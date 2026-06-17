@@ -5,6 +5,7 @@ venv/
 .env
 *.egg-info/
 .pytest_cache/
+*.log
 
 build/
 .dart_tool/
