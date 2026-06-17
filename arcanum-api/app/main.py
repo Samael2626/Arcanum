@@ -1,30 +1,48 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.core.config import settings
 from app.core.middleware import ProcessTimeMiddleware
+from app.core.exceptions import http_exception_handler
 from app.routers import auth, users
-from app.db.session import Base, engine
+
+# Importar todos los modelos para que Alembic los detecte
+from app.models import user, refresh_token, natal_chart, grimoire_entry  # noqa: F401
+from app.models import tradition, materia_item, divination_session, oracle_conversation  # noqa: F401
 
 app = FastAPI(
-    title="Arcanum API",
-    description="Backend for Arcanum app",
-    version="0.1.0"
+    title=settings.APP_NAME,
+    description="Backend para la aplicación Arcanum — astrología y esoterismo",
+    version=settings.APP_VERSION,
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
-# Add middleware
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.ALLOWED_ORIGINS.split(","),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Middleware personalizado
 app.add_middleware(ProcessTimeMiddleware)
 
-# Include routers
+# Handler de errores uniforme
+app.add_exception_handler(HTTPException, http_exception_handler)
+
+# Routers
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(users.router, prefix="/users", tags=["users"])
 
-# Create tables on startup
-@app.on_event("startup")
-async def startup():
-    Base.metadata.create_all(bind=engine)
 
-@app.get("/")
+@app.get("/", tags=["root"])
 def read_root():
-    return {"message": "Welcome to Arcanum API"}
+    return {"message": f"Bienvenido a {settings.APP_NAME} v{settings.APP_VERSION}"}
 
-@app.get("/health")
+
+@app.get("/health", tags=["root"])
 def health_check():
     return {"status": "healthy"}

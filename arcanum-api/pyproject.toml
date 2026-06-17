@@ -11,14 +11,13 @@ uvicorn = { version = "^0.29.0", extras = ["standard"] }
 sqlalchemy = { version = "^2.0.0", extras = ["postgresql"] }
 alembic = "^1.13.0"
 pydantic = { version = "^2.6.0", extras = ["email"] }
+pydantic-settings = "^2.2.0"
 python-jose = { version = "^3.3.0", extras = ["cryptography"] }
 passlib = { version = "^1.7.0", extras = ["bcrypt"] }
 python-multipart = "^0.0.9"
 redis = "^5.0.0"
-pytest = { version = "^8.0.0", optional = true }
-
-[tool.poetry.group.dev.dependencies]
-# We can add dev dependencies here if needed
+pytest = "^8.0.0"
+httpx = "^0.27.0"
 
 [build-system]
 requires = ["poetry-core"]

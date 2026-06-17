@@ -1,35 +1,50 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserResponse
+from app.schemas.refresh_token import TokenPair
 from app.core.security import (
-    get_password_hash,
-    create_access_token,
-    create_refresh_token,
-    verify_password,
+    get_current_user,
     blacklist_token,
-    is_token_blacklisted
+    verify_token,
+    oauth2_scheme,
 )
-from datetime import timedelta
+from app.core.rate_limit import RateLimiter
+from app.services import auth_service
+from datetime import datetime, timezone
 
 router = APIRouter()
 
-@router.post("/register", response_model=UserResponse)
+# Límites por IP (fixed-window). Protegen contra fuerza bruta / enumeración.
+login_rate_limit = RateLimiter(max_calls=5, window_seconds=60, scope="login")
+register_rate_limit = RateLimiter(max_calls=5, window_seconds=3600, scope="register")
+
+
+@router.post(
+    "/register",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(register_rate_limit)],
+)
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
-    # Check if user already exists
-    user = db.query(User).filter(User.email == user_in.email).first()
-    if user:
+    """
+    Registra un nuevo usuario.
+    - Valida email único
+    - Hashea la contraseña con bcrypt
+    """
+    existing = db.query(User).filter(User.email == user_in.email).first()
+    if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            detail="Este email ya está registrado",
         )
-    # Create new user
-    hashed_password = get_password_hash(user_in.password)
-    user = User(
+    user = auth_service.create_user(
+        db,
         email=user_in.email,
-        hashed_password=hashed_password,
+        password=user_in.password,
         display_name=user_in.display_name,
         birth_date=user_in.birth_date,
         birth_time=user_in.birth_time,
@@ -37,105 +52,82 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
         birth_lon=user_in.birth_lon,
         birth_city=user_in.birth_city,
         birth_timezone=user_in.birth_timezone,
-        subscription_tier=user_in.subscription_tier,
-        subscription_expires_at=user_in.subscription_expires_at,
-        revenuecat_customer_id=user_in.revenuecat_customer_id,
         preferred_tradition=user_in.preferred_tradition,
-        preferred_house_system=user_in.preferred_house_system,
-        onboarding_completed=user_in.onboarding_completed
+        preferred_house_system=user_in.preferred_house_system or "placidus",
     )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
     return user
 
-@router.post("/login")
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token_expires = timedelta(minutes=15)
-    access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
-    )
-    refresh_token = create_refresh_token(data={"sub": user.email})
-    # We should store the refresh token hash in the database
-    # For now, we just return the tokens. In a real app, we would store the refresh token hash.
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "refresh_token": refresh_token
-    }
 
-@router.post("/refresh")
-def refresh_token(refresh_token: str, db: Session = Depends(get_db)):
-    # Verify the refresh token
-    from app.core.security import verify_token, SECRET_KEY, ALGORITHM
-    from jose import JWTError
-    try:
-        payload = verify_token(refresh_token, token_type="refresh")
-        if payload is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid refresh token",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        email = payload.get("sub")
-        if email is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid refresh token",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-    except JWTError:
+@router.post(
+    "/login",
+    response_model=TokenPair,
+    dependencies=[Depends(login_rate_limit)],
+)
+def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+):
+    """
+    Login con email + contraseña (OAuth2 password flow).
+    Retorna access_token (15 min) + refresh_token (30 días).
+    El refresh token se persiste en BD como hash SHA-256.
+    """
+    user = auth_service.authenticate_user(db, form_data.username, form_data.password)
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid refresh token",
+            detail="Email o contraseña incorrectos",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    # Check if the refresh token is blacklisted (we don't have a table for refresh tokens yet, but we can use Redis for blacklist)
-    # We are not storing the refresh token in the database, so we cannot blacklist it by token hash.
-    # We will implement refresh token storage in the database in the future.
-    # For now, we just return new tokens.
-    # In a production app, we would store the refresh token hash in the database and blacklist the old one.
-    user = db.query(User).filter(User.email == email).first()
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token_expires = timedelta(minutes=15)
-    access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
-    )
-    new_refresh_token = create_refresh_token(data={"sub": user.email})
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "refresh_token": new_refresh_token
-    }
+    return auth_service.issue_token_pair(db, user)
 
-@router.post("/logout")
-def logout(token: str, db: Session = Depends(get_db)):
-    # Blacklist the access token
-    # We need to get the token's expiration to set the Redis key expiry
-    from app.core.security import verify_token
-    from datetime import datetime
+
+@router.post("/refresh", response_model=TokenPair)
+def refresh(
+    refresh_token: str = Body(..., embed=True),
+    db: Session = Depends(get_db),
+):
+    """
+    Intercambia un refresh token válido por un nuevo par de tokens.
+    Implementa refresh token rotation: el token antiguo queda revocado.
+    """
+    token_pair = auth_service.rotate_refresh_token(db, refresh_token)
+    if token_pair is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token inválido o revocado",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return token_pair
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+def logout(
+    refresh_token: str = Body(..., embed=True),
+    token: str = Depends(oauth2_scheme),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Cierra sesión revocando el refresh token en BD y blacklisteando el access
+    token actual en Redis por su TTL restante, para que deje de ser válido de
+    inmediato (no solo cuando expire naturalmente).
+    """
+    auth_service.revoke_refresh_token(db, refresh_token)
+
     payload = verify_token(token, token_type="access")
-    if payload is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    exp = payload.get("exp")
-    now = int(datetime.utcnow().timestamp())
-    expires_in = exp - now
-    if expires_in > 0:
-        blacklist_token(token, expires_in)
-    return {"message": "Successfully logged out"}
+    if payload and payload.get("exp"):
+        remaining = int(payload["exp"] - datetime.now(timezone.utc).timestamp())
+        if remaining > 0:
+            blacklist_token(token, remaining)
+
+
+@router.post("/logout-all", status_code=status.HTTP_204_NO_CONTENT)
+def logout_all(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Cierra sesión en todos los dispositivos revocando todos los refresh tokens del usuario.
+    """
+    auth_service.revoke_all_user_tokens(db, current_user.id)
