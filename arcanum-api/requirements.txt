@@ -12,5 +12,8 @@ bcrypt==4.0.1
 python-multipart==0.0.9
 redis==5.0.3
 astral==3.2
+# pyswisseph: en Windows requiere MS C++ Build Tools (compila desde fuente).
+# Si falla la autodetección de VS: activar vcvarsall x64 y exportar DISTUTILS_USE_SDK=1.
+pyswisseph==2.10.3.2
 pytest==8.0.2
 httpx==0.27.0
