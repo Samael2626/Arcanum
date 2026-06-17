@@ -1,6 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
-from typing import Optional, Any, Dict
+from typing import Any, Dict
 from uuid import UUID
 
 
@@ -18,5 +18,4 @@ class NatalChartResponse(NatalChartBase):
     id: UUID
     user_id: UUID
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
