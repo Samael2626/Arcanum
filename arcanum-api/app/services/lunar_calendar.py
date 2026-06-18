@@ -1,43 +1,46 @@
-"""Fase lunar y datos asociados.
+"""Fase lunar e iluminación — precisión Swiss Ephemeris.
 
-MVP: usa `astral.moon.phase` (algoritmo simplificado, escala 0..27.99).
-La iluminación es aproximada (coseno sobre el ciclo sinódico). La precisión
-fina (efemérides Swiss) llega en v2 vía AstroVisor / astro-sweph.
+Basado en la elongación Luna-Sol (longitud eclíptica): 0°=nueva, 90°=cuarto
+creciente, 180°=llena, 270°=cuarto menguante. La iluminación es la fracción
+realmente iluminada del disco, no una aproximación.
 """
 from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from datetime import date as _date, datetime, timezone
+from datetime import date as _date, datetime, time, timezone
 
-from astral import moon
+import swisseph as swe
 
-# astral usa una escala 0..27.99 con los 4 principales en 0/7/14/21
-_ASTRAL_CYCLE = 28.0
+SYNODIC_MONTH = 29.530588  # días
+FLG = swe.FLG_MOSEPH
 
-# (límite_superior_exclusivo, slug, nombre_es)
-_PHASES = (
-    (1.75, "new", "Luna Nueva"),
-    (5.25, "waxing_crescent", "Creciente"),
-    (8.75, "first_quarter", "Cuarto Creciente"),
-    (12.25, "waxing_gibbous", "Gibosa Creciente"),
-    (15.75, "full", "Luna Llena"),
-    (19.25, "waning_gibbous", "Gibosa Menguante"),
-    (22.75, "last_quarter", "Cuarto Menguante"),
-    (26.25, "waning_crescent", "Menguante"),
-)
+# (límite_superior_exclusivo_en_grados, slug, nombre_es) — partición de 45°
+_PHASES = [
+    (22.5, "new", "Luna Nueva"),
+    (67.5, "waxing_crescent", "Creciente"),
+    (112.5, "first_quarter", "Cuarto Creciente"),
+    (157.5, "waxing_gibbous", "Gibosa Creciente"),
+    (202.5, "full", "Luna Llena"),
+    (247.5, "waning_gibbous", "Gibosa Menguante"),
+    (292.5, "last_quarter", "Cuarto Menguante"),
+    (337.5, "waning_crescent", "Menguante"),
+    (360.0, "new", "Luna Nueva"),
+]
 
 
 @dataclass(frozen=True)
 class MoonInfo:
-    age_days: float          # 0..27.99 (edad lunar aproximada)
-    illumination: float      # 0..1 (fracción iluminada, aproximada)
+    elongation: float        # 0..360 (grados Luna-Sol)
+    age_days: float          # 0..29.53
+    illumination: float      # 0..1 (fracción iluminada real)
     phase_slug: str
     phase_name: str
     is_waxing: bool
 
     def to_dict(self) -> dict:
         return {
+            "elongation": round(self.elongation, 2),
             "age_days": round(self.age_days, 2),
             "illumination": round(self.illumination, 4),
             "phase_slug": self.phase_slug,
@@ -46,23 +49,30 @@ class MoonInfo:
         }
 
 
-def _normalize_date(d) -> _date:
+def _to_dt(d) -> datetime:
     if d is None:
-        return datetime.now(timezone.utc).date()
+        return datetime.now(timezone.utc)
     if isinstance(d, datetime):
-        d = d.astimezone(timezone.utc) if d.tzinfo else d.replace(tzinfo=timezone.utc)
-        return d.date()
-    return d
+        return d.replace(tzinfo=timezone.utc) if d.tzinfo is None else d.astimezone(timezone.utc)
+    # un date suelto -> mediodía UTC (representativo del día)
+    return datetime.combine(d, time(12), tzinfo=timezone.utc)
 
 
 def get_moon_info(d=None) -> MoonInfo:
-    age = float(moon.phase(_normalize_date(d)))  # 0..27.99
-    illumination = (1 - math.cos(2 * math.pi * age / _ASTRAL_CYCLE)) / 2
-    is_waxing = age < (_ASTRAL_CYCLE / 2)  # creciente hasta la llena (~14)
+    dt = _to_dt(d)
+    jd = swe.julday(dt.year, dt.month, dt.day,
+                    dt.hour + dt.minute / 60 + dt.second / 3600)
+    sun = swe.calc_ut(jd, swe.SUN, FLG)[0][0]
+    moon = swe.calc_ut(jd, swe.MOON, FLG)[0][0]
+    elong = (moon - sun) % 360
+
+    illumination = (1 - math.cos(math.radians(elong))) / 2
+    age = elong / 360 * SYNODIC_MONTH
+    is_waxing = elong < 180
 
     slug, name = "new", "Luna Nueva"
     for upper, s, n in _PHASES:
-        if age < upper:
+        if elong < upper:
             slug, name = s, n
             break
-    return MoonInfo(age, illumination, slug, name, is_waxing)
+    return MoonInfo(elong, age, illumination, slug, name, is_waxing)
