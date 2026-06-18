@@ -1,26 +1,31 @@
-import 'dart:convert';
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:http/http.dart' as http;
+import '../auth/auth_controller.dart';
 
-/// Cliente del backend Arcanum (FastAPI en localhost:8000).
-/// Más adelante se migrará a Dio con interceptores JWT (Semana 4+).
+/// Cliente del backend Arcanum sobre Dio (auth vía interceptor).
 class ArcanumApi {
-  static const String baseUrl = 'http://localhost:8000';
+  ArcanumApi(this._dio);
+  final Dio _dio;
 
-  Future<Map<String, dynamic>> today({
-    double lat = 4.71,
-    double lon = -74.07,
-  }) async {
-    return _getJson('/astral/today?lat=$lat&lon=$lon');
+  Future<Map<String, dynamic>> today({double lat = 4.71, double lon = -74.07}) async {
+    final res = await _dio.get('/astral/today',
+        queryParameters: {'lat': lat, 'lon': lon});
+    return res.data as Map<String, dynamic>;
   }
 
-  Future<Map<String, dynamic>> _getJson(String path) async {
-    final res = await http
-        .get(Uri.parse('$baseUrl$path'))
-        .timeout(const Duration(seconds: 8));
-    if (res.statusCode != 200) {
-      throw Exception('El oráculo respondió ${res.statusCode}');
-    }
-    return jsonDecode(res.body) as Map<String, dynamic>;
+  /// Calcula (o recalcula) y cachea la carta natal del usuario. Requiere auth.
+  Future<Map<String, dynamic>> natalChart() async {
+    final res = await _dio.post('/astral/natal-chart');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Tránsitos del cielo actual sobre la carta natal. Requiere auth.
+  Future<Map<String, dynamic>> transits() async {
+    final res = await _dio.get('/astral/transits');
+    return res.data as Map<String, dynamic>;
   }
 }
+
+final arcanumApiProvider =
+    Provider((ref) => ArcanumApi(ref.read(dioProvider)));

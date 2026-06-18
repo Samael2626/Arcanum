@@ -1,36 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/arcanum_api.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
+import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/moon_disc.dart';
 import '../../shared/widgets/pulsing_glyph.dart';
 
-const planetGlyph = {
-  'sun': '☉', 'moon': '☽', 'mercury': '☿', 'venus': '♀',
-  'mars': '♂', 'jupiter': '♃', 'saturn': '♄',
-};
-const planetEs = {
-  'sun': 'Sol', 'moon': 'Luna', 'mercury': 'Mercurio', 'venus': 'Venus',
-  'mars': 'Marte', 'jupiter': 'Júpiter', 'saturn': 'Saturno',
-};
-
-class HoyScreen extends StatefulWidget {
+class HoyScreen extends ConsumerStatefulWidget {
   const HoyScreen({super.key});
   @override
-  State<HoyScreen> createState() => _HoyScreenState();
+  ConsumerState<HoyScreen> createState() => _HoyScreenState();
 }
 
-class _HoyScreenState extends State<HoyScreen> {
-  final _api = ArcanumApi();
-  late Future<Map<String, dynamic>> _future;
-
-  @override
-  void initState() {
-    super.initState();
-    _future = _api.today();
-  }
+class _HoyScreenState extends ConsumerState<HoyScreen> {
+  late final ArcanumApi _api = ref.read(arcanumApiProvider);
+  late Future<Map<String, dynamic>> _future = _api.today();
 
   @override
   Widget build(BuildContext context) {
