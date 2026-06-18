@@ -5,6 +5,7 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/moon_disc.dart';
+import '../../shared/widgets/pulsing_glyph.dart';
 
 const planetGlyph = {
   'sun': '☉', 'moon': '☽', 'mercury': '☿', 'venus': '♀',
@@ -96,15 +97,24 @@ class _HoyScreenState extends State<HoyScreen> {
     final hour = data['planetary_hour'] as Map<String, dynamic>;
     final moon = data['moon'] as Map<String, dynamic>;
     final ruler = data['day_ruler'] as String;
-    return Column(
-      children: [
-        Text('${planetGlyph[ruler] ?? ''}  Día de ${planetEs[ruler] ?? ruler}',
-            textAlign: TextAlign.center, style: ArcanumText.heading(24)),
-        const SizedBox(height: 24),
-        _planetaryHourCard(hour),
-        const SizedBox(height: 18),
-        _moonCard(moon),
-      ],
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 650),
+      curve: Curves.easeOut,
+      builder: (context, v, child) => Opacity(
+        opacity: v,
+        child: Transform.translate(offset: Offset(0, (1 - v) * 16), child: child),
+      ),
+      child: Column(
+        children: [
+          Text('${planetGlyph[ruler] ?? ''}  Día de ${planetEs[ruler] ?? ruler}',
+              textAlign: TextAlign.center, style: ArcanumText.heading(24)),
+          const SizedBox(height: 24),
+          _planetaryHourCard(hour),
+          const SizedBox(height: 18),
+          _moonCard(moon),
+        ],
+      ),
     );
   }
 
@@ -116,10 +126,9 @@ class _HoyScreenState extends State<HoyScreen> {
       child: Column(
         children: [
           const SectionLabel('HORA PLANETARIA'),
-          const SizedBox(height: 14),
-          Text(planetGlyph[planet] ?? '?',
-              style: const TextStyle(fontSize: 64, color: ArcanumColors.gold)),
-          const SizedBox(height: 6),
+          const SizedBox(height: 18),
+          PulsingGlyph(planetGlyph[planet] ?? '?', size: 64),
+          const SizedBox(height: 12),
           Text(planetEs[planet] ?? planet, style: ArcanumText.heading(30)),
           const SizedBox(height: 10),
           Text('${isDay ? 'Hora diurna' : 'Hora nocturna'}  ·  termina en $mins min',
