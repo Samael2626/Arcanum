@@ -145,3 +145,52 @@ def compute_natal_chart(birth: BirthData) -> dict:
         "planets": planets,
         "aspects": _aspects(positions),
     }
+
+
+# ── Tránsitos (cielo actual vs carta natal) ───────────────────────────────────
+
+# Orbes más ajustados que en la natal: un tránsito "cuenta" cerca de la exactitud.
+TRANSIT_ASPECTS = [
+    ("conjunction", 0, 3), ("sextile", 60, 2), ("square", 90, 3),
+    ("trine", 120, 3), ("opposition", 180, 3),
+]
+
+
+def current_positions(dt_utc: datetime) -> dict[str, dict]:
+    """Posiciones eclípticas de los planetas en `dt_utc` (cielo actual)."""
+    dt = dt_utc.replace(tzinfo=timezone.utc) if dt_utc.tzinfo is None else dt_utc.astimezone(timezone.utc)
+    jd = swe.julday(dt.year, dt.month, dt.day,
+                    dt.hour + dt.minute / 60 + dt.second / 3600)
+    out: dict[str, dict] = {}
+    for name, pid in PLANETS:
+        try:
+            xx, _ = swe.calc_ut(jd, pid, FLG)
+        except swe.Error:
+            continue
+        lon, speed = xx[0] % 360, xx[3]
+        out[name] = {**_sign_block(lon), "name": name, "retrograde": speed < 0}
+    return out
+
+
+def compute_transits(natal_planets: list[dict], dt_utc: datetime) -> dict:
+    """Posiciones actuales + aspectos de los planetas en tránsito a los natales."""
+    transiting = current_positions(dt_utc)
+    natal_lon = {p["name"]: p["longitude"] for p in natal_planets}
+
+    aspects: list[dict] = []
+    for tname, tdata in transiting.items():
+        for nname, nlon in natal_lon.items():
+            sep = _angular_diff(tdata["longitude"], nlon)
+            for aname, angle, orb in TRANSIT_ASPECTS:
+                delta = abs(sep - angle)
+                if delta <= orb:
+                    aspects.append({
+                        "transit": tname, "natal": nname,
+                        "aspect": aname, "angle": angle, "orb": round(delta, 2),
+                    })
+                    break
+    return {
+        "datetime": (dt_utc if dt_utc.tzinfo else dt_utc.replace(tzinfo=timezone.utc)).isoformat(),
+        "transiting": list(transiting.values()),
+        "aspects_to_natal": aspects,
+    }

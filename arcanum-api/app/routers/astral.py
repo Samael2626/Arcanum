@@ -138,3 +138,39 @@ def get_natal_chart(
             detail="No hay carta natal calculada. Usa POST /astral/natal-chart.",
         )
     return chart
+
+
+@router.get("/transits")
+def transits(
+    at: Optional[datetime] = Query(None, description="ISO 8601; por defecto, ahora (UTC)"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Cielo actual (o en `at`) y sus aspectos a la carta natal del usuario."""
+    chart = db.query(NatalChart).filter(NatalChart.user_id == current_user.id).first()
+    if chart is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Calcula primero tu carta natal con POST /astral/natal-chart.",
+        )
+    dt = at or datetime.now(timezone.utc)
+    return nce.compute_transits(chart.chart_data["planets"], dt)
+
+
+@router.get("/today")
+def today(
+    lat: float = Query(..., ge=-90, le=90),
+    lon: float = Query(..., ge=-180, le=180),
+):
+    """Agregado para la pantalla 'Hoy': hora planetaria + regente del día + luna."""
+    now = datetime.now(timezone.utc)
+    try:
+        hour = ph.get_planetary_hour(now, lat, lon).to_dict()
+    except ph.AstralCalculationError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+    return {
+        "datetime": now.isoformat(),
+        "day_ruler": ph.get_day_ruler(now.date()),
+        "planetary_hour": hour,
+        "moon": lc.get_moon_info(now).to_dict(),
+    }
