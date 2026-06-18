@@ -17,6 +17,7 @@ from app.schemas.natal_chart import NatalChartResponse
 from app.services import lunar_calendar as lc
 from app.services import natal_chart_engine as nce
 from app.services import planetary_hours as ph
+from app.services import ritual_calendar as rc
 
 router = APIRouter()
 
@@ -177,3 +178,46 @@ def today(
         "planetary_hour": hour.to_dict(),
         "moon": lc.get_moon_info(now).to_dict(),
     }
+
+
+# ── Calendario ritual (próximos eventos) ──────────────────────────────────────
+
+@router.get("/calendar/upcoming-hours")
+def upcoming_hours(
+    lat: float = Query(..., ge=-90, le=90),
+    lon: float = Query(..., ge=-180, le=180),
+    count: int = Query(12, ge=1, le=48),
+):
+    """Las próximas horas planetarias (para alertas y planificación ritual)."""
+    now = datetime.now(timezone.utc)
+    try:
+        hours = rc.upcoming_planetary_hours(now, lat, lon, count)
+    except ph.AstralCalculationError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+    return {"from": now.isoformat(), "hours": [h.to_dict() for h in hours]}
+
+
+@router.get("/calendar/next-planet-hour")
+def next_planet_hour(
+    planet: str = Query(..., description="sun|venus|mercury|moon|saturn|jupiter|mars"),
+    lat: float = Query(..., ge=-90, le=90),
+    lon: float = Query(..., ge=-180, le=180),
+):
+    """Próxima hora regida por un planeta (ej. Venus para un ritual de amor)."""
+    now = datetime.now(timezone.utc)
+    try:
+        hour = rc.next_hour_of_planet(now, lat, lon, planet)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+    except ph.AstralCalculationError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+    if hour is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="No se encontró una hora para ese planeta.")
+    return hour.to_dict()
+
+
+@router.get("/calendar/moon-phases")
+def moon_phases():
+    """Próximos cambios de fase lunar principal (nueva/cuartos/llena) con hora exacta."""
+    return {"phases": rc.next_principal_phases()}
