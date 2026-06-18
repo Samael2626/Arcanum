@@ -5,58 +5,52 @@ area: arcanum
 actualizado: 2026-06-18
 ---
 
-# ARCANUM — Semana 3: App Flutter (UI Grimorio Vivo)
+# ARCANUM — Semana 3+: App Flutter (UI Grimorio Vivo)
 
-Ver [[MOC-ARCANUM]] · [[ARCANUM-Estado-Sesion]]
+Ver [[MOC-ARCANUM]] · [[ARCANUM-Estado-Sesion]] · [[ARCANUM-Mejoras-y-Retos]]
 
-> Por fin la parte visual. App Flutter corriendo en **web (Edge)** vía `flutter run -d web-server
-> --web-port 3000`, consumiendo el backend en vivo (`localhost:8000`). El mismo código Dart correrá
-> luego en iOS/Android.
+> App Flutter en **web (Edge)** vía `flutter run -d web-server --web-port 3000`, consumiendo el
+> backend en vivo (`localhost:8000`). Mismo código Dart → iOS/Android después.
 
-## Estética implementada (Grimorio Vivo)
-- Paleta: negro profundo `#0A0A0F`, dorado antiguo `#C9A84C`, marfil `#F5F0E8`, borgoña.
-- Tipografías vía `google_fonts`: **Cormorant Garamond** (títulos) + **Crimson Pro** (cuerpo).
-- Wordmark ARCANUM dorado con tracking, divisor ornamental `✧`, tarjetas con borde dorado tenue.
+## Estética (Grimorio Vivo)
+Negro `#0A0A0F`, dorado `#C9A84C`, marfil `#F5F0E8`, borgoña. Fuentes **Cormorant Garamond**
+(títulos) + **Crimson Pro** (cuerpo) vía `google_fonts`. Wordmark con tracking, divisor `✧`,
+tarjetas con borde dorado, micro-animación de pulso dorado en glifos.
 
-## Pantalla "Hoy" (en vivo, no skeleton)
-Consume `GET /astral/today`:
-- "Día de {planeta}" (regente) con su glifo.
-- Tarjeta Hora Planetaria: glifo del planeta, nombre, diurna/nocturna, minutos restantes.
-- Tarjeta La Luna: **disco lunar dibujado con CustomPainter** según la iluminación real (fase
-  creciente/menguante), nombre de fase y % iluminada.
-- Pull-to-refresh.
+## Navegación
+GoRouter `StatefulShellRoute.indexedStack` → barra inferior de 5 pestañas:
+**Hoy** · **Cielos** · **Grimorio** · **Arte** · **Oráculo**. Rutas top-level `/login`, `/register`.
 
-## Navegación (shell de 5 pestañas)
-- **GoRouter** con `StatefulShellRoute.indexedStack` → barra inferior persistente.
-- Pestañas: **Hoy** (live) · **Cielos** · **Grimorio** · **Arte** · **Oráculo**.
-- Las 4 últimas son skeletons premium (`ComingSoon`: glifo esotérico + título + descripción +
-  pill "Próximamente").
+## Pantallas
+- **Hoy** (en vivo, `/astral/today`): regente del día, hora planetaria (glifo con pulso), luna
+  dibujada con `CustomPainter` según iluminación real. Pull-to-refresh.
+- **Cielos** (auth): con sesión → carta natal (Asc/MC, planetas con signo/casa/℞) + tránsitos de hoy
+  (`/astral/natal-chart`, `/astral/transits`); sin sesión → prompt de login.
+- **Login / Registro**: estética Grimorio Vivo; registro captura datos natales.
+- **Grimorio / Arte / Oráculo**: skeletons (`ComingSoon`) — faltan endpoints backend.
 
-## Arquitectura (limpia, escalable)
+## Arquitectura
 ```
 arcanum_app/lib/
-├── main.dart                 # MaterialApp.router
+├── main.dart                 # ProviderScope + MaterialApp.router
 ├── core/
 │   ├── theme/                # arcanum_colors, arcanum_theme (ArcanumText)
 │   ├── router/               # app_router (GoRouter), app_shell (NavigationBar)
-│   └── api/                  # arcanum_api (http; migrará a Dio + JWT en Semana 4)
-├── shared/widgets/           # ArcanumCard, SectionLabel, Ornament, ArcanumHeader,
-│                             # MoonDisc, ComingSoon
-└── features/                 # hoy, cielos, grimorio, arte, oraculo
+│   ├── api/                  # arcanum_api (Dio): today, natalChart, transits
+│   ├── auth/                 # token_storage, auth_repository, auth_controller (Riverpod)
+│   └── network/              # dio_client (interceptor Bearer + refresh 401)
+├── shared/                   # astro_symbols + widgets (ArcanumCard, MoonDisc,
+│                             # PulsingGlyph, ArcanumField, GoldButton, ComingSoon)
+└── features/                 # hoy, cielos, grimorio, arte, oraculo, auth
 ```
 
-## Decisiones técnicas
-- **Target inicial = Flutter Web (Edge)**: evita instalar Android Studio+SDK+emulador (varios GB);
-  el mismo código compila a móvil después. Edge se usa porque no hay Chrome (`CHROME_EXECUTABLE`
-  no necesario con `-d web-server`, se abre Edge manualmente).
-- CORS: la web corre en `:3000`, que el backend ya permite en `ALLOWED_ORIGINS`.
-- Flutter SDK instalado en `D:\flutter` (canal stable 3.44.2, Dart 3.12.2).
-
-## Pendiente Semana 3 / siguiente
-- (Opcional) pulir transiciones, estados de carga por pestaña.
-- Versionar la app en git (rama nueva) — aún sin commit.
-- Semana 4: onboarding (5 pasos) + auth UI (login/registro contra el backend JWT).
+## Decisiones
+- **Target dev = Flutter Web (Edge)**: evita Android Studio+SDK+emulador; mismo código a móvil luego.
+- Riverpod para estado (sesión global, API). Dio con interceptor JWT + refresh silencioso.
+- CORS: web en `:3000`, permitido en `ALLOWED_ORIGINS` del backend.
+- Flutter SDK en `D:\flutter` (stable 3.44.2, Dart 3.12.2).
+- ⚠️ `C:` lleno → compilar con `TEMP`=`D:\tmp` (ver [[ARCANUM-Mejoras-y-Retos]]).
 
 ---
-Backend (Semanas 1-2) ya en GitHub: `github.com/Samael2626/Arcanum`. La app Flutter está en
-`D:\Proyectos\Arcanum\arcanum_app`.
+Backend en GitHub `github.com/Samael2626/Arcanum`. App Flutter en `D:\Proyectos\Arcanum\arcanum_app`
+(rama `feature/semana-3-flutter`).

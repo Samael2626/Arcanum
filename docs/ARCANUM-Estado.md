@@ -37,8 +37,21 @@ carta natal (planetas/casas/aspectos/Asc/MC), tránsitos, dashboard `today`, cal
 ## Semana 3 — App Flutter (UI) 🔄 EN CURSO
 Tema Grimorio Vivo (negro/dorado/marfil, Cormorant Garamond + Crimson Pro). Navegación GoRouter
 `StatefulShellRoute` con barra inferior de 5 pestañas. "Hoy" en vivo (hora planetaria + luna
-dibujada). 4 skeletons. Arquitectura `core/`+`shared/`+`features/`. Corre en `localhost:3000`
-(`flutter run -d web-server --web-port 3000`). Ver [[ARCANUM-Semana3-Flutter]].
+dibujada, con micro-animación de pulso dorado). Arquitectura `core/`+`shared/`+`features/`. Corre en
+`localhost:3000` (`flutter run -d web-server --web-port 3000`). Ver [[ARCANUM-Semana3-Flutter]].
+
+### Auth + Cielos (retos #1 y #4 — HECHO, commit `529f9dd`)
+- **Auth:** Dio con interceptor (Bearer + refresh silencioso en 401), `flutter_secure_storage`,
+  Riverpod (`AuthNotifier` + providers). Pantallas **login** y **registro** (con datos natales).
+- **Cielos** ya NO es skeleton: con sesión muestra **carta natal** (Asc/MC, planetas con signo/casa/
+  retro) + **tránsitos de hoy**; sin sesión, prompt de login.
+- deps nuevas: `dio`, `flutter_riverpod`, `flutter_secure_storage`.
+- Pestañas **Grimorio / Arte / Oráculo** siguen skeleton: faltan sus endpoints en el backend.
+
+### ⚠️ Problema operativo: disco C: lleno
+`C:` llegó a **0 GB libres** → el compilador de Dart (temporales en `C:\...\Temp`) falla con errno
+112. Workaround: lanzar Flutter con `TEMP`/`TMP`/`TMPDIR` apuntando a `D:\tmp`. **Pendiente:** liberar
+`C:` o fijar `TEMP` a `D:\tmp` permanente en Variables de entorno de Windows.
 
 ## Comandos clave
 ```
@@ -51,6 +64,7 @@ venv\Scripts\python.exe -m pytest -q   # 47/47
 cd D:\Proyectos\Arcanum\arcanum_app && flutter run -d web-server --web-port 3000   # abrir Edge
 ```
 
-## Siguiente: Semana 4
-Onboarding (5 pasos) + auth UI (login/registro). Migrar API a Dio + interceptor JWT + refresh
-silencioso. Riverpod para estado de sesión. Ver [[ARCANUM-Mejoras-y-Retos]].
+## Siguiente
+Auth UI + Dio/JWT + Riverpod ✅ hechos. Falta: onboarding (5 pasos) pulido; endpoints backend para
+Grimorio (CRUD + cifrado AES-256 client-side, reto #2), Materia Arcana (Arte) y Oráculo (tarot/IA);
+luego conectar esas pestañas. Ver [[ARCANUM-Mejoras-y-Retos]].
