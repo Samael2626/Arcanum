@@ -87,3 +87,42 @@ def test_natal_endpoint_requires_birth_data(client):
     resp = client.post("/astral/natal-chart", headers=headers)
     assert resp.status_code == 422
     assert "datos de nacimiento" in resp.json()["detail"].lower()
+
+
+# ── Tránsitos y dashboard "Hoy" ───────────────────────────────────────────────
+
+def test_transits_engine_structure():
+    natal = nce.compute_natal_chart(BIRTH)["planets"]
+    at = datetime(2026, 6, 17, 12, 0, tzinfo=timezone.utc)
+    tr = nce.compute_transits(natal, at)
+    assert len(tr["transiting"]) == 11
+    sun = next(p for p in tr["transiting"] if p["name"] == "sun")
+    assert sun["sign"] == "gemini"  # 17 de junio -> Géminis
+    # Cerca del cumpleaños: Sol en tránsito conjunto al Sol natal (retorno solar)
+    assert any(a["transit"] == "sun" and a["natal"] == "sun" and a["aspect"] == "conjunction"
+               for a in tr["aspects_to_natal"])
+
+
+def test_transits_endpoint_requires_natal_chart(client):
+    headers = _auth(client, {"email": "notr@arcanum.com", "password": "notrpass123"})
+    assert client.get("/astral/transits", headers=headers).status_code == 404
+
+
+def test_transits_endpoint_after_chart(client):
+    headers = _auth(client, _BIRTH_USER)
+    client.post("/astral/natal-chart", headers=headers)
+    resp = client.get("/astral/transits?at=2026-06-17T12:00:00%2B00:00", headers=headers)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "transiting" in data and "aspects_to_natal" in data
+    assert len(data["transiting"]) == 11
+
+
+def test_today_endpoint(client):
+    resp = client.get("/astral/today?lat=4.71&lon=-74.07")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert set(data) >= {"datetime", "day_ruler", "planetary_hour", "moon"}
+    assert data["planetary_hour"]["planet"] in (
+        "sun", "venus", "mercury", "moon", "saturn", "jupiter", "mars")
+    assert "phase_slug" in data["moon"]
