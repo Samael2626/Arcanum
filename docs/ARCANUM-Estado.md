@@ -46,7 +46,18 @@ dibujada, con micro-animación de pulso dorado). Arquitectura `core/`+`shared/`+
 - **Cielos** ya NO es skeleton: con sesión muestra **carta natal** (Asc/MC, planetas con signo/casa/
   retro) + **tránsitos de hoy**; sin sesión, prompt de login.
 - deps nuevas: `dio`, `flutter_riverpod`, `flutter_secure_storage`.
-- Pestañas **Grimorio / Arte / Oráculo** siguen skeleton: faltan sus endpoints en el backend.
+- **Arte (Materia Arcana)** ya NO es skeleton: backend `/materia` (15 correspondencias sembradas:
+  hierbas/piedras/metales/inciensos con planeta+elemento+intenciones; list con filtros + detalle +
+  CRUD con auth) y pestaña con lista filtrable por tipo + ficha en bottom sheet. Commit `5fb8b30`.
+- Pestañas **Grimorio / Oráculo** siguen skeleton: faltan sus endpoints (Grimorio = CRUD + cifrado
+  AES-256 client-side reto #2; Oráculo = tarot + IA Claude).
+- **Propósito de cada módulo (uso mágico real):** ver [[ARCANUM-Modulos-Proposito]].
+
+### Entorno (2026-06-18): movimientos de disco rompieron y se repararon
+Mover apps a mano a `D:\Softwares` rompió cosas. Reparado: venv recreado (`D:\Python312`), VS Build
+Tools ahora en `D:\Softwares\VS2022BuildTools` (flutter lo detecta, pyswisseph compila), `.git` del
+SDK Flutter reparado (faltaba HEAD), cache web restaurado (`flutter precache --web`). **Lección: no
+mover apps instaladas arrastrando carpetas — reinstalar con su instalador.**
 
 ### ⚠️ Problema operativo: disco C: lleno
 `C:` llegó a **0 GB libres** → el compilador de Dart (temporales en `C:\...\Temp`) falla con errno
