@@ -25,6 +25,21 @@ class ArcanumApi {
     final res = await _dio.get('/astral/transits');
     return res.data as Map<String, dynamic>;
   }
+
+  /// Materia Arcana: catálogo (resumen). Filtros opcionales.
+  Future<List<Map<String, dynamic>>> materiaList({String? itemType, String? q}) async {
+    final res = await _dio.get('/materia', queryParameters: {
+      if (itemType != null) 'item_type': itemType,
+      if (q != null && q.isNotEmpty) 'q': q,
+    });
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  /// Detalle completo de un ítem de Materia Arcana.
+  Future<Map<String, dynamic>> materiaDetail(String slug) async {
+    final res = await _dio.get('/materia/$slug');
+    return res.data as Map<String, dynamic>;
+  }
 }
 
 final arcanumApiProvider =
