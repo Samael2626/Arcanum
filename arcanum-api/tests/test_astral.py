@@ -68,3 +68,14 @@ def test_moon_phase(d, slug, wax, illum_min, illum_max):
     assert illum_min <= mi.illumination <= illum_max
     assert 0.0 <= mi.illumination <= 1.0
     assert mi.phase_name  # nombre en español no vacío
+
+
+def test_day_ruler_uses_planetary_day_not_utc_date():
+    """Regente del día = día planetario (amanecer local), no la fecha UTC.
+    A las 02:00 UTC en Bogotá aún es la noche del día anterior."""
+    from datetime import datetime, timezone, date
+    dt = datetime(2026, 6, 18, 2, 0, tzinfo=timezone.utc)
+    h = ph.get_planetary_hour(dt, LAT, LON)
+    derived = ph.CHALDEAN[(ph.CHALDEAN.index(h.planet) - h.hour_number) % 7]
+    assert derived == ph.get_day_ruler(date(2026, 6, 17))   # miércoles -> mercury
+    assert derived != ph.get_day_ruler(date(2026, 6, 18))   # NO jueves (jupiter)

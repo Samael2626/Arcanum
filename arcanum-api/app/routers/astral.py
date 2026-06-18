@@ -165,12 +165,15 @@ def today(
     """Agregado para la pantalla 'Hoy': hora planetaria + regente del día + luna."""
     now = datetime.now(timezone.utc)
     try:
-        hour = ph.get_planetary_hour(now, lat, lon).to_dict()
+        hour = ph.get_planetary_hour(now, lat, lon)
     except ph.AstralCalculationError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+    # Regente del día planetario (no del calendario UTC): se deriva de la hora
+    # vigente -> planet = CHALDEAN[(ruler_idx + hour_number) % 7].
+    day_ruler = ph.CHALDEAN[(ph.CHALDEAN.index(hour.planet) - hour.hour_number) % 7]
     return {
         "datetime": now.isoformat(),
-        "day_ruler": ph.get_day_ruler(now.date()),
-        "planetary_hour": hour,
+        "day_ruler": day_ruler,
+        "planetary_hour": hour.to_dict(),
         "moon": lc.get_moon_info(now).to_dict(),
     }
