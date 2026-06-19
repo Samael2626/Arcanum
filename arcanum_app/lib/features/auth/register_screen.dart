@@ -79,7 +79,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             birthLon: _lon.text.trim(),
             birthTimezone: _tz.text.trim(),
           ));
-      if (mounted) context.go('/cielos');
+      if (mounted) context.go('/onboarding');
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {

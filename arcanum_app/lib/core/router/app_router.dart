@@ -6,6 +6,7 @@ import '../../features/auth/register_screen.dart';
 import '../../features/cielos/cielos_screen.dart';
 import '../../features/grimorio/grimorio_screen.dart';
 import '../../features/hoy/hoy_screen.dart';
+import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/oraculo/oraculo_screen.dart';
 import 'app_shell.dart';
 
@@ -14,6 +15,7 @@ final appRouter = GoRouter(
   routes: [
     GoRoute(path: '/login', builder: (c, s) => const LoginScreen()),
     GoRoute(path: '/register', builder: (c, s) => const RegisterScreen()),
+    GoRoute(path: '/onboarding', builder: (c, s) => const OnboardingScreen()),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           AppShell(navigationShell: navigationShell),
