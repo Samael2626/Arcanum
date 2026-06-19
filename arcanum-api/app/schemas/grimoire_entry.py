@@ -57,3 +57,19 @@ class GrimoireEntryResponse(GrimoireEntryBase):
 
     class Config:
         from_attributes = True
+
+
+class GrimoireEntrySummary(BaseModel):
+    """Vista de lista: sin el contenido cifrado (título va en claro como índice)."""
+    id: UUID
+    entry_type: EntryType
+    title: str
+    moon_phase: Optional[str] = None
+    planetary_hour: Optional[str] = None
+    day_planet: Optional[str] = None
+    tags: Optional[List[str]] = []
+    entry_date: datetime
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

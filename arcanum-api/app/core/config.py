@@ -26,6 +26,16 @@ class Settings(BaseSettings):
     # CORS
     ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:8080"
 
+    # Oráculo IA (Anthropic / Claude)
+    ANTHROPIC_API_KEY: Optional[str] = None
+    CLAUDE_MODEL_FREE: str = "claude-haiku-4-5-20251001"
+    CLAUDE_MODEL_PREMIUM: str = "claude-sonnet-4-6"
+    CLAUDE_MAX_TOKENS: int = 1024
+    CLAUDE_TEMPERATURE: float = 0.7
+    CLAUDE_TIMEOUT_SECONDS: int = 30
+    ORACLE_FREE_DAILY: int = 3
+    ORACLE_PREMIUM_DAILY: int = 20
+
     class Config:
         env_file = ".env"
         case_sensitive = True

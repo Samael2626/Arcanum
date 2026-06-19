@@ -8,6 +8,8 @@ venv/
 *.log
 
 build/
+# El vault Obsidian (D:\Brain) NO va en el repo; si se copia aquí, se ignora.
+Brain/
 .dart_tool/
 .packages
 .flutter-plugins
