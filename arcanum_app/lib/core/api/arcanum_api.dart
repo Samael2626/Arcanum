@@ -27,9 +27,10 @@ class ArcanumApi {
   }
 
   /// Materia Arcana: catálogo (resumen). Filtros opcionales.
-  Future<List<Map<String, dynamic>>> materiaList({String? itemType, String? q}) async {
+  Future<List<Map<String, dynamic>>> materiaList({String? itemType, String? planet, String? q}) async {
     final res = await _dio.get('/materia', queryParameters: {
       if (itemType != null) 'item_type': itemType,
+      if (planet != null) 'planet': planet,
       if (q != null && q.isNotEmpty) 'q': q,
     });
     return (res.data as List).cast<Map<String, dynamic>>();
@@ -61,9 +62,18 @@ class ArcanumApi {
     await _dio.delete('/grimoire/$id');
   }
 
-  /// Tira de tarot (Arcanos Mayores). spread: 'single' | 'three'.
+  /// Tira de tarot. spread: 'three_card' | 'celtic_cross'. Requiere auth.
+  /// Devuelve la sesión guardada (cartas en data['cards_drawn']['cards']).
   Future<Map<String, dynamic>> tarotDraw(String spread) async {
-    final res = await _dio.get('/oracle/tarot/draw', queryParameters: {'spread': spread});
+    final res = await _dio.post('/oracle/tarot/draw', queryParameters: {'spread_type': spread});
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Consulta ritual con IA Claude. Requiere auth.
+  /// Devuelve OracleConversation (messages = lista de {role, content, timestamp}).
+  Future<Map<String, dynamic>> oracleIa({required String context, required String question}) async {
+    final res = await _dio.post('/oracle/ia',
+        queryParameters: {'context': context, 'question': question});
     return res.data as Map<String, dynamic>;
   }
 }

@@ -11,6 +11,7 @@ passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
 python-multipart==0.0.9
 redis==5.0.3
+anthropic==0.111.0
 astral==3.2
 # pyswisseph: en Windows requiere MS C++ Build Tools (compila desde fuente).
 # Si falla la autodetección de VS: activar vcvarsall x64 y exportar DISTUTILS_USE_SDK=1.
