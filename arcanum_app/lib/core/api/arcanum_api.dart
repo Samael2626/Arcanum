@@ -40,6 +40,26 @@ class ArcanumApi {
     final res = await _dio.get('/materia/$slug');
     return res.data as Map<String, dynamic>;
   }
+
+  // ── Grimorio (requiere auth; contenido cifrado en cliente) ──────────────────
+  Future<List<Map<String, dynamic>>> grimoireList() async {
+    final res = await _dio.get('/grimoire');
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> grimoireGet(String id) async {
+    final res = await _dio.get('/grimoire/$id');
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> grimoireCreate(Map<String, dynamic> body) async {
+    final res = await _dio.post('/grimoire', data: body);
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<void> grimoireDelete(String id) async {
+    await _dio.delete('/grimoire/$id');
+  }
 }
 
 final arcanumApiProvider =
