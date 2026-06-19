@@ -7,6 +7,7 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_card.dart';
+import '../../shared/widgets/info_dot.dart';
 import '../../shared/widgets/login_prompt.dart';
 import 'grimorio_detail.dart';
 import 'grimorio_editor.dart';
@@ -78,9 +79,15 @@ class _GrimorioScreenState extends ConsumerState<GrimorioScreen> {
                 children: [
                   Text('Grimorio', textAlign: TextAlign.center, style: ArcanumText.heading(34)),
                   const SizedBox(height: 6),
-                  Text('Tu libro cifrado',
-                      textAlign: TextAlign.center,
-                      style: ArcanumText.body(15, italic: true, color: ArcanumColors.ivoryMuted)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Tu libro cifrado',
+                          style: ArcanumText.body(15, italic: true, color: ArcanumColors.ivoryMuted)),
+                      const SizedBox(width: 8),
+                      const InfoDot('grimorio'),
+                    ],
+                  ),
                   const SizedBox(height: 24),
                   if (entries.isEmpty)
                     Padding(

@@ -6,6 +6,7 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_card.dart';
+import '../../shared/widgets/info_dot.dart';
 import '../../shared/widgets/moon_disc.dart';
 import '../../shared/widgets/pulsing_glyph.dart';
 
@@ -94,8 +95,17 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
       ),
       child: Column(
         children: [
-          Text('${planetGlyph[ruler] ?? ''}  Día de ${planetEs[ruler] ?? ruler}',
-              textAlign: TextAlign.center, style: ArcanumText.heading(24)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text('${planetGlyph[ruler] ?? ''}  Día de ${planetEs[ruler] ?? ruler}',
+                    textAlign: TextAlign.center, style: ArcanumText.heading(24)),
+              ),
+              const SizedBox(width: 8),
+              const InfoDot('dia_regente'),
+            ],
+          ),
           const SizedBox(height: 24),
           _planetaryHourCard(hour),
           const SizedBox(height: 18),
@@ -112,7 +122,7 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
     return ArcanumCard(
       child: Column(
         children: [
-          const SectionLabel('HORA PLANETARIA'),
+          const SectionLabel('HORA PLANETARIA', infoKey: 'hora_planetaria'),
           const SizedBox(height: 18),
           PulsingGlyph(planetGlyph[planet] ?? '?', size: 64),
           const SizedBox(height: 12),
@@ -120,6 +130,20 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
           const SizedBox(height: 10),
           Text('${isDay ? 'Hora diurna' : 'Hora nocturna'}  ·  termina en $mins min',
               style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted)),
+          if (planetFavors[planet] != null) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: ArcanumColors.gold.withValues(alpha: 0.07),
+                border: Border.all(color: ArcanumColors.gold.withValues(alpha: 0.25)),
+              ),
+              child: Text('Ahora favorece: ${planetFavors[planet]}',
+                  textAlign: TextAlign.center,
+                  style: ArcanumText.body(14, color: ArcanumColors.gold)),
+            ),
+          ],
         ],
       ),
     );
@@ -132,7 +156,7 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
     return ArcanumCard(
       child: Column(
         children: [
-          const SectionLabel('LA LUNA'),
+          const SectionLabel('LA LUNA', infoKey: 'luna'),
           const SizedBox(height: 16),
           MoonDisc(illumination: illum, waxing: waxing),
           const SizedBox(height: 14),

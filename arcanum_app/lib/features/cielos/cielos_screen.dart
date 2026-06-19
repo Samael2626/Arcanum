@@ -122,6 +122,8 @@ class _NatalViewState extends ConsumerState<_NatalView> {
         const SizedBox(height: 24),
         ArcanumCard(
           child: Column(children: [
+            const SectionLabel('ÁNGULOS', infoKey: 'ascendente'),
+            const SizedBox(height: 14),
             _angle('Ascendente', asc),
             const Divider(color: ArcanumColors.surfaceHigh, height: 28),
             _angle('Medio Cielo', mc),
@@ -130,7 +132,7 @@ class _NatalViewState extends ConsumerState<_NatalView> {
         const SizedBox(height: 18),
         ArcanumCard(
           child: Column(children: [
-            const SectionLabel('PLANETAS'),
+            const SectionLabel('PLANETAS', infoKey: 'carta_natal'),
             const SizedBox(height: 12),
             ...planets.map(_planetRow),
           ]),
@@ -138,7 +140,7 @@ class _NatalViewState extends ConsumerState<_NatalView> {
         const SizedBox(height: 18),
         ArcanumCard(
           child: Column(children: [
-            const SectionLabel('TRÁNSITOS DE HOY'),
+            const SectionLabel('TRÁNSITOS DE HOY', infoKey: 'transitos'),
             const SizedBox(height: 12),
             if (aspects.isEmpty)
               Text('Cielo en calma: sin aspectos exactos a tu carta ahora.',

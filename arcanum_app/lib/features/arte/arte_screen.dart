@@ -6,6 +6,7 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_card.dart';
+import '../../shared/widgets/info_dot.dart';
 
 const _typeEs = {
   'herb': 'Hierba', 'stone': 'Piedra', 'metal': 'Metal', 'incense': 'Incienso',
@@ -48,7 +49,9 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
           children: [
             const SizedBox(height: 32),
             const ArcanumHeader(subtitle: 'Materia Arcana'),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
+            const Center(child: InfoDot('materia')),
+            const SizedBox(height: 14),
             _filterBar(),
             const SizedBox(height: 8),
             Expanded(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
+import 'info_dot.dart';
 
 /// Tarjeta base con borde dorado tenue.
 class ArcanumCard extends StatelessWidget {
@@ -24,11 +25,21 @@ class ArcanumCard extends StatelessWidget {
 }
 
 /// Etiqueta dorada en versalitas (ej. "HORA PLANETARIA").
+/// Con `infoKey` añade un "?" que abre la explicación del concepto.
 class SectionLabel extends StatelessWidget {
   final String text;
-  const SectionLabel(this.text, {super.key});
+  final String? infoKey;
+  const SectionLabel(this.text, {super.key, this.infoKey});
   @override
-  Widget build(BuildContext context) => Text(text, style: ArcanumText.label());
+  Widget build(BuildContext context) {
+    final label = Text(text, style: ArcanumText.label());
+    if (infoKey == null) return label;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [label, const SizedBox(width: 8), InfoDot(infoKey!)],
+    );
+  }
 }
 
 /// Divisor ornamental con estrella central.

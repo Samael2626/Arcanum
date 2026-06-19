@@ -25,3 +25,14 @@ const aspectEs = {
   'conjunction': 'conjunción', 'sextile': 'sextil', 'square': 'cuadratura',
   'trine': 'trígono', 'opposition': 'oposición',
 };
+
+/// Qué favorece la energía de cada planeta (para la guía "Ahora favorece").
+const planetFavors = {
+  'sun': 'éxito, vitalidad, reconocimiento',
+  'moon': 'hogar, sueños, psiquismo, emociones',
+  'mercury': 'estudio, comercio, comunicación, viajes',
+  'venus': 'amor, belleza, arte, reconciliación',
+  'mars': 'fuerza, coraje, protección, deseo',
+  'jupiter': 'abundancia, expansión, suerte, justicia',
+  'saturn': 'límites, disciplina, destierro, estructura',
+};

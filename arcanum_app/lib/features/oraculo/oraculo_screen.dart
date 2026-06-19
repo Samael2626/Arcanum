@@ -6,6 +6,7 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
+import '../../shared/widgets/info_dot.dart';
 
 const _spreads = <(String, String)>[('single', 'Una carta'), ('three', 'Tres cartas')];
 
@@ -51,7 +52,9 @@ class _OraculoScreenState extends ConsumerState<OraculoScreen> {
           padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
           children: [
             const ArcanumHeader(subtitle: 'El oráculo'),
-            const SizedBox(height: 24),
+            const SizedBox(height: 10),
+            const Center(child: InfoDot('tarot')),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: _spreads.map((s) {
