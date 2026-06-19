@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/arcanum_api.dart';
+import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
@@ -32,16 +33,23 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
   late final ArcanumApi _api = ref.read(arcanumApiProvider);
   late Future<List<Map<String, dynamic>>> _future = _api.materiaList();
   String? _type;
+  String? _lastPlanet;
 
   void _select(String? type) {
     setState(() {
       _type = type;
-      _future = _api.materiaList(itemType: type);
+      _future = _api.materiaList(itemType: type, planet: ref.read(materiaPlanetProvider));
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    // Si Hoy nos pasó un planeta, pre-filtramos por sus correspondencias.
+    final planet = ref.watch(materiaPlanetProvider);
+    if (planet != _lastPlanet) {
+      _lastPlanet = planet;
+      _future = _api.materiaList(itemType: _type, planet: planet);
+    }
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 460),
@@ -53,6 +61,7 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
             const Center(child: InfoDot('materia')),
             const SizedBox(height: 14),
             _filterBar(),
+            if (planet != null) _planetBanner(planet),
             const SizedBox(height: 8),
             Expanded(
               child: FutureBuilder<List<Map<String, dynamic>>>(
@@ -111,6 +120,33 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _planetBanner(String planet) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: ArcanumColors.gold.withValues(alpha: 0.08),
+          border: Border.all(color: ArcanumColors.gold.withValues(alpha: 0.3)),
+        ),
+        child: Row(children: [
+          Text(planetGlyph[planet] ?? '',
+              style: const TextStyle(color: ArcanumColors.gold, fontSize: 18)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text('Para tu hora de ${planetEs[planet] ?? planet}',
+                style: ArcanumText.body(14, color: ArcanumColors.gold)),
+          ),
+          GestureDetector(
+            onTap: () => ref.read(materiaPlanetProvider.notifier).set(null),
+            child: const Icon(Icons.close, color: ArcanumColors.goldMuted, size: 18),
+          ),
+        ]),
       ),
     );
   }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/api/arcanum_api.dart';
+import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
@@ -144,8 +146,40 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
                   style: ArcanumText.body(14, color: ArcanumColors.gold)),
             ),
           ],
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: _ctaButton('⚗  Materiales', () {
+                  ref.read(materiaPlanetProvider.notifier).set(planet);
+                  context.go('/arte');
+                }),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _ctaButton('❦  Anotar', () {
+                  ref.read(grimoireComposeProvider.notifier).set(true);
+                  context.go('/grimorio');
+                }),
+              ),
+            ],
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _ctaButton(String label, VoidCallback onTap) {
+    return OutlinedButton(
+      onPressed: onTap,
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        side: BorderSide(color: ArcanumColors.gold.withValues(alpha: 0.5)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      child: Text(label,
+          textAlign: TextAlign.center,
+          style: ArcanumText.body(14, color: ArcanumColors.gold)),
     );
   }
 

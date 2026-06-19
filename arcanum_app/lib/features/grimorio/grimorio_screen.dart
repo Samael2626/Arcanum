@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/arcanum_api.dart';
 import '../../core/auth/auth_controller.dart';
+import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
@@ -54,6 +55,16 @@ class _GrimorioScreenState extends ConsumerState<GrimorioScreen> {
       );
     }
     _future ??= _api.grimoireList();
+
+    // Si llegamos desde "Anotar", abrimos el editor automáticamente.
+    if (ref.watch(grimoireComposeProvider)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && ref.read(grimoireComposeProvider)) {
+          ref.read(grimoireComposeProvider.notifier).set(false);
+          _newEntry();
+        }
+      });
+    }
 
     return Scaffold(
       backgroundColor: Colors.transparent,
