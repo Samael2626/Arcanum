@@ -60,6 +60,12 @@ class ArcanumApi {
   Future<void> grimoireDelete(String id) async {
     await _dio.delete('/grimoire/$id');
   }
+
+  /// Tira de tarot (Arcanos Mayores). spread: 'single' | 'three'.
+  Future<Map<String, dynamic>> tarotDraw(String spread) async {
+    final res = await _dio.get('/oracle/tarot/draw', queryParameters: {'spread': spread});
+    return res.data as Map<String, dynamic>;
+  }
 }
 
 final arcanumApiProvider =

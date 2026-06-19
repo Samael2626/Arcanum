@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.middleware import ProcessTimeMiddleware
 from app.core.exceptions import http_exception_handler
-from app.routers import auth, users, astral, materia, grimoire
+from app.routers import auth, users, astral, materia, grimoire, oracle
 
 # Importar todos los modelos para que Alembic los detecte
 from app.models import user, refresh_token, natal_chart, grimoire_entry  # noqa: F401
@@ -39,6 +39,7 @@ app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(astral.router, prefix="/astral", tags=["astral"])
 app.include_router(materia.router, prefix="/materia", tags=["materia"])
 app.include_router(grimoire.router, prefix="/grimoire", tags=["grimoire"])
+app.include_router(oracle.router, prefix="/oracle", tags=["oracle"])
 
 
 @app.get("/", tags=["root"])
