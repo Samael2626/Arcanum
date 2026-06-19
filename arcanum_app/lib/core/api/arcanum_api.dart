@@ -69,11 +69,11 @@ class ArcanumApi {
     return res.data as Map<String, dynamic>;
   }
 
-  /// Consulta ritual con IA Claude. Requiere auth.
+  /// Consulta ritual con IA Claude. Requiere auth. Solo envía la pregunta;
+  /// el contexto astral lo construye el servidor desde la carta natal cacheada.
   /// Devuelve OracleConversation (messages = lista de {role, content, timestamp}).
-  Future<Map<String, dynamic>> oracleIa({required String context, required String question}) async {
-    final res = await _dio.post('/oracle/ia',
-        queryParameters: {'context': context, 'question': question});
+  Future<Map<String, dynamic>> oracleIa({required String question}) async {
+    final res = await _dio.post('/oracle/ia', data: {'question': question});
     return res.data as Map<String, dynamic>;
   }
 }

@@ -5,7 +5,6 @@ import '../../core/api/arcanum_api.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
-import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
 import '../../shared/widgets/info_dot.dart';
@@ -96,20 +95,9 @@ class _OracleViewState extends ConsumerState<_OracleView> {
       _iaError = null;
       _iaReply = null;
     });
-    var context = '';
     try {
-      final today = await _api.today();
-      final moon = today['moon'] as Map<String, dynamic>;
-      final hour = today['planetary_hour'] as Map<String, dynamic>;
-      final dayRuler = today['day_ruler'] as String;
-      context =
-          'Luna: ${moon['phase_name']}. Hora planetaria: ${planetEs[hour['planet']] ?? hour['planet']}. '
-          'Día regente: ${planetEs[dayRuler] ?? dayRuler}.';
-    } catch (_) {
-      context = '';
-    }
-    try {
-      final res = await _api.oracleIa(context: context, question: q);
+      // El contexto astral lo arma el servidor desde tu carta natal.
+      final res = await _api.oracleIa(question: q);
       final messages = (res['messages'] as List).cast<Map<String, dynamic>>();
       final assistant = messages.lastWhere(
         (m) => m['role'] == 'assistant',
