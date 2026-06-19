@@ -1,20 +1,32 @@
 """Endpoints del Oráculo: tiradas de tarot y consulta ritual con IA Claude."""
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from uuid import UUID
 from datetime import datetime
 
+from app.core.config import settings
+from app.core.rate_limit import enforce_user_quota
 from app.db.session import get_db
 from app.core.security import get_current_user
 from app.models.user import User
 from app.models.divination_session import DivinationSession
+from app.models.natal_chart import NatalChart
 from app.models.oracle_conversation import OracleConversation
 from app.schemas.divination_session import DivinationSessionCreate, DivinationSessionResponse
 from app.schemas.oracle_conversation import OracleConversationCreate, OracleConversationResponse
 from app.services.tarot_service import draw_cards, get_tarot_deck
 from app.services.claude_service import get_claude_response
+from app.services.oracle_context import build_oracle_context
 
 router = APIRouter(tags=["oracle"])
+
+_ONE_DAY_SECONDS = 86400
+
+
+class OracleQuestion(BaseModel):
+    """Body de la consulta al oráculo IA. El cliente SOLO manda la pregunta."""
+    question: str = Field(..., min_length=1, max_length=500)
 
 # -------------------------------------------------
 # TAROT
@@ -59,27 +71,53 @@ def draw_tarot(
 # -------------------------------------------------
 @router.post("/ia", response_model=OracleConversationResponse)
 def ritual_ia(
-    context: str,  # Contexto astral (natal chart, fase lunar, hora planetaria, etc.)
-    question: str,  # Pregunta del usuario en texto plano (no cifrada)
-    tradition_context: str | None = None,
+    body: OracleQuestion,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
-    Consulta ritual usando Claude API con el contexto proporcionado.
-    Guarda la conversación en oracle_conversations.
+    Consulta ritual con Claude. El contexto astral se construye SERVER-SIDE a
+    partir de la carta natal cacheada del usuario (el cliente solo manda la
+    pregunta). Aplica cuota diaria por usuario según el tier y guarda la
+    conversación en oracle_conversations.
     """
-    claude_reply = get_claude_response(context=context, question=question)
+    is_premium = current_user.subscription_tier == "premium"
 
-    user_msg = {"role": "user", "content": question, "timestamp": datetime.utcnow().isoformat()}
-    assistant_msg = {"role": "assistant", "content": claude_reply, "timestamp": datetime.utcnow().isoformat()}
-    messages = [user_msg, assistant_msg]
+    # Cuota diaria por usuario (no por IP). Fail-open si Redis no está.
+    daily_limit = settings.ORACLE_PREMIUM_DAILY if is_premium else settings.ORACLE_FREE_DAILY
+    enforce_user_quota(
+        scope="oracle_ia",
+        identifier=str(current_user.id),
+        max_calls=daily_limit,
+        window_seconds=_ONE_DAY_SECONDS,
+        detail=(f"Has alcanzado tu cupo diario de consultas al oráculo "
+                f"({daily_limit}/día). Vuelve mañana o mejora tu plan."),
+    )
+
+    natal_chart = db.query(NatalChart).filter(NatalChart.user_id == current_user.id).first()
+    if natal_chart is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Calcula primero tu carta natal con POST /astral/natal-chart.",
+        )
+
+    context = build_oracle_context(current_user, natal_chart, db)
+    model = settings.CLAUDE_MODEL_PREMIUM if is_premium else settings.CLAUDE_MODEL_FREE
+    claude_reply = get_claude_response(context=context, question=body.question, model=model)
+
+    now = datetime.utcnow().isoformat()
+    user_msg = {"role": "user", "content": body.question, "timestamp": now}
+    assistant_msg = {"role": "assistant", "content": claude_reply, "timestamp": now}
+    # Snapshot del contexto astral usado (auditoría/historial), como mensaje
+    # 'system' que el frontend ya tolera (MessageRole.system existe en el schema).
+    context_msg = {"role": "system", "content": context, "timestamp": now}
+    messages = [context_msg, user_msg, assistant_msg]
 
     conv_in = OracleConversationCreate(
-        tradition_context=tradition_context,
+        tradition_context=current_user.preferred_tradition,
         messages=messages,
     )
-    conv = OracleConversation(user_id=current_user.id, **conv_in.model_dump())
+    conv = OracleConversation(user_id=current_user.id, **conv_in.model_dump(mode="json"))
     db.add(conv)
     db.commit()
     db.refresh(conv)

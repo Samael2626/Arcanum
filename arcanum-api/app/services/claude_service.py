@@ -1,51 +1,75 @@
-"""Servicio para interactuar con la API de Anthropic (Claude)."""
-import os
+"""Servicio para interactuar con la API de Anthropic (Claude).
+
+El modelo se recibe como parámetro (lo elige el router según el tier del
+usuario); aquí NO se hardcodea ningún modelo. El system prompt estático se
+envía como bloque con `cache_control` efímero para activar el prompt caching de
+Anthropic. Si falta ANTHROPIC_API_KEY, se mantiene el fallback de modo desarrollo.
+"""
+from __future__ import annotations
+
 from typing import Optional
+
 import anthropic
 
-# Inicializa el cliente de Anthropic usando la variable de entorno ANTHROPIC_API_KEY
-_api_key = os.getenv("ANTHROPIC_API_KEY")
-if not _api_key:
-    # En desarrollo, se puede advertir pero no fallar si la variable no está establecida.
-    # En producción, debería lanzarse una excepción o configurarse adecuadamente.
-    _client = None
-else:
-    _client = anthropic.Anthropic(api_key=_api_key)
+from app.core.config import settings
+from app.services.oracle_prompt import ORACLE_SYSTEM_PROMPT
 
-def get_claude_response(context: str, question: str) -> str:
+_FALLBACK = "[Modo desarrollo] Respuesta de Claude no disponible. Configure ANTHROPIC_API_KEY."
+
+# Cliente lazy: se crea una sola vez si hay API key.
+_client: Optional[anthropic.Anthropic] = None
+
+
+def _get_client() -> Optional[anthropic.Anthropic]:
+    global _client
+    if _client is not None:
+        return _client
+    if not settings.ANTHROPIC_API_KEY:
+        return None
+    _client = anthropic.Anthropic(
+        api_key=settings.ANTHROPIC_API_KEY,
+        timeout=settings.CLAUDE_TIMEOUT_SECONDS,
+    )
+    return _client
+
+
+def get_claude_response(context: str, question: str, model: str) -> str:
+    """Consulta al oráculo Claude con contexto astral y pregunta del usuario.
+
+    Args:
+        context: resumen astral server-side (build_oracle_context).
+        question: pregunta del consultante (texto plano, ya validada).
+        model: id del modelo Claude elegido por el router según el tier.
+
+    Returns:
+        Texto de la respuesta del oráculo, o un mensaje de fallback/error amable.
     """
-    Envía un contexto y una pregunta a Claude y devuelve la respuesta.
-    El contexto puede incluir natal chart, fase lunar, hora planetaria, etc.
-    """
-    if _client is None:
-        # Fallback para desarrollo sin API key configurada.
-        return "[Modo desarrollo] Respuesta de Claude no disponible. Configure ANTHROPIC_API_KEY."
-
-    # Construimos el prompt para el modelo.
-    prompt = f"""Contexto del usuario:
-{context}
-
-Pregunta del usuario:
-{question}
-
-Por favor, responde como un oráculo ritual, utilizando el contexto proporcionado para dar una respuesta significativa y acorde con la tradición esotérica."""
+    client = _get_client()
+    if client is None:
+        return _FALLBACK
 
     try:
-        message = _client.messages.create(
-            model="claude-3-5-sonnet-20241022",  # o el modelo más reciente disponible
-            max_tokens=1024,
-            temperature=0.7,
-            system="Eres un oráculo experto en tradiciones esotéricas, astrología y rituales. Tu respuesta debe ser profunda, simbólica y útil para el usuario.",
+        message = client.messages.create(
+            model=model,
+            max_tokens=settings.CLAUDE_MAX_TOKENS,
+            temperature=settings.CLAUDE_TEMPERATURE,
+            system=[
+                {
+                    "type": "text",
+                    "text": ORACLE_SYSTEM_PROMPT,
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ],
             messages=[
-                {"role": "user", "content": prompt}
-            ]
+                {
+                    "role": "user",
+                    "content": f"{context}\n\nPregunta: {question}",
+                }
+            ],
         )
-        # Extraemos el texto de la respuesta.
         if message.content and len(message.content) > 0:
-            # Asumimos que el primer bloque es texto.
-            return message.content[0].text if hasattr(message.content[0], 'text') else str(message.content[0])
-        else:
-            return "[Error] Claude no devolvió contenido."
-    except Exception as e:
-        # En caso de error, devolvemos un mensaje amigable.
-        return f"[Error al consultar a Claude: {str(e)}]"
+            block = message.content[0]
+            return block.text if hasattr(block, "text") else str(block)
+        return "[El oráculo guardó silencio. Intenta formular tu pregunta de nuevo.]"
+    except Exception as e:  # noqa: BLE001
+        return f"[El oráculo no pudo responder en este momento: {str(e)}]"
