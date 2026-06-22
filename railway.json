@@ -1,5 +1,5 @@
 {
   "build": {
-    "rootDirectory": "arcanum-api"
+    "builder": "dockerfile"
   }
 }
