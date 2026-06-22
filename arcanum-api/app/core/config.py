@@ -14,8 +14,9 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
-    # Database (Supabase directo - Supavisor bloqueado en Render/local)
-    DATABASE_URL: str = "postgresql://postgres:Peydun1226!@db.qqwendjedaokyrstbugv.supabase.co:5432/postgres?sslmode=require"
+    # Database — Default Supavisor (Supabase IPv4 pooler).
+    # render.yaml IaC reinyecta el mismo valor; env var gana sobre default.
+    DATABASE_URL: str = "postgresql://postgres:Peydun1226!@pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
 
     # Redis
     REDIS_HOST: str = "localhost"
