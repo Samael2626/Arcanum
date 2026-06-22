@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     REDIS_PASSWORD: Optional[str] = None
 
     # CORS
-    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:8080"
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:8080,https://arcanum-app-magick.web.app"
 
     # Admin (migraciones on-demand, endpoints admin)
     ADMIN_TOKEN: str = "change-me-in-production"
