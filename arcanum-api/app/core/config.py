@@ -14,8 +14,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
-    # Database (Supavisor bloqueado en Render, usar endpoint directo)
-    DATABASE_URL: str = "postgresql://postgres:Peydun1226!@db.qqwendjedaokyrstbugv.supabase.co:5432/postgres"
+    # Database (Supabase directo - Supavisor bloqueado en Render/local)
+    DATABASE_URL: str = "postgresql://postgres:Peydun1226!@db.qqwendjedaokyrstbugv.supabase.co:5432/postgres?sslmode=require"
 
     # Redis
     REDIS_HOST: str = "localhost"
