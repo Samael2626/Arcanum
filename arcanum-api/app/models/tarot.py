@@ -70,7 +70,7 @@ class TarotReading(Base):
     planetary_hour = Column(String(20), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    user = relationship("User", back_populates="tarot_readings")
+    # user = relationship("User", back_populates="tarot_readings")  # TODO: uncomment when User has tarot_readings relationship
 
 
 Index("ix_tarot_readings_user_created", TarotReading.__table__.columns.user_id,
