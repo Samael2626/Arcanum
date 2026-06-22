@@ -1,1 +1,1 @@
-web: cd arcanum-api && python -m alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+﻿web: cd arcanum-api && python -m alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
