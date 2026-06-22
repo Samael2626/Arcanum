@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../auth/token_storage.dart';
 
-const String kBaseUrl = 'http://localhost:8000';
+const String kBaseUrl = 'https://arcanum-1.onrender.com';
 
 /// Dio con interceptor que: adjunta el Bearer, y ante 401 refresca el token
 /// (rotación en `/auth/refresh`) y reintenta una vez. Si el refresh falla,
