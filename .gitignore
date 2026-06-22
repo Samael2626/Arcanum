@@ -15,3 +15,11 @@ Brain/
 .flutter-plugins
 .flutter-plugins-dependencies
 *.iml
+
+# Deploy config (safe to commit without secrets)
+!app.py
+!Dockerfile
+!Procfile
+!requirements.txt
+!railway.json
+!railway.toml
