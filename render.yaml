@@ -1,0 +1,33 @@
+version: 1
+
+services:
+  - type: web
+    name: arcanum-api
+    runtime: docker
+    dockerfilePath: ./render.dockerfile
+    region: oregon
+    plan: standard
+
+    # Variables de entorno
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: DATABASE_URL
+        fromService:
+          type: pgsql
+          property: connectionString
+
+    # Health check: si responde /health en 5s, está vivo
+    healthCheckPath: /health
+    healthCheckInterval: 30
+
+    # Auto-deploy en push a rama
+    branch: feat/onboarding-5-pasos
+    autoDeploy: true
+
+databases:
+  - name: arcanum-db
+    plan: standard
+    region: oregon
+    database: arcanum
+    user: arcanum_user
