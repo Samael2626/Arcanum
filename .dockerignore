@@ -1,0 +1,64 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv
+env
+.venv
+*.egg-info
+dist
+build
+.pytest_cache
+.coverage
+htmlcov
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Local development
+.env
+.env.local
+*.db
+*.sqlite
+.env.example
+
+# Node/Flutter (front-end)
+node_modules
+build/
+.dart_tool
+.flutter-plugins
+.packages
+
+# Testing
+tests/__pycache__
+tests/.pytest_cache
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Large files
+*.psd
+*.zip
+*.tar.gz
+
+# Logs
+*.log
+logs/
