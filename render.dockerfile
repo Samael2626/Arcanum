@@ -22,6 +22,6 @@ COPY . .
 # Puerto para Render
 EXPOSE 8000
 
-# Ejecutar solo Uvicorn (migraciones se hacen manual después)
+# Ejecutar migraciones + Uvicorn
 WORKDIR /app/arcanum-api
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "python -m alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
