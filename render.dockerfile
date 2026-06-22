@@ -1,4 +1,4 @@
-FROM python:3.14-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -22,5 +22,6 @@ COPY . .
 # Puerto para Render
 EXPOSE 8000
 
-# Uvicorn ASGI server para FastAPI
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Ejecutar migraciones + Uvicorn
+WORKDIR /app/arcanum-api
+CMD ["sh", "-c", "python -m alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
