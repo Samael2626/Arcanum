@@ -3,10 +3,10 @@ set -e
 
 echo "🧙 Arcanum API - Starting..."
 
-# Migrate database
-echo "📊 Running migrations..."
-cd /app/arcanum-api
-python -m alembic upgrade head
+# Migrate database (DISABLED - Render network isolation prevents DB connection)
+# echo "📊 Running migrations..."
+# cd /app/arcanum-api
+# python -m alembic upgrade head
 
 # Start server
 echo "🚀 Starting uvicorn server..."
