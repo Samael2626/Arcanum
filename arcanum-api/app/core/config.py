@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     # CORS
     ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:8080"
 
+    # Admin (migraciones on-demand, endpoints admin)
+    ADMIN_TOKEN: str = "change-me-in-production"
+
     # Oráculo IA (Groq — free tier, sin cuota diaria estricta)
     GROQ_API_KEY: Optional[str] = None
     CLAUDE_MODEL_FREE: str = "llama-3.3-70b-versatile"   # ignorado en servicio; free tier
