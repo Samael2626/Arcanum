@@ -76,6 +76,41 @@ class ArcanumApi {
     final res = await _dio.post('/oracle/ia', data: {'question': question});
     return res.data as Map<String, dynamic>;
   }
+
+  // ── Tarot (catálogo + sorteos) ──────────────────────────────────────────
+
+  /// Catálogo de cartas del Tarot. Filtros opcionales.
+  Future<List<Map<String, dynamic>>> tarotList({String? arcana, String? suit}) async {
+    final res = await _dio.get('/tarot/cards', queryParameters: {
+      if (arcana != null) 'arcana': arcana,
+      if (suit != null) 'suit': suit,
+    });
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  /// Detalle de una carta por slug.
+  Future<Map<String, dynamic>> tarotCard(String slug) async {
+    final res = await _dio.get('/tarot/cards/$slug');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Sorteo de una carta. Requiere auth.
+  /// La pregunta se envía en texto plano (Pydantic del lado servidor la trunca a 1000 chars).
+  Future<Map<String, dynamic>> tarotDrawOne({String? question}) async {
+    final res = await _dio.post('/tarot/draw-one', data: {
+      if (question != null) 'question': question,
+    });
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Tirada completa (one_card | three_card | celtic_cross). Requiere auth.
+  Future<Map<String, dynamic>> tarotSpread({required String spreadType, String? question}) async {
+    final res = await _dio.post('/tarot/spread', data: {
+      'spread_type': spreadType,
+      if (question != null) 'question': question,
+    });
+    return res.data as Map<String, dynamic>;
+  }
 }
 
 final arcanumApiProvider =

@@ -8,6 +8,7 @@ import '../../features/grimorio/grimorio_screen.dart';
 import '../../features/hoy/hoy_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/oraculo/oraculo_screen.dart';
+import '../../features/tarot/tarot_screen.dart';
 import 'app_shell.dart';
 
 final appRouter = GoRouter(
@@ -33,7 +34,11 @@ final appRouter = GoRouter(
           GoRoute(path: '/arte', builder: (c, s) => const ArteScreen()),
         ]),
         StatefulShellBranch(routes: [
-          GoRoute(path: '/oraculo', builder: (c, s) => const OraculoScreen()),
+          GoRoute(path: '/oraculo',
+              builder: (c, s) => const OraculoScreen(),
+              routes: [
+                GoRoute(path: 'tarot', builder: (c, s) => const TarotScreen()),
+              ]),
         ]),
       ],
     ),

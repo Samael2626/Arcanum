@@ -1,13 +1,14 @@
 {
-    "name": "arcanum_app",
-    "short_name": "arcanum_app",
-    "start_url": ".",
+    "name": "ARCANUM",
+    "short_name": "ARCANUM",
+    "start_url": "/",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0a0a0f",
+    "theme_color": "#0a0a0f",
+    "description": "Tu práctica mágica diaria",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
+    "categories": ["lifestyle", "health"],
     "icons": [
         {
             "src": "icons/Icon-192.png",

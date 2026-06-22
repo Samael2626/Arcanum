@@ -33,3 +33,4 @@ class User(Base):
     grimoire_entries = relationship("GrimoireEntry", back_populates="user", cascade="all, delete-orphan")
     divination_sessions = relationship("DivinationSession", back_populates="user", cascade="all, delete-orphan")
     oracle_conversations = relationship("OracleConversation", back_populates="user", cascade="all, delete-orphan")
+    tarot_readings = relationship("TarotReading", back_populates="user", cascade="all, delete-orphan")
