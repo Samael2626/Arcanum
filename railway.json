@@ -1,6 +1,0 @@
-﻿{
-    "build":  {
-                  "dockerfile":  "./render.dockerfile",
-                  "builder":  "dockerfile"
-              }
-}

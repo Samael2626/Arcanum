@@ -1,19 +1,27 @@
-﻿FROM python:3.12-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copy requirements and install dependencies
+# Instalar dependencias de compilación ANTES de pip install
+# Necesario para pyswisseph, psycopg2-binary, y otras extensiones C
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    python3-dev \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copiar requirements
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt && rm -rf /root/.cache
 
-# Copy app code
-COPY arcanum-api/ ./arcanum-api/
-COPY start.sh .
-RUN chmod +x start.sh
+# Instalar Python deps (compila pyswisseph aquí en FS writable)
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs').read()" || exit 1
+# Copiar aplicación
+COPY . .
 
-# Start
-CMD ["./start.sh"]
+# Puerto para Railway
+EXPOSE 8000
+
+# Solo Uvicorn
+WORKDIR /app/arcanum-api
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
