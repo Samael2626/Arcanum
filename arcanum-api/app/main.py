@@ -1,9 +1,11 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.middleware import ProcessTimeMiddleware
 from app.core.exceptions import http_exception_handler
+from app.db.seed import run_seeds
 from app.routers import auth, users, astral, materia, grimoire, oracle, tarot, admin
 
 # Importar todos los modelos para que Alembic los detecte
@@ -11,12 +13,21 @@ from app.models import user, refresh_token, natal_chart, grimoire_entry  # noqa:
 from app.models import tradition, materia_item, divination_session, oracle_conversation  # noqa: F401
 from app.models import tarot as tarot_models  # noqa: F401
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Siembra datos de referencia (materia, tarot) al arrancar. Idempotente.
+    run_seeds()
+    yield
+
+
 app = FastAPI(
     title=settings.APP_NAME,
     description="Backend para la aplicación Arcanum — astrología y esoterismo",
     version=settings.APP_VERSION,
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 # CORS
