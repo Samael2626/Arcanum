@@ -2,37 +2,21 @@ import 'package:dio/dio.dart';
 
 import 'token_storage.dart';
 
-/// Datos de registro (incluye natales para poder calcular la carta).
+/// Datos de registro: mínimo viable (email + password).
+/// Los datos natales se capturan en el onboarding post-registro y se
+/// persisten vía PUT /users/me, evitando pedir lo mismo dos veces.
 class RegisterData {
   final String email;
   final String password;
-  final String? displayName;
-  final String? birthDate; // ISO: 2000-06-15T00:00:00
-  final String? birthTime; // ISO: 2000-06-15T14:30:00
-  final String? birthLat;
-  final String? birthLon;
-  final String? birthTimezone;
 
   const RegisterData({
     required this.email,
     required this.password,
-    this.displayName,
-    this.birthDate,
-    this.birthTime,
-    this.birthLat,
-    this.birthLon,
-    this.birthTimezone,
   });
 
   Map<String, dynamic> toJson() => {
         'email': email,
         'password': password,
-        if (displayName != null) 'display_name': displayName,
-        if (birthDate != null) 'birth_date': birthDate,
-        if (birthTime != null) 'birth_time': birthTime,
-        if (birthLat != null) 'birth_lat': birthLat,
-        if (birthLon != null) 'birth_lon': birthLon,
-        if (birthTimezone != null) 'birth_timezone': birthTimezone,
       };
 }
 
@@ -79,6 +63,16 @@ class AuthRepository {
   Future<Map<String, dynamic>> me() async {
     final res = await _dio.get('/users/me');
     return res.data as Map<String, dynamic>;
+  }
+
+  /// Actualiza el perfil del usuario autenticado (datos del onboarding).
+  Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
+    try {
+      final res = await _dio.put('/users/me', data: data);
+      return res.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw AuthException(_detail(e) ?? 'No se pudo guardar el perfil');
+    }
   }
 
   Future<void> logout() async {

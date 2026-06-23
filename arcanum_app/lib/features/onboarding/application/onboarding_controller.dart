@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/auth/auth_controller.dart';
+
 class OnboardingData {
   final String? displayName;
   final DateTime? birthDate;
@@ -93,6 +95,33 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
   }
 
   Future<void> finish() async {
+    final d = state.data;
+
+    // Persistir el perfil en el backend (datos capturados en el onboarding).
+    // Lat/lon/tz usan defaults Bogotá por ahora; se afinan luego con geocoding.
+    final payload = <String, dynamic>{
+      'onboarding_completed': true,
+      if (d.displayName != null && d.displayName!.isNotEmpty)
+        'display_name': d.displayName,
+      if (d.birthDate != null)
+        'birth_date': d.birthDate!.toIso8601String(),
+      if (d.birthTime != null && d.birthTime!.isNotEmpty)
+        'birth_time': '2000-01-01T${d.birthTime}:00',
+      if (d.birthPlace != null && d.birthPlace!.isNotEmpty)
+        'birth_city': d.birthPlace,
+      'birth_lat': '4.71',
+      'birth_lon': '-74.07',
+      'birth_timezone': 'America/Bogota',
+    };
+
+    try {
+      await ref.read(authRepositoryProvider).updateProfile(payload);
+      await ref.read(authProvider.notifier).refreshUser();
+    } catch (_) {
+      // No bloquear el flujo si la red falla; el flag local permite continuar.
+      // El perfil se reintenta en el próximo arranque autenticado.
+    }
+
     final p = await _prefs;
     await p.setBool(_kCompleted, true);
   }

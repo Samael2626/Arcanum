@@ -1,9 +1,7 @@
-const CACHE_NAME = 'arcanum-v1';
+// Bump CACHE_NAME en cada deploy crítico para forzar limpieza del cache viejo.
+const CACHE_NAME = 'arcanum-v2';
+
 const CORE_ASSETS = [
-  '/',
-  '/index.html',
-  '/flutter_bootstrap.js',
-  '/main.dart.js',
   '/manifest.json',
   '/favicon.png',
   '/icons/Icon-192.png',
@@ -12,11 +10,21 @@ const CORE_ASSETS = [
   '/icons/Icon-maskable-512.png'
 ];
 
+// Assets que SIEMPRE deben venir frescos de la red (contienen la URL del backend).
+// Si se cachean, un cambio de backend (Render→Railway) nunca llega al usuario.
+const NETWORK_FIRST = [
+  '/',
+  '/index.html',
+  '/flutter_bootstrap.js',
+  '/main.dart.js',
+  '/flutter.js',
+  '/flutter_service_worker.js'
+];
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(CORE_ASSETS).catch((err) => {
-        // Non-fatal: algunos assets pueden no existir aún en install
         console.warn('[ARCANUM SW] cache.addAll parcial:', err);
       });
     })
@@ -38,37 +46,45 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Solo intercepta GET; deja pasar las llamadas al backend API
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
 
-  // No cachear llamadas al backend (distintos origins o path /api/)
-  if (url.pathname.startsWith('/api/') || url.port === '8000') return;
+  // No interceptar llamadas al backend (otro origin).
+  if (url.origin !== self.location.origin) return;
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
+  const isNetworkFirst =
+    NETWORK_FIRST.includes(url.pathname) ||
+    event.request.destination === 'document' ||
+    url.pathname.endsWith('.js');
 
-      return fetch(event.request)
+  if (isNetworkFirst) {
+    // Network-first: intenta red, cae a cache si offline.
+    event.respondWith(
+      fetch(event.request)
         .then((response) => {
-          // Cachear solo respuestas válidas de mismo origen
-          if (
-            response.ok &&
-            response.type === 'basic' &&
-            url.origin === self.location.origin
-          ) {
+          if (response.ok) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }
           return response;
         })
-        .catch(() => {
-          // Offline fallback: devuelve index.html para rutas de navegación
-          if (event.request.destination === 'document') {
-            return caches.match('/index.html');
-          }
-        });
+        .catch(() => caches.match(event.request).then((c) => c || caches.match('/index.html')))
+    );
+    return;
+  }
+
+  // Cache-first para assets estáticos (iconos, fuentes).
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(event.request).then((response) => {
+        if (response.ok && response.type === 'basic') {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      });
     })
   );
 });

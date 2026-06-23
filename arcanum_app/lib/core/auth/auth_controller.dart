@@ -54,6 +54,13 @@ class AuthNotifier extends Notifier<AuthState> {
     await login(data.email, data.password);
   }
 
+  /// Recarga el perfil desde el servidor (p.ej. tras el onboarding).
+  Future<void> refreshUser() async {
+    if (state.isAuthenticated) {
+      state = AuthState(AuthStatus.authenticated, await _repo.me());
+    }
+  }
+
   Future<void> logout() async {
     await _repo.logout();
     state = const AuthState(AuthStatus.unauthenticated);
