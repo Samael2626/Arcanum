@@ -8,8 +8,18 @@ venv/
 *.log
 
 build/
+# El vault Obsidian (D:\Brain) NO va en el repo; si se copia aquí, se ignora.
+Brain/
 .dart_tool/
 .packages
 .flutter-plugins
 .flutter-plugins-dependencies
 *.iml
+
+# Deploy config (safe to commit without secrets)
+!app.py
+!Dockerfile
+!Procfile
+!requirements.txt
+!railway.json
+!railway.toml

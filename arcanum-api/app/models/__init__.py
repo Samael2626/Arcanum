@@ -6,6 +6,7 @@ from app.models.tradition import Tradition
 from app.models.materia_item import MateriaItem
 from app.models.divination_session import DivinationSession
 from app.models.oracle_conversation import OracleConversation
+from app.models.tarot import TarotCard, TarotReading
 
 __all__ = [
     "User",
@@ -16,4 +17,6 @@ __all__ = [
     "MateriaItem",
     "DivinationSession",
     "OracleConversation",
+    "TarotCard",
+    "TarotReading",
 ]

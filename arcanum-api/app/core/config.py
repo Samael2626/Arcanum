@@ -14,8 +14,9 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
-    # Database
-    DATABASE_URL: str = "postgresql://user:password@localhost:5432/arcanum_db"
+    # Database — Default Supavisor (Supabase IPv4 pooler).
+    # render.yaml IaC reinyecta el mismo valor; env var gana sobre default.
+    DATABASE_URL: str = "postgresql://postgres:Peydun1226!@pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
 
     # Redis
     REDIS_HOST: str = "localhost"
@@ -24,11 +25,29 @@ class Settings(BaseSettings):
     REDIS_PASSWORD: Optional[str] = None
 
     # CORS
-    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:8080"
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:8080,https://arcanum-app-magick.web.app"
+
+    # Admin (migraciones on-demand, endpoints admin)
+    ADMIN_TOKEN: str = "change-me-in-production"
+
+    # Oráculo IA (Groq — free tier, sin cuota diaria estricta)
+    GROQ_API_KEY: Optional[str] = None
+    CLAUDE_MODEL_FREE: str = "llama-3.3-70b-versatile"   # ignorado en servicio; free tier
+    CLAUDE_MODEL_PREMIUM: str = "llama-3.3-70b-versatile"  # ignorado en servicio; free tier
+    CLAUDE_MAX_TOKENS: int = 1024
+    CLAUDE_TEMPERATURE: float = 0.7
+    CLAUDE_TIMEOUT_SECONDS: int = 30
+    ORACLE_FREE_DAILY: int = 3
+    ORACLE_PREMIUM_DAILY: int = 20
+
+    # Tarot
+    TAROT_FREE_DAILY: int = 5
+    TAROT_PREMIUM_DAILY: int = 50
 
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"  # tolera vars de entorno viejas (ej. ANTHROPIC_API_KEY)
 
 
 settings = Settings()
