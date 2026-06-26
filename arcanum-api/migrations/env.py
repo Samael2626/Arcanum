@@ -51,7 +51,11 @@ def run_migrations_offline():
     """
     url = get_url()
     context.configure(
-        url=url, target_metadata=target_metadata, literal_binds=True, dialect_opts={"paramstyle": "named"}
+        url=url, 
+        target_metadata=target_metadata, 
+        literal_binds=True, 
+        dialect_opts={"paramstyle": "named"},
+        render_as_batch=True  # Required for SQLAlchemy 2.0+
     )
 
     with context.begin_transaction():
@@ -75,7 +79,9 @@ def run_migrations_online():
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection, 
+            target_metadata=target_metadata,
+            render_as_batch=True  # Required for SQLAlchemy 2.0+
         )
 
         with context.begin_transaction():
