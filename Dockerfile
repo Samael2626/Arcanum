@@ -22,6 +22,6 @@ COPY . .
 # Puerto para Railway
 EXPOSE 8000
 
-# Solo Uvicorn
+# Migraciones + Uvicorn
 WORKDIR /app/arcanum-api
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000

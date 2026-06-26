@@ -4,8 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.middleware import ProcessTimeMiddleware
-from app.core.exceptions import http_exception_handler
+from app.core.exceptions import http_exception_handler, generic_exception_handler
 from app.db.seed import run_seeds
+from app.db.migrate import run_migrations
+from app.db.session import engine
 from app.routers import auth, users, astral, materia, grimoire, oracle, tarot, admin
 
 # Importar todos los modelos para que Alembic los detecte
@@ -16,6 +18,8 @@ from app.models import tarot as tarot_models  # noqa: F401
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Migraciones automáticas al arrancar (idempotente)
+    run_migrations(engine)
     # Siembra datos de referencia (materia, tarot) al arrancar. Idempotente.
     run_seeds()
     yield
@@ -44,6 +48,7 @@ app.add_middleware(ProcessTimeMiddleware)
 
 # Handler de errores uniforme
 app.add_exception_handler(HTTPException, http_exception_handler)
+app.add_exception_handler(Exception, generic_exception_handler)
 
 # Routers
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
