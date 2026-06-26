@@ -17,6 +17,10 @@ depends_on = None
 
 
 def upgrade():
+    # NOTE: checkfirst=True is used on all create_table/create_index calls to handle
+    # the case where tables already exist (e.g., DB was pre-populated before Alembic
+    # took control). This is equivalent to CREATE TABLE IF NOT EXISTS.
+
     # 1. Table users
     op.create_table(
         'users',
@@ -38,9 +42,10 @@ def upgrade():
         sa.Column('onboarding_completed', sa.Boolean(), server_default=sa.text('false'), nullable=False),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.PrimaryKeyConstraint('id')
+        sa.PrimaryKeyConstraint('id'),
+        checkfirst=True
     )
-    op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
+    op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True, if_not_exists=True)
 
     # 2. Table refresh_tokens
     op.create_table(
@@ -51,10 +56,11 @@ def upgrade():
         sa.Column('expires_at', sa.DateTime(timezone=True), nullable=False),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
-        sa.PrimaryKeyConstraint('id')
+        sa.PrimaryKeyConstraint('id'),
+        checkfirst=True
     )
-    op.create_index(op.f('ix_refresh_tokens_token_hash'), 'refresh_tokens', ['token_hash'], unique=True)
-    op.create_index(op.f('ix_refresh_tokens_user_id'), 'refresh_tokens', ['user_id'], unique=False)
+    op.create_index(op.f('ix_refresh_tokens_token_hash'), 'refresh_tokens', ['token_hash'], unique=True, if_not_exists=True)
+    op.create_index(op.f('ix_refresh_tokens_user_id'), 'refresh_tokens', ['user_id'], unique=False, if_not_exists=True)
 
     # 3. Table natal_charts
     op.create_table(
@@ -66,9 +72,10 @@ def upgrade():
         sa.Column('calculated_at', sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('user_id')
+        sa.UniqueConstraint('user_id'),
+        checkfirst=True
     )
-    op.create_index(op.f('ix_natal_charts_user_id'), 'natal_charts', ['user_id'], unique=True)
+    op.create_index(op.f('ix_natal_charts_user_id'), 'natal_charts', ['user_id'], unique=True, if_not_exists=True)
 
     # 4. Table grimoire_entries
     op.create_table(
@@ -89,9 +96,10 @@ def upgrade():
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
-        sa.PrimaryKeyConstraint('id')
+        sa.PrimaryKeyConstraint('id'),
+        checkfirst=True
     )
-    op.create_index(op.f('ix_grimoire_entries_user_id'), 'grimoire_entries', ['user_id'], unique=False)
+    op.create_index(op.f('ix_grimoire_entries_user_id'), 'grimoire_entries', ['user_id'], unique=False, if_not_exists=True)
 
     # 5. Table traditions
     op.create_table(
@@ -105,9 +113,10 @@ def upgrade():
         sa.Column('is_premium', sa.Boolean(), server_default=sa.text('true'), nullable=False),
         sa.Column('language', sa.String(length=5), server_default=sa.text("'es'"), nullable=False),
         sa.Column('display_order', sa.Integer(), server_default=sa.text('0'), nullable=False),
-        sa.PrimaryKeyConstraint('id')
+        sa.PrimaryKeyConstraint('id'),
+        checkfirst=True
     )
-    op.create_index(op.f('ix_traditions_slug'), 'traditions', ['slug'], unique=True)
+    op.create_index(op.f('ix_traditions_slug'), 'traditions', ['slug'], unique=True, if_not_exists=True)
 
     # 6. Table materia_items
     op.create_table(
@@ -121,9 +130,10 @@ def upgrade():
         sa.Column('element', sa.String(length=20), nullable=True),
         sa.Column('properties', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column('language', sa.String(length=5), server_default=sa.text("'es'"), nullable=False),
-        sa.PrimaryKeyConstraint('id')
+        sa.PrimaryKeyConstraint('id'),
+        checkfirst=True
     )
-    op.create_index(op.f('ix_materia_items_slug'), 'materia_items', ['slug'], unique=True)
+    op.create_index(op.f('ix_materia_items_slug'), 'materia_items', ['slug'], unique=True, if_not_exists=True)
 
     # 7. Table divination_sessions
     op.create_table(
@@ -139,9 +149,10 @@ def upgrade():
         sa.Column('planetary_hour', sa.String(length=20), nullable=True),
         sa.Column('session_date', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
-        sa.PrimaryKeyConstraint('id')
+        sa.PrimaryKeyConstraint('id'),
+        checkfirst=True
     )
-    op.create_index(op.f('ix_divination_sessions_user_id'), 'divination_sessions', ['user_id'], unique=False)
+    op.create_index(op.f('ix_divination_sessions_user_id'), 'divination_sessions', ['user_id'], unique=False, if_not_exists=True)
 
     # 8. Table oracle_conversations
     op.create_table(
@@ -153,9 +164,10 @@ def upgrade():
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
-        sa.PrimaryKeyConstraint('id')
+        sa.PrimaryKeyConstraint('id'),
+        checkfirst=True
     )
-    op.create_index(op.f('ix_oracle_conversations_user_id'), 'oracle_conversations', ['user_id'], unique=False)
+    op.create_index(op.f('ix_oracle_conversations_user_id'), 'oracle_conversations', ['user_id'], unique=False, if_not_exists=True)
 
 
 def downgrade():
