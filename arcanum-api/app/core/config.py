@@ -29,6 +29,7 @@ class Settings(BaseSettings):
 
     # Admin (migraciones on-demand, endpoints admin)
     ADMIN_TOKEN: str = "change-me-in-production"
+    RUN_STARTUP_MIGRATIONS: bool = False
 
     # Oráculo IA (Groq — free tier, sin cuota diaria estricta)
     GROQ_API_KEY: Optional[str] = None

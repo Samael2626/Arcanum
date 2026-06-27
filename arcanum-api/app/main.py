@@ -19,7 +19,8 @@ from app.models import tarot as tarot_models  # noqa: F401
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Migraciones automáticas al arrancar (idempotente)
-    run_migrations(engine)
+    if settings.RUN_STARTUP_MIGRATIONS:
+        run_migrations(engine)
     # Siembra datos de referencia (materia, tarot) al arrancar. Idempotente.
     run_seeds()
     yield
