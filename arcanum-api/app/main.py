@@ -22,7 +22,8 @@ async def lifespan(app: FastAPI):
     if settings.RUN_STARTUP_MIGRATIONS:
         run_migrations(engine)
     # Siembra datos de referencia (materia, tarot) al arrancar. Idempotente.
-    run_seeds()
+    if settings.RUN_STARTUP_SEEDS:
+        run_seeds()
     yield
 
 
