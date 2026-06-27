@@ -8,7 +8,7 @@ class MateriaItem(Base):
 
     id = Column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     slug = Column(String(100), unique=True, nullable=False, index=True)
-    item_type = Column(String(30), nullable=False)  # herb|stone|incense|metal|oil|element|color
+    item_type = Column(String(30), nullable=False)
     name = Column(String(150), nullable=False)
     aliases = Column(ARRAY(String), server_default=text("'{}'"))
     planet = Column(String(20), nullable=True)

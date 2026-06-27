@@ -13,6 +13,10 @@ class ItemType(str, Enum):
     oil = "oil"
     element = "element"
     color = "color"
+    resin = "resin"
+    planet = "planet"
+    sign = "sign"
+    angel = "angel"
 
 
 class MateriaItemBase(BaseModel):
