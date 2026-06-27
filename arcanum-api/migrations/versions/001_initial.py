@@ -17,10 +17,6 @@ depends_on = None
 
 
 def upgrade():
-    # NOTE: checkfirst=True is used on all create_table/create_index calls to handle
-    # the case where tables already exist (e.g., DB was pre-populated before Alembic
-    # took control). This is equivalent to CREATE TABLE IF NOT EXISTS.
-
     # 1. Table users
     op.create_table(
         'users',
@@ -70,8 +66,7 @@ def upgrade():
         sa.Column('calculated_at', sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('user_id'),
-        checkfirst=True
+        sa.UniqueConstraint('user_id')
     )
     op.create_index(op.f('ix_natal_charts_user_id'), 'natal_charts', ['user_id'], unique=True, if_not_exists=True)
 
