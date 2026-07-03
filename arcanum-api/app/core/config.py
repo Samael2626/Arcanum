@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     CLAUDE_MODEL_FREE: str = "llama-3.3-70b-versatile"   # ignorado en servicio; free tier
     CLAUDE_MODEL_PREMIUM: str = "llama-3.3-70b-versatile"  # ignorado en servicio; free tier
     CLAUDE_MAX_TOKENS: int = 1024
-    CLAUDE_TEMPERATURE: float = 0.7
+    CLAUDE_TEMPERATURE: float = 0.6
     CLAUDE_TIMEOUT_SECONDS: int = 30
     ORACLE_FREE_DAILY: int = 3
     ORACLE_PREMIUM_DAILY: int = 20
@@ -45,6 +45,11 @@ class Settings(BaseSettings):
     # Tarot
     TAROT_FREE_DAILY: int = 5
     TAROT_PREMIUM_DAILY: int = 50
+
+    # Geocoding (Nominatim + timezonefinder) — resuelve lugar de nacimiento
+    # real en el onboarding, reemplaza el default hardcodeado a Bogotá.
+    NOMINATIM_USER_AGENT: str = "ARCANUM-app/1.0 (contacto: soporte@arcanum-app.com)"
+    GEOCODING_MIN_INTERVAL_SECONDS: float = 1.0
 
     class Config:
         env_file = ".env"

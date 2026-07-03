@@ -13,4 +13,4 @@ if (-not (Test-Path $flutter)) {
 Set-Location $appDir
 $msg = "[flutter] " + $appDir
 Write-Host $msg -ForegroundColor Cyan
-& $flutter run -d chrome
+& $flutter run -d chrome -t lib/main.dart --web-port 3000

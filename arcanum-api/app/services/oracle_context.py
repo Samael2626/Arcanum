@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 
 from app.models.natal_chart import NatalChart
 from app.models.user import User
+from app.models.divination_session import DivinationSession
 from app.services import lunar_calendar as lc
 from app.services import natal_chart_engine as nce
 from app.services import planetary_hours as ph
@@ -124,4 +125,74 @@ def build_oracle_context(user: User, natal_chart: NatalChart, db) -> str:
     except Exception:
         lineas.append("Hora planetaria: no disponible.")
 
+    return "\n".join(lineas)
+
+
+def _correspondencias(c: dict) -> str:
+    """Correspondencias esotéricas compactas de una carta ya sorteada.
+
+    `draw_cards` ya horneó arcana/suit/element/decan/astro_correspondence/
+    hebrew_letter/zodiac en cada carta (cards_drawn). Aquí solo componemos lo
+    que esté PRESENTE en formato denso "campo: valor · campo: valor"; degrada
+    con gracia si falta algo (deck viejo o Mayores sin datos cabalísticos aún).
+    """
+    partes: list[str] = []
+    if c.get("arcana") == "major":
+        partes.append("Arcano Mayor")
+    element = c.get("element")
+    if element:
+        partes.append(f"elemento {element}")
+    suit = c.get("suit")
+    if suit:
+        partes.append(f"palo {suit}")
+    decan = c.get("decan")
+    if decan:
+        partes.append(f"decanato {decan}")
+    zodiac = c.get("zodiac")
+    if zodiac:
+        partes.append(f"zodiaco {zodiac}")
+    astro = c.get("astro_correspondence")
+    if astro:
+        partes.append(f"astro {astro}")
+    hebrew = c.get("hebrew_letter")
+    if hebrew:
+        partes.append(f"letra {hebrew}")
+    return " · ".join(partes)
+
+
+def build_tarot_context(session: DivinationSession) -> str:
+    """Render compacto de una tirada de tarot guardada, organizada POR POSICIÓN.
+
+    La sesión llega ya cargada y validada desde el router (pertenece al usuario
+    y system=="tarot"). Aquí NO se consulta la BD ni se adivina nada: se lee la
+    posición, orientación, significado y correspondencias que `draw_cards` ya
+    horneó en cada carta al momento de tirar (cards_drawn = {"cards": [...]}).
+    Incluir las correspondencias (elemento, decanato/astro, palo, letra hebrea)
+    es lo que le permite al oráculo anclar la lectura en la carta CONCRETA en
+    vez de responder con significado de manual.
+
+    Returns:
+        Bloque legible de la tirada para el prompt, o "" si no hay cartas.
+    """
+    data = session.cards_drawn or {}
+    cards = data.get("cards") or []
+    if not cards:
+        return ""
+
+    spread = session.spread_type or "tirada"
+    lineas: list[str] = [f"TIRADA DE TAROT DEL CONSULTANTE (spread: {spread})"]
+    for c in cards:
+        pos = c.get("position") or "Carta"
+        # Nombre ES limpio (name_es ya viene derivado sin el descriptor
+        # bilingüe); fallback a name/slug para compat con sesiones viejas.
+        name = c.get("name_es") or c.get("name") or c.get("slug") or "?"
+        orient = "derecha" if c.get("drawn_upright", True) else "invertida"
+        meaning = (c.get("meaning") or "").strip()
+        corr = _correspondencias(c)
+        linea = f"- {pos}: {name} ({orient})"
+        if corr:
+            linea += f" [{corr}]"
+        if meaning:
+            linea += f" — {meaning}"
+        lineas.append(linea)
     return "\n".join(lineas)

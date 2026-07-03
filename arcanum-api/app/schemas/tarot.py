@@ -45,6 +45,7 @@ class TarotCardInDeck(BaseModel):
     decan: Optional[str] = None
     zodiac: Optional[str] = None
     title_book_t: Optional[str] = None
+    name_es: Optional[str] = None             # ADITIVO: nombre ES limpio, sin bilingüe
     position: Optional[str] = None            # Pasado/Presente/Futuro, etc.
     reversed: Optional[bool] = False
     meaning: str

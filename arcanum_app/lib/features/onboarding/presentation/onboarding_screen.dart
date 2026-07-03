@@ -22,7 +22,21 @@ class OnboardingScreen extends ConsumerWidget {
       // last step finishes + navigates, others just advance.
       final next = state.isLast
           ? () async {
-              await notifier.finish();
+              try {
+                await notifier.finish();
+              } catch (_) {
+                // Defensa última: PlaceStep ya exige resolver+confirmar el
+                // lugar antes de llegar aquí. Si igual falla, no navegamos
+                // con datos a medias — el usuario se queda en el paso actual.
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text(
+                        'Falta confirmar tu lugar de nacimiento. Volvé a intentarlo.'),
+                    backgroundColor: ArcanumColors.error,
+                  ));
+                }
+                return;
+              }
               if (context.mounted) context.go('/hoy');
             }
           : () => notifier.next();

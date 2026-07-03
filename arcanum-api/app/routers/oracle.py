@@ -17,7 +17,7 @@ from app.schemas.divination_session import DivinationSessionCreate, DivinationSe
 from app.schemas.oracle_conversation import OracleConversationCreate, OracleConversationResponse
 from app.services.tarot_service import draw_cards, get_tarot_deck
 from app.services.claude_service import get_claude_response
-from app.services.oracle_context import build_oracle_context
+from app.services.oracle_context import build_oracle_context, build_tarot_context
 
 router = APIRouter(tags=["oracle"])
 
@@ -25,8 +25,15 @@ _ONE_DAY_SECONDS = 86400
 
 
 class OracleQuestion(BaseModel):
-    """Body de la consulta al oráculo IA. El cliente SOLO manda la pregunta."""
-    question: str = Field(..., min_length=1, max_length=500)
+    """Body de la consulta al oráculo IA. Tres modos:
+
+    - solo `question`              → lectura astral (como antes).
+    - `question` + `session_id`    → respuesta anclada a las cartas tiradas.
+    - solo `divination_session_id` → lectura de la tirada (sin pregunta).
+    Ambos nulos → 400 (validado en el endpoint).
+    """
+    question: str | None = Field(default=None, min_length=1, max_length=500)
+    divination_session_id: UUID | None = None
 
 # -------------------------------------------------
 # TAROT
@@ -49,7 +56,7 @@ def draw_tarot(
             detail="Tipo de extensión no soportado. Use 'three_card' o 'celtic_cross'.",
         )
     count = 3 if spread_type == "three_card" else 10
-    baraja = get_tarot_deck()
+    baraja = get_tarot_deck(db)
     cartas = draw_cards(baraja, count=count, spread_type=spread_type)
 
     session_in = DivinationSessionCreate(
@@ -83,6 +90,13 @@ def ritual_ia(
     """
     is_premium = current_user.subscription_tier == "premium"
 
+    # Validación de entrada ANTES de consumir cuota: al menos uno de los dos.
+    if not body.question and body.divination_session_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Envía una pregunta, un divination_session_id, o ambos.",
+        )
+
     # Cuota diaria por usuario (no por IP). Fail-open si Redis no está.
     daily_limit = settings.ORACLE_PREMIUM_DAILY if is_premium else settings.ORACLE_FREE_DAILY
     enforce_user_quota(
@@ -102,15 +116,51 @@ def ritual_ia(
         )
 
     context = build_oracle_context(current_user, natal_chart, db)
+
+    # Tirada opcional: SOLO si el cliente manda un id explícito (sin heurística
+    # de "última tirada reciente"). Debe pertenecer al usuario y ser de tarot.
+    tarot_context: str | None = None
+    card_count = 0
+    expected_cards: list[str] = []
+    if body.divination_session_id is not None:
+        session = (
+            db.query(DivinationSession)
+            .filter(
+                DivinationSession.id == body.divination_session_id,
+                DivinationSession.user_id == current_user.id,
+            )
+            .first()
+        )
+        if session is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Tirada no encontrada.",
+            )
+        if session.system != "tarot":
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="La sesión indicada no es una tirada de tarot.",
+            )
+        tarot_context = build_tarot_context(session)
+        _cards = (session.cards_drawn or {}).get("cards") or []
+        card_count = len(_cards)
+        expected_cards = [c.get("name") or c.get("slug") or "" for c in _cards]
+
     model = settings.CLAUDE_MODEL_PREMIUM if is_premium else settings.CLAUDE_MODEL_FREE
-    claude_reply = get_claude_response(context=context, question=body.question, model=model)
+    claude_reply = get_claude_response(
+        context=context, question=body.question, tarot=tarot_context, model=model,
+        card_count=card_count, expected_cards=expected_cards,
+    )
 
     now = datetime.utcnow().isoformat()
-    user_msg = {"role": "user", "content": body.question, "timestamp": now}
+    # Modo solo-tirada: no hay pregunta; marcador legible para el historial.
+    user_content = body.question or "[Lectura de tirada de tarot]"
+    user_msg = {"role": "user", "content": user_content, "timestamp": now}
     assistant_msg = {"role": "assistant", "content": claude_reply, "timestamp": now}
-    # Snapshot del contexto astral usado (auditoría/historial), como mensaje
-    # 'system' que el frontend ya tolera (MessageRole.system existe en el schema).
-    context_msg = {"role": "system", "content": context, "timestamp": now}
+    # Snapshot del contexto usado (auditoría). Si hubo tirada, se incluye para
+    # que el historial muestre qué cartas se leyeron (sin columna nueva ni migración).
+    snapshot = context if tarot_context is None else f"{context}\n\n{tarot_context}"
+    context_msg = {"role": "system", "content": snapshot, "timestamp": now}
     messages = [context_msg, user_msg, assistant_msg]
 
     conv_in = OracleConversationCreate(

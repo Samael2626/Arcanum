@@ -18,3 +18,6 @@ astral==3.2
 pyswisseph==2.10.3.2
 pytest==8.0.2
 httpx==0.27.0
+requests==2.34.2
+# timezonefinder: offline lat/lon -> IANA timezone (usado por geocoding onboarding)
+timezonefinder==8.2.4

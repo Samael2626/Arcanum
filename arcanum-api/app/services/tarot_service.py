@@ -166,6 +166,26 @@ def _attr(card: Any, key: str, default: Any = None) -> Any:
     return getattr(card, key, default)
 
 
+def _derive_name_es(card: Any) -> Optional[str]:
+    """Nombre en español LIMPIO, sin el descriptor bilingüe.
+
+    `name_es` está NULL en BD para casi todo el mazo; `title_book_t` guarda
+    el nombre bilingüe con barra ("The Fool / El Loco", "Lord of Wealth /
+    Señor de la Riqueza"). Preferimos name_es si vino sembrado; si no,
+    tomamos la parte después de " / "; si no hay barra, usamos title_book_t
+    completo (deck legacy / cartas sin bilingüe).
+    """
+    name_es = _attr(card, "name_es")
+    if name_es:
+        return name_es
+    title = _attr(card, "title_book_t")
+    if not title:
+        return None
+    if " / " in title:
+        return title.split(" / ")[-1].strip()
+    return title
+
+
 def draw_cards(deck: List[Any], *, count: int = 3,
                spread_type: str = "three_card") -> List[Dict[str, Any]]:
     """Sorteo genérico que devuelve el JSON sin guardar (compat con oracle.py).
@@ -198,6 +218,17 @@ def draw_cards(deck: List[Any], *, count: int = 3,
             "meaning_upright": meaning_upright,
             "meaning_reversed": meaning_reversed,
             "meaning": meaning,
+            # ── Datos esotéricos (ADITIVO). El deck legacy (dict) que no los
+            # tiene devuelve None sin romper; el front cae a su tabla canónica.
+            "arcana": _attr(card, "arcana"),
+            "suit": _attr(card, "suit"),
+            "number": number,
+            "element": _attr(card, "element"),
+            "hebrew_letter": _attr(card, "hebrew_letter"),
+            "astro_correspondence": _attr(card, "astro_correspondence"),
+            "decan": _attr(card, "decan"),
+            "zodiac": _attr(card, "zodiac"),
+            "name_es": _derive_name_es(card),
         })
     return result
 
@@ -281,6 +312,9 @@ def _hydrate(card: TarotCard, *, position: Optional[str],
         decan=card.decan,
         zodiac=card.zodiac,
         title_book_t=card.title_book_t,
+        # ADITIVO, consistente con draw_cards: nombre ES limpio sin bilingüe.
+        # `name` (arriba) NO se toca — sigue siendo el contrato legacy.
+        name_es=_derive_name_es(card),
         position=position,
         reversed=reversed_,
         meaning=card.meaning_reversed if reversed_ else card.meaning_upright,

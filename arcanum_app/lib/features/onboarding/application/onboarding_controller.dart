@@ -7,24 +7,51 @@ class OnboardingData {
   final String? displayName;
   final DateTime? birthDate;
   final String? birthTime;
-  final String? birthPlace;
+  final String? birthCountry;
+  final String? birthCity;
+  // Lugar RESUELTO por el backend (Nominatim + timezonefinder) y CONFIRMADO
+  // por el usuario. Solo estos valores (nunca un default) se persisten como
+  // birth_lat/birth_lon/birth_timezone. Ver bug documentado 2026-07-01.
+  final String? resolvedDisplayName;
+  final String? resolvedLat;
+  final String? resolvedLon;
+  final String? resolvedTimezone;
   const OnboardingData({
     this.displayName,
     this.birthDate,
     this.birthTime,
-    this.birthPlace,
+    this.birthCountry,
+    this.birthCity,
+    this.resolvedDisplayName,
+    this.resolvedLat,
+    this.resolvedLon,
+    this.resolvedTimezone,
   });
+
+  bool get hasResolvedLocation =>
+      resolvedLat != null && resolvedLon != null && resolvedTimezone != null;
+
   OnboardingData copyWith({
     String? displayName,
     DateTime? birthDate,
     String? birthTime,
-    String? birthPlace,
+    String? birthCountry,
+    String? birthCity,
+    String? resolvedDisplayName,
+    String? resolvedLat,
+    String? resolvedLon,
+    String? resolvedTimezone,
   }) =>
       OnboardingData(
         displayName: displayName ?? this.displayName,
         birthDate: birthDate ?? this.birthDate,
         birthTime: birthTime ?? this.birthTime,
-        birthPlace: birthPlace ?? this.birthPlace,
+        birthCountry: birthCountry ?? this.birthCountry,
+        birthCity: birthCity ?? this.birthCity,
+        resolvedDisplayName: resolvedDisplayName ?? this.resolvedDisplayName,
+        resolvedLat: resolvedLat ?? this.resolvedLat,
+        resolvedLon: resolvedLon ?? this.resolvedLon,
+        resolvedTimezone: resolvedTimezone ?? this.resolvedTimezone,
       );
 }
 
@@ -43,7 +70,8 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
   static const _kName = 'onboarding_display_name';
   static const _kDate = 'onboarding_birth_date';
   static const _kTime = 'onboarding_birth_time';
-  static const _kPlace = 'onboarding_birth_place';
+  static const _kCountry = 'onboarding_birth_country';
+  static const _kCity = 'onboarding_birth_city';
 
   Future<SharedPreferences> get _prefs async => SharedPreferences.getInstance();
 
@@ -75,11 +103,38 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
         step: state.step, data: state.data.copyWith(birthTime: v));
   }
 
-  Future<void> setBirthPlace(String v) async {
+  Future<void> setBirthCountry(String v) async {
     final p = await _prefs;
-    await p.setString(_kPlace, v);
+    await p.setString(_kCountry, v);
     state = OnboardingState(
-        step: state.step, data: state.data.copyWith(birthPlace: v));
+        step: state.step, data: state.data.copyWith(birthCountry: v));
+  }
+
+  Future<void> setBirthCity(String v) async {
+    final p = await _prefs;
+    await p.setString(_kCity, v);
+    state = OnboardingState(
+        step: state.step, data: state.data.copyWith(birthCity: v));
+  }
+
+  /// Guarda el lugar resuelto por el backend y CONFIRMADO por el usuario.
+  /// No se persiste en SharedPreferences a propósito: si el onboarding se
+  /// interrumpe, se re-resuelve en lugar de arrastrar coordenadas viejas.
+  void setResolvedLocation({
+    required String displayName,
+    required String lat,
+    required String lon,
+    required String timezone,
+  }) {
+    state = OnboardingState(
+      step: state.step,
+      data: state.data.copyWith(
+        resolvedDisplayName: displayName,
+        resolvedLat: lat,
+        resolvedLon: lon,
+        resolvedTimezone: timezone,
+      ),
+    );
   }
 
   void next() {
@@ -97,8 +152,17 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
   Future<void> finish() async {
     final d = state.data;
 
+    // FAIL LOUD: sin lugar resuelto y confirmado, NO se persiste nada de
+    // ubicación. Nunca un default silencioso (ese fue el bug de Bogotá
+    // hardcodeada, documentado 2026-07-01). PlaceStep garantiza que esto solo
+    // se llame tras un resolve+confirmación exitosos; esta es la última
+    // barrera defensiva.
+    if (!d.hasResolvedLocation) {
+      throw StateError(
+          'No se puede finalizar el onboarding sin un lugar de nacimiento confirmado.');
+    }
+
     // Persistir el perfil en el backend (datos capturados en el onboarding).
-    // Lat/lon/tz usan defaults Bogotá por ahora; se afinan luego con geocoding.
     final payload = <String, dynamic>{
       'onboarding_completed': true,
       if (d.displayName != null && d.displayName!.isNotEmpty)
@@ -107,19 +171,22 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
         'birth_date': d.birthDate!.toIso8601String(),
       if (d.birthTime != null && d.birthTime!.isNotEmpty)
         'birth_time': '2000-01-01T${d.birthTime}:00',
-      if (d.birthPlace != null && d.birthPlace!.isNotEmpty)
-        'birth_city': d.birthPlace,
-      'birth_lat': '4.71',
-      'birth_lon': '-74.07',
-      'birth_timezone': 'America/Bogota',
+      if (d.birthCity != null && d.birthCity!.isNotEmpty)
+        'birth_city': d.birthCity,
+      'birth_lat': d.resolvedLat,
+      'birth_lon': d.resolvedLon,
+      'birth_timezone': d.resolvedTimezone,
     };
 
+    // A diferencia del resolve (que debe fallar visible), persistir el
+    // perfil tolera fallo de red: el flag local permite continuar y el
+    // perfil se reintenta en el próximo arranque autenticado. Los datos que
+    // se reintentarán son los REALES (ya confirmados), nunca un default.
     try {
       await ref.read(authRepositoryProvider).updateProfile(payload);
       await ref.read(authProvider.notifier).refreshUser();
     } catch (_) {
-      // No bloquear el flujo si la red falla; el flag local permite continuar.
-      // El perfil se reintenta en el próximo arranque autenticado.
+      // No bloquear el flujo si la red falla.
     }
 
     final p = await _prefs;
@@ -133,7 +200,8 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
       p.remove(_kName),
       p.remove(_kDate),
       p.remove(_kTime),
-      p.remove(_kPlace),
+      p.remove(_kCountry),
+      p.remove(_kCity),
     ]);
     state = OnboardingState.initial;
   }

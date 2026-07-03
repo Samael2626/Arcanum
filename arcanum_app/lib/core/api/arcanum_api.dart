@@ -69,11 +69,17 @@ class ArcanumApi {
     return res.data as Map<String, dynamic>;
   }
 
-  /// Consulta ritual con IA Claude. Requiere auth. Solo envía la pregunta;
-  /// el contexto astral lo construye el servidor desde la carta natal cacheada.
+  /// Consulta ritual con IA Claude. Requiere auth. El contexto astral lo
+  /// construye el servidor desde la carta natal cacheada. Dos modos:
+  /// - `question` + `divinationSessionId` → lectura anclada a la tirada, responde la pregunta.
+  /// - solo `divinationSessionId` (question null/vacío) → lectura de la tirada sin pregunta.
   /// Devuelve OracleConversation (messages = lista de {role, content, timestamp}).
-  Future<Map<String, dynamic>> oracleIa({required String question}) async {
-    final res = await _dio.post('/oracle/ia', data: {'question': question});
+  Future<Map<String, dynamic>> oracleIa({String? question, String? divinationSessionId}) async {
+    final q = question?.trim();
+    final res = await _dio.post('/oracle/ia', data: {
+      if (q != null && q.isNotEmpty) 'question': q,
+      if (divinationSessionId != null) 'divination_session_id': divinationSessionId,
+    });
     return res.data as Map<String, dynamic>;
   }
 
@@ -108,6 +114,22 @@ class ArcanumApi {
     final res = await _dio.post('/tarot/spread', data: {
       'spread_type': spreadType,
       if (question != null) 'question': question,
+    });
+    return res.data as Map<String, dynamic>;
+  }
+
+  // ── Geocoding (onboarding: lugar de nacimiento real) ─────────────────────
+
+  /// Resuelve país+ciudad a lat/lon/timezone reales (Nominatim + timezonefinder,
+  /// calculado en el servidor). Requiere auth. El cliente DEBE mostrar
+  /// `display_name` al usuario para que confirme antes de persistirlo — nunca
+  /// guardar automáticamente sin confirmación. Si el backend no resuelve el
+  /// lugar, propaga un DioException con `response.data['detail']` legible
+  /// (422); el llamador debe fallar visible, nunca caer a un default.
+  Future<Map<String, dynamic>> geoResolve({required String country, required String city}) async {
+    final res = await _dio.post('/geo/resolve', data: {
+      'country': country,
+      'city': city,
     });
     return res.data as Map<String, dynamic>;
   }

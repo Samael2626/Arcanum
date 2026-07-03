@@ -56,19 +56,38 @@ void main() {
     final dob = DateTime(1990, 5, 12);
     await notifier.setBirthDate(dob);
     await notifier.setBirthTime('13:42');
-    await notifier.setBirthPlace('Bogotá, Colombia');
+    await notifier.setBirthCountry('Colombia');
+    await notifier.setBirthCity('Bogotá');
 
     final data = container.read(onboardingProvider).data;
     expect(data.displayName, 'Samael');
     expect(data.birthDate, dob);
     expect(data.birthTime, '13:42');
-    expect(data.birthPlace, 'Bogotá, Colombia');
+    expect(data.birthCountry, 'Colombia');
+    expect(data.birthCity, 'Bogotá');
   });
 
-  testWidgets('finish flips onboarding_completed to true', (tester) async {
+  testWidgets('finish sin lugar resuelto falla ruidoso (nunca default oculto)',
+      (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
     final notifier = container.read(onboardingProvider.notifier);
+
+    expect(() => notifier.finish(), throwsA(isA<StateError>()));
+  });
+
+  testWidgets('finish flips onboarding_completed to true tras confirmar lugar',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(onboardingProvider.notifier);
+
+    notifier.setResolvedLocation(
+      displayName: 'Bogotá, Colombia',
+      lat: '4.710000',
+      lon: '-74.070000',
+      timezone: 'America/Bogota',
+    );
 
     expect(await notifier.isCompleted(), isFalse);
     await notifier.finish();
@@ -80,6 +99,12 @@ void main() {
     addTearDown(container.dispose);
     final notifier = container.read(onboardingProvider.notifier);
 
+    notifier.setResolvedLocation(
+      displayName: 'Bogotá, Colombia',
+      lat: '4.710000',
+      lon: '-74.070000',
+      timezone: 'America/Bogota',
+    );
     await notifier.finish();
     expect(await notifier.isCompleted(), isTrue);
     await notifier.reset();

@@ -1,29 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:thermion_flutter/thermion_flutter.dart';
 
-class ThermionPlanetViewer extends StatefulWidget {
-  const ThermionPlanetViewer({Key? key}) : super(key: key);
+import '../../../../core/theme/arcanum_colors.dart';
 
-  @override
-  State<ThermionPlanetViewer> createState() => _ThermionPlanetViewerState();
-}
-
-class _ThermionPlanetViewerState extends State<ThermionPlanetViewer> {
-  late ThermionViewerState _thermionViewerState;
+/// STUB — el visor 3D real dependía de `thermion_flutter`, que no está en el
+/// pubspec (rompía `flutter analyze`/`build`/`widget_test` al bootear).
+/// Se aísla con un placeholder autocontenido hasta reincorporar la dep.
+/// Nada del árbol de la app lo importa hoy; existe solo para no romper el build.
+class ThermionPlanetViewer extends StatelessWidget {
+  const ThermionPlanetViewer({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Saturno 3D')),
-      body: ThermionViewer(
-        onViewerCreated: (controller) async {
-          _thermionViewerState = controller;
-          // Cargar asset comprimido
-          await controller.loadGlb('assets/models/saturn.opt.glb');
-          // Rotación automática
-          controller.autoRotate = true;
-          controller.autoRotateSpeed = 3.0;
-        },
+      body: const Center(
+        child: Text(
+          'Visor 3D no disponible',
+          style: TextStyle(color: ArcanumColors.ivoryMuted),
+        ),
       ),
     );
   }
