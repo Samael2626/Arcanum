@@ -3,7 +3,7 @@
 Vive fuera de `tests/` a propósito (ver docstring de test_oracle_pure.py):
 el conftest de `tests/` carga tipos exclusivos de PostgreSQL sobre SQLite.
 
-Mockea `requests.get` (Nominatim) y `TimezoneFinder` (timezonefinder).
+Mockea `httpx.get` (Nominatim) y `TimezoneFinder` (timezonefinder).
 Cubre: resuelve OK, no encuentra -> error, país/ciudad vacíos -> error,
 tz no derivable -> error, tz derivada correctamente del resultado.
 
@@ -25,7 +25,7 @@ def _fake_response(json_data, status_ok=True):
         resp.raise_for_status = lambda: None
     else:
         def _raise():
-            raise geocoding.requests.RequestException("boom")
+            raise geocoding.httpx.HTTPError("boom")
         resp.raise_for_status = _raise
     return resp
 
@@ -44,7 +44,7 @@ def test_resuelve_ok_medellin_colombia():
         "lat": "6.2442",
         "lon": "-75.5812",
     }]
-    with patch.object(geocoding.requests, "get",
+    with patch.object(geocoding.httpx, "get",
                        return_value=_fake_response(nominatim_payload)) as mock_get, \
          patch.object(geocoding, "_timezone_finder") as mock_tf:
         mock_tf.return_value.timezone_at.return_value = "America/Bogota"
@@ -65,13 +65,13 @@ def test_resuelve_ok_medellin_colombia():
 
 
 def test_no_encuentra_resultado_falla_ruidoso():
-    with patch.object(geocoding.requests, "get", return_value=_fake_response([])):
+    with patch.object(geocoding.httpx, "get", return_value=_fake_response([])):
         with pytest.raises(geocoding.GeocodingError, match="No se encontró"):
             geocoding.resolve_location("Narnia", "Xyzzyville")
 
 
 def test_pais_o_ciudad_vacio_falla_sin_llamar_a_nominatim():
-    with patch.object(geocoding.requests, "get") as mock_get:
+    with patch.object(geocoding.httpx, "get") as mock_get:
         with pytest.raises(geocoding.GeocodingError):
             geocoding.resolve_location("", "Medellín")
         with pytest.raises(geocoding.GeocodingError):
@@ -81,7 +81,7 @@ def test_pais_o_ciudad_vacio_falla_sin_llamar_a_nominatim():
 
 def test_timezone_no_derivable_falla_ruidoso():
     nominatim_payload = [{"display_name": "Isla Fantasma", "lat": "0.0", "lon": "0.0"}]
-    with patch.object(geocoding.requests, "get",
+    with patch.object(geocoding.httpx, "get",
                        return_value=_fake_response(nominatim_payload)), \
          patch.object(geocoding, "_timezone_finder") as mock_tf:
         mock_tf.return_value.timezone_at.return_value = None
@@ -95,7 +95,7 @@ def test_madrid_espana_deriva_europe_madrid():
         "lat": "40.4168",
         "lon": "-3.7038",
     }]
-    with patch.object(geocoding.requests, "get",
+    with patch.object(geocoding.httpx, "get",
                        return_value=_fake_response(nominatim_payload)), \
          patch.object(geocoding, "_timezone_finder") as mock_tf:
         mock_tf.return_value.timezone_at.return_value = "Europe/Madrid"
@@ -105,7 +105,7 @@ def test_madrid_espana_deriva_europe_madrid():
 
 
 def test_error_de_red_falla_ruidoso():
-    with patch.object(geocoding.requests, "get",
+    with patch.object(geocoding.httpx, "get",
                        return_value=_fake_response(None, status_ok=False)):
         with pytest.raises(geocoding.GeocodingError, match="No se pudo contactar"):
             geocoding.resolve_location("Colombia", "Bogotá")

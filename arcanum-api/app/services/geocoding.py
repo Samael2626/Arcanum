@@ -18,7 +18,7 @@ import time
 from dataclasses import dataclass
 from typing import Optional
 
-import requests
+import httpx
 
 from app.core.config import settings
 
@@ -93,7 +93,7 @@ def resolve_location(country: str, city: str, timeout: float = 10.0) -> Resolved
 
     _throttle()
     try:
-        resp = requests.get(
+        resp = httpx.get(
             _NOMINATIM_URL,
             params={
                 "city": city,
@@ -106,7 +106,7 @@ def resolve_location(country: str, city: str, timeout: float = 10.0) -> Resolved
             timeout=timeout,
         )
         resp.raise_for_status()
-    except requests.RequestException as e:
+    except httpx.HTTPError as e:
         raise GeocodingError(
             f"No se pudo contactar el servicio de geocodificación: {e}"
         )
