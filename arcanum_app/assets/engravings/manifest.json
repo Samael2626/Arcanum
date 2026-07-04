@@ -1,0 +1,218 @@
+{
+ "ruda": {
+  "asset": "engravings/hierbas/ruda.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Ruta_graveolens0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/46/Illustration_Ruta_graveolens0.jpg",
+  "work": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "verbena": {
+  "asset": "engravings/hierbas/verbena.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Verbena_officinalis0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/6/6d/Illustration_Verbena_officinalis0.jpg",
+  "work": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "belladona": {
+  "asset": "engravings/hierbas/belladona.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Atropa_belladonna_(Köhler).jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/95/Atropa_belladonna_%28K%C3%B6hler%29.jpg",
+  "work": "Köhler's Medizinal-Pflanzen (1887)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "mandragora": {
+  "asset": "engravings/hierbas/mandragora.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:De_historia_stirpium_commentarii_insignes_(Page_530)_(9367776086).jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/eb/De_historia_stirpium_commentarii_insignes_%28Page_530%29_%289367776086%29.jpg",
+  "work": "Fuchs, De Historia Stirpium (1543) — woodcut",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "ajenjo": {
+  "asset": "engravings/hierbas/ajenjo.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Artemisia_absinthium_(Köhler).jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Artemisia_absinthium_%28K%C3%B6hler%29.jpg",
+  "work": "Köhler's Medizinal-Pflanzen (1887)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "hiperico": {
+  "asset": "engravings/hierbas/hiperico.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Hypericum_perforatum_(Sturm_06,_plate_060)_clean.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Hypericum_perforatum_%28Sturm_06%2C_plate_060%29_clean.jpg",
+  "work": "Sturm, Deutschlands Flora (1796)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "laurel": {
+  "asset": "engravings/hierbas/laurel.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Laurus_nobilis0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Illustration_Laurus_nobilis0.jpg",
+  "work": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "hisopo": {
+  "asset": "engravings/hierbas/hisopo.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Hyssopus_officinalis0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/c/c6/Illustration_Hyssopus_officinalis0.jpg",
+  "work": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "milenrama": {
+  "asset": "engravings/hierbas/milenrama.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Achillea_millefolium_(Köhler).jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/a/a8/Achillea_millefolium_%28K%C3%B6hler%29.jpg",
+  "work": "Köhler's Medizinal-Pflanzen (1887)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "dictamo-cretense": {
+  "asset": "engravings/hierbas/dictamo-cretense.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Origanum_dictamnus.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/9a/Origanum_dictamnus.jpg",
+  "work": "Public-domain botanical illustration (pre-1900), Wikimedia Commons",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "valeriana": {
+  "asset": "engravings/hierbas/valeriana.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Valeriana_officinalis0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f5/Illustration_Valeriana_officinalis0.jpg",
+  "work": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "menta-piperita": {
+  "asset": "engravings/hierbas/menta-piperita.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Köhler's_Medizinal-Pflanzen_in_naturgetreuen_Abbildungen_mit_kurz_erläuterndem_Texte_(Plate_67)_BHL303700.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/c/cc/K%C3%B6hler%27s_Medizinal-Pflanzen_in_naturgetreuen_Abbildungen_mit_kurz_erl%C3%A4uterndem_Texte_%28Plate_67%29_BHL303700.jpg",
+  "work": "Köhler's Medizinal-Pflanzen (1887)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "tomillo": {
+  "asset": "engravings/hierbas/tomillo.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Thymus_serpyllum0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/39/Illustration_Thymus_serpyllum0.jpg",
+  "work": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "mejorana": {
+  "asset": "engravings/hierbas/mejorana.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Icones_plantarum_medico-oeconomico-technologicarum_cum_earum_fructus_ususque_descriptione_%3D_(Tab._122)_(8096970445).jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/c/ce/Icones_plantarum_medico-oeconomico-technologicarum_cum_earum_fructus_ususque_descriptione_%3D_%28Tab._122%29_%288096970445%29.jpg",
+  "work": "Vietz, Icones Plantarum Medico-Oeconomico-Technologicarum (1800), Tab. 122",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "agrimonia": {
+  "asset": "engravings/hierbas/agrimonia.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Agrimonia_eupatoria0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Illustration_Agrimonia_eupatoria0.jpg",
+  "work": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "celidonia": {
+  "asset": "engravings/hierbas/celidonia.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Chelidonium_majus_(Köhler).jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/8/88/Chelidonium_majus_%28K%C3%B6hler%29.jpg",
+  "work": "Köhler's Medizinal-Pflanzen (1887)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "digital": {
+  "asset": "engravings/hierbas/digital.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Digitalis_purpurea0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/7/71/Illustration_Digitalis_purpurea0.jpg",
+  "work": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "beleno": {
+  "asset": "engravings/hierbas/beleno.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Hyoscyamus_niger0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Illustration_Hyoscyamus_niger0.jpg",
+  "work": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "acacia": {
+  "asset": "engravings/hierbas/acacia.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Acacia_senegal_-_Köhler–s_Medizinal-Pflanzen-004.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/ed/Acacia_senegal_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-004.jpg",
+  "work": "Köhler's Medizinal-Pflanzen (1887)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "enebro": {
+  "asset": "engravings/hierbas/enebro.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Juniperus_communis0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/23/Illustration_Juniperus_communis0.jpg",
+  "work": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "angelica": {
+  "asset": "engravings/hierbas/angelica.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Angelica_archangelica0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/d6/Illustration_Angelica_archangelica0.jpg",
+  "work": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "calamo-aromatico": {
+  "asset": "engravings/hierbas/calamo-aromatico.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Acorus_calamus_(Köhler).jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/b0/Acorus_calamus_%28K%C3%B6hler%29.jpg",
+  "work": "Köhler's Medizinal-Pflanzen (1887)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "trebol-rojo": {
+  "asset": "engravings/hierbas/trebol-rojo.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Trifolium_pratense_—_Flora_Batava_—_Volume_v5.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/42/Trifolium_pratense_%E2%80%94_Flora_Batava_%E2%80%94_Volume_v5.jpg",
+  "work": "Flora Batava (1800–1934)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "muerdago": {
+  "asset": "engravings/hierbas/muerdago.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Viscum_album0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/b1/Illustration_Viscum_album0.jpg",
+  "work": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "nuez-moscada": {
+  "asset": "engravings/hierbas/nuez-moscada.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Myristica_fragrans_-_Köhler–s_Medizinal-Pflanzen-097.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/24/Myristica_fragrans_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-097.jpg",
+  "work": "Köhler's Medizinal-Pflanzen (1887)",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "albahaca": {
+  "asset": "engravings/hierbas/albahaca.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Ocimum_Basilicum.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/7/78/Ocimum_Basilicum.jpg",
+  "work": "Public-domain botanical illustration (pre-1900), Wikimedia Commons",
+  "license": "public-domain",
+  "status": "final"
+ },
+ "aconito": {
+  "asset": "engravings/hierbas/aconito.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Aconitum_napellus_(Köhler).jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/b6/Aconitum_napellus_%28K%C3%B6hler%29.jpg",
+  "work": "Köhler's Medizinal-Pflanzen (1887)",
+  "license": "public-domain",
+  "status": "final"
+ }
+}

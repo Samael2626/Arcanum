@@ -68,5 +68,7 @@ flutter:
   assets:
     - assets/models/
     - assets/images/
+    - assets/engravings/manifest.json
+    - assets/engravings/hierbas/
   # shaders:
   #   - shaders/nebula.frag
