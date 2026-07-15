@@ -5,6 +5,8 @@ Admin endpoints (protegidos).
 - POST /admin/migrate-direct — ejecuta migraciones con BD custom (parámetro URL)
 """
 
+import secrets
+
 from fastapi import APIRouter, HTTPException, status, Header, Query
 from sqlalchemy import create_engine
 from app.core.config import settings
@@ -15,8 +17,15 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 
 def verify_admin_token(x_admin_token: str = Header(None)):
-    """Valida token de admin (simple pero funcional)."""
-    if not x_admin_token or x_admin_token != settings.ADMIN_TOKEN:
+    """Valida el token sin comparaciones sensibles al tiempo."""
+    if settings.ADMIN_TOKEN is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Administración deshabilitada",
+        )
+    if not x_admin_token or not secrets.compare_digest(
+        x_admin_token, settings.ADMIN_TOKEN
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Token de admin inválido o ausente",

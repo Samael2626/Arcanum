@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -5,6 +6,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:arcanum_app/features/onboarding/application/onboarding_controller.dart';
 import 'package:arcanum_app/features/onboarding/presentation/onboarding_screen.dart';
+import 'package:arcanum_app/core/auth/auth_controller.dart';
+import 'package:arcanum_app/core/auth/auth_repository.dart';
+import 'package:arcanum_app/core/auth/token_storage.dart';
+
+class _OfflineAuthRepository extends AuthRepository {
+  _OfflineAuthRepository() : super(Dio(), TokenStorage());
+
+  @override
+  Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
+    throw AuthException('offline test');
+  }
+}
 
 void main() {
   // Use an in-memory mock for SharedPreferences so the controller can read/write
@@ -13,12 +26,18 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  Widget wrap() => const ProviderScope(
-        child: MaterialApp(home: OnboardingScreen()),
-      );
+  final authRepository = _OfflineAuthRepository();
 
-  testWidgets('starts on welcome step and shows sigil + title',
-      (tester) async {
+  ProviderContainer makeContainer() => ProviderContainer(
+    overrides: [authRepositoryProvider.overrideWithValue(authRepository)],
+  );
+
+  Widget wrap() => ProviderScope(
+    overrides: [authRepositoryProvider.overrideWithValue(authRepository)],
+    child: const MaterialApp(home: OnboardingScreen()),
+  );
+
+  testWidgets('starts on welcome step and shows sigil + title', (tester) async {
     await tester.pumpWidget(wrap());
     await tester.pump();
     expect(find.text('Bienvenido a tu grimorio'), findsOneWidget);
@@ -35,7 +54,7 @@ void main() {
   });
 
   testWidgets('next advances step and back retreats it', (tester) async {
-    final container = ProviderContainer();
+    final container = makeContainer();
     addTearDown(container.dispose);
     final notifier = container.read(onboardingProvider.notifier);
     expect(container.read(onboardingProvider).step, 0);
@@ -48,7 +67,7 @@ void main() {
   });
 
   testWidgets('setters persist data into OnboardingData', (tester) async {
-    final container = ProviderContainer();
+    final container = makeContainer();
     addTearDown(container.dispose);
     final notifier = container.read(onboardingProvider.notifier);
 
@@ -67,35 +86,39 @@ void main() {
     expect(data.birthCity, 'Bogotá');
   });
 
-  testWidgets('finish sin lugar resuelto falla ruidoso (nunca default oculto)',
-      (tester) async {
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
-    final notifier = container.read(onboardingProvider.notifier);
+  testWidgets(
+    'finish sin lugar resuelto falla ruidoso (nunca default oculto)',
+    (tester) async {
+      final container = makeContainer();
+      addTearDown(container.dispose);
+      final notifier = container.read(onboardingProvider.notifier);
 
-    expect(() => notifier.finish(), throwsA(isA<StateError>()));
-  });
+      expect(() => notifier.finish(), throwsA(isA<StateError>()));
+    },
+  );
 
-  testWidgets('finish flips onboarding_completed to true tras confirmar lugar',
-      (tester) async {
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
-    final notifier = container.read(onboardingProvider.notifier);
+  testWidgets(
+    'finish flips onboarding_completed to true tras confirmar lugar',
+    (tester) async {
+      final container = makeContainer();
+      addTearDown(container.dispose);
+      final notifier = container.read(onboardingProvider.notifier);
 
-    notifier.setResolvedLocation(
-      displayName: 'Bogotá, Colombia',
-      lat: '4.710000',
-      lon: '-74.070000',
-      timezone: 'America/Bogota',
-    );
+      notifier.setResolvedLocation(
+        displayName: 'Bogotá, Colombia',
+        lat: '4.710000',
+        lon: '-74.070000',
+        timezone: 'America/Bogota',
+      );
 
-    expect(await notifier.isCompleted(), isFalse);
-    await notifier.finish();
-    expect(await notifier.isCompleted(), isTrue);
-  });
+      expect(await notifier.isCompleted(), isFalse);
+      await notifier.finish();
+      expect(await notifier.isCompleted(), isTrue);
+    },
+  );
 
   testWidgets('reset clears completion flag', (tester) async {
-    final container = ProviderContainer();
+    final container = makeContainer();
     addTearDown(container.dispose);
     final notifier = container.read(onboardingProvider.notifier);
 
@@ -112,7 +135,7 @@ void main() {
   });
 
   testWidgets('isLast is true on step 4', (tester) async {
-    final container = ProviderContainer();
+    final container = makeContainer();
     addTearDown(container.dispose);
     final n = container.read(onboardingProvider.notifier);
     n.next();

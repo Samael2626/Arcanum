@@ -13,24 +13,45 @@ import '../../shared/widgets/arcanum_surface.dart';
 import '../../shared/widgets/info_dot.dart';
 import 'materia_engravings.dart';
 import 'materia_lore.dart';
+import 'materia_specimen.dart';
 
 const _filters = <(String?, String)>[
-  (null, 'Todos'), ('herb', 'Hierbas'), ('stone', 'Piedras'),
-  ('metal', 'Metales'), ('incense', 'Inciensos'),
+  (null, 'Todos'),
+  ('herb', 'Hierbas'),
+  ('stone', 'Piedras'),
+  ('metal', 'Metales'),
+  ('incense', 'Inciensos'),
+  ('oil', 'Aceites'),
+  ('resin', 'Resinas'),
+  ('planet', 'Planetas'),
+  ('angel', 'Ángeles'),
+  ('sign', 'Signos'),
 ];
 
 /// Los siete regentes clásicos, en orden de la semana mágica.
-const _planets = ['sun', 'moon', 'mars', 'mercury', 'jupiter', 'venus', 'saturn'];
+const _planets = [
+  'sun',
+  'moon',
+  'mars',
+  'mercury',
+  'jupiter',
+  'venus',
+  'saturn',
+];
 
 class ArteScreen extends ConsumerStatefulWidget {
-  const ArteScreen({super.key});
+  const ArteScreen({super.key, this.itemsOverride});
+
+  /// Fuente inyectable para previews y widget tests. Producción usa el API.
+  final Future<List<Map<String, dynamic>>>? itemsOverride;
   @override
   ConsumerState<ArteScreen> createState() => _ArteScreenState();
 }
 
 class _ArteScreenState extends ConsumerState<ArteScreen> {
   late final ArcanumApi _api = ref.read(arcanumApiProvider);
-  late Future<List<Map<String, dynamic>>> _future = _api.materiaList();
+  late Future<List<Map<String, dynamic>>> _future =
+      widget.itemsOverride ?? _api.materiaList();
   String? _type;
   String? _lastPlanet;
 
@@ -38,20 +59,35 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
     setState(() {
       _type = type;
       _future = _api.materiaList(
-          itemType: type, planet: ref.read(materiaPlanetProvider));
+        itemType: type,
+        planet: ref.read(materiaPlanetProvider),
+      );
+    });
+  }
+
+  void _reload() {
+    setState(() {
+      _future =
+          widget.itemsOverride ??
+          _api.materiaList(
+            itemType: _type,
+            planet: ref.read(materiaPlanetProvider),
+          );
     });
   }
 
   void _togglePlanet(String planet) {
     final current = ref.read(materiaPlanetProvider);
-    ref.read(materiaPlanetProvider.notifier).set(current == planet ? null : planet);
+    ref
+        .read(materiaPlanetProvider.notifier)
+        .set(current == planet ? null : planet);
   }
 
   @override
   Widget build(BuildContext context) {
     // Si Hoy (o el filtro de planeta) cambió el regente, refresca el catálogo.
     final planet = ref.watch(materiaPlanetProvider);
-    if (planet != _lastPlanet) {
+    if (widget.itemsOverride == null && planet != _lastPlanet) {
       _lastPlanet = planet;
       _future = _api.materiaList(itemType: _type, planet: planet);
     }
@@ -78,10 +114,17 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
                   if (snap.connectionState == ConnectionState.waiting) {
                     child = const _LoadingState(key: ValueKey('loading'));
                   } else if (snap.hasError) {
-                    child = _ErrorState(key: const ValueKey('error'), error: snap.error);
+                    child = _ErrorState(
+                      key: const ValueKey('error'),
+                      error: snap.error,
+                      onRetry: _reload,
+                    );
                   } else if ((snap.data ?? const []).isEmpty) {
                     child = _EmptyState(
-                        key: const ValueKey('empty'), type: _type, planet: planet);
+                      key: const ValueKey('empty'),
+                      type: _type,
+                      planet: planet,
+                    );
                   } else {
                     final items = snap.data!;
                     child = _grid(items, planet);
@@ -113,28 +156,38 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
         itemBuilder: (context, i) {
           final (value, label) = _filters[i];
           final selected = value == _type;
-          return GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => _selectType(value),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                color: selected
-                    ? ArcanumColors.gold.withValues(alpha: 0.16)
-                    : Colors.transparent,
-                border: Border.all(
+          return Semantics(
+            button: true,
+            selected: selected,
+            label: 'Filtrar por $label',
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: () => _selectType(value),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: selected
+                      ? ArcanumColors.gold.withValues(alpha: 0.16)
+                      : Colors.transparent,
+                  border: Border.all(
                     color: selected
                         ? ArcanumColors.gold
-                        : ArcanumColors.goldMuted.withValues(alpha: 0.4)),
+                        : ArcanumColors.goldMuted.withValues(alpha: 0.4),
+                  ),
+                ),
+                child: Text(
+                  label,
+                  style: ArcanumText.body(
+                    15,
+                    color: selected
+                        ? ArcanumColors.gold
+                        : ArcanumColors.ivoryMuted,
+                  ),
+                ),
               ),
-              child: Text(label,
-                  style: ArcanumText.body(15,
-                      color: selected
-                          ? ArcanumColors.gold
-                          : ArcanumColors.ivoryMuted)),
             ),
           );
         },
@@ -155,42 +208,51 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
           final p = _planets[i];
           final selected = p == active;
           final mood = ArcanumMood.forPlanet(p);
-          return GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => _togglePlanet(p),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 240),
-              width: 48,
-              height: 48,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(colors: [
-                  mood.glow.withValues(alpha: selected ? 0.34 : 0.08),
-                  mood.glow.withValues(alpha: 0.0),
-                ]),
-                border: Border.all(
-                  color: mood.accent.withValues(alpha: selected ? 0.95 : 0.30),
-                  width: selected ? 1.6 : 1,
+          return Semantics(
+            button: true,
+            selected: selected,
+            label: 'Filtrar por ${planetEs[p] ?? p}',
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () => _togglePlanet(p),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 240),
+                width: 48,
+                height: 48,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      mood.glow.withValues(alpha: selected ? 0.34 : 0.08),
+                      mood.glow.withValues(alpha: 0.0),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: mood.accent.withValues(
+                      alpha: selected ? 0.95 : 0.30,
+                    ),
+                    width: selected ? 1.6 : 1,
+                  ),
+                  boxShadow: selected
+                      ? [
+                          BoxShadow(
+                            color: mood.glow.withValues(alpha: 0.30),
+                            blurRadius: 14,
+                            spreadRadius: 1,
+                          ),
+                        ]
+                      : null,
                 ),
-                boxShadow: selected
-                    ? [
-                        BoxShadow(
-                          color: mood.glow.withValues(alpha: 0.30),
-                          blurRadius: 14,
-                          spreadRadius: 1,
-                        )
-                      ]
-                    : null,
-              ),
-              child: Text(
-                planetGlyph[p] ?? '',
-                style: TextStyle(
-                  fontSize: 22,
-                  height: 1,
-                  color: selected
-                      ? mood.accent
-                      : ArcanumColors.ivoryMuted.withValues(alpha: 0.85),
+                child: Text(
+                  planetGlyph[p] ?? '',
+                  style: TextStyle(
+                    fontSize: 22,
+                    height: 1,
+                    color: selected
+                        ? mood.accent
+                        : ArcanumColors.ivoryMuted.withValues(alpha: 0.85),
+                  ),
                 ),
               ),
             ),
@@ -211,24 +273,28 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
           color: mood.glow.withValues(alpha: 0.08),
           border: Border.all(color: mood.accent.withValues(alpha: 0.4)),
         ),
-        child: Row(children: [
-          Text(planetGlyph[planet] ?? '',
-              style: TextStyle(color: mood.accent, fontSize: 18, height: 1)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text('Correspondencias de ${planetEs[planet] ?? planet}',
-                style: ArcanumText.body(14.5, color: mood.accent)),
-          ),
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => ref.read(materiaPlanetProvider.notifier).set(null),
-            child: Padding(
-              padding: const EdgeInsets.all(6),
-              child: Icon(Icons.close,
-                  color: ArcanumColors.ivoryMuted, size: 18),
+        child: Row(
+          children: [
+            Text(
+              planetGlyph[planet] ?? '',
+              style: TextStyle(color: mood.accent, fontSize: 18, height: 1),
             ),
-          ),
-        ]),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Correspondencias de ${planetEs[planet] ?? planet}',
+                style: ArcanumText.body(14.5, color: mood.accent),
+              ),
+            ),
+            IconButton(
+              tooltip: 'Quitar filtro planetario',
+              onPressed: () =>
+                  ref.read(materiaPlanetProvider.notifier).set(null),
+              icon: const Icon(Icons.close, size: 18),
+              color: ArcanumColors.ivoryMuted,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -247,10 +313,7 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
       itemCount: items.length,
       itemBuilder: (context, i) => _Reveal(
         index: i,
-        child: _MateriaCard(
-          item: items[i],
-          onTap: () => _openDetail(items[i]),
-        ),
+        child: _MateriaCard(item: items[i], onTap: () => _openDetail(items[i])),
       ),
     );
   }
@@ -276,15 +339,23 @@ class ArcanumHeaderCompat extends StatelessWidget {
   const ArcanumHeaderCompat({super.key, required this.subtitle});
   @override
   Widget build(BuildContext context) => Column(
-        children: [
-          Text('ARCANUM',
-              textAlign: TextAlign.center, style: ArcanumText.wordmark(size: 38)),
-          const SizedBox(height: 4),
-          Text(subtitle,
-              style: ArcanumText.body(16,
-                  italic: true, color: ArcanumColors.ivoryMuted)),
-        ],
-      );
+    children: [
+      Text(
+        'ARCANUM',
+        textAlign: TextAlign.center,
+        style: ArcanumText.wordmark(size: 38),
+      ),
+      const SizedBox(height: 4),
+      Text(
+        subtitle,
+        style: ArcanumText.body(
+          16,
+          italic: true,
+          color: ArcanumColors.ivoryMuted,
+        ),
+      ),
+    ],
+  );
 }
 
 // ── Placa de correspondencia ───────────────────────────────────────────────
@@ -300,101 +371,128 @@ class _MateriaCard extends StatelessWidget {
     final type = item['item_type'] as String;
     final slug = item['slug'] as String? ?? '';
     final mood = materiaMood(planet, element);
-    final planetG = (planet != null && planet.isNotEmpty) ? planetGlyph[planet] : null;
-    final zodiacKey = materiaZodiacKey(planet, element,
-        explicit: item['zodiac'] as String?);
+    final planetG = (planet != null && planet.isNotEmpty)
+        ? planetGlyph[planet]
+        : null;
+    final zodiacKey = materiaZodiacKey(
+      planet,
+      element,
+      explicit: item['zodiac'] as String?,
+    );
     final zodiacG = zodiacKey == null ? null : signGlyph[zodiacKey];
-    final variant = materiaVariant(slug, type);
     final subtitle = [
       materiaTypeEs[type] ?? type,
       if (element != null && element.isNotEmpty) materiaElementEs(element),
     ].join('  ·  ');
     const br = BorderRadius.all(Radius.circular(16));
 
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: ArcanumTilt(
-        maxTilt: 0.06,
+    return Semantics(
+      button: true,
+      label: 'Abrir ${item['name']}, $subtitle',
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: br,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: br,
-            border: Border.all(color: mood.accent.withValues(alpha: 0.28)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.32),
-                blurRadius: 16,
-                offset: const Offset(0, 7),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: br,
-            child: ArcanumFrame(
-              mood: mood,
-              radius: 16,
-              corners: false,
-              child: ArcanumSurface(
+        child: ArcanumTilt(
+          maxTilt: 0.06,
+          borderRadius: br,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: br,
+              border: Border.all(color: mood.accent.withValues(alpha: 0.28)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.32),
+                  blurRadius: 16,
+                  offset: const Offset(0, 7),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: br,
+              child: ArcanumFrame(
                 mood: mood,
-                intensity: 0.44,
-                child: Stack(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
-                      child: Column(
-                        children: [
-                          // Deja aire a los lados: el sello planetario vive
-                          // arriba-izquierda y no debe pisar el label.
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 26),
-                            child: Text((materiaTypeEs[type] ?? type).toUpperCase(),
+                radius: 16,
+                corners: false,
+                child: ArcanumSurface(
+                  mood: mood,
+                  intensity: 0.44,
+                  child: Stack(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
+                        child: Column(
+                          children: [
+                            // Deja aire a los lados: el sello planetario vive
+                            // arriba-izquierda y no debe pisar el label.
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 26,
+                              ),
+                              child: Text(
+                                (materiaTypeEs[type] ?? type).toUpperCase(),
                                 textAlign: TextAlign.center,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: ArcanumText.label()),
-                          ),
-                          const Spacer(),
-                          MateriaArt(
-                            type: type,
-                            variant: variant,
+                                style: ArcanumText.label(),
+                              ),
+                            ),
+                            const Spacer(),
+                            MateriaSpecimen(
+                              slug: slug,
+                              type: type,
+                              mood: mood,
+                              size: type == 'herb' ? 104 : 88,
+                              strokeWidth: 1.4,
+                              semanticLabel: item['name'] as String,
+                            ),
+                            const Spacer(),
+                            Text(
+                              item['name'] as String,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: ArcanumText.heading(
+                                20,
+                                color: ArcanumColors.gold,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              subtitle,
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: ArcanumText.body(
+                                12.5,
+                                color: ArcanumColors.ivoryMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (planetG != null)
+                        Positioned(
+                          top: 9,
+                          left: 10,
+                          child: MateriaSeal(
+                            glyph: planetG,
                             mood: mood,
-                            size: 74,
-                            strokeWidth: 1.4,
+                            size: 25,
                           ),
-                          const Spacer(),
-                          Text(
-                            item['name'] as String,
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: ArcanumText.heading(20, color: ArcanumColors.gold),
+                        ),
+                      if (zodiacG != null)
+                        Positioned(
+                          bottom: 9,
+                          right: 10,
+                          child: MateriaSeal(
+                            glyph: zodiacG,
+                            mood: mood,
+                            size: 23,
                           ),
-                          const SizedBox(height: 3),
-                          Text(
-                            subtitle,
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style:
-                                ArcanumText.body(12.5, color: ArcanumColors.ivoryMuted),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (planetG != null)
-                      Positioned(
-                        top: 9,
-                        left: 10,
-                        child: MateriaSeal(glyph: planetG, mood: mood, size: 25),
-                      ),
-                    if (zodiacG != null)
-                      Positioned(
-                        bottom: 9,
-                        right: 10,
-                        child: MateriaSeal(glyph: zodiacG, mood: mood, size: 23),
-                      ),
-                  ],
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -416,9 +514,13 @@ class _Reveal extends StatefulWidget {
 
 class _RevealState extends State<_Reveal> with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 460));
-  late final Animation<double> _fade =
-      CurvedAnimation(parent: _c, curve: Curves.easeOut);
+    vsync: this,
+    duration: const Duration(milliseconds: 460),
+  );
+  late final Animation<double> _fade = CurvedAnimation(
+    parent: _c,
+    curve: Curves.easeOut,
+  );
   late final Animation<Offset> _slide = Tween(
     begin: const Offset(0, 0.10),
     end: Offset.zero,
@@ -441,9 +543,10 @@ class _RevealState extends State<_Reveal> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) => FadeTransition(
-        opacity: _fade,
-        child: SlideTransition(position: _slide, child: widget.child),
-      );
+    opacity: _fade,
+    alwaysIncludeSemantics: true,
+    child: SlideTransition(position: _slide, child: widget.child),
+  );
 }
 
 // ── Estados: carga / error / vacío ──────────────────────────────────────────
@@ -455,9 +558,10 @@ class _LoadingState extends StatefulWidget {
 
 class _LoadingStateState extends State<_LoadingState>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _c =
-      AnimationController(vsync: this, duration: const Duration(seconds: 3))
-        ..repeat();
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 3),
+  )..repeat();
 
   @override
   void dispose() {
@@ -473,17 +577,22 @@ class _LoadingStateState extends State<_LoadingState>
         children: [
           AnimatedBuilder(
             animation: _c,
-            builder: (context, child) => Transform.rotate(
-              angle: _c.value * 6.283,
-              child: child,
+            builder: (context, child) =>
+                Transform.rotate(angle: _c.value * 6.283, child: child),
+            child: const Text(
+              '✦',
+              style: TextStyle(color: ArcanumColors.gold, fontSize: 34),
             ),
-            child: const Text('✦',
-                style: TextStyle(color: ArcanumColors.gold, fontSize: 34)),
           ),
           const SizedBox(height: 16),
-          Text('Consultando el herbario…',
-              style: ArcanumText.body(15,
-                  color: ArcanumColors.ivoryMuted, italic: true)),
+          Text(
+            'Consultando el herbario…',
+            style: ArcanumText.body(
+              15,
+              color: ArcanumColors.ivoryMuted,
+              italic: true,
+            ),
+          ),
         ],
       ),
     );
@@ -492,7 +601,8 @@ class _LoadingStateState extends State<_LoadingState>
 
 class _ErrorState extends StatelessWidget {
   final Object? error;
-  const _ErrorState({super.key, this.error});
+  final VoidCallback onRetry;
+  const _ErrorState({super.key, this.error, required this.onRetry});
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -501,17 +611,33 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline,
-                color: ArcanumColors.goldMuted, size: 34),
+            const Icon(
+              Icons.error_outline,
+              color: ArcanumColors.goldMuted,
+              size: 34,
+            ),
             const SizedBox(height: 14),
-            Text('No se pudo abrir el herbario.',
-                textAlign: TextAlign.center,
-                style: ArcanumText.heading(20, color: ArcanumColors.ivory)),
+            Text(
+              'No se pudo abrir el herbario.',
+              textAlign: TextAlign.center,
+              style: ArcanumText.heading(20, color: ArcanumColors.ivory),
+            ),
             const SizedBox(height: 6),
-            Text('El velo entre tú y el catálogo está denso. Inténtalo de nuevo.',
-                textAlign: TextAlign.center,
-                style: ArcanumText.body(14,
-                    color: ArcanumColors.ivoryMuted, italic: true)),
+            Text(
+              'El velo entre tú y el catálogo está denso. Inténtalo de nuevo.',
+              textAlign: TextAlign.center,
+              style: ArcanumText.body(
+                14,
+                color: ArcanumColors.ivoryMuted,
+                italic: true,
+              ),
+            ),
+            const SizedBox(height: 20),
+            OutlinedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Reintentar'),
+            ),
           ],
         ),
       ),
@@ -526,27 +652,41 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = type;
-    final tipoEs =
-        t == null ? 'correspondencias' : (materiaTypeEs[t] ?? t).toLowerCase();
-    final regente = planet == null ? '' : ' regidas por ${planetEs[planet] ?? planet}';
+    final tipoEs = t == null
+        ? 'correspondencias'
+        : (materiaTypeEs[t] ?? t).toLowerCase();
+    final regente = planet == null
+        ? ''
+        : ' regidas por ${planetEs[planet] ?? planet}';
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 44),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('✧',
-                style: TextStyle(
-                    color: ArcanumColors.gold.withValues(alpha: 0.7), fontSize: 32)),
+            Text(
+              '✧',
+              style: TextStyle(
+                color: ArcanumColors.gold.withValues(alpha: 0.7),
+                fontSize: 32,
+              ),
+            ),
             const SizedBox(height: 16),
-            Text('El herbario aún calla',
-                textAlign: TextAlign.center,
-                style: ArcanumText.heading(22, color: ArcanumColors.gold)),
+            Text(
+              'El herbario aún calla',
+              textAlign: TextAlign.center,
+              style: ArcanumText.heading(22, color: ArcanumColors.gold),
+            ),
             const SizedBox(height: 8),
-            Text('No guarda $tipoEs$regente. Prueba otra correspondencia.',
-                textAlign: TextAlign.center,
-                style: ArcanumText.body(15,
-                    color: ArcanumColors.ivoryMuted, italic: true)),
+            Text(
+              'No guarda $tipoEs$regente. Prueba otra correspondencia.',
+              textAlign: TextAlign.center,
+              style: ArcanumText.body(
+                15,
+                color: ArcanumColors.ivoryMuted,
+                italic: true,
+              ),
+            ),
           ],
         ),
       ),

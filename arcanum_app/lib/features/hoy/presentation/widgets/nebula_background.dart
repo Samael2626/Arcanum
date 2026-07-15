@@ -5,7 +5,7 @@ import 'dart:math';
 class NebulaBackground extends StatefulWidget {
   final Widget child;
 
-  const NebulaBackground({required this.child, Key? key}) : super(key: key);
+  const NebulaBackground({required this.child, super.key});
 
   @override
   State<NebulaBackground> createState() => _NebulaBackgroundState();

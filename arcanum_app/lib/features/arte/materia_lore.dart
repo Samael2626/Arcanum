@@ -6,12 +6,21 @@ import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_surface.dart';
 import 'materia_engravings.dart';
+import 'materia_specimen.dart';
 
 /// Nombres en español de cada tipo de Materia Arcana.
 const materiaTypeEs = {
-  'herb': 'Hierba', 'stone': 'Piedra', 'metal': 'Metal', 'incense': 'Incienso',
-  'oil': 'Aceite', 'resin': 'Resina', 'element': 'Elemento', 'color': 'Color',
-  'planet': 'Planeta', 'sign': 'Signo', 'angel': 'Ángel',
+  'herb': 'Hierba',
+  'stone': 'Piedra',
+  'metal': 'Metal',
+  'incense': 'Incienso',
+  'oil': 'Aceite',
+  'resin': 'Resina',
+  'element': 'Elemento',
+  'color': 'Color',
+  'planet': 'Planeta',
+  'sign': 'Signo',
+  'angel': 'Ángel',
 };
 
 /// Nombre en español de un elemento (clave ES o EN).
@@ -38,7 +47,9 @@ String materiaElementEs(String e) {
 /// si tampoco, pergamino neutro. El color de la carta SIGNIFICA su regencia.
 ArcanumMood materiaMood(String? planet, String? element) {
   if (planet != null && planet.isNotEmpty) return ArcanumMood.forPlanet(planet);
-  if (element != null && element.isNotEmpty) return ArcanumMood.forElement(element);
+  if (element != null && element.isNotEmpty) {
+    return ArcanumMood.forElement(element);
+  }
   return ArcanumMood.neutral;
 }
 
@@ -107,8 +118,11 @@ void showMateriaLoreSheet(
                     if (snap.hasError) {
                       return Text(
                         'No se pudo abrir esta correspondencia.',
-                        style: ArcanumText.body(15,
-                            color: ArcanumColors.ivoryMuted, italic: true),
+                        style: ArcanumText.body(
+                          15,
+                          color: ArcanumColors.ivoryMuted,
+                          italic: true,
+                        ),
                       );
                     }
                     if (!snap.hasData) {
@@ -119,7 +133,9 @@ void showMateriaLoreSheet(
                             width: 22,
                             height: 22,
                             child: CircularProgressIndicator(
-                                color: ArcanumColors.gold, strokeWidth: 2),
+                              color: ArcanumColors.gold,
+                              strokeWidth: 2,
+                            ),
                           ),
                         ),
                       );
@@ -162,11 +178,16 @@ class _LoreHero extends StatefulWidget {
   State<_LoreHero> createState() => _LoreHeroState();
 }
 
-class _LoreHeroState extends State<_LoreHero> with SingleTickerProviderStateMixin {
+class _LoreHeroState extends State<_LoreHero>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 1150));
-  late final Animation<double> _draw =
-      CurvedAnimation(parent: _c, curve: Curves.easeInOutCubic);
+    vsync: this,
+    duration: const Duration(milliseconds: 1150),
+  );
+  late final Animation<double> _draw = CurvedAnimation(
+    parent: _c,
+    curve: Curves.easeInOutCubic,
+  );
 
   @override
   void initState() {
@@ -186,11 +207,15 @@ class _LoreHeroState extends State<_LoreHero> with SingleTickerProviderStateMixi
   Widget build(BuildContext context) {
     final planet = widget.planet;
     final mood = widget.mood;
-    final planetG = (planet != null && planet.isNotEmpty) ? planetGlyph[planet] : null;
-    final zodiacKey =
-        materiaZodiacKey(planet, widget.element, explicit: widget.zodiac);
+    final planetG = (planet != null && planet.isNotEmpty)
+        ? planetGlyph[planet]
+        : null;
+    final zodiacKey = materiaZodiacKey(
+      planet,
+      widget.element,
+      explicit: widget.zodiac,
+    );
     final zodiacG = zodiacKey == null ? null : signGlyph[zodiacKey];
-    final variant = materiaVariant(widget.slug, widget.itemType);
     final subtitleParts = <String>[
       materiaTypeEs[widget.itemType] ?? widget.itemType,
       if (widget.element != null && widget.element!.isNotEmpty)
@@ -211,21 +236,24 @@ class _LoreHeroState extends State<_LoreHero> with SingleTickerProviderStateMixi
                 height: 150,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: RadialGradient(colors: [
-                    mood.glow.withValues(alpha: 0.16),
-                    mood.glow.withValues(alpha: 0.0),
-                  ]),
+                  gradient: RadialGradient(
+                    colors: [
+                      mood.glow.withValues(alpha: 0.16),
+                      mood.glow.withValues(alpha: 0.0),
+                    ],
+                  ),
                 ),
               ),
               AnimatedBuilder(
                 animation: _draw,
-                builder: (_, _) => MateriaArt(
+                builder: (_, _) => MateriaSpecimen(
+                  slug: widget.slug,
                   type: widget.itemType,
-                  variant: variant,
                   mood: mood,
-                  size: 128,
+                  size: widget.itemType == 'herb' ? 148 : 132,
                   strokeWidth: 1.7,
                   progress: _draw.value,
+                  semanticLabel: widget.name,
                 ),
               ),
               if (planetG != null)
@@ -244,14 +272,21 @@ class _LoreHeroState extends State<_LoreHero> with SingleTickerProviderStateMixi
           ),
         ),
         const SizedBox(height: 12),
-        Text(widget.name,
-            textAlign: TextAlign.center,
-            style: ArcanumText.heading(30, color: ArcanumColors.gold)),
+        Text(
+          widget.name,
+          textAlign: TextAlign.center,
+          style: ArcanumText.heading(30, color: ArcanumColors.gold),
+        ),
         const SizedBox(height: 3),
-        Text(subtitleParts.join('  ·  '),
-            textAlign: TextAlign.center,
-            style: ArcanumText.body(15,
-                color: ArcanumColors.ivoryMuted, italic: true)),
+        Text(
+          subtitleParts.join('  ·  '),
+          textAlign: TextAlign.center,
+          style: ArcanumText.body(
+            15,
+            color: ArcanumColors.ivoryMuted,
+            italic: true,
+          ),
+        ),
       ],
     );
   }
@@ -259,7 +294,8 @@ class _LoreHeroState extends State<_LoreHero> with SingleTickerProviderStateMixi
 
 Widget _body(Map<String, dynamic> d, ArcanumMood mood) {
   final props = (d['properties'] as Map?)?.cast<String, dynamic>() ?? const {};
-  final intenciones = (props['intenciones'] as List?)?.cast<String>() ?? const [];
+  final intenciones =
+      (props['intenciones'] as List?)?.cast<String>() ?? const [];
   final aliases = (d['aliases'] as List?)?.cast<String>() ?? const [];
   final notas = props['notas'] as String?;
   final estudio = props['estudio'] as String?;
@@ -289,24 +325,49 @@ Widget _body(Map<String, dynamic> d, ArcanumMood mood) {
             borderRadius: BorderRadius.circular(12),
             color: mood.glow.withValues(alpha: 0.07),
             border: Border(
-              left: BorderSide(color: mood.accent.withValues(alpha: 0.6), width: 2),
+              left: BorderSide(
+                color: mood.accent.withValues(alpha: 0.6),
+                width: 2,
+              ),
             ),
           ),
-          child: Text(notas,
-              style: ArcanumText.body(16, color: ArcanumColors.ivory, italic: true)),
+          child: Text(
+            notas,
+            style: ArcanumText.body(
+              16,
+              color: ArcanumColors.ivory,
+              italic: true,
+            ),
+          ),
         ),
         const SizedBox(height: 22),
       ],
       if (estudio != null && estudio.isNotEmpty) ...[
         Text('EN LA TRADICIÓN', style: ArcanumText.label()),
         const SizedBox(height: 10),
-        Text(estudio, style: ArcanumText.body(16), textAlign: TextAlign.justify),
+        Text(
+          estudio,
+          style: ArcanumText.body(16),
+          textAlign: TextAlign.justify,
+        ),
         const SizedBox(height: 22),
       ],
-      if (dia != null || angel != null || parte != null || toxicidad != null) ...[
-        if (dia != null) ...[_row('DÍA', _cap(dia)), const SizedBox(height: 10)],
-        if (angel != null) ...[_row('ÁNGEL', angel), const SizedBox(height: 10)],
-        if (parte != null) ...[_row('PARTE', _cap(parte)), const SizedBox(height: 10)],
+      if (dia != null ||
+          angel != null ||
+          parte != null ||
+          toxicidad != null) ...[
+        if (dia != null) ...[
+          _row('DÍA', _cap(dia)),
+          const SizedBox(height: 10),
+        ],
+        if (angel != null) ...[
+          _row('ÁNGEL', angel),
+          const SizedBox(height: 10),
+        ],
+        if (parte != null) ...[
+          _row('PARTE', _cap(parte)),
+          const SizedBox(height: 10),
+        ],
         if (toxicidad != null) _row('TOXICIDAD', _cap(toxicidad)),
         const SizedBox(height: 22),
       ],
@@ -317,9 +378,14 @@ Widget _body(Map<String, dynamic> d, ArcanumMood mood) {
       if (fuente != null && fuente.isNotEmpty) ...[
         Text('FUENTE', style: ArcanumText.label()),
         const SizedBox(height: 6),
-        Text(fuente,
-            style: ArcanumText.body(13,
-                color: ArcanumColors.ivoryMuted, italic: true)),
+        Text(
+          fuente,
+          style: ArcanumText.body(
+            13,
+            color: ArcanumColors.ivoryMuted,
+            italic: true,
+          ),
+        ),
       ],
     ],
   );
@@ -328,23 +394,27 @@ Widget _body(Map<String, dynamic> d, ArcanumMood mood) {
 String _cap(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 
 Widget _chip(String text, ArcanumMood mood) => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: mood.glow.withValues(alpha: 0.08),
-        border: Border.all(color: mood.accent.withValues(alpha: 0.45)),
-      ),
-      child: Text(_cap(text),
-          style: ArcanumText.body(13.5, color: ArcanumColors.ivory)),
-    );
+  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+  decoration: BoxDecoration(
+    borderRadius: BorderRadius.circular(16),
+    color: mood.glow.withValues(alpha: 0.08),
+    border: Border.all(color: mood.accent.withValues(alpha: 0.45)),
+  ),
+  child: Text(
+    _cap(text),
+    style: ArcanumText.body(13.5, color: ArcanumColors.ivory),
+  ),
+);
 
 Widget _row(String label, String value) => Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(width: 96, child: Text(label, style: ArcanumText.label())),
-        Expanded(
-          child: Text(value,
-              style: ArcanumText.body(16, color: ArcanumColors.ivory)),
-        ),
-      ],
-    );
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    SizedBox(width: 96, child: Text(label, style: ArcanumText.label())),
+    Expanded(
+      child: Text(
+        value,
+        style: ArcanumText.body(16, color: ArcanumColors.ivory),
+      ),
+    ),
+  ],
+);

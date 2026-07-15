@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
+import 'engraving_manifest_loader.dart' show normalizeMateriaSlug;
 
 /// Grabados vectoriales de la Materia Arcana — lámina de herbario s.XVII.
 ///
@@ -55,17 +56,35 @@ String? materiaZodiacKey(String? planet, String? element, {String? explicit}) {
 int _variantCount(String type) {
   switch (type) {
     case 'herb':
-      return 4;
+      return 9;
     case 'stone':
-      return 4;
+      return 23;
     case 'metal':
-      return 3;
+      return 7;
     case 'incense':
-      return 3;
+      return 12;
+    case 'oil':
+      return 8;
+    case 'resin':
+      return 5;
+    case 'planet':
+    case 'angel':
+      return 7;
+    case 'sign':
+      return 12;
     default:
       return 1;
   }
 }
+
+// Los materiales ampliados codifican morfologia (4 bits bajos) e identidad
+// de catalogo (bits altos). Conservan una forma fisica reconocible y reciben
+// vetas, inclusiones, humo o recipiente irrepetibles por slug.
+bool _isMaterialVariant(int variant) => variant >= 16;
+int _materialBase(int variant) =>
+    _isMaterialVariant(variant) ? (variant - 16) & 0x0f : variant;
+int _materialIdentity(int variant) =>
+    _isMaterialVariant(variant) ? (variant - 16) >> 4 : variant;
 
 /// Índice de variante ESTABLE para un ítem (mismo slug → mismo grabado siempre).
 ///
@@ -74,10 +93,55 @@ int _variantCount(String type) {
 /// VM y en web (dart2js compila `int` a `double` de JS — un FNV de 32 bits
 /// desborda el entero seguro y colapsa todas las variantes a 0).
 int materiaVariant(String slug, String type) {
+  final key = normalizeMateriaSlug(slug);
+  const semantic = <String, int>{
+    // Seis hierbas fundacionales: silueta botánica propia.
+    'romero': 0, 'lavanda': 4, 'rosa': 5, 'canela': 6,
+    'artemisa': 7, 'salvia': 8,
+    // Piedras: el corte sigue la morfología reconocible del material.
+    'turmalina-negra': 20, 'labradorita': 39, 'lapislazuli': 49,
+    'hematita': 65, 'citrino': 83, 'malaquita': 102,
+    'agata-musgo': 118, 'onix-negro': 135, 'jade': 151,
+    'rodocrosita': 167, 'sodalita': 183, 'ojo-de-tigre': 198,
+    'piedra-luna': 213, 'granate': 224, 'esmeralda': 240,
+    'zafiro': 256, 'rubi': 272, 'perla': 293,
+    'cuarzo-ahumado': 307, 'cuarzo-claro': 323, 'cuarzo': 323,
+    'amatista': 340, 'obsidiana': 353, 'cornalina': 369,
+    // Siete metales planetarios y su forma alquímica dominante.
+    'oro': 1, 'plata': 1, 'hierro': 5, 'estano': 0, 'plomo': 6,
+    'mercurio-metal': 3, 'cobre': 4,
+    // Inciensos: resina, madera, raíz/hierba o cristal aromático.
+    'copal': 18, 'benjui': 34, 'sangre-de-drago': 50,
+    'sandalo-blanco': 67, 'estoraque': 84, 'galbano': 98,
+    'opoponax': 114, 'nardo': 132, 'cipres-resina': 147,
+    'canfora': 165, 'olibano': 178, 'mirra': 194,
+    // Aceites: ocho recipientes rituales individuales.
+    'aceite-oliva-sagrado': 16, 'aceite-solar': 33,
+    'aceite-lunar': 50, 'aceite-mercurial': 67,
+    'aceite-venusino': 84, 'aceite-marcial': 101,
+    'aceite-jovial': 118, 'aceite-saturnino': 135,
+    // Resinas: forma de exudacion o recipiente propia.
+    'resina-pino': 16, 'trementina': 33, 'resina-elemi': 50,
+    'resina-labdano': 67, 'resina-mastix': 84,
+    // Regentes, inteligencias y signos conservan su orden tradicional.
+    'planeta-sol': 0, 'planeta-luna': 1, 'planeta-marte': 2,
+    'planeta-mercurio': 3, 'planeta-jupiter': 4, 'planeta-venus': 5,
+    'planeta-saturno': 6,
+    'arcangel-miguel': 0, 'arcangel-gabriel': 1,
+    'arcangel-samael': 2, 'arcangel-rafael': 3,
+    'arcangel-sachiel': 4, 'arcangel-anael': 5,
+    'arcangel-cassiel': 6,
+    'signo-aries': 0, 'signo-tauro': 1, 'signo-geminis': 2,
+    'signo-cancer': 3, 'signo-leo': 4, 'signo-virgo': 5,
+    'signo-libra': 6, 'signo-escorpio': 7, 'signo-sagitario': 8,
+    'signo-capricornio': 9, 'signo-acuario': 10, 'signo-piscis': 11,
+  };
+  final chosen = semantic[key];
+  if (chosen != null) return chosen;
   final n = _variantCount(type);
   if (n <= 1) return 0;
   var h = 5381;
-  for (final c in slug.codeUnits) {
+  for (final c in key.codeUnits) {
     h = ((h * 33) + c) & 0x7fffffff;
   }
   return h % n;
@@ -97,8 +161,9 @@ class _Pen {
       path.cubicTo(_x(a), _y(b), _x(c), _y(d), _x(x), _y(y));
   void quad(double a, double b, double x, double y) =>
       path.quadraticBezierTo(_x(a), _y(b), _x(x), _y(y));
-  void circle(double cx, double cy, double r) =>
-      path.addOval(Rect.fromCircle(center: Offset(_x(cx), _y(cy)), radius: r * s));
+  void circle(double cx, double cy, double r) => path.addOval(
+    Rect.fromCircle(center: Offset(_x(cx), _y(cy)), radius: r * s),
+  );
   void close() => path.close();
 }
 
@@ -117,12 +182,28 @@ Path buildEngraving(String type, int variant, double box) {
         case 2:
           _herbLeaf(pen);
           break;
-        default:
+        case 3:
           _herbRoot(pen);
+          break;
+        case 4:
+          _herbLavender(pen);
+          break;
+        case 5:
+          _herbRose(pen);
+          break;
+        case 6:
+          _herbCinnamon(pen);
+          break;
+        case 7:
+          _herbMugwort(pen);
+          break;
+        default:
+          _herbSage(pen);
       }
       break;
     case 'stone':
-      switch (variant) {
+      final base = _materialBase(variant);
+      switch (base) {
         case 0:
           _stoneGem(pen);
           break;
@@ -132,8 +213,23 @@ Path buildEngraving(String type, int variant, double box) {
         case 2:
           _stoneGeode(pen);
           break;
-        default:
+        case 3:
           _stonePoint(pen);
+          break;
+        case 4:
+          _stoneCluster(pen);
+          break;
+        case 5:
+          _stoneSphere(pen);
+          break;
+        case 6:
+          _stoneBanded(pen);
+          break;
+        default:
+          _stoneCabochon(pen);
+      }
+      if (_isMaterialVariant(variant)) {
+        _stoneSignature(pen, _materialIdentity(variant));
       }
       break;
     case 'metal':
@@ -144,33 +240,67 @@ Path buildEngraving(String type, int variant, double box) {
         case 1:
           _metalDisc(pen);
           break;
-        default:
+        case 2:
           _metalNugget(pen);
+          break;
+        case 3:
+          _metalMercury(pen);
+          break;
+        case 4:
+          _metalCopper(pen);
+          break;
+        case 5:
+          _metalIron(pen);
+          break;
+        default:
+          _metalLead(pen);
       }
       break;
     case 'incense':
-      switch (variant) {
+      final base = _materialBase(variant);
+      switch (base) {
         case 0:
           _incenseSmoke(pen);
           break;
         case 1:
           _incenseCenser(pen);
           break;
-        default:
+        case 2:
           _incenseResin(pen);
+          break;
+        case 3:
+          _incenseWood(pen);
+          break;
+        case 4:
+          _incenseBundle(pen);
+          break;
+        default:
+          _incenseCrystal(pen);
+      }
+      if (_isMaterialVariant(variant)) {
+        _incenseSignature(pen, _materialIdentity(variant));
       }
       break;
     case 'oil':
-      _emblemDroplet(pen);
+      _oilVessel(pen, _materialBase(variant));
       break;
     case 'resin':
-      _emblemResinTear(pen);
+      _resinVessel(pen, _materialBase(variant));
       break;
     case 'element':
       _emblemTriangle(pen);
       break;
     case 'color':
       _emblemAura(pen);
+      break;
+    case 'planet':
+      _emblemPlanet(pen, variant);
+      break;
+    case 'angel':
+      _emblemWings(pen, variant);
+      break;
+    case 'sign':
+      _emblemZodiac(pen, variant);
       break;
     default:
       _emblemStar(pen);
@@ -181,18 +311,35 @@ Path buildEngraving(String type, int variant, double box) {
 // ── HIERBAS ──────────────────────────────────────────────────────────────────
 
 void _herbSprig(_Pen p) {
-  // Ramita de agujas (romero/pino): tallo en S con pares de agujas ascendentes.
+  // Romero: mata ramificada con agujas opuestas y flores axilares.
   p.move(50, 92);
   p.cubic(45, 74, 55, 58, 50, 42);
   p.cubic(47, 32, 51, 22, 50, 12);
-  for (var i = 0; i < 6; i++) {
-    final y = 80.0 - i * 11.5;
-    final len = 20.0 - i * 2.2; // más cortas hacia el ápice
-    p.move(50, y);
-    p.line(50 - len, y - len * 0.55);
-    p.move(50, y - 4);
-    p.line(50 + len, y - 4 - len * 0.55);
+  p.move(48, 68);
+  p.cubic(39, 61, 31, 50, 27, 36);
+  p.move(52, 61);
+  p.cubic(62, 53, 69, 42, 74, 28);
+  const branches = <(double, double, double, double)>[
+    (50, 84, 50, 14),
+    (48, 68, 27, 36),
+    (52, 61, 74, 28),
+  ];
+  for (final (x1, y1, x2, y2) in branches) {
+    for (var i = 1; i < 7; i++) {
+      final t = i / 7;
+      final x = x1 + (x2 - x1) * t;
+      final y = y1 + (y2 - y1) * t;
+      final dx = (y2 - y1) * .13;
+      final dy = (x1 - x2) * .13;
+      p.move(x, y);
+      p.line(x - dx, y - dy);
+      p.move(x + 1, y - 2);
+      p.line(x + dx, y + dy - 2);
+    }
   }
+  p.circle(38, 52, 2.4);
+  p.circle(62, 46, 2.4);
+  p.circle(47, 31, 2.2);
 }
 
 void _herbFlower(_Pen p) {
@@ -268,13 +415,125 @@ void _herbRoot(_Pen p) {
   p.circle(58, 16, 2.4);
 }
 
+void _herbLavender(_Pen p) {
+  // Mata de lavanda: cinco espigas de alturas desiguales y follaje basal.
+  for (final x in [28.0, 39.0, 50.0, 61.0, 72.0]) {
+    final top = x == 50 ? 12.0 : 24.0;
+    p.move(x, 90);
+    final bend = (x - 50) * .12;
+    p.cubic(x - bend, 68, x + bend, 46, x, top);
+    for (var i = 0; i < 6; i++) {
+      final y = top + 7 + i * 5.4;
+      p.move(x, y);
+      p.quad(x - 6, y - 4, x - 8, y);
+      p.move(x, y + 2);
+      p.quad(x + 6, y - 3, x + 8, y + 2);
+    }
+  }
+  for (final x in [30.0, 40.0, 50.0, 60.0, 70.0]) {
+    p.move(50, 88);
+    p.quad(x, 80, x + (x < 50 ? -6 : 6), 66);
+  }
+}
+
+void _herbRose(_Pen p) {
+  // Rosa de jardín: corola concéntrica, cáliz, tallo y hojas serradas.
+  p.move(50, 94);
+  p.cubic(46, 76, 54, 59, 50, 45);
+  p.move(50, 74);
+  p.quad(32, 72, 25, 61);
+  p.quad(37, 62, 50, 70);
+  p.move(51, 65);
+  p.quad(69, 63, 76, 52);
+  p.quad(63, 54, 51, 61);
+  p.circle(50, 31, 5);
+  for (final r in [11.0, 18.0, 25.0]) {
+    final petals = r == 11 ? 5 : (r == 18 ? 7 : 9);
+    for (var i = 0; i < petals; i++) {
+      final a = -math.pi / 2 + i * 2 * math.pi / petals + r * .01;
+      final x = 50 + r * math.cos(a);
+      final y = 31 + r * .72 * math.sin(a);
+      p.move(
+        50 + r * .45 * math.cos(a - .35),
+        31 + r * .32 * math.sin(a - .35),
+      );
+      p.quad(
+        x,
+        y,
+        50 + r * .45 * math.cos(a + .35),
+        31 + r * .32 * math.sin(a + .35),
+      );
+    }
+  }
+}
+
+void _herbCinnamon(_Pen p) {
+  // Corteza enrollada y rama de hojas opuestas.
+  p.move(24, 72);
+  p.line(64, 28);
+  p.line(76, 40);
+  p.line(36, 84);
+  p.close();
+  p.move(30, 73);
+  p.cubic(38, 82, 45, 77, 42, 69);
+  p.move(58, 33);
+  p.cubic(67, 25, 75, 31, 70, 40);
+  p.move(48, 60);
+  p.line(78, 76);
+  p.move(58, 65);
+  p.quad(65, 51, 72, 50);
+  p.quad(75, 60, 62, 68);
+  p.move(66, 70);
+  p.quad(78, 65, 84, 71);
+  p.quad(78, 79, 68, 74);
+}
+
+void _herbMugwort(_Pen p) {
+  // Artemisa: hoja profundamente lobulada y espiga de cabezuelas.
+  p.move(48, 92);
+  p.cubic(44, 72, 54, 48, 50, 14);
+  for (var i = 0; i < 6; i++) {
+    final y = 76.0 - i * 10;
+    final spread = 25.0 - i * 2.4;
+    p.move(49, y);
+    p.quad(38, y - 8, 50 - spread, y - 4);
+    p.quad(35, y + 1, 49, y + 3);
+    p.move(51, y - 4);
+    p.quad(64, y - 12, 50 + spread, y - 9);
+    p.quad(65, y - 2, 51, y);
+  }
+  p.circle(44, 13, 2.6);
+  p.circle(51, 9, 2.4);
+  p.circle(57, 15, 2.8);
+}
+
+void _herbSage(_Pen p) {
+  // Salvia: hojas anchas, opuestas y de borde ondulado.
+  p.move(50, 94);
+  p.cubic(47, 72, 53, 48, 50, 15);
+  for (var i = 0; i < 4; i++) {
+    final y = 76.0 - i * 15;
+    final len = 24.0 - i * 2;
+    p.move(50, y);
+    p.cubic(38, y - 10, 29, y - 7, 50 - len, y - 2);
+    p.cubic(32, y + 6, 41, y + 8, 50, y + 3);
+    p.move(50, y - 5);
+    p.cubic(62, y - 15, 71, y - 12, 50 + len, y - 7);
+    p.cubic(68, y + 1, 59, y + 3, 50, y - 2);
+  }
+  p.move(50, 23);
+  p.quad(42, 12, 38, 17);
+  p.move(50, 19);
+  p.quad(58, 8, 63, 14);
+}
+
 // ── PIEDRAS ──────────────────────────────────────────────────────────────────
 
-List<Offset> _hexagon(double cx, double cy, double r, double rot) => List.generate(
-    6, (i) {
-  final a = rot + i * math.pi / 3;
-  return Offset(cx + r * math.cos(a), cy + r * math.sin(a));
-});
+List<Offset> _hexagon(double cx, double cy, double r, double rot) =>
+    List.generate(6, (i) {
+      final a = rot + i * math.pi / 3;
+      return Offset(cx + r * math.cos(a), cy + r * math.sin(a));
+    });
 
 void _stoneGem(_Pen p) {
   // Corte facetado (rosa): hexágono exterior, mesa interior y radios.
@@ -356,6 +615,112 @@ void _stonePoint(_Pen p) {
   p.line(50, 84);
 }
 
+void _stoneCluster(_Pen p) {
+  // Drusa: cinco puntas de alturas y anchos distintos sobre matriz rocosa.
+  const crystals = <(double, double, double)>[
+    (28, 50, 15),
+    (39, 34, 18),
+    (51, 18, 20),
+    (63, 38, 16),
+    (73, 52, 13),
+  ];
+  for (final (x, top, half) in crystals) {
+    p.move(x - half * .45, 77);
+    p.line(x - half * .45, top + 10);
+    p.line(x, top);
+    p.line(x + half * .45, top + 10);
+    p.line(x + half * .45, 77);
+    p.move(x, top);
+    p.line(x, 77);
+  }
+  p.move(20, 76);
+  p.cubic(34, 68, 65, 70, 82, 78);
+  p.line(72, 86);
+  p.line(31, 86);
+  p.close();
+}
+
+void _stoneSphere(_Pen p) {
+  // Perla/esfera lunar sobre pequeño pedestal de museo.
+  p.circle(50, 45, 27);
+  p.move(31, 37);
+  p.cubic(36, 25, 46, 18, 57, 19);
+  p.move(39, 70);
+  p.line(34, 83);
+  p.line(66, 83);
+  p.line(61, 70);
+  p.move(38, 78);
+  p.quad(50, 72, 62, 78);
+}
+
+void _stoneBanded(_Pen p) {
+  // Mineral bandeado: contorno irregular con estratos orgánicos.
+  p.move(24, 58);
+  p.cubic(22, 37, 39, 22, 60, 25);
+  p.cubic(78, 28, 83, 49, 74, 68);
+  p.cubic(62, 82, 35, 79, 26, 66);
+  p.close();
+  p.move(27, 48);
+  p.cubic(40, 39, 57, 46, 76, 38);
+  p.move(25, 58);
+  p.cubic(39, 49, 59, 59, 77, 49);
+  p.move(29, 69);
+  p.cubic(43, 60, 57, 72, 71, 62);
+}
+
+void _stoneCabochon(_Pen p) {
+  // Cabujón pulido: gema oval en engaste fino.
+  p.move(50, 16);
+  p.cubic(74, 18, 82, 39, 75, 61);
+  p.cubic(69, 82, 31, 82, 25, 61);
+  p.cubic(18, 39, 26, 18, 50, 16);
+  p.close();
+  p.move(50, 24);
+  p.cubic(66, 25, 72, 42, 68, 58);
+  p.cubic(62, 71, 38, 71, 32, 58);
+  p.cubic(28, 42, 34, 25, 50, 24);
+  p.close();
+  p.move(34, 36);
+  p.quad(43, 27, 52, 28);
+}
+
+/// Marca mineralogica individual: veta, inclusion o plano de exfoliacion.
+/// La combinacion de motivo y puntos de catalogo es unica para las 23 piedras.
+void _stoneSignature(_Pen p, int identity) {
+  switch (identity % 5) {
+    case 0:
+      p.move(32, 53);
+      p.cubic(42, 45, 52, 61, 68, 49);
+      break;
+    case 1:
+      p.move(37, 35);
+      p.line(62, 67);
+      p.move(59, 34);
+      p.line(42, 66);
+      break;
+    case 2:
+      p.circle(50, 49, 9);
+      p.circle(50, 49, 3);
+      break;
+    case 3:
+      p.move(31, 45);
+      p.quad(50, 34, 69, 45);
+      p.move(31, 57);
+      p.quad(50, 68, 69, 57);
+      break;
+    default:
+      for (var i = 0; i < 5; i++) {
+        final a = -math.pi / 2 + i * 2 * math.pi / 5;
+        p.move(50, 50);
+        p.line(50 + 17 * math.cos(a), 50 + 17 * math.sin(a));
+      }
+  }
+  final marks = 1 + identity ~/ 5;
+  for (var i = 0; i < marks; i++) {
+    p.circle(34 + i * 8.0, 87, 1.5);
+  }
+}
+
 // ── METALES ──────────────────────────────────────────────────────────────────
 
 void _metalIngot(_Pen p) {
@@ -412,6 +777,66 @@ void _metalNugget(_Pen p) {
   p.line(38, 72);
 }
 
+void _metalMercury(_Pen p) {
+  // Azogue: gotas coalescentes dentro de una retorta alquímica.
+  p.circle(40, 60, 14);
+  p.circle(60, 62, 17);
+  p.circle(52, 39, 10);
+  p.move(47, 29);
+  p.line(47, 15);
+  p.line(56, 15);
+  p.line(56, 30);
+  p.move(32, 77);
+  p.quad(50, 85, 70, 78);
+}
+
+void _metalCopper(_Pen p) {
+  // Cobre: espiral conductora sobre lámina martillada.
+  p.move(22, 68);
+  p.line(30, 28);
+  p.line(78, 32);
+  p.line(70, 74);
+  p.close();
+  p.move(51, 50);
+  for (var i = 0; i < 3; i++) {
+    final r = 7.0 + i * 7;
+    p.move(51 + r, 50);
+    p.cubic(51 + r, 50 - r, 51 - r, 50 - r, 51 - r, 50);
+    p.cubic(51 - r, 50 + r, 51 + r, 50 + r, 51 + r, 50);
+  }
+}
+
+void _metalIron(_Pen p) {
+  // Hierro: hoja forjada y marcas de martillo.
+  p.move(50, 12);
+  p.line(66, 34);
+  p.line(57, 73);
+  p.line(50, 88);
+  p.line(43, 73);
+  p.line(34, 34);
+  p.close();
+  p.move(50, 18);
+  p.line(50, 76);
+  p.move(40, 38);
+  p.line(60, 38);
+  p.move(43, 55);
+  p.line(57, 55);
+}
+
+void _metalLead(_Pen p) {
+  // Plomo: pesa saturnina, densa y estable.
+  p.move(39, 24);
+  p.quad(50, 14, 61, 24);
+  p.line(65, 39);
+  p.line(76, 75);
+  p.quad(50, 86, 24, 75);
+  p.line(35, 39);
+  p.close();
+  p.circle(50, 28, 6);
+  p.move(32, 69);
+  p.quad(50, 76, 68, 69);
+}
+
 // ── INCIENSOS ────────────────────────────────────────────────────────────────
 
 void _incenseSmoke(_Pen p) {
@@ -451,6 +876,72 @@ void _incenseResin(_Pen p) {
   p.cubic(44, 48, 60, 40, 50, 26);
 }
 
+void _incenseWood(_Pen p) {
+  // Maderas aromáticas: tres astillas cruzadas y humo tenue.
+  p.move(24, 72);
+  p.line(70, 42);
+  p.line(76, 50);
+  p.line(30, 80);
+  p.close();
+  p.move(28, 48);
+  p.line(72, 70);
+  p.line(68, 79);
+  p.line(24, 57);
+  p.close();
+  p.move(52, 42);
+  p.cubic(42, 31, 61, 25, 52, 14);
+}
+
+void _incenseBundle(_Pen p) {
+  // Nardo/raíces: haz atado listo para el sahumerio.
+  for (final x in [35.0, 43.0, 51.0, 59.0, 67.0]) {
+    p.move(x, 80);
+    p.cubic(x - 7, 64, x + 7, 46, x - 2, 25 + (x % 3) * 4);
+  }
+  p.move(28, 61);
+  p.cubic(40, 55, 61, 68, 74, 59);
+  p.move(29, 66);
+  p.cubic(42, 60, 60, 73, 73, 64);
+}
+
+void _incenseCrystal(_Pen p) {
+  // Alcanfor: cristales aromáticos sublimándose.
+  _stoneCluster(p);
+  p.move(50, 42);
+  p.cubic(39, 31, 62, 24, 51, 12);
+  p.move(61, 46);
+  p.cubic(72, 35, 58, 29, 67, 20);
+}
+
+/// Firma aromatica individual: cada materia conserva su forma de origen y
+/// recibe una voluta propia y un numero de granos de catalogo irrepetible.
+void _incenseSignature(_Pen p, int identity) {
+  switch (identity % 4) {
+    case 0:
+      p.move(39, 34);
+      p.cubic(28, 25, 44, 18, 35, 10);
+      break;
+    case 1:
+      p.move(61, 38);
+      p.cubic(73, 29, 57, 21, 67, 12);
+      break;
+    case 2:
+      p.move(38, 39);
+      p.cubic(25, 30, 45, 24, 34, 14);
+      p.move(62, 37);
+      p.cubic(73, 29, 57, 22, 67, 13);
+      break;
+    default:
+      p.move(50, 38);
+      p.cubic(35, 28, 65, 23, 48, 10);
+      p.circle(65, 22, 2);
+  }
+  final grains = 1 + identity ~/ 4;
+  for (var i = 0; i < grains; i++) {
+    p.circle(42 + i * 8.0, 88, 1.6);
+  }
+}
+
 void _tear(_Pen p, double cx, double by, double r) {
   // Gota/lágrima: punta arriba, panza abajo, centrada en (cx, by-r).
   p.move(cx, by - 2 * r);
@@ -468,6 +959,115 @@ void _emblemDroplet(_Pen p) {
   p.quad(40, 68, 46, 72); // destello
 }
 
+void _oilVessel(_Pen p, int variant) {
+  switch (variant) {
+    case 0: // Oliva consagrada: gota primordial.
+      _emblemDroplet(p);
+      p.move(33, 82);
+      p.quad(50, 88, 67, 82);
+      break;
+    case 1: // Solar: ampolla radiante.
+      p.move(42, 17);
+      p.line(58, 17);
+      p.line(60, 31);
+      p.cubic(76, 40, 76, 67, 66, 82);
+      p.line(34, 82);
+      p.cubic(24, 67, 24, 40, 40, 31);
+      p.close();
+      p.circle(50, 57, 11);
+      for (var i = 0; i < 8; i++) {
+        final a = i * math.pi / 4;
+        p.move(50 + 14 * math.cos(a), 57 + 14 * math.sin(a));
+        p.line(50 + 19 * math.cos(a), 57 + 19 * math.sin(a));
+      }
+      break;
+    case 2: // Lunar: matraz redondo con creciente.
+      p.move(44, 14);
+      p.line(56, 14);
+      p.line(56, 31);
+      p.cubic(76, 43, 75, 72, 61, 83);
+      p.line(39, 83);
+      p.cubic(25, 72, 24, 43, 44, 31);
+      p.close();
+      p.move(57, 47);
+      p.cubic(41, 49, 40, 68, 57, 71);
+      p.cubic(48, 64, 48, 54, 57, 47);
+      break;
+    case 3: // Mercurial: vial alto y alado.
+      p.move(43, 13);
+      p.line(57, 13);
+      p.line(57, 68);
+      p.quad(50, 83, 43, 68);
+      p.close();
+      p.move(42, 27);
+      p.quad(31, 22, 25, 31);
+      p.quad(34, 30, 42, 38);
+      p.move(58, 27);
+      p.quad(69, 22, 75, 31);
+      p.quad(66, 30, 58, 38);
+      p.move(38, 18);
+      p.line(62, 18);
+      break;
+    case 4: // Venusino: perfumero de cintura estrecha.
+      p.move(40, 19);
+      p.quad(50, 11, 60, 19);
+      p.line(57, 31);
+      p.cubic(72, 42, 72, 69, 63, 82);
+      p.quad(50, 75, 37, 82);
+      p.cubic(28, 69, 28, 42, 43, 31);
+      p.close();
+      p.circle(50, 55, 10);
+      p.move(50, 65);
+      p.line(50, 75);
+      p.move(44, 70);
+      p.line(56, 70);
+      break;
+    case 5: // Marcial: frasco angular protegido.
+      p.move(41, 16);
+      p.line(59, 16);
+      p.line(61, 31);
+      p.line(74, 45);
+      p.line(66, 83);
+      p.line(34, 83);
+      p.line(26, 45);
+      p.line(39, 31);
+      p.close();
+      p.circle(47, 57, 9);
+      p.move(54, 50);
+      p.line(65, 39);
+      p.line(65, 48);
+      break;
+    case 6: // Jovial: vaso ancho de abundancia.
+      p.move(35, 25);
+      p.quad(50, 16, 65, 25);
+      p.line(70, 70);
+      p.quad(50, 90, 30, 70);
+      p.close();
+      p.move(28, 35);
+      p.quad(19, 48, 32, 58);
+      p.move(72, 35);
+      p.quad(81, 48, 68, 58);
+      p.move(36, 54);
+      p.quad(50, 64, 64, 54);
+      break;
+    default: // Saturnino: botella cuadrada y sellada.
+      p.move(39, 15);
+      p.line(61, 15);
+      p.line(61, 30);
+      p.line(72, 39);
+      p.line(69, 83);
+      p.line(31, 83);
+      p.line(28, 39);
+      p.line(39, 30);
+      p.close();
+      p.move(35, 49);
+      p.line(65, 49);
+      p.move(39, 64);
+      p.line(61, 64);
+      p.circle(50, 72, 5);
+  }
+}
+
 void _emblemResinTear(_Pen p) {
   // Resina: lágrima facetada colgando de una ramita.
   p.move(50, 16);
@@ -477,6 +1077,54 @@ void _emblemResinTear(_Pen p) {
   p.line(50, 78); // arista
   p.move(42, 60);
   p.line(58, 60); // faceta
+}
+
+void _resinVessel(_Pen p, int variant) {
+  switch (variant) {
+    case 0:
+      _emblemResinTear(p);
+      break;
+    case 1:
+      _incenseResin(p);
+      p.move(28, 78);
+      p.quad(50, 87, 74, 78);
+      break;
+    case 2:
+      p.move(22, 31);
+      p.quad(50, 20, 78, 31);
+      p.move(50, 27);
+      p.line(50, 50);
+      _tear(p, 50, 81, 15);
+      _tear(p, 31, 68, 8);
+      _tear(p, 69, 68, 8);
+      break;
+    case 3:
+      p.move(31, 35);
+      p.line(69, 35);
+      p.line(74, 78);
+      p.quad(50, 86, 26, 78);
+      p.close();
+      p.move(36, 27);
+      p.line(64, 27);
+      p.line(69, 35);
+      p.line(31, 35);
+      p.close();
+      _tear(p, 50, 70, 11);
+      break;
+    default:
+      // Mastic: lagrimas pequenas perladas todavia unidas a la rama.
+      p.move(25, 28);
+      p.cubic(39, 19, 61, 36, 77, 22);
+      for (var i = 0; i < 5; i++) {
+        final x = 32.0 + i * 9;
+        final y = 32.0 + (i.isEven ? 2 : 8);
+        p.move(x, 28 + (i.isEven ? 0 : 5));
+        p.line(x, y + 5);
+        _tear(p, x, y + 17, 5);
+      }
+      p.move(28, 78);
+      p.quad(50, 87, 72, 78);
+  }
 }
 
 void _emblemTriangle(_Pen p) {
@@ -497,6 +1145,104 @@ void _emblemAura(_Pen p) {
     p.move(50 + 27 * math.cos(a), 50 + 27 * math.sin(a));
     p.line(50 + 34 * math.cos(a), 50 + 34 * math.sin(a));
   }
+}
+
+void _emblemPlanet(_Pen p, int variant) {
+  // Sello orbital común; el núcleo porta el glifo geométrico del regente.
+  p.move(17, 50);
+  p.cubic(24, 25, 76, 25, 83, 50);
+  p.cubic(76, 75, 24, 75, 17, 50);
+  p.move(50, 17);
+  p.cubic(75, 24, 75, 76, 50, 83);
+  p.cubic(25, 76, 25, 24, 50, 17);
+  p.circle(77, 39, 3);
+  switch (variant) {
+    case 0: // Sol
+      p.circle(50, 50, 13);
+      p.circle(50, 50, 2.5);
+      break;
+    case 1: // Luna
+      p.move(57, 36);
+      p.cubic(39, 39, 38, 62, 57, 65);
+      p.cubic(47, 58, 47, 43, 57, 36);
+      break;
+    case 2: // Marte
+      p.circle(46, 54, 11);
+      p.move(54, 46);
+      p.line(66, 34);
+      p.move(58, 34);
+      p.line(66, 34);
+      p.line(66, 42);
+      break;
+    case 3: // Mercurio
+      p.circle(50, 49, 9);
+      p.move(43, 39);
+      p.quad(50, 31, 57, 39);
+      p.move(50, 58);
+      p.line(50, 68);
+      p.move(44, 64);
+      p.line(56, 64);
+      break;
+    case 4: // Júpiter
+      p.move(40, 38);
+      p.cubic(58, 34, 57, 48, 43, 55);
+      p.line(63, 55);
+      p.move(56, 36);
+      p.line(50, 68);
+      break;
+    case 5: // Venus
+      p.circle(50, 45, 11);
+      p.move(50, 56);
+      p.line(50, 69);
+      p.move(43, 64);
+      p.line(57, 64);
+      break;
+    default: // Saturno
+      p.move(45, 33);
+      p.line(45, 66);
+      p.move(38, 42);
+      p.line(54, 42);
+      p.cubic(62, 44, 61, 55, 52, 58);
+      p.cubic(61, 61, 60, 68, 55, 71);
+  }
+}
+
+void _emblemWings(_Pen p, int variant) {
+  p.circle(50, 31, 8);
+  p.move(50, 39);
+  p.line(50, 83);
+  p.move(48, 48);
+  p.cubic(34, 31, 19, 32, 15, 42);
+  p.cubic(28, 41, 22, 55, 42, 68);
+  p.move(52, 48);
+  p.cubic(66, 31, 81, 32, 85, 42);
+  p.cubic(72, 41, 78, 55, 58, 68);
+  p.move(31, 45);
+  p.line(42, 61);
+  p.move(69, 45);
+  p.line(58, 61);
+  // Marca de la inteligencia planetaria: siete terminales irrepetibles.
+  final rays = variant + 1;
+  for (var i = 0; i < rays; i++) {
+    final a = math.pi * (0.15 + 0.7 * i / math.max(1, rays - 1));
+    p.move(50 + 11 * math.cos(a), 75 + 6 * math.sin(a));
+    p.line(50 + 18 * math.cos(a), 75 + 10 * math.sin(a));
+  }
+}
+
+void _emblemZodiac(_Pen p, int variant) {
+  p.circle(50, 50, 31);
+  p.circle(50, 50, 20);
+  for (var i = 0; i < 12; i++) {
+    final a = -math.pi / 2 + i * math.pi / 6;
+    p.move(50 + 22 * math.cos(a), 50 + 22 * math.sin(a));
+    p.line(50 + 31 * math.cos(a), 50 + 31 * math.sin(a));
+  }
+  // El radio iluminado sitúa al signo en su casa dentro de la rueda completa.
+  final a = -math.pi / 2 + (variant % 12) * math.pi / 6;
+  p.move(50, 50);
+  p.line(50 + 29 * math.cos(a), 50 + 29 * math.sin(a));
+  p.circle(50 + 25 * math.cos(a), 50 + 25 * math.sin(a), 3.5);
 }
 
 void _emblemStar(_Pen p) {
@@ -612,8 +1358,11 @@ class MateriaArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ink = Color.lerp(mood.accent, ArcanumColors.ivory, 0.34)!
-        .withValues(alpha: 0.92);
+    final ink = Color.lerp(
+      mood.accent,
+      ArcanumColors.ivory,
+      0.34,
+    )!.withValues(alpha: 0.92);
     return RepaintBoundary(
       child: CustomPaint(
         size: Size.square(size),
@@ -652,7 +1401,10 @@ class MateriaSeal extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: mood.glow.withValues(alpha: 0.10),
-        border: Border.all(color: mood.accent.withValues(alpha: 0.42), width: 0.9),
+        border: Border.all(
+          color: mood.accent.withValues(alpha: 0.42),
+          width: 0.9,
+        ),
       ),
       child: Text(
         glyph,

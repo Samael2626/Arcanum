@@ -1,5 +1,8 @@
+import os
+from typing import Literal, Optional
+
+from pydantic import ConfigDict, model_validator
 from pydantic_settings import BaseSettings
-from typing import Optional
 
 
 class Settings(BaseSettings):
@@ -7,16 +10,16 @@ class Settings(BaseSettings):
     APP_NAME: str = "Arcanum API"
     APP_VERSION: str = "0.1.0"
     DEBUG: bool = False
+    ENVIRONMENT: Literal["development", "test", "production"] = "development"
 
     # Security
-    SECRET_KEY: str = "change-me-in-production-use-openssl-rand-hex-32"
+    SECRET_KEY: str = "development-only-secret-key"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
-    # Database — Default Supavisor (Supabase IPv4 pooler).
-    # render.yaml IaC reinyecta el mismo valor; env var gana sobre default.
-    DATABASE_URL: str = "postgresql://postgres:Peydun1226!@pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
+    # Desarrollo local solamente. Producción debe inyectar DATABASE_URL.
+    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/arcanum_db"
 
     # Redis
     REDIS_HOST: str = "localhost"
@@ -28,7 +31,7 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:8080,https://arcanum-app-magick.web.app"
 
     # Admin (migraciones on-demand, endpoints admin)
-    ADMIN_TOKEN: str = "change-me-in-production"
+    ADMIN_TOKEN: Optional[str] = None
     RUN_STARTUP_MIGRATIONS: bool = False
     RUN_STARTUP_SEEDS: bool = False
 
@@ -51,10 +54,37 @@ class Settings(BaseSettings):
     NOMINATIM_USER_AGENT: str = "ARCANUM-app/1.0 (contacto: soporte@arcanum-app.com)"
     GEOCODING_MIN_INTERVAL_SECONDS: float = 1.0
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-        extra = "ignore"  # tolera vars de entorno viejas (ej. ANTHROPIC_API_KEY)
+    model_config = ConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra="ignore",
+    )
+
+    @model_validator(mode="after")
+    def reject_insecure_production_defaults(self):
+        railway_production = (
+            os.getenv("RAILWAY_ENVIRONMENT_NAME", "").lower() == "production"
+        )
+        if self.ENVIRONMENT != "production" and not railway_production:
+            return self
+
+        problems: list[str] = []
+        if len(self.SECRET_KEY) < 32 or self.SECRET_KEY.startswith(
+            ("change-me", "development-")
+        ):
+            problems.append("SECRET_KEY")
+        if not self.ADMIN_TOKEN or len(self.ADMIN_TOKEN) < 32:
+            problems.append("ADMIN_TOKEN")
+        if (
+            "localhost" in self.DATABASE_URL
+            or "postgres:postgres@" in self.DATABASE_URL
+        ):
+            problems.append("DATABASE_URL")
+        if problems:
+            raise ValueError(
+                "Configuración insegura para producción: " + ", ".join(problems)
+            )
+        return self
 
 
 settings = Settings()

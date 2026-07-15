@@ -8,9 +8,14 @@ class ArcanumApi {
   ArcanumApi(this._dio);
   final Dio _dio;
 
-  Future<Map<String, dynamic>> today({double lat = 4.71, double lon = -74.07}) async {
-    final res = await _dio.get('/astral/today',
-        queryParameters: {'lat': lat, 'lon': lon});
+  Future<Map<String, dynamic>> today({
+    double lat = 4.71,
+    double lon = -74.07,
+  }) async {
+    final res = await _dio.get(
+      '/astral/today',
+      queryParameters: {'lat': lat, 'lon': lon},
+    );
     return res.data as Map<String, dynamic>;
   }
 
@@ -27,12 +32,19 @@ class ArcanumApi {
   }
 
   /// Materia Arcana: catálogo (resumen). Filtros opcionales.
-  Future<List<Map<String, dynamic>>> materiaList({String? itemType, String? planet, String? q}) async {
-    final res = await _dio.get('/materia', queryParameters: {
-      if (itemType != null) 'item_type': itemType,
-      if (planet != null) 'planet': planet,
-      if (q != null && q.isNotEmpty) 'q': q,
-    });
+  Future<List<Map<String, dynamic>>> materiaList({
+    String? itemType,
+    String? planet,
+    String? q,
+  }) async {
+    final res = await _dio.get(
+      '/materia',
+      queryParameters: {
+        'item_type': ?itemType,
+        'planet': ?planet,
+        if (q != null && q.isNotEmpty) 'q': q,
+      },
+    );
     return (res.data as List).cast<Map<String, dynamic>>();
   }
 
@@ -65,7 +77,10 @@ class ArcanumApi {
   /// Tira de tarot. spread: 'three_card' | 'celtic_cross'. Requiere auth.
   /// Devuelve la sesión guardada (cartas en data['cards_drawn']['cards']).
   Future<Map<String, dynamic>> tarotDraw(String spread) async {
-    final res = await _dio.post('/oracle/tarot/draw', queryParameters: {'spread_type': spread});
+    final res = await _dio.post(
+      '/oracle/tarot/draw',
+      queryParameters: {'spread_type': spread},
+    );
     return res.data as Map<String, dynamic>;
   }
 
@@ -74,23 +89,32 @@ class ArcanumApi {
   /// - `question` + `divinationSessionId` → lectura anclada a la tirada, responde la pregunta.
   /// - solo `divinationSessionId` (question null/vacío) → lectura de la tirada sin pregunta.
   /// Devuelve OracleConversation (messages = lista de {role, content, timestamp}).
-  Future<Map<String, dynamic>> oracleIa({String? question, String? divinationSessionId}) async {
+  Future<Map<String, dynamic>> oracleIa({
+    String? question,
+    String? divinationSessionId,
+  }) async {
     final q = question?.trim();
-    final res = await _dio.post('/oracle/ia', data: {
-      if (q != null && q.isNotEmpty) 'question': q,
-      if (divinationSessionId != null) 'divination_session_id': divinationSessionId,
-    });
+    final res = await _dio.post(
+      '/oracle/ia',
+      data: {
+        if (q != null && q.isNotEmpty) 'question': q,
+        'divination_session_id': ?divinationSessionId,
+      },
+    );
     return res.data as Map<String, dynamic>;
   }
 
   // ── Tarot (catálogo + sorteos) ──────────────────────────────────────────
 
   /// Catálogo de cartas del Tarot. Filtros opcionales.
-  Future<List<Map<String, dynamic>>> tarotList({String? arcana, String? suit}) async {
-    final res = await _dio.get('/tarot/cards', queryParameters: {
-      if (arcana != null) 'arcana': arcana,
-      if (suit != null) 'suit': suit,
-    });
+  Future<List<Map<String, dynamic>>> tarotList({
+    String? arcana,
+    String? suit,
+  }) async {
+    final res = await _dio.get(
+      '/tarot/cards',
+      queryParameters: {'arcana': ?arcana, 'suit': ?suit},
+    );
     return (res.data as List).cast<Map<String, dynamic>>();
   }
 
@@ -103,18 +127,22 @@ class ArcanumApi {
   /// Sorteo de una carta. Requiere auth.
   /// La pregunta se envía en texto plano (Pydantic del lado servidor la trunca a 1000 chars).
   Future<Map<String, dynamic>> tarotDrawOne({String? question}) async {
-    final res = await _dio.post('/tarot/draw-one', data: {
-      if (question != null) 'question': question,
-    });
+    final res = await _dio.post(
+      '/tarot/draw-one',
+      data: {'question': ?question},
+    );
     return res.data as Map<String, dynamic>;
   }
 
   /// Tirada completa (one_card | three_card | celtic_cross). Requiere auth.
-  Future<Map<String, dynamic>> tarotSpread({required String spreadType, String? question}) async {
-    final res = await _dio.post('/tarot/spread', data: {
-      'spread_type': spreadType,
-      if (question != null) 'question': question,
-    });
+  Future<Map<String, dynamic>> tarotSpread({
+    required String spreadType,
+    String? question,
+  }) async {
+    final res = await _dio.post(
+      '/tarot/spread',
+      data: {'spread_type': spreadType, 'question': ?question},
+    );
     return res.data as Map<String, dynamic>;
   }
 
@@ -126,14 +154,16 @@ class ArcanumApi {
   /// guardar automáticamente sin confirmación. Si el backend no resuelve el
   /// lugar, propaga un DioException con `response.data['detail']` legible
   /// (422); el llamador debe fallar visible, nunca caer a un default.
-  Future<Map<String, dynamic>> geoResolve({required String country, required String city}) async {
-    final res = await _dio.post('/geo/resolve', data: {
-      'country': country,
-      'city': city,
-    });
+  Future<Map<String, dynamic>> geoResolve({
+    required String country,
+    required String city,
+  }) async {
+    final res = await _dio.post(
+      '/geo/resolve',
+      data: {'country': country, 'city': city},
+    );
     return res.data as Map<String, dynamic>;
   }
 }
 
-final arcanumApiProvider =
-    Provider((ref) => ArcanumApi(ref.read(dioProvider)));
+final arcanumApiProvider = Provider((ref) => ArcanumApi(ref.read(dioProvider)));

@@ -43,6 +43,7 @@ dependencies:
   encrypt: ^5.0.3
   crypto: ^3.0.3
   shared_preferences: ^2.5.5
+  flutter_svg: ^2.3.0
   # rive: ^0.14.8
   # model_viewer_plus: ^1.10.0
 
