@@ -4,8 +4,8 @@
 
 set -e
 
-echo "=== Building Render Docker image locally ==="
-docker build -f render.dockerfile -t arcanum-api:test .
+echo "=== Building Docker image locally (mismo Dockerfile que Render/Railway) ==="
+docker build -f Dockerfile -t arcanum-api:test .
 
 echo ""
 echo "=== Testing swisseph compilation ==="
@@ -24,7 +24,7 @@ print(f'✓ All checks passed!')
 echo ""
 echo "=== Image ready for Render ==="
 echo "Next steps:"
-echo "  1. Commit files: git add render.dockerfile render.yaml requirements.txt"
+echo "  1. Commit files: git add Dockerfile render.yaml requirements.txt"
 echo "  2. Push: git push origin feat/onboarding-5-pasos"
 echo "  3. In Render dashboard:"
 echo "     - Select project"
@@ -32,5 +32,5 @@ echo "     - New Service → Web Service"
 echo "     - Connect GitHub repo"
 echo "     - Select branch: feat/onboarding-5-pasos"
 echo "     - Runtime: Docker (not Python buildpack!)"
-echo "     - Dockerfile Path: ./render.dockerfile"
+echo "     - Dockerfile Path: ./Dockerfile"
 echo "     - Deploy"

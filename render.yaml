@@ -4,7 +4,7 @@ services:
   - type: web
     name: arcanum-api
     runtime: docker
-    dockerfilePath: ./render.dockerfile
+    dockerfilePath: ./Dockerfile
     region: oregon
     plan: standard
 
@@ -12,6 +12,10 @@ services:
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
+      # Render omite migraciones (el pooler pgbouncer/transaction rompe el DDL de
+      # Alembic). Se corren en local. Railway no setea esto -> corre migraciones.
+      - key: RUN_MIGRATIONS
+        value: "false"
       - key: DATABASE_URL
         value: "postgresql://postgres:Peydun1226!@pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
       - key: ADMIN_TOKEN

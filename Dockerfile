@@ -1,26 +1,25 @@
+# Dockerfile UNICO de ARCANUM API — lo usan Railway y Render (render.yaml apunta
+# aqui via dockerfilePath). El arranque (migraciones si/no) lo decide start.sh
+# segun RUN_MIGRATIONS. Build context = raiz del repo.
 FROM python:3.12-slim
 
 WORKDIR /app
 
-# Instalar dependencias de compilación ANTES de pip install
-# Necesario para pyswisseph, psycopg2-binary, y otras extensiones C
+# Dependencias de compilacion ANTES de pip install (pyswisseph, psycopg2, etc.)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     python3-dev \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiar requirements
+# Lista unica de requirements (raiz del repo)
 COPY requirements.txt .
-
-# Instalar Python deps (compila pyswisseph aquí en FS writable)
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar aplicación
+# Codigo de la app
 COPY . .
 
-# Puerto para Railway
 EXPOSE 8000
 
-# Migraciones + Uvicorn
-CMD ["sh", "/app/start-railway.sh"]
+# Entrypoint unico Railway/Render. Migraciones on/off via RUN_MIGRATIONS.
+CMD ["sh", "/app/start.sh"]
