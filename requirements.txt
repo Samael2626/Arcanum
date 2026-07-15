@@ -16,3 +16,6 @@ astral==3.2
 pyswisseph==2.10.3.2
 pytest==8.0.2
 httpx==0.27.0
+# timezonefinder: offline lat/lon -> IANA timezone (geocoding onboarding). Render
+# construye desde la raiz y usa ESTE requirements.txt, no arcanum-api/requirements.txt.
+timezonefinder==8.2.4
