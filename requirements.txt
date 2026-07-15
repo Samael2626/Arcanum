@@ -1,21 +1,43 @@
-﻿fastapi==0.110.0
+# ARCANUM API — dependencias (FUENTE UNICA).
+# Render (render.dockerfile) y Railway (/Dockerfile) construyen desde la raiz del
+# repo y usan ESTE archivo. arcanum-api/requirements.txt es un passthrough (-r ../).
+# No dupliques la lista: edita solo aqui.
+
+# FastAPI stack
+fastapi==0.110.0
 uvicorn[standard]==0.29.0
+
+# Base de datos
 sqlalchemy==2.0.29
 psycopg2-binary==2.9.10
 alembic==1.13.0
+
+# Pydantic
 pydantic[email]==2.10.0
 pydantic-settings==2.2.1
 python-dotenv==1.0.1
+
+# Auth & seguridad
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
 python-multipart==0.0.9
+
+# Infra
 redis==5.0.3
+
+# LLM
 groq>=0.9.0
-astral==3.2
+
+# Astrologia (astral para horas planetarias).
+# pyswisseph compila extension C. En Windows requiere MS C++ Build Tools; si falla
+# la autodeteccion de VS: activar vcvarsall x64 y exportar DISTUTILS_USE_SDK=1.
 pyswisseph==2.10.3.2
-pytest==8.0.2
+astral==3.2
+
+# Geocoding onboarding (Nominatim via httpx + timezonefinder offline lat/lon->IANA tz)
 httpx==0.27.0
-# timezonefinder: offline lat/lon -> IANA timezone (geocoding onboarding). Render
-# construye desde la raiz y usa ESTE requirements.txt, no arcanum-api/requirements.txt.
 timezonefinder==8.2.4
+
+# Testing
+pytest==8.0.2

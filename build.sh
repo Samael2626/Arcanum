@@ -24,7 +24,7 @@ print(f'✓ All checks passed!')
 echo ""
 echo "=== Image ready for Render ==="
 echo "Next steps:"
-echo "  1. Commit files: git add render.dockerfile render.yaml requirements-render.txt"
+echo "  1. Commit files: git add render.dockerfile render.yaml requirements.txt"
 echo "  2. Push: git push origin feat/onboarding-5-pasos"
 echo "  3. In Render dashboard:"
 echo "     - Select project"
