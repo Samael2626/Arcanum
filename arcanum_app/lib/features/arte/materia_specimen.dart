@@ -53,7 +53,6 @@ class _MateriaSpecimenState extends State<MateriaSpecimen> {
   }
 
   Future<EngravingEntry?>? _resolve() {
-    if (widget.type != 'herb') return null;
     return () async {
       final manifest = EngravingManifest.instance;
       await manifest.ensureLoaded();

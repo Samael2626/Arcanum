@@ -71,5 +71,10 @@ flutter:
     - assets/images/
     - assets/engravings/manifest.json
     - assets/engravings/hierbas/
+    - assets/engravings/piedras/
+    - assets/engravings/metales/
+    - assets/engravings/inciensos/
+    - assets/engravings/aceites/
+    - assets/engravings/resinas/
   # shaders:
   #   - shaders/nebula.frag

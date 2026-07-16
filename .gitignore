@@ -27,3 +27,4 @@ Brain/
 !requirements.txt
 !railway.json
 !railway.toml
+.tmp/

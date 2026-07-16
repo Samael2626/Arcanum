@@ -194,11 +194,33 @@ void main() {
       expect(manifest.resolve('acónito')?.isFinal, isTrue);
     });
 
-    test('las 27 láminas históricas decodifican como SVG', () async {
+    test('all material categories resolve through historical plates', () async {
+      const slugs = [
+        'oro', 'plata', 'hierro', 'estano', 'plomo', 'mercurio-metal', 'cobre',
+        'turmalina-negra', 'labradorita', 'lapislazuli', 'hematita', 'citrino',
+        'malaquita', 'agata-musgo', 'onix-negro', 'jade', 'rodocrosita',
+        'sodalita', 'ojo-de-tigre', 'piedra-luna', 'granate', 'esmeralda',
+        'zafiro', 'rubi', 'perla', 'cuarzo-ahumado', 'cuarzo-claro',
+        'amatista', 'obsidiana', 'cornalina',
+        'copal', 'benjui', 'sangre-de-drago', 'sandalo-blanco', 'estoraque',
+        'galbano', 'opoponax', 'nardo', 'cipres-resina', 'canfora', 'olibano',
+        'mirra', 'aceite-oliva-sagrado', 'aceite-solar', 'aceite-lunar',
+        'aceite-mercurial', 'aceite-venusino', 'aceite-marcial',
+        'aceite-jovial', 'aceite-saturnino', 'resina-pino', 'trementina',
+        'resina-elemi', 'resina-labdano', 'resina-mastix',
+      ];
+      final manifest = EngravingManifest.instance;
+      await manifest.ensureLoaded();
+      for (final slug in slugs) {
+        expect(manifest.resolve(slug)?.isFinal, isTrue, reason: slug);
+      }
+    });
+
+    test('all 82 historical plates decode as SVG', () async {
       final manifest = EngravingManifest.instance;
       await manifest.ensureLoaded();
       final plates = manifest.all.where((entry) => entry.isFinal).toList();
-      expect(plates, hasLength(27));
+      expect(plates, hasLength(82));
 
       for (final plate in plates) {
         final picture = await vg.loadPicture(
