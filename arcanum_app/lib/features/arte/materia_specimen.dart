@@ -20,6 +20,7 @@ class MateriaSpecimen extends StatefulWidget {
     required this.size,
     this.progress = 1,
     this.strokeWidth = 1.5,
+    this.compact = false,
     this.semanticLabel,
   });
 
@@ -29,6 +30,10 @@ class MateriaSpecimen extends StatefulWidget {
   final double size;
   final double progress;
   final double strokeWidth;
+
+  /// Usa la silueta procedural, legible en tarjetas pequeñas.
+  /// La lámina histórica se reserva para la vista de detalle.
+  final bool compact;
   final String? semanticLabel;
 
   @override
@@ -41,14 +46,16 @@ class _MateriaSpecimenState extends State<MateriaSpecimen> {
   @override
   void initState() {
     super.initState();
-    _entry = _resolve();
+    _entry = widget.compact ? null : _resolve();
   }
 
   @override
   void didUpdateWidget(covariant MateriaSpecimen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.slug != widget.slug || oldWidget.type != widget.type) {
-      _entry = _resolve();
+    if (oldWidget.slug != widget.slug ||
+        oldWidget.type != widget.type ||
+        oldWidget.compact != widget.compact) {
+      _entry = widget.compact ? null : _resolve();
     }
   }
 
@@ -63,6 +70,14 @@ class _MateriaSpecimenState extends State<MateriaSpecimen> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.compact) {
+      return MateriaGlyph(
+        type: widget.type,
+        size: widget.size,
+        variant: materiaVariant(widget.slug, widget.type),
+        progress: widget.progress,
+      );
+    }
     final future = _entry;
     if (future == null) return _fallback();
     return FutureBuilder<EngravingEntry?>(

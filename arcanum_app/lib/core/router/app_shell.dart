@@ -9,7 +9,26 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(child: navigationShell),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Positioned.fill(child: navigationShell),
+            Positioned(
+              top: 4,
+              right: 6,
+              child: Semantics(
+                label: 'Abrir ajustes',
+                button: true,
+                child: IconButton.filledTonal(
+                  tooltip: 'Ajustes',
+                  onPressed: () => context.push('/settings'),
+                  icon: const Icon(Icons.settings_outlined),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: (index) => navigationShell.goBranch(
@@ -18,25 +37,30 @@ class AppShell extends StatelessWidget {
         ),
         destinations: const [
           NavigationDestination(
-              icon: Icon(Icons.wb_twilight_outlined),
-              selectedIcon: Icon(Icons.wb_twilight),
-              label: 'Hoy'),
+            icon: Icon(Icons.wb_twilight_outlined),
+            selectedIcon: Icon(Icons.wb_twilight),
+            label: 'Hoy',
+          ),
           NavigationDestination(
-              icon: Icon(Icons.auto_awesome_outlined),
-              selectedIcon: Icon(Icons.auto_awesome),
-              label: 'Cielos'),
+            icon: Icon(Icons.auto_awesome_outlined),
+            selectedIcon: Icon(Icons.auto_awesome),
+            label: 'Cielos',
+          ),
           NavigationDestination(
-              icon: Icon(Icons.menu_book_outlined),
-              selectedIcon: Icon(Icons.menu_book),
-              label: 'Grimorio'),
+            icon: Icon(Icons.menu_book_outlined),
+            selectedIcon: Icon(Icons.menu_book),
+            label: 'Grimorio',
+          ),
           NavigationDestination(
-              icon: Icon(Icons.spa_outlined),
-              selectedIcon: Icon(Icons.spa),
-              label: 'Arte'),
+            icon: Icon(Icons.spa_outlined),
+            selectedIcon: Icon(Icons.spa),
+            label: 'Arte',
+          ),
           NavigationDestination(
-              icon: Icon(Icons.style_outlined),
-              selectedIcon: Icon(Icons.style),
-              label: 'Oráculo'),
+            icon: Icon(Icons.style_outlined),
+            selectedIcon: Icon(Icons.style),
+            label: 'Oráculo',
+          ),
         ],
       ),
     );

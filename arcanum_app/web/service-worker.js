@@ -1,5 +1,5 @@
 // Bump CACHE_NAME en cada deploy crítico para forzar limpieza del cache viejo.
-const CACHE_NAME = 'arcanum-v2';
+const CACHE_NAME = 'arcanum-v3';
 
 const CORE_ASSETS = [
   '/manifest.json',
@@ -16,9 +16,12 @@ const NETWORK_FIRST = [
   '/',
   '/index.html',
   '/flutter_bootstrap.js',
-  '/main.dart.js',
-  '/flutter.js',
   '/flutter_service_worker.js'
+];
+
+const STALE_WHILE_REVALIDATE = [
+  '/main.dart.js',
+  '/flutter.js'
 ];
 
 self.addEventListener('install', (event) => {
@@ -55,8 +58,21 @@ self.addEventListener('fetch', (event) => {
 
   const isNetworkFirst =
     NETWORK_FIRST.includes(url.pathname) ||
-    event.request.destination === 'document' ||
-    url.pathname.endsWith('.js');
+    event.request.destination === 'document';
+
+  if (STALE_WHILE_REVALIDATE.includes(url.pathname)) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const cached = await cache.match(event.request);
+        const update = fetch(event.request).then((response) => {
+          if (response.ok) cache.put(event.request, response.clone());
+          return response;
+        });
+        return cached || update;
+      })
+    );
+    return;
+  }
 
   if (isNetworkFirst) {
     // Network-first: intenta red, cae a cache si offline.

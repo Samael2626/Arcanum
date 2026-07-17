@@ -10,7 +10,6 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_card.dart';
-import '../../shared/widgets/arcanum_motion.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_surface.dart';
 import '../../shared/widgets/moon_disc.dart';
@@ -35,7 +34,9 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         // La atmósfera del cielo deriva del regente REAL del día; mientras
         // carga, penumbra neutra.
         final ruler = (snap.data?['day_ruler'] as String?);
-        final mood = ruler != null ? ArcanumMood.forPlanet(ruler) : ArcanumMood.neutral;
+        final mood = ruler != null
+            ? ArcanumMood.forPlanet(ruler)
+            : ArcanumMood.neutral;
 
         return Stack(
           children: [
@@ -73,35 +74,47 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
   // ── Estados premium ────────────────────────────────────────────────────
 
   Widget _error(String msg) => ArcanumCard(
-        mood: ArcanumMood.saturn,
-        frame: true,
-        child: Column(
-          children: [
-            Text('⛧',
-                style: TextStyle(
-                    fontSize: 44, color: ArcanumColors.saturnAccent.withValues(alpha: 0.9))),
-            const SizedBox(height: 14),
-            Text('El cielo guarda silencio',
-                textAlign: TextAlign.center, style: ArcanumText.heading(24)),
-            const SizedBox(height: 8),
-            Text('No se pudo contactar el oráculo astral.',
-                textAlign: TextAlign.center,
-                style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted)),
-            const SizedBox(height: 18),
-            OutlinedButton(
-              onPressed: () => setState(() => _future = _api.today()),
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: ArcanumColors.gold.withValues(alpha: 0.6)),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape:
-                    RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: Text('Reintentar',
-                  style: ArcanumText.body(15, color: ArcanumColors.gold)),
-            ),
-          ],
+    mood: ArcanumMood.saturn,
+    frame: true,
+    child: Column(
+      children: [
+        Text(
+          '⛧',
+          style: TextStyle(
+            fontSize: 44,
+            color: ArcanumColors.saturnAccent.withValues(alpha: 0.9),
+          ),
         ),
-      );
+        const SizedBox(height: 14),
+        Text(
+          'El cielo guarda silencio',
+          textAlign: TextAlign.center,
+          style: ArcanumText.heading(24),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'No se pudo contactar el oráculo astral.',
+          textAlign: TextAlign.center,
+          style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
+        ),
+        const SizedBox(height: 18),
+        OutlinedButton(
+          onPressed: () => setState(() => _future = _api.today()),
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: ArcanumColors.gold.withValues(alpha: 0.6)),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: Text(
+            'Reintentar',
+            style: ArcanumText.body(15, color: ArcanumColors.gold),
+          ),
+        ),
+      ],
+    ),
+  );
 
   // ── Contenido ──────────────────────────────────────────────────────────
 
@@ -112,11 +125,11 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
     // Entrada en cascada suave: cada panel emerge del velo con su propio retardo.
     return Column(
       children: [
-        _Cascade(delayMs: 0, child: _rulerHero(ruler)),
+        _rulerHero(ruler),
         const SizedBox(height: 18),
-        _Cascade(delayMs: 130, child: _planetaryHourCard(hour)),
+        _planetaryHourCard(hour),
         const SizedBox(height: 18),
-        _Cascade(delayMs: 260, child: _moonCard(moon)),
+        _moonCard(moon),
       ],
     );
   }
@@ -126,43 +139,39 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
     final mood = ArcanumMood.forPlanet(ruler);
     final favors = planetFavors[ruler];
     // Glow del tilt hundido hacia el borde: acompaña, no quema.
-    final haloTilt = Color.lerp(mood.accent, mood.edge, 0.5)!;
-    return ArcanumTilt(
-      phase: 0,
-      maxTilt: 0.045,
-      glowing: true,
-      glowColor: haloTilt,
-      borderRadius: BorderRadius.circular(20),
-      child: _Tappable(
-        borderRadius: 20,
-        onTap: () => showPlanetLoreSheet(context, ruler),
-        // Atmósfera más profunda: menos bloom para que el violeta sea regio.
-        child: ArcanumCard(
-          mood: mood,
-          frame: true,
-          radius: 20,
-          intensity: 0.6,
-          padding: const EdgeInsets.symmetric(vertical: 26, horizontal: 22),
-          child: Column(
-            children: [
-              const SectionLabel('REGENTE DEL DÍA', infoKey: 'dia_regente'),
-              const SizedBox(height: 18),
-              _HeroGlyph(glyph: planetGlyph[ruler] ?? '✦', accent: mood.accent),
-              const SizedBox(height: 14),
-              Text('Día de ${planetEs[ruler] ?? ruler}',
-                  textAlign: TextAlign.center, style: ArcanumText.heading(32)),
-              if (favors != null) ...[
-                const SizedBox(height: 10),
-                Text('El cielo favorece hoy', style: ArcanumText.label()),
-                const SizedBox(height: 4),
-                Text(favors,
-                    textAlign: TextAlign.center,
-                    style: ArcanumText.body(16, color: ArcanumColors.ivory)),
-              ],
-              const SizedBox(height: 16),
-              _TapHint(color: mood.accent, label: 'Toca para su lore'),
+    return _Tappable(
+      borderRadius: 20,
+      onTap: () => showPlanetLoreSheet(context, ruler),
+      // Atmósfera más profunda: menos bloom para que el violeta sea regio.
+      child: _TodayCard(
+        mood: mood,
+        radius: 20,
+        intensity: 0.6,
+        padding: const EdgeInsets.symmetric(vertical: 26, horizontal: 22),
+        child: Column(
+          children: [
+            const SectionLabel('REGENTE DEL DÍA', infoKey: 'dia_regente'),
+            const SizedBox(height: 18),
+            _HeroGlyph(glyph: planetGlyph[ruler] ?? '✦', accent: mood.accent),
+            const SizedBox(height: 14),
+            Text(
+              'Día de ${planetEs[ruler] ?? ruler}',
+              textAlign: TextAlign.center,
+              style: ArcanumText.heading(32),
+            ),
+            if (favors != null) ...[
+              const SizedBox(height: 10),
+              Text('El cielo favorece hoy', style: ArcanumText.label()),
+              const SizedBox(height: 4),
+              Text(
+                favors,
+                textAlign: TextAlign.center,
+                style: ArcanumText.body(16, color: ArcanumColors.ivory),
+              ),
             ],
-          ),
+            const SizedBox(height: 16),
+            _TapHint(color: mood.accent, label: 'Toca para su lore'),
+          ],
         ),
       ),
     );
@@ -178,65 +187,80 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
 
     return _Tappable(
       borderRadius: 18,
-      onTap: () => showPlanetaryHourSheet(context, planet,
-          isDay: isDay, minutesRemaining: mins),
-      child: ArcanumCard(
+      onTap: () => showPlanetaryHourSheet(
+        context,
+        planet,
+        isDay: isDay,
+        minutesRemaining: mins,
+      ),
+      child: _TodayCard(
         mood: mood,
-        frame: true,
         radius: 18,
         // Ámbar hundido a bronce: brasa en la penumbra, no panel amarillo.
         intensity: 0.48,
         child: Column(
-        children: [
-          const SectionLabel('HORA PLANETARIA', infoKey: 'hora_planetaria'),
-          const SizedBox(height: 20),
-          PlanetaryHourDial(
-            progress: progress,
-            glyph: planetGlyph[planet] ?? '?',
-            mood: mood,
-            hourNumber: hourNumber,
-            isDay: isDay,
-          ),
-          const SizedBox(height: 18),
-          Text(planetEs[planet] ?? planet, style: ArcanumText.heading(30)),
-          const SizedBox(height: 8),
-          Text('${isDay ? 'Hora diurna' : 'Hora nocturna'}  ·  termina en $mins min',
-              style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted)),
-          if (planetFavors[planet] != null) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: mood.glow.withValues(alpha: 0.10),
-                border: Border.all(color: mood.accent.withValues(alpha: 0.35)),
-              ),
-              child: Text('Ahora favorece: ${planetFavors[planet]}',
-                  textAlign: TextAlign.center,
-                  style: ArcanumText.body(14, color: mood.accent)),
+          children: [
+            const SectionLabel('HORA PLANETARIA', infoKey: 'hora_planetaria'),
+            const SizedBox(height: 20),
+            PlanetaryHourDial(
+              progress: progress,
+              glyph: planetGlyph[planet] ?? '?',
+              mood: mood,
+              hourNumber: hourNumber,
+              isDay: isDay,
             ),
-          ],
-          const SizedBox(height: 14),
-          _TapHint(color: mood.accent, label: 'Toca para ver las próximas horas'),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Expanded(
-                child: _ctaButton('⚗  Materiales', mood, () {
-                  ref.read(materiaPlanetProvider.notifier).set(planet);
-                  context.go('/arte');
-                }),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _ctaButton('❦  Anotar', mood, () {
-                  ref.read(grimoireComposeProvider.notifier).set(true);
-                  context.go('/grimorio');
-                }),
+            const SizedBox(height: 18),
+            Text(planetEs[planet] ?? planet, style: ArcanumText.heading(30)),
+            const SizedBox(height: 8),
+            Text(
+              '${isDay ? 'Hora diurna' : 'Hora nocturna'}  ·  termina en $mins min',
+              style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
+            ),
+            if (planetFavors[planet] != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 9,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: mood.glow.withValues(alpha: 0.10),
+                  border: Border.all(
+                    color: mood.accent.withValues(alpha: 0.35),
+                  ),
+                ),
+                child: Text(
+                  'Ahora favorece: ${planetFavors[planet]}',
+                  textAlign: TextAlign.center,
+                  style: ArcanumText.body(14, color: mood.accent),
+                ),
               ),
             ],
-          ),
-        ],
+            const SizedBox(height: 14),
+            _TapHint(
+              color: mood.accent,
+              label: 'Toca para ver las próximas horas',
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Expanded(
+                  child: _ctaButton('⚗  Materiales', mood, () {
+                    ref.read(materiaPlanetProvider.notifier).set(planet);
+                    context.go('/arte');
+                  }),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _ctaButton('❦  Anotar', mood, () {
+                    ref.read(grimoireComposeProvider.notifier).set(true);
+                    context.go('/grimorio');
+                  }),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -248,7 +272,10 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
     final ends = DateTime.tryParse((h['ends_at'] as String?) ?? '');
     if (starts != null && ends != null) {
       final total = ends.difference(starts).inSeconds;
-      final elapsed = DateTime.now().toUtc().difference(starts.toUtc()).inSeconds;
+      final elapsed = DateTime.now()
+          .toUtc()
+          .difference(starts.toUtc())
+          .inSeconds;
       if (total > 0) return (elapsed / total).clamp(0.0, 1.0);
     }
     // Fallback: hora planetaria ~ 60 min.
@@ -263,9 +290,11 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         side: BorderSide(color: mood.accent.withValues(alpha: 0.5)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
-      child: Text(label,
-          textAlign: TextAlign.center,
-          style: ArcanumText.body(14, color: mood.accent)),
+      child: Text(
+        label,
+        textAlign: TextAlign.center,
+        style: ArcanumText.body(14, color: mood.accent),
+      ),
     );
   }
 
@@ -276,11 +305,15 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
     final age = (m['age_days'] as num?)?.toDouble();
     return _Tappable(
       borderRadius: 18,
-      onTap: () => showMoonPhaseSheet(context,
-          phaseName: name, illumination: illum, waxing: waxing, ageDays: age),
-      child: ArcanumCard(
+      onTap: () => showMoonPhaseSheet(
+        context,
+        phaseName: name,
+        illumination: illum,
+        waxing: waxing,
+        ageDays: age,
+      ),
+      child: _TodayCard(
         mood: ArcanumMood.moon,
-        frame: true,
         radius: 18,
         intensity: 0.72,
         child: Column(
@@ -288,18 +321,23 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
             const SectionLabel('LA LUNA', infoKey: 'luna'),
             const SizedBox(height: 18),
             // Halo plateado tras el disco (respira suave).
-            _MoonHalo(child: MoonDisc(illumination: illum, waxing: waxing, size: 96)),
+            _MoonHalo(
+              child: MoonDisc(illumination: illum, waxing: waxing, size: 96),
+            ),
             const SizedBox(height: 16),
             Text(name, style: ArcanumText.heading(26)),
             const SizedBox(height: 6),
             Text(
-                '${(illum * 100).round()}% iluminada'
-                '${age != null ? '  ·  ${age.round()} días de edad' : ''}',
-                textAlign: TextAlign.center,
-                style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted)),
+              '${(illum * 100).round()}% iluminada'
+              '${age != null ? '  ·  ${age.round()} días de edad' : ''}',
+              textAlign: TextAlign.center,
+              style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
+            ),
             const SizedBox(height: 16),
             _TapHint(
-                color: ArcanumColors.moonAccent, label: 'Toca para la fase'),
+              color: ArcanumColors.moonAccent,
+              label: 'Toca para la fase',
+            ),
           ],
         ),
       ),
@@ -309,6 +347,53 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
 
 // ── Cielo vivo: atmósfera de fondo que respira y transiciona al regente ────
 
+class _TodayCard extends StatelessWidget {
+  const _TodayCard({
+    required this.mood,
+    required this.child,
+    this.padding = const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+    this.radius = 18,
+    this.intensity = 0.55,
+  });
+
+  final ArcanumMood mood;
+  final Widget child;
+  final EdgeInsets padding;
+  final double radius;
+  final double intensity;
+
+  @override
+  Widget build(BuildContext context) {
+    final br = BorderRadius.circular(radius);
+    return RepaintBoundary(
+      child: Container(
+        width: double.infinity,
+        padding: padding,
+        decoration: BoxDecoration(
+          borderRadius: br,
+          border: Border.all(color: mood.accent.withValues(alpha: 0.34)),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color.lerp(mood.edge, mood.core, intensity * 0.45)!,
+              mood.edge,
+            ],
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x4A000000),
+              blurRadius: 6,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
 class _LivingSky extends StatefulWidget {
   final ArcanumMood mood;
   const _LivingSky({required this.mood});
@@ -317,12 +402,12 @@ class _LivingSky extends StatefulWidget {
   State<_LivingSky> createState() => _LivingSkyState();
 }
 
-class _LivingSkyState extends State<_LivingSky> with TickerProviderStateMixin {
-  late final AnimationController _drift = AnimationController(
-      vsync: this, duration: const Duration(seconds: 48))
-    ..repeat();
+class _LivingSkyState extends State<_LivingSky>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _fade = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 900));
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  );
 
   late ArcanumMood _from = widget.mood;
   late ArcanumMood _to = widget.mood;
@@ -333,13 +418,12 @@ class _LivingSkyState extends State<_LivingSky> with TickerProviderStateMixin {
     if (widget.mood.core != _to.core) {
       _from = ArcanumMood.lerp(_from, _to, _fade.value);
       _to = widget.mood;
-      _fade.forward(from: 0);
+      _fade.value = 1;
     }
   }
 
   @override
   void dispose() {
-    _drift.dispose();
     _fade.dispose();
     super.dispose();
   }
@@ -347,12 +431,12 @@ class _LivingSkyState extends State<_LivingSky> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_drift, _fade]),
+      animation: _fade,
       builder: (context, _) {
-        final mood = ArcanumMood.lerp(_from, _to, _fade.value);
+        final mood = widget.mood;
         return ArcanumSurface(
           mood: mood,
-          drift: _drift.value,
+          drift: null,
           grain: false,
           // Cielo como INSINUACIÓN del regente: penumbra profunda para que el
           // color se lea misterioso, no brillante. Los paneles rebotan sobre él.
@@ -377,8 +461,9 @@ class _HeroGlyph extends StatefulWidget {
 class _HeroGlyphState extends State<_HeroGlyph>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 4200))
-    ..repeat(reverse: true);
+    vsync: this,
+    duration: const Duration(milliseconds: 4200),
+  );
 
   @override
   void dispose() {
@@ -402,10 +487,12 @@ class _HeroGlyphState extends State<_HeroGlyph>
           alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: RadialGradient(colors: [
-              halo.withValues(alpha: 0.07 + 0.05 * t),
-              Colors.transparent,
-            ]),
+            gradient: RadialGradient(
+              colors: [
+                halo.withValues(alpha: 0.07 + 0.05 * t),
+                Colors.transparent,
+              ],
+            ),
             boxShadow: [
               BoxShadow(
                 color: halo.withValues(alpha: 0.10 + 0.10 * t),
@@ -417,8 +504,10 @@ class _HeroGlyphState extends State<_HeroGlyph>
           child: child,
         );
       },
-      child: Text(widget.glyph,
-          style: TextStyle(fontSize: 60, color: glyphColor, height: 1)),
+      child: Text(
+        widget.glyph,
+        style: TextStyle(fontSize: 60, color: glyphColor, height: 1),
+      ),
     );
   }
 }
@@ -437,7 +526,9 @@ class _Cascade extends StatefulWidget {
 class _CascadeState extends State<_Cascade>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 620));
+    vsync: this,
+    duration: const Duration(milliseconds: 620),
+  );
 
   @override
   void initState() {
@@ -461,7 +552,10 @@ class _CascadeState extends State<_Cascade>
         final v = Curves.easeOutCubic.transform(_c.value);
         return Opacity(
           opacity: v,
-          child: Transform.translate(offset: Offset(0, (1 - v) * 26), child: child),
+          child: Transform.translate(
+            offset: Offset(0, (1 - v) * 26),
+            child: child,
+          ),
         );
       },
       child: widget.child,
@@ -477,8 +571,11 @@ class _Tappable extends StatefulWidget {
   final Widget child;
   final VoidCallback onTap;
   final double borderRadius;
-  const _Tappable(
-      {required this.child, required this.onTap, this.borderRadius = 16});
+  const _Tappable({
+    required this.child,
+    required this.onTap,
+    this.borderRadius = 16,
+  });
 
   @override
   State<_Tappable> createState() => _TappableState();
@@ -518,8 +615,9 @@ class _TapHint extends StatefulWidget {
 class _TapHintState extends State<_TapHint>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 2600))
-    ..repeat(reverse: true);
+    vsync: this,
+    duration: const Duration(milliseconds: 2600),
+  );
 
   @override
   void dispose() {
@@ -538,18 +636,29 @@ class _TapHintState extends State<_TapHint>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-                color: widget.color.withValues(alpha: 0.20 + 0.18 * t)),
+              color: widget.color.withValues(alpha: 0.20 + 0.18 * t),
+            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(widget.label,
-                  style: ArcanumText.body(12.5,
-                      color: ArcanumColors.ivoryMuted)),
+              Flexible(
+                child: Text(
+                  widget.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcanumText.body(
+                    12.5,
+                    color: ArcanumColors.ivoryMuted,
+                  ),
+                ),
+              ),
               const SizedBox(width: 7),
-              Icon(Icons.keyboard_arrow_down_rounded,
-                  size: 16,
-                  color: widget.color.withValues(alpha: 0.55 + 0.35 * t)),
+              Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 16,
+                color: widget.color.withValues(alpha: 0.55 + 0.35 * t),
+              ),
             ],
           ),
         );
@@ -570,8 +679,9 @@ class _MoonHalo extends StatefulWidget {
 class _MoonHaloState extends State<_MoonHalo>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 5000))
-    ..repeat(reverse: true);
+    vsync: this,
+    duration: const Duration(milliseconds: 5000),
+  );
 
   @override
   void dispose() {
@@ -590,7 +700,9 @@ class _MoonHaloState extends State<_MoonHalo>
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: ArcanumColors.moonGlow.withValues(alpha: 0.12 + 0.06 * t),
+                color: ArcanumColors.moonGlow.withValues(
+                  alpha: 0.12 + 0.06 * t,
+                ),
                 blurRadius: 24 + 8 * t,
                 spreadRadius: 1,
               ),
@@ -616,8 +728,9 @@ class _SkyLoading extends StatefulWidget {
 class _SkyLoadingState extends State<_SkyLoading>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
-      vsync: this, duration: const Duration(seconds: 12))
-    ..repeat();
+    vsync: this,
+    duration: const Duration(seconds: 12),
+  )..repeat();
 
   static const _glyphs = ['☉', '☽', '☿', '♀', '♂', '♃', '♄'];
 
@@ -651,24 +764,36 @@ class _SkyLoadingState extends State<_SkyLoading>
                         ),
                         child: Opacity(
                           opacity: 0.35 + 0.4 * (0.5 + 0.5 * math.sin(a + i)),
-                          child: Text(_glyphs[i],
-                              style: const TextStyle(
-                                  fontSize: 20, color: ArcanumColors.gold)),
+                          child: Text(
+                            _glyphs[i],
+                            style: const TextStyle(
+                              fontSize: 20,
+                              color: ArcanumColors.gold,
+                            ),
+                          ),
                         ),
                       ),
-                    Text('✶',
-                        style: TextStyle(
-                            fontSize: 30,
-                            color: ArcanumColors.gold.withValues(alpha: 0.9))),
+                    Text(
+                      '✶',
+                      style: TextStyle(
+                        fontSize: 30,
+                        color: ArcanumColors.gold.withValues(alpha: 0.9),
+                      ),
+                    ),
                   ],
                 );
               },
             ),
           ),
           const SizedBox(height: 22),
-          Text('Consultando los cielos…',
-              style: ArcanumText.body(16,
-                  italic: true, color: ArcanumColors.ivoryMuted)),
+          Text(
+            'Consultando los cielos…',
+            style: ArcanumText.body(
+              16,
+              italic: true,
+              color: ArcanumColors.ivoryMuted,
+            ),
+          ),
         ],
       ),
     );

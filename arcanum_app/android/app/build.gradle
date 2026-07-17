@@ -4,8 +4,27 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+def keystorePropertiesFile = rootProject.file("key.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+def requiredSigningKeys = ["storeFile", "storePassword", "keyAlias", "keyPassword"]
+def hasReleaseSigning = requiredSigningKeys.every {
+    keystoreProperties[it]?.toString()?.trim()
+}
+def releaseRequested = gradle.startParameter.taskNames.any {
+    it.toLowerCase().contains("release")
+}
+if (releaseRequested && !hasReleaseSigning) {
+    throw new GradleException(
+        "Firma release ausente. Copia android/key.properties.example a " +
+        "android/key.properties y configura el upload keystore."
+    )
+}
+
 android {
-    namespace = "com.example.arcanum_app"
+    namespace = "com.arcanum.magick"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -23,27 +42,35 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.arcanum_app"
+        applicationId = "com.arcanum.magick"
         minSdkVersion = flutter.minSdkVersion
         targetSdkVersion = flutter.targetSdkVersion
         versionCode = flutter.versionCode.toInteger()
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                keyAlias = keystoreProperties["keyAlias"]
+                keyPassword = keystoreProperties["keyPassword"]
+                storeFile = file(keystoreProperties["storeFile"])
+                storePassword = keystoreProperties["storePassword"]
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled = false
             shrinkResources = false
-            signingConfig = signingConfigs.debug
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 }
 
 flutter {
     source = "../.."
-}
-
-dependencies {
-    implementation "androidx.appcompat:appcompat:1.6.1"
-    implementation "androidx.constraintlayout:constraintlayout:2.1.4"
 }

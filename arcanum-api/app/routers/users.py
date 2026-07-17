@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.user import UserResponse, UserUpdate
 from app.core.security import get_current_user
+from app.services.oracle_context import invalidate_oracle_context
 
 router = APIRouter()
 
@@ -23,3 +24,16 @@ def update_user_me(
     db.commit()
     db.refresh(current_user)
     return current_user
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user_me(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Borra la cuenta y todos sus datos dependientes de forma irreversible."""
+    user_id = current_user.id
+    db.delete(current_user)
+    db.commit()
+    invalidate_oracle_context(user_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

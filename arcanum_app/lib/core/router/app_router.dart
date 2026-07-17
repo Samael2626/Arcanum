@@ -8,6 +8,7 @@ import '../../features/grimorio/grimorio_screen.dart';
 import '../../features/hoy/hoy_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/oraculo/oraculo_screen.dart';
+import '../../features/settings/settings_screen.dart';
 import '../../features/tarot/tarot_screen.dart';
 import 'app_shell.dart';
 
@@ -17,29 +18,43 @@ final appRouter = GoRouter(
     GoRoute(path: '/login', builder: (c, s) => const LoginScreen()),
     GoRoute(path: '/register', builder: (c, s) => const RegisterScreen()),
     GoRoute(path: '/onboarding', builder: (c, s) => const OnboardingScreen()),
+    GoRoute(path: '/settings', builder: (c, s) => const SettingsScreen()),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           AppShell(navigationShell: navigationShell),
       branches: [
-        StatefulShellBranch(routes: [
-          GoRoute(path: '/hoy', builder: (c, s) => const HoyScreen()),
-        ]),
-        StatefulShellBranch(routes: [
-          GoRoute(path: '/cielos', builder: (c, s) => const CielosScreen()),
-        ]),
-        StatefulShellBranch(routes: [
-          GoRoute(path: '/grimorio', builder: (c, s) => const GrimorioScreen()),
-        ]),
-        StatefulShellBranch(routes: [
-          GoRoute(path: '/arte', builder: (c, s) => const ArteScreen()),
-        ]),
-        StatefulShellBranch(routes: [
-          GoRoute(path: '/oraculo',
+        StatefulShellBranch(
+          routes: [GoRoute(path: '/hoy', builder: (c, s) => const HoyScreen())],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(path: '/cielos', builder: (c, s) => const CielosScreen()),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/grimorio',
+              builder: (c, s) => const GrimorioScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(path: '/arte', builder: (c, s) => const ArteScreen()),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/oraculo',
               builder: (c, s) => const OraculoScreen(),
               routes: [
                 GoRoute(path: 'tarot', builder: (c, s) => const TarotScreen()),
-              ]),
-        ]),
+              ],
+            ),
+          ],
+        ),
       ],
     ),
   ],

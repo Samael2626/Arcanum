@@ -77,9 +77,8 @@ class NatalWheel extends StatefulWidget {
   State<NatalWheel> createState() => _NatalWheelState();
 }
 
-class _NatalWheelState extends State<NatalWheel> with TickerProviderStateMixin {
-  late final AnimationController _reveal;
-  late final AnimationController _idle; // deriva/respiración continua
+class _NatalWheelState extends State<NatalWheel>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _pulse; // realce del seleccionado
 
   double _dragRot = 0; // giro acumulado por el usuario (grados)
@@ -90,19 +89,14 @@ class _NatalWheelState extends State<NatalWheel> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _reveal = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1500))
-      ..forward();
-    _idle = AnimationController(vsync: this, duration: const Duration(seconds: 26))
-      ..repeat();
     _pulse = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1600));
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+    );
   }
 
   @override
   void dispose() {
-    _reveal.dispose();
-    _idle.dispose();
     _pulse.dispose();
     super.dispose();
   }
@@ -110,24 +104,25 @@ class _NatalWheelState extends State<NatalWheel> with TickerProviderStateMixin {
   double get _ascLon =>
       (widget.chart['ascendant']?['longitude'] as num?)?.toDouble() ?? 0;
 
-  // Deriva sutil (±1.4°) + giro del usuario.
-  double get _rot =>
-      _dragRot + 1.4 * math.sin(_idle.value * 2 * math.pi);
+  double get _rot => _dragRot;
 
   double _screenDeg(double lon) => (180 + (lon - _ascLon) + _rot) % 360;
 
   List<_PlanetSlot> _slots() {
-    final planets =
-        (widget.chart['planets'] as List).cast<Map<String, dynamic>>();
-    final raw = planets
-        .map((p) => _PlanetSlot(
-              p['name'] as String,
-              (p['longitude'] as num).toDouble(),
-              _screenDeg((p['longitude'] as num).toDouble()),
-              p,
-            ))
-        .toList()
-      ..sort((a, b) => a.displayDeg.compareTo(b.displayDeg));
+    final planets = (widget.chart['planets'] as List)
+        .cast<Map<String, dynamic>>();
+    final raw =
+        planets
+            .map(
+              (p) => _PlanetSlot(
+                p['name'] as String,
+                (p['longitude'] as num).toDouble(),
+                _screenDeg((p['longitude'] as num).toDouble()),
+                p,
+              ),
+            )
+            .toList()
+          ..sort((a, b) => a.displayDeg.compareTo(b.displayDeg));
 
     const minGap = 10.0;
     final adj = <_PlanetSlot>[];
@@ -192,8 +187,8 @@ class _NatalWheelState extends State<NatalWheel> with TickerProviderStateMixin {
   }
 
   int _houseOf(double lon) {
-    final houses =
-        (widget.chart['houses'] as List).cast<Map<String, dynamic>>();
+    final houses = (widget.chart['houses'] as List)
+        .cast<Map<String, dynamic>>();
     for (var i = 0; i < 12; i++) {
       final a = (houses[i]['longitude'] as num).toDouble() % 360;
       final b = (houses[(i + 1) % 12]['longitude'] as num).toDouble() % 360;
@@ -218,22 +213,24 @@ class _NatalWheelState extends State<NatalWheel> with TickerProviderStateMixin {
             onTapUp: (d) => _onTap(d, size),
             onHorizontalDragUpdate: (d) =>
                 setState(() => _dragRot += d.delta.dx * 0.45),
-            child: AnimatedBuilder(
-              animation: Listenable.merge([_reveal, _idle, _pulse]),
-              builder: (context, _) => CustomPaint(
-                size: size,
-                painter: _WheelPainter(
-                  chart: widget.chart,
-                  ascLon: _ascLon,
-                  rot: _rot,
-                  slots: _slots(),
-                  reveal: Curves.easeOutCubic.transform(_reveal.value),
-                  rawReveal: _reveal.value,
-                  selPlanet: _selPlanet,
-                  selHouse: _selHouse,
-                  pulse: _pulse.isAnimating || _pulse.isCompleted
-                      ? _pulse.value
-                      : 0,
+            child: RepaintBoundary(
+              child: AnimatedBuilder(
+                animation: _pulse,
+                builder: (context, _) => CustomPaint(
+                  size: size,
+                  painter: _WheelPainter(
+                    chart: widget.chart,
+                    ascLon: _ascLon,
+                    rot: _rot,
+                    slots: _slots(),
+                    reveal: 1,
+                    rawReveal: 1,
+                    selPlanet: _selPlanet,
+                    selHouse: _selHouse,
+                    pulse: _pulse.isAnimating || _pulse.isCompleted
+                        ? _pulse.value
+                        : 0,
+                  ),
                 ),
               ),
             ),
@@ -259,32 +256,43 @@ class _NatalWheelState extends State<NatalWheel> with TickerProviderStateMixin {
       builder: (_) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-            Text(planetGlyph[name] ?? '?',
-                style: TextStyle(fontSize: 46, color: mood.accent)),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(planetEs[name] ?? name,
-                      style:
-                          ArcanumText.heading(30, color: ArcanumColors.gold)),
-                  Text(
+          Row(
+            children: [
+              Text(
+                planetGlyph[name] ?? '?',
+                style: TextStyle(fontSize: 46, color: mood.accent),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      planetEs[name] ?? name,
+                      style: ArcanumText.heading(30, color: ArcanumColors.gold),
+                    ),
+                    Text(
                       '${signGlyph[sign] ?? ''} ${signEs[sign] ?? sign} · ${deg.floor()}°'
                       '${retro ? '  ·  retrógrado ℞' : ''}',
-                      style: ArcanumText.body(15,
-                          color: ArcanumColors.ivoryMuted, italic: true)),
-                ],
+                      style: ArcanumText.body(
+                        15,
+                        color: ArcanumColors.ivoryMuted,
+                        italic: true,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ]),
+            ],
+          ),
           const SizedBox(height: 22),
           if (house != null) ...[
             Text('CASA $house', style: ArcanumText.label()),
             const SizedBox(height: 8),
-            Text(_houseMeaning[(house as int) - 1],
-                style: ArcanumText.body(16)),
+            Text(
+              _houseMeaning[(house as int) - 1],
+              style: ArcanumText.body(16),
+            ),
             const SizedBox(height: 20),
           ],
           if (favors != null) ...[
@@ -297,9 +305,10 @@ class _NatalWheelState extends State<NatalWheel> with TickerProviderStateMixin {
             Text('RETRÓGRADO', style: ArcanumText.label()),
             const SizedBox(height: 8),
             Text(
-                'Su corriente se vuelve hacia dentro: revisión, retorno y '
-                'trabajo interior antes que impulso hacia afuera.',
-                style: ArcanumText.body(16)),
+              'Su corriente se vuelve hacia dentro: revisión, retorno y '
+              'trabajo interior antes que impulso hacia afuera.',
+              style: ArcanumText.body(16),
+            ),
           ],
         ],
       ),
@@ -308,8 +317,8 @@ class _NatalWheelState extends State<NatalWheel> with TickerProviderStateMixin {
 
   void _showHouse(double lon) {
     final h = _houseOf(lon);
-    final houses =
-        (widget.chart['houses'] as List).cast<Map<String, dynamic>>();
+    final houses = (widget.chart['houses'] as List)
+        .cast<Map<String, dynamic>>();
     final cuspSign = houses[h - 1]['sign'] as String? ?? '';
     _sheet(
       mood: ArcanumMood.neutral,
@@ -318,16 +327,22 @@ class _NatalWheelState extends State<NatalWheel> with TickerProviderStateMixin {
         children: [
           Text('CASA $h', style: ArcanumText.label()),
           const SizedBox(height: 6),
-          Text('${signGlyph[cuspSign] ?? ''} en la cúspide',
-              style: ArcanumText.heading(28, color: ArcanumColors.gold)),
+          Text(
+            '${signGlyph[cuspSign] ?? ''} en la cúspide',
+            style: ArcanumText.heading(28, color: ArcanumColors.gold),
+          ),
           const SizedBox(height: 18),
           Text(_houseMeaning[h - 1], style: ArcanumText.body(17)),
           const SizedBox(height: 18),
           Text(
-              'La cúspide cae en ${signEs[cuspSign] ?? cuspSign}: ese signo '
-              'colorea cómo vives este territorio de tu carta.',
-              style: ArcanumText.body(15,
-                  color: ArcanumColors.ivoryMuted, italic: true)),
+            'La cúspide cae en ${signEs[cuspSign] ?? cuspSign}: ese signo '
+            'colorea cómo vives este territorio de tu carta.',
+            style: ArcanumText.body(
+              15,
+              color: ArcanumColors.ivoryMuted,
+              italic: true,
+            ),
+          ),
         ],
       ),
     );
@@ -445,8 +460,14 @@ class _WheelPainter extends CustomPainter {
     );
   }
 
-  void _paintZodiac(Canvas canvas, Offset c, double inner, double outer,
-      double glyphR, double a) {
+  void _paintZodiac(
+    Canvas canvas,
+    Offset c,
+    double inner,
+    double outer,
+    double glyphR,
+    double a,
+  ) {
     if (a <= 0) return;
     for (var i = 0; i < 12; i++) {
       final el = _signElement[i];
@@ -461,13 +482,15 @@ class _WheelPainter extends CustomPainter {
       canvas.drawPath(
         path,
         Paint()
-          ..shader = RadialGradient(
-            colors: [
-              glow.withValues(alpha: 0.17 * a),
-              glow.withValues(alpha: 0.045 * a),
-            ],
-          ).createShader(
-              Rect.fromCircle(center: mid, radius: (outer - inner) * 1.5)),
+          ..shader =
+              RadialGradient(
+                colors: [
+                  glow.withValues(alpha: 0.17 * a),
+                  glow.withValues(alpha: 0.045 * a),
+                ],
+              ).createShader(
+                Rect.fromCircle(center: mid, radius: (outer - inner) * 1.5),
+              ),
       );
     }
 
@@ -497,21 +520,33 @@ class _WheelPainter extends CustomPainter {
         _ptLon(c, inner + len, d.toDouble()),
         Paint()
           ..strokeWidth = 1
-          ..color = ArcanumColors.goldMuted
-              .withValues(alpha: (d % 30 == 0 ? 0.5 : 0.26) * a),
+          ..color = ArcanumColors.goldMuted.withValues(
+            alpha: (d % 30 == 0 ? 0.5 : 0.26) * a,
+          ),
       );
     }
     for (var i = 0; i < 12; i++) {
       final el = _signElement[i];
       final pos = _pt(c, glyphR, _deg(i * 30.0 + 15));
-      _text(canvas, signGlyph[zodiacOrder[i]] ?? '', pos,
-          _elementAccent[el]!.withValues(alpha: 0.95 * a), glyphR * 0.205,
-          bold: true);
+      _text(
+        canvas,
+        signGlyph[zodiacOrder[i]] ?? '',
+        pos,
+        _elementAccent[el]!.withValues(alpha: 0.95 * a),
+        glyphR * 0.205,
+        bold: true,
+      );
     }
   }
 
   void _sectorPath(
-      Path path, Offset c, double inner, double outer, double a0, double a1) {
+    Path path,
+    Offset c,
+    double inner,
+    double outer,
+    double a0,
+    double a1,
+  ) {
     final s0 = -a0, s1 = -a1;
     final sweep = s1 - s0;
     path
@@ -521,7 +556,11 @@ class _WheelPainter extends CustomPainter {
   }
 
   void _paintHouseHighlight(
-      Canvas canvas, Offset c, double hubR, double zodInner) {
+    Canvas canvas,
+    Offset c,
+    double hubR,
+    double zodInner,
+  ) {
     final houses = (chart['houses'] as List).cast<Map<String, dynamic>>();
     final i = selHouse! - 1;
     final cusp = (houses[i]['longitude'] as num).toDouble();
@@ -537,8 +576,14 @@ class _WheelPainter extends CustomPainter {
     );
   }
 
-  void _paintHouses(Canvas canvas, Offset c, double hubR, double zodInner,
-      double numR, double a) {
+  void _paintHouses(
+    Canvas canvas,
+    Offset c,
+    double hubR,
+    double zodInner,
+    double numR,
+    double a,
+  ) {
     if (a <= 0) return;
     canvas.drawCircle(
       c,
@@ -575,8 +620,13 @@ class _WheelPainter extends CustomPainter {
       var span = (next - cusp) % 360;
       if (span <= 0) span += 360;
       final numPos = _ptLon(c, numR, cusp + span / 2);
-      _text(canvas, '${i + 1}', numPos,
-          ArcanumColors.ivoryMuted.withValues(alpha: 0.5 * a), 13);
+      _text(
+        canvas,
+        '${i + 1}',
+        numPos,
+        ArcanumColors.ivoryMuted.withValues(alpha: 0.5 * a),
+        13,
+      );
     }
   }
 
@@ -586,9 +636,14 @@ class _WheelPainter extends CustomPainter {
     final mc = (chart['midheaven']?['longitude'] as num?)?.toDouble();
     void label(double? lon, String txt) {
       if (lon == null) return;
-      _text(canvas, txt, _ptLon(c, zodInner - 20, lon),
-          ArcanumColors.gold.withValues(alpha: a), 15,
-          bold: true);
+      _text(
+        canvas,
+        txt,
+        _ptLon(c, zodInner - 20, lon),
+        ArcanumColors.gold.withValues(alpha: a),
+        15,
+        bold: true,
+      );
     }
 
     label(asc, 'AC');
@@ -601,7 +656,7 @@ class _WheelPainter extends CustomPainter {
         (chart['aspects'] as List?)?.cast<Map<String, dynamic>>() ?? const [];
     final lonByName = {
       for (final p in (chart['planets'] as List).cast<Map<String, dynamic>>())
-        p['name'] as String: (p['longitude'] as num).toDouble()
+        p['name'] as String: (p['longitude'] as num).toDouble(),
     };
     for (final asp in aspects) {
       final l1 = lonByName[asp['p1']];
@@ -613,7 +668,8 @@ class _WheelPainter extends CustomPainter {
       // "Traza" la línea creciendo desde p0 hacia p1.
       final p1 = Offset.lerp(p0, full, a)!;
       final hard = asp['aspect'] == 'trine' || asp['aspect'] == 'opposition';
-      final sel = selPlanet != null &&
+      final sel =
+          selPlanet != null &&
           (asp['p1'] == selPlanet || asp['p2'] == selPlanet);
       canvas.drawLine(
         p0,
@@ -633,8 +689,13 @@ class _WheelPainter extends CustomPainter {
   }
 
   void _paintCenter(Canvas canvas, Offset c, double hubR, double a) {
-    _text(canvas, '✦', c,
-        ArcanumColors.gold.withValues(alpha: 0.6 * a), hubR * 0.16);
+    _text(
+      canvas,
+      '✦',
+      c,
+      ArcanumColors.gold.withValues(alpha: 0.6 * a),
+      hubR * 0.16,
+    );
   }
 
   void _paintPlanets(Canvas canvas, Offset c, double hubR, double planetR) {
@@ -643,8 +704,9 @@ class _WheelPainter extends CustomPainter {
       final s = slots[i];
       // Cascada: cada planeta entra escalonado tras los aspectos.
       final start = 0.62 + (i / n) * 0.32;
-      final t = Curves.easeOutBack
-          .transform(((rawReveal - start) / 0.14).clamp(0.0, 1.0));
+      final t = Curves.easeOutBack.transform(
+        ((rawReveal - start) / 0.14).clamp(0.0, 1.0),
+      );
       if (t <= 0) continue;
       final pos = _pt(c, planetR, s.displayDeg);
       final hubPos = _ptLon(c, hubR, s.trueLon);
@@ -690,20 +752,37 @@ class _WheelPainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1
-          ..color = ArcanumColors.gold
-              .withValues(alpha: (selected ? 0.85 : 0.5) * t),
+          ..color = ArcanumColors.gold.withValues(
+            alpha: (selected ? 0.85 : 0.5) * t,
+          ),
       );
-      _text(canvas, planetGlyph[s.name] ?? '?', pos,
-          ArcanumColors.gold.withValues(alpha: t), rDisc * 1.15);
+      _text(
+        canvas,
+        planetGlyph[s.name] ?? '?',
+        pos,
+        ArcanumColors.gold.withValues(alpha: t),
+        rDisc * 1.15,
+      );
       if (s.raw['retrograde'] == true) {
-        _text(canvas, '℞', pos + Offset(rDisc * 0.85, -rDisc * 0.85),
-            ArcanumColors.burgundyLight.withValues(alpha: t), rDisc * 0.7);
+        _text(
+          canvas,
+          '℞',
+          pos + Offset(rDisc * 0.85, -rDisc * 0.85),
+          ArcanumColors.burgundyLight.withValues(alpha: t),
+          rDisc * 0.7,
+        );
       }
     }
   }
 
-  void _text(Canvas canvas, String s, Offset center, Color color, double size,
-      {bool bold = false}) {
+  void _text(
+    Canvas canvas,
+    String s,
+    Offset center,
+    Color color,
+    double size, {
+    bool bold = false,
+  }) {
     final tp = TextPainter(
       text: TextSpan(
         text: s,
@@ -724,12 +803,18 @@ class _WheelPainter extends CustomPainter {
     final dir = (b - a) / total;
     var d = 0.0;
     while (d < total) {
-      canvas.drawLine(
-          a + dir * d, a + dir * math.min(d + dash, total), paint);
+      canvas.drawLine(a + dir * d, a + dir * math.min(d + dash, total), paint);
       d += dash + gap;
     }
   }
 
   @override
-  bool shouldRepaint(covariant _WheelPainter old) => true;
+  bool shouldRepaint(covariant _WheelPainter old) =>
+      !identical(old.chart, chart) ||
+      old.rot != rot ||
+      old.reveal != reveal ||
+      old.rawReveal != rawReveal ||
+      old.selPlanet != selPlanet ||
+      old.selHouse != selHouse ||
+      old.pulse != pulse;
 }

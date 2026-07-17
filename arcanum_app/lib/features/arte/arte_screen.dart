@@ -6,12 +6,8 @@ import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
-import '../../shared/widgets/arcanum_frame.dart';
 import '../../shared/widgets/arcanum_mood.dart';
-import '../../shared/widgets/arcanum_motion.dart';
-import '../../shared/widgets/arcanum_surface.dart';
 import '../../shared/widgets/info_dot.dart';
-import 'materia_engravings.dart';
 import 'materia_lore.dart';
 import 'materia_specimen.dart';
 
@@ -50,30 +46,38 @@ class ArteScreen extends ConsumerStatefulWidget {
 
 class _ArteScreenState extends ConsumerState<ArteScreen> {
   late final ArcanumApi _api = ref.read(arcanumApiProvider);
-  late Future<List<Map<String, dynamic>>> _future =
+  late Future<List<Map<String, dynamic>>> _catalog =
       widget.itemsOverride ?? _api.materiaList();
+  late Future<List<Map<String, dynamic>>> _future = _catalog;
   String? _type;
   String? _lastPlanet;
 
   void _selectType(String? type) {
     setState(() {
       _type = type;
-      _future = _api.materiaList(
-        itemType: type,
-        planet: ref.read(materiaPlanetProvider),
-      );
+      _future = _filterCatalog(type, ref.read(materiaPlanetProvider));
     });
   }
 
   void _reload() {
     setState(() {
-      _future =
-          widget.itemsOverride ??
-          _api.materiaList(
-            itemType: _type,
-            planet: ref.read(materiaPlanetProvider),
-          );
+      _catalog = widget.itemsOverride ?? _api.materiaList();
+      _future = _filterCatalog(_type, ref.read(materiaPlanetProvider));
     });
+  }
+
+  Future<List<Map<String, dynamic>>> _filterCatalog(
+    String? type,
+    String? planet,
+  ) async {
+    final items = await _catalog;
+    return items
+        .where((item) {
+          final matchesType = type == null || item['item_type'] == type;
+          final matchesPlanet = planet == null || item['planet'] == planet;
+          return matchesType && matchesPlanet;
+        })
+        .toList(growable: false);
   }
 
   void _togglePlanet(String planet) {
@@ -89,7 +93,7 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
     final planet = ref.watch(materiaPlanetProvider);
     if (widget.itemsOverride == null && planet != _lastPlanet) {
       _lastPlanet = planet;
-      _future = _api.materiaList(itemType: _type, planet: planet);
+      _future = _filterCatalog(_type, planet);
     }
     return Center(
       child: ConstrainedBox(
@@ -312,7 +316,6 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
       ),
       itemCount: items.length,
       itemBuilder: (context, i) => _Reveal(
-        index: i,
         child: _MateriaCard(item: items[i], onTap: () => _openDetail(items[i])),
       ),
     );
@@ -374,12 +377,6 @@ class _MateriaCard extends StatelessWidget {
     final planetG = (planet != null && planet.isNotEmpty)
         ? planetGlyph[planet]
         : null;
-    final zodiacKey = materiaZodiacKey(
-      planet,
-      element,
-      explicit: item['zodiac'] as String?,
-    );
-    final zodiacG = zodiacKey == null ? null : signGlyph[zodiacKey];
     final subtitle = [
       materiaTypeEs[type] ?? type,
       if (element != null && element.isNotEmpty) materiaElementEs(element),
@@ -393,109 +390,117 @@ class _MateriaCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: br,
-        child: ArcanumTilt(
-          maxTilt: 0.06,
-          borderRadius: br,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: br,
-              border: Border.all(color: mood.accent.withValues(alpha: 0.28)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.32),
-                  blurRadius: 16,
-                  offset: const Offset(0, 7),
-                ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: br,
+            border: Border.all(color: mood.accent.withValues(alpha: 0.36)),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color.lerp(mood.edge, mood.core, 0.30)!,
+                mood.edge,
               ],
             ),
-            child: ClipRRect(
-              borderRadius: br,
-              child: ArcanumFrame(
-                mood: mood,
-                radius: 16,
-                corners: false,
-                child: ArcanumSurface(
-                  mood: mood,
-                  intensity: 0.44,
-                  child: Stack(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
-                        child: Column(
-                          children: [
-                            // Deja aire a los lados: el sello planetario vive
-                            // arriba-izquierda y no debe pisar el label.
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 26,
-                              ),
-                              child: Text(
-                                (materiaTypeEs[type] ?? type).toUpperCase(),
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: ArcanumText.label(),
-                              ),
-                            ),
-                            const Spacer(),
-                            MateriaSpecimen(
-                              slug: slug,
-                              type: type,
-                              mood: mood,
-                              size: type == 'herb' ? 104 : 88,
-                              strokeWidth: 1.4,
-                              semanticLabel: item['name'] as String,
-                            ),
-                            const Spacer(),
-                            Text(
-                              item['name'] as String,
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: ArcanumText.heading(
-                                20,
-                                color: ArcanumColors.gold,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              subtitle,
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: ArcanumText.body(
-                                12.5,
-                                color: ArcanumColors.ivoryMuted,
-                              ),
-                            ),
-                          ],
-                        ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x52000000),
+                blurRadius: 5,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: br,
+                      gradient: RadialGradient(
+                        center: Alignment(0, -0.55),
+                        radius: 0.9,
+                        colors: [
+                          mood.accent.withValues(alpha: 0.12),
+                          Colors.transparent,
+                        ],
                       ),
-                      if (planetG != null)
-                        Positioned(
-                          top: 9,
-                          left: 10,
-                          child: MateriaSeal(
-                            glyph: planetG,
-                            mood: mood,
-                            size: 25,
-                          ),
-                        ),
-                      if (zodiacG != null)
-                        Positioned(
-                          bottom: 9,
-                          right: 10,
-                          child: MateriaSeal(
-                            glyph: zodiacG,
-                            mood: mood,
-                            size: 23,
-                          ),
-                        ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 26),
+                      child: Text(
+                        (materiaTypeEs[type] ?? type).toUpperCase(),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: ArcanumText.label(),
+                      ),
+                    ),
+                    const Spacer(),
+                    MateriaSpecimen(
+                      slug: slug,
+                      type: type,
+                      mood: mood,
+                      size: 102,
+                      strokeWidth: 1.55,
+                      compact: true,
+                      semanticLabel: item['name'] as String,
+                    ),
+                    const Spacer(),
+                    Text(
+                      item['name'] as String,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: ArcanumText.heading(
+                        20,
+                        color: ArcanumColors.gold,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: ArcanumText.body(
+                        12.5,
+                        color: ArcanumColors.ivoryMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (planetG != null)
+                Positioned(
+                  top: 12,
+                  left: 13,
+                  child: Text(
+                    planetG,
+                    style: TextStyle(
+                      color: mood.accent.withValues(alpha: 0.78),
+                      fontSize: 18,
+                      height: 1,
+                    ),
+                  ),
+                ),
+              Positioned(
+                top: 8,
+                right: 12,
+                child: Container(
+                  width: 24,
+                  height: 1,
+                  color: mood.accent.withValues(alpha: 0.48),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -504,49 +509,12 @@ class _MateriaCard extends StatelessWidget {
 }
 
 // ── Entrada en cascada (fade + rise, desfasada por índice) ──────────────────
-class _Reveal extends StatefulWidget {
-  final int index;
+class _Reveal extends StatelessWidget {
   final Widget child;
-  const _Reveal({required this.index, required this.child});
-  @override
-  State<_Reveal> createState() => _RevealState();
-}
-
-class _RevealState extends State<_Reveal> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 460),
-  );
-  late final Animation<double> _fade = CurvedAnimation(
-    parent: _c,
-    curve: Curves.easeOut,
-  );
-  late final Animation<Offset> _slide = Tween(
-    begin: const Offset(0, 0.10),
-    end: Offset.zero,
-  ).animate(CurvedAnimation(parent: _c, curve: Curves.easeOutCubic));
+  const _Reveal({required this.child});
 
   @override
-  void initState() {
-    super.initState();
-    final delayMs = (widget.index * 55).clamp(0, 700);
-    Future.delayed(Duration(milliseconds: delayMs), () {
-      if (mounted) _c.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => FadeTransition(
-    opacity: _fade,
-    alwaysIncludeSemantics: true,
-    child: SlideTransition(position: _slide, child: widget.child),
-  );
+  Widget build(BuildContext context) => child;
 }
 
 // ── Estados: carga / error / vacío ──────────────────────────────────────────

@@ -62,6 +62,8 @@ class GrimoireCrypto {
       iv: enc.IV.fromBase64(ivB64),
     );
   }
+
+  Future<void> clearLocalKey() => _storage.delete(key: _dekKey);
 }
 
 final grimoireCryptoProvider = Provider((ref) => GrimoireCrypto());

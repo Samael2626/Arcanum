@@ -1,5 +1,5 @@
 name: arcanum_app
-description: "A new Flutter project."
+description: "Práctica mágica, tarot, astrología y grimorio cifrado."
 # The following prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -34,7 +34,6 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  google_fonts: ^8.1.0
   http: ^1.6.0
   go_router: ^17.3.0
   dio: ^5.9.2
@@ -76,5 +75,21 @@ flutter:
     - assets/engravings/inciensos/
     - assets/engravings/aceites/
     - assets/engravings/resinas/
+  fonts:
+    - family: Cormorant Garamond
+      fonts:
+        - asset: assets/fonts/CormorantGaramond-600.ttf
+          weight: 600
+    - family: Crimson Pro
+      fonts:
+        - asset: assets/fonts/CrimsonPro-400.ttf
+          weight: 400
+        - asset: assets/fonts/CrimsonPro-400italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/CrimsonPro-500.ttf
+          weight: 500
+        - asset: assets/fonts/CrimsonPro-600.ttf
+          weight: 600
   # shaders:
   #   - shaders/nebula.frag

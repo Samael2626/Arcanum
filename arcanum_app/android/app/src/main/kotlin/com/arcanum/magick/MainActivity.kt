@@ -1,4 +1,4 @@
-package com.example.arcanum_app
+package com.arcanum.magick
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -4,7 +4,7 @@ Contenido de referencia, público (la app puede gatear por premium más adelante
 """
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -24,12 +24,14 @@ router = APIRouter()
 
 @router.get("", response_model=list[MateriaItemSummary])
 def list_materia(
+    response: Response,
     item_type: Optional[ItemType] = Query(None),
     planet: Optional[str] = Query(None),
     element: Optional[str] = Query(None),
     q: Optional[str] = Query(None, description="Busca en el nombre"),
     db: Session = Depends(get_db),
 ):
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
     query = db.query(MateriaItem)
     if item_type is not None:
         query = query.filter(MateriaItem.item_type == item_type.value)
@@ -43,7 +45,8 @@ def list_materia(
 
 
 @router.get("/{slug}", response_model=MateriaItemResponse)
-def get_materia(slug: str, db: Session = Depends(get_db)):
+def get_materia(slug: str, response: Response, db: Session = Depends(get_db)):
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
     item = db.query(MateriaItem).filter(MateriaItem.slug == slug).first()
     if item is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No encontrado")

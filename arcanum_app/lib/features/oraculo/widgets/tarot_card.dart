@@ -7,8 +7,28 @@ import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
 
 const _roman = [
-  '0', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X',
-  'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI',
+  '0',
+  'I',
+  'II',
+  'III',
+  'IV',
+  'V',
+  'VI',
+  'VII',
+  'VIII',
+  'IX',
+  'X',
+  'XI',
+  'XII',
+  'XIII',
+  'XIV',
+  'XV',
+  'XVI',
+  'XVII',
+  'XVIII',
+  'XIX',
+  'XX',
+  'XXI',
 ];
 
 // ── Firma esotérica de los 22 Mayores (atribución Golden Dawn, orden RWS:
@@ -16,33 +36,99 @@ const _roman = [
 //    haya poblado hebrew_letter/astro_correspondence, la cara se dibuja fiel.
 //    Glifos astrológicos para planeta/signo; elemento (0,12,20) va vectorial.
 const _majorGlyph = <int, String>{
-  1: '☿', 2: '☽', 3: '♀', 4: '♈', 5: '♉', 6: '♊', 7: '♋', 8: '♌',
-  9: '♍', 10: '♃', 11: '♎', 13: '♏', 14: '♐', 15: '♑', 16: '♂',
-  17: '♒', 18: '♓', 19: '☉', 21: '♄',
+  1: '☿',
+  2: '☽',
+  3: '♀',
+  4: '♈',
+  5: '♉',
+  6: '♊',
+  7: '♋',
+  8: '♌',
+  9: '♍',
+  10: '♃',
+  11: '♎',
+  13: '♏',
+  14: '♐',
+  15: '♑',
+  16: '♂',
+  17: '♒',
+  18: '♓',
+  19: '☉',
+  21: '♄',
 };
 const _majorElement = <int, String>{0: 'aire', 12: 'agua', 20: 'fuego'};
 const _majorHebGlyph = <int, String>{
-  0: 'א', 1: 'ב', 2: 'ג', 3: 'ד', 4: 'ה', 5: 'ו', 6: 'ז', 7: 'ח',
-  8: 'ט', 9: 'י', 10: 'כ', 11: 'ל', 12: 'מ', 13: 'נ', 14: 'ס', 15: 'ע',
-  16: 'פ', 17: 'צ', 18: 'ק', 19: 'ר', 20: 'ש', 21: 'ת',
+  0: 'א',
+  1: 'ב',
+  2: 'ג',
+  3: 'ד',
+  4: 'ה',
+  5: 'ו',
+  6: 'ז',
+  7: 'ח',
+  8: 'ט',
+  9: 'י',
+  10: 'כ',
+  11: 'ל',
+  12: 'מ',
+  13: 'נ',
+  14: 'ס',
+  15: 'ע',
+  16: 'פ',
+  17: 'צ',
+  18: 'ק',
+  19: 'ר',
+  20: 'ש',
+  21: 'ת',
 };
 const _majorHebName = <int, String>{
-  0: 'ALEPH', 1: 'BETH', 2: 'GIMEL', 3: 'DALETH', 4: 'HEH', 5: 'VAV',
-  6: 'ZAYIN', 7: 'CHETH', 8: 'TETH', 9: 'YOD', 10: 'KAPH', 11: 'LAMED',
-  12: 'MEM', 13: 'NUN', 14: 'SAMEKH', 15: 'AYIN', 16: 'PEH', 17: 'TZADDI',
-  18: 'QOPH', 19: 'RESH', 20: 'SHIN', 21: 'TAV',
+  0: 'ALEPH',
+  1: 'BETH',
+  2: 'GIMEL',
+  3: 'DALETH',
+  4: 'HEH',
+  5: 'VAV',
+  6: 'ZAYIN',
+  7: 'CHETH',
+  8: 'TETH',
+  9: 'YOD',
+  10: 'KAPH',
+  11: 'LAMED',
+  12: 'MEM',
+  13: 'NUN',
+  14: 'SAMEKH',
+  15: 'AYIN',
+  16: 'PEH',
+  17: 'TZADDI',
+  18: 'QOPH',
+  19: 'RESH',
+  20: 'SHIN',
+  21: 'TAV',
 };
 
 const _suits = {'bastos', 'copas', 'espadas', 'oros'};
 const _suitElement = <String, String>{
-  'bastos': 'fuego', 'copas': 'agua', 'espadas': 'aire', 'oros': 'tierra',
+  'bastos': 'fuego',
+  'copas': 'agua',
+  'espadas': 'aire',
+  'oros': 'tierra',
 };
 const _courtWords = <String, String>{
-  'princesa': 'Princesa', 'principe': 'Príncipe', 'príncipe': 'Príncipe',
-  'reina': 'Reina', 'rey': 'Rey', 'caballero': 'Caballero', 'caballo': 'Caballero',
-  'sota': 'Sota', 'paje': 'Paje',
-  'queen': 'Reina', 'king': 'Rey', 'knight': 'Caballero', 'page': 'Paje',
-  'prince': 'Príncipe', 'princess': 'Princesa',
+  'princesa': 'Princesa',
+  'principe': 'Príncipe',
+  'príncipe': 'Príncipe',
+  'reina': 'Reina',
+  'rey': 'Rey',
+  'caballero': 'Caballero',
+  'caballo': 'Caballero',
+  'sota': 'Sota',
+  'paje': 'Paje',
+  'queen': 'Reina',
+  'king': 'Rey',
+  'knight': 'Caballero',
+  'page': 'Paje',
+  'prince': 'Príncipe',
+  'princess': 'Princesa',
 };
 
 // Disposición clásica de pips (coordenadas normalizadas dentro del naipe).
@@ -51,12 +137,63 @@ const _pipLayouts = <int, List<Offset>>{
   2: [Offset(.5, .30), Offset(.5, .70)],
   3: [Offset(.5, .26), Offset(.5, .5), Offset(.5, .74)],
   4: [Offset(.35, .30), Offset(.65, .30), Offset(.35, .70), Offset(.65, .70)],
-  5: [Offset(.35, .28), Offset(.65, .28), Offset(.5, .5), Offset(.35, .72), Offset(.65, .72)],
-  6: [Offset(.35, .26), Offset(.65, .26), Offset(.35, .5), Offset(.65, .5), Offset(.35, .74), Offset(.65, .74)],
-  7: [Offset(.35, .24), Offset(.65, .24), Offset(.5, .38), Offset(.35, .52), Offset(.65, .52), Offset(.35, .76), Offset(.65, .76)],
-  8: [Offset(.35, .22), Offset(.65, .22), Offset(.5, .36), Offset(.35, .49), Offset(.65, .49), Offset(.5, .63), Offset(.35, .78), Offset(.65, .78)],
-  9: [Offset(.35, .22), Offset(.65, .22), Offset(.35, .40), Offset(.65, .40), Offset(.5, .5), Offset(.35, .60), Offset(.65, .60), Offset(.35, .78), Offset(.65, .78)],
-  10: [Offset(.35, .20), Offset(.65, .20), Offset(.5, .31), Offset(.35, .41), Offset(.65, .41), Offset(.35, .59), Offset(.65, .59), Offset(.5, .69), Offset(.35, .80), Offset(.65, .80)],
+  5: [
+    Offset(.35, .28),
+    Offset(.65, .28),
+    Offset(.5, .5),
+    Offset(.35, .72),
+    Offset(.65, .72),
+  ],
+  6: [
+    Offset(.35, .26),
+    Offset(.65, .26),
+    Offset(.35, .5),
+    Offset(.65, .5),
+    Offset(.35, .74),
+    Offset(.65, .74),
+  ],
+  7: [
+    Offset(.35, .24),
+    Offset(.65, .24),
+    Offset(.5, .38),
+    Offset(.35, .52),
+    Offset(.65, .52),
+    Offset(.35, .76),
+    Offset(.65, .76),
+  ],
+  8: [
+    Offset(.35, .22),
+    Offset(.65, .22),
+    Offset(.5, .36),
+    Offset(.35, .49),
+    Offset(.65, .49),
+    Offset(.5, .63),
+    Offset(.35, .78),
+    Offset(.65, .78),
+  ],
+  9: [
+    Offset(.35, .22),
+    Offset(.65, .22),
+    Offset(.35, .40),
+    Offset(.65, .40),
+    Offset(.5, .5),
+    Offset(.35, .60),
+    Offset(.65, .60),
+    Offset(.35, .78),
+    Offset(.65, .78),
+  ],
+  10: [
+    Offset(.35, .20),
+    Offset(.65, .20),
+    Offset(.5, .31),
+    Offset(.35, .41),
+    Offset(.65, .41),
+    Offset(.35, .59),
+    Offset(.65, .59),
+    Offset(.5, .69),
+    Offset(.35, .80),
+    Offset(.65, .80),
+  ],
 };
 
 enum TarotFaceKind { major, pip, court, fallback }
@@ -119,8 +256,9 @@ class TarotFace {
       if (suit.isEmpty) suit = null;
     }
 
-    final element =
-        _normElement((c['element'] as String?) ?? (suit != null ? _suitElement[suit] : null));
+    final element = _normElement(
+      (c['element'] as String?) ?? (suit != null ? _suitElement[suit] : null),
+    );
 
     // Figura (corte): por palabra de rango en nombre/slug.
     String? court;
@@ -135,35 +273,57 @@ class TarotFace {
     if (suit != null) {
       if (court != null) {
         return TarotFace._(
-            kind: TarotFaceKind.court, element: element, name: name, suit: suit, court: court);
+          kind: TarotFaceKind.court,
+          element: element,
+          name: name,
+          suit: suit,
+          court: court,
+        );
       }
       final n = numRaw;
       if (n != null && n >= 1 && n <= 10) {
         return TarotFace._(
-            kind: TarotFaceKind.pip, element: element, name: name, suit: suit, number: n);
+          kind: TarotFaceKind.pip,
+          element: element,
+          name: name,
+          suit: suit,
+          number: n,
+        );
       }
       // Palo sin número claro → pip con un solo emblema.
       return TarotFace._(
-          kind: TarotFaceKind.pip, element: element, name: name, suit: suit, number: 1);
+        kind: TarotFaceKind.pip,
+        element: element,
+        name: name,
+        suit: suit,
+        number: 1,
+      );
     }
 
     // Mayor: por arcana, o por id/number en 0..21 (deck legacy).
     final maj = arcana == 'major' ? (numRaw ?? id) : (id ?? numRaw);
     if ((arcana == 'major' || arcana == null) &&
-        maj != null && maj >= 0 && maj <= 21) {
+        maj != null &&
+        maj >= 0 &&
+        maj <= 21) {
       final astro = (c['astro_correspondence'] as String?)?.trim();
       final zodiac = (c['zodiac'] as String?)?.trim();
       final mel = _majorElement[maj] ?? 'aire';
       return TarotFace._(
-          kind: TarotFaceKind.major,
-          element: mel,
-          name: name,
-          majorNum: maj,
-          astro: (astro != null && astro.isNotEmpty) ? astro : null,
-          zodiac: (zodiac != null && zodiac.isNotEmpty) ? zodiac : null);
+        kind: TarotFaceKind.major,
+        element: mel,
+        name: name,
+        majorNum: maj,
+        astro: (astro != null && astro.isNotEmpty) ? astro : null,
+        zodiac: (zodiac != null && zodiac.isNotEmpty) ? zodiac : null,
+      );
     }
 
-    return TarotFace._(kind: TarotFaceKind.fallback, element: 'aire', name: name);
+    return TarotFace._(
+      kind: TarotFaceKind.fallback,
+      element: 'aire',
+      name: name,
+    );
   }
 }
 
@@ -213,21 +373,64 @@ class _CardSkin {
   final Color accent; // color del emblema (más brillante)
   final _Orn orn;
   final double lightY; // posición vertical de la luz (0 arriba, 1 abajo)
-  const _CardSkin(this.edge, this.core, this.glow, this.accent, this.orn, this.lightY);
+  const _CardSkin(
+    this.edge,
+    this.core,
+    this.glow,
+    this.accent,
+    this.orn,
+    this.lightY,
+  );
 }
 
-const _skinFire = _CardSkin(ArcanumColors.fireEdge, ArcanumColors.fireCore,
-    ArcanumColors.fireGlow, ArcanumColors.fireAccent, _Orn.rays, 0.70);
-const _skinWater = _CardSkin(ArcanumColors.waterEdge, ArcanumColors.waterCore,
-    ArcanumColors.waterGlow, ArcanumColors.waterAccent, _Orn.ripples, 0.32);
-const _skinAir = _CardSkin(ArcanumColors.airEdge, ArcanumColors.airCore,
-    ArcanumColors.airGlow, ArcanumColors.airAccent, _Orn.wind, 0.30);
-const _skinEarth = _CardSkin(ArcanumColors.earthEdge, ArcanumColors.earthCore,
-    ArcanumColors.earthGlow, ArcanumColors.earthAccent, _Orn.lattice, 0.70);
-const _skinMoon = _CardSkin(ArcanumColors.moonEdge, ArcanumColors.moonCore,
-    ArcanumColors.moonGlow, ArcanumColors.moonAccent, _Orn.stars, 0.30);
-const _skinSun = _CardSkin(ArcanumColors.sunEdge, ArcanumColors.sunCore,
-    ArcanumColors.sunGlow, ArcanumColors.sunAccent, _Orn.rays, 0.46);
+const _skinFire = _CardSkin(
+  ArcanumColors.fireEdge,
+  ArcanumColors.fireCore,
+  ArcanumColors.fireGlow,
+  ArcanumColors.fireAccent,
+  _Orn.rays,
+  0.70,
+);
+const _skinWater = _CardSkin(
+  ArcanumColors.waterEdge,
+  ArcanumColors.waterCore,
+  ArcanumColors.waterGlow,
+  ArcanumColors.waterAccent,
+  _Orn.ripples,
+  0.32,
+);
+const _skinAir = _CardSkin(
+  ArcanumColors.airEdge,
+  ArcanumColors.airCore,
+  ArcanumColors.airGlow,
+  ArcanumColors.airAccent,
+  _Orn.wind,
+  0.30,
+);
+const _skinEarth = _CardSkin(
+  ArcanumColors.earthEdge,
+  ArcanumColors.earthCore,
+  ArcanumColors.earthGlow,
+  ArcanumColors.earthAccent,
+  _Orn.lattice,
+  0.70,
+);
+const _skinMoon = _CardSkin(
+  ArcanumColors.moonEdge,
+  ArcanumColors.moonCore,
+  ArcanumColors.moonGlow,
+  ArcanumColors.moonAccent,
+  _Orn.stars,
+  0.30,
+);
+const _skinSun = _CardSkin(
+  ArcanumColors.sunEdge,
+  ArcanumColors.sunCore,
+  ArcanumColors.sunGlow,
+  ArcanumColors.sunAccent,
+  _Orn.rays,
+  0.46,
+);
 
 _CardSkin _skinForElement(String element) {
   switch (element) {
@@ -246,10 +449,28 @@ _CardSkin _skinForElement(String element) {
 // Elemento canónico de cada Mayor (atribución Golden Dawn por planeta/signo).
 // Fallback cuando el backend aún no pobló astro/zodiac.
 const _majorElem = <int, String>{
-  0: 'aire', 1: 'aire', 2: 'agua', 3: 'tierra', 4: 'fuego', 5: 'tierra',
-  6: 'aire', 7: 'agua', 8: 'fuego', 9: 'tierra', 10: 'aire', 11: 'aire',
-  12: 'agua', 13: 'agua', 14: 'fuego', 15: 'tierra', 16: 'fuego', 17: 'aire',
-  18: 'agua', 19: 'fuego', 20: 'fuego', 21: 'tierra',
+  0: 'aire',
+  1: 'aire',
+  2: 'agua',
+  3: 'tierra',
+  4: 'fuego',
+  5: 'tierra',
+  6: 'aire',
+  7: 'agua',
+  8: 'fuego',
+  9: 'tierra',
+  10: 'aire',
+  11: 'aire',
+  12: 'agua',
+  13: 'agua',
+  14: 'fuego',
+  15: 'tierra',
+  16: 'fuego',
+  17: 'aire',
+  18: 'agua',
+  19: 'fuego',
+  20: 'fuego',
+  21: 'tierra',
 };
 
 // Deriva elemento de un texto astral libre (signo o planeta) → enriquecimiento
@@ -258,15 +479,29 @@ String? _elementFromAstro(String? s) {
   if (s == null) return null;
   final t = s.toLowerCase();
   bool has(List<String> ks) => ks.any(t.contains);
-  if (has(['aries', 'leo', 'sagit', 'marte', '♈', '♌', '♐', '♂'])) return 'fuego';
+  if (has(['aries', 'leo', 'sagit', 'marte', '♈', '♌', '♐', '♂'])) {
+    return 'fuego';
+  }
   if (has(['cáncer', 'cancer', 'escorpi', 'piscis', 'pisces', '♋', '♏', '♓'])) {
     return 'agua';
   }
   if (has(['tauro', 'virgo', 'capricor', 'saturno', '♉', '♍', '♑', '♄'])) {
     return 'tierra';
   }
-  if (has(['géminis', 'geminis', 'libra', 'acuario', 'mercurio', 'júpiter', 'jupiter',
-      '♊', '♎', '♒', '☿', '♃'])) {
+  if (has([
+    'géminis',
+    'geminis',
+    'libra',
+    'acuario',
+    'mercurio',
+    'júpiter',
+    'jupiter',
+    '♊',
+    '♎',
+    '♒',
+    '☿',
+    '♃',
+  ])) {
     return 'aire';
   }
   return null;
@@ -278,9 +513,12 @@ _CardSkin _skinForFace(TarotFace f) {
       final n = f.majorNum!;
       // Héroes con atmósfera propia (icónicos).
       if (n == 19) return _skinSun; // El Sol
-      if (n == 18 || n == 2 || n == 17) return _skinMoon; // Luna, Sacerdotisa, Estrella
+      if (n == 18 || n == 2 || n == 17) {
+        return _skinMoon; // Luna, Sacerdotisa, Estrella
+      }
       // Elemento: prioriza dato del backend (astro/zodiac); si null, tabla canónica.
-      final el = _elementFromAstro(f.astro) ??
+      final el =
+          _elementFromAstro(f.astro) ??
           _elementFromAstro(f.zodiac) ??
           _majorElem[n] ??
           'aire';
@@ -311,7 +549,9 @@ class TarotFacePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width, h = size.height;
     final rrect = RRect.fromRectAndRadius(
-        Offset.zero & size, Radius.circular(w * 0.10));
+      Offset.zero & size,
+      Radius.circular(w * 0.10),
+    );
     final sk = _skin;
     final bounds = Offset.zero & size;
     final cx = w * 0.5, cy = h * 0.46;
@@ -322,53 +562,62 @@ class TarotFacePainter extends CustomPainter {
 
     // 1 · Atmósfera base: gradiente radial desde la luz (core → edge).
     canvas.drawRect(
-        bounds,
-        Paint()
-          ..shader = RadialGradient(
-            center: Alignment(
-                (light.dx / w) * 2 - 1, (light.dy / h) * 2 - 1),
-            radius: 0.95,
-            colors: [sk.core, sk.edge],
-          ).createShader(bounds));
+      bounds,
+      Paint()
+        ..shader = RadialGradient(
+          center: Alignment((light.dx / w) * 2 - 1, (light.dy / h) * 2 - 1),
+          radius: 0.95,
+          colors: [sk.core, sk.edge],
+        ).createShader(bounds),
+    );
 
     // 2 · Ornamento geométrico afín al elemento (muy tenue).
     if (detail) _paintOrnament(canvas, size, sk, Offset(cx, cy));
 
     // 3 · Light-leak asimétrico (fuga de luz esquina sup-izquierda).
     canvas.drawRect(
-        bounds,
-        Paint()
-          ..shader = RadialGradient(
-            center: const Alignment(-0.55, -0.75),
-            radius: 1.1,
-            colors: [sk.accent.withValues(alpha: 0.13), Colors.transparent],
-            stops: const [0.0, 0.6],
-          ).createShader(bounds));
+      bounds,
+      Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(-0.55, -0.75),
+          radius: 1.1,
+          colors: [sk.accent.withValues(alpha: 0.13), Colors.transparent],
+          stops: const [0.0, 0.6],
+        ).createShader(bounds),
+    );
 
     // 4 · Bruma + bloom del elemento tras el emblema.
     canvas.drawRect(
-        bounds,
-        Paint()
-          ..shader = RadialGradient(
-            colors: [
-              sk.glow.withValues(alpha: 0.40),
-              sk.glow.withValues(alpha: 0.14),
-              Colors.transparent,
-            ],
-            stops: const [0.0, 0.42, 1.0],
-          ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: w * 0.62)));
+      bounds,
+      Paint()
+        ..shader =
+            RadialGradient(
+              colors: [
+                sk.glow.withValues(alpha: 0.40),
+                sk.glow.withValues(alpha: 0.14),
+                Colors.transparent,
+              ],
+              stops: const [0.0, 0.42, 1.0],
+            ).createShader(
+              Rect.fromCircle(center: Offset(cx, cy), radius: w * 0.62),
+            ),
+    );
 
     // 5 · Grano de material (estipulado determinista → textil/pergamino).
     if (detail) _paintGrain(canvas, size);
 
     // 6 · Viñeta interior suave: solo el borde exterior cae a sombra.
     canvas.drawRect(
-        bounds,
-        Paint()
-          ..shader = RadialGradient(
-            colors: const [Colors.transparent, Color(0x66000000)],
-            stops: const [0.62, 1.0],
-          ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: h * 0.66)));
+      bounds,
+      Paint()
+        ..shader =
+            RadialGradient(
+              colors: const [Colors.transparent, Color(0x66000000)],
+              stops: const [0.62, 1.0],
+            ).createShader(
+              Rect.fromCircle(center: Offset(cx, cy), radius: h * 0.66),
+            ),
+    );
 
     canvas.restore();
 
@@ -437,8 +686,14 @@ class TarotFacePainter extends CustomPainter {
       case _Orn.stars: // Luna/nocturno: estrellas dispersas
         final dot = Paint()..color = sk.accent.withValues(alpha: 0.45);
         const pts = [
-          Offset(.2, .2), Offset(.8, .18), Offset(.72, .58), Offset(.28, .72),
-          Offset(.5, .30), Offset(.86, .5), Offset(.14, .55), Offset(.6, .84),
+          Offset(.2, .2),
+          Offset(.8, .18),
+          Offset(.72, .58),
+          Offset(.28, .72),
+          Offset(.5, .30),
+          Offset(.86, .5),
+          Offset(.14, .55),
+          Offset(.6, .84),
         ];
         for (final o in pts) {
           canvas.drawCircle(Offset(o.dx * w, o.dy * h), w * 0.008, dot);
@@ -457,6 +712,7 @@ class TarotFacePainter extends CustomPainter {
       seed = (seed * 1103515245 + 12345) & 0x7fffffff;
       return seed / 0x7fffffff;
     }
+
     final light = Paint()..color = const Color(0xFFFFF0D6);
     final dark = Paint()..color = Colors.black;
     for (var i = 0; i < n; i++) {
@@ -478,58 +734,70 @@ class TarotFacePainter extends CustomPainter {
     final w = size.width, h = size.height;
     final gold = ArcanumColors.gold;
     RRect fr(double inset, double rf) => RRect.fromRectAndRadius(
-        Rect.fromLTWH(w * inset, h * inset, w * (1 - inset * 2), h * (1 - inset * 2)),
-        Radius.circular(w * 0.10 * rf));
+      Rect.fromLTWH(
+        w * inset,
+        h * inset,
+        w * (1 - inset * 2),
+        h * (1 - inset * 2),
+      ),
+      Radius.circular(w * 0.10 * rf),
+    );
 
     // Inner-glow del filete exterior.
     canvas.drawRRect(
-        fr(0.045, 0.72),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = w * 0.013
-          ..color = gold.withValues(alpha: 0.28)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
+      fr(0.045, 0.72),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.013
+        ..color = gold.withValues(alpha: 0.28)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+    );
     // Bisel: highlight y sombra ligeramente desplazados.
     final outer = fr(0.045, 0.72);
     canvas.save();
     canvas.translate(-w * 0.004, -h * 0.003);
     canvas.drawRRect(
-        outer,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = w * 0.006
-          ..color = const Color(0xFFF0DFA0).withValues(alpha: 0.55));
+      outer,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.006
+        ..color = const Color(0xFFF0DFA0).withValues(alpha: 0.55),
+    );
     canvas.restore();
     canvas.save();
     canvas.translate(w * 0.004, h * 0.003);
     canvas.drawRRect(
-        outer,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = w * 0.006
-          ..color = Colors.black.withValues(alpha: 0.35));
+      outer,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.006
+        ..color = Colors.black.withValues(alpha: 0.35),
+    );
     canvas.restore();
     // Filete exterior maestro.
     canvas.drawRRect(
-        outer,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = w * 0.010
-          ..color = gold.withValues(alpha: 0.72));
+      outer,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.010
+        ..color = gold.withValues(alpha: 0.72),
+    );
     // Hilo intermedio dorado tenue.
     canvas.drawRRect(
-        fr(0.062, 0.64),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = w * 0.004
-          ..color = ArcanumColors.goldMuted.withValues(alpha: 0.50));
+      fr(0.062, 0.64),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.004
+        ..color = ArcanumColors.goldMuted.withValues(alpha: 0.50),
+    );
     // Filete interior con tinte del elemento.
     canvas.drawRRect(
-        fr(0.082, 0.56),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = w * 0.006
-          ..color = sk.accent.withValues(alpha: 0.44));
+      fr(0.082, 0.56),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.006
+        ..color = sk.accent.withValues(alpha: 0.44),
+    );
     // Florituras de esquina.
     _paintCorners(canvas, size);
   }
@@ -556,12 +824,17 @@ class TarotFacePainter extends CustomPainter {
     for (final cc in corners) {
       final x = cc[0], y = cc[1], sx = cc[2], sy = cc[3];
       canvas.drawPath(
-          Path()
-            ..moveTo(x + sx * len, y)
-            ..lineTo(x, y)
-            ..lineTo(x, y + sy * len),
-          p);
-      canvas.drawCircle(Offset(x + sx * len * 0.5, y + sy * len * 0.5), w * 0.012, dot);
+        Path()
+          ..moveTo(x + sx * len, y)
+          ..lineTo(x, y)
+          ..lineTo(x, y + sy * len),
+        p,
+      );
+      canvas.drawCircle(
+        Offset(x + sx * len * 0.5, y + sy * len * 0.5),
+        w * 0.012,
+        dot,
+      );
     }
   }
 
@@ -570,44 +843,51 @@ class TarotFacePainter extends CustomPainter {
   /// elemento y un reflejo especular superior que le da volumen físico.
   void _medallionSeat(Canvas canvas, Offset c, double r) {
     canvas.drawCircle(
-        c,
-        r,
-        Paint()
-          ..shader = RadialGradient(
-            colors: [_skin.edge.withValues(alpha: 0.62), _skin.edge.withValues(alpha: 0.0)],
-            stops: const [0.55, 1.0],
-          ).createShader(Rect.fromCircle(center: c, radius: r)));
+      c,
+      r,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            _skin.edge.withValues(alpha: 0.62),
+            _skin.edge.withValues(alpha: 0.0),
+          ],
+          stops: const [0.55, 1.0],
+        ).createShader(Rect.fromCircle(center: c, radius: r)),
+    );
     // Inner-glow del elemento en el borde interior del medallón.
     canvas.drawCircle(
-        c,
-        r * 0.92,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = r * 0.10
-          ..color = _skin.glow.withValues(alpha: 0.18)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.10));
+      c,
+      r * 0.92,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = r * 0.10
+        ..color = _skin.glow.withValues(alpha: 0.18)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.10),
+    );
     // Reflejo especular: arco de luz en la parte superior del aro.
     canvas.drawArc(
-        Rect.fromCircle(center: c, radius: r),
-        math.pi * 1.15,
-        math.pi * 0.7,
-        false,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = r * 0.04
-          ..strokeCap = StrokeCap.round
-          ..color = const Color(0xFFFFF3D6).withValues(alpha: 0.30)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5));
+      Rect.fromCircle(center: c, radius: r),
+      math.pi * 1.15,
+      math.pi * 0.7,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = r * 0.04
+        ..strokeCap = StrokeCap.round
+        ..color = const Color(0xFFFFF3D6).withValues(alpha: 0.30)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5),
+    );
   }
 
   /// Sombra bajo el emblema central → sensación de bajo relieve grabado.
   void _emblemShadow(Canvas canvas, Offset c, double r) {
     canvas.drawCircle(
-        c.translate(0, r * 0.12),
-        r * 0.82,
-        Paint()
-          ..color = Colors.black.withValues(alpha: 0.30)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.30));
+      c.translate(0, r * 0.12),
+      r * 0.82,
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.30)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.30),
+    );
   }
 
   // ── Mayores: glifo astral en medallón + hebreo + numeral ──────────────
@@ -617,8 +897,15 @@ class TarotFacePainter extends CustomPainter {
     final gold = ArcanumColors.gold;
 
     // Numeral romano arriba.
-    _text(canvas, _roman[face.majorNum!.clamp(0, 21)], Offset(w * 0.5, h * 0.155),
-        w * 0.13, ArcanumColors.goldMuted, style: _serif, spacing: 2);
+    _text(
+      canvas,
+      _roman[face.majorNum!.clamp(0, 21)],
+      Offset(w * 0.5, h * 0.155),
+      w * 0.13,
+      ArcanumColors.goldMuted,
+      style: _serif,
+      spacing: 2,
+    );
 
     // Medallón.
     final r = w * 0.30;
@@ -651,8 +938,15 @@ class TarotFacePainter extends CustomPainter {
     }
     final hname = _majorHebName[face.majorNum!];
     if (hname != null) {
-      _text(canvas, hname, Offset(w * 0.5, h * 0.87), w * 0.075,
-          ArcanumColors.goldMuted, style: _serif, spacing: 3);
+      _text(
+        canvas,
+        hname,
+        Offset(w * 0.5, h * 0.87),
+        w * 0.075,
+        ArcanumColors.goldMuted,
+        style: _serif,
+        spacing: 3,
+      );
     }
   }
 
@@ -669,19 +963,21 @@ class TarotFacePainter extends CustomPainter {
       _medallionSeat(canvas, center, r);
       _emblemShadow(canvas, center, r * 0.55);
       canvas.drawCircle(
-          center,
-          r,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = w * 0.010
-            ..color = accent.withValues(alpha: 0.65));
+        center,
+        r,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = w * 0.010
+          ..color = accent.withValues(alpha: 0.65),
+      );
       canvas.drawCircle(
-          center,
-          r * 0.86,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = w * 0.006
-            ..color = ArcanumColors.goldMuted.withValues(alpha: 0.35));
+        center,
+        r * 0.86,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = w * 0.006
+          ..color = ArcanumColors.goldMuted.withValues(alpha: 0.35),
+      );
       _drawSuit(canvas, face.suit!, center, w * 0.20, accent);
       _cornerIndex(canvas, size, '1', accent);
       return;
@@ -692,8 +988,13 @@ class TarotFacePainter extends CustomPainter {
     final s = w * (n <= 3 ? 0.135 : (n <= 6 ? 0.100 : 0.082));
 
     for (final p in layout) {
-      _drawSuit(canvas, face.suit!, Offset(p.dx * size.width, p.dy * size.height),
-          s, accent);
+      _drawSuit(
+        canvas,
+        face.suit!,
+        Offset(p.dx * size.width, p.dy * size.height),
+        s,
+        accent,
+      );
     }
 
     // Índice de esquina (como un naipe real): numeral + palo mini.
@@ -707,15 +1008,27 @@ class TarotFacePainter extends CustomPainter {
     final accent = _skin.accent;
 
     // Corona/insignia de rango sobre el emblema.
-    _drawRankMark(canvas, face.court ?? '', Offset(w * 0.5, h * 0.24), w * 0.14);
+    _drawRankMark(
+      canvas,
+      face.court ?? '',
+      Offset(w * 0.5, h * 0.24),
+      w * 0.14,
+    );
 
     // Emblema grande del palo, sentado sobre la atmósfera.
     _emblemShadow(canvas, center, w * 0.22);
     _drawSuit(canvas, face.suit!, center, w * 0.24, accent);
 
     // Rango en versalitas abajo.
-    _text(canvas, (face.court ?? '').toUpperCase(), Offset(w * 0.5, h * 0.84),
-        w * 0.085, ArcanumColors.goldMuted, style: _serif, spacing: 2);
+    _text(
+      canvas,
+      (face.court ?? '').toUpperCase(),
+      Offset(w * 0.5, h * 0.84),
+      w * 0.085,
+      ArcanumColors.goldMuted,
+      style: _serif,
+      spacing: 2,
+    );
 
     _cornerIndex(canvas, size, (face.court ?? ' ').characters.first, accent);
   }
@@ -738,14 +1051,24 @@ class TarotFacePainter extends CustomPainter {
       ..color = gold.withValues(alpha: 0.5);
     for (var i = 0; i < 8; i++) {
       final a = i * math.pi / 4;
-      canvas.drawLine(center + Offset(math.cos(a), math.sin(a)) * (r * 0.3),
-          center + Offset(math.cos(a), math.sin(a)) * (r * 0.9), ray);
+      canvas.drawLine(
+        center + Offset(math.cos(a), math.sin(a)) * (r * 0.3),
+        center + Offset(math.cos(a), math.sin(a)) * (r * 0.9),
+        ray,
+      );
     }
     _text(canvas, '✦', center, r * 0.9, gold);
     final id = _romanIfPossible(face);
     if (id != null) {
-      _text(canvas, id, Offset(w * 0.5, h * 0.82), w * 0.12,
-          ArcanumColors.goldMuted, style: _serif, spacing: 2);
+      _text(
+        canvas,
+        id,
+        Offset(w * 0.5, h * 0.82),
+        w * 0.12,
+        ArcanumColors.goldMuted,
+        style: _serif,
+        spacing: 2,
+      );
     }
   }
 
@@ -773,22 +1096,40 @@ class TarotFacePainter extends CustomPainter {
         canvas.drawCircle(Offset(c.dx, c.dy - s), s * 0.16, knob);
         canvas.drawCircle(Offset(c.dx, c.dy + s), s * 0.16, knob);
         // brotes
-        canvas.drawLine(Offset(c.dx, c.dy - s * 0.3),
-            Offset(c.dx - s * 0.5, c.dy - s * 0.6), stroke);
-        canvas.drawLine(Offset(c.dx, c.dy - s * 0.3),
-            Offset(c.dx + s * 0.5, c.dy - s * 0.6), stroke);
+        canvas.drawLine(
+          Offset(c.dx, c.dy - s * 0.3),
+          Offset(c.dx - s * 0.5, c.dy - s * 0.6),
+          stroke,
+        );
+        canvas.drawLine(
+          Offset(c.dx, c.dy - s * 0.3),
+          Offset(c.dx + s * 0.5, c.dy - s * 0.6),
+          stroke,
+        );
         break;
       case 'copas': // cáliz
         final bowl = Path()
           ..moveTo(c.dx - s * 0.7, c.dy - s * 0.55)
-          ..quadraticBezierTo(c.dx, c.dy + s * 0.45, c.dx + s * 0.7, c.dy - s * 0.55)
+          ..quadraticBezierTo(
+            c.dx,
+            c.dy + s * 0.45,
+            c.dx + s * 0.7,
+            c.dy - s * 0.55,
+          )
           ..close();
         canvas.drawPath(bowl, fill);
         canvas.drawPath(bowl, stroke);
         // pie
-        canvas.drawLine(Offset(c.dx, c.dy + s * 0.15), Offset(c.dx, c.dy + s * 0.75), stroke);
-        canvas.drawLine(Offset(c.dx - s * 0.5, c.dy + s * 0.85),
-            Offset(c.dx + s * 0.5, c.dy + s * 0.85), stroke);
+        canvas.drawLine(
+          Offset(c.dx, c.dy + s * 0.15),
+          Offset(c.dx, c.dy + s * 0.75),
+          stroke,
+        );
+        canvas.drawLine(
+          Offset(c.dx - s * 0.5, c.dy + s * 0.85),
+          Offset(c.dx + s * 0.5, c.dy + s * 0.85),
+          stroke,
+        );
         break;
       case 'espadas': // espada vertical
         final blade = Path()
@@ -798,10 +1139,21 @@ class TarotFacePainter extends CustomPainter {
           ..close();
         canvas.drawPath(blade, fill);
         canvas.drawPath(blade, stroke);
-        canvas.drawLine(Offset(c.dx - s * 0.55, c.dy + s * 0.3),
-            Offset(c.dx + s * 0.55, c.dy + s * 0.3), stroke); // guarda
-        canvas.drawLine(Offset(c.dx, c.dy + s * 0.3), Offset(c.dx, c.dy + s * 0.8), stroke);
-        canvas.drawCircle(Offset(c.dx, c.dy + s * 0.9), s * 0.13, Paint()..color = color);
+        canvas.drawLine(
+          Offset(c.dx - s * 0.55, c.dy + s * 0.3),
+          Offset(c.dx + s * 0.55, c.dy + s * 0.3),
+          stroke,
+        ); // guarda
+        canvas.drawLine(
+          Offset(c.dx, c.dy + s * 0.3),
+          Offset(c.dx, c.dy + s * 0.8),
+          stroke,
+        );
+        canvas.drawCircle(
+          Offset(c.dx, c.dy + s * 0.9),
+          s * 0.13,
+          Paint()..color = color,
+        );
         break;
       case 'oros': // pentáculo
       default:
@@ -831,7 +1183,13 @@ class TarotFacePainter extends CustomPainter {
   }
 
   // Símbolos elementales vectoriales (triángulos alquímicos).
-  void _drawElement(Canvas canvas, String element, Offset c, double s, Color color) {
+  void _drawElement(
+    Canvas canvas,
+    String element,
+    Offset c,
+    double s,
+    Color color,
+  ) {
     final stroke = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = s * 0.09
@@ -850,7 +1208,11 @@ class TarotFacePainter extends CustomPainter {
     // Aire/Tierra llevan barra horizontal.
     if (element == 'aire' || element == 'tierra') {
       final by = c.dy - dy * s * 0.15;
-      canvas.drawLine(Offset(c.dx - s * 0.45, by), Offset(c.dx + s * 0.45, by), stroke);
+      canvas.drawLine(
+        Offset(c.dx - s * 0.45, by),
+        Offset(c.dx + s * 0.45, by),
+        stroke,
+      );
     }
   }
 
@@ -887,23 +1249,50 @@ class TarotFacePainter extends CustomPainter {
 
   void _cornerIndex(Canvas canvas, Size size, String label, Color accent) {
     final w = size.width;
-    _text(canvas, label, Offset(w * 0.16, size.height * 0.13), w * 0.11,
-        ArcanumColors.goldMuted, style: _serif);
+    _text(
+      canvas,
+      label,
+      Offset(w * 0.16, size.height * 0.13),
+      w * 0.11,
+      ArcanumColors.goldMuted,
+      style: _serif,
+    );
     // Espejo abajo-derecha.
     canvas.save();
     canvas.translate(w * 0.84, size.height * 0.87);
     canvas.rotate(math.pi);
-    _text(canvas, label, Offset.zero, w * 0.11, ArcanumColors.goldMuted, style: _serif);
+    _text(
+      canvas,
+      label,
+      Offset.zero,
+      w * 0.11,
+      ArcanumColors.goldMuted,
+      style: _serif,
+    );
     canvas.restore();
   }
 
   // Glifo/texto centrado en `center` vía TextPainter.
-  void _text(Canvas canvas, String s, Offset center, double fontSize, Color color,
-      {bool style = false, double spacing = 0}) {
+  void _text(
+    Canvas canvas,
+    String s,
+    Offset center,
+    double fontSize,
+    Color color, {
+    bool style = false,
+    double spacing = 0,
+  }) {
     final ts = style
-        ? ArcanumText.heading(fontSize, color: color)
-            .copyWith(letterSpacing: spacing, height: 1.0)
-        : TextStyle(fontSize: fontSize, color: color, height: 1.0, letterSpacing: spacing);
+        ? ArcanumText.heading(
+            fontSize,
+            color: color,
+          ).copyWith(letterSpacing: spacing, height: 1.0)
+        : TextStyle(
+            fontSize: fontSize,
+            color: color,
+            height: 1.0,
+            letterSpacing: spacing,
+          );
     final tp = TextPainter(
       text: TextSpan(text: s, style: ts),
       textDirection: TextDirection.ltr,
@@ -965,20 +1354,28 @@ class TarotNaipe extends StatelessWidget {
           borderRadius: BorderRadius.circular(radius),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.45),
-                blurRadius: 10,
-                offset: const Offset(0, 5)),
+              color: Colors.black.withValues(alpha: 0.45),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
             if (active)
               BoxShadow(
-                  color: ArcanumColors.gold.withValues(alpha: 0.35),
-                  blurRadius: 16,
-                  spreadRadius: 1),
+                color: ArcanumColors.gold.withValues(alpha: 0.35),
+                blurRadius: 16,
+                spreadRadius: 1,
+              ),
           ],
           border: active
-              ? Border.all(color: ArcanumColors.gold.withValues(alpha: 0.9), width: 1.5)
+              ? Border.all(
+                  color: ArcanumColors.gold.withValues(alpha: 0.9),
+                  width: 1.5,
+                )
               : null,
         ),
-        child: ClipRRect(borderRadius: BorderRadius.circular(radius), child: face),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(radius),
+          child: face,
+        ),
       ),
     );
   }
@@ -1016,8 +1413,6 @@ class _TarotCardViewState extends State<TarotCardView>
   late final AnimationController _deal;
   late final AnimationController _flip;
   late final AnimationController _engage;
-  late final AnimationController _glow;
-  late final AnimationController _idle; // respiración/sway de reposo, siempre viva
 
   Timer? _dealTimer;
   Timer? _flipTimer;
@@ -1036,12 +1431,18 @@ class _TarotCardViewState extends State<TarotCardView>
   @override
   void initState() {
     super.initState();
-    _deal = AnimationController(vsync: this, duration: const Duration(milliseconds: 460));
-    _flip = AnimationController(vsync: this, duration: const Duration(milliseconds: 620));
-    _engage = AnimationController(vsync: this, duration: const Duration(milliseconds: 170));
-    _glow = AnimationController(vsync: this, duration: const Duration(milliseconds: 2400));
-    _idle = AnimationController(vsync: this, duration: const Duration(seconds: 7))
-      ..repeat();
+    _deal = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 460),
+    );
+    _flip = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 620),
+    );
+    _engage = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 170),
+    );
 
     final base = 90 + widget.index * 110;
     _dealTimer = Timer(Duration(milliseconds: base), () {
@@ -1051,18 +1452,15 @@ class _TarotCardViewState extends State<TarotCardView>
       if (mounted) _flip.forward();
     });
 
-    if (widget.active) _glow.repeat(reverse: true);
+    if (widget.active) _engage.value = 1;
   }
 
   @override
   void didUpdateWidget(covariant TarotCardView old) {
     super.didUpdateWidget(old);
     if (widget.active && !old.active) {
-      _glow.repeat(reverse: true);
       _engage.forward();
     } else if (!widget.active && old.active) {
-      _glow.stop();
-      _glow.value = 0;
       if (!_hovering && !_pressing) _engage.reverse();
     }
   }
@@ -1074,8 +1472,6 @@ class _TarotCardViewState extends State<TarotCardView>
     _deal.dispose();
     _flip.dispose();
     _engage.dispose();
-    _glow.dispose();
-    _idle.dispose();
     super.dispose();
   }
 
@@ -1129,7 +1525,7 @@ class _TarotCardViewState extends State<TarotCardView>
         },
         onTap: widget.onToggle,
         child: AnimatedBuilder(
-          animation: Listenable.merge([_deal, _flip, _engage, _glow, _idle]),
+          animation: Listenable.merge([_deal, _flip, _engage]),
           builder: (context, _) => _buildAnimated(reversed),
         ),
       ),
@@ -1139,8 +1535,11 @@ class _TarotCardViewState extends State<TarotCardView>
       padding: const EdgeInsets.only(bottom: 26),
       child: Column(
         children: [
-          Text(((widget.card['position'] as String?) ?? '').toUpperCase(),
-              textAlign: TextAlign.center, style: ArcanumText.label()),
+          Text(
+            ((widget.card['position'] as String?) ?? '').toUpperCase(),
+            textAlign: TextAlign.center,
+            style: ArcanumText.label(),
+          ),
           const SizedBox(height: 10),
           naipe,
           const SizedBox(height: 14),
@@ -1164,26 +1563,19 @@ class _TarotCardViewState extends State<TarotCardView>
     final eng = Curves.easeOut.transform(_engage.value);
     const maxTilt = 0.20;
 
-    // Sway de reposo: respiración lenta SIEMPRE presente (aunque no haya
-    // hover). Fases desfasadas por carta para que el conjunto no lata al
-    // unísono. Amplitud sutil, elegante. Cede el paso al parallax al enganchar.
-    final it = _idle.value * 2 * math.pi;
-    final swayY = math.sin(it + widget.index * 0.9); // giro suave eje Y
-    final swayX = math.sin(it * 0.73 + widget.index * 1.4); // cabeceo eje X
-    final idleRotY = swayY * 0.024;
-    final idleRotX = swayX * 0.015;
-    final idleZ = _baseTilt + swayY * 0.006;
-
-    // Parallax hacia el puntero al enganchar; reposo cuando no.
-    final rotX = -_tilt.dy * maxTilt * eng + idleRotX * (1 - eng);
-    final rotY = _tilt.dx * maxTilt * eng + idleRotY * (1 - eng);
-    final bt = idleZ * (1 - eng);
+    // Parallax solo durante interacción. En reposo la carta queda estable y
+    // conserva una inclinación física propia sin consumir frames.
+    final rotX = -_tilt.dy * maxTilt * eng;
+    final rotY = _tilt.dx * maxTilt * eng;
+    final bt = _baseTilt * (1 - eng);
     final lift = 1 + 0.03 * eng;
-    final pulse = widget.active ? _glow.value : 0.0;
 
     final matrix = Matrix4.identity()
-      ..setEntry(3, 2, 0.0019) // perspectiva más honda: el tilt se lee como 3D real
-
+      ..setEntry(
+        3,
+        2,
+        0.0019,
+      ) // perspectiva más honda: el tilt se lee como 3D real
       ..translateByDouble(0.0, dealDy - 8 * eng, 0.0, 1.0)
       ..scaleByDouble(dealScale * lift, dealScale * lift, dealScale * lift, 1.0)
       ..rotateX(rotX)
@@ -1194,6 +1586,7 @@ class _TarotCardViewState extends State<TarotCardView>
       size: const Size(_w, _h),
       painter: TarotFacePainter(_face),
     );
+    faceWidget = RepaintBoundary(child: faceWidget);
     if (reversed) {
       faceWidget = Transform.rotate(angle: math.pi, child: faceWidget);
     }
@@ -1216,9 +1609,9 @@ class _TarotCardViewState extends State<TarotCardView>
               ),
               if (widget.active)
                 BoxShadow(
-                  color: ArcanumColors.gold.withValues(alpha: 0.10 + 0.24 * pulse),
-                  blurRadius: 22 + 18 * pulse,
-                  spreadRadius: 1 + 2 * pulse,
+                  color: ArcanumColors.gold.withValues(alpha: 0.28),
+                  blurRadius: 30,
+                  spreadRadius: 2,
                 ),
             ],
           ),
@@ -1226,7 +1619,10 @@ class _TarotCardViewState extends State<TarotCardView>
             borderRadius: BorderRadius.circular(_w * 0.10),
             child: showFace
                 ? faceWidget
-                : CustomPaint(size: const Size(_w, _h), painter: const _TarotBackPainter()),
+                : CustomPaint(
+                    size: const Size(_w, _h),
+                    painter: const _TarotBackPainter(),
+                  ),
           ),
         ),
       ),
@@ -1238,20 +1634,37 @@ class _TarotCardViewState extends State<TarotCardView>
     final numeral = _face.numeral;
     // Título SOLO en español: usa name_es; cae a name si el dict es legacy.
     final es = (c['name_es'] as String?)?.trim();
-    final title = (es != null && es.isNotEmpty) ? es : ((c['name'] as String?) ?? '');
+    final title = (es != null && es.isNotEmpty)
+        ? es
+        : ((c['name'] as String?) ?? '');
     return Column(
       children: [
         if (numeral.isNotEmpty)
-          Text(numeral, style: ArcanumText.heading(20, color: ArcanumColors.goldMuted)),
-        Text(title,
-            textAlign: TextAlign.center, style: ArcanumText.heading(26)),
+          Text(
+            numeral,
+            style: ArcanumText.heading(20, color: ArcanumColors.goldMuted),
+          ),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: ArcanumText.heading(26),
+        ),
         const SizedBox(height: 4),
-        Text(reversed ? 'Invertida' : 'Al derecho',
-            style: ArcanumText.body(13,
-                color: reversed ? ArcanumColors.burgundyLight : ArcanumColors.goldMuted)),
+        Text(
+          reversed ? 'Invertida' : 'Al derecho',
+          style: ArcanumText.body(
+            13,
+            color: reversed
+                ? ArcanumColors.burgundyLight
+                : ArcanumColors.goldMuted,
+          ),
+        ),
         const SizedBox(height: 10),
-        Text((c['meaning'] as String?) ?? '',
-            textAlign: TextAlign.center, style: ArcanumText.body(16)),
+        Text(
+          (c['meaning'] as String?) ?? '',
+          textAlign: TextAlign.center,
+          style: ArcanumText.body(16),
+        ),
       ],
     );
   }
@@ -1266,7 +1679,9 @@ class _TarotBackPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final rrect = RRect.fromRectAndRadius(
-        Offset.zero & size, Radius.circular(size.width * 0.10));
+      Offset.zero & size,
+      Radius.circular(size.width * 0.10),
+    );
 
     final field = Paint()
       ..shader = RadialGradient(
@@ -1347,8 +1762,10 @@ class _ShuffleDeckState extends State<ShuffleDeck>
   @override
   void initState() {
     super.initState();
-    _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))
-      ..repeat();
+    _c = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat();
   }
 
   @override
@@ -1401,7 +1818,9 @@ class _ShuffleDeckState extends State<ShuffleDeck>
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(14),
-                            child: CustomPaint(painter: const _TarotBackPainter()),
+                            child: CustomPaint(
+                              painter: const _TarotBackPainter(),
+                            ),
                           ),
                         ),
                       );
@@ -1413,8 +1832,14 @@ class _ShuffleDeckState extends State<ShuffleDeck>
           ),
         ),
         const SizedBox(height: 16),
-        Text('Barajando el oráculo…',
-            style: ArcanumText.body(15, italic: true, color: ArcanumColors.ivoryMuted)),
+        Text(
+          'Barajando el oráculo…',
+          style: ArcanumText.body(
+            15,
+            italic: true,
+            color: ArcanumColors.ivoryMuted,
+          ),
+        ),
       ],
     );
   }

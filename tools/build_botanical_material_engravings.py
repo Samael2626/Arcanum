@@ -12,6 +12,19 @@ ENGRAVINGS = ROOT / "arcanum_app" / "assets" / "engravings"
 PREVIEWS = ROOT / ".tmp" / "material-previews"
 
 PLATES = {
+    'copal': ('copal', 'inciensos'),
+    'benjui': ('benjui', 'inciensos'),
+    'sangre-de-drago': ('sangre-de-drago', 'inciensos'),
+    'sandalo-blanco': ('sandalo-blanco', 'inciensos'),
+    'estoraque': ('estoraque', 'inciensos'),
+    'galbano': ('galbano', 'inciensos'),
+    'opoponax': ('opoponax', 'inciensos'),
+    'nardo': ('nardo', 'inciensos'),
+    'cipres-resina': ('cipres-resina', 'inciensos'),
+    'olibano': ('olibano', 'inciensos'),
+    'resina-pino': ('resina-pino', 'resinas'),
+    'trementina': ('trementina', 'resinas'),
+    'resina-elemi': ('resina-elemi', 'resinas'),
     "canfora": ("canfora", "inciensos"),
     "mirra": ("mirra", "inciensos"),
     "resina-labdano": ("labdano", "resinas"),

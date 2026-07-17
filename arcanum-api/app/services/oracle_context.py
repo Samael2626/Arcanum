@@ -10,7 +10,9 @@ de datos de confianza (carta cacheada + datos de nacimiento del usuario).
 """
 from __future__ import annotations
 
+from collections import OrderedDict
 from datetime import datetime, timezone
+from threading import Lock
 
 from app.models.natal_chart import NatalChart
 from app.models.user import User
@@ -25,6 +27,46 @@ _FALLBACK_LON = -74.07
 
 # Aspectos mayores con peso simbólico (para limitar tokens, priorizamos estos).
 _PLANETAS_PERSONALES = {"sun", "moon", "mercury", "venus", "mars"}
+_CONTEXT_CACHE_TTL_SECONDS = 300
+_CONTEXT_CACHE_MAX_SIZE = 512
+_context_cache: OrderedDict[tuple[str, ...], str] = OrderedDict()
+_context_cache_lock = Lock()
+
+
+def _context_cache_key(user: User, natal_chart: NatalChart, now: datetime) -> tuple[str, ...]:
+    bucket = str(int(now.timestamp()) // _CONTEXT_CACHE_TTL_SECONDS)
+    return (
+        str(user.id),
+        str(natal_chart.calculated_at),
+        str(user.display_name),
+        str(user.birth_lat),
+        str(user.birth_lon),
+        bucket,
+    )
+
+
+def _cached_context(key: tuple[str, ...]) -> str | None:
+    with _context_cache_lock:
+        value = _context_cache.get(key)
+        if value is not None:
+            _context_cache.move_to_end(key)
+        return value
+
+
+def _store_context(key: tuple[str, ...], value: str) -> None:
+    with _context_cache_lock:
+        _context_cache[key] = value
+        _context_cache.move_to_end(key)
+        while len(_context_cache) > _CONTEXT_CACHE_MAX_SIZE:
+            _context_cache.popitem(last=False)
+
+
+def invalidate_oracle_context(user_id: object) -> None:
+    """Elimina de memoria cualquier contexto personal del usuario."""
+    prefix = str(user_id)
+    with _context_cache_lock:
+        for key in [key for key in _context_cache if key[0] == prefix]:
+            del _context_cache[key]
 
 
 def _coords(user: User) -> tuple[float, float]:
@@ -94,6 +136,11 @@ def build_oracle_context(user: User, natal_chart: NatalChart, db) -> str:
         Resumen compacto y legible del contexto astral, listo para el prompt.
     """
     now = datetime.now(timezone.utc)
+    cache_key = _context_cache_key(user, natal_chart, now)
+    cached = _cached_context(cache_key)
+    if cached is not None:
+        return cached
+
     chart_data = natal_chart.chart_data or {}
     natal_planets = chart_data.get("planets") or []
     lat, lon = _coords(user)
@@ -125,7 +172,9 @@ def build_oracle_context(user: User, natal_chart: NatalChart, db) -> str:
     except Exception:
         lineas.append("Hora planetaria: no disponible.")
 
-    return "\n".join(lineas)
+    context = "\n".join(lineas)
+    _store_context(cache_key, context)
+    return context
 
 
 def _correspondencias(c: dict) -> str:

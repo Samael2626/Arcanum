@@ -121,6 +121,9 @@ def test_transits_endpoint_after_chart(client):
 def test_today_endpoint(client):
     resp = client.get("/astral/today?lat=4.71&lon=-74.07")
     assert resp.status_code == 200
+    assert resp.headers["cache-control"] == (
+        "public, max-age=60, stale-while-revalidate=120"
+    )
     data = resp.json()
     assert set(data) >= {"datetime", "day_ruler", "planetary_hour", "moon"}
     assert data["planetary_hour"]["planet"] in (

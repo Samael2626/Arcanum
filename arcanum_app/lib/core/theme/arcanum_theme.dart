@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'arcanum_colors.dart';
 
 /// Estilos tipográficos del sistema: Cormorant Garamond (títulos) + Crimson Pro.
 class ArcanumText {
-  static TextStyle wordmark({double size = 44}) => GoogleFonts.cormorantGaramond(
+  static TextStyle wordmark({double size = 44}) => TextStyle(
+        fontFamily: 'Cormorant Garamond',
         fontSize: size,
         fontWeight: FontWeight.w600,
         letterSpacing: 10,
@@ -13,20 +13,23 @@ class ArcanumText {
       );
 
   static TextStyle heading(double size, {Color? color}) =>
-      GoogleFonts.cormorantGaramond(
+      TextStyle(
+        fontFamily: 'Cormorant Garamond',
         fontSize: size,
         fontWeight: FontWeight.w600,
         color: color ?? ArcanumColors.ivory,
       );
 
   static TextStyle body(double size, {Color? color, bool italic = false}) =>
-      GoogleFonts.crimsonPro(
+      TextStyle(
+        fontFamily: 'Crimson Pro',
         fontSize: size,
         color: color ?? ArcanumColors.ivory,
         fontStyle: italic ? FontStyle.italic : FontStyle.normal,
       );
 
-  static TextStyle label() => GoogleFonts.crimsonPro(
+  static TextStyle label() => const TextStyle(
+        fontFamily: 'Crimson Pro',
         fontSize: 12,
         letterSpacing: 3,
         color: ArcanumColors.goldMuted,
@@ -42,7 +45,8 @@ ThemeData buildArcanumTheme() {
       primary: ArcanumColors.gold,
       surface: ArcanumColors.surface,
     ),
-    textTheme: GoogleFonts.crimsonProTextTheme(base.textTheme).apply(
+    textTheme: base.textTheme.apply(
+      fontFamily: 'Crimson Pro',
       bodyColor: ArcanumColors.ivory,
       displayColor: ArcanumColors.ivory,
     ),
@@ -51,7 +55,8 @@ ThemeData buildArcanumTheme() {
       indicatorColor: ArcanumColors.gold.withValues(alpha: 0.16),
       elevation: 0,
       labelTextStyle: WidgetStateProperty.resolveWith(
-        (states) => GoogleFonts.crimsonPro(
+        (states) => TextStyle(
+          fontFamily: 'Crimson Pro',
           fontSize: 12,
           letterSpacing: 0.5,
           color: states.contains(WidgetState.selected)

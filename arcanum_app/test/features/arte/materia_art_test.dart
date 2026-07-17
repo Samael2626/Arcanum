@@ -221,6 +221,11 @@ void main() {
       await manifest.ensureLoaded();
       final plates = manifest.all.where((entry) => entry.isFinal).toList();
       expect(plates, hasLength(82));
+      expect(
+        plates.map((entry) => entry.assetPath).toSet(),
+        hasLength(plates.length),
+        reason: 'cada materia debe conservar una identidad visual propia',
+      );
 
       for (final plate in plates) {
         final picture = await vg.loadPicture(

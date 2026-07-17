@@ -1338,6 +1338,459 @@ class _EngravingPainter extends CustomPainter {
 ///
 /// [progress] < 1 dibuja el trazo parcialmente (héroe animado). La tinta se
 /// mezcla del acento del [mood] con marfil para leer como grabado antiguo.
+/// Pictograma de catálogo sin vetas, rayado ni ornamento interior.
+class MateriaGlyph extends StatelessWidget {
+  const MateriaGlyph({
+    super.key,
+    required this.type,
+    required this.size,
+    required this.variant,
+    this.progress = 1,
+  });
+
+  final String type;
+  final double size;
+  final int variant;
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final ink = Color.lerp(
+      ArcanumColors.gold,
+      ArcanumColors.ivory,
+      0.12,
+    )!.withValues(alpha: 0.94);
+    final glyph = CustomPaint(
+      size: Size.square(size),
+      painter: _MinimalGlyphPainter(
+        type: type,
+        variant: variant,
+        color: ink,
+      ),
+    );
+    if (progress >= 1) return glyph;
+    return RepaintBoundary(
+      child: Opacity(
+        opacity: Curves.easeOut.transform(progress.clamp(0.0, 1.0)),
+        child: glyph,
+      ),
+    );
+  }
+}
+
+class _MinimalGlyphPainter extends CustomPainter {
+  const _MinimalGlyphPainter({
+    required this.type,
+    required this.variant,
+    required this.color,
+  });
+
+  final String type;
+  final int variant;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.shortestSide / 100;
+    canvas.save();
+    canvas.scale(s, s);
+
+    final line = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4.8
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..color = color;
+    final fill = Paint()
+      ..style = PaintingStyle.fill
+      ..color = color;
+
+    switch (type) {
+      case 'herb':
+        _herb(canvas, line, fill, variant % 9);
+        break;
+      case 'stone':
+        _stone(canvas, line, variant % 5);
+        break;
+      case 'metal':
+        _metal(canvas, line, fill, variant % 5);
+        break;
+      case 'incense':
+        _incense(canvas, line, fill, variant % 4);
+        break;
+      case 'oil':
+        _oil(canvas, line, variant % 4);
+        break;
+      case 'resin':
+        _resin(canvas, line, fill, variant % 5);
+        break;
+      case 'planet':
+        canvas.drawCircle(const Offset(50, 50), 27, line);
+        canvas.drawCircle(const Offset(50, 50), 5, fill);
+        break;
+      case 'angel':
+        canvas.drawPath(
+          Path()
+            ..moveTo(50, 72)
+            ..quadraticBezierTo(25, 67, 22, 35)
+            ..quadraticBezierTo(42, 39, 50, 59)
+            ..quadraticBezierTo(58, 39, 78, 35)
+            ..quadraticBezierTo(75, 67, 50, 72),
+          line,
+        );
+        break;
+      case 'sign':
+        canvas.drawPath(
+          Path()
+            ..moveTo(50, 17)
+            ..lineTo(58, 42)
+            ..lineTo(83, 50)
+            ..lineTo(58, 58)
+            ..lineTo(50, 83)
+            ..lineTo(42, 58)
+            ..lineTo(17, 50)
+            ..lineTo(42, 42)
+            ..close(),
+          line,
+        );
+        break;
+      case 'element':
+        canvas.drawPath(
+          Path()
+            ..moveTo(50, 20)
+            ..lineTo(79, 75)
+            ..lineTo(21, 75)
+            ..close(),
+          line,
+        );
+        break;
+      case 'color':
+        canvas.drawCircle(const Offset(50, 50), 25, fill);
+        break;
+      default:
+        canvas.drawCircle(const Offset(50, 50), 25, line);
+    }
+
+    canvas.restore();
+  }
+
+  void _herb(Canvas canvas, Paint line, Paint fill, int v) {
+    switch (v) {
+      case 0: // ramita
+        canvas.drawLine(const Offset(50, 80), const Offset(50, 22), line);
+        _leaf(canvas, const Offset(50, 38), const Offset(29, 28), fill);
+        _leaf(canvas, const Offset(50, 53), const Offset(72, 42), fill);
+        _leaf(canvas, const Offset(50, 67), const Offset(31, 57), fill);
+        break;
+      case 1: // flor
+        canvas.drawLine(const Offset(50, 78), const Offset(50, 38), line);
+        for (var i = 0; i < 5; i++) {
+          final angle = -math.pi / 2 + i * math.pi * 2 / 5;
+          canvas.drawCircle(
+            Offset(50 + math.cos(angle) * 8, 29 + math.sin(angle) * 8),
+            5.5,
+            fill,
+          );
+        }
+        _leaf(canvas, const Offset(50, 59), const Offset(69, 49), fill);
+        break;
+      case 2: // hoja
+        _leaf(canvas, const Offset(32, 72), const Offset(68, 25), line);
+        canvas.drawLine(const Offset(32, 72), const Offset(63, 32), line);
+        break;
+      case 3: // raíz
+        canvas.drawLine(const Offset(50, 20), const Offset(50, 57), line);
+        canvas.drawPath(
+          Path()
+            ..moveTo(50, 53)
+            ..lineTo(31, 77)
+            ..moveTo(50, 57)
+            ..lineTo(50, 82)
+            ..moveTo(50, 60)
+            ..lineTo(69, 77),
+          line,
+        );
+        _leaf(canvas, const Offset(50, 36), const Offset(68, 27), fill);
+        break;
+      case 4: // espiga
+        canvas.drawLine(const Offset(50, 82), const Offset(50, 20), line);
+        _leaf(canvas, const Offset(50, 36), const Offset(37, 27), fill);
+        _leaf(canvas, const Offset(50, 48), const Offset(63, 39), fill);
+        _leaf(canvas, const Offset(50, 60), const Offset(37, 51), fill);
+        break;
+      case 5: // rosa
+        canvas.drawLine(const Offset(50, 78), const Offset(50, 43), line);
+        canvas.drawPath(
+          Path()
+            ..moveTo(36, 25)
+            ..quadraticBezierTo(42, 17, 50, 25)
+            ..quadraticBezierTo(58, 17, 64, 25)
+            ..quadraticBezierTo(63, 43, 50, 45)
+            ..quadraticBezierTo(37, 43, 36, 25)
+            ..close(),
+          line,
+        );
+        _leaf(canvas, const Offset(50, 60), const Offset(31, 50), fill);
+        _leaf(canvas, const Offset(50, 68), const Offset(68, 58), fill);
+        break;
+      case 6: // corteza / canela
+        canvas.drawLine(const Offset(35, 72), const Offset(55, 25), line);
+        canvas.drawLine(const Offset(48, 77), const Offset(68, 30), line);
+        canvas.drawLine(const Offset(39, 52), const Offset(61, 61), line);
+        break;
+      case 7: // artemisa
+        canvas.drawLine(const Offset(50, 80), const Offset(50, 25), line);
+        canvas.drawLine(const Offset(50, 46), const Offset(31, 34), line);
+        canvas.drawLine(const Offset(50, 57), const Offset(70, 43), line);
+        canvas.drawLine(const Offset(50, 68), const Offset(33, 61), line);
+        canvas.drawCircle(const Offset(50, 22), 4, fill);
+        break;
+      default: // hoja ancha / salvia
+        canvas.drawPath(
+          Path()
+            ..moveTo(50, 79)
+            ..cubicTo(22, 64, 27, 31, 50, 20)
+            ..cubicTo(73, 31, 78, 64, 50, 79)
+            ..close(),
+          line,
+        );
+        canvas.drawLine(const Offset(50, 76), const Offset(50, 28), line);
+    }
+  }
+
+  void _stone(Canvas canvas, Paint line, int v) {
+    final path = switch (v) {
+      0 =>
+        Path()
+          ..moveTo(50, 18)
+          ..lineTo(79, 43)
+          ..lineTo(68, 78)
+          ..lineTo(32, 78)
+          ..lineTo(21, 43)
+          ..close(),
+      1 =>
+        Path()
+          ..moveTo(50, 16)
+          ..lineTo(72, 39)
+          ..lineTo(61, 82)
+          ..lineTo(39, 82)
+          ..lineTo(28, 39)
+          ..close(),
+      2 =>
+        Path()
+          ..moveTo(50, 15)
+          ..lineTo(78, 66)
+          ..lineTo(64, 80)
+          ..lineTo(36, 80)
+          ..lineTo(22, 66)
+          ..close(),
+      3 =>
+        Path()
+          ..moveTo(28, 72)
+          ..quadraticBezierTo(20, 43, 43, 24)
+          ..quadraticBezierTo(70, 19, 78, 48)
+          ..quadraticBezierTo(80, 73, 28, 72)
+          ..close(),
+      _ =>
+        Path()
+          ..moveTo(21, 73)
+          ..lineTo(28, 39)
+          ..lineTo(42, 52)
+          ..lineTo(50, 20)
+          ..lineTo(59, 51)
+          ..lineTo(73, 36)
+          ..lineTo(79, 73)
+          ..close(),
+    };
+    canvas.drawPath(path, line);
+  }
+
+  void _metal(Canvas canvas, Paint line, Paint fill, int v) {
+    switch (v) {
+      case 0:
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            const Rect.fromLTWH(22, 34, 56, 34),
+            const Radius.circular(7),
+          ),
+          line,
+        );
+        canvas.drawLine(const Offset(34, 51), const Offset(66, 51), line);
+        break;
+      case 1:
+        canvas.drawCircle(const Offset(50, 50), 27, line);
+        canvas.drawCircle(const Offset(50, 50), 4, fill);
+        break;
+      case 2:
+        canvas.drawPath(
+          Path()
+            ..moveTo(25, 65)
+            ..quadraticBezierTo(18, 39, 39, 27)
+            ..quadraticBezierTo(66, 18, 78, 45)
+            ..quadraticBezierTo(82, 73, 25, 65)
+            ..close(),
+          line,
+        );
+        break;
+      case 3:
+        _drop(canvas, line, 50, 16, 25);
+        break;
+      default:
+        canvas.drawArc(
+          const Rect.fromLTWH(22, 22, 56, 56),
+          0.35,
+          math.pi * 1.75,
+          false,
+          line,
+        );
+    }
+  }
+
+  void _incense(Canvas canvas, Paint line, Paint fill, int v) {
+    if (v == 1) {
+      canvas.drawLine(const Offset(35, 75), const Offset(55, 37), line);
+      canvas.drawCircle(const Offset(34, 77), 4, fill);
+      canvas.drawPath(
+        Path()
+          ..moveTo(57, 34)
+          ..cubicTo(44, 27, 66, 22, 56, 15),
+        line,
+      );
+      return;
+    }
+    if (v == 2) {
+      canvas.drawLine(const Offset(38, 75), const Offset(42, 28), line);
+      canvas.drawLine(const Offset(50, 77), const Offset(50, 24), line);
+      canvas.drawLine(const Offset(62, 75), const Offset(58, 28), line);
+      canvas.drawLine(const Offset(34, 53), const Offset(66, 53), line);
+      return;
+    }
+    if (v == 3) {
+      canvas.drawCircle(const Offset(37, 64), 8, line);
+      canvas.drawCircle(const Offset(54, 66), 9, line);
+      canvas.drawCircle(const Offset(66, 59), 7, line);
+      canvas.drawPath(
+        Path()
+          ..moveTo(51, 49)
+          ..cubicTo(37, 39, 64, 32, 50, 20),
+        line,
+      );
+      return;
+    }
+    canvas.drawArc(
+      const Rect.fromLTWH(25, 45, 50, 28),
+      0,
+      math.pi,
+      false,
+      line,
+    );
+    canvas.drawLine(const Offset(33, 60), const Offset(67, 60), line);
+    canvas.drawPath(
+      Path()
+        ..moveTo(50, 43)
+        ..cubicTo(37, 35, 63, 28, 50, 18),
+      line,
+    );
+  }
+
+  void _oil(Canvas canvas, Paint line, int v) {
+    final neck = v == 1 ? 37.0 : (v == 2 ? 44.0 : 41.0);
+    final rightNeck = 100 - neck;
+    final side = v == 3 ? 25.0 : (v == 1 ? 35.0 : 30.0);
+    final shoulder = v == 2 ? 45.0 : 39.0;
+    canvas.drawPath(
+      Path()
+        ..moveTo(neck, 21)
+        ..lineTo(rightNeck, 21)
+        ..lineTo(rightNeck, 33)
+        ..quadraticBezierTo(100 - side, shoulder, 100 - side, 55)
+        ..lineTo(100 - side - 3, 77)
+        ..lineTo(side + 3, 77)
+        ..lineTo(side, 55)
+        ..quadraticBezierTo(side, shoulder, neck, 33)
+        ..close(),
+      line,
+    );
+  }
+
+  void _resin(Canvas canvas, Paint line, Paint fill, int v) {
+    switch (v) {
+      case 0:
+        _drop(canvas, line, 50, 18, 21);
+        break;
+      case 1:
+        canvas.drawCircle(const Offset(35, 61), 11, line);
+        canvas.drawCircle(const Offset(53, 55), 14, line);
+        canvas.drawCircle(const Offset(68, 65), 9, line);
+        break;
+      case 2:
+        canvas.drawOval(const Rect.fromLTWH(22, 35, 56, 38), line);
+        break;
+      case 3:
+        _drop(canvas, line, 38, 27, 15);
+        _drop(canvas, line, 64, 38, 12);
+        break;
+      default:
+        canvas.drawArc(
+          const Rect.fromLTWH(23, 45, 54, 30),
+          0,
+          math.pi,
+          false,
+          line,
+        );
+        canvas.drawCircle(const Offset(50, 50), 8, fill);
+    }
+  }
+
+  void _drop(Canvas canvas, Paint line, double cx, double top, double r) {
+    canvas.drawPath(
+      Path()
+        ..moveTo(cx, top)
+        ..cubicTo(
+          cx - r * 0.4,
+          top + r,
+          cx - r,
+          top + r * 1.45,
+          cx - r,
+          top + r * 2,
+        )
+        ..cubicTo(cx - r, top + r * 3, cx + r, top + r * 3, cx + r, top + r * 2)
+        ..cubicTo(cx + r, top + r * 1.45, cx + r * 0.4, top + r, cx, top)
+        ..close(),
+      line,
+    );
+  }
+
+  void _leaf(Canvas canvas, Offset stem, Offset tip, Paint paint) {
+    final delta = tip - stem;
+    final normal = Offset(-delta.dy, delta.dx) * 0.24;
+    canvas.drawPath(
+      Path()
+        ..moveTo(stem.dx, stem.dy)
+        ..quadraticBezierTo(
+          stem.dx + delta.dx * 0.55 + normal.dx,
+          stem.dy + delta.dy * 0.55 + normal.dy,
+          tip.dx,
+          tip.dy,
+        )
+        ..quadraticBezierTo(
+          stem.dx + delta.dx * 0.55 - normal.dx,
+          stem.dy + delta.dy * 0.55 - normal.dy,
+          stem.dx,
+          stem.dy,
+        )
+        ..close(),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _MinimalGlyphPainter oldDelegate) =>
+      oldDelegate.type != type ||
+      oldDelegate.variant != variant ||
+      oldDelegate.color != color;
+}
+
 class MateriaArt extends StatelessWidget {
   const MateriaArt({
     super.key,

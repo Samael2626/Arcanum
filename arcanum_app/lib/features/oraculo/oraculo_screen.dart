@@ -25,13 +25,18 @@ class OraculoScreen extends ConsumerWidget {
     final auth = ref.watch(authProvider);
     if (auth.status == AuthStatus.unknown) {
       return const Center(
-          child: CircularProgressIndicator(color: ArcanumColors.gold, strokeWidth: 2));
+        child: CircularProgressIndicator(
+          color: ArcanumColors.gold,
+          strokeWidth: 2,
+        ),
+      );
     }
     if (!auth.isAuthenticated) {
       return const LoginPrompt(
         glyph: '⛤',
         title: 'El oráculo te aguarda',
-        description: 'Inicia sesión para tirar las cartas y guardar tus lecturas.',
+        description:
+            'Inicia sesión para tirar las cartas y guardar tus lecturas.',
       );
     }
     return const _OracleView();
@@ -117,10 +122,12 @@ class _OracleViewState extends ConsumerState<_OracleView> {
   void _jumpTo(int i) {
     final ctx = _cardKeys.length > i ? _cardKeys[i].currentContext : null;
     if (ctx != null) {
-      Scrollable.ensureVisible(ctx,
-          duration: const Duration(milliseconds: 420),
-          curve: Curves.easeInOutCubic,
-          alignment: 0.08);
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeInOutCubic,
+        alignment: 0.08,
+      );
     }
     setState(() => _activeCard = i);
   }
@@ -132,16 +139,10 @@ class _OracleViewState extends ConsumerState<_OracleView> {
       _iaError = null;
       _iaReply = null;
     });
-    final start = DateTime.now();
     try {
       final data = await _api.tarotDraw(_spread);
       final cards = ((data['cards_drawn'] as Map)['cards'] as List)
           .cast<Map<String, dynamic>>();
-      // Ritual: el barajado se ve al menos ~1.1s aunque la red vuele.
-      // Solo retrasa la PRESENTACIÓN; los datos ya llegaron intactos.
-      final elapsed = DateTime.now().difference(start);
-      const minShuffle = Duration(milliseconds: 1100);
-      if (elapsed < minShuffle) await Future.delayed(minShuffle - elapsed);
       setState(() {
         _cards = cards;
         _sessionId = data['id'] as String?;
@@ -196,7 +197,9 @@ class _OracleViewState extends ConsumerState<_OracleView> {
     if (e is DioException) {
       final status = e.response?.statusCode;
       final data = e.response?.data;
-      final detail = (data is Map && data['detail'] is String) ? data['detail'] as String : null;
+      final detail = (data is Map && data['detail'] is String)
+          ? data['detail'] as String
+          : null;
       switch (status) {
         case 400:
           return detail ?? 'Falta pregunta o tirada.';
@@ -218,115 +221,141 @@ class _OracleViewState extends ConsumerState<_OracleView> {
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 460),
-        child: Stack(
-          children: [
-            _buildScroll(),
-            _buildStickyPanel(),
-          ],
-        ),
+        child: Stack(children: [_buildScroll(), _buildStickyPanel()]),
       ),
     );
   }
 
   Widget _buildScroll() {
     return ListView(
-          controller: _scroll,
-          padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
-          children: [
-            const ArcanumHeader(subtitle: 'El oráculo'),
-            const SizedBox(height: 10),
-            const Center(child: InfoDot('tarot')),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: _spreads.map((s) {
-                final sel = s.$1 == _spread;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  child: GestureDetector(
-                    onTap: () => setState(() => _spread = s.$1),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color: sel ? ArcanumColors.gold.withValues(alpha: 0.16) : Colors.transparent,
-                        border: Border.all(
-                            color: sel ? ArcanumColors.gold : ArcanumColors.goldMuted.withValues(alpha: 0.4)),
-                      ),
-                      child: Text(s.$2,
-                          style: ArcanumText.body(14, color: sel ? ArcanumColors.gold : ArcanumColors.ivoryMuted)),
+      controller: _scroll,
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+      children: [
+        const ArcanumHeader(subtitle: 'El oráculo'),
+        const SizedBox(height: 10),
+        const Center(child: InfoDot('tarot')),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: _spreads.map((s) {
+            final sel = s.$1 == _spread;
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: GestureDetector(
+                onTap: () => setState(() => _spread = s.$1),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: sel
+                        ? ArcanumColors.gold.withValues(alpha: 0.16)
+                        : Colors.transparent,
+                    border: Border.all(
+                      color: sel
+                          ? ArcanumColors.gold
+                          : ArcanumColors.goldMuted.withValues(alpha: 0.4),
                     ),
                   ),
-                );
-              }).toList(),
+                  child: Text(
+                    s.$2,
+                    style: ArcanumText.body(
+                      14,
+                      color: sel
+                          ? ArcanumColors.gold
+                          : ArcanumColors.ivoryMuted,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 18),
+        TextField(
+          controller: _question,
+          textAlign: TextAlign.center,
+          style: ArcanumText.body(16, italic: true),
+          cursorColor: ArcanumColors.gold,
+          decoration: InputDecoration(
+            hintText: 'Formula tu pregunta… (opcional)',
+            hintStyle: ArcanumText.body(
+              15,
+              italic: true,
+              color: ArcanumColors.ivoryMuted,
             ),
-            const SizedBox(height: 18),
-            TextField(
-              controller: _question,
+            border: InputBorder.none,
+          ),
+        ),
+        const SizedBox(height: 20),
+        GoldButton(
+          label: 'Consultar al oráculo',
+          loading: _drawing,
+          onPressed: _draw,
+        ),
+        if (_drawError != null) ...[
+          const SizedBox(height: 14),
+          Text(
+            _drawError!,
+            textAlign: TextAlign.center,
+            style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
+          ),
+        ],
+        const SizedBox(height: 24),
+        if (_drawing) const ShuffleDeck(),
+        if (!_drawing && _cards != null)
+          for (var i = 0; i < _cards!.length; i++)
+            KeyedSubtree(
+              key: _cardKeys.length > i ? _cardKeys[i] : null,
+              child: TarotCardView(
+                key: ValueKey('$_drawNonce-$i'),
+                card: _cards![i],
+                index: i,
+                active: _activeCard == i,
+                onToggle: () => _jumpTo(i),
+              ),
+            ),
+        if (_sessionId != null) ...[
+          const SizedBox(height: 8),
+          const SectionLabel('IA RITUAL'),
+          const SizedBox(height: 12),
+          Text(
+            'Pide una interpretación de esta tirada. La pregunta es opcional.',
+            textAlign: TextAlign.center,
+            style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
+          ),
+          const SizedBox(height: 16),
+          GoldButton(
+            label: 'Pedir interpretación',
+            loading: _iaLoading,
+            onPressed: _askIa,
+          ),
+          if (_iaError != null) ...[
+            const SizedBox(height: 14),
+            Text(
+              _iaError!,
               textAlign: TextAlign.center,
-              style: ArcanumText.body(16, italic: true),
-              cursorColor: ArcanumColors.gold,
-              decoration: InputDecoration(
-                hintText: 'Formula tu pregunta… (opcional)',
-                hintStyle: ArcanumText.body(15, italic: true, color: ArcanumColors.ivoryMuted),
-                border: InputBorder.none,
+              style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
+            ),
+          ],
+          if (_iaReply != null) ...[
+            const SizedBox(height: 16),
+            ArcanumCard(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 420),
+                child: Scrollbar(
+                  child: SingleChildScrollView(
+                    child: Text(_iaReply!, style: ArcanumText.body(16)),
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 20),
-            GoldButton(label: 'Consultar al oráculo', loading: _drawing, onPressed: _draw),
-            if (_drawError != null) ...[
-              const SizedBox(height: 14),
-              Text(_drawError!,
-                  textAlign: TextAlign.center,
-                  style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted)),
-            ],
-            const SizedBox(height: 24),
-            if (_drawing) const ShuffleDeck(),
-            if (!_drawing && _cards != null)
-              for (var i = 0; i < _cards!.length; i++)
-                KeyedSubtree(
-                  key: _cardKeys.length > i ? _cardKeys[i] : null,
-                  child: TarotCardView(
-                    key: ValueKey('$_drawNonce-$i'),
-                    card: _cards![i],
-                    index: i,
-                    active: _activeCard == i,
-                    onToggle: () => _jumpTo(i),
-                  ),
-                ),
-            if (_sessionId != null) ...[
-              const SizedBox(height: 8),
-              const SectionLabel('IA RITUAL'),
-              const SizedBox(height: 12),
-              Text(
-                'Pide una interpretación de esta tirada. La pregunta es opcional.',
-                textAlign: TextAlign.center,
-                style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
-              ),
-              const SizedBox(height: 16),
-              GoldButton(label: 'Pedir interpretación', loading: _iaLoading, onPressed: _askIa),
-              if (_iaError != null) ...[
-                const SizedBox(height: 14),
-                Text(_iaError!,
-                    textAlign: TextAlign.center,
-                    style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted)),
-              ],
-              if (_iaReply != null) ...[
-                const SizedBox(height: 16),
-                ArcanumCard(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 420),
-                    child: Scrollbar(
-                      child: SingleChildScrollView(
-                        child: Text(_iaReply!, style: ArcanumText.body(16)),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ],
           ],
-        );
+        ],
+      ],
+    );
   }
 
   /// Mini-panel sticky: naipes en miniatura (misma cara vectorial) que
@@ -341,20 +370,20 @@ class _OracleViewState extends ConsumerState<_OracleView> {
     final miniW = celtic ? 42.0 : 58.0;
 
     List<Widget> mini(Iterable<int> idxs) => [
-          for (final i in idxs)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: GestureDetector(
-                onTap: () => _jumpTo(i),
-                child: TarotNaipe(
-                  card: cards[i],
-                  width: miniW,
-                  reversed: cards[i]['drawn_upright'] == false,
-                  active: _activeCard == i,
-                ),
-              ),
+      for (final i in idxs)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: GestureDetector(
+            onTap: () => _jumpTo(i),
+            child: TarotNaipe(
+              card: cards[i],
+              width: miniW,
+              reversed: cards[i]['drawn_upright'] == false,
+              active: _activeCard == i,
             ),
-        ];
+          ),
+        ),
+    ];
 
     return Positioned(
       top: 0,
@@ -367,18 +396,22 @@ class _OracleViewState extends ConsumerState<_OracleView> {
           duration: const Duration(milliseconds: 220),
           child: Container(
             padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 8, bottom: 10),
+              top: MediaQuery.of(context).padding.top + 8,
+              bottom: 10,
+            ),
             decoration: BoxDecoration(
               color: ArcanumColors.background.withValues(alpha: 0.94),
               border: Border(
                 bottom: BorderSide(
-                    color: ArcanumColors.gold.withValues(alpha: 0.3)),
+                  color: ArcanumColors.gold.withValues(alpha: 0.3),
+                ),
               ),
               boxShadow: [
                 BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.5),
-                    blurRadius: 14,
-                    offset: const Offset(0, 6)),
+                  color: Colors.black.withValues(alpha: 0.5),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
+                ),
               ],
             ),
             child: Column(
@@ -386,18 +419,20 @@ class _OracleViewState extends ConsumerState<_OracleView> {
               children: celtic
                   ? [
                       Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: mini([0, 1, 2, 3, 4])),
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: mini([0, 1, 2, 3, 4]),
+                      ),
                       const SizedBox(height: 6),
                       Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: mini([5, 6, 7, 8, 9])),
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: mini([5, 6, 7, 8, 9]),
+                      ),
                     ]
                   : [
                       Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: mini(
-                              List.generate(cards.length, (i) => i))),
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: mini(List.generate(cards.length, (i) => i)),
+                      ),
                     ],
             ),
           ),

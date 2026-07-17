@@ -41,18 +41,17 @@ class OnboardingData {
     String? resolvedLat,
     String? resolvedLon,
     String? resolvedTimezone,
-  }) =>
-      OnboardingData(
-        displayName: displayName ?? this.displayName,
-        birthDate: birthDate ?? this.birthDate,
-        birthTime: birthTime ?? this.birthTime,
-        birthCountry: birthCountry ?? this.birthCountry,
-        birthCity: birthCity ?? this.birthCity,
-        resolvedDisplayName: resolvedDisplayName ?? this.resolvedDisplayName,
-        resolvedLat: resolvedLat ?? this.resolvedLat,
-        resolvedLon: resolvedLon ?? this.resolvedLon,
-        resolvedTimezone: resolvedTimezone ?? this.resolvedTimezone,
-      );
+  }) => OnboardingData(
+    displayName: displayName ?? this.displayName,
+    birthDate: birthDate ?? this.birthDate,
+    birthTime: birthTime ?? this.birthTime,
+    birthCountry: birthCountry ?? this.birthCountry,
+    birthCity: birthCity ?? this.birthCity,
+    resolvedDisplayName: resolvedDisplayName ?? this.resolvedDisplayName,
+    resolvedLat: resolvedLat ?? this.resolvedLat,
+    resolvedLon: resolvedLon ?? this.resolvedLon,
+    resolvedTimezone: resolvedTimezone ?? this.resolvedTimezone,
+  );
 }
 
 class OnboardingState {
@@ -85,7 +84,9 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
     final p = await _prefs;
     await p.setString(_kName, v);
     state = OnboardingState(
-        step: state.step, data: state.data.copyWith(displayName: v));
+      step: state.step,
+      data: state.data.copyWith(displayName: v),
+    );
   }
 
   Future<void> setBirthDate(DateTime v) async {
@@ -93,28 +94,36 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
     final iso = v.toIso8601String();
     await p.setString(_kDate, iso);
     state = OnboardingState(
-        step: state.step, data: state.data.copyWith(birthDate: v));
+      step: state.step,
+      data: state.data.copyWith(birthDate: v),
+    );
   }
 
   Future<void> setBirthTime(String v) async {
     final p = await _prefs;
     await p.setString(_kTime, v);
     state = OnboardingState(
-        step: state.step, data: state.data.copyWith(birthTime: v));
+      step: state.step,
+      data: state.data.copyWith(birthTime: v),
+    );
   }
 
   Future<void> setBirthCountry(String v) async {
     final p = await _prefs;
     await p.setString(_kCountry, v);
     state = OnboardingState(
-        step: state.step, data: state.data.copyWith(birthCountry: v));
+      step: state.step,
+      data: state.data.copyWith(birthCountry: v),
+    );
   }
 
   Future<void> setBirthCity(String v) async {
     final p = await _prefs;
     await p.setString(_kCity, v);
     state = OnboardingState(
-        step: state.step, data: state.data.copyWith(birthCity: v));
+      step: state.step,
+      data: state.data.copyWith(birthCity: v),
+    );
   }
 
   /// Guarda el lugar resuelto por el backend y CONFIRMADO por el usuario.
@@ -159,7 +168,8 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
     // barrera defensiva.
     if (!d.hasResolvedLocation) {
       throw StateError(
-          'No se puede finalizar el onboarding sin un lugar de nacimiento confirmado.');
+        'No se puede finalizar el onboarding sin un lugar de nacimiento confirmado.',
+      );
     }
 
     // Persistir el perfil en el backend (datos capturados en el onboarding).
@@ -167,8 +177,7 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
       'onboarding_completed': true,
       if (d.displayName != null && d.displayName!.isNotEmpty)
         'display_name': d.displayName,
-      if (d.birthDate != null)
-        'birth_date': d.birthDate!.toIso8601String(),
+      if (d.birthDate != null) 'birth_date': d.birthDate!.toIso8601String(),
       if (d.birthTime != null && d.birthTime!.isNotEmpty)
         'birth_time': '2000-01-01T${d.birthTime}:00',
       if (d.birthCity != null && d.birthCity!.isNotEmpty)
@@ -208,9 +217,25 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
 }
 
 final onboardingProvider =
-    NotifierProvider<OnboardingNotifier, OnboardingState>(OnboardingNotifier.new);
+    NotifierProvider<OnboardingNotifier, OnboardingState>(
+      OnboardingNotifier.new,
+    );
 
 final onboardingCompletedProvider = FutureProvider<bool>((ref) async {
   final prefs = await SharedPreferences.getInstance();
   return prefs.getBool('onboarding_completed') ?? false;
 });
+
+Future<void> clearOnboardingLocalData() async {
+  final prefs = await SharedPreferences.getInstance();
+  for (final key in const [
+    'onboarding_completed',
+    'onboarding_display_name',
+    'onboarding_birth_date',
+    'onboarding_birth_time',
+    'onboarding_birth_country',
+    'onboarding_birth_city',
+  ]) {
+    await prefs.remove(key);
+  }
+}

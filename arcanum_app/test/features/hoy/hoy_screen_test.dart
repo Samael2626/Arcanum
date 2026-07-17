@@ -1,0 +1,63 @@
+import 'package:arcanum_app/core/api/arcanum_api.dart';
+import 'package:arcanum_app/features/hoy/hoy_screen.dart';
+import 'package:arcanum_app/shared/widgets/arcanum_frame.dart';
+import 'package:arcanum_app/shared/widgets/arcanum_motion.dart';
+import 'package:arcanum_app/shared/widgets/arcanum_surface.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+class _TodayApi extends ArcanumApi {
+  _TodayApi() : super(Dio());
+
+  var calls = 0;
+
+  @override
+  Future<Map<String, dynamic>> today({
+    double lat = 4.71,
+    double lon = -74.07,
+  }) async {
+    calls++;
+    return {
+      'day_ruler': 'sun',
+      'planetary_hour': {
+        'planet': 'venus',
+        'minutes_remaining': 38,
+        'is_daytime': true,
+        'hour_number': 4,
+      },
+      'moon': {
+        'illumination': 0.62,
+        'is_waxing': true,
+        'phase_name': 'Gibosa creciente',
+        'age_days': 10.0,
+      },
+    };
+  }
+}
+
+void main() {
+  testWidgets('Hoy evita animaciones y marcos costosos permanentes', (
+    tester,
+  ) async {
+    final api = _TodayApi();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [arcanumApiProvider.overrideWithValue(api)],
+        child: const MaterialApp(home: Scaffold(body: HoyScreen())),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(api.calls, 1);
+    expect(find.text('Día de Sol'), findsOneWidget);
+    expect(find.text('Venus'), findsOneWidget);
+    expect(find.text('Gibosa creciente'), findsOneWidget);
+    expect(find.byType(ArcanumTilt), findsNothing);
+    expect(find.byType(ArcanumFrame), findsNothing);
+    expect(find.byType(ArcanumSurface), findsOneWidget);
+    expect(find.byType(TweenAnimationBuilder<double>), findsNothing);
+  });
+}

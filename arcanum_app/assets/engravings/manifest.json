@@ -426,65 +426,65 @@
   "status": "final"
  },
  "copal": {
-  "asset": "engravings/hierbas/acacia.svg",
-  "source": "https://commons.wikimedia.org/wiki/File:Acacia_senegal_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-004.jpg",
-  "work": "Kohler's Medizinal-Pflanzen (1887) - historical resin-tree analogue",
+  "asset": "engravings/inciensos/copal.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Fragmenta_botanica,_figuris_coloratis_illustrata_(T._33)_BHL287662.jpg",
+  "work": "Fragmenta botanica (1800), Bursera simaruba - historical copal-tree analogue",
   "license": "public-domain",
   "status": "final"
  },
  "benjui": {
-  "asset": "engravings/hierbas/angelica.svg",
-  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Angelica_archangelica0.jpg",
-  "work": "Thome, Flora von Deutschland (1885) - historical aromatic-plant analogue",
+  "asset": "engravings/inciensos/benjui.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Styrax_benzoin_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-133.jpg",
+  "work": "Köhler's Medizinal-Pflanzen (1887), Styrax benzoin",
   "license": "public-domain",
   "status": "final"
  },
  "sangre-de-drago": {
-  "asset": "engravings/hierbas/digital.svg",
-  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Digitalis_purpurea0.jpg",
-  "work": "Thome, Flora von Deutschland (1885) - historical botanical analogue",
+  "asset": "engravings/inciensos/sangre-de-drago.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Dracaena_draco_Dragonnier_avant_1819.jpg",
+  "work": "Historical botanical plate, Dracaena draco (before 1819)",
   "license": "public-domain",
   "status": "final"
  },
  "sandalo-blanco": {
-  "asset": "engravings/hierbas/calamo-aromatico.svg",
-  "source": "https://commons.wikimedia.org/wiki/File:Acorus_calamus_(K%C3%B6hler).jpg",
-  "work": "Kohler's Medizinal-Pflanzen (1887) - historical aromatic-plant analogue",
+  "asset": "engravings/inciensos/sandalo-blanco.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Santalum_album_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-128.jpg",
+  "work": "Köhler's Medizinal-Pflanzen (1887), Santalum album",
   "license": "public-domain",
   "status": "final"
  },
  "estoraque": {
-  "asset": "engravings/hierbas/celidonia.svg",
-  "source": "https://commons.wikimedia.org/wiki/File:Chelidonium_majus_(K%C3%B6hler).jpg",
-  "work": "Kohler's Medizinal-Pflanzen (1887) - historical botanical analogue",
+  "asset": "engravings/inciensos/estoraque.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Liquidambar_orientalis_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-089.jpg",
+  "work": "Köhler's Medizinal-Pflanzen (1887), Liquidambar orientalis",
   "license": "public-domain",
   "status": "final"
  },
  "galbano": {
-  "asset": "engravings/hierbas/dictamo-cretense.svg",
-  "source": "https://commons.wikimedia.org/wiki/File:Origanum_dictamnus.jpg",
-  "work": "Public-domain botanical plate (pre-1900) - historical aromatic-plant analogue",
+  "asset": "engravings/inciensos/galbano.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:K%C3%B6hler%27s_Medizinal-Pflanzen_(Plate_153)_(8232804618).jpg",
+  "work": "Köhler's Medizinal-Pflanzen (1887), Ferula gummosa",
   "license": "public-domain",
   "status": "final"
  },
  "opoponax": {
-  "asset": "engravings/hierbas/aconito.svg",
-  "source": "https://commons.wikimedia.org/wiki/File:Aconitum_napellus_(K%C3%B6hler).jpg",
-  "work": "Kohler's Medizinal-Pflanzen (1887) - historical botanical analogue",
+  "asset": "engravings/inciensos/opoponax.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_from_Medical_Botany,_digitally_enhanced_from_rawpixel%27s_own_original_plates_147.jpg",
+  "work": "Medical Botany historical plate, Opopanax chironium",
   "license": "public-domain",
   "status": "final"
  },
  "nardo": {
-  "asset": "engravings/hierbas/valeriana.svg",
-  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Valeriana_officinalis0.jpg",
-  "work": "Thome, Flora von Deutschland (1885) - historical root-plant analogue",
+  "asset": "engravings/inciensos/nardo.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustrations_of_the_botany_of_the_Himalayan_Mountains_(Pl._54)_(6982072816).jpg",
+  "work": "Illustrations of the Himalayan Mountains (1839), Nardostachys jatamansi",
   "license": "public-domain",
   "status": "final"
  },
  "cipres-resina": {
-  "asset": "engravings/hierbas/enebro.svg",
-  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Juniperus_communis0.jpg",
-  "work": "Thome, Flora von Deutschland (1885) - historical conifer analogue",
+  "asset": "engravings/inciensos/cipres-resina.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:T3_01_Cupressus_sempervirens_par_Pierre-Joseph_Redout%C3%A9.jpeg",
+  "work": "Pierre-Joseph Redouté botanical plate, Cupressus sempervirens",
   "license": "public-domain",
   "status": "final"
  },
@@ -496,9 +496,9 @@
   "status": "final"
  },
  "olibano": {
-  "asset": "engravings/hierbas/hisopo.svg",
-  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Hyssopus_officinalis0.jpg",
-  "work": "Thome, Flora von Deutschland (1885) - historical sacred-aromatic analogue",
+  "asset": "engravings/inciensos/olibano.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Boswellia_sacra_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-022.jpg",
+  "work": "Köhler's Medizinal-Pflanzen (1887), Boswellia sacra",
   "license": "public-domain",
   "status": "final"
  },
@@ -510,79 +510,79 @@
   "status": "final"
  },
  "aceite-oliva-sagrado": {
-  "asset": "engravings/aceites/aceite-oliva-sagrado.svg",
+  "asset": "engravings/aceites/aceite-oliva-sagrado-vessel.svg",
   "source": "https://commons.wikimedia.org/wiki/File:Olea_europaea,_Koehler_1887.jpg",
-  "work": "Kohler's Medizinal-Pflanzen (1887), Olea europaea",
+  "work": "Kohler's Medizinal-Pflanzen (1887), Olea europaea - ARCANUM oil-vessel composition",
   "license": "public-domain",
   "status": "final"
  },
  "aceite-solar": {
-  "asset": "engravings/hierbas/hiperico.svg",
+  "asset": "engravings/aceites/aceite-solar-vessel.svg",
   "source": "https://commons.wikimedia.org/wiki/File:Hypericum_perforatum_(Sturm_06,_plate_060)_clean.jpg",
-  "work": "Sturm, Deutschlands Flora (1796) - solar ingredient plate",
+  "work": "Sturm, Deutschlands Flora (1796) - solar ingredient plate and ARCANUM oil-vessel composition",
   "license": "public-domain",
   "status": "final"
  },
  "aceite-lunar": {
-  "asset": "engravings/hierbas/muerdago.svg",
+  "asset": "engravings/aceites/aceite-lunar-vessel.svg",
   "source": "https://commons.wikimedia.org/wiki/File:Illustration_Viscum_album0.jpg",
-  "work": "Thome, Flora von Deutschland (1885) - lunar ingredient plate",
+  "work": "Thome, Flora von Deutschland (1885) - lunar ingredient plate and ARCANUM oil-vessel composition",
   "license": "public-domain",
   "status": "final"
  },
  "aceite-mercurial": {
-  "asset": "engravings/hierbas/menta-piperita.svg",
+  "asset": "engravings/aceites/aceite-mercurial-vessel.svg",
   "source": "https://commons.wikimedia.org/wiki/File:K%C3%B6hler%27s_Medizinal-Pflanzen_in_naturgetreuen_Abbildungen_mit_kurz_erl%C3%A4uterndem_Texte_(Plate_67)_BHL303700.jpg",
-  "work": "Kohler's Medizinal-Pflanzen (1887) - mercurial ingredient plate",
+  "work": "Kohler's Medizinal-Pflanzen (1887) - mercurial ingredient plate and ARCANUM oil-vessel composition",
   "license": "public-domain",
   "status": "final"
  },
  "aceite-venusino": {
-  "asset": "engravings/hierbas/verbena.svg",
+  "asset": "engravings/aceites/aceite-venusino-vessel.svg",
   "source": "https://commons.wikimedia.org/wiki/File:Illustration_Verbena_officinalis0.jpg",
-  "work": "Thome, Flora von Deutschland (1885) - venusian ingredient plate",
+  "work": "Thome, Flora von Deutschland (1885) - venusian ingredient plate and ARCANUM oil-vessel composition",
   "license": "public-domain",
   "status": "final"
  },
  "aceite-marcial": {
-  "asset": "engravings/hierbas/ruda.svg",
+  "asset": "engravings/aceites/aceite-marcial-vessel.svg",
   "source": "https://commons.wikimedia.org/wiki/File:Illustration_Ruta_graveolens0.jpg",
-  "work": "Thome, Flora von Deutschland (1885) - martial ingredient plate",
+  "work": "Thome, Flora von Deutschland (1885) - martial ingredient plate and ARCANUM oil-vessel composition",
   "license": "public-domain",
   "status": "final"
  },
  "aceite-jovial": {
-  "asset": "engravings/hierbas/nuez-moscada.svg",
+  "asset": "engravings/aceites/aceite-jovial-vessel.svg",
   "source": "https://commons.wikimedia.org/wiki/File:Myristica_fragrans_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-097.jpg",
-  "work": "Kohler's Medizinal-Pflanzen (1887) - jovial ingredient plate",
+  "work": "Kohler's Medizinal-Pflanzen (1887) - jovial ingredient plate and ARCANUM oil-vessel composition",
   "license": "public-domain",
   "status": "final"
  },
  "aceite-saturnino": {
-  "asset": "engravings/hierbas/enebro.svg",
+  "asset": "engravings/aceites/aceite-saturnino-vessel.svg",
   "source": "https://commons.wikimedia.org/wiki/File:Illustration_Juniperus_communis0.jpg",
-  "work": "Thome, Flora von Deutschland (1885) - saturnine ingredient plate",
+  "work": "Thome, Flora von Deutschland (1885) - saturnine ingredient plate and ARCANUM oil-vessel composition",
   "license": "public-domain",
   "status": "final"
  },
  "resina-pino": {
-  "asset": "engravings/hierbas/enebro.svg",
-  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Juniperus_communis0.jpg",
-  "work": "Thome, Flora von Deutschland (1885) - historical conifer analogue",
+  "asset": "engravings/resinas/resina-pino.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:K%C3%B6hler%27s_Medizinal-Pflanzen_(Plate_7)_BHL303574.jpg",
+  "work": "Köhler's Medizinal-Pflanzen (1887), Pinus sylvestris",
   "license": "public-domain",
   "status": "final"
  },
  "trementina": {
-  "asset": "engravings/hierbas/tomillo.svg",
-  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Thymus_serpyllum0.jpg",
-  "work": "Thome, Flora von Deutschland (1885) - historical botanical analogue",
+  "asset": "engravings/resinas/trementina.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Arboretum_et_fruticetum_Britannicum_-_Pinus_pinaster_(19127275304).jpg",
+  "work": "Arboretum et fruticetum Britannicum (1838), Pinus pinaster",
   "license": "public-domain",
   "status": "final"
  },
  "resina-elemi": {
-  "asset": "engravings/hierbas/acacia.svg",
-  "source": "https://commons.wikimedia.org/wiki/File:Acacia_senegal_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-004.jpg",
-  "work": "Kohler's Medizinal-Pflanzen (1887) - historical resin-tree analogue",
+  "asset": "engravings/resinas/resina-elemi.svg",
+  "source": "https://commons.wikimedia.org/wiki/File:Canarium_indicum_-_Icica_icicariba_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-171.jpg",
+  "work": "Köhler's Medizinal-Pflanzen (1887), Canarium indicum - elemi-tree analogue",
   "license": "public-domain",
   "status": "final"
  },

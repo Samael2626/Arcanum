@@ -24,8 +24,11 @@ class CielosScreen extends ConsumerWidget {
     final auth = ref.watch(authProvider);
     if (auth.status == AuthStatus.unknown) {
       return const Center(
-          child: CircularProgressIndicator(
-              color: ArcanumColors.gold, strokeWidth: 2));
+        child: CircularProgressIndicator(
+          color: ArcanumColors.gold,
+          strokeWidth: 2,
+        ),
+      );
     }
     if (!auth.isAuthenticated) return const _LoginPrompt();
     return const _NatalView();
@@ -42,24 +45,34 @@ class _LoginPrompt extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('✶',
-                style: TextStyle(fontSize: 60, color: ArcanumColors.goldMuted)),
+            const Text(
+              '✶',
+              style: TextStyle(fontSize: 60, color: ArcanumColors.goldMuted),
+            ),
             const SizedBox(height: 20),
-            Text('Tu cielo te espera',
-                textAlign: TextAlign.center, style: ArcanumText.heading(30)),
+            Text(
+              'Tu cielo te espera',
+              textAlign: TextAlign.center,
+              style: ArcanumText.heading(30),
+            ),
             const SizedBox(height: 12),
             Text(
-                'Inicia sesión para revelar tu carta natal y los tránsitos del cielo de hoy sobre ella.',
-                textAlign: TextAlign.center,
-                style: ArcanumText.body(16, color: ArcanumColors.ivoryMuted)),
+              'Inicia sesión para revelar tu carta natal y los tránsitos del cielo de hoy sobre ella.',
+              textAlign: TextAlign.center,
+              style: ArcanumText.body(16, color: ArcanumColors.ivoryMuted),
+            ),
             const SizedBox(height: 28),
             GoldButton(
-                label: 'Iniciar sesión', onPressed: () => context.go('/login')),
+              label: 'Iniciar sesión',
+              onPressed: () => context.go('/login'),
+            ),
             const SizedBox(height: 12),
             TextButton(
               onPressed: () => context.go('/register'),
-              child: Text('Crear cuenta',
-                  style: ArcanumText.body(15, color: ArcanumColors.gold)),
+              child: Text(
+                'Crear cuenta',
+                style: ArcanumText.body(15, color: ArcanumColors.gold),
+              ),
             ),
           ],
         ),
@@ -79,9 +92,21 @@ class _NatalViewState extends ConsumerState<_NatalView> {
   late Future<(Map<String, dynamic>, Map<String, dynamic>)> _future = _load();
 
   Future<(Map<String, dynamic>, Map<String, dynamic>)> _load() async {
-    final natal = await _api.natalChart();
-    final transits = await _api.transits();
-    return (natal, transits);
+    try {
+      final data = await _api.celestialOverview();
+      return (
+        data['natal_chart'] as Map<String, dynamic>,
+        data['transits'] as Map<String, dynamic>,
+      );
+    } on DioException catch (error) {
+      if (error.response?.statusCode != 404) rethrow;
+      await _api.natalChart();
+      final data = await _api.celestialOverview();
+      return (
+        data['natal_chart'] as Map<String, dynamic>,
+        data['transits'] as Map<String, dynamic>,
+      );
+    }
   }
 
   bool _isMissingBirth(Object e) =>
@@ -107,8 +132,7 @@ class _NatalViewState extends ConsumerState<_NatalView> {
                     ? const _NoBirthData()
                     : _ErrorState(error: '${snap.error}');
               }
-              final chart =
-                  snap.data!.$1['chart_data'] as Map<String, dynamic>;
+              final chart = snap.data!.$1['chart_data'] as Map<String, dynamic>;
               final transits = snap.data!.$2;
               return _content(chart, transits);
             },
@@ -122,11 +146,13 @@ class _NatalViewState extends ConsumerState<_NatalView> {
     final asc = chart['ascendant'] as Map<String, dynamic>;
     final mc = chart['midheaven'] as Map<String, dynamic>;
     final planets = (chart['planets'] as List).cast<Map<String, dynamic>>();
-    final aspects =
-        (transits['aspects_to_natal'] as List).cast<Map<String, dynamic>>();
+    final aspects = (transits['aspects_to_natal'] as List)
+        .cast<Map<String, dynamic>>();
 
-    final sunPlanet = planets.firstWhere((p) => p['name'] == 'sun',
-        orElse: () => <String, dynamic>{});
+    final sunPlanet = planets.firstWhere(
+      (p) => p['name'] == 'sun',
+      orElse: () => <String, dynamic>{},
+    );
     final sunSign = (sunPlanet['sign'] as String?) ?? '';
     final ascSign = (asc['sign'] as String?) ?? '';
 
@@ -143,10 +169,15 @@ class _NatalViewState extends ConsumerState<_NatalView> {
         // ── La rueda: instrumento vivo e interactivo ──
         const SectionLabel('TU RUEDA NATAL', infoKey: 'carta_natal'),
         const SizedBox(height: 6),
-        Text('El cielo del instante en que naciste.',
-            textAlign: TextAlign.center,
-            style: ArcanumText.body(14,
-                color: ArcanumColors.ivoryMuted, italic: true)),
+        Text(
+          'El cielo del instante en que naciste.',
+          textAlign: TextAlign.center,
+          style: ArcanumText.body(
+            14,
+            color: ArcanumColors.ivoryMuted,
+            italic: true,
+          ),
+        ),
         const SizedBox(height: 14),
         NatalWheel(chart: chart),
         const SizedBox(height: 10),
@@ -157,49 +188,61 @@ class _NatalViewState extends ConsumerState<_NatalView> {
 
         // ── Ángulos ──
         ArcanumCard(
-          child: Column(children: [
-            const SectionLabel('ÁNGULOS', infoKey: 'ascendente'),
-            const SizedBox(height: 14),
-            _angle('Ascendente', asc),
-            const Divider(color: ArcanumColors.surfaceHigh, height: 28),
-            _angle('Medio Cielo', mc),
-          ]),
+          child: Column(
+            children: [
+              const SectionLabel('ÁNGULOS', infoKey: 'ascendente'),
+              const SizedBox(height: 14),
+              _angle('Ascendente', asc),
+              const Divider(color: ArcanumColors.surfaceHigh, height: 28),
+              _angle('Medio Cielo', mc),
+            ],
+          ),
         ),
         const SizedBox(height: 18),
 
         // ── Planetas ──
         ArcanumCard(
-          child: Column(children: [
-            const SectionLabel('PLANETAS', infoKey: 'carta_natal'),
-            const SizedBox(height: 12),
-            ...planets.map(_planetRow),
-          ]),
+          child: Column(
+            children: [
+              const SectionLabel('PLANETAS', infoKey: 'carta_natal'),
+              const SizedBox(height: 12),
+              ...planets.map(_planetRow),
+            ],
+          ),
         ),
         const SizedBox(height: 18),
 
         // ── Tránsitos ──
         ArcanumCard(
-          child: Column(children: [
-            const SectionLabel('TRÁNSITOS DE HOY', infoKey: 'transitos'),
-            const SizedBox(height: 12),
-            if (aspects.isEmpty)
-              Text('Cielo en calma: sin aspectos exactos a tu carta ahora.',
+          child: Column(
+            children: [
+              const SectionLabel('TRÁNSITOS DE HOY', infoKey: 'transitos'),
+              const SizedBox(height: 12),
+              if (aspects.isEmpty)
+                Text(
+                  'Cielo en calma: sin aspectos exactos a tu carta ahora.',
                   textAlign: TextAlign.center,
-                  style:
-                      ArcanumText.body(15, color: ArcanumColors.ivoryMuted))
-            else
-              ...aspects.map(_aspectRow),
-          ]),
+                  style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
+                )
+              else
+                ...aspects.map(_aspectRow),
+            ],
+          ),
         ),
         const SizedBox(height: 30),
 
         // ── Los doce signos ──
         const SectionLabel('LOS DOCE SIGNOS'),
         const SizedBox(height: 6),
-        Text('Cada signo, su elemento y su regente. Toca uno para su lore.',
-            textAlign: TextAlign.center,
-            style: ArcanumText.body(14,
-                color: ArcanumColors.ivoryMuted, italic: true)),
+        Text(
+          'Cada signo, su elemento y su regente. Toca uno para su lore.',
+          textAlign: TextAlign.center,
+          style: ArcanumText.body(
+            14,
+            color: ArcanumColors.ivoryMuted,
+            italic: true,
+          ),
+        ),
         const SizedBox(height: 16),
         SignGallery(sunSign: sunSign, ascSign: ascSign),
         const SizedBox(height: 24),
@@ -207,8 +250,10 @@ class _NatalViewState extends ConsumerState<_NatalView> {
         Center(
           child: TextButton(
             onPressed: () => ref.read(authProvider.notifier).logout(),
-            child: Text('Cerrar sesión',
-                style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted)),
+            child: Text(
+              'Cerrar sesión',
+              style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
+            ),
           ),
         ),
       ],
@@ -222,13 +267,20 @@ class _NatalViewState extends ConsumerState<_NatalView> {
       borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Text(label,
-              style: ArcanumText.body(16, color: ArcanumColors.ivoryMuted)),
-          const SizedBox(width: 12),
-          Text('${signGlyph[sign] ?? ''} ${signEs[sign] ?? sign}',
-              style: ArcanumText.heading(22, color: ArcanumColors.gold)),
-        ]),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              label,
+              style: ArcanumText.body(16, color: ArcanumColors.ivoryMuted),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              '${signGlyph[sign] ?? ''} ${signEs[sign] ?? sign}',
+              style: ArcanumText.heading(22, color: ArcanumColors.gold),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -242,29 +294,42 @@ class _NatalViewState extends ConsumerState<_NatalView> {
       borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
-        child: Row(children: [
-          SizedBox(
+        child: Row(
+          children: [
+            SizedBox(
               width: 34,
-              child: Text(planetGlyph[name] ?? '?',
-                  style: const TextStyle(
-                      fontSize: 22, color: ArcanumColors.gold))),
-          Expanded(
-              child: Text(planetEs[name] ?? name, style: ArcanumText.body(16))),
-          Text('${signGlyph[sign] ?? ''} ${signEs[sign] ?? sign}',
-              style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted)),
-          if (retro)
-            const Padding(
-              padding: EdgeInsets.only(left: 6),
-              child: Text('℞',
-                  style: TextStyle(
-                      color: ArcanumColors.burgundyLight, fontSize: 15)),
+              child: Text(
+                planetGlyph[name] ?? '?',
+                style: const TextStyle(fontSize: 22, color: ArcanumColors.gold),
+              ),
             ),
-          Padding(
-            padding: const EdgeInsets.only(left: 8),
-            child: Text('C${p['house']}',
-                style: ArcanumText.body(13, color: ArcanumColors.goldMuted)),
-          ),
-        ]),
+            Expanded(
+              child: Text(planetEs[name] ?? name, style: ArcanumText.body(16)),
+            ),
+            Text(
+              '${signGlyph[sign] ?? ''} ${signEs[sign] ?? sign}',
+              style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
+            ),
+            if (retro)
+              const Padding(
+                padding: EdgeInsets.only(left: 6),
+                child: Text(
+                  '℞',
+                  style: TextStyle(
+                    color: ArcanumColors.burgundyLight,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Text(
+                'C${p['house']}',
+                style: ArcanumText.body(13, color: ArcanumColors.goldMuted),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -315,9 +380,13 @@ class _SolarSummary extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Text(glyph,
-                style: const TextStyle(
-                    fontSize: 22, color: ArcanumColors.goldMuted)),
+            Text(
+              glyph,
+              style: const TextStyle(
+                fontSize: 22,
+                color: ArcanumColors.goldMuted,
+              ),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -325,9 +394,10 @@ class _SolarSummary extends StatelessWidget {
                 children: [
                   Text(label.toUpperCase(), style: ArcanumText.label()),
                   const SizedBox(height: 2),
-                  Text('${signGlyph[sign] ?? ''} $name',
-                      style:
-                          ArcanumText.heading(20, color: ArcanumColors.gold)),
+                  Text(
+                    '${signGlyph[sign] ?? ''} $name',
+                    style: ArcanumText.heading(20, color: ArcanumColors.gold),
+                  ),
                 ],
               ),
             ),
@@ -344,30 +414,35 @@ class _TapHint extends StatelessWidget {
   const _TapHint();
   @override
   Widget build(BuildContext context) => Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.touch_app_outlined,
-              size: 15, color: ArcanumColors.goldMuted.withValues(alpha: 0.9)),
-          const SizedBox(width: 6),
-          Text('Toca planeta, signo o casa · arrastra para girar',
-              style: ArcanumText.body(13, color: ArcanumColors.ivoryMuted)),
-        ],
-      );
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(
+        Icons.touch_app_outlined,
+        size: 15,
+        color: ArcanumColors.goldMuted.withValues(alpha: 0.9),
+      ),
+      const SizedBox(width: 6),
+      Text(
+        'Toca planeta, signo o casa · arrastra para girar',
+        style: ArcanumText.body(13, color: ArcanumColors.ivoryMuted),
+      ),
+    ],
+  );
 }
 
 class _AspectLegend extends StatelessWidget {
   const _AspectLegend();
   @override
   Widget build(BuildContext context) => const Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 16,
-        runSpacing: 8,
-        children: [
-          _LegendDot(ArcanumColors.aspectUnion, 'Unión'),
-          _LegendDot(ArcanumColors.aspectHarmony, 'Armonía'),
-          _LegendDot(ArcanumColors.aspectTension, 'Tensión'),
-        ],
-      );
+    alignment: WrapAlignment.center,
+    spacing: 16,
+    runSpacing: 8,
+    children: [
+      _LegendDot(ArcanumColors.aspectUnion, 'Unión'),
+      _LegendDot(ArcanumColors.aspectHarmony, 'Armonía'),
+      _LegendDot(ArcanumColors.aspectTension, 'Tensión'),
+    ],
+  );
 }
 
 class _LegendDot extends StatelessWidget {
@@ -376,14 +451,13 @@ class _LegendDot extends StatelessWidget {
   const _LegendDot(this.color, this.label);
   @override
   Widget build(BuildContext context) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(width: 14, height: 2, color: color),
-          const SizedBox(width: 6),
-          Text(label,
-              style: ArcanumText.body(13, color: ArcanumColors.ivoryMuted)),
-        ],
-      );
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Container(width: 14, height: 2, color: color),
+      const SizedBox(width: 6),
+      Text(label, style: ArcanumText.body(13, color: ArcanumColors.ivoryMuted)),
+    ],
+  );
 }
 
 // ── Estados premium ───────────────────────────────────────────────────────────
@@ -396,20 +470,26 @@ class _WheelLoading extends StatelessWidget {
       children: [
         const SizedBox(height: 160),
         const Center(
-          child: Text('✵',
-              style: TextStyle(fontSize: 54, color: ArcanumColors.goldMuted)),
+          child: Text(
+            '✵',
+            style: TextStyle(fontSize: 54, color: ArcanumColors.goldMuted),
+          ),
         ),
         const SizedBox(height: 20),
-        Text('Trazando tu cielo…',
-            textAlign: TextAlign.center,
-            style: ArcanumText.body(16, color: ArcanumColors.ivoryMuted)),
+        Text(
+          'Trazando tu cielo…',
+          textAlign: TextAlign.center,
+          style: ArcanumText.body(16, color: ArcanumColors.ivoryMuted),
+        ),
         const SizedBox(height: 18),
         const Center(
           child: SizedBox(
             width: 22,
             height: 22,
             child: CircularProgressIndicator(
-                color: ArcanumColors.gold, strokeWidth: 2),
+              color: ArcanumColors.gold,
+              strokeWidth: 2,
+            ),
           ),
         ),
       ],
@@ -426,22 +506,29 @@ class _NoBirthData extends StatelessWidget {
       children: [
         const SizedBox(height: 120),
         const Center(
-            child: Text('☽',
-                style:
-                    TextStyle(fontSize: 60, color: ArcanumColors.goldMuted))),
+          child: Text(
+            '☽',
+            style: TextStyle(fontSize: 60, color: ArcanumColors.goldMuted),
+          ),
+        ),
         const SizedBox(height: 22),
-        Text('Aún no hay carta que trazar',
-            textAlign: TextAlign.center, style: ArcanumText.heading(28)),
+        Text(
+          'Aún no hay carta que trazar',
+          textAlign: TextAlign.center,
+          style: ArcanumText.heading(28),
+        ),
         const SizedBox(height: 12),
         Text(
-            'Para dibujar tu rueda natal necesito el instante y el lugar exactos '
-            'de tu nacimiento: fecha, hora y coordenadas.',
-            textAlign: TextAlign.center,
-            style: ArcanumText.body(16, color: ArcanumColors.ivoryMuted)),
+          'Para dibujar tu rueda natal necesito el instante y el lugar exactos '
+          'de tu nacimiento: fecha, hora y coordenadas.',
+          textAlign: TextAlign.center,
+          style: ArcanumText.body(16, color: ArcanumColors.ivoryMuted),
+        ),
         const SizedBox(height: 28),
         GoldButton(
-            label: 'Completar mi nacimiento',
-            onPressed: () => context.go('/onboarding')),
+          label: 'Completar mi nacimiento',
+          onPressed: () => context.go('/onboarding'),
+        ),
       ],
     );
   }
@@ -457,21 +544,32 @@ class _ErrorState extends StatelessWidget {
       children: [
         const SizedBox(height: 140),
         const Center(
-            child: Text('✶',
-                style:
-                    TextStyle(fontSize: 54, color: ArcanumColors.goldMuted))),
+          child: Text(
+            '✶',
+            style: TextStyle(fontSize: 54, color: ArcanumColors.goldMuted),
+          ),
+        ),
         const SizedBox(height: 20),
-        Text('No se pudo trazar tu carta',
-            textAlign: TextAlign.center, style: ArcanumText.heading(24)),
+        Text(
+          'No se pudo trazar tu carta',
+          textAlign: TextAlign.center,
+          style: ArcanumText.heading(24),
+        ),
         const SizedBox(height: 10),
-        Text('Desliza hacia abajo para reintentar.',
-            textAlign: TextAlign.center,
-            style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted)),
+        Text(
+          'Desliza hacia abajo para reintentar.',
+          textAlign: TextAlign.center,
+          style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
+        ),
         const SizedBox(height: 8),
-        Text(error,
-            textAlign: TextAlign.center,
-            style: ArcanumText.body(12,
-                color: ArcanumColors.ivoryMuted.withValues(alpha: 0.6))),
+        Text(
+          error,
+          textAlign: TextAlign.center,
+          style: ArcanumText.body(
+            12,
+            color: ArcanumColors.ivoryMuted.withValues(alpha: 0.6),
+          ),
+        ),
       ],
     );
   }

@@ -9,15 +9,9 @@ class RegisterData {
   final String email;
   final String password;
 
-  const RegisterData({
-    required this.email,
-    required this.password,
-  });
+  const RegisterData({required this.email, required this.password});
 
-  Map<String, dynamic> toJson() => {
-        'email': email,
-        'password': password,
-      };
+  Map<String, dynamic> toJson() => {'email': email, 'password': password};
 }
 
 class AuthException implements Exception {
@@ -34,8 +28,11 @@ class AuthRepository {
 
   Future<void> register(RegisterData data) async {
     try {
-      await _dio.post('/auth/register',
-          data: data.toJson(), options: Options(extra: {'noAuth': true}));
+      await _dio.post(
+        '/auth/register',
+        data: data.toJson(),
+        options: Options(extra: {'noAuth': true}),
+      );
     } on DioException catch (e) {
       throw AuthException(_detail(e) ?? 'No se pudo registrar');
     }
@@ -51,6 +48,7 @@ class AuthRepository {
           extra: {'noAuth': true},
         ),
       );
+      await _storage.clearProfile();
       await _storage.save(
         access: res.data['access_token'] as String,
         refresh: res.data['refresh_token'] as String,
@@ -75,6 +73,15 @@ class AuthRepository {
     }
   }
 
+  Future<void> deleteAccount() async {
+    try {
+      await _dio.delete('/users/me');
+      await _storage.clear();
+    } on DioException catch (e) {
+      throw AuthException(_detail(e) ?? 'No se pudo eliminar la cuenta');
+    }
+  }
+
   Future<void> logout() async {
     final refresh = await _storage.refresh;
     if (refresh != null) {
@@ -89,7 +96,9 @@ class AuthRepository {
 
   String? _detail(DioException e) {
     final data = e.response?.data;
-    if (data is Map && data['detail'] is String) return data['detail'] as String;
+    if (data is Map && data['detail'] is String) {
+      return data['detail'] as String;
+    }
     return null;
   }
 }

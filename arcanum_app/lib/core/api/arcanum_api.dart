@@ -15,6 +15,7 @@ class ArcanumApi {
     final res = await _dio.get(
       '/astral/today',
       queryParameters: {'lat': lat, 'lon': lon},
+      options: Options(extra: const {'noAuth': true}),
     );
     return res.data as Map<String, dynamic>;
   }
@@ -31,6 +32,11 @@ class ArcanumApi {
     return res.data as Map<String, dynamic>;
   }
 
+  Future<Map<String, dynamic>> celestialOverview() async {
+    final res = await _dio.get('/astral/overview');
+    return res.data as Map<String, dynamic>;
+  }
+
   /// Materia Arcana: catálogo (resumen). Filtros opcionales.
   Future<List<Map<String, dynamic>>> materiaList({
     String? itemType,
@@ -39,6 +45,7 @@ class ArcanumApi {
   }) async {
     final res = await _dio.get(
       '/materia',
+      options: Options(extra: const {'noAuth': true}),
       queryParameters: {
         'item_type': ?itemType,
         'planet': ?planet,
@@ -50,7 +57,10 @@ class ArcanumApi {
 
   /// Detalle completo de un ítem de Materia Arcana.
   Future<Map<String, dynamic>> materiaDetail(String slug) async {
-    final res = await _dio.get('/materia/$slug');
+    final res = await _dio.get(
+      '/materia/$slug',
+      options: Options(extra: const {'noAuth': true}),
+    );
     return res.data as Map<String, dynamic>;
   }
 

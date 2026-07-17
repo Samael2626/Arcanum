@@ -15,7 +15,8 @@ Cubre dos funciones puras (sin I/O):
 """
 from types import SimpleNamespace
 
-from app.services.oracle_context import build_tarot_context
+from app.services import oracle_context
+from app.services.oracle_context import build_oracle_context, build_tarot_context
 from app.services.claude_service import _build_user_message
 
 
@@ -106,3 +107,42 @@ def test_user_message_solo_contexto_marca_ausencia_de_pregunta():
     assert msg.startswith(_CTX)
     assert "no formuló pregunta" in msg
     assert "TIRADA DE TAROT" not in msg
+
+
+def test_contexto_astral_se_cachea_durante_la_misma_ventana(monkeypatch):
+    oracle_context._context_cache.clear()
+    calls = {"transits": 0, "moon": 0, "hour": 0}
+
+    def transits(*_args):
+        calls["transits"] += 1
+        return {"aspects_to_natal": []}
+
+    def moon(*_args):
+        calls["moon"] += 1
+        return SimpleNamespace(phase_name="Llena", illumination=1, is_waxing=True)
+
+    def hour(*_args):
+        calls["hour"] += 1
+        return SimpleNamespace(planet="Sol")
+
+    monkeypatch.setattr(oracle_context.nce, "compute_transits", transits)
+    monkeypatch.setattr(oracle_context.lc, "get_moon_info", moon)
+    monkeypatch.setattr(oracle_context.ph, "get_planetary_hour", hour)
+    monkeypatch.setattr(oracle_context.ph, "get_day_ruler", lambda *_: "Luna")
+
+    user = SimpleNamespace(
+        id="user-a",
+        display_name="Samuel",
+        birth_lat=4.71,
+        birth_lon=-74.07,
+    )
+    chart = SimpleNamespace(
+        calculated_at="2026-07-16T00:00:00Z",
+        chart_data={"planets": [], "aspects": []},
+    )
+
+    first = build_oracle_context(user, chart, None)
+    second = build_oracle_context(user, chart, None)
+
+    assert second == first
+    assert calls == {"transits": 1, "moon": 1, "hour": 1}

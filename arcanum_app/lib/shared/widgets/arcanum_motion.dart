@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/arcanum_colors.dart';
@@ -51,16 +52,27 @@ class _ArcanumTiltState extends State<ArcanumTilt>
   Offset _tilt = Offset.zero;
   bool _hovering = false;
   Size _size = Size.zero;
+  late final bool _ambientEnabled =
+      !kIsWeb &&
+      defaultTargetPlatform != TargetPlatform.android &&
+      defaultTargetPlatform != TargetPlatform.iOS;
 
   @override
   void initState() {
     super.initState();
     _engage = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 220));
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    );
     _glow = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 2600));
-    _idle = AnimationController(vsync: this, duration: const Duration(seconds: 9))
-      ..repeat();
+      vsync: this,
+      duration: const Duration(milliseconds: 2600),
+    );
+    _idle = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 9),
+    );
+    if (_ambientEnabled) _idle.repeat();
     if (widget.glowing) _glow.repeat(reverse: true);
   }
 
@@ -134,8 +146,8 @@ class _ArcanumTiltState extends State<ArcanumTilt>
     final it = _idle.value * 2 * math.pi;
     final swayY = math.sin(it + widget.phase * 0.9);
     final swayX = math.sin(it * 0.73 + widget.phase * 1.4);
-    final idleRotY = swayY * 0.010;
-    final idleRotX = swayX * 0.007;
+    final idleRotY = _ambientEnabled ? swayY * 0.010 : 0.0;
+    final idleRotX = _ambientEnabled ? swayX * 0.007 : 0.0;
 
     final rotX = -_tilt.dy * widget.maxTilt * eng + idleRotX * (1 - eng);
     final rotY = _tilt.dx * widget.maxTilt * eng + idleRotY * (1 - eng);

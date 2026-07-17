@@ -253,6 +253,7 @@ class _LoreHeroState extends State<_LoreHero>
                   size: widget.itemType == 'herb' ? 148 : 132,
                   strokeWidth: 1.7,
                   progress: _draw.value,
+                  compact: true,
                   semanticLabel: widget.name,
                 ),
               ),

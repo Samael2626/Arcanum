@@ -6,7 +6,7 @@ from datetime import date, datetime, timezone
 from typing import Optional
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.core.security import get_current_user
@@ -158,12 +158,33 @@ def transits(
     return nce.compute_transits(chart.chart_data["planets"], dt)
 
 
+@router.get("/overview")
+def overview(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Carta natal cacheada y tránsitos actuales en una sola respuesta."""
+    chart = db.query(NatalChart).filter(NatalChart.user_id == current_user.id).first()
+    if chart is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No hay carta natal calculada.",
+        )
+    now = datetime.now(timezone.utc)
+    return {
+        "natal_chart": NatalChartResponse.model_validate(chart).model_dump(mode="json"),
+        "transits": nce.compute_transits(chart.chart_data["planets"], now),
+    }
+
+
 @router.get("/today")
 def today(
+    response: Response,
     lat: float = Query(..., ge=-90, le=90),
     lon: float = Query(..., ge=-180, le=180),
 ):
     """Agregado para la pantalla 'Hoy': hora planetaria + regente del día + luna."""
+    response.headers['Cache-Control'] = 'public, max-age=60, stale-while-revalidate=120'
     now = datetime.now(timezone.utc)
     try:
         hour = ph.get_planetary_hour(now, lat, lon)
