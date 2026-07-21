@@ -5,11 +5,14 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/api/arcanum_api.dart';
 import '../../core/auth/auth_controller.dart';
+import '../../core/content/glossary.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
+import '../../shared/widgets/info_dot.dart';
+import '../hoy/hoy_lore.dart';
 import 'sign_lore.dart';
 import 'widgets/natal_wheel.dart';
 import 'widgets/sign_gallery.dart';
@@ -205,7 +208,9 @@ class _NatalViewState extends ConsumerState<_NatalView> {
           child: Column(
             children: [
               const SectionLabel('PLANETAS', infoKey: 'carta_natal'),
-              const SizedBox(height: 12),
+              const SizedBox(height: 4),
+              const _TermHint(),
+              const SizedBox(height: 6),
               ...planets.map(_planetRow),
             ],
           ),
@@ -217,7 +222,9 @@ class _NatalViewState extends ConsumerState<_NatalView> {
           child: Column(
             children: [
               const SectionLabel('TRÁNSITOS DE HOY', infoKey: 'transitos'),
-              const SizedBox(height: 12),
+              const SizedBox(height: 4),
+              if (aspects.isNotEmpty) const _TermHint(),
+              const SizedBox(height: 6),
               if (aspects.isEmpty)
                 Text(
                   'Cielo en calma: sin aspectos exactos a tu carta ahora.',
@@ -285,68 +292,166 @@ class _NatalViewState extends ConsumerState<_NatalView> {
     );
   }
 
+  /// Fila de planeta: cada parte abre SU propia explicación.
+  ///
+  /// Antes la fila entera abría el lore del signo — tocabas "Sol" y salía
+  /// "Capricornio". Ahora planeta, signo, retrogradación y casa son cuatro
+  /// zonas independientes.
   Widget _planetRow(Map<String, dynamic> p) {
     final name = p['name'] as String;
     final sign = p['sign'] as String;
     final retro = p['retrograde'] == true;
-    return InkWell(
-      onTap: () => showSignLoreSheet(context, sign),
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 34,
-              child: Text(
-                planetGlyph[name] ?? '?',
-                style: const TextStyle(fontSize: 22, color: ArcanumColors.gold),
-              ),
-            ),
-            Expanded(
-              child: Text(planetEs[name] ?? name, style: ArcanumText.body(16)),
-            ),
-            Text(
-              '${signGlyph[sign] ?? ''} ${signEs[sign] ?? sign}',
-              style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
-            ),
-            if (retro)
-              const Padding(
-                padding: EdgeInsets.only(left: 6),
-                child: Text(
-                  '℞',
-                  style: TextStyle(
-                    color: ArcanumColors.burgundyLight,
-                    fontSize: 15,
+    final house = (p['house'] as num?)?.toInt();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 4),
+      child: Row(
+        children: [
+          // Planeta → su propio lore
+          Expanded(
+            child: _Tappable(
+              onTap: () => showPlanetLoreSheet(context, name),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 34,
+                    child: Text(
+                      planetGlyph[name] ?? '✶',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        color: ArcanumColors.gold,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: Text(
-                'C${p['house']}',
-                style: ArcanumText.body(13, color: ArcanumColors.goldMuted),
+                  Flexible(
+                    child: Text(
+                      planetEs[name] ?? name,
+                      style: ArcanumText.body(16),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+          // Signo → lore del signo
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _Tappable(
+                    onTap: () => showSignLoreSheet(context, sign),
+                    child: Text(
+                      '${signGlyph[sign] ?? ''} ${signEs[sign] ?? sign}',
+                      style: ArcanumText.body(
+                        15,
+                        color: ArcanumColors.ivoryMuted,
+                      ),
+                    ),
+                  ),
+                  // Retrogradación → qué significa ℞
+                  if (retro)
+                    _Tappable(
+                      onTap: () => showGlossarySheet(context, 'retrogrado'),
+                      child: const Text(
+                        '℞',
+                        style: TextStyle(
+                          color: ArcanumColors.burgundyLight,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  // Casa → qué terreno de la vida es (era el ilegible "C2")
+                  if (house != null)
+                    _Tappable(
+                      onTap: () =>
+                          showGlossarySheet(context, houseGlossaryKey(house)),
+                      child: Text(
+                        'Casa $house',
+                        style: ArcanumText.body(
+                          13,
+                          color: ArcanumColors.goldMuted,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
+  /// Fila de tránsito: cada término es tocable por separado.
+  ///
+  /// Era una línea de texto muerta — "♀ Venus trígono ☽ Luna natal" — donde
+  /// ninguna de las cuatro piezas de jerga tenía salida.
   Widget _aspectRow(Map<String, dynamic> a) {
     final t = a['transit'] as String;
     final n = a['natal'] as String;
     final asp = a['aspect'] as String;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: Text(
-        '${planetGlyph[t] ?? ''} ${planetEs[t] ?? t}  ${aspectEs[asp] ?? asp}  ${planetGlyph[n] ?? ''} ${planetEs[n] ?? n} natal',
-        textAlign: TextAlign.center,
-        style: ArcanumText.body(15),
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          _Tappable(
+            onTap: () => showPlanetLoreSheet(context, t),
+            child: Text(
+              '${planetGlyph[t] ?? ''} ${planetEs[t] ?? t}',
+              style: ArcanumText.body(15),
+            ),
+          ),
+          _Tappable(
+            onTap: () => showGlossarySheet(context, aspectGlossaryKey(asp)),
+            child: Text(
+              aspectEs[asp] ?? asp,
+              style: ArcanumText.body(15, color: ArcanumColors.gold),
+            ),
+          ),
+          _Tappable(
+            onTap: () => showPlanetLoreSheet(context, n),
+            child: Text(
+              '${planetGlyph[n] ?? ''} ${planetEs[n] ?? n}',
+              style: ArcanumText.body(15),
+            ),
+          ),
+          // "natal" es la palabra que hace ilegible la línea entera.
+          _Tappable(
+            onTap: () => showGlossarySheet(context, 'natal_vs_transito'),
+            child: Text(
+              'natal',
+              style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
+            ),
+          ),
+        ],
       ),
     );
   }
+}
+
+/// Envoltorio táctil uniforme para los términos explicables de la carta.
+/// Da área de toque cómoda (≥40px de alto) sin romper el ritmo visual.
+class _Tappable extends StatelessWidget {
+  final VoidCallback onTap;
+  final Widget child;
+  const _Tappable({required this.onTap, required this.child});
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(8),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+      child: child,
+    ),
+  );
 }
 
 // ── Resumen solar / ascendente ────────────────────────────────────────────────
@@ -427,6 +532,18 @@ class _TapHint extends StatelessWidget {
         style: ArcanumText.body(13, color: ArcanumColors.ivoryMuted),
       ),
     ],
+  );
+}
+
+/// Avisa de que cada término técnico de la lista se puede tocar.
+/// Sin esto la capa explicativa existe pero nadie la descubre.
+class _TermHint extends StatelessWidget {
+  const _TermHint();
+  @override
+  Widget build(BuildContext context) => Text(
+    'Toca cualquier término para saber qué significa.',
+    textAlign: TextAlign.center,
+    style: ArcanumText.body(12, color: ArcanumColors.ivoryMuted, italic: true),
   );
 }
 

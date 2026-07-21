@@ -66,4 +66,193 @@ const Map<String, GlossaryEntry> glossary = {
     'Sostén una pregunta clara, lee cada carta EN su posición y luego une las tres en un solo relato. '
         'Invertida = matiz o bloqueo, no "malo".',
   ),
+
+  // ── Aspectos ───────────────────────────────────────────────────────────────
+  'aspecto': GlossaryEntry(
+    'Aspecto',
+    'El ángulo que forman dos planetas entre sí visto desde la Tierra. Ese ángulo dice cómo se '
+        'relacionan sus fuerzas: si colaboran, se ignoran o chocan.',
+    'No leas los planetas sueltos: léelos EN relación. Un mismo planeta se comporta distinto según '
+        'con quién esté aspectado. Los suaves (sextil, trígono) abren puertas; los duros (cuadratura, '
+        'oposición) piden trabajo.',
+  ),
+  'conjuncion': GlossaryEntry(
+    'Conjunción (0°)',
+    'Dos planetas en el mismo punto del cielo. Sus naturalezas se funden en una sola fuerza: ya no '
+        'actúan por separado.',
+    'Es el aspecto más potente y el más ambiguo — amplifica lo que toca, para bien o para mal. Mira '
+        'qué planetas son: Venus con Júpiter bendice; Marte con Saturno aprieta. Buen momento para '
+        'iniciar algo de la naturaleza de ambos.',
+  ),
+  'sextil': GlossaryEntry(
+    'Sextil (60°)',
+    'Aspecto suave entre planetas de elementos compatibles. Es una puerta abierta: la oportunidad '
+        'está ahí, pero no entra sola.',
+    'Favorece si actúas. A diferencia del trígono, el sextil pide que des el primer paso — es apoyo '
+        'que responde al esfuerzo. Ideal para pedir, proponer, estudiar y tender puentes.',
+  ),
+  'cuadratura': GlossaryEntry(
+    'Cuadratura (90°)',
+    'Aspecto de tensión: dos planetas tiran en direcciones que no se entienden. Es fricción, y la '
+        'fricción es incómoda pero produce fuego.',
+    'No es una maldición: es el músculo del carácter. Evita cronometrar aquí lo delicado (firmas, '
+        'reconciliaciones, ritos de atracción). Úsalo para romper inercia, cortar y empujar lo que '
+        'estaba trabado.',
+  ),
+  'trigono': GlossaryEntry(
+    'Trígono (120°)',
+    'Aspecto armónico entre planetas del mismo elemento. Todo fluye sin resistencia: el talento sale '
+        'solo, sin esfuerzo.',
+    'La mejor ventana para lo importante: talismanes, consagraciones, obras que quieres que prosperen. '
+        'Su trampa es la pereza — como no cuesta, es fácil no usarlo.',
+  ),
+  'oposicion': GlossaryEntry(
+    'Oposición (180°)',
+    'Dos planetas enfrentados, cara a cara desde extremos del cielo. Es el aspecto de la conciencia: '
+        'ves el conflicto porque está fuera de ti, casi siempre en otra persona.',
+    'Pide equilibrio, no victoria de un lado. Buen momento para negociar, para ver un espejo y para '
+        'la adivinación; mal momento para decidir en caliente o para atar voluntades.',
+  ),
+
+  // ── Lectura de la carta ────────────────────────────────────────────────────
+  'natal_vs_transito': GlossaryEntry(
+    'Natal vs. tránsito',
+    'Tu carta NATAL es fija: el cielo del instante en que naciste, y no cambia jamás. Un TRÁNSITO es '
+        'dónde está ese mismo planeta AHORA en el cielo real.\n\n'
+        'Por eso una línea como "Venus trígono Luna natal" se lee: la Venus de hoy está en trígono con '
+        'la Luna que tenías al nacer.',
+    'Tu carta natal es el instrumento; los tránsitos son la mano que lo toca. Lee siempre en ese '
+        'orden: primero qué eres, luego qué te está pasando encima.',
+  ),
+  'retrogrado': GlossaryEntry(
+    'Retrógrado ℞',
+    'Desde la Tierra, un planeta parece retroceder en el cielo durante unas semanas. Es un efecto de '
+        'perspectiva, no un cambio real de dirección — pero la tradición lo lee como una fuerza que '
+        'mira hacia adentro.',
+    'Su energía se vuelve introspectiva: revisar, corregir, terminar lo empezado, reencontrar. Mala '
+        'ventana para lanzar y firmar de esa naturaleza; excelente para RE-hacer. En tu carta natal, '
+        'un planeta retrógrado indica una fuerza que trabajas por dentro antes de expresarla.',
+  ),
+  'elemento': GlossaryEntry(
+    'Elemento',
+    'Fuego, Tierra, Aire y Agua: las cuatro naturalezas básicas. Cada signo pertenece a una, y de ahí '
+        'salen casi todas las correspondencias mágicas.',
+    'Fuego → voluntad y acción. Tierra → cuerpo, dinero, materia. Aire → mente, palabra, vínculo. '
+        'Agua → emoción, sueño, psiquismo. Elige materiales e intención afines al elemento del trabajo.',
+  ),
+  'polaridad': GlossaryEntry(
+    'Polaridad',
+    'Cada signo es activo (Fuego y Aire) o receptivo (Tierra y Agua). No es "masculino/femenino" ni '
+        'bueno/malo: es la dirección en que la fuerza se mueve.',
+    'Activa → proyectar hacia fuera, iniciar, emitir. Receptiva → contener, atraer, gestar. Ajusta el '
+        'gesto del rito a la polaridad: no se invoca igual de lo que se acoge.',
+  ),
+  'regente': GlossaryEntry(
+    'Regente',
+    'El planeta que gobierna un signo o una casa y le presta su naturaleza. Marte rige Aries; Venus, '
+        'Tauro y Libra; la Luna, Cáncer, y así.',
+    'Para reforzar un asunto, trabaja en el día y la hora de su regente, con sus metales, hierbas e '
+        'inciensos. Es el hilo que conecta tu carta con la Materia Arcana.',
+  ),
+
+  // ── Casas ──────────────────────────────────────────────────────────────────
+  'casa': GlossaryEntry(
+    'Las doce casas',
+    'La rueda natal se divide en doce sectores llamados casas. Si el signo dice CÓMO actúa un planeta, '
+        'la casa dice DÓNDE: en qué terreno concreto de tu vida se nota.\n\n'
+        'Se cuentan desde el Ascendente y dependen de la hora y el lugar exactos de tu nacimiento.',
+    'Localiza el asunto que te importa (dinero → casa 2, pareja → casa 7, trabajo → casa 10) y mira '
+        'qué planetas caen ahí: son las fuerzas que gobiernan ese terreno en tu vida.',
+  ),
+  'casa_1': GlossaryEntry(
+    'Casa 1 · el Yo',
+    'La casa del Ascendente: tu cuerpo, tu aspecto, tu manera de entrar en cualquier sala. Cómo te ve '
+        'el mundo antes de que hables.',
+    'Trabajos de presencia, carisma, salud del cuerpo y comienzos personales. Planetas aquí se notan '
+        'en el temperamento a simple vista.',
+  ),
+  'casa_2': GlossaryEntry(
+    'Casa 2 · lo que sostiene',
+    'Tus recursos: dinero ganado, bienes, cuerpo como herramienta, y también lo que valoras y te da '
+        'seguridad.',
+    'Prosperidad, estabilidad material, autoestima. Es la casa de los talismanes de abundancia y de '
+        'todo lo que quieras que dure.',
+  ),
+  'casa_3': GlossaryEntry(
+    'Casa 3 · la palabra',
+    'Mente cotidiana, habla, escritura, aprendizaje corto, hermanos, vecinos y trayectos breves.',
+    'Estudio, elocuencia, pactos y comunicación. Casa mercurial por excelencia: aquí van los sigilos '
+        'de palabra y de mensaje.',
+  ),
+  'casa_4': GlossaryEntry(
+    'Casa 4 · la raíz',
+    'Hogar, familia de origen, ancestros, la tierra bajo tus pies y el final de las cosas.',
+    'Protección del hogar, trabajo ancestral, echar raíces. Todo rito de asentamiento y de linaje '
+        'pertenece aquí.',
+  ),
+  'casa_5': GlossaryEntry(
+    'Casa 5 · la creación',
+    'Lo que sale de ti por gusto: arte, juego, romance, hijos, riesgo y placer.',
+    'Creatividad, atracción amorosa, fertilidad y suerte. Casa solar: se trabaja para brillar y para '
+        'gozar, no para durar.',
+  ),
+  'casa_6': GlossaryEntry(
+    'Casa 6 · el oficio',
+    'Trabajo diario, rutinas, salud, servicio y disciplina. Lo que haces todos los días aunque no te '
+        'apetezca.',
+    'Salud, hábitos, limpieza y el trabajo como práctica. Aquí van los ritos de mantenimiento — los '
+        'que sostienen todo lo demás.',
+  ),
+  'casa_7': GlossaryEntry(
+    'Casa 7 · el otro',
+    'Pareja, socios, contratos y también enemigos declarados. Todo vínculo cara a cara.',
+    'Amor comprometido, alianzas, acuerdos y reconciliación. Es la casa opuesta a la 1: aquí se '
+        'trabaja el espejo, no el yo.',
+  ),
+  'casa_8': GlossaryEntry(
+    'Casa 8 · lo profundo',
+    'Muerte y renacimiento, sexo, crisis, herencias, deudas y recursos de otros. Lo que se transforma '
+        'sin permiso.',
+    'Necromancia, trabajo de sombra, transformación profunda y corte de lazos. Casa de umbral: pide '
+        'protección y limpieza antes y después.',
+  ),
+  'casa_9': GlossaryEntry(
+    'Casa 9 · la búsqueda',
+    'Filosofía, religión, estudios superiores, viajes largos y visión de largo alcance.',
+    'Iniciación, adivinación, peregrinación y estudio profundo. La casa natural del practicante que '
+        'busca la doctrina, no solo el efecto.',
+  ),
+  'casa_10': GlossaryEntry(
+    'Casa 10 · la cima',
+    'La casa del Medio Cielo: vocación, reputación, autoridad y tu obra pública.',
+    'Éxito visible, reconocimiento, ascenso. Trabajos solares y jupiterianos de carrera y de nombre.',
+  ),
+  'casa_11': GlossaryEntry(
+    'Casa 11 · la red',
+    'Amistades, comunidad, aliados, causas colectivas y esperanzas a futuro.',
+    'Favores, apoyo de grupo, encontrar a los tuyos. Casa buena para trabajos que necesitan más manos '
+        'que la tuya.',
+  ),
+  'casa_12': GlossaryEntry(
+    'Casa 12 · lo oculto',
+    'Lo invisible: inconsciente, sueños, encierro, enemigos secretos, retiro y disolución.',
+    'Trabajo onírico, retiro, destierro de lo que te mina sin que lo veas. También la casa de lo que '
+        'te sabotea: mírala antes de culpar a fuera.',
+  ),
 };
+
+/// Clave de glosario para una casa (1-12). Cae al genérico si el número no es válido.
+String houseGlossaryKey(int house) =>
+    (house >= 1 && house <= 12) ? 'casa_$house' : 'casa';
+
+/// Clave de glosario para un aspecto, desde la clave inglesa del backend
+/// ('sextile', 'trine'…). Cae al genérico si llega uno desconocido.
+String aspectGlossaryKey(String aspect) =>
+    const {
+      'conjunction': 'conjuncion',
+      'sextile': 'sextil',
+      'square': 'cuadratura',
+      'trine': 'trigono',
+      'opposition': 'oposicion',
+    }[aspect.toLowerCase()] ??
+    'aspecto';

@@ -9,15 +9,18 @@ import '../../shared/widgets/arcanum_surface.dart';
 /// Lore esotérico de un planeta clásico (correspondencias de Agrippa / Golden
 /// Dawn) para las hojas de detalle de la pantalla Hoy.
 class PlanetLore {
-  final String dia;
-  final String metal;
-  final String sephirah;
+  /// Nulos en los planetas modernos (Urano, Neptuno, Plutón) y en el Nodo:
+  /// no rigen día ni hora planetaria, ni tienen metal o sephirah asignados en
+  /// la tradición clásica. Inventárselos sería mentir sobre la fuente.
+  final String? dia;
+  final String? metal;
+  final String? sephirah;
   final String descripcion;
   final List<String> correspondencias;
   const PlanetLore({
-    required this.dia,
-    required this.metal,
-    required this.sephirah,
+    this.dia,
+    this.metal,
+    this.sephirah,
     required this.descripcion,
     required this.correspondencias,
   });
@@ -159,13 +162,85 @@ const Map<String, PlanetLore> planetLore = {
       'Favorece: límites, disciplina, destierro, estructura',
     ],
   ),
+
+  // ── Modernos y puntos calculados ─────────────────────────────────────────
+  // No son planetas tradicionales: no rigen día ni hora planetaria, y la
+  // tradición clásica (Agrippa, Golden Dawn) no les asigna metal ni sephirah.
+  // Aparecen en la carta natal, así que necesitan lore propio.
+  'uranus': PlanetLore(
+    descripcion:
+        'Urano es la ruptura: el rayo que parte la estructura que ya no sirve. '
+        'Descubierto en 1781, no pertenece a la tradición clásica — se le lee '
+        'como una octava superior de Mercurio, la mente que ya no razona sino '
+        'que ve de golpe.\n\n'
+        'Donde cae en tu carta, algo se niega a ser normal. Trae libertad, '
+        'genialidad e inestabilidad en la misma mano: lo que toca, lo despierta '
+        'y lo desordena a la vez.',
+    correspondencias: [
+      'Naturaleza: ruptura, rayo, despertar súbito',
+      'Signo: Acuario (regencia moderna)',
+      'Octava superior de: Mercurio',
+      'Favorece: liberación, invención, cortar con lo caduco',
+    ],
+  ),
+  'neptune': PlanetLore(
+    descripcion:
+        'Neptuno es la disolución: la niebla donde los contornos se pierden y '
+        'todo se vuelve uno. Descubierto en 1846, se lee como octava superior de '
+        'Venus — el amor que ya no elige un objeto, sino que se derrama.\n\n'
+        'Donde cae, hay inspiración y también engaño: es la casa de la visión '
+        'mística y la del autoengaño, y desde dentro no se distinguen. Rige el '
+        'sueño, la imagen, la compasión y toda huida.',
+    correspondencias: [
+      'Naturaleza: disolución, niebla, éxtasis',
+      'Signo: Piscis (regencia moderna)',
+      'Octava superior de: Venus',
+      'Favorece: trabajo onírico, visión, arte, compasión',
+    ],
+  ),
+  'pluto': PlanetLore(
+    descripcion:
+        'Plutón es la muerte y lo que viene después. Descubierto en 1930, se lee '
+        'como octava superior de Marte: ya no la espada que hiere, sino la fuerza '
+        'que descompone hasta la semilla.\n\n'
+        'Donde cae, nada se reforma — se destruye y se vuelve a nacer. Rige lo '
+        'enterrado, el poder, el tabú y aquello que solo se sana yendo al fondo. '
+        'Es lento y no negocia.',
+    correspondencias: [
+      'Naturaleza: muerte, renacimiento, poder subterráneo',
+      'Signo: Escorpio (regencia moderna)',
+      'Octava superior de: Marte',
+      'Favorece: transformación profunda, trabajo de sombra, corte de raíz',
+    ],
+  ),
+  'north_node': PlanetLore(
+    descripcion:
+        'El Nodo Norte no es un cuerpo celeste: es un punto matemático, uno de '
+        'los dos cruces entre la órbita de la Luna y la eclíptica. La tradición '
+        'lo llama Cabeza del Dragón (Caput Draconis).\n\n'
+        'Señala la dirección de crecimiento: lo que no traes hecho y te toca '
+        'aprender en esta vida. Su opuesto exacto, el Nodo Sur, es lo que ya '
+        'dominas — cómodo, y por eso mismo trampa.',
+    correspondencias: [
+      'Naturaleza: punto calculado, no planeta',
+      'Nombre tradicional: Caput Draconis · Cabeza del Dragón',
+      'Opuesto: Nodo Sur (lo ya dominado)',
+      'Favorece: dirección vital, propósito, salir de la zona cómoda',
+    ],
+  ),
 };
 
 /// Orden caldeo de los regentes de las horas planetarias (descendente por
 /// velocidad aparente). Cada hora sucesiva pertenece al siguiente de la lista,
 /// cíclicamente — así se calculan las próximas horas sin pedir nada al backend.
 const List<String> _chaldean = [
-  'saturn', 'jupiter', 'mars', 'sun', 'venus', 'mercury', 'moon',
+  'saturn',
+  'jupiter',
+  'mars',
+  'sun',
+  'venus',
+  'mercury',
+  'moon',
 ];
 
 /// Regentes de las [count] horas siguientes a [planet], en orden caldeo.
@@ -179,30 +254,56 @@ List<String> nextPlanetaryRulers(String planet, {int count = 3}) {
 
 void showPlanetLoreSheet(BuildContext context, String planetKey) {
   final lore = planetLore[planetKey];
-  if (lore == null) return;
+  if (lore == null) {
+    // Fail loud: un planeta de la carta sin lore es un hueco de contenido,
+    // no algo que deba tragarse en silencio.
+    assert(false, 'planetLore: sin entrada para "$planetKey"');
+    FlutterError.reportError(
+      FlutterErrorDetails(
+        exception: StateError('planetLore: sin entrada para "$planetKey"'),
+        library: 'arcanum lore',
+        context: ErrorDescription('abriendo la hoja de un planeta'),
+      ),
+    );
+    return;
+  }
   final name = planetEs[planetKey] ?? planetKey;
   final glyph = planetGlyph[planetKey] ?? '✶';
   final mood = ArcanumMood.forPlanet(planetKey);
+  // Los modernos y el Nodo no tienen día/metal: el subtítulo cae a su papel.
+  final subtitle = (lore.dia != null && lore.metal != null)
+      ? '${lore.dia} · ${lore.metal}'
+      : 'Punto de la carta natal';
 
   _sheet(
     context,
     mood: mood,
     glyph: glyph,
     title: name,
-    subtitle: '${lore.dia} · ${lore.metal}',
+    subtitle: subtitle,
     body: (scroll) => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _row('DÍA', lore.dia),
+        if (lore.dia != null) ...[
+          _row('DÍA', lore.dia!),
+          const SizedBox(height: 10),
+        ],
+        if (lore.metal != null) ...[
+          _row('METAL', lore.metal!),
+          const SizedBox(height: 10),
+        ],
+        if (lore.sephirah != null) ...[
+          _row('SEPHIRAH', lore.sephirah!),
+          const SizedBox(height: 14),
+        ],
         const SizedBox(height: 10),
-        _row('METAL', lore.metal),
-        const SizedBox(height: 10),
-        _row('SEPHIRAH', lore.sephirah),
-        const SizedBox(height: 24),
         Text('NATURALEZA', style: ArcanumText.label()),
         const SizedBox(height: 10),
-        Text(lore.descripcion,
-            style: ArcanumText.body(16), textAlign: TextAlign.justify),
+        Text(
+          lore.descripcion,
+          style: ArcanumText.body(16),
+          textAlign: TextAlign.justify,
+        ),
         const SizedBox(height: 24),
         Text('CORRESPONDENCIAS', style: ArcanumText.label()),
         const SizedBox(height: 10),
@@ -214,8 +315,12 @@ void showPlanetLoreSheet(BuildContext context, String planetKey) {
 
 // ── Hoja: la hora planetaria vigente + las próximas ───────────────────────
 
-void showPlanetaryHourSheet(BuildContext context, String planetKey,
-    {required bool isDay, required int minutesRemaining}) {
+void showPlanetaryHourSheet(
+  BuildContext context,
+  String planetKey, {
+  required bool isDay,
+  required int minutesRemaining,
+}) {
   final name = planetEs[planetKey] ?? planetKey;
   final glyph = planetGlyph[planetKey] ?? '✶';
   final mood = ArcanumMood.forPlanet(planetKey);
@@ -234,16 +339,19 @@ void showPlanetaryHourSheet(BuildContext context, String planetKey,
       children: [
         Text('AHORA FAVORECE', style: ArcanumText.label()),
         const SizedBox(height: 8),
-        Text(favors,
-            style: ArcanumText.body(17, color: mood.accent),
-            textAlign: TextAlign.start),
+        Text(
+          favors,
+          style: ArcanumText.body(17, color: mood.accent),
+          textAlign: TextAlign.start,
+        ),
         const SizedBox(height: 20),
         Text(
-            'Cada hora del día mágico pertenece a un planeta. Al terminar esta, '
-            'el cielo pasa el cetro al siguiente regente en el orden antiguo — '
-            'y con él cambia lo que la hora favorece.',
-            style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
-            textAlign: TextAlign.justify),
+          'Cada hora del día mágico pertenece a un planeta. Al terminar esta, '
+          'el cielo pasa el cetro al siguiente regente en el orden antiguo — '
+          'y con él cambia lo que la hora favorece.',
+          style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
+          textAlign: TextAlign.justify,
+        ),
         const SizedBox(height: 24),
         Text('LAS PRÓXIMAS HORAS', style: ArcanumText.label()),
         const SizedBox(height: 12),
@@ -272,18 +380,24 @@ Widget _hourRow(String planetKey) {
             color: m.glow.withValues(alpha: 0.12),
             border: Border.all(color: m.accent.withValues(alpha: 0.35)),
           ),
-          child: Text(glyph,
-              style: TextStyle(fontSize: 20, color: m.accent, height: 1)),
+          child: Text(
+            glyph,
+            style: TextStyle(fontSize: 20, color: m.accent, height: 1),
+          ),
         ),
         const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(name,
-                  style: ArcanumText.heading(19, color: ArcanumColors.ivory)),
-              Text(favors,
-                  style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted)),
+              Text(
+                name,
+                style: ArcanumText.heading(19, color: ArcanumColors.ivory),
+              ),
+              Text(
+                favors,
+                style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
+              ),
             ],
           ),
         ),
@@ -294,18 +408,20 @@ Widget _hourRow(String planetKey) {
 
 // ── Hoja: la fase de la Luna ───────────────────────────────────────────────
 
-void showMoonPhaseSheet(BuildContext context,
-    {required String phaseName,
-    required double illumination,
-    required bool waxing,
-    double? ageDays}) {
+void showMoonPhaseSheet(
+  BuildContext context, {
+  required String phaseName,
+  required double illumination,
+  required bool waxing,
+  double? ageDays,
+}) {
   final mood = ArcanumMood.moon;
   final favors = waxing
       ? 'atraer, crecer, edificar, invocar. La Luna que crece suma fuerza a '
-          'todo lo que quieres que aumente: prosperidad, amor, salud, proyectos '
-          'nuevos.'
+            'todo lo que quieres que aumente: prosperidad, amor, salud, proyectos '
+            'nuevos.'
       : 'desterrar, disolver, cerrar, soltar. La Luna que mengua retira y '
-          'limpia: rompe ataduras, aleja lo dañino, termina lo que debe acabar.';
+            'limpia: rompe ataduras, aleja lo dañino, termina lo que debe acabar.';
   final pct = (illumination * 100).round();
 
   _sheet(
@@ -326,15 +442,18 @@ void showMoonPhaseSheet(BuildContext context,
         const SizedBox(height: 24),
         Text('QUÉ FAVORECE', style: ArcanumText.label()),
         const SizedBox(height: 10),
-        Text(favors,
-            style: ArcanumText.body(16), textAlign: TextAlign.justify),
+        Text(favors, style: ArcanumText.body(16), textAlign: TextAlign.justify),
         const SizedBox(height: 20),
         Text(
-            'La Luna es el reloj de la magia sublunar: rige las mareas del alma, '
-            'los sueños y las aguas. Trabaja con su marcha, no contra ella.',
-            style: ArcanumText.body(15,
-                color: ArcanumColors.ivoryMuted, italic: true),
-            textAlign: TextAlign.justify),
+          'La Luna es el reloj de la magia sublunar: rige las mareas del alma, '
+          'los sueños y las aguas. Trabaja con su marcha, no contra ella.',
+          style: ArcanumText.body(
+            15,
+            color: ArcanumColors.ivoryMuted,
+            italic: true,
+          ),
+          textAlign: TextAlign.justify,
+        ),
       ],
     ),
   );
@@ -383,18 +502,30 @@ void _sheet(
                 const SizedBox(height: 20),
                 Row(
                   children: [
-                    Text(glyph, style: TextStyle(fontSize: 44, color: mood.accent)),
+                    Text(
+                      glyph,
+                      style: TextStyle(fontSize: 44, color: mood.accent),
+                    ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(title,
-                              style: ArcanumText.heading(32,
-                                  color: ArcanumColors.gold)),
-                          Text(subtitle,
-                              style: ArcanumText.body(15,
-                                  color: ArcanumColors.ivoryMuted, italic: true)),
+                          Text(
+                            title,
+                            style: ArcanumText.heading(
+                              32,
+                              color: ArcanumColors.gold,
+                            ),
+                          ),
+                          Text(
+                            subtitle,
+                            style: ArcanumText.body(
+                              15,
+                              color: ArcanumColors.ivoryMuted,
+                              italic: true,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -412,25 +543,29 @@ void _sheet(
 }
 
 Widget _row(String label, String value) => Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(width: 110, child: Text(label, style: ArcanumText.label())),
-        Expanded(
-          child: Text(value,
-              style: ArcanumText.body(16, color: ArcanumColors.ivory)),
-        ),
-      ],
-    );
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    SizedBox(width: 110, child: Text(label, style: ArcanumText.label())),
+    Expanded(
+      child: Text(
+        value,
+        style: ArcanumText.body(16, color: ArcanumColors.ivory),
+      ),
+    ),
+  ],
+);
 
 List<Widget> _bullets(List<String> items, ArcanumMood mood) => items
-    .map((c) => Padding(
-          padding: const EdgeInsets.only(bottom: 6),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('·  ', style: TextStyle(color: mood.accent, fontSize: 18)),
-              Expanded(child: Text(c, style: ArcanumText.body(15))),
-            ],
-          ),
-        ))
+    .map(
+      (c) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('·  ', style: TextStyle(color: mood.accent, fontSize: 18)),
+            Expanded(child: Text(c, style: ArcanumText.body(15))),
+          ],
+        ),
+      ),
+    )
     .toList();
