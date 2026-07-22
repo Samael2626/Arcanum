@@ -10,8 +10,7 @@ import '../../application/onboarding_controller.dart';
 class BirthDateStep extends ConsumerStatefulWidget {
   final VoidCallback onNext;
   final VoidCallback onBack;
-  const BirthDateStep(
-      {super.key, required this.onNext, required this.onBack});
+  const BirthDateStep({super.key, required this.onNext, required this.onBack});
 
   @override
   ConsumerState<BirthDateStep> createState() => _BirthDateStepState();
@@ -70,12 +69,12 @@ class _BirthDateStepState extends ConsumerState<BirthDateStep> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 24),
-          Text('Fecha de nacimiento',
-              style: ArcanumText.heading(24)),
+          Text('Fecha de nacimiento', style: ArcanumText.heading(24)),
           const SizedBox(height: 12),
-          Text('Los astros requieren precisión.',
-              style: ArcanumText.body(15,
-                  color: ArcanumColors.ivoryMuted)),
+          Text(
+            'Los astros requieren precisión.',
+            style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
+          ),
           const SizedBox(height: 28),
           ArcanumField(
             controller: _ctrl,
@@ -84,22 +83,30 @@ class _BirthDateStepState extends ConsumerState<BirthDateStep> {
             onTap: _pick,
           ),
           const SizedBox(height: 28),
-          Row(children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: widget.onBack,
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: ArcanumColors.ivoryMuted),
-                  padding: const EdgeInsets.symmetric(vertical: 18),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: widget.onBack,
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: ArcanumColors.ivoryMuted),
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                  ),
+                  child: Text(
+                    'Atrás',
+                    style: ArcanumText.heading(
+                      18,
+                      color: ArcanumColors.ivoryMuted,
+                    ),
+                  ),
                 ),
-                child: Text('Atrás',
-                    style: ArcanumText.heading(18,
-                        color: ArcanumColors.ivoryMuted)),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(child: GoldButton(label: 'Siguiente', onPressed: _continuar)),
-          ]),
+              const SizedBox(width: 16),
+              Expanded(
+                child: GoldButton(label: 'Siguiente', onPressed: _continuar),
+              ),
+            ],
+          ),
         ],
       ),
     );

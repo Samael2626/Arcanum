@@ -58,61 +58,68 @@ class _FramePainter extends CustomPainter {
     final unit = w * 0.010; // grosor base relativo al ancho
 
     RRect inset(double px, double rf) => RRect.fromRectAndRadius(
-        Rect.fromLTWH(px, px, w - px * 2, h - px * 2),
-        Radius.circular(radius * rf));
+      Rect.fromLTWH(px, px, w - px * 2, h - px * 2),
+      Radius.circular(radius * rf),
+    );
 
     final o = w * 0.035; // filete exterior
     final outer = inset(o, 0.9);
 
     // Inner-glow del filete exterior.
     canvas.drawRRect(
-        outer,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = unit * 1.3
-          ..color = gold.withValues(alpha: 0.26)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
+      outer,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = unit * 1.3
+        ..color = gold.withValues(alpha: 0.26)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+    );
     // Bisel: highlight desplazado arriba-izquierda.
     canvas.save();
     canvas.translate(-w * 0.003, -h * 0.002);
     canvas.drawRRect(
-        outer,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = unit * 0.6
-          ..color = const Color(0xFFF0DFA0).withValues(alpha: 0.5));
+      outer,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = unit * 0.6
+        ..color = const Color(0xFFF0DFA0).withValues(alpha: 0.5),
+    );
     canvas.restore();
     // Bisel: sombra desplazada abajo-derecha.
     canvas.save();
     canvas.translate(w * 0.003, h * 0.002);
     canvas.drawRRect(
-        outer,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = unit * 0.6
-          ..color = Colors.black.withValues(alpha: 0.32));
+      outer,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = unit * 0.6
+        ..color = Colors.black.withValues(alpha: 0.32),
+    );
     canvas.restore();
     // Filete exterior maestro.
     canvas.drawRRect(
-        outer,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = unit
-          ..color = gold.withValues(alpha: 0.70));
+      outer,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = unit
+        ..color = gold.withValues(alpha: 0.70),
+    );
     // Hilo intermedio tenue.
     canvas.drawRRect(
-        inset(o + unit * 1.6, 0.78),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = unit * 0.4
-          ..color = ArcanumColors.goldMuted.withValues(alpha: 0.5));
+      inset(o + unit * 1.6, 0.78),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = unit * 0.4
+        ..color = ArcanumColors.goldMuted.withValues(alpha: 0.5),
+    );
     // Filete interior tintado del humor.
     canvas.drawRRect(
-        inset(o + unit * 3.4, 0.62),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = unit * 0.6
-          ..color = accent.withValues(alpha: 0.42));
+      inset(o + unit * 3.4, 0.62),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = unit * 0.6
+        ..color = accent.withValues(alpha: 0.42),
+    );
 
     if (corners) _paintCorners(canvas, size, gold);
   }
@@ -138,12 +145,17 @@ class _FramePainter extends CustomPainter {
     for (final c in cs) {
       final x = c[0], y = c[1], sx = c[2], sy = c[3];
       canvas.drawPath(
-          Path()
-            ..moveTo(x + sx * len, y)
-            ..lineTo(x, y)
-            ..lineTo(x, y + sy * len),
-          p);
-      canvas.drawCircle(Offset(x + sx * len * 0.5, y + sy * len * 0.5), w * 0.008, dot);
+        Path()
+          ..moveTo(x + sx * len, y)
+          ..lineTo(x, y)
+          ..lineTo(x, y + sy * len),
+        p,
+      );
+      canvas.drawCircle(
+        Offset(x + sx * len * 0.5, y + sy * len * 0.5),
+        w * 0.008,
+        dot,
+      );
     }
   }
 

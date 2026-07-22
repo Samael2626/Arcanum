@@ -9,18 +9,19 @@ class MoonDisc extends StatelessWidget {
   final double illumination;
   final bool waxing;
   final double size;
-  const MoonDisc(
-      {super.key,
-      required this.illumination,
-      required this.waxing,
-      this.size = 84});
+  const MoonDisc({
+    super.key,
+    required this.illumination,
+    required this.waxing,
+    this.size = 84,
+  });
 
   @override
   Widget build(BuildContext context) => SizedBox(
-        width: size,
-        height: size,
-        child: CustomPaint(painter: _MoonPainter(illumination, waxing)),
-      );
+    width: size,
+    height: size,
+    child: CustomPaint(painter: _MoonPainter(illumination, waxing)),
+  );
 }
 
 class _MoonPainter extends CustomPainter {
@@ -39,7 +40,8 @@ class _MoonPainter extends CustomPainter {
     final f = illum.clamp(0.0, 1.0);
     if (f > 0.005) {
       final lit = Paint()..color = ArcanumColors.ivory.withValues(alpha: 0.92);
-      final base = Path()..addArc(rect, waxing ? -math.pi / 2 : math.pi / 2, math.pi);
+      final base = Path()
+        ..addArc(rect, waxing ? -math.pi / 2 : math.pi / 2, math.pi);
       final tb = r * (1 - 2 * f).abs();
       final term = Path()
         ..addOval(Rect.fromCenter(center: c, width: tb * 2, height: r * 2));
@@ -50,14 +52,16 @@ class _MoonPainter extends CustomPainter {
     }
 
     canvas.drawCircle(
-        c,
-        r,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5
-          ..color = ArcanumColors.goldMuted);
+      c,
+      r,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = ArcanumColors.goldMuted,
+    );
   }
 
   @override
-  bool shouldRepaint(_MoonPainter old) => old.illum != illum || old.waxing != waxing;
+  bool shouldRepaint(_MoonPainter old) =>
+      old.illum != illum || old.waxing != waxing;
 }

@@ -34,7 +34,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = null;
     });
     try {
-      await ref.read(authProvider.notifier).login(_email.text.trim(), _password.text);
+      await ref
+          .read(authProvider.notifier)
+          .login(_email.text.trim(), _password.text);
       if (mounted) context.go('/cielos');
     } catch (e) {
       setState(() => _error = e.toString());
@@ -63,20 +65,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               children: [
                 const ArcanumHeader(subtitle: 'Cruza el umbral'),
                 const SizedBox(height: 32),
-                ArcanumField(controller: _email, label: 'Correo', keyboardType: TextInputType.emailAddress),
+                ArcanumField(
+                  controller: _email,
+                  label: 'Correo',
+                  keyboardType: TextInputType.emailAddress,
+                ),
                 const SizedBox(height: 18),
-                ArcanumField(controller: _password, label: 'Contraseña', obscure: true),
+                ArcanumField(
+                  controller: _password,
+                  label: 'Contraseña',
+                  obscure: true,
+                ),
                 if (_error != null) ...[
                   const SizedBox(height: 16),
-                  Text(_error!, style: ArcanumText.body(14, color: ArcanumColors.error)),
+                  Text(
+                    _error!,
+                    style: ArcanumText.body(14, color: ArcanumColors.error),
+                  ),
                 ],
                 const SizedBox(height: 28),
-                GoldButton(label: 'Entrar', loading: _loading, onPressed: _submit),
+                GoldButton(
+                  label: 'Entrar',
+                  loading: _loading,
+                  onPressed: _submit,
+                ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => context.go('/register'),
-                  child: Text('¿Aún no tienes cuenta? Regístrate',
-                      style: ArcanumText.body(14, color: ArcanumColors.gold)),
+                  child: Text(
+                    '¿Aún no tienes cuenta? Regístrate',
+                    style: ArcanumText.body(14, color: ArcanumColors.gold),
+                  ),
                 ),
               ],
             ),

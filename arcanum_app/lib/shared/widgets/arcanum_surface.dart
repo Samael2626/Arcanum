@@ -81,57 +81,63 @@ class _SurfacePainter extends CustomPainter {
 
     // 1 · Atmósfera base: radial core→edge desde la luz.
     canvas.drawRect(
-        bounds,
-        Paint()
-          ..shader = RadialGradient(
-            center: Alignment((cx / w) * 2 - 1, (cy / h) * 2 - 1),
-            radius: 1.05,
-            colors: [
-              Color.lerp(mood.edge, mood.core, intensity)!,
-              mood.edge,
-            ],
-          ).createShader(bounds));
+      bounds,
+      Paint()
+        ..shader = RadialGradient(
+          center: Alignment((cx / w) * 2 - 1, (cy / h) * 2 - 1),
+          radius: 1.05,
+          colors: [Color.lerp(mood.edge, mood.core, intensity)!, mood.edge],
+        ).createShader(bounds),
+    );
 
     // 2 · Fuga de luz asimétrica (esquina superior-izquierda).
     canvas.drawRect(
-        bounds,
-        Paint()
-          ..shader = RadialGradient(
-            center: const Alignment(-0.55, -0.8),
-            radius: 1.2,
-            colors: [
-              mood.accent.withValues(alpha: 0.12 * intensity),
-              Colors.transparent,
-            ],
-            stops: const [0.0, 0.62],
-          ).createShader(bounds));
+      bounds,
+      Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(-0.55, -0.8),
+          radius: 1.2,
+          colors: [
+            mood.accent.withValues(alpha: 0.12 * intensity),
+            Colors.transparent,
+          ],
+          stops: const [0.0, 0.62],
+        ).createShader(bounds),
+    );
 
     // 3 · Bloom del elemento/planeta en el foco.
     final bloomR = w * 0.72;
     canvas.drawRect(
-        bounds,
-        Paint()
-          ..shader = RadialGradient(
-            colors: [
-              mood.glow.withValues(alpha: 0.30 * intensity),
-              mood.glow.withValues(alpha: 0.10 * intensity),
-              Colors.transparent,
-            ],
-            stops: const [0.0, 0.45, 1.0],
-          ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: bloomR)));
+      bounds,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            mood.glow.withValues(alpha: 0.30 * intensity),
+            mood.glow.withValues(alpha: 0.10 * intensity),
+            Colors.transparent,
+          ],
+          stops: const [0.0, 0.45, 1.0],
+        ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: bloomR)),
+    );
 
     // 4 · Grano de material (motas deterministas claro/oscuro).
     if (grain) _paintGrain(canvas, size);
 
     // 5 · Viñeta de profundidad: sólo el borde exterior cae a sombra.
     canvas.drawRect(
-        bounds,
-        Paint()
-          ..shader = RadialGradient(
-            colors: const [Colors.transparent, Color(0x5C000000)],
-            stops: const [0.60, 1.0],
-          ).createShader(Rect.fromCircle(
-              center: Offset(w * 0.5, h * 0.5), radius: h * 0.74)));
+      bounds,
+      Paint()
+        ..shader =
+            RadialGradient(
+              colors: const [Colors.transparent, Color(0x5C000000)],
+              stops: const [0.60, 1.0],
+            ).createShader(
+              Rect.fromCircle(
+                center: Offset(w * 0.5, h * 0.5),
+                radius: h * 0.74,
+              ),
+            ),
+    );
   }
 
   void _paintGrain(Canvas canvas, Size size) {
@@ -148,10 +154,14 @@ class _SurfacePainter extends CustomPainter {
     for (var i = 0; i < n; i++) {
       final px = rnd() * w, py = rnd() * h, br = rnd();
       if (br > 0.5) {
-        light.color = const Color(0xFFFFF0D6).withValues(alpha: 0.018 * br * intensity);
+        light.color = const Color(
+          0xFFFFF0D6,
+        ).withValues(alpha: 0.018 * br * intensity);
         canvas.drawRect(Rect.fromLTWH(px, py, 1, 1), light);
       } else {
-        dark.color = Colors.black.withValues(alpha: 0.030 * (1 - br) * intensity);
+        dark.color = Colors.black.withValues(
+          alpha: 0.030 * (1 - br) * intensity,
+        );
         canvas.drawRect(Rect.fromLTWH(px, py, 1, 1), dark);
       }
     }

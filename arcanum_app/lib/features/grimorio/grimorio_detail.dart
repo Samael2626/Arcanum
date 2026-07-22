@@ -92,7 +92,11 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
       try {
         await _api.grimoireDelete(widget.id);
         if (mounted) Navigator.pop(context, true);
-      } catch (_) {
+      } catch (error) {
+        // El usuario ve un mensaje amable, pero la causa real no se pierde:
+        // sin esto, un borrado que falla siempre sería indistinguible de uno
+        // que falla por red.
+        debugPrint('ARCANUM grimorio: fallo al borrar la entrada ($error).');
         if (!mounted) return;
         setState(() => _deleting = false);
         ScaffoldMessenger.of(context).showSnackBar(

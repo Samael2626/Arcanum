@@ -1,0 +1,88 @@
+name: CI
+
+# Hace real la regla "nunca commitear con tests rojos": hasta ahora los 79
+# tests de Flutter y los 32 del backend solo corrían si alguien se acordaba.
+on:
+  push:
+    branches: [main, master, develop, 'feat/**', 'fix/**']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  # Un push nuevo cancela el run anterior de la misma rama.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: Flutter (arcanum_app)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: arcanum_app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Dependencias
+        run: flutter pub get
+
+      - name: Formato
+        # --set-exit-if-changed: el formato se verifica, no se corrige en CI.
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Análisis estático
+        run: flutter analyze
+
+      - name: Tests
+        run: flutter test
+
+  api:
+    name: Backend (arcanum-api)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: arcanum-api
+
+    services:
+      # Los tests de integración necesitan PostgreSQL de verdad: los modelos
+      # usan UUID, JSONB, ARRAY y gen_random_uuid(), que SQLite no crea.
+      # Sin esta BD se saltarían (ver tests/conftest.py) y no probaríamos nada.
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgrespassword
+          POSTGRES_DB: arcanum_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Tests unitarios
+        run: pytest tests_unit -q
+
+      - name: Tests de integración
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/arcanum_test
+          SECRET_KEY: ci-only-not-a-real-secret
+        run: pytest tests -q

@@ -106,12 +106,17 @@ class _PlaceStepState extends ConsumerState<PlaceStep> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('¿Es este tu lugar de nacimiento?',
-                  textAlign: TextAlign.center, style: ArcanumText.heading(20)),
+              Text(
+                '¿Es este tu lugar de nacimiento?',
+                textAlign: TextAlign.center,
+                style: ArcanumText.heading(20),
+              ),
               const SizedBox(height: 16),
-              Text(displayName,
-                  textAlign: TextAlign.center,
-                  style: ArcanumText.body(17, color: ArcanumColors.gold)),
+              Text(
+                displayName,
+                textAlign: TextAlign.center,
+                style: ArcanumText.body(17, color: ArcanumColors.gold),
+              ),
               const SizedBox(height: 12),
               Text(
                 'Tu Ascendente, casas y Luna se calculan a partir de estas '
@@ -120,27 +125,33 @@ class _PlaceStepState extends ConsumerState<PlaceStep> {
                 style: ArcanumText.body(13, color: ArcanumColors.ivoryMuted),
               ),
               const SizedBox(height: 24),
-              Row(children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.of(ctx).pop(false),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: ArcanumColors.ivoryMuted),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(ctx).pop(false),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: ArcanumColors.ivoryMuted),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: Text(
+                        'Corregir',
+                        style: ArcanumText.body(
+                          15,
+                          color: ArcanumColors.ivoryMuted,
+                        ),
+                      ),
                     ),
-                    child: Text('Corregir',
-                        style:
-                            ArcanumText.body(15, color: ArcanumColors.ivoryMuted)),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: GoldButton(
-                    label: 'Confirmar',
-                    onPressed: () => Navigator.of(ctx).pop(true),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GoldButton(
+                      label: 'Confirmar',
+                      onPressed: () => Navigator.of(ctx).pop(true),
+                    ),
                   ),
-                ),
-              ]),
+                ],
+              ),
             ],
           ),
         ),
@@ -154,8 +165,9 @@ class _PlaceStepState extends ConsumerState<PlaceStep> {
   String _geoErrorMessage(Object e) {
     if (e is DioException) {
       final data = e.response?.data;
-      final detail =
-          (data is Map && data['detail'] is String) ? data['detail'] as String : null;
+      final detail = (data is Map && data['detail'] is String)
+          ? data['detail'] as String
+          : null;
       if (e.response?.statusCode == 429) {
         return detail ?? 'Demasiados intentos. Probá de nuevo en un momento.';
       }
@@ -185,30 +197,40 @@ class _PlaceStepState extends ConsumerState<PlaceStep> {
           ArcanumField(controller: _cityCtrl, label: 'Ciudad'),
           if (_error != null) ...[
             const SizedBox(height: 16),
-            Text(_error!, style: ArcanumText.body(14, color: ArcanumColors.error)),
+            Text(
+              _error!,
+              style: ArcanumText.body(14, color: ArcanumColors.error),
+            ),
           ],
           const SizedBox(height: 28),
-          Row(children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: _resolving ? null : widget.onBack,
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: ArcanumColors.ivoryMuted),
-                  padding: const EdgeInsets.symmetric(vertical: 18),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _resolving ? null : widget.onBack,
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: ArcanumColors.ivoryMuted),
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                  ),
+                  child: Text(
+                    'Atrás',
+                    style: ArcanumText.heading(
+                      18,
+                      color: ArcanumColors.ivoryMuted,
+                    ),
+                  ),
                 ),
-                child: Text('Atrás',
-                    style: ArcanumText.heading(18, color: ArcanumColors.ivoryMuted)),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: GoldButton(
-                label: 'Finalizar',
-                loading: _resolving,
-                onPressed: _resolveAndConfirm,
+              const SizedBox(width: 16),
+              Expanded(
+                child: GoldButton(
+                  label: 'Finalizar',
+                  loading: _resolving,
+                  onPressed: _resolveAndConfirm,
+                ),
               ),
-            ),
-          ]),
+            ],
+          ),
         ],
       ),
     );

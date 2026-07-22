@@ -24,8 +24,18 @@ class SignLore {
 
 /// Orden zodiacal canónico (para galerías y recorridos por índice).
 const List<String> zodiacOrder = [
-  'aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo',
-  'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces',
+  'aries',
+  'taurus',
+  'gemini',
+  'cancer',
+  'leo',
+  'virgo',
+  'libra',
+  'scorpio',
+  'sagittarius',
+  'capricorn',
+  'aquarius',
+  'pisces',
 ];
 
 const Map<String, SignLore> signLore = {
@@ -354,7 +364,20 @@ const Map<String, SignLore> signLore = {
 /// elemento (Fuego/Tierra/Aire/Agua). Reutilizable desde la rueda y la galería.
 void showSignLoreSheet(BuildContext context, String signKey) {
   final lore = signLore[signKey];
-  if (lore == null) return;
+  if (lore == null) {
+    // Fail loud: un signo de la carta sin lore es un hueco de contenido, no
+    // algo que deba tragarse. En silencio, el usuario solo ve que tocar no
+    // hace nada. Equivale al guard de showPlanetLoreSheet.
+    assert(false, 'signLore: sin entrada para "$signKey"');
+    FlutterError.reportError(
+      FlutterErrorDetails(
+        exception: StateError('signLore: sin entrada para "$signKey"'),
+        library: 'arcanum lore',
+        context: ErrorDescription('abriendo la hoja de un signo'),
+      ),
+    );
+    return;
+  }
   final signName = signEs[signKey] ?? signKey;
   final glyph = signGlyph[signKey] ?? '✶';
   final mood = ArcanumMood.forElement(lore.elemento);
@@ -392,20 +415,30 @@ void showSignLoreSheet(BuildContext context, String signKey) {
                 const SizedBox(height: 20),
                 Row(
                   children: [
-                    Text(glyph,
-                        style: TextStyle(fontSize: 44, color: mood.accent)),
+                    Text(
+                      glyph,
+                      style: TextStyle(fontSize: 44, color: mood.accent),
+                    ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(signName,
-                              style: ArcanumText.heading(32,
-                                  color: ArcanumColors.gold)),
-                          Text('${lore.elemento} · regido por ${lore.regente}',
-                              style: ArcanumText.body(15,
-                                  color: ArcanumColors.ivoryMuted,
-                                  italic: true)),
+                          Text(
+                            signName,
+                            style: ArcanumText.heading(
+                              32,
+                              color: ArcanumColors.gold,
+                            ),
+                          ),
+                          Text(
+                            '${lore.elemento} · regido por ${lore.regente}',
+                            style: ArcanumText.body(
+                              15,
+                              color: ArcanumColors.ivoryMuted,
+                              italic: true,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -420,24 +453,29 @@ void showSignLoreSheet(BuildContext context, String signKey) {
                 const SizedBox(height: 24),
                 Text('NATURALEZA', style: ArcanumText.label()),
                 const SizedBox(height: 10),
-                Text(lore.descripcion,
-                    style: ArcanumText.body(16), textAlign: TextAlign.justify),
+                Text(
+                  lore.descripcion,
+                  style: ArcanumText.body(16),
+                  textAlign: TextAlign.justify,
+                ),
                 const SizedBox(height: 24),
                 Text('CORRESPONDENCIAS', style: ArcanumText.label()),
                 const SizedBox(height: 10),
-                ...lore.correspondencias.map((c) => Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('·  ',
-                              style: TextStyle(
-                                  color: mood.accent, fontSize: 18)),
-                          Expanded(
-                              child: Text(c, style: ArcanumText.body(15))),
-                        ],
-                      ),
-                    )),
+                ...lore.correspondencias.map(
+                  (c) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '·  ',
+                          style: TextStyle(color: mood.accent, fontSize: 18),
+                        ),
+                        Expanded(child: Text(c, style: ArcanumText.body(15))),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -448,12 +486,14 @@ void showSignLoreSheet(BuildContext context, String signKey) {
 }
 
 Widget _loreRow(String label, String value) => Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(width: 110, child: Text(label, style: ArcanumText.label())),
-        Expanded(
-          child: Text(value,
-              style: ArcanumText.body(16, color: ArcanumColors.ivory)),
-        ),
-      ],
-    );
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    SizedBox(width: 110, child: Text(label, style: ArcanumText.label())),
+    Expanded(
+      child: Text(
+        value,
+        style: ArcanumText.body(16, color: ArcanumColors.ivory),
+      ),
+    ),
+  ],
+);

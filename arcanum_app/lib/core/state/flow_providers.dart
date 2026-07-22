@@ -9,8 +9,9 @@ class MateriaPlanet extends Notifier<String?> {
   void set(String? planet) => state = planet;
 }
 
-final materiaPlanetProvider =
-    NotifierProvider<MateriaPlanet, String?>(MateriaPlanet.new);
+final materiaPlanetProvider = NotifierProvider<MateriaPlanet, String?>(
+  MateriaPlanet.new,
+);
 
 /// Señal para abrir el editor del grimorio al entrar (Hoy/Arte → Grimorio).
 class GrimoireCompose extends Notifier<bool> {
@@ -19,5 +20,6 @@ class GrimoireCompose extends Notifier<bool> {
   void set(bool value) => state = value;
 }
 
-final grimoireComposeProvider =
-    NotifierProvider<GrimoireCompose, bool>(GrimoireCompose.new);
+final grimoireComposeProvider = NotifierProvider<GrimoireCompose, bool>(
+  GrimoireCompose.new,
+);

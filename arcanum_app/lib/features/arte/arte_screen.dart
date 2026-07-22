@@ -397,10 +397,7 @@ class _MateriaCard extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color.lerp(mood.edge, mood.core, 0.30)!,
-                mood.edge,
-              ],
+              colors: [Color.lerp(mood.edge, mood.core, 0.30)!, mood.edge],
             ),
             boxShadow: const [
               BoxShadow(
@@ -459,10 +456,7 @@ class _MateriaCard extends StatelessWidget {
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: ArcanumText.heading(
-                        20,
-                        color: ArcanumColors.gold,
-                      ),
+                      style: ArcanumText.heading(20, color: ArcanumColors.gold),
                     ),
                     const SizedBox(height: 3),
                     Text(

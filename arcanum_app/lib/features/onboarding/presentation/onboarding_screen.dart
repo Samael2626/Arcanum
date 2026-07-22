@@ -24,16 +24,30 @@ class OnboardingScreen extends ConsumerWidget {
           ? () async {
               try {
                 await notifier.finish();
-              } catch (_) {
+              } catch (error, stackTrace) {
                 // Defensa última: PlaceStep ya exige resolver+confirmar el
                 // lugar antes de llegar aquí. Si igual falla, no navegamos
                 // con datos a medias — el usuario se queda en el paso actual.
+                // El fallo de red al persistir NO llega aquí: finish() lo
+                // captura y deja el perfil pendiente de reintento.
+                FlutterError.reportError(
+                  FlutterErrorDetails(
+                    exception: error,
+                    stack: stackTrace,
+                    library: 'arcanum onboarding',
+                    context: ErrorDescription('finalizando el onboarding'),
+                    silent: true,
+                  ),
+                );
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text(
-                        'Falta confirmar tu lugar de nacimiento. Volvé a intentarlo.'),
-                    backgroundColor: ArcanumColors.error,
-                  ));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Falta confirmar tu lugar de nacimiento. Inténtalo de nuevo.',
+                      ),
+                      backgroundColor: ArcanumColors.error,
+                    ),
+                  );
                 }
                 return;
               }
@@ -58,8 +72,10 @@ class OnboardingScreen extends ConsumerWidget {
         leading: state.isFirst
             ? null
             : IconButton(
-                icon: const Icon(Icons.arrow_back,
-                    color: ArcanumColors.ivoryMuted),
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: ArcanumColors.ivoryMuted,
+                ),
                 onPressed: notifier.back,
               ),
       ),

@@ -60,7 +60,8 @@ class ArcanumCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: br,
         border: Border.all(
-            color: (mood?.accent ?? ArcanumColors.gold).withValues(alpha: 0.30)),
+          color: (mood?.accent ?? ArcanumColors.gold).withValues(alpha: 0.30),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.35),
@@ -97,22 +98,28 @@ class Ornament extends StatelessWidget {
   const Ornament({super.key});
   @override
   Widget build(BuildContext context) => Row(
-        children: [
-          Expanded(
-              child: Container(
-                  height: 1,
-                  color: ArcanumColors.goldMuted.withValues(alpha: 0.5))),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 12),
-            child:
-                Text('✧', style: TextStyle(color: ArcanumColors.gold, fontSize: 16)),
-          ),
-          Expanded(
-              child: Container(
-                  height: 1,
-                  color: ArcanumColors.goldMuted.withValues(alpha: 0.5))),
-        ],
-      );
+    children: [
+      Expanded(
+        child: Container(
+          height: 1,
+          color: ArcanumColors.goldMuted.withValues(alpha: 0.5),
+        ),
+      ),
+      const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 12),
+        child: Text(
+          '✧',
+          style: TextStyle(color: ArcanumColors.gold, fontSize: 16),
+        ),
+      ),
+      Expanded(
+        child: Container(
+          height: 1,
+          color: ArcanumColors.goldMuted.withValues(alpha: 0.5),
+        ),
+      ),
+    ],
+  );
 }
 
 /// Cabecera de pantalla: wordmark ARCANUM + subtítulo + ornamento.
@@ -121,15 +128,23 @@ class ArcanumHeader extends StatelessWidget {
   const ArcanumHeader({super.key, required this.subtitle});
   @override
   Widget build(BuildContext context) => Column(
-        children: [
-          Text('ARCANUM',
-              textAlign: TextAlign.center, style: ArcanumText.wordmark()),
-          const SizedBox(height: 6),
-          Text(subtitle,
-              style: ArcanumText.body(17,
-                  italic: true, color: ArcanumColors.ivoryMuted)),
-          const SizedBox(height: 16),
-          const Ornament(),
-        ],
-      );
+    children: [
+      Text(
+        'ARCANUM',
+        textAlign: TextAlign.center,
+        style: ArcanumText.wordmark(),
+      ),
+      const SizedBox(height: 6),
+      Text(
+        subtitle,
+        style: ArcanumText.body(
+          17,
+          italic: true,
+          color: ArcanumColors.ivoryMuted,
+        ),
+      ),
+      const SizedBox(height: 16),
+      const Ornament(),
+    ],
+  );
 }

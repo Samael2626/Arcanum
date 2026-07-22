@@ -25,19 +25,37 @@ class LoginPrompt extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(glyph, style: const TextStyle(fontSize: 60, color: ArcanumColors.goldMuted)),
+            Text(
+              glyph,
+              style: const TextStyle(
+                fontSize: 60,
+                color: ArcanumColors.goldMuted,
+              ),
+            ),
             const SizedBox(height: 20),
-            Text(title, textAlign: TextAlign.center, style: ArcanumText.heading(30)),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: ArcanumText.heading(30),
+            ),
             const SizedBox(height: 12),
-            Text(description,
-                textAlign: TextAlign.center,
-                style: ArcanumText.body(16, color: ArcanumColors.ivoryMuted)),
+            Text(
+              description,
+              textAlign: TextAlign.center,
+              style: ArcanumText.body(16, color: ArcanumColors.ivoryMuted),
+            ),
             const SizedBox(height: 28),
-            GoldButton(label: 'Iniciar sesión', onPressed: () => context.go('/login')),
+            GoldButton(
+              label: 'Iniciar sesión',
+              onPressed: () => context.go('/login'),
+            ),
             const SizedBox(height: 12),
             TextButton(
               onPressed: () => context.go('/register'),
-              child: Text('Crear cuenta', style: ArcanumText.body(15, color: ArcanumColors.gold)),
+              child: Text(
+                'Crear cuenta',
+                style: ArcanumText.body(15, color: ArcanumColors.gold),
+              ),
             ),
           ],
         ),

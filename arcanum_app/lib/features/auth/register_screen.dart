@@ -26,7 +26,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final email = _email.text.trim();
     final password = _password.text;
     if (email.isEmpty || password.length < 8) {
-      setState(() => _error = 'Correo válido y contraseña de mínimo 8 caracteres');
+      setState(
+        () => _error = 'Correo válido y contraseña de mínimo 8 caracteres',
+      );
       return;
     }
     setState(() {
@@ -34,10 +36,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _error = null;
     });
     try {
-      await ref.read(authProvider.notifier).register(RegisterData(
-            email: email,
-            password: password,
-          ));
+      await ref
+          .read(authProvider.notifier)
+          .register(RegisterData(email: email, password: password));
       // Datos natales se capturan en el onboarding (no se duplican aquí).
       if (mounted) context.go('/onboarding');
     } catch (e) {
@@ -67,19 +68,37 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               children: [
                 const ArcanumHeader(subtitle: 'Inscríbete en el grimorio'),
                 const SizedBox(height: 28),
-                ArcanumField(controller: _email, label: 'Correo', keyboardType: TextInputType.emailAddress),
+                ArcanumField(
+                  controller: _email,
+                  label: 'Correo',
+                  keyboardType: TextInputType.emailAddress,
+                ),
                 const SizedBox(height: 16),
-                ArcanumField(controller: _password, label: 'Contraseña (mín. 8)', obscure: true),
+                ArcanumField(
+                  controller: _password,
+                  label: 'Contraseña (mín. 8)',
+                  obscure: true,
+                ),
                 if (_error != null) ...[
                   const SizedBox(height: 16),
-                  Text(_error!, style: ArcanumText.body(14, color: ArcanumColors.error)),
+                  Text(
+                    _error!,
+                    style: ArcanumText.body(14, color: ArcanumColors.error),
+                  ),
                 ],
                 const SizedBox(height: 28),
-                GoldButton(label: 'Crear cuenta', loading: _loading, onPressed: _submit),
+                GoldButton(
+                  label: 'Crear cuenta',
+                  loading: _loading,
+                  onPressed: _submit,
+                ),
                 const SizedBox(height: 12),
                 TextButton(
                   onPressed: () => context.go('/login'),
-                  child: Text('Ya tengo cuenta', style: ArcanumText.body(14, color: ArcanumColors.gold)),
+                  child: Text(
+                    'Ya tengo cuenta',
+                    style: ArcanumText.body(14, color: ArcanumColors.gold),
+                  ),
                 ),
               ],
             ),

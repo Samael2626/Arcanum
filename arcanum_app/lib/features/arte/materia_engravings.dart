@@ -1362,11 +1362,7 @@ class MateriaGlyph extends StatelessWidget {
     )!.withValues(alpha: 0.94);
     final glyph = CustomPaint(
       size: Size.square(size),
-      painter: _MinimalGlyphPainter(
-        type: type,
-        variant: variant,
-        color: ink,
-      ),
+      painter: _MinimalGlyphPainter(type: type, variant: variant, color: ink),
     );
     if (progress >= 1) return glyph;
     return RepaintBoundary(

@@ -23,15 +23,23 @@ class GoldButton extends StatelessWidget {
         onPressed: loading ? null : onPressed,
         style: OutlinedButton.styleFrom(
           side: const BorderSide(color: ArcanumColors.gold),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
         child: loading
             ? const SizedBox(
                 width: 22,
                 height: 22,
                 child: CircularProgressIndicator(
-                    strokeWidth: 2, color: ArcanumColors.gold))
-            : Text(label, style: ArcanumText.heading(20, color: ArcanumColors.gold)),
+                  strokeWidth: 2,
+                  color: ArcanumColors.gold,
+                ),
+              )
+            : Text(
+                label,
+                style: ArcanumText.heading(20, color: ArcanumColors.gold),
+              ),
       ),
     );
   }

@@ -34,8 +34,9 @@ class ArcanumField extends StatelessWidget {
         labelText: label,
         labelStyle: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
         enabledBorder: UnderlineInputBorder(
-          borderSide:
-              BorderSide(color: ArcanumColors.goldMuted.withValues(alpha: 0.5)),
+          borderSide: BorderSide(
+            color: ArcanumColors.goldMuted.withValues(alpha: 0.5),
+          ),
         ),
         focusedBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: ArcanumColors.gold),

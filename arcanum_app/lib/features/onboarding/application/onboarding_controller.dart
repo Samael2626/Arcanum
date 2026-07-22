@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -66,6 +69,7 @@ class OnboardingState {
 
 class OnboardingNotifier extends Notifier<OnboardingState> {
   static const _kCompleted = 'onboarding_completed';
+  static const _kPendingProfile = 'onboarding_pending_profile';
   static const _kName = 'onboarding_display_name';
   static const _kDate = 'onboarding_birth_date';
   static const _kTime = 'onboarding_birth_time';
@@ -187,19 +191,60 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
       'birth_timezone': d.resolvedTimezone,
     };
 
-    // A diferencia del resolve (que debe fallar visible), persistir el
-    // perfil tolera fallo de red: el flag local permite continuar y el
-    // perfil se reintenta en el próximo arranque autenticado. Los datos que
-    // se reintentarán son los REALES (ya confirmados), nunca un default.
+    // A diferencia del resolve (que debe fallar visible), persistir el perfil
+    // tolera fallo de red: el flag local permite continuar y el perfil se
+    // reintenta en el próximo arranque autenticado. Los datos que se
+    // reintentarán son los REALES (ya confirmados), nunca un default.
     try {
       await ref.read(authRepositoryProvider).updateProfile(payload);
       await ref.read(authProvider.notifier).refreshUser();
-    } catch (_) {
-      // No bloquear el flujo si la red falla.
+      await _clearPendingProfile();
+    } catch (error) {
+      // No bloquear el flujo, pero tampoco perder los datos: se guardan en
+      // disco para reintentarlos. Estar sin red es una condición ESPERADA y
+      // gestionada, no una anomalía: se registra, no se reporta como error del
+      // framework (eso ensuciaría el crash reporting en cada uso offline).
+      await _savePendingProfile(payload);
+      debugPrint(
+        'ARCANUM onboarding: perfil no persistido ($error). '
+        'Queda encolado para reintento.',
+      );
     }
 
     final p = await _prefs;
     await p.setBool(_kCompleted, true);
+  }
+
+  /// Guarda el perfil que no se pudo enviar, para reintentarlo al arrancar.
+  Future<void> _savePendingProfile(Map<String, dynamic> payload) async {
+    final p = await _prefs;
+    await p.setString(_kPendingProfile, jsonEncode(payload));
+  }
+
+  Future<void> _clearPendingProfile() async {
+    final p = await _prefs;
+    await p.remove(_kPendingProfile);
+  }
+
+  /// Reintenta el perfil que quedó pendiente por un fallo de red al terminar
+  /// el onboarding.
+  ///
+  /// Sin esto, un corte de red en ese instante exacto dejaba la fecha, hora y
+  /// lugar de nacimiento SOLO en el dispositivo: el onboarding se marcaba
+  /// completo, no volvía a mostrarse, y el servidor nunca recibía los datos
+  /// → carta natal imposible (422) para siempre y sin explicación.
+  ///
+  /// Devuelve true si había algo pendiente y se envió.
+  Future<bool> flushPendingProfile() async {
+    final p = await _prefs;
+    final raw = p.getString(_kPendingProfile);
+    if (raw == null) return false;
+
+    final payload = jsonDecode(raw) as Map<String, dynamic>;
+    await ref.read(authRepositoryProvider).updateProfile(payload);
+    await ref.read(authProvider.notifier).refreshUser();
+    await p.remove(_kPendingProfile);
+    return true;
   }
 
   Future<void> reset() async {
@@ -211,6 +256,7 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
       p.remove(_kTime),
       p.remove(_kCountry),
       p.remove(_kCity),
+      p.remove(_kPendingProfile),
     ]);
     state = OnboardingState.initial;
   }
@@ -220,6 +266,23 @@ final onboardingProvider =
     NotifierProvider<OnboardingNotifier, OnboardingState>(
       OnboardingNotifier.new,
     );
+
+/// Reintenta el perfil pendiente sin romper el arranque si sigue sin red.
+///
+/// Se llama al pasar a autenticado (ver `ArcanumApp`). Si vuelve a fallar, el
+/// perfil sigue en disco y se reintentará el próximo arranque: no se pierde.
+/// Recibe el notifier en vez de un `Ref` para servir igual a `Ref` y a
+/// `WidgetRef`, que en Riverpod 3 no comparten tipo.
+Future<void> tryFlushPendingProfile(OnboardingNotifier notifier) async {
+  try {
+    await notifier.flushPendingProfile();
+  } catch (error) {
+    debugPrint(
+      'ARCANUM onboarding: el reintento del perfil falló ($error). '
+      'Sigue guardado en disco para el próximo arranque.',
+    );
+  }
+}
 
 final onboardingCompletedProvider = FutureProvider<bool>((ref) async {
   final prefs = await SharedPreferences.getInstance();
@@ -235,6 +298,9 @@ Future<void> clearOnboardingLocalData() async {
     'onboarding_birth_time',
     'onboarding_birth_country',
     'onboarding_birth_city',
+    // Crítico al borrar la cuenta: si el perfil pendiente sobreviviera, los
+    // datos de nacimiento de un usuario se enviarían a la cuenta siguiente.
+    'onboarding_pending_profile',
   ]) {
     await prefs.remove(key);
   }

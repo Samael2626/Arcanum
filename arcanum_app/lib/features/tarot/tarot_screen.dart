@@ -32,14 +32,18 @@ class TarotScreen extends ConsumerWidget {
     final auth = ref.watch(authProvider);
     if (auth.status == AuthStatus.unknown) {
       return const Center(
-        child: CircularProgressIndicator(color: ArcanumColors.gold, strokeWidth: 2),
+        child: CircularProgressIndicator(
+          color: ArcanumColors.gold,
+          strokeWidth: 2,
+        ),
       );
     }
     if (!auth.isAuthenticated) {
       return const LoginPrompt(
         glyph: '♃',
         title: 'El tarot te aguarda',
-        description: 'Inicia sesión para consultar las cartas y guardar tus lecturas.',
+        description:
+            'Inicia sesión para consultar las cartas y guardar tus lecturas.',
       );
     }
     return const _TarotView();
@@ -113,7 +117,10 @@ class _TarotViewState extends ConsumerState<_TarotView> {
                   child: GestureDetector(
                     onTap: () => setState(() => _spread = s.$1),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         color: sel
@@ -125,9 +132,15 @@ class _TarotViewState extends ConsumerState<_TarotView> {
                               : ArcanumColors.goldMuted.withValues(alpha: 0.4),
                         ),
                       ),
-                      child: Text(s.$2,
-                          style: ArcanumText.body(13,
-                              color: sel ? ArcanumColors.gold : ArcanumColors.ivoryMuted)),
+                      child: Text(
+                        s.$2,
+                        style: ArcanumText.body(
+                          13,
+                          color: sel
+                              ? ArcanumColors.gold
+                              : ArcanumColors.ivoryMuted,
+                        ),
+                      ),
                     ),
                   ),
                 );
@@ -141,22 +154,29 @@ class _TarotViewState extends ConsumerState<_TarotView> {
               cursorColor: ArcanumColors.gold,
               decoration: InputDecoration(
                 hintText: 'Formula tu pregunta… (opcional)',
-                hintStyle:
-                    ArcanumText.body(15, italic: true, color: ArcanumColors.ivoryMuted),
+                hintStyle: ArcanumText.body(
+                  15,
+                  italic: true,
+                  color: ArcanumColors.ivoryMuted,
+                ),
                 border: InputBorder.none,
               ),
             ),
             const SizedBox(height: 16),
             GoldButton(
-              label: _spread == 'one_card' ? 'Sacar una carta' : 'Tirar las cartas',
+              label: _spread == 'one_card'
+                  ? 'Sacar una carta'
+                  : 'Tirar las cartas',
               loading: _busy,
               onPressed: _draw,
             ),
             if (_error != null) ...[
               const SizedBox(height: 14),
-              Text(_error!,
-                  textAlign: TextAlign.center,
-                  style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted)),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
+              ),
             ],
             const SizedBox(height: 24),
             if (_resolved != null) ..._resolved!.map(_renderCard),
@@ -196,35 +216,55 @@ class _TarotViewState extends ConsumerState<_TarotView> {
               children: [
                 Transform.rotate(
                   angle: reversed ? 3.14159 : 0,
-                  child: Text(glyph,
-                      style: const TextStyle(fontSize: 38, color: ArcanumColors.gold)),
+                  child: Text(
+                    glyph,
+                    style: const TextStyle(
+                      fontSize: 38,
+                      color: ArcanumColors.gold,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 8),
-                Text(name,
-                    textAlign: TextAlign.center,
-                    style: ArcanumText.heading(24)),
+                Text(
+                  name,
+                  textAlign: TextAlign.center,
+                  style: ArcanumText.heading(24),
+                ),
                 if (titleBookT.isNotEmpty) ...[
                   const SizedBox(height: 4),
-                  Text(titleBookT,
-                      textAlign: TextAlign.center,
-                      style: ArcanumText.body(13,
-                          italic: true, color: ArcanumColors.goldMuted)),
+                  Text(
+                    titleBookT,
+                    textAlign: TextAlign.center,
+                    style: ArcanumText.body(
+                      13,
+                      italic: true,
+                      color: ArcanumColors.goldMuted,
+                    ),
+                  ),
                 ],
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     color: reversed
                         ? ArcanumColors.burgundy
                         : ArcanumColors.surfaceHigh,
                   ),
-                  child: Text(reversed ? 'Invertida' : 'Al derecho',
-                      style: ArcanumText.label()),
+                  child: Text(
+                    reversed ? 'Invertida' : 'Al derecho',
+                    style: ArcanumText.label(),
+                  ),
                 ),
                 const SizedBox(height: 12),
-                Text(meaning,
-                    textAlign: TextAlign.center, style: ArcanumText.body(16)),
+                Text(
+                  meaning,
+                  textAlign: TextAlign.center,
+                  style: ArcanumText.body(16),
+                ),
               ],
             ),
           ),

@@ -1,30 +1,63 @@
 import os
+from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
 from app.main import app
 from app.db.session import Base, get_db
 from app.core.security import get_redis
 
 # Base de datos de tests.
-# Por defecto SQLite en memoria, pero los modelos usan tipos propios de PostgreSQL
-# (UUID, JSONB, ARRAY, gen_random_uuid()) que SQLite no soporta. Para una validación
-# real exporta TEST_DATABASE_URL apuntando a un Postgres dedicado, por ejemplo:
-#   postgresql://postgres:postgrespassword@localhost:5432/arcanum_test
-SQLALCHEMY_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "sqlite:///:memory:")
+#
+# Los modelos usan tipos propios de PostgreSQL (UUID, JSONB, ARRAY,
+# gen_random_uuid()) que SQLite no sabe crear: contra SQLite, create_all()
+# revienta con `sqlite3.OperationalError: near "("`. Estos tests son de
+# integración y NECESITAN un Postgres de verdad.
+#
+# Para correrlos, levanta el Postgres de docker-compose y exporta:
+#   docker compose up -d db
+#   export TEST_DATABASE_URL=postgresql://postgres:postgrespassword@localhost:5432/arcanum_test
+#
+# Sin esa variable, la suite entera se SALTA con un motivo visible. Antes
+# erroraban 59 tests por defecto, lo que hacía imposible distinguir un fallo
+# real del estado normal en limpio — y un rojo permanente es un rojo que se
+# acaba ignorando. Los tests unitarios (tests_unit/) no dependen de esto y
+# corren siempre.
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 
-if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
-    engine = create_engine(
-        SQLALCHEMY_DATABASE_URL,
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
+REQUIRES_POSTGRES = (
+    "Tests de integración: requieren PostgreSQL. Define TEST_DATABASE_URL "
+    "(ver tests/conftest.py). Los unitarios están en tests_unit/."
+)
+
+if TEST_DATABASE_URL:
+    engine = create_engine(TEST_DATABASE_URL)
+    TestingSessionLocal = sessionmaker(
+        autocommit=False, autoflush=False, bind=engine
     )
 else:
-    engine = create_engine(SQLALCHEMY_DATABASE_URL)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    engine = None
+    TestingSessionLocal = None
+
+
+def pytest_collection_modifyitems(config, items):
+    """Marca como skip los tests de integración cuando no hay Postgres.
+
+    Se saltan con motivo en vez de ignorarse en silencio: `pytest -rs` explica
+    exactamente qué falta y cómo levantarlo. Un "0 tests" mudo esconde el
+    problema tanto como un rojo permanente.
+    """
+    if TEST_DATABASE_URL:
+        return
+    skip = pytest.mark.skip(reason=REQUIRES_POSTGRES)
+    # Comparación por ruta, no por prefijo de cadena: "tests_unit" empieza por
+    # "tests" y un startswith() se llevaría por delante los unitarios.
+    here = Path(__file__).parent.resolve()
+    for item in items:
+        if here in Path(str(item.fspath)).resolve().parents:
+            item.add_marker(skip)
 
 
 # Mock de Redis en memoria para evitar dependencias durante los tests

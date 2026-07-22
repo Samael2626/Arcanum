@@ -5,20 +5,19 @@ import 'arcanum_colors.dart';
 /// Estilos tipográficos del sistema: Cormorant Garamond (títulos) + Crimson Pro.
 class ArcanumText {
   static TextStyle wordmark({double size = 44}) => TextStyle(
-        fontFamily: 'Cormorant Garamond',
-        fontSize: size,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 10,
-        color: ArcanumColors.gold,
-      );
+    fontFamily: 'Cormorant Garamond',
+    fontSize: size,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 10,
+    color: ArcanumColors.gold,
+  );
 
-  static TextStyle heading(double size, {Color? color}) =>
-      TextStyle(
-        fontFamily: 'Cormorant Garamond',
-        fontSize: size,
-        fontWeight: FontWeight.w600,
-        color: color ?? ArcanumColors.ivory,
-      );
+  static TextStyle heading(double size, {Color? color}) => TextStyle(
+    fontFamily: 'Cormorant Garamond',
+    fontSize: size,
+    fontWeight: FontWeight.w600,
+    color: color ?? ArcanumColors.ivory,
+  );
 
   static TextStyle body(double size, {Color? color, bool italic = false}) =>
       TextStyle(
@@ -29,12 +28,12 @@ class ArcanumText {
       );
 
   static TextStyle label() => const TextStyle(
-        fontFamily: 'Crimson Pro',
-        fontSize: 12,
-        letterSpacing: 3,
-        color: ArcanumColors.goldMuted,
-        fontWeight: FontWeight.w600,
-      );
+    fontFamily: 'Crimson Pro',
+    fontSize: 12,
+    letterSpacing: 3,
+    color: ArcanumColors.goldMuted,
+    fontWeight: FontWeight.w600,
+  );
 }
 
 ThemeData buildArcanumTheme() {

@@ -18,13 +18,17 @@ class WelcomeStep extends StatelessWidget {
         children: [
           const SizedBox(height: 48),
           const Center(
-            child: Text('⛧',
-                style: TextStyle(fontSize: 56, color: ArcanumColors.gold)),
+            child: Text(
+              '⛧',
+              style: TextStyle(fontSize: 56, color: ArcanumColors.gold),
+            ),
           ),
           const SizedBox(height: 18),
-          Text('Bienvenido a tu grimorio',
-              textAlign: TextAlign.center,
-              style: ArcanumText.heading(26)),
+          Text(
+            'Bienvenido a tu grimorio',
+            textAlign: TextAlign.center,
+            style: ArcanumText.heading(26),
+          ),
           const SizedBox(height: 14),
           Center(
             child: Container(
@@ -36,8 +40,11 @@ class WelcomeStep extends StatelessWidget {
           const SizedBox(height: 24),
           Text(
             'Has cruzado el umbral. Guardaremos tu nombre y los astros de tu nacimiento para guiar tu práctica.',
-            style: ArcanumText.body(17,
-                italic: true, color: ArcanumColors.ivoryMuted),
+            style: ArcanumText.body(
+              17,
+              italic: true,
+              color: ArcanumColors.ivoryMuted,
+            ),
             textAlign: TextAlign.center,
           ),
           const Spacer(),

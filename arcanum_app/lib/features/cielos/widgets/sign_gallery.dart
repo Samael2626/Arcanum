@@ -44,7 +44,11 @@ class _SignCard extends StatelessWidget {
   final String signKey;
   final bool isSun;
   final bool isAsc;
-  const _SignCard({required this.signKey, this.isSun = false, this.isAsc = false});
+  const _SignCard({
+    required this.signKey,
+    this.isSun = false,
+    this.isAsc = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -87,20 +91,28 @@ class _SignCard extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(glyph,
-                          style: TextStyle(fontSize: 34, color: mood.accent)),
+                      Text(
+                        glyph,
+                        style: TextStyle(fontSize: 34, color: mood.accent),
+                      ),
                       const Spacer(),
                       if (isSun) _tag('☉ Sol', mood.accent),
                       if (isAsc) _tag('AC', mood.accent),
                     ],
                   ),
                   const Spacer(),
-                  Text(name,
-                      style: ArcanumText.heading(22, color: ArcanumColors.ivory)),
+                  Text(
+                    name,
+                    style: ArcanumText.heading(22, color: ArcanumColors.ivory),
+                  ),
                   const SizedBox(height: 2),
-                  Text('${lore.elemento} · ${lore.regente}',
-                      style: ArcanumText.body(13,
-                          color: ArcanumColors.ivoryMuted)),
+                  Text(
+                    '${lore.elemento} · ${lore.regente}',
+                    style: ArcanumText.body(
+                      13,
+                      color: ArcanumColors.ivoryMuted,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -111,15 +123,19 @@ class _SignCard extends StatelessWidget {
   }
 
   Widget _tag(String txt, Color accent) => Container(
-        margin: const EdgeInsets.only(left: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-        decoration: BoxDecoration(
-          color: ArcanumColors.background.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: accent.withValues(alpha: 0.6)),
-        ),
-        child: Text(txt,
-            style: ArcanumText.body(11, color: ArcanumColors.gold)
-                .copyWith(fontWeight: FontWeight.w600)),
-      );
+    margin: const EdgeInsets.only(left: 4),
+    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+    decoration: BoxDecoration(
+      color: ArcanumColors.background.withValues(alpha: 0.5),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: accent.withValues(alpha: 0.6)),
+    ),
+    child: Text(
+      txt,
+      style: ArcanumText.body(
+        11,
+        color: ArcanumColors.gold,
+      ).copyWith(fontWeight: FontWeight.w600),
+    ),
+  );
 }

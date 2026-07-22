@@ -56,7 +56,15 @@ class _GrimorioEditorState extends ConsumerState<GrimorioEditor> {
         moonPhase = today['moon']?['phase_name'] as String?;
         planetaryHour = today['planetary_hour']?['planet'] as String?;
         dayPlanet = today['day_ruler'] as String?;
-      } catch (_) {}
+      } catch (error) {
+        // Best-effort de verdad: la entrada se guarda igual, solo pierde la
+        // anotación astral. Pero deja rastro: si /astral/today se rompiera,
+        // TODAS las entradas quedarían sin contexto y nadie se enteraría hasta
+        // mirar el grimorio meses después.
+        debugPrint(
+          'ARCANUM grimorio: sin contexto astral para esta entrada ($error).',
+        );
+      }
 
       await api.grimoireCreate({
         'entry_type': _type,

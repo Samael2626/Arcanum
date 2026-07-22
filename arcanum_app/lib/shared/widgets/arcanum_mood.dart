@@ -37,63 +37,72 @@ class ArcanumMood {
 
   // ── Elementos del Tarot ────────────────────────────────────────────────
   static const fire = ArcanumMood(
-      edge: ArcanumColors.fireEdge,
-      core: ArcanumColors.fireCore,
-      glow: ArcanumColors.fireGlow,
-      accent: ArcanumColors.fireAccent,
-      lightY: 0.62);
+    edge: ArcanumColors.fireEdge,
+    core: ArcanumColors.fireCore,
+    glow: ArcanumColors.fireGlow,
+    accent: ArcanumColors.fireAccent,
+    lightY: 0.62,
+  );
   static const water = ArcanumMood(
-      edge: ArcanumColors.waterEdge,
-      core: ArcanumColors.waterCore,
-      glow: ArcanumColors.waterGlow,
-      accent: ArcanumColors.waterAccent,
-      lightY: 0.34);
+    edge: ArcanumColors.waterEdge,
+    core: ArcanumColors.waterCore,
+    glow: ArcanumColors.waterGlow,
+    accent: ArcanumColors.waterAccent,
+    lightY: 0.34,
+  );
   static const air = ArcanumMood(
-      edge: ArcanumColors.airEdge,
-      core: ArcanumColors.airCore,
-      glow: ArcanumColors.airGlow,
-      accent: ArcanumColors.airAccent,
-      lightY: 0.32);
+    edge: ArcanumColors.airEdge,
+    core: ArcanumColors.airCore,
+    glow: ArcanumColors.airGlow,
+    accent: ArcanumColors.airAccent,
+    lightY: 0.32,
+  );
   static const earth = ArcanumMood(
-      edge: ArcanumColors.earthEdge,
-      core: ArcanumColors.earthCore,
-      glow: ArcanumColors.earthGlow,
-      accent: ArcanumColors.earthAccent,
-      lightY: 0.62);
+    edge: ArcanumColors.earthEdge,
+    core: ArcanumColors.earthCore,
+    glow: ArcanumColors.earthGlow,
+    accent: ArcanumColors.earthAccent,
+    lightY: 0.62,
+  );
 
   // ── Luminarias y planetas (color clásico / Golden Dawn) ────────────────
   static const moon = ArcanumMood(
-      edge: ArcanumColors.moonEdge,
-      core: ArcanumColors.moonCore,
-      glow: ArcanumColors.moonGlow,
-      accent: ArcanumColors.moonAccent,
-      lightY: 0.30);
+    edge: ArcanumColors.moonEdge,
+    core: ArcanumColors.moonCore,
+    glow: ArcanumColors.moonGlow,
+    accent: ArcanumColors.moonAccent,
+    lightY: 0.30,
+  );
   static const sun = ArcanumMood(
-      edge: ArcanumColors.sunEdge,
-      core: ArcanumColors.sunCore,
-      glow: ArcanumColors.sunGlow,
-      accent: ArcanumColors.sunAccent,
-      lightY: 0.44);
+    edge: ArcanumColors.sunEdge,
+    core: ArcanumColors.sunCore,
+    glow: ArcanumColors.sunGlow,
+    accent: ArcanumColors.sunAccent,
+    lightY: 0.44,
+  );
   static const jupiter = ArcanumMood(
-      edge: ArcanumColors.jupiterEdge,
-      core: ArcanumColors.jupiterCore,
-      glow: ArcanumColors.jupiterGlow,
-      accent: ArcanumColors.jupiterAccent,
-      lightY: 0.36);
+    edge: ArcanumColors.jupiterEdge,
+    core: ArcanumColors.jupiterCore,
+    glow: ArcanumColors.jupiterGlow,
+    accent: ArcanumColors.jupiterAccent,
+    lightY: 0.36,
+  );
   static const saturn = ArcanumMood(
-      edge: ArcanumColors.saturnEdge,
-      core: ArcanumColors.saturnCore,
-      glow: ArcanumColors.saturnGlow,
-      accent: ArcanumColors.saturnAccent,
-      lightY: 0.30);
+    edge: ArcanumColors.saturnEdge,
+    core: ArcanumColors.saturnCore,
+    glow: ArcanumColors.saturnGlow,
+    accent: ArcanumColors.saturnAccent,
+    lightY: 0.30,
+  );
 
   /// Atmósfera base (pergamino tibio) para paneles sin correspondencia.
   static const neutral = ArcanumMood(
-      edge: ArcanumColors.neutralEdge,
-      core: ArcanumColors.neutralCore,
-      glow: ArcanumColors.neutralGlow,
-      accent: ArcanumColors.neutralAccent,
-      lightY: 0.36);
+    edge: ArcanumColors.neutralEdge,
+    core: ArcanumColors.neutralCore,
+    glow: ArcanumColors.neutralGlow,
+    accent: ArcanumColors.neutralAccent,
+    lightY: 0.36,
+  );
 
   /// Resuelve el humor de un elemento del Tarot (fuego/agua/aire/tierra).
   factory ArcanumMood.forElement(String element) {
@@ -142,7 +151,8 @@ class ArcanumMood {
   }
 
   /// Interpola dos humores (para transiciones suaves de atmósfera).
-  static ArcanumMood lerp(ArcanumMood a, ArcanumMood b, double t) => ArcanumMood(
+  static ArcanumMood lerp(ArcanumMood a, ArcanumMood b, double t) =>
+      ArcanumMood(
         edge: Color.lerp(a.edge, b.edge, t)!,
         core: Color.lerp(a.core, b.core, t)!,
         glow: Color.lerp(a.glow, b.glow, t)!,
