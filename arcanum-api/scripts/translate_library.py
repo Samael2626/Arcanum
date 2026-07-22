@@ -135,9 +135,21 @@ def parse_response(text: str, expected: int) -> list[str] | None:
 
 
 def suspicious_terms(source: list[str], translated: list[str]) -> list[str]:
+    """Marca los términos doctrinales que no sobrevivieron a la traducción.
+
+    La comparación es por palabra completa, no por subcadena: buscando "vulgo"
+    suelto, un modelo que escribía "los vulgos llaman" —incorrecto, y justo lo
+    que el glosario debe impedir— pasaba el control.
+    """
     src = " ".join(source).lower()
     dst = " ".join(translated).lower()
-    return [en for en, es in TERM_CHECKS.items() if en in src and es not in dst]
+    flagged = []
+    for english, spanish in TERM_CHECKS.items():
+        if english not in src:
+            continue
+        if not re.search(rf"\b{re.escape(spanish)}\b", dst):
+            flagged.append(english)
+    return flagged
 
 
 def translate_chapter(
