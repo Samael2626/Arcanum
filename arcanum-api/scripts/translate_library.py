@@ -103,12 +103,45 @@ No añadas, no fusiones, no resumas, no comentes. Solo la traducción numerada."
 TERM_CHECKS = {
     "by sympathy": "simpatía",
     "by antipathy": "antipatía",
-    "the vulgar": "vulgo",
+    # Solo el uso SUSTANTIVO ("el vulgo lo llama…"). Culpeper también usa
+    # "vulgar" como adjetivo — "the vulgar and apish fashion" es "la moda
+    # vulgar", y ahí la traducción literal es correcta. Sin este matiz, el
+    # control marcaba capítulos bien traducidos.
+    "the vulgar call": "vulgo",
+    "the vulgar name": "vulgo",
     "retentive faculty": "facultad retentiva",
     "decoction": "decocción",
 }
 
 _NUMBERED = re.compile(r"^\s*\[(\d+)\]\s*", re.M)
+
+# Sufijos que no existen en español. Sirven para detectar palabras inglesas
+# que se cuelan sin traducir: apareció "como es la moda vulgar y apish", con
+# "apish" (simiesca) crudo en mitad de la frase — una fuga que ningún control
+# de terminología veía, porque el término vigilado sí estaba bien.
+#
+# Solo se miran palabras en MINÚSCULA: los nombres de planta deben quedarse en
+# inglés a propósito y van capitalizados ("Alehoof", "Arssmart").
+_ENGLISH_SUFFIXES = ("ish", "ness", "ing", "ship", "ful", "less", "hood")
+_LOWER_WORD = re.compile(r"\b[a-záéíóúñü]{4,}\b")
+
+# Excepciones: palabras españolas legítimas que terminan igual.
+_NOT_LEAKS = {
+    "hashish",
+    "fetiching",
+}
+
+
+def english_leaks(translated: list[str]) -> list[str]:
+    """Palabras que parecen inglesas sin traducir dentro del texto español."""
+    found = set()
+    for text in translated:
+        for word in _LOWER_WORD.findall(text):
+            if word in _NOT_LEAKS:
+                continue
+            if word.endswith(_ENGLISH_SUFFIXES):
+                found.add(word)
+    return sorted(found)
 
 
 def build_prompt(paragraphs: list[str]) -> str:
@@ -137,9 +170,14 @@ def parse_response(text: str, expected: int) -> list[str] | None:
 def suspicious_terms(source: list[str], translated: list[str]) -> list[str]:
     """Marca los términos doctrinales que no sobrevivieron a la traducción.
 
-    La comparación es por palabra completa, no por subcadena: buscando "vulgo"
-    suelto, un modelo que escribía "los vulgos llaman" —incorrecto, y justo lo
-    que el glosario debe impedir— pasaba el control.
+    Dos controles distintos:
+
+    1. Términos doctrinales que no sobrevivieron. La comparación es por palabra
+       completa, no por subcadena: buscando "vulgo" suelto, un modelo que
+       escribía "los vulgos llaman" —incorrecto, y justo lo que el glosario
+       debe impedir— pasaba el control.
+    2. Palabras inglesas coladas sin traducir, que el control anterior no ve
+       porque el término vigilado sí estaba bien.
     """
     src = " ".join(source).lower()
     dst = " ".join(translated).lower()
@@ -149,6 +187,7 @@ def suspicious_terms(source: list[str], translated: list[str]) -> list[str]:
             continue
         if not re.search(rf"\b{re.escape(spanish)}\b", dst):
             flagged.append(english)
+    flagged.extend(f"sin traducir: {word}" for word in english_leaks(translated))
     return flagged
 
 
