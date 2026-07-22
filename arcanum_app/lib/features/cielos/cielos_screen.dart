@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/api/arcanum_api.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/content/glossary.dart';
+import '../../core/content/transit_reading.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
@@ -232,7 +233,7 @@ class _NatalViewState extends ConsumerState<_NatalView> {
                   style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
                 )
               else
-                ...aspects.map(_aspectRow),
+                ...aspects.map((a) => _AspectRow(a)),
             ],
           ),
         ),
@@ -385,51 +386,133 @@ class _NatalViewState extends ConsumerState<_NatalView> {
       ),
     );
   }
+}
 
-  /// Fila de tránsito: cada término es tocable por separado.
-  ///
-  /// Era una línea de texto muerta — "♀ Venus trígono ☽ Luna natal" — donde
-  /// ninguna de las cuatro piezas de jerga tenía salida.
-  Widget _aspectRow(Map<String, dynamic> a) {
+/// Fila de tránsito: cada término es tocable por separado (capa 1) y la fila
+/// entera se despliega con la lectura en español llano (capa 2).
+///
+/// Era una línea de texto muerta — "♀ Venus trígono ☽ Luna natal" — donde
+/// ninguna de las cuatro piezas de jerga tenía salida.
+class _AspectRow extends StatefulWidget {
+  final Map<String, dynamic> aspect;
+  const _AspectRow(this.aspect);
+
+  @override
+  State<_AspectRow> createState() => _AspectRowState();
+}
+
+class _AspectRowState extends State<_AspectRow> {
+  bool _open = false;
+
+  static const _toneColor = {
+    AspectTone.fusion: ArcanumColors.aspectUnion,
+    AspectTone.armonico: ArcanumColors.aspectHarmony,
+    AspectTone.tenso: ArcanumColors.aspectTension,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final a = widget.aspect;
     final t = a['transit'] as String;
     final n = a['natal'] as String;
     final asp = a['aspect'] as String;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        crossAxisAlignment: WrapCrossAlignment.center,
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Column(
         children: [
-          _Tappable(
-            onTap: () => showPlanetLoreSheet(context, t),
-            child: Text(
-              '${planetGlyph[t] ?? ''} ${planetEs[t] ?? t}',
-              style: ArcanumText.body(15),
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              _Tappable(
+                onTap: () => showPlanetLoreSheet(context, t),
+                child: Text(
+                  '${planetGlyph[t] ?? ''} ${planetEs[t] ?? t}',
+                  style: ArcanumText.body(15),
+                ),
+              ),
+              _Tappable(
+                onTap: () => showGlossarySheet(context, aspectGlossaryKey(asp)),
+                child: Text(
+                  aspectEs[asp] ?? asp,
+                  style: ArcanumText.body(15, color: ArcanumColors.gold),
+                ),
+              ),
+              _Tappable(
+                onTap: () => showPlanetLoreSheet(context, n),
+                child: Text(
+                  '${planetGlyph[n] ?? ''} ${planetEs[n] ?? n}',
+                  style: ArcanumText.body(15),
+                ),
+              ),
+              // "natal" es la palabra que hace ilegible la línea entera.
+              _Tappable(
+                onTap: () => showGlossarySheet(context, 'natal_vs_transito'),
+                child: Text(
+                  'natal',
+                  style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
+                ),
+              ),
+              _Tappable(
+                onTap: () => setState(() => _open = !_open),
+                child: Icon(
+                  _open ? Icons.expand_less : Icons.expand_more,
+                  size: 18,
+                  color: ArcanumColors.goldMuted,
+                ),
+              ),
+            ],
+          ),
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 180),
+            crossFadeState: _open
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            firstChild: const SizedBox(width: double.infinity),
+            secondChild: _Reading(
+              reading: readTransit(transit: t, natal: n, aspect: asp),
+              accent: _toneColor[aspectToneOf(asp)] ?? ArcanumColors.goldMuted,
             ),
           ),
-          _Tappable(
-            onTap: () => showGlossarySheet(context, aspectGlossaryKey(asp)),
-            child: Text(
-              aspectEs[asp] ?? asp,
-              style: ArcanumText.body(15, color: ArcanumColors.gold),
+        ],
+      ),
+    );
+  }
+}
+
+/// El tránsito traducido: qué pasa, qué hace ese aspecto y qué hacer con ello.
+class _Reading extends StatelessWidget {
+  final TransitReading reading;
+  final Color accent;
+  const _Reading({required this.reading, required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(4, 2, 4, 10),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+      decoration: BoxDecoration(
+        color: ArcanumColors.surfaceHigh.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(10),
+        border: Border(left: BorderSide(color: accent, width: 2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(reading.sentence, style: ArcanumText.body(15)),
+          const SizedBox(height: 10),
+          Text(
+            reading.nature,
+            style: ArcanumText.body(
+              14,
+              color: ArcanumColors.ivoryMuted,
+              italic: true,
             ),
           ),
-          _Tappable(
-            onTap: () => showPlanetLoreSheet(context, n),
-            child: Text(
-              '${planetGlyph[n] ?? ''} ${planetEs[n] ?? n}',
-              style: ArcanumText.body(15),
-            ),
-          ),
-          // "natal" es la palabra que hace ilegible la línea entera.
-          _Tappable(
-            onTap: () => showGlossarySheet(context, 'natal_vs_transito'),
-            child: Text(
-              'natal',
-              style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
-            ),
-          ),
+          const SizedBox(height: 10),
+          Text(reading.guidance, style: ArcanumText.body(14, color: accent)),
         ],
       ),
     );
