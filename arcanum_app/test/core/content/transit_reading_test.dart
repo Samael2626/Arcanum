@@ -93,6 +93,51 @@ void main() {
     });
   });
 
+  group('pregunta al oráculo', () {
+    test('nombra el tránsito en español, como lo ve el usuario', () {
+      final q = transitOracleQuestion(
+        transit: 'venus',
+        natal: 'moon',
+        aspect: 'trine',
+      );
+      expect(q, contains('Venus en trígono con mi Luna natal'));
+    });
+
+    test('nunca filtra claves inglesas a la pregunta', () {
+      for (final transit in planetEs.keys) {
+        for (final aspect in aspectEs.keys) {
+          final q = transitOracleQuestion(
+            transit: transit,
+            natal: 'sun',
+            aspect: aspect,
+          );
+          expect(q, isNot(contains(transit)), reason: transit);
+          expect(q, isNot(contains(aspect)), reason: aspect);
+        }
+      }
+    });
+
+    test('cabe en el límite de 500 caracteres del endpoint', () {
+      for (final transit in planetEs.keys) {
+        for (final natal in planetEs.keys) {
+          for (final aspect in aspectEs.keys) {
+            final q = transitOracleQuestion(
+              transit: transit,
+              natal: natal,
+              aspect: aspect,
+            );
+            expect(
+              q.length,
+              lessThanOrEqualTo(500),
+              reason: '$transit $aspect $natal → ${q.length} caracteres',
+            );
+            expect(q.trim(), isNotEmpty);
+          }
+        }
+      }
+    });
+  });
+
   group('tono de un aspecto', () {
     test('coincide con el de la lectura completa', () {
       for (final aspect in aspectEs.keys) {

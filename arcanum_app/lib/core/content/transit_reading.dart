@@ -133,3 +133,24 @@ TransitReading readTransit({
 /// " (rol)" o cadena vacía si el planeta no tiene rol definido, para que la
 /// frase nunca quede con un paréntesis huérfano.
 String _parenthetical(String? role) => role == null ? '' : ' ($role)';
+
+/// Pregunta para `POST /oracle/ia` sobre un tránsito concreto.
+///
+/// El servidor ya inyecta la carta natal del usuario en el contexto, así que
+/// aquí solo se nombra el tránsito y qué se quiere saber de él. Se compone en
+/// español y con los mismos nombres que ve el usuario en pantalla, para que la
+/// respuesta hable de lo que tiene delante.
+String transitOracleQuestion({
+  required String transit,
+  required String natal,
+  required String aspect,
+}) {
+  final transitName = planetEs[transit] ?? transit;
+  final natalName = planetEs[natal] ?? natal;
+  final aspectName = aspectEs[aspect] ?? aspect;
+
+  return 'Explícame qué significa para mí este tránsito de hoy: '
+      '$transitName en $aspectName con mi $natalName natal. '
+      'Habla de cómo se siente en el día a día y qué conviene hacer o evitar '
+      'mientras dure.';
+}

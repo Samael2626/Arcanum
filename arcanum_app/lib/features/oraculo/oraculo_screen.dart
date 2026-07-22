@@ -1,8 +1,8 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/arcanum_api.dart';
+import '../../core/api/oracle_error.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
@@ -177,43 +177,12 @@ class _OracleViewState extends ConsumerState<_OracleView> {
         question: q.isEmpty ? null : q,
         divinationSessionId: sessionId,
       );
-      final messages = (res['messages'] as List).cast<Map<String, dynamic>>();
-      final assistant = messages.lastWhere(
-        (m) => m['role'] == 'assistant',
-        orElse: () => const {'content': ''},
-      );
-      setState(() => _iaReply = (assistant['content'] as String?) ?? '');
+      setState(() => _iaReply = assistantReply(res));
     } catch (e) {
-      setState(() => _iaError = _oracleErrorMessage(e));
+      setState(() => _iaError = oracleErrorMessage(e));
     } finally {
       setState(() => _iaLoading = false);
     }
-  }
-
-  /// Mapea los errores documentados de `POST /oracle/ia` a un mensaje claro.
-  /// Prefiere el `detail` del backend cuando existe (ya es legible); si no,
-  /// cae al mensaje canónico por código de estado.
-  String _oracleErrorMessage(Object e) {
-    if (e is DioException) {
-      final status = e.response?.statusCode;
-      final data = e.response?.data;
-      final detail = (data is Map && data['detail'] is String)
-          ? data['detail'] as String
-          : null;
-      switch (status) {
-        case 400:
-          return detail ?? 'Falta pregunta o tirada.';
-        case 401:
-          return 'Sesión expirada, iniciá de nuevo.';
-        case 404:
-          return detail ?? 'Tirada no encontrada.';
-        case 422:
-          return detail ?? 'La sesión no es una tirada de tarot.';
-        case 429:
-          return detail ?? 'Cupo diario del oráculo alcanzado.';
-      }
-    }
-    return 'La IA ritual no respondió. $e';
   }
 
   @override

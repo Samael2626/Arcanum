@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api/arcanum_api.dart';
+import '../../core/api/oracle_error.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/content/glossary.dart';
 import '../../core/content/transit_reading.dart';
@@ -393,16 +394,48 @@ class _NatalViewState extends ConsumerState<_NatalView> {
 ///
 /// Era una línea de texto muerta — "♀ Venus trígono ☽ Luna natal" — donde
 /// ninguna de las cuatro piezas de jerga tenía salida.
-class _AspectRow extends StatefulWidget {
+class _AspectRow extends ConsumerStatefulWidget {
   final Map<String, dynamic> aspect;
   const _AspectRow(this.aspect);
 
   @override
-  State<_AspectRow> createState() => _AspectRowState();
+  ConsumerState<_AspectRow> createState() => _AspectRowState();
 }
 
-class _AspectRowState extends State<_AspectRow> {
+class _AspectRowState extends ConsumerState<_AspectRow> {
   bool _open = false;
+  bool _asking = false;
+  String? _oracleReply;
+  String? _oracleError;
+
+  /// Pide al oráculo la lectura personalizada de ESTE tránsito.
+  /// El servidor ya inyecta la carta natal: solo hay que nombrar el tránsito.
+  Future<void> _askOracle() async {
+    final a = widget.aspect;
+    setState(() {
+      _asking = true;
+      _oracleError = null;
+      _oracleReply = null;
+    });
+    try {
+      final res = await ref
+          .read(arcanumApiProvider)
+          .oracleIa(
+            question: transitOracleQuestion(
+              transit: a['transit'] as String,
+              natal: a['natal'] as String,
+              aspect: a['aspect'] as String,
+            ),
+          );
+      if (!mounted) return;
+      setState(() => _oracleReply = assistantReply(res));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _oracleError = oracleErrorMessage(e));
+    } finally {
+      if (mounted) setState(() => _asking = false);
+    }
+  }
 
   static const _toneColor = {
     AspectTone.fusion: ArcanumColors.aspectUnion,
@@ -473,6 +506,10 @@ class _AspectRowState extends State<_AspectRow> {
             secondChild: _Reading(
               reading: readTransit(transit: t, natal: n, aspect: asp),
               accent: _toneColor[aspectToneOf(asp)] ?? ArcanumColors.goldMuted,
+              asking: _asking,
+              oracleReply: _oracleReply,
+              oracleError: _oracleError,
+              onAskOracle: _askOracle,
             ),
           ),
         ],
@@ -482,10 +519,23 @@ class _AspectRowState extends State<_AspectRow> {
 }
 
 /// El tránsito traducido: qué pasa, qué hace ese aspecto y qué hacer con ello.
+/// Al final, la puerta a la lectura personalizada del oráculo (capa 3).
 class _Reading extends StatelessWidget {
   final TransitReading reading;
   final Color accent;
-  const _Reading({required this.reading, required this.accent});
+  final bool asking;
+  final String? oracleReply;
+  final String? oracleError;
+  final VoidCallback onAskOracle;
+
+  const _Reading({
+    required this.reading,
+    required this.accent,
+    required this.asking,
+    required this.oracleReply,
+    required this.oracleError,
+    required this.onAskOracle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -513,7 +563,83 @@ class _Reading extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(reading.guidance, style: ArcanumText.body(14, color: accent)),
+
+          // ── El oráculo: lectura personalizada de este tránsito ──
+          const SizedBox(height: 14),
+          Divider(
+            height: 1,
+            color: ArcanumColors.goldMuted.withValues(alpha: 0.25),
+          ),
+          const SizedBox(height: 10),
+          if (oracleReply == null)
+            _OracleButton(asking: asking, onPressed: onAskOracle),
+          if (oracleError != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              oracleError!,
+              style: ArcanumText.body(13, color: ArcanumColors.burgundyLight),
+            ),
+          ],
+          if (oracleReply != null) ...[
+            Row(
+              children: [
+                const Text(
+                  '✦',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: ArcanumColors.goldMuted,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text('EL ORÁCULO', style: ArcanumText.label()),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              oracleReply!.isEmpty
+                  ? 'El oráculo guardó silencio. Inténtalo de nuevo.'
+                  : oracleReply!,
+              style: ArcanumText.body(15),
+            ),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+/// Botón discreto que abre la lectura personalizada. Consume cupo diario del
+/// oráculo, así que se pide explícitamente: nunca se dispara solo al desplegar.
+class _OracleButton extends StatelessWidget {
+  final bool asking;
+  final VoidCallback onPressed;
+  const _OracleButton({required this.asking, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton.icon(
+      onPressed: asking ? null : onPressed,
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      icon: asking
+          ? const SizedBox(
+              width: 13,
+              height: 13,
+              child: CircularProgressIndicator(
+                color: ArcanumColors.gold,
+                strokeWidth: 1.6,
+              ),
+            )
+          : const Text(
+              '✦',
+              style: TextStyle(fontSize: 13, color: ArcanumColors.gold),
+            ),
+      label: Text(
+        asking ? 'Consultando al oráculo…' : 'Explícame esto',
+        style: ArcanumText.body(14, color: ArcanumColors.gold),
       ),
     );
   }
