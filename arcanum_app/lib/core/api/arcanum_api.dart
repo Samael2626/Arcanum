@@ -20,6 +20,45 @@ class ArcanumApi {
     return res.data as Map<String, dynamic>;
   }
 
+  // ── Lecturas (obras en dominio público) ─────────────────────────────────
+  //
+  // Contenido público, como Materia Arcana: no requiere auth. Se piden por
+  // separado índice y texto porque Culpeper son 423 capítulos y ~1,7 MB:
+  // mandar el libro entero por una lista que el usuario solo ojea sería
+  // gastar los datos de alguien para nada.
+
+  /// Índice de obras, sin texto.
+  Future<List<Map<String, dynamic>>> libraryWorks() async {
+    final res = await _dio.get(
+      '/library',
+      options: Options(extra: const {'noAuth': true}),
+    );
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  /// Una obra con su índice de capítulos, sin texto.
+  /// [kind] filtra el índice: herb | appendix | catalogue | front.
+  Future<Map<String, dynamic>> libraryWork(String slug, {String? kind}) async {
+    final res = await _dio.get(
+      '/library/$slug',
+      queryParameters: {'kind': ?kind},
+      options: Options(extra: const {'noAuth': true}),
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Un capítulo con su texto. Es la unidad que se cachea para leer offline.
+  Future<Map<String, dynamic>> libraryChapter(
+    String workSlug,
+    String chapterSlug,
+  ) async {
+    final res = await _dio.get(
+      '/library/$workSlug/$chapterSlug',
+      options: Options(extra: const {'noAuth': true}),
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
   /// Calcula (o recalcula) y cachea la carta natal del usuario. Requiere auth.
   Future<Map<String, dynamic>> natalChart() async {
     final res = await _dio.post('/astral/natal-chart');
