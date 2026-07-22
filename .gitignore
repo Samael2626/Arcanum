@@ -28,3 +28,7 @@ Brain/
 !railway.json
 !railway.toml
 .tmp/
+
+# Lecturas: los JSON de obras se generan con scripts/ingest_library.py
+# (1.7 MB cada uno). Se versiona el pipeline, no su salida.
+arcanum-api/scripts/library_data/
