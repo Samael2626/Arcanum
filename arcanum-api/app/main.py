@@ -8,12 +8,13 @@ from app.core.exceptions import http_exception_handler, generic_exception_handle
 from app.db.seed import run_seeds
 from app.db.migrate import run_migrations
 from app.db.session import engine
-from app.routers import auth, users, astral, materia, grimoire, oracle, tarot, admin, geo
+from app.routers import auth, users, astral, materia, grimoire, oracle, tarot, admin, geo, library
 
 # Importar todos los modelos para que Alembic los detecte
 from app.models import user, refresh_token, natal_chart, grimoire_entry  # noqa: F401
 from app.models import tradition, materia_item, divination_session, oracle_conversation  # noqa: F401
 from app.models import tarot as tarot_models  # noqa: F401
+from app.models import library as library_models  # noqa: F401  (colisiona con el router)
 
 
 @asynccontextmanager
@@ -62,6 +63,7 @@ app.include_router(oracle.router, prefix="/oracle", tags=["oracle"])
 app.include_router(tarot.router, tags=["tarot"])
 app.include_router(admin.router, tags=["admin"])
 app.include_router(geo.router, prefix="/geo", tags=["geo"])
+app.include_router(library.router, prefix="/library", tags=["library"])
 
 
 @app.get("/", tags=["root"])
