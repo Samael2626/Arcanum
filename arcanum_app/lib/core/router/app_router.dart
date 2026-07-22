@@ -6,6 +6,9 @@ import '../../features/auth/register_screen.dart';
 import '../../features/cielos/cielos_screen.dart';
 import '../../features/grimorio/grimorio_screen.dart';
 import '../../features/hoy/hoy_screen.dart';
+import '../../features/lecturas/presentation/lector_screen.dart';
+import '../../features/lecturas/presentation/lecturas_screen.dart';
+import '../../features/lecturas/presentation/obra_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/oraculo/oraculo_screen.dart';
 import '../../features/settings/settings_screen.dart';
@@ -51,6 +54,33 @@ final appRouter = GoRouter(
               builder: (c, s) => const OraculoScreen(),
               routes: [
                 GoRoute(path: 'tarot', builder: (c, s) => const TarotScreen()),
+              ],
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/lecturas',
+              builder: (c, s) => const LecturasScreen(),
+              routes: [
+                // Anidadas para que volver desde un pasaje lleve al índice de
+                // su obra, y de ahí a la biblioteca — el recorrido natural de
+                // quien está leyendo.
+                GoRoute(
+                  path: ':work',
+                  builder: (c, s) =>
+                      ObraScreen(workSlug: s.pathParameters['work']!),
+                  routes: [
+                    GoRoute(
+                      path: ':chapter',
+                      builder: (c, s) => LectorScreen(
+                        workSlug: s.pathParameters['work']!,
+                        chapterSlug: s.pathParameters['chapter']!,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ],

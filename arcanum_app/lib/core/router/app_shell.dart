@@ -61,6 +61,15 @@ class AppShell extends StatelessWidget {
             selectedIcon: Icon(Icons.style),
             label: 'Oráculo',
           ),
+          // Sexta pestaña. Material recomienda 3-5: con seis, las etiquetas se
+          // aprietan en pantallas estrechas. Si llega a molestar, la salida
+          // natural es fundir Arte y Lecturas bajo un mismo "Saber", ya que
+          // Materia Arcana sale justamente de estas obras.
+          NavigationDestination(
+            icon: Icon(Icons.local_library_outlined),
+            selectedIcon: Icon(Icons.local_library),
+            label: 'Lecturas',
+          ),
         ],
       ),
     );
