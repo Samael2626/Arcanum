@@ -380,7 +380,9 @@ class _BridgeCard extends StatelessWidget {
   Widget _rulerRow(String label, String value) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      SizedBox(width: 78, child: Text(label, style: ArcanumText.label())),
+      // 96px: "CULPEPER" (8 letras con tracking de label) no cabía en 78 y
+      // se partía en dos líneas ("CULPEPE / R").
+      SizedBox(width: 96, child: Text(label, style: ArcanumText.label())),
       Expanded(
         child: Text(
           value,
