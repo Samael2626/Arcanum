@@ -44,12 +44,12 @@ def load_bridge() -> dict[str, str]:
     return data["map"]
 
 
-def load_culpeper_planets() -> dict[str, str | None]:
+def load_culpeper_planets() -> dict[str, list[str]]:
     work = json.loads(
         (DATA_DIR / "culpeper-complete-herbal.json").read_text(encoding="utf-8")
     )
     return {
-        c["slug"]: c["meta"].get("ruling_planet")
+        c["slug"]: c["meta"].get("ruling_planets", [])
         for c in work["chapters"]
         if c["kind"] == "herb"
     }
@@ -78,26 +78,30 @@ def main() -> None:
 
     for materia_slug, culpeper_slug in sorted(bridge.items()):
         materia_planet = materia.get(materia_slug)
-        culpeper_planet = culpeper.get(culpeper_slug, "__missing__")
+        culpeper_planets = culpeper.get(culpeper_slug)
 
-        if culpeper_planet == "__missing__":
+        if culpeper_planets is None:
             verdict = "✗ FALTA en Culpeper"
             missing += 1
-            planets = f"{materia_planet or '?'} / —"
-        elif culpeper_planet is None:
+            shown = "—"
+        elif not culpeper_planets:
             verdict = "· sin dato en Culpeper"
             no_data += 1
-            planets = f"{materia_planet or '?'} / —"
-        elif materia_planet == culpeper_planet:
+            shown = "—"
+        elif materia_planet in culpeper_planets:
+            # El planeta de Materia está entre los que Culpeper afirma. Con
+            # varios (la rosa), basta que uno coincida: es la misma planta.
             verdict = "✓ OK"
             ok += 1
-            planets = f"{materia_planet} = {culpeper_planet}"
+            shown = "+".join(culpeper_planets)
         else:
+            # Ninguno coincide: discrepancia doctrinal real entre tradiciones.
             verdict = "⚠ DISCREPA"
             discrepancies += 1
-            planets = f"{materia_planet} ≠ {culpeper_planet}"
+            shown = "+".join(culpeper_planets)
 
-        print(f"{materia_slug:<18}{culpeper_slug:<32}{planets:<22}{verdict}")
+        planets = f"{materia_planet or '?'} / {shown}"
+        print(f"{materia_slug:<18}{culpeper_slug:<32}{planets:<24}{verdict}")
 
     # Hierbas de Materia que aún no tienen enlace.
     unmapped = sorted(set(materia) - set(bridge))

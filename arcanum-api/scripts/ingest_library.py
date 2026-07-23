@@ -25,6 +25,7 @@ Uso:
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 import re
 import unicodedata
@@ -146,13 +147,27 @@ CULPEPER_SOURCE = "https://www.gutenberg.org/cache/epub/49513/pg49513.txt"
 # Las entradas de planta son títulos indentados en mayúsculas: "    ALL-HEAL."
 _ENTRY = re.compile(r"^ {4}([A-Z][A-Z0-9 .,'’()-]{2,60})\.?\s*$", re.M)
 
-# "It is under the planet Mercury", "It is an herb of Mars", "Saturn owns the herb"
-_RULER = re.compile(
-    r"\b(?:planet\s+of\s+|under\s+(?:the\s+)?(?:planet|dominion\s+of)\s+|"
-    r"herb\s+of\s+|owned\s+by\s+|governed\s+by\s+)?"
-    r"(Saturn|Jupiter|Mars|Sol|Sun|Venus|Mercury|Luna|Moon)\b",
+_PLANET = r"(Saturn|Jupiter|Mars|Sol|Sun|Venus|Mercury|Luna|Moon)"
+
+# Regencia FUERTE: construcciones que casi nunca son incidentales. "It is an
+# herb of Mars", "under the dominion of Saturn", "governed by Jupiter", "Venus
+# owns this herb". Se buscan en toda la sección.
+_STRONG_RULER = re.compile(
+    r"(?:herb|tree|plant)\s+of\s+(?:the\s+)?" + _PLANET
+    + r"|(?:planet|dominion|influence)\s+of\s+(?:the\s+)?" + _PLANET
+    + r"|governed\s+by\s+(?:the\s+)?" + _PLANET
+    + r"|" + _PLANET + r"\s+(?:owns|governs|claims|rules)"
+    # Posesivo: "The herb is Jupiter's" (con apóstrofe recto o tipográfico).
+    + r"|" + _PLANET + r"['’']s\b",
     re.I,
 )
+
+# Regencia DÉBIL: "X are under Jupiter". Es regencia cuando enumera subtipos al
+# inicio (la rosa roja bajo Júpiter, la damascena bajo Venus…), pero "those
+# under Saturn" más adelante son enfermedades que trata, no su regencia. Por
+# eso solo se acepta en la cabecera de la sección y nunca tras "those"/"parts".
+_WEAK_UNDER = re.compile(r"(?<!those )under\s+(?:the\s+)?" + _PLANET, re.I)
+_WEAK_LIMIT = 170  # caracteres iniciales donde "under X" aún es regencia
 
 _PLANET_KEY = {
     "saturn": "saturn",
@@ -167,21 +182,68 @@ _PLANET_KEY = {
 }
 
 
-def _extract_ruler(paragraphs: list[str]) -> str | None:
-    """Planeta regente, desde la sección 'Government and virtues'.
+# Marcas de que un planeta está siendo NEGADO, no afirmado. Culpeper discute
+# atribuciones ajenas antes de dar la suya: en henbane escribe "I wonder how
+# astrologers could take on them to make this an herb of Jupiter... it is under
+# the dominion of Saturn". Coger el primer planeta daba Júpiter — justo el que
+# él rechaza. Si alguna de estas aparece en los ~60 caracteres previos, el
+# planeta se descarta.
+_NEGATION = re.compile(
+    r"\b(wonder|how could|cannot|could not|is not|no astrologer|mistake|"
+    r"erroneously|falsely|deny|denied)\b",
+    re.I,
+)
 
-    Es el puente con Materia Arcana: la misma correspondencia que la app ya
-    afirma, ahora con su fuente citable. Solo se mira esa sección: el nombre
-    de un planeta en la descripción botánica no es una regencia.
+
+def _extract_rulers(paragraphs: list[str]) -> list[str]:
+    """Planetas regentes AFIRMADOS, desde 'Government and virtues'.
+
+    Devuelve una lista, no un valor único, porque una entrada legítima puede
+    declarar varios: Culpeper pone la rosa roja bajo Júpiter, la damascena bajo
+    Venus y la blanca bajo la Luna. Aplastar eso a un solo planeta perdía
+    información y creaba falsas discrepancias con Materia Arcana.
+
+    Es el puente con Materia: la misma correspondencia que la app afirma, ahora
+    citable. Solo se mira esta sección — un planeta nombrado en la descripción
+    botánica no es una regencia.
     """
     for p in paragraphs:
         if "_Government and virtues._]" not in p and "_Government._]" not in p:
             continue
         section = p.split("]", 1)[1] if "]" in p else p
-        match = _RULER.search(section[:400])
-        if match:
-            return _PLANET_KEY.get(match.group(1).lower())
-    return None
+        counts: "Counter[str]" = Counter()
+
+        def add(match: "re.Match[str]") -> None:
+            # Un planeta negado es una atribución que el autor rechaza, no la
+            # suya: "I wonder how astrologers could make this an herb of…".
+            window = section[max(0, match.start() - 60) : match.start()]
+            if _NEGATION.search(window):
+                return
+            planet = next(
+                (_PLANET_KEY[g.lower()] for g in match.groups() if g), None
+            )
+            if planet:
+                counts[planet] += 1
+
+        # 1) Regencia fuerte, en cualquier posición.
+        for match in _STRONG_RULER.finditer(section):
+            add(match)
+        # 2) "under X" solo en la cabecera, donde aún es regencia (subtipos)
+        #    y no una lista de dolencias.
+        if not counts:
+            for match in _WEAK_UNDER.finditer(section[:_WEAK_LIMIT]):
+                add(match)
+
+        if not counts:
+            return []
+        # El planeta REGENTE es el que domina. En el texto (larguísimo) de
+        # wormwood, "herb of Mars" aparece diez veces y otros planetas una vez
+        # en digresiones: gana Marte. Cuando varios empatan —la rosa roja bajo
+        # Júpiter, la damascena bajo Venus— son regencias legítimas de subtipo
+        # y se conservan todas.
+        top = max(counts.values())
+        return [planet for planet, n in counts.items() if n == top]
+    return []
 
 
 # Marcadores que identifican una entrada de hierba de verdad. Un prefacio o
@@ -302,9 +364,13 @@ def parse_culpeper(raw: str) -> Work:
             meta={},
         )
         if is_herb:
-            ruler = _extract_ruler(paragraphs)
-            if ruler:
-                chapter.meta["ruling_planet"] = ruler
+            rulers = _extract_rulers(paragraphs)
+            if rulers:
+                # Lista siempre; el "principal" (para un solo glifo) es el
+                # primero afirmado, pero la app usa el planeta de Materia como
+                # principal — esto es solo lo que la OBRA declara.
+                chapter.meta["ruling_planets"] = rulers
+                chapter.meta["ruling_planet"] = rulers[0]
 
         chapter.paragraphs = [
             Paragraph(anchor=f"{work.slug}.{slug}.{n}", text=text)
@@ -348,7 +414,7 @@ def main() -> None:
     from collections import Counter
 
     kinds = Counter(c.kind for c in work.chapters)
-    with_ruler = sum(1 for c in work.chapters if c.meta.get("ruling_planet"))
+    with_ruler = sum(1 for c in work.chapters if c.meta.get("ruling_planets"))
     compact = json.dumps(asdict(work), ensure_ascii=False).encode()
     longest = max(work.chapters, key=lambda c: len(c.paragraphs))
 

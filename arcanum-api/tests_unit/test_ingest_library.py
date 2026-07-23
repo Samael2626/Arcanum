@@ -14,12 +14,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from ingest_library import (  # noqa: E402
     _classify,
-    _extract_ruler,
+    _extract_rulers,
     normalize_paragraphs,
     slugify,
     strip_gutenberg_boilerplate,
     title_case,
 )
+
+
+def _gov(text: str) -> list[str]:
+    """Envuelve un cuerpo en una sección 'Government and virtues'."""
+    return [f"_Government and virtues._] {text}"]
 
 
 class TestGutenbergBoilerplate:
@@ -93,33 +98,75 @@ class TestNormalizeParagraphs:
         assert normalize_paragraphs("\n\n   \n\n") == []
 
 
-class TestExtractRuler:
-    """El regente es el puente con Materia Arcana: tiene que ser exacto."""
+class TestExtractRulers:
+    """El regente es el puente con Materia Arcana: tiene que ser exacto.
+
+    Cada caso salió de una hierba real de Culpeper que rompía la versión
+    anterior del extractor.
+    """
 
     @pytest.mark.parametrize(
         "texto,esperado",
         [
-            ("_Government and virtues._] It is under the planet Mercury.", "mercury"),
-            ("_Government and virtues._] It is under the dominion of Mars.", "mars"),
-            ("_Government and virtues._] This is an herb of Venus.", "venus"),
-            ("_Government and virtues._] Saturn owns the herb.", "saturn"),
-            ("_Government and virtues._] It is a herb of Sol.", "sun"),
-            ("_Government and virtues._] Luna claims this one.", "moon"),
+            ("It is under the dominion of Mars.", ["mars"]),
+            ("This is an herb of Venus.", ["venus"]),
+            ("Saturn owns the herb.", ["saturn"]),
+            ("It is a herb of Sol.", ["sun"]),
+            ("Luna claims this one.", ["moon"]),
+            ("The herb is Jupiter's, and the sign Cancer.", ["jupiter"]),
+            ("This is under the influence of Mercury.", ["mercury"]),
         ],
     )
     def test_reconoce_las_formulas_de_culpeper(self, texto, esperado):
-        assert _extract_ruler([texto]) == esperado
+        assert _extract_rulers(_gov(texto)) == esperado
+
+    def test_henbane_ignora_el_planeta_negado(self):
+        # Culpeper rechaza Júpiter y afirma Saturno. Coger el primero daba el
+        # planeta que él desmiente.
+        texto = (
+            "I wonder how astrologers could take on them to make this an herb "
+            "of Jupiter; the herb is indeed under the dominion of Saturn, and "
+            "I prove it."
+        )
+        assert _extract_rulers(_gov(texto)) == ["saturn"]
+
+    def test_roses_conserva_todos_los_subtipos(self):
+        # La rosa roja bajo Júpiter, la damascena bajo Venus, la blanca bajo la
+        # Luna: son regencias legítimas de subtipo, no un error.
+        texto = (
+            "red Roses are under Jupiter, Damask under Venus, White under the "
+            "Moon, and Provence under the King of France."
+        )
+        assert _extract_rulers(_gov(texto)) == ["jupiter", "venus", "moon"]
+
+    def test_wormwood_el_dominante_gana(self):
+        # En un texto largo, el planeta repetido con "herb of" es la regencia;
+        # los mencionados de pasada son digresiones.
+        texto = (
+            "Wormwood is an herb of Mars. It helps the evils Venus causes. "
+            "Some say it is under the Moon, but Wormwood, an herb of Mars, "
+            "cures what Mars afflicts, for Wormwood is an herb of Mars."
+        )
+        assert _extract_rulers(_gov(texto)) == ["mars"]
+
+    def test_excluye_las_dolencias_que_trata(self):
+        # "those under Saturn, Mars and Mercury" son enfermedades que cura, no
+        # su regencia; la regencia es el primer "under Jupiter".
+        texto = (
+            "It is an herb under Jupiter, and cures the diseases of those "
+            "under Saturn, Mars and Mercury by sympathy."
+        )
+        assert _extract_rulers(_gov(texto)) == ["jupiter"]
 
     def test_ignora_planetas_fuera_de_la_seccion_de_regencia(self):
-        # Un planeta nombrado en la descripción botánica NO es una regencia.
         parrafos = [
             "_Descript._] Its leaves shine like the Moon on a clear night.",
             "_Place._] Grows where Mars once trod, say the poets.",
         ]
-        assert _extract_ruler(parrafos) is None
+        assert _extract_rulers(parrafos) == []
 
-    def test_sin_regencia_declarada_devuelve_None(self):
-        assert _extract_ruler(["_Government and virtues._] A very useful herb."]) is None
+    def test_sin_regencia_declarada_devuelve_lista_vacia(self):
+        assert _extract_rulers(_gov("A very useful herb.")) == []
 
 
 class TestClassify:
