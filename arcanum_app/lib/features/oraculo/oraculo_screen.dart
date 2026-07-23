@@ -4,12 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/arcanum_api.dart';
 import '../../core/api/oracle_error.dart';
 import '../../core/auth/auth_controller.dart';
+import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
 // El "?" de Oráculo vive ahora en la barra superior del shell (InfoDot allí).
 import '../../shared/widgets/login_prompt.dart';
+import 'tarot_learn.dart';
 import 'widgets/tarot_card.dart';
 
 const _spreads = <(String, String)>[
@@ -39,7 +41,114 @@ class OraculoScreen extends ConsumerWidget {
             'Inicia sesión para tirar las cartas y guardar tus lecturas.',
       );
     }
-    return const _OracleView();
+    return const _OracleHome();
+  }
+}
+
+/// El hogar del Oráculo: dos caras de la misma práctica. **Consultar** tira las
+/// cartas; **Aprender** recorre el mazo carta por carta (derecho e invertida).
+/// El salto de tarot desde Hoy entra directo en Aprender y abre una carta.
+class _OracleHome extends ConsumerStatefulWidget {
+  const _OracleHome();
+  @override
+  ConsumerState<_OracleHome> createState() => _OracleHomeState();
+}
+
+class _OracleHomeState extends ConsumerState<_OracleHome> {
+  int _mode = 0; // 0 = consultar, 1 = aprender
+  String? _focusSlug;
+
+  @override
+  void initState() {
+    super.initState();
+    final focus = ref.read(oraculoFocusCardProvider);
+    if (focus != null) {
+      _mode = 1;
+      _focusSlug = focus;
+      // Consumido: si vuelve al Oráculo por su cuenta, sin foco.
+      Future.microtask(
+        () => ref.read(oraculoFocusCardProvider.notifier).set(null),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 460),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            _ModeToggle(
+              mode: _mode,
+              onChanged: (m) => setState(() => _mode = m),
+            ),
+            Expanded(
+              child: IndexedStack(
+                index: _mode,
+                children: [
+                  const _OracleView(),
+                  TarotCatalog(focusSlug: _focusSlug),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Segmentado Consultar | Aprender (misma píldora dorada que el toggle de Saber).
+class _ModeToggle extends StatelessWidget {
+  final int mode;
+  final ValueChanged<int> onChanged;
+  const _ModeToggle({required this.mode, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: ArcanumColors.goldMuted.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          _seg('Consultar', 0),
+          _seg('Aprender', 1),
+        ],
+      ),
+    );
+  }
+
+  Widget _seg(String label, int value) {
+    final selected = value == mode;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onChanged(value),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: selected
+                ? ArcanumColors.gold.withValues(alpha: 0.16)
+                : Colors.transparent,
+          ),
+          child: Text(
+            label,
+            style: ArcanumText.body(
+              15,
+              color: selected ? ArcanumColors.gold : ArcanumColors.ivoryMuted,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

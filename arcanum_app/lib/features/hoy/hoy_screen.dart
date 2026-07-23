@@ -162,6 +162,9 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         ref.read(grimoireComposeProvider.notifier).set(true);
         context.go('/grimorio');
       case NextStepKind.tarot:
+        if (slug != null) {
+          ref.read(oraculoFocusCardProvider.notifier).set(slug);
+        }
         context.go('/oraculo');
       case NextStepKind.cielos:
         ref.read(cielosFocusPlanetProvider.notifier).set(planet);

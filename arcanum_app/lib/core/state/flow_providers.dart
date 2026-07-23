@@ -35,3 +35,15 @@ class CielosFocusPlanet extends Notifier<String?> {
 
 final cielosFocusPlanetProvider =
     NotifierProvider<CielosFocusPlanet, String?>(CielosFocusPlanet.new);
+
+/// Carta de tarot a abrir en Oráculo → Aprender al entrar (Hoy → Oráculo). Es
+/// el slug de la carta ('el-sol'); Oráculo arranca en modo Aprender y abre su
+/// ficha. Se limpia tras consumirse.
+class OraculoFocusCard extends Notifier<String?> {
+  @override
+  String? build() => null;
+  void set(String? slug) => state = slug;
+}
+
+final oraculoFocusCardProvider =
+    NotifierProvider<OraculoFocusCard, String?>(OraculoFocusCard.new);
