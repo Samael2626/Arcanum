@@ -126,9 +126,16 @@ def main() -> None:
             for position_gone in set(by_position) - set(range(len(chapter_data["paragraphs"]))):
                 db.delete(by_position[position_gone])
 
+            # Commit por capítulo, no uno solo al final. Sembrar 423 capítulos
+            # contra el pooler tarda >10 min: con un único commit, un corte a
+            # mitad lo pierde TODO y no hay progreso visible. Así es reanudable
+            # e idempotente por capítulo.
+            db.commit()
+            if (created + updated) % 50 == 0:
+                print(f"    … {created + updated} capítulos")
+
         for slug_gone in set(existing) - seen:
             db.delete(existing[slug_gone])
-
         db.commit()
         print(f"\n  capítulos nuevos    : {created}")
         print(f"  capítulos actualizados: {updated}")
