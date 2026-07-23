@@ -13,6 +13,7 @@ import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_surface.dart';
 import '../../shared/widgets/moon_disc.dart';
+import 'hoy_guidance.dart';
 import 'hoy_lore.dart';
 import 'presentation/widgets/planetary_hour_dial.dart';
 
@@ -120,9 +121,20 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
     final hour = data['planetary_hour'] as Map<String, dynamic>;
     final moon = data['moon'] as Map<String, dynamic>;
     final ruler = data['day_ruler'] as String;
+    // "Tu siguiente paso": lo conduce la HORA planetaria (cambia cada ~60 min,
+    // mantiene Hoy vivo), no el día. Si el planeta no es de los siete clásicos
+    // no hay paso y la tarjeta no aparece.
+    final step = nextStepFor(
+      hourPlanet: hour['planet'] as String,
+      hourNumber: (hour['hour_number'] as num?)?.toInt() ?? 1,
+    );
     // Entrada en cascada suave: cada panel emerge del velo con su propio retardo.
     return Column(
       children: [
+        if (step != null) ...[
+          _NextStepCard(step: step, onTap: () => _runStep(step)),
+          const SizedBox(height: 18),
+        ],
         _rulerHero(ruler),
         const SizedBox(height: 18),
         _planetaryHourCard(hour),
@@ -130,6 +142,28 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         _moonCard(moon),
       ],
     );
+  }
+
+  /// Ejecuta el salto de un paso/atajo. Todos los destinos existen ya: plantas
+  /// filtradas por planeta, un capítulo de Culpeper, el editor del grimorio o
+  /// la pestaña del oráculo.
+  void _runStep(NextStep step) => _navigate(step.kind, step.planet, step.slug);
+
+  void _navigate(NextStepKind kind, String planet, String? slug) {
+    switch (kind) {
+      case NextStepKind.materia:
+        ref.read(materiaPlanetProvider.notifier).set(planet);
+        context.go('/saber');
+      case NextStepKind.culpeper:
+        if (slug != null) {
+          context.push('/saber/$culpeperWorkSlug/$slug');
+        }
+      case NextStepKind.grimoire:
+        ref.read(grimoireComposeProvider.notifier).set(true);
+        context.go('/grimorio');
+      case NextStepKind.tarot:
+        context.go('/oraculo');
+    }
   }
 
   /// Héroe del día: el regente con su atmósfera y color verdaderos. Tap → lore.
@@ -169,9 +203,44 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
             ],
             const SizedBox(height: 16),
             _TapHint(color: mood.accent, label: 'Toca para su lore'),
+            const SizedBox(height: 16),
+            _jumpRow(ruler, mood),
           ],
         ),
       ),
+    );
+  }
+
+  /// Saltos contextuales (B) de un panel: hilos a otras secciones tejidos según
+  /// el planeta del panel. Los chips capturan su propio tap dentro del panel.
+  Widget _jumpRow(String planet, ArcanumMood mood) {
+    final es = planetEs[planet] ?? planet;
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      alignment: WrapAlignment.center,
+      children: [
+        _JumpChip(
+          label: 'Plantas de $es',
+          mood: mood,
+          onTap: () => _navigate(NextStepKind.materia, planet, null),
+        ),
+        if (planetCulpeperChapter.containsKey(planet))
+          _JumpChip(
+            label: 'Léelo en Culpeper',
+            mood: mood,
+            onTap: () => _navigate(
+              NextStepKind.culpeper,
+              planet,
+              planetCulpeperChapter[planet],
+            ),
+          ),
+        _JumpChip(
+          label: 'Anota',
+          mood: mood,
+          onTap: () => _navigate(NextStepKind.grimoire, planet, null),
+        ),
+      ],
     );
   }
 
@@ -336,6 +405,8 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
               color: ArcanumColors.moonAccent,
               label: 'Toca para la fase',
             ),
+            const SizedBox(height: 16),
+            _jumpRow('moon', ArcanumMood.moon),
           ],
         ),
       ),
@@ -387,6 +458,116 @@ class _TodayCard extends StatelessWidget {
           ],
         ),
         child: child,
+      ),
+    );
+  }
+}
+
+/// "Tu siguiente paso": el titular de Hoy. Toma la atmósfera del planeta de la
+/// hora y ofrece UNA acción concreta. Toda la tarjeta es tocable; el botón
+/// repite la acción como afford explícito.
+class _NextStepCard extends StatelessWidget {
+  final NextStep step;
+  final VoidCallback onTap;
+  const _NextStepCard({required this.step, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final mood = ArcanumMood.forPlanet(step.planet);
+    return _Tappable(
+      borderRadius: 18,
+      onTap: onTap,
+      child: _TodayCard(
+        mood: mood,
+        radius: 18,
+        intensity: 0.55,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  '✶',
+                  style: TextStyle(
+                    color: mood.accent,
+                    fontSize: 15,
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: Text(step.eyebrow, style: ArcanumText.label())),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(step.title, style: ArcanumText.heading(23)),
+            const SizedBox(height: 18),
+            InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: mood.glow.withValues(alpha: 0.16),
+                  border: Border.all(color: mood.accent.withValues(alpha: 0.6)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      step.actionLabel,
+                      style: ArcanumText.body(15, color: mood.accent),
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 17,
+                      color: mood.accent,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Chip de salto contextual: un hilo corto a otra sección, teñido del planeta
+/// del panel donde vive.
+class _JumpChip extends StatelessWidget {
+  final String label;
+  final ArcanumMood mood;
+  final VoidCallback onTap;
+  const _JumpChip({
+    required this.label,
+    required this.mood,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          color: mood.glow.withValues(alpha: 0.10),
+          border: Border.all(color: mood.accent.withValues(alpha: 0.45)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label, style: ArcanumText.body(13, color: mood.accent)),
+            const SizedBox(width: 5),
+            Icon(Icons.arrow_forward_rounded, size: 14, color: mood.accent),
+          ],
+        ),
       ),
     );
   }
