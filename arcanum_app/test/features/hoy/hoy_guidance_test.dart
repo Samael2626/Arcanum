@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('nextStepFor', () {
     test('la acción rota con la hora para dar variedad', () {
-      // La rotación es [materia, grimoire, culpeper, tarot].
+      // La rotación es [materia, grimoire, culpeper, tarot, cielos].
       expect(
         nextStepFor(hourPlanet: 'mercury', hourNumber: 0)!.kind,
         NextStepKind.materia,
@@ -21,9 +21,13 @@ void main() {
         nextStepFor(hourPlanet: 'mercury', hourNumber: 3)!.kind,
         NextStepKind.tarot,
       );
-      // Vuelve a empezar: 4 % 4 == 0.
       expect(
         nextStepFor(hourPlanet: 'mercury', hourNumber: 4)!.kind,
+        NextStepKind.cielos,
+      );
+      // Vuelve a empezar: 5 % 5 == 0.
+      expect(
+        nextStepFor(hourPlanet: 'mercury', hourNumber: 5)!.kind,
         NextStepKind.materia,
       );
     });

@@ -136,11 +136,14 @@ class NextStep {
 
 /// El orden en que rotan los tipos de paso a lo largo del día. Rotar por número
 /// de hora da variedad (no siempre "ver plantas") sin dejar de ser determinista.
+/// Las cinco caras tocan las cinco secciones: Saber (plantas y libro), Grimorio,
+/// Oráculo y Cielos — así "Tu siguiente paso" nunca deja una sección huérfana.
 const _kindRotation = [
   NextStepKind.materia,
   NextStepKind.grimoire,
   NextStepKind.culpeper,
   NextStepKind.tarot,
+  NextStepKind.cielos,
 ];
 
 /// Decide el siguiente paso desde la hora planetaria vigente.

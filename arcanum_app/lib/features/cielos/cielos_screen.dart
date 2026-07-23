@@ -15,6 +15,7 @@ import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
 import '../../shared/widgets/info_dot.dart';
+import '../hoy/hoy_guidance.dart';
 import '../hoy/hoy_lore.dart';
 import 'sign_lore.dart';
 import 'widgets/natal_wheel.dart';
@@ -463,6 +464,14 @@ class _AspectRowState extends ConsumerState<_AspectRow> {
   String? _oracleReply;
   String? _oracleError;
 
+  /// Abre en Oráculo → Aprender la carta del planeta que transita. El planeta
+  /// activo del tránsito tiene su Arcano Mayor (Golden Dawn): otro hilo entre
+  /// secciones, del cielo al mazo.
+  void _openTarot(String slug) {
+    ref.read(oraculoFocusCardProvider.notifier).set(slug);
+    context.go('/oraculo');
+  }
+
   /// Pide al oráculo la lectura personalizada de ESTE tránsito.
   /// El servidor ya inyecta la carta natal: solo hay que nombrar el tránsito.
   Future<void> _askOracle() async {
@@ -565,6 +574,10 @@ class _AspectRowState extends ConsumerState<_AspectRow> {
               oracleReply: _oracleReply,
               oracleError: _oracleError,
               onAskOracle: _askOracle,
+              tarotPlanet: planetTarot.containsKey(t) ? t : null,
+              onOpenTarot: planetTarot.containsKey(t)
+                  ? () => _openTarot(planetTarot[t]!)
+                  : null,
             ),
           ),
         ],
@@ -583,6 +596,11 @@ class _Reading extends StatelessWidget {
   final String? oracleError;
   final VoidCallback onAskOracle;
 
+  /// Planeta que transita, si tiene Arcano Mayor (uno de los siete clásicos):
+  /// habilita el salto a su carta en el Oráculo. Null para los modernos.
+  final String? tarotPlanet;
+  final VoidCallback? onOpenTarot;
+
   const _Reading({
     required this.reading,
     required this.accent,
@@ -590,6 +608,8 @@ class _Reading extends StatelessWidget {
     required this.oracleReply,
     required this.oracleError,
     required this.onAskOracle,
+    this.tarotPlanet,
+    this.onOpenTarot,
   });
 
   @override
@@ -618,6 +638,27 @@ class _Reading extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(reading.guidance, style: ArcanumText.body(14, color: accent)),
+
+          // ── Hilo al mazo: la carta del planeta que transita ──
+          if (onOpenTarot != null) ...[
+            const SizedBox(height: 10),
+            TextButton.icon(
+              onPressed: onOpenTarot,
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              icon: const Text(
+                '✦',
+                style: TextStyle(fontSize: 13, color: ArcanumColors.goldMuted),
+              ),
+              label: Text(
+                'Ver la carta de ${planetEs[tarotPlanet] ?? tarotPlanet}',
+                style: ArcanumText.body(14, color: ArcanumColors.goldMuted),
+              ),
+            ),
+          ],
 
           // ── El oráculo: lectura personalizada de este tránsito ──
           const SizedBox(height: 14),
