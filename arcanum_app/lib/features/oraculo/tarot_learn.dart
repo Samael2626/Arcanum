@@ -6,6 +6,8 @@
 /// desde Hoy ("la carta de Marte es La Torre").
 library;
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -377,8 +379,12 @@ class _TarotCatalogState extends ConsumerState<TarotCatalog> {
               children: [
                 Expanded(
                   child: LayoutBuilder(
-                    builder: (context, c) =>
-                        TarotNaipe(card: card, width: c.maxHeight / 1.6),
+                    // Encaja el naipe (relación 1:1.6) sin desbordar la celda:
+                    // limita por el MENOR de ancho o alto disponibles.
+                    builder: (context, c) {
+                      final w = math.min(c.maxWidth, c.maxHeight / 1.6);
+                      return Center(child: TarotNaipe(card: card, width: w));
+                    },
                   ),
                 ),
                 const SizedBox(height: 6),
