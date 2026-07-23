@@ -99,6 +99,9 @@ enum NextStepKind {
 
   /// La pestaña del oráculo (tarot no tiene visor de carta suelta).
   tarot,
+
+  /// Cielos, enfocando el planeta en la carta natal ("tu Marte natal").
+  cielos,
 }
 
 /// El "siguiente paso" ya resuelto en texto + destino. La pantalla solo lo pinta
@@ -198,6 +201,16 @@ NextStep? nextStepFor({
         kind: kind,
         planet: hourPlanet,
         slug: planetTarot[hourPlanet],
+      );
+    case NextStepKind.cielos:
+      // Hoy no lo produce por rotación; existe como destino de los saltos de
+      // panel ("tu Marte natal") y queda listo por si entra a la rotación.
+      return NextStep(
+        eyebrow: eyebrow,
+        title: 'Mira tu $es en tu carta natal',
+        actionLabel: 'Ver tu $es natal',
+        kind: kind,
+        planet: hourPlanet,
       );
   }
 }

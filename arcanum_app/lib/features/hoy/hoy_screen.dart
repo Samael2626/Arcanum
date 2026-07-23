@@ -163,6 +163,9 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         context.go('/grimorio');
       case NextStepKind.tarot:
         context.go('/oraculo');
+      case NextStepKind.cielos:
+        ref.read(cielosFocusPlanetProvider.notifier).set(planet);
+        context.go('/cielos');
     }
   }
 
@@ -235,6 +238,11 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
               planetCulpeperChapter[planet],
             ),
           ),
+        _JumpChip(
+          label: 'Tu $es natal',
+          mood: mood,
+          onTap: () => _navigate(NextStepKind.cielos, planet, null),
+        ),
         _JumpChip(
           label: 'Anota',
           mood: mood,

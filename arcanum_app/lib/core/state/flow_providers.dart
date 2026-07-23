@@ -23,3 +23,15 @@ class GrimoireCompose extends Notifier<bool> {
 final grimoireComposeProvider = NotifierProvider<GrimoireCompose, bool>(
   GrimoireCompose.new,
 );
+
+/// Planeta a enfocar en Cielos al entrar (Hoy → Cielos). Cielos resalta la fila
+/// de ese planeta en la carta natal y se desplaza hasta ella; luego lo limpia
+/// para no re-disparar el foco en visitas siguientes.
+class CielosFocusPlanet extends Notifier<String?> {
+  @override
+  String? build() => null;
+  void set(String? planet) => state = planet;
+}
+
+final cielosFocusPlanetProvider =
+    NotifierProvider<CielosFocusPlanet, String?>(CielosFocusPlanet.new);

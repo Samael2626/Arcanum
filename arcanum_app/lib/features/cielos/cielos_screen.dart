@@ -8,6 +8,7 @@ import '../../core/api/oracle_error.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/content/glossary.dart';
 import '../../core/content/transit_reading.dart';
+import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
@@ -96,6 +97,47 @@ class _NatalViewState extends ConsumerState<_NatalView> {
   late final ArcanumApi _api = ref.read(arcanumApiProvider);
   late Future<(Map<String, dynamic>, Map<String, dynamic>)> _future = _load();
 
+  /// Planeta que Hoy pidió enfocar ("tu Marte natal"). Se lee una vez y se
+  /// limpia el canal, para no re-disparar el foco en visitas siguientes.
+  String? _focus;
+
+  /// Ancla de la fila del planeta enfocado, para desplazarse hasta ella.
+  final GlobalKey _focusKey = GlobalKey();
+
+  /// El desplazamiento al foco se hace UNA vez tras dibujar; este flag lo evita
+  /// repetir en cada rebuild.
+  bool _focusScrolled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focus = ref.read(cielosFocusPlanetProvider);
+    if (_focus != null) {
+      // Consumido: si el usuario vuelve a Cielos por su cuenta, sin foco.
+      Future.microtask(
+        () => ref.read(cielosFocusPlanetProvider.notifier).set(null),
+      );
+    }
+  }
+
+  /// Tras dibujar la lista, lleva la fila enfocada al centro del viewport. Una
+  /// sola vez: el foco es un gesto de llegada, no un ancla permanente.
+  void _scrollToFocusOnce() {
+    if (_focus == null || _focusScrolled) return;
+    _focusScrolled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _focusKey.currentContext;
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 520),
+          curve: Curves.easeInOutCubic,
+          alignment: 0.3,
+        );
+      }
+    });
+  }
+
   Future<(Map<String, dynamic>, Map<String, dynamic>)> _load() async {
     try {
       final data = await _api.celestialOverview();
@@ -148,6 +190,8 @@ class _NatalViewState extends ConsumerState<_NatalView> {
   }
 
   Widget _content(Map<String, dynamic> chart, Map<String, dynamic> transits) {
+    // Si Hoy pidió enfocar un planeta, desplázate a su fila tras dibujar.
+    _scrollToFocusOnce();
     final asc = chart['ascendant'] as Map<String, dynamic>;
     final mc = chart['midheaven'] as Map<String, dynamic>;
     final planets = (chart['planets'] as List).cast<Map<String, dynamic>>();
@@ -301,8 +345,22 @@ class _NatalViewState extends ConsumerState<_NatalView> {
     final sign = p['sign'] as String;
     final retro = p['retrograde'] == true;
     final house = (p['house'] as num?)?.toInt();
+    final focused = name == _focus;
 
-    return Padding(
+    return Container(
+      key: focused ? _focusKey : null,
+      decoration: focused
+          ? BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: ArcanumColors.gold.withValues(alpha: 0.10),
+              border: Border(
+                left: BorderSide(
+                  color: ArcanumColors.gold.withValues(alpha: 0.7),
+                  width: 2,
+                ),
+              ),
+            )
+          : null,
       padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 4),
       child: Row(
         children: [
