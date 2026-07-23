@@ -7,7 +7,6 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
-import '../../shared/widgets/info_dot.dart';
 import 'materia_lore.dart';
 import 'materia_specimen.dart';
 
@@ -100,10 +99,6 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
         constraints: const BoxConstraints(maxWidth: 500),
         child: Column(
           children: [
-            const SizedBox(height: 32),
-            const ArcanumHeaderCompat(subtitle: 'Materia Arcana'),
-            const SizedBox(height: 8),
-            const Center(child: InfoDot('materia')),
             const SizedBox(height: 14),
             _typeBar(),
             const SizedBox(height: 10),
@@ -333,32 +328,6 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
       zodiac: item['zodiac'] as String?,
     );
   }
-}
-
-/// Cabecera compacta local (menos aire vertical que ArcanumHeader, que reserva
-/// espacio para dos filas de filtros en esta pantalla densa de catálogo).
-class ArcanumHeaderCompat extends StatelessWidget {
-  final String subtitle;
-  const ArcanumHeaderCompat({super.key, required this.subtitle});
-  @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      Text(
-        'ARCANUM',
-        textAlign: TextAlign.center,
-        style: ArcanumText.wordmark(size: 38),
-      ),
-      const SizedBox(height: 4),
-      Text(
-        subtitle,
-        style: ArcanumText.body(
-          16,
-          italic: true,
-          color: ArcanumColors.ivoryMuted,
-        ),
-      ),
-    ],
-  );
 }
 
 // ── Placa de correspondencia ───────────────────────────────────────────────

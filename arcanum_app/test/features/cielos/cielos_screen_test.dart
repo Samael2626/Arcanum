@@ -102,6 +102,8 @@ void main() {
     expect(api.overviewCalls, 1);
     expect(api.natalCalls, 0);
     expect(find.byType(NatalWheel), findsOneWidget);
-    expect(find.text('Tu carta natal'), findsOneWidget);
+    // El subtítulo "Tu carta natal" migró a la barra superior del shell; la
+    // pantalla en sí conserva la etiqueta de su rueda.
+    expect(find.text('TU RUEDA NATAL'), findsOneWidget);
   });
 }

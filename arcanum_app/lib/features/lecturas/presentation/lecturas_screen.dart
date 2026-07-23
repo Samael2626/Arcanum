@@ -70,26 +70,14 @@ class _LecturasScreenState extends ConsumerState<LecturasScreen> {
   }
 
   Widget _list(List<LibraryWorkSummary> works) => ListView(
-    padding: const EdgeInsets.fromLTRB(20, 32, 20, 32),
+    padding: const EdgeInsets.fromLTRB(20, 14, 20, 32),
     children: [
-      const ArcanumHeader(subtitle: 'Lecturas'),
-      const SizedBox(height: 8),
-      Text(
-        'Las fuentes de las que sale todo lo demás.',
-        textAlign: TextAlign.center,
-        style: ArcanumText.body(
-          14,
-          color: ArcanumColors.ivoryMuted,
-          italic: true,
-        ),
-      ),
-      const SizedBox(height: 24),
       ...works.map(
         (work) => Padding(
           padding: const EdgeInsets.only(bottom: 14),
           child: _WorkCard(
             work: work,
-            onTap: () => context.push('/lecturas/${work.slug}'),
+            onTap: () => context.push('/saber/${work.slug}'),
           ),
         ),
       ),

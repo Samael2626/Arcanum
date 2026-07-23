@@ -1,31 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Carcasa con barra de navegación inferior persistente (5 pestañas).
+import '../auth/auth_controller.dart';
+import '../content/sections.dart';
+import '../theme/arcanum_colors.dart';
+import '../theme/arcanum_theme.dart';
+import '../../shared/widgets/info_dot.dart';
+
+/// Carcasa con barra superior contextual + barra de navegación inferior.
+///
+/// Arriba (por pantalla): nombre místico de la sección + subtítulo llano + "?"
+/// que explica + avatar que abre el perfil. Abajo: las cinco secciones. La
+/// barra superior se OCULTA en las sub-rutas (una obra, un capítulo), que traen
+/// su propio AppBar con botón de volver.
 class AppShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
   const AppShell({super.key, required this.navigationShell});
 
   @override
   Widget build(BuildContext context) {
+    final router = GoRouter.of(context);
     return Scaffold(
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            Positioned.fill(child: navigationShell),
-            Positioned(
-              top: 4,
-              right: 6,
-              child: Semantics(
-                label: 'Abrir ajustes',
-                button: true,
-                child: IconButton.filledTonal(
-                  tooltip: 'Ajustes',
-                  onPressed: () => context.push('/settings'),
-                  icon: const Icon(Icons.settings_outlined),
-                ),
-              ),
+            // Se reconstruye en cada navegación para saber si estamos en una
+            // raíz de sección (mostrar barra) o en una sub-ruta (ocultarla).
+            AnimatedBuilder(
+              animation: router.routerDelegate,
+              builder: (context, _) {
+                final location =
+                    router.routerDelegate.currentConfiguration.uri.path;
+                final section = arcanumSectionForRoute(location);
+                if (section == null) return const SizedBox.shrink();
+                return _SectionBar(section: section);
+              },
             ),
+            Expanded(child: navigationShell),
           ],
         ),
       ),
@@ -52,25 +64,106 @@ class AppShell extends StatelessWidget {
             label: 'Grimorio',
           ),
           NavigationDestination(
-            icon: Icon(Icons.spa_outlined),
-            selectedIcon: Icon(Icons.spa),
-            label: 'Arte',
+            icon: Icon(Icons.local_library_outlined),
+            selectedIcon: Icon(Icons.local_library),
+            label: 'Saber',
           ),
           NavigationDestination(
             icon: Icon(Icons.style_outlined),
             selectedIcon: Icon(Icons.style),
             label: 'Oráculo',
           ),
-          // Sexta pestaña. Material recomienda 3-5: con seis, las etiquetas se
-          // aprietan en pantallas estrechas. Si llega a molestar, la salida
-          // natural es fundir Arte y Lecturas bajo un mismo "Saber", ya que
-          // Materia Arcana sale justamente de estas obras.
-          NavigationDestination(
-            icon: Icon(Icons.local_library_outlined),
-            selectedIcon: Icon(Icons.local_library),
-            label: 'Lecturas',
-          ),
         ],
+      ),
+    );
+  }
+}
+
+/// Barra superior de una sección: identidad + qué es + ayuda + perfil.
+class _SectionBar extends StatelessWidget {
+  final ArcanumSection section;
+  const _SectionBar({required this.section});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 10, 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  section.title,
+                  style: ArcanumText.heading(26, color: ArcanumColors.gold),
+                ),
+                Text(
+                  section.subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcanumText.body(
+                    13,
+                    color: ArcanumColors.ivoryMuted,
+                    italic: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          // "?" — explica a fondo esta sección (misma hoja del glosario).
+          InfoDot(section.helpKey, size: 22),
+          const SizedBox(width: 12),
+          const _ProfileAvatar(),
+        ],
+      ),
+    );
+  }
+}
+
+/// Avatar circular con la inicial del practicante. Único punto de entrada al
+/// perfil (y, dentro, a los ajustes) desde cualquier pantalla.
+class _ProfileAvatar extends ConsumerWidget {
+  const _ProfileAvatar();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authProvider).user;
+    final name = (user?['display_name'] as String?)?.trim();
+    final initial = (name != null && name.isNotEmpty)
+        ? name.substring(0, 1).toUpperCase()
+        : '☾';
+    return Semantics(
+      button: true,
+      label: 'Abrir perfil',
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: () => context.push('/perfil'),
+        child: Container(
+          width: 40,
+          height: 40,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: ArcanumColors.gold.withValues(alpha: 0.7),
+              width: 1.2,
+            ),
+            gradient: RadialGradient(
+              colors: [
+                ArcanumColors.gold.withValues(alpha: 0.16),
+                Colors.transparent,
+              ],
+            ),
+          ),
+          child: Text(
+            initial,
+            style: ArcanumText.heading(20, color: ArcanumColors.gold),
+          ),
+        ),
       ),
     );
   }

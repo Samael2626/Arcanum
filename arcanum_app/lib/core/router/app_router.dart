@@ -1,16 +1,16 @@
 import 'package:go_router/go_router.dart';
 
-import '../../features/arte/arte_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/register_screen.dart';
 import '../../features/cielos/cielos_screen.dart';
 import '../../features/grimorio/grimorio_screen.dart';
 import '../../features/hoy/hoy_screen.dart';
 import '../../features/lecturas/presentation/lector_screen.dart';
-import '../../features/lecturas/presentation/lecturas_screen.dart';
 import '../../features/lecturas/presentation/obra_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/oraculo/oraculo_screen.dart';
+import '../../features/perfil/perfil_screen.dart';
+import '../../features/saber/saber_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/tarot/tarot_screen.dart';
 import 'app_shell.dart';
@@ -22,6 +22,7 @@ final appRouter = GoRouter(
     GoRoute(path: '/register', builder: (c, s) => const RegisterScreen()),
     GoRoute(path: '/onboarding', builder: (c, s) => const OnboardingScreen()),
     GoRoute(path: '/settings', builder: (c, s) => const SettingsScreen()),
+    GoRoute(path: '/perfil', builder: (c, s) => const PerfilScreen()),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           AppShell(navigationShell: navigationShell),
@@ -42,31 +43,15 @@ final appRouter = GoRouter(
             ),
           ],
         ),
-        StatefulShellBranch(
-          routes: [
-            GoRoute(path: '/arte', builder: (c, s) => const ArteScreen()),
-          ],
-        ),
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/oraculo',
-              builder: (c, s) => const OraculoScreen(),
-              routes: [
-                GoRoute(path: 'tarot', builder: (c, s) => const TarotScreen()),
-              ],
-            ),
-          ],
-        ),
+        // Saber = Plantas (Materia) + Libros (Lecturas). El lector de obras
+        // cuelga aquí: volver desde un pasaje lleva al índice de su obra, y de
+        // ahí a Saber — el recorrido natural de quien lee.
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: '/lecturas',
-              builder: (c, s) => const LecturasScreen(),
+              path: '/saber',
+              builder: (c, s) => const SaberScreen(),
               routes: [
-                // Anidadas para que volver desde un pasaje lleve al índice de
-                // su obra, y de ahí a la biblioteca — el recorrido natural de
-                // quien está leyendo.
                 GoRoute(
                   path: ':work',
                   builder: (c, s) =>
@@ -81,6 +66,17 @@ final appRouter = GoRouter(
                     ),
                   ],
                 ),
+              ],
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/oraculo',
+              builder: (c, s) => const OraculoScreen(),
+              routes: [
+                GoRoute(path: 'tarot', builder: (c, s) => const TarotScreen()),
               ],
             ),
           ],

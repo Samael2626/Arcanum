@@ -8,7 +8,7 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
-import '../../shared/widgets/info_dot.dart';
+// El "?" de Oráculo vive ahora en la barra superior del shell (InfoDot allí).
 import '../../shared/widgets/login_prompt.dart';
 import 'widgets/tarot_card.dart';
 
@@ -200,10 +200,7 @@ class _OracleViewState extends ConsumerState<_OracleView> {
       controller: _scroll,
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
       children: [
-        const ArcanumHeader(subtitle: 'El oráculo'),
-        const SizedBox(height: 10),
-        const Center(child: InfoDot('tarot')),
-        const SizedBox(height: 20),
+        const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: _spreads.map((s) {

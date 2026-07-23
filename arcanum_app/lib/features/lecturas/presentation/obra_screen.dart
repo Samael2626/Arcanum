@@ -188,7 +188,7 @@ class _ObraScreenState extends ConsumerState<ObraScreen> {
                 (chapter) => _ChapterRow(
                   chapter: chapter,
                   onTap: () =>
-                      context.push('/lecturas/${work.slug}/${chapter.slug}'),
+                      context.push('/saber/${work.slug}/${chapter.slug}'),
                 ),
               ),
           ],

@@ -52,8 +52,6 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(22, 36, 22, 28),
                     children: [
-                      const ArcanumHeader(subtitle: 'El cielo de hoy'),
-                      const SizedBox(height: 26),
                       if (snap.connectionState == ConnectionState.waiting)
                         const _SkyLoading()
                       else if (snap.hasError)
@@ -248,7 +246,7 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
                 Expanded(
                   child: _ctaButton('⚗  Materiales', mood, () {
                     ref.read(materiaPlanetProvider.notifier).set(planet);
-                    context.go('/arte');
+                    context.go('/saber');
                   }),
                 ),
                 const SizedBox(width: 10),

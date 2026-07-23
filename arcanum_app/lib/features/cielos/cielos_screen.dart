@@ -164,9 +164,6 @@ class _NatalViewState extends ConsumerState<_NatalView> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 32, 20, 32),
       children: [
-        const ArcanumHeader(subtitle: 'Tu carta natal'),
-        const SizedBox(height: 22),
-
         // ── Vistazo: Sol + Ascendente ──
         _SolarSummary(sunSign: sunSign, ascSign: ascSign),
         const SizedBox(height: 24),
