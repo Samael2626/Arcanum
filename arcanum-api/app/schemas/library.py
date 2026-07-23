@@ -77,3 +77,32 @@ class ChapterDetail(BaseModel):
     paragraphs: list[ParagraphResponse]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class MateriaBridge(BaseModel):
+    """El puente Materia → Culpeper: dado el slug de una planta de Materia
+    Arcana, qué capítulo de las Lecturas la trata y qué dice.
+
+    Lo consume la ficha de la planta (sección FUENTE) para ofrecer "lo que
+    dijo Culpeper" sin sacar al usuario de la ficha: la comparación va inline
+    y el capítulo completo queda a un toque.
+    """
+
+    work_slug: str
+    work_title: str
+    author: str
+    year: Optional[int] = None
+    chapter_slug: str
+    chapter_title: str
+    # Planetas regentes según el capítulo (meta.ruling_planets). Lista porque
+    # una planta puede tener regencia compartida o disputada.
+    ruling_planets: list[str] = []
+    # True si la regencia de Culpeper NO coincide con la de Materia Arcana:
+    # el cliente lo marca en neutral, ambas con su referencia, sin "corregir".
+    discrepant: bool = False
+    # Un pasaje corto donde el autor nombra la regencia, para el anticipo.
+    excerpt: Optional[str] = None
+    # True si el extracto salió de la traducción ES; False si es el original.
+    excerpt_is_translation: bool = False
+
+    model_config = ConfigDict(from_attributes=True)

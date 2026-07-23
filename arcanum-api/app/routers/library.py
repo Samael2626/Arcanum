@@ -9,6 +9,7 @@ El texto viaja como texto, nunca como PDF: así se puede buscar, resaltar,
 anclar una lección a un párrafo y mandar ese pasaje al oráculo.
 """
 
+import re
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
@@ -20,6 +21,7 @@ from app.models.library import LibraryChapter, LibraryParagraph, LibraryWork
 from app.schemas.library import (
     ChapterDetail,
     ChapterSummary,
+    MateriaBridge,
     ParagraphResponse,
     WorkDetail,
     WorkSummary,
@@ -29,6 +31,61 @@ router = APIRouter()
 
 # Una obra del XVII no cambia; solo se toca al corregir una traducción.
 _CACHE = "public, max-age=3600, stale-while-revalidate=86400"
+
+# Para el puente: palabras con las que un texto (EN original o ES traducido)
+# nombra a cada planeta regente. Sirve para localizar el pasaje donde el autor
+# declara la regencia y usarlo como anticipo en la ficha de la planta.
+_PLANET_WORDS: dict[str, tuple[str, ...]] = {
+    "sun": ("sun", "sol", "solar"),
+    "moon": ("moon", "luna", "lunar"),
+    "mercury": ("mercury", "mercurio"),
+    "venus": ("venus",),
+    "mars": ("mars", "marte"),
+    "jupiter": ("jupiter", "júpiter", "jove"),
+    "saturn": ("saturn", "saturno"),
+}
+
+# Frases que suelen preceder a la declaración de regencia en Culpeper y afines.
+# Si el pasaje que nombra al planeta trae además una de estas, es casi seguro
+# el que declara "de quién es la hierba" — se prefiere ese.
+_RULER_HINT = re.compile(
+    r"\b(herb of|dominion|govern|ruled by|owns|claims|under the|"
+    r"influence of|regid|domin|goberna|pertenece|planta de)\b",
+    re.IGNORECASE,
+)
+
+
+def _ruling_excerpt(
+    paragraphs: list[LibraryParagraph], ruling_planets: list[str]
+) -> tuple[Optional[str], bool]:
+    """Devuelve (texto, es_traduccion) del pasaje que declara la regencia.
+
+    Prioriza un párrafo que nombre el planeta Y traiga una frase de regencia;
+    si no, el primero que nombre el planeta; si nada, (None, False). Prefiere
+    la traducción ES cuando existe, porque el anticipo se muestra en español.
+    """
+    words = tuple(
+        w for planet in ruling_planets for w in _PLANET_WORDS.get(planet, ())
+    )
+    if not words:
+        return None, False
+    word_re = re.compile(
+        r"\b(" + "|".join(re.escape(w) for w in words) + r")\b", re.IGNORECASE
+    )
+
+    fallback: Optional[tuple[str, bool]] = None
+    for p in sorted(paragraphs, key=lambda x: x.position):
+        for text, is_es in ((p.text_es, True), (p.text_original, False)):
+            if not text or not word_re.search(text):
+                continue
+            if _RULER_HINT.search(text):
+                return text, is_es
+            if fallback is None:
+                fallback = (text, is_es)
+            break  # este párrafo ya aportó su mejor variante al fallback
+    if fallback is not None:
+        return fallback
+    return None, False
 
 
 @router.get("", response_model=list[WorkSummary])
@@ -62,6 +119,60 @@ def list_works(response: Response, db: Session = Depends(get_db)):
         )
         for work in db.query(LibraryWork).order_by(LibraryWork.year).all()
     ]
+
+
+@router.get("/by-materia/{materia_slug}", response_model=MateriaBridge)
+def get_bridge_by_materia(
+    materia_slug: str,
+    response: Response,
+    db: Session = Depends(get_db),
+):
+    """El puente Materia → Culpeper.
+
+    Se declara ANTES de `/{work_slug}` a propósito: si no, FastAPI casaría
+    `by-materia` como si fuera un slug de obra y este endpoint nunca correría.
+
+    Devuelve 404 si ninguna hierba de las Lecturas está enlazada a este slug
+    de Materia (meta.materia_slug). El cliente lo trata como "sin puente" y
+    simplemente no muestra la tarjeta: ausencia esperada, no error ruidoso.
+    """
+    response.headers["Cache-Control"] = _CACHE
+
+    chapter = (
+        db.query(LibraryChapter)
+        .join(LibraryWork, LibraryChapter.work_id == LibraryWork.id)
+        .options(selectinload(LibraryChapter.paragraphs))
+        .filter(LibraryChapter.meta["materia_slug"].astext == materia_slug)
+        .order_by(LibraryChapter.position)
+        .first()
+    )
+    if chapter is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Sin capítulo enlazado a esta materia.",
+        )
+
+    meta = chapter.meta or {}
+    ruling = meta.get("ruling_planets")
+    if not isinstance(ruling, list):
+        # Compat: fichas viejas guardaron solo ruling_planet (singular).
+        single = meta.get("ruling_planet")
+        ruling = [single] if single else []
+
+    excerpt, is_es = _ruling_excerpt(list(chapter.paragraphs), ruling)
+
+    return MateriaBridge(
+        work_slug=chapter.work.slug,
+        work_title=chapter.work.title,
+        author=chapter.work.author,
+        year=chapter.work.year,
+        chapter_slug=chapter.slug,
+        chapter_title=chapter.title,
+        ruling_planets=ruling,
+        discrepant=bool(meta.get("materia_discrepant", False)),
+        excerpt=excerpt,
+        excerpt_is_translation=is_es,
+    )
 
 
 @router.get("/{work_slug}", response_model=WorkDetail)

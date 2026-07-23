@@ -103,6 +103,17 @@ class ArcanumApi {
     return res.data as Map<String, dynamic>;
   }
 
+  /// El puente Materia → Lecturas: qué capítulo de Culpeper trata esta planta.
+  /// 404 cuando no hay capítulo enlazado (planta sin puente) — el llamador lo
+  /// trata como ausencia esperada y no muestra la tarjeta, no como error.
+  Future<Map<String, dynamic>> materiaBridge(String slug) async {
+    final res = await _dio.get(
+      '/library/by-materia/$slug',
+      options: Options(extra: const {'noAuth': true}),
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
   // ── Grimorio (requiere auth; contenido cifrado en cliente) ──────────────────
   Future<List<Map<String, dynamic>>> grimoireList() async {
     final res = await _dio.get('/grimoire');

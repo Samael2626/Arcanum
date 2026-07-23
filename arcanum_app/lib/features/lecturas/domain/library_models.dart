@@ -133,6 +133,11 @@ class LibraryChapter {
   /// no puede depender de la calidad del traductor.
   String? get rulingPlanet => meta['ruling_planet'] as String?;
 
+  /// Slug de la planta de Materia Arcana enlazada, si esta entrada es una
+  /// hierba mapeada. Es el puente inverso: desde el capítulo de Culpeper de
+  /// vuelta a la ficha de la planta.
+  String? get materiaSlug => meta['materia_slug'] as String?;
+
   bool get hasTranslation => paragraphs.any((p) => p.hasTranslation);
 
   factory LibraryChapter.fromJson(Map<String, dynamic> json) => LibraryChapter(
@@ -257,6 +262,62 @@ class LibraryWork {
     'advisory': advisory,
     'chapters': chapters.map((c) => c.toJson()).toList(),
   };
+}
+
+/// El puente Materia → Culpeper: qué capítulo de las Lecturas trata una planta
+/// de Materia Arcana, para ofrecer "lo que dijo Culpeper" dentro de su ficha.
+///
+/// Lo devuelve `GET /library/by-materia/{slug}`. La ficha muestra una tarjeta
+/// con la comparación de regencias y un anticipo del pasaje; el capítulo entero
+/// queda a un toque en `/saber/{workSlug}/{chapterSlug}`.
+class CulpeperBridge {
+  final String workSlug;
+  final String workTitle;
+  final String author;
+  final int? year;
+  final String chapterSlug;
+  final String chapterTitle;
+
+  /// Regentes según Culpeper. Lista: puede haber regencia compartida/disputada.
+  final List<String> rulingPlanets;
+
+  /// True si Culpeper NO coincide con la regencia de Materia Arcana. Se muestra
+  /// en neutral, ambas con su referencia — no se "corrige" a ninguna.
+  final bool discrepant;
+
+  /// Anticipo: el pasaje donde el autor declara la regencia. Puede faltar.
+  final String? excerpt;
+
+  /// True si el extracto salió de la traducción ES; false si del original EN.
+  final bool excerptIsTranslation;
+
+  const CulpeperBridge({
+    required this.workSlug,
+    required this.workTitle,
+    required this.author,
+    required this.chapterSlug,
+    required this.chapterTitle,
+    required this.rulingPlanets,
+    required this.discrepant,
+    required this.excerptIsTranslation,
+    this.year,
+    this.excerpt,
+  });
+
+  factory CulpeperBridge.fromJson(Map<String, dynamic> json) => CulpeperBridge(
+    workSlug: json['work_slug'] as String,
+    workTitle: json['work_title'] as String,
+    author: json['author'] as String,
+    year: json['year'] as int?,
+    chapterSlug: json['chapter_slug'] as String,
+    chapterTitle: json['chapter_title'] as String,
+    rulingPlanets: (json['ruling_planets'] as List? ?? const [])
+        .map((e) => e as String)
+        .toList(),
+    discrepant: json['discrepant'] as bool? ?? false,
+    excerpt: json['excerpt'] as String?,
+    excerptIsTranslation: json['excerpt_is_translation'] as bool? ?? false,
+  );
 }
 
 /// Ficha de obra para el índice general.

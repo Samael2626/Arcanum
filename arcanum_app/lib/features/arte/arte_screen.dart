@@ -317,15 +317,20 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
   }
 
   void _openDetail(Map<String, dynamic> item) {
+    final slug = item['slug'] as String;
+    final isHerb = item['item_type'] == 'herb';
     showMateriaLoreSheet(
       context,
-      future: _api.materiaDetail(item['slug'] as String),
-      slug: item['slug'] as String,
+      future: _api.materiaDetail(slug),
+      slug: slug,
       name: item['name'] as String,
       itemType: item['item_type'] as String,
       planet: item['planet'] as String?,
       element: item['element'] as String?,
       zodiac: item['zodiac'] as String?,
+      // El puente vive en Culpeper, que es un herbario: solo las hierbas
+      // pueden tener capítulo enlazado. 404 (sin puente) se ignora en silencio.
+      bridgeFuture: isHerb ? _api.materiaBridge(slug) : null,
     );
   }
 }

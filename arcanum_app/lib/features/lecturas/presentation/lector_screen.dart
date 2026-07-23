@@ -6,6 +6,7 @@ import '../../../core/api/oracle_error.dart';
 import '../../../core/api/arcanum_api.dart';
 import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
+import '../../arte/materia_lore.dart';
 import '../data/library_repository.dart';
 import '../domain/library_models.dart';
 
@@ -103,6 +104,13 @@ class _LectorScreenState extends ConsumerState<LectorScreen> {
               _RulingPlanet(planet: chapter.rulingPlanet!),
             ],
             const SizedBox(height: 22),
+
+            // Puente inverso: si esta entrada es una hierba mapeada, se ofrece
+            // volver a su ficha de Materia Arcana antes de leer el texto.
+            if (chapter.materiaSlug != null) ...[
+              _MateriaLink(slug: chapter.materiaSlug!, herbName: chapter.title),
+              const SizedBox(height: 18),
+            ],
 
             if (chapter.advisory != null) ...[
               _Advisory(text: chapter.advisory!),
@@ -264,6 +272,116 @@ class _RulingPlanet extends StatelessWidget {
     textAlign: TextAlign.center,
     style: ArcanumText.body(15, color: ArcanumColors.goldMuted),
   );
+}
+
+/// El puente inverso: de vuelta a la ficha de la planta en Materia Arcana.
+///
+/// Aparece arriba del capítulo, antes del texto: quien llega a "Rosemary" en
+/// Culpeper puede saltar a la correspondencia de la planta sin buscarla. Al
+/// tocar, pide el detalle y abre la MISMA hoja que en Saber, sin puente de
+/// vuelta (sería circular): ya se está en el capítulo que enlazaría.
+class _MateriaLink extends ConsumerStatefulWidget {
+  final String slug;
+  final String herbName;
+  const _MateriaLink({required this.slug, required this.herbName});
+
+  @override
+  ConsumerState<_MateriaLink> createState() => _MateriaLinkState();
+}
+
+class _MateriaLinkState extends ConsumerState<_MateriaLink> {
+  bool _opening = false;
+
+  Future<void> _open() async {
+    if (_opening) return;
+    setState(() => _opening = true);
+    try {
+      final detail = await ref
+          .read(arcanumApiProvider)
+          .materiaDetail(widget.slug);
+      if (!mounted) return;
+      showMateriaLoreSheet(
+        context,
+        future: Future.value(detail),
+        slug: widget.slug,
+        name: detail['name'] as String? ?? widget.herbName,
+        itemType: detail['item_type'] as String? ?? 'herb',
+        planet: detail['planet'] as String?,
+        element: detail['element'] as String?,
+        zodiac: detail['zodiac'] as String?,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo abrir la ficha de la planta.')),
+      );
+    } finally {
+      if (mounted) setState(() => _opening = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Ver ${widget.herbName} en Materia Arcana',
+      child: InkWell(
+        onTap: _opening ? null : _open,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: ArcanumColors.gold.withValues(alpha: 0.06),
+            border: Border.all(
+              color: ArcanumColors.gold.withValues(alpha: 0.35),
+            ),
+          ),
+          child: Row(
+            children: [
+              Text(
+                '❦',
+                style: TextStyle(
+                  color: ArcanumColors.gold.withValues(alpha: 0.85),
+                  fontSize: 18,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('EN MATERIA ARCANA', style: ArcanumText.label()),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Ver la correspondencia de esta planta',
+                      style: ArcanumText.body(14.5, color: ArcanumColors.ivory),
+                    ),
+                  ],
+                ),
+              ),
+              if (_opening)
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    color: ArcanumColors.gold,
+                    strokeWidth: 2,
+                  ),
+                )
+              else
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 18,
+                  color: ArcanumColors.gold,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Un párrafo. Al tocarlo se abren sus acciones: copiar, y pedir al oráculo

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_surface.dart';
+import '../lecturas/domain/library_models.dart';
 import 'materia_engravings.dart';
 import 'materia_specimen.dart';
 
@@ -68,6 +70,10 @@ void showMateriaLoreSheet(
   String? planet,
   String? element,
   String? zodiac,
+  // El puente Materia → Lecturas. Solo se pasa para hierbas (Culpeper es un
+  // herbario). Si resuelve 404 (planta sin capítulo) la tarjeta no se muestra:
+  // ausencia esperada, en silencio. La entrada vive al pie, junto a FUENTE.
+  Future<Map<String, dynamic>>? bridgeFuture,
 }) {
   final mood = materiaMood(planet, element);
 
@@ -143,12 +149,245 @@ void showMateriaLoreSheet(
                     return _body(snap.data!, mood);
                   },
                 ),
+                if (bridgeFuture != null)
+                  _BridgeSection(
+                    future: bridgeFuture,
+                    materiaPlanet: planet,
+                    mood: mood,
+                  ),
               ],
             ),
           ),
         ),
       ),
     ),
+  );
+}
+
+/// El puente Materia → Culpeper dentro de la ficha, al pie (junto a FUENTE).
+///
+/// Silencioso por diseño: mientras carga no ocupa sitio, y si el backend
+/// responde 404 (esta planta no tiene capítulo enlazado) desaparece sin ruido.
+/// Solo cuando hay puente aparece la tarjeta, con la comparación de regencias
+/// y un anticipo del pasaje; el capítulo entero queda a un toque.
+class _BridgeSection extends StatelessWidget {
+  const _BridgeSection({
+    required this.future,
+    required this.materiaPlanet,
+    required this.mood,
+  });
+
+  final Future<Map<String, dynamic>> future;
+  final String? materiaPlanet;
+  final ArcanumMood mood;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: future,
+      builder: (context, snap) {
+        // Sin puente (404) o aún cargando: no ocupamos sitio. La ausencia de
+        // enlace es lo normal en la mayoría de plantas, no un fallo que mostrar.
+        if (snap.connectionState != ConnectionState.done || !snap.hasData) {
+          return const SizedBox.shrink();
+        }
+        final CulpeperBridge bridge;
+        try {
+          bridge = CulpeperBridge.fromJson(snap.data!);
+        } catch (_) {
+          return const SizedBox.shrink();
+        }
+        return Padding(
+          padding: const EdgeInsets.only(top: 26),
+          child: _BridgeCard(
+            bridge: bridge,
+            materiaPlanet: materiaPlanet,
+            mood: mood,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _BridgeCard extends StatelessWidget {
+  const _BridgeCard({
+    required this.bridge,
+    required this.materiaPlanet,
+    required this.mood,
+  });
+
+  final CulpeperBridge bridge;
+  final String? materiaPlanet;
+  final ArcanumMood mood;
+
+  String _planetLabel(String p) {
+    final glyph = planetGlyph[p];
+    final name = planetEs[p] ?? _cap(p);
+    return glyph == null ? name : '$glyph  $name';
+  }
+
+  String _rulersLabel(List<String> planets) => planets.isEmpty
+      ? 'sin regente declarado'
+      : planets.map(_planetLabel).join('  ·  ');
+
+  @override
+  Widget build(BuildContext context) {
+    final ref = [
+      bridge.author,
+      if (bridge.year != null) '${bridge.year}',
+    ].join(', ');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              '❦',
+              style: TextStyle(color: mood.accent, fontSize: 15, height: 1),
+            ),
+            const SizedBox(width: 8),
+            Text('EN LAS LECTURAS', style: ArcanumText.label()),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Semantics(
+          button: true,
+          label: 'Leer «${bridge.chapterTitle}» en ${bridge.workTitle}',
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => context.push(
+              '/saber/${bridge.workSlug}/${bridge.chapterSlug}',
+            ),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                color: mood.glow.withValues(alpha: 0.08),
+                border: Border.all(color: mood.accent.withValues(alpha: 0.5)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    bridge.chapterTitle,
+                    style: ArcanumText.heading(19, color: ArcanumColors.gold),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${bridge.workTitle} · $ref',
+                    style: ArcanumText.body(
+                      12.5,
+                      color: ArcanumColors.ivoryMuted,
+                      italic: true,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _rulings(),
+                  if (bridge.excerpt != null &&
+                      bridge.excerpt!.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.black.withValues(alpha: 0.16),
+                        border: Border(
+                          left: BorderSide(
+                            color: mood.accent.withValues(alpha: 0.55),
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        '“${bridge.excerpt!.trim()}”',
+                        maxLines: 4,
+                        overflow: TextOverflow.ellipsis,
+                        style: ArcanumText.body(
+                          14.5,
+                          color: ArcanumColors.ivory,
+                          italic: true,
+                        ),
+                      ),
+                    ),
+                    if (!bridge.excerptIsTranslation) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        'Texto original — se traduce al abrir el capítulo.',
+                        style: ArcanumText.body(
+                          11.5,
+                          color: ArcanumColors.ivoryMuted,
+                          italic: true,
+                        ),
+                      ),
+                    ],
+                  ],
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Leer capítulo completo',
+                        style: ArcanumText.body(13.5, color: mood.accent),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 16,
+                        color: mood.accent,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// La comparación de regencias. Si difieren, ambas con su etiqueta y sin
+  /// jerarquía: son dos tradiciones, no una correcta y otra equivocada.
+  Widget _rulings() {
+    final culpeper = _rulersLabel(bridge.rulingPlanets);
+    if (!bridge.discrepant) {
+      return _rulerRow('REGENTE', culpeper);
+    }
+    final materia = materiaPlanet != null && materiaPlanet!.isNotEmpty
+        ? _planetLabel(materiaPlanet!)
+        : 'sin regente declarado';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _rulerRow('MATERIA', materia),
+        const SizedBox(height: 6),
+        _rulerRow('CULPEPER', culpeper),
+        const SizedBox(height: 8),
+        Text(
+          'Las dos tradiciones difieren en la regencia; ambas se conservan.',
+          style: ArcanumText.body(
+            12,
+            color: ArcanumColors.ivoryMuted,
+            italic: true,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _rulerRow(String label, String value) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      SizedBox(width: 78, child: Text(label, style: ArcanumText.label())),
+      Expanded(
+        child: Text(
+          value,
+          style: ArcanumText.body(15, color: ArcanumColors.ivory),
+        ),
+      ),
+    ],
   );
 }
 
