@@ -1,0 +1,25 @@
+{
+  "_comment": "Puente curado a mano entre Materia Arcana (nombres en español) y las entradas de Culpeper (inglés). Mapear por nombre falla — español<->inglés es justo lo que la IA erraba 9 de 10 veces. Este mapa lo verifica scripts/bridge_materia.py comparando el planeta regente de cada fuente. Solo se incluyen hierbas que EXISTEN en Culpeper: es un herbario inglés, así que canela, nuez moscada, acacia o belladona no están. Versionado en git a propósito (a diferencia de los *.json de obra): es contenido, no salida generada.",
+  "map": {
+    "agrimonia": "agrimony",
+    "ajenjo": "wormwood",
+    "albahaca": "garden-bazil-or-sweet-bazil",
+    "angélica": "angelica",
+    "artemisa": "mugwort",
+    "beleño": "henbane",
+    "celidonia": "celandine",
+    "enebro": "juniper-bush",
+    "hiperico": "st-johns-wort",
+    "hisopo": "hyssop",
+    "laurel": "the-bay-tree",
+    "lavanda": "lavender",
+    "mejorana": "sweet-marjoram",
+    "romero": "rosemary",
+    "rosa": "roses",
+    "ruda": "garden-rue",
+    "salvia": "sage",
+    "tomillo": "thyme",
+    "valeriana": "garden-valerian",
+    "verbena": "vervain"
+  }
+}

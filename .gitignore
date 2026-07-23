@@ -31,4 +31,8 @@ Brain/
 
 # Lecturas: los JSON de obras se generan con scripts/ingest_library.py
 # (1.7 MB cada uno). Se versiona el pipeline, no su salida.
-arcanum-api/scripts/library_data/
+# Salida generada por ingest/translate (1,7 MB por obra), NO se versiona.
+# Se ignora el CONTENIDO (/*), no el directorio, para poder exceptuar ficheros.
+arcanum-api/scripts/library_data/*
+# Excepción: el puente Materia<->Culpeper es contenido curado a mano.
+!arcanum-api/scripts/library_data/culpeper_materia_bridge.json
