@@ -1,13 +1,10 @@
 """Lecturas: obras en dominio público servidas como texto estructurado."""
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
-from sqlalchemy import func
-from sqlalchemy.orm import Session, selectinload
-
 from typing import Optional
 
-from app.db.session import get_db
-from app.models.library import LibraryChapter, LibraryParagraph, LibraryWork
+from app.api.deps import get_library_repo
+from app.adapters.repositories import LibraryWorkRepository
 from app.schemas.library import (
     ChapterDetail,
     ChapterSummary,
@@ -24,43 +21,18 @@ _CACHE = "public, max-age=3600, stale-while-revalidate=86400"
 
 
 @router.get("", response_model=list[WorkSummary])
-def list_works(response: Response, db: Session = Depends(get_db)):
+def list_works(response: Response, repo: LibraryWorkRepository = Depends(get_library_repo)):
     """Índice de obras. Sin texto: debe poder cargarse con mala conexión."""
     response.headers["Cache-Control"] = _CACHE
 
-    chapter_counts = dict(
-        db.query(LibraryChapter.work_id, func.count(LibraryChapter.id))
-        .group_by(LibraryChapter.work_id)
-        .all()
-    )
-    # Un capítulo cuenta como traducido si alguno de sus párrafos lo está.
-    translated = dict(
-        db.query(LibraryChapter.work_id, func.count(func.distinct(LibraryChapter.id)))
-        .join(LibraryParagraph, LibraryParagraph.chapter_id == LibraryChapter.id)
-        .filter(LibraryParagraph.text_es.isnot(None))
-        .group_by(LibraryChapter.work_id)
-        .all()
-    )
-
-    return [
-        WorkSummary(
-            slug=work.slug,
-            title=work.title,
-            author=work.author,
-            year=work.year,
-            language=work.language,
-            chapter_count=chapter_counts.get(work.id, 0),
-            translated_chapters=translated.get(work.id, 0),
-        )
-        for work in db.query(LibraryWork).order_by(LibraryWork.year).all()
-    ]
+    return [WorkSummary.model_validate(w) for w in repo.list_works()]
 
 
 @router.get("/by-materia/{materia_slug}", response_model=MateriaBridge)
 def get_bridge_by_materia(
     materia_slug: str,
     response: Response,
-    db: Session = Depends(get_db),
+    repo: LibraryWorkRepository = Depends(get_library_repo),
 ):
     """El puente Materia → Culpeper.
 
@@ -73,14 +45,7 @@ def get_bridge_by_materia(
     """
     response.headers["Cache-Control"] = _CACHE
 
-    chapter = (
-        db.query(LibraryChapter)
-        .join(LibraryWork, LibraryChapter.work_id == LibraryWork.id)
-        .options(selectinload(LibraryChapter.paragraphs))
-        .filter(LibraryChapter.meta["materia_slug"].astext == materia_slug)
-        .order_by(LibraryChapter.position)
-        .first()
-    )
+    chapter = repo.get_bridge_chapter(materia_slug)
     if chapter is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -119,7 +84,7 @@ def get_work(
         None,
         description="Filtra el índice: herb | appendix | catalogue | front",
     ),
-    db: Session = Depends(get_db),
+    repo: LibraryWorkRepository = Depends(get_library_repo),
 ):
     """La obra con su índice de capítulos, todavía sin texto.
 
@@ -127,24 +92,13 @@ def get_work(
     ~1,7 MB por una lista que el usuario solo va a ojear.
     """
     response.headers["Cache-Control"] = _CACHE
-    work = db.query(LibraryWork).filter(LibraryWork.slug == work_slug).first()
+    work = repo.get_by_slug(work_slug)
     if work is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Obra no encontrada."
         )
 
-    query = (
-        db.query(
-            LibraryChapter, func.count(LibraryParagraph.id).label("paragraph_count")
-        )
-        .outerjoin(LibraryParagraph, LibraryParagraph.chapter_id == LibraryChapter.id)
-        .filter(LibraryChapter.work_id == work.id)
-        .group_by(LibraryChapter.id)
-        .order_by(LibraryChapter.position)
-    )
-    if kind:
-        query = query.filter(LibraryChapter.kind == kind)
-
+    chapters = repo.get_chapters(work_slug, kind)
     return WorkDetail(
         slug=work.slug,
         title=work.title,
@@ -156,14 +110,14 @@ def get_work(
         advisory=work.advisory,
         chapters=[
             ChapterSummary(
-                slug=chapter.slug,
-                title=chapter.title,
-                kind=chapter.kind,
-                position=chapter.position,
-                meta=chapter.meta or {},
-                paragraph_count=count,
+                slug=ch.slug,
+                title=ch.title,
+                kind=ch.kind,
+                position=ch.position,
+                meta=ch.meta or {},
+                paragraph_count=len(ch.paragraphs or []),
             )
-            for chapter, count in query.all()
+            for ch in chapters
         ],
     )
 
@@ -173,18 +127,12 @@ def get_chapter(
     work_slug: str,
     chapter_slug: str,
     response: Response,
-    db: Session = Depends(get_db),
+    repo: LibraryWorkRepository = Depends(get_library_repo),
 ):
     """Un capítulo con su texto. Es la unidad que el cliente cachea offline."""
     response.headers["Cache-Control"] = _CACHE
 
-    chapter = (
-        db.query(LibraryChapter)
-        .join(LibraryWork, LibraryChapter.work_id == LibraryWork.id)
-        .options(selectinload(LibraryChapter.paragraphs))
-        .filter(LibraryWork.slug == work_slug, LibraryChapter.slug == chapter_slug)
-        .first()
-    )
+    chapter = repo.get_chapter(work_slug, chapter_slug)
     if chapter is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Capítulo no encontrado."

@@ -5,11 +5,10 @@ Contenido de referencia, público (la app puede gatear por premium más adelante
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
-from sqlalchemy.orm import Session
 
-from app.db.session import get_db
-from app.models.materia_item import MateriaItem
-from app.domain.entities import UserEntity
+from app.api.deps import get_materia_repo
+from app.adapters.repositories import MateriaItemRepository
+from app.domain.entities import MateriaItemEntity, UserEntity
 from app.schemas.materia_item import (
     ItemType,
     MateriaItemResponse,
@@ -29,77 +28,66 @@ def list_materia(
     planet: Optional[str] = Query(None),
     element: Optional[str] = Query(None),
     q: Optional[str] = Query(None, description="Busca en el nombre"),
-    db: Session = Depends(get_db),
+    repo: MateriaItemRepository = Depends(get_materia_repo),
 ):
     response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
-    query = db.query(MateriaItem)
-    if item_type is not None:
-        query = query.filter(MateriaItem.item_type == item_type.value)
-    if planet:
-        query = query.filter(MateriaItem.planet == planet)
-    if element:
-        query = query.filter(MateriaItem.element == element)
-    if q:
-        query = query.filter(MateriaItem.name.ilike(f"%{q}%"))
-    return query.order_by(MateriaItem.name).all()
+    items = repo.list(
+        item_type=item_type.value if item_type else None,
+        planet=planet,
+        element=element,
+        name=q,
+    )
+    return [MateriaItemSummary.model_validate(i) for i in items]
 
 
 @router.get("/{slug}", response_model=MateriaItemResponse)
-def get_materia(slug: str, response: Response, db: Session = Depends(get_db)):
+def get_materia(slug: str, response: Response, repo: MateriaItemRepository = Depends(get_materia_repo)):
     response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
-    item = db.query(MateriaItem).filter(MateriaItem.slug == slug).first()
+    item = repo.get_by_slug(slug)
     if item is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No encontrado")
-    return item
+    return MateriaItemResponse.model_validate(item)
 
 
 @router.post("", response_model=MateriaItemResponse, status_code=status.HTTP_201_CREATED)
 def create_materia(
     materia_in: MateriaItemCreate,
-    db: Session = Depends(get_db),
     current_user: UserEntity = Depends(get_current_user),
+    repo: MateriaItemRepository = Depends(get_materia_repo),
 ):
-    # Check if slug already exists
-    existing = db.query(MateriaItem).filter(MateriaItem.slug == materia_in.slug).first()
+    existing = repo.get_by_slug(materia_in.slug)
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Ya existe un ítem con ese slug",
         )
-    item = MateriaItem(**materia_in.dict())
-    db.add(item)
-    db.commit()
-    db.refresh(item)
-    return item
+    item = repo.create(**materia_in.model_dump())
+    return MateriaItemResponse.model_validate(item)
 
 
 @router.put("/{slug}", response_model=MateriaItemResponse)
 def update_materia(
     slug: str,
     materia_in: MateriaItemUpdate,
-    db: Session = Depends(get_db),
     current_user: UserEntity = Depends(get_current_user),
+    repo: MateriaItemRepository = Depends(get_materia_repo),
 ):
-    item = db.query(MateriaItem).filter(MateriaItem.slug == slug).first()
+    item = repo.get_by_slug(slug)
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No encontrado")
-    update_data = materia_in.dict(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(item, field, value)
-    db.commit()
-    db.refresh(item)
-    return item
+    update_data = materia_in.model_dump(exclude_unset=True)
+    item = repo.update(item, **update_data)
+    return MateriaItemResponse.model_validate(item)
 
 
 @router.delete("/{slug}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_materia(
     slug: str,
-    db: Session = Depends(get_db),
     current_user: UserEntity = Depends(get_current_user),
+    repo: MateriaItemRepository = Depends(get_materia_repo),
 ):
-    item = db.query(MateriaItem).filter(MateriaItem.slug == slug).first()
+    item = repo.get_by_slug(slug)
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No encontrado")
-    db.delete(item)
-    db.commit()
+    repo.delete(item)
     return None

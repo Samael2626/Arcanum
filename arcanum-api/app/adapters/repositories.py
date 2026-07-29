@@ -369,6 +369,18 @@ class LibraryWorkRepository:
         ch.paragraphs = _list_to_entities(LibraryParagraphEntity, row.paragraphs)
         return ch
 
+    def get_chapters(self, work_slug: str, kind: str | None = None) -> list[LibraryChapterEntity]:
+        query = (
+            self._db.query(LibraryChapter)
+            .join(LibraryWork)
+            .options(selectinload(LibraryChapter.paragraphs))
+            .filter(LibraryWork.slug == work_slug)
+            .order_by(LibraryChapter.position)
+        )
+        if kind:
+            query = query.filter(LibraryChapter.kind == kind)
+        return _list_to_entities(LibraryChapterEntity, query.all())
+
     def get_bridge_chapter(self, materia_slug: str) -> LibraryChapterEntity | None:
         row = (
             self._db.query(LibraryChapter)

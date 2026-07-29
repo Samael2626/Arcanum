@@ -7,12 +7,11 @@ from typing import Optional
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
-from sqlalchemy.orm import Session
 
+from app.api.deps import get_natal_chart_repo
+from app.adapters.repositories import NatalChartRepository
 from app.core.security import get_current_user
-from app.db.session import get_db
-from app.models.natal_chart import NatalChart
-from app.domain.entities import UserEntity
+from app.domain.entities import NatalChartEntity, UserEntity
 from app.schemas.natal_chart import NatalChartResponse
 from app.services import lunar_calendar as lc
 from app.services import natal_chart_engine as nce
@@ -64,9 +63,9 @@ def moon(
 
 # ── Carta natal (requiere auth + datos de nacimiento del usuario) ─────────────
 
+
 def _birth_data(user: UserEntity, house_system: str) -> nce.BirthData:
-    missing = [f for f in ("birth_date", "birth_time", "birth_lat", "birth_lon")
-               if getattr(user, f) is None]
+    missing = [f for f in ("birth_date", "birth_time", "birth_lat", "birth_lon") if getattr(user, f) is None]
     if missing:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -88,16 +87,14 @@ def _birth_data(user: UserEntity, house_system: str) -> nce.BirthData:
             detail="Coordenadas de nacimiento inválidas",
         )
     local = datetime.combine(user.birth_date.date(), user.birth_time.time(), tzinfo=tz)
-    return nce.BirthData(dt_utc=local.astimezone(timezone.utc), lat=lat, lon=lon,
-                         house_system=house_system)
+    return nce.BirthData(dt_utc=local.astimezone(timezone.utc), lat=lat, lon=lon, house_system=house_system)
 
 
-@router.post("/natal-chart", response_model=NatalChartResponse,
-             status_code=status.HTTP_201_CREATED)
+@router.post("/natal-chart", response_model=NatalChartResponse, status_code=status.HTTP_201_CREATED)
 def compute_natal_chart(
     house_system: str = Query("placidus"),
     current_user: UserEntity = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    repo: NatalChartRepository = Depends(get_natal_chart_repo),
 ):
     """Calcula (o recalcula) y cachea la carta natal del usuario autenticado."""
     if house_system not in nce.HOUSE_SYSTEMS:
@@ -111,69 +108,62 @@ def compute_natal_chart(
     except nce.NatalChartError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
 
-    chart = db.query(NatalChart).filter(NatalChart.user_id == current_user.id).first()
-    now = datetime.now(timezone.utc)
-    if chart is None:
-        chart = NatalChart(user_id=current_user.id, chart_data=chart_data,
-                           house_system=house_system, calculated_at=now)
-        db.add(chart)
-    else:
-        chart.chart_data = chart_data
-        chart.house_system = house_system
-        chart.calculated_at = now
-    db.commit()
-    db.refresh(chart)
-    return chart
+    entity = repo.create_or_update(
+        user_id=current_user.id,
+        chart_data=chart_data,
+        house_system=house_system,
+    )
+    return NatalChartResponse.model_validate(entity)
 
 
 @router.get("/natal-chart", response_model=NatalChartResponse)
 def get_natal_chart(
     current_user: UserEntity = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    repo: NatalChartRepository = Depends(get_natal_chart_repo),
 ):
     """Devuelve la carta natal cacheada del usuario."""
-    chart = db.query(NatalChart).filter(NatalChart.user_id == current_user.id).first()
-    if chart is None:
+    entity = repo.get_by_user_id(current_user.id)
+    if entity is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No hay carta natal calculada. Usa POST /astral/natal-chart.",
         )
-    return chart
+    return NatalChartResponse.model_validate(entity)
 
 
 @router.get("/transits")
 def transits(
     at: Optional[datetime] = Query(None, description="ISO 8601; por defecto, ahora (UTC)"),
     current_user: UserEntity = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    repo: NatalChartRepository = Depends(get_natal_chart_repo),
 ):
     """Cielo actual (o en `at`) y sus aspectos a la carta natal del usuario."""
-    chart = db.query(NatalChart).filter(NatalChart.user_id == current_user.id).first()
-    if chart is None:
+    entity = repo.get_by_user_id(current_user.id)
+    if entity is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Calcula primero tu carta natal con POST /astral/natal-chart.",
         )
     dt = at or datetime.now(timezone.utc)
-    return nce.compute_transits(chart.chart_data["planets"], dt)
+    return nce.compute_transits(entity.chart_data["planets"], dt)
 
 
 @router.get("/overview")
 def overview(
     current_user: UserEntity = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    repo: NatalChartRepository = Depends(get_natal_chart_repo),
 ):
     """Carta natal cacheada y tránsitos actuales en una sola respuesta."""
-    chart = db.query(NatalChart).filter(NatalChart.user_id == current_user.id).first()
-    if chart is None:
+    entity = repo.get_by_user_id(current_user.id)
+    if entity is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No hay carta natal calculada.",
         )
     now = datetime.now(timezone.utc)
     return {
-        "natal_chart": NatalChartResponse.model_validate(chart).model_dump(mode="json"),
-        "transits": nce.compute_transits(chart.chart_data["planets"], now),
+        "natal_chart": NatalChartResponse.model_validate(entity).model_dump(mode="json"),
+        "transits": nce.compute_transits(entity.chart_data["planets"], now),
     }
 
 
@@ -184,7 +174,7 @@ def today(
     lon: float = Query(..., ge=-180, le=180),
 ):
     """Agregado para la pantalla 'Hoy': hora planetaria + regente del día + luna."""
-    response.headers['Cache-Control'] = 'public, max-age=60, stale-while-revalidate=120'
+    response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=120"
     now = datetime.now(timezone.utc)
     try:
         hour = ph.get_planetary_hour(now, lat, lon)
@@ -202,6 +192,7 @@ def today(
 
 
 # ── Calendario ritual (próximos eventos) ──────────────────────────────────────
+
 
 @router.get("/calendar/upcoming-hours")
 def upcoming_hours(
@@ -233,8 +224,7 @@ def next_planet_hour(
     except ph.AstralCalculationError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     if hour is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="No se encontró una hora para ese planeta.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No se encontró una hora para ese planeta.")
     return hour.to_dict()
 
 

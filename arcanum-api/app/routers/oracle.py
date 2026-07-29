@@ -1,21 +1,28 @@
 """Endpoints del Oráculo: tiradas de tarot y consulta ritual con IA Claude."""
+from datetime import datetime
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
-from uuid import UUID
-from datetime import datetime
 
+from app.api.deps import (
+    get_divination_session_repo,
+    get_natal_chart_repo,
+    get_oracle_conversation_repo,
+    get_tarot_service,
+)
+from app.adapters.repositories import (
+    DivinationSessionRepository,
+    NatalChartRepository,
+    OracleConversationRepository,
+)
+from app.application.services.tarot_service import TarotService, draw_cards
 from app.core.config import settings
 from app.core.rate_limit import enforce_user_quota
-from app.db.session import get_db
 from app.core.security import get_current_user
 from app.domain.entities import UserEntity
-from app.models.divination_session import DivinationSession
-from app.models.natal_chart import NatalChart
-from app.models.oracle_conversation import OracleConversation
 from app.schemas.divination_session import DivinationSessionCreate, DivinationSessionResponse
 from app.schemas.oracle_conversation import OracleConversationCreate, OracleConversationResponse
-from app.services.tarot_service import draw_cards, get_tarot_deck
 from app.services.claude_service import get_claude_response
 from app.services.oracle_context import build_oracle_context, build_tarot_context
 
@@ -35,6 +42,7 @@ class OracleQuestion(BaseModel):
     question: str | None = Field(default=None, min_length=1, max_length=500)
     divination_session_id: UUID | None = None
 
+
 # -------------------------------------------------
 # TAROT
 # -------------------------------------------------
@@ -43,8 +51,9 @@ def draw_tarot(
     enc_question: str | None = None,
     question_iv: str | None = None,
     spread_type: str = "three_card",
-    db: Session = Depends(get_db),
     current_user: UserEntity = Depends(get_current_user),
+    div_repo: DivinationSessionRepository = Depends(get_divination_session_repo),
+    tarot: TarotService = Depends(get_tarot_service),
 ):
     """
     Realiza una tirada de tarot y guarda la sesión.
@@ -56,7 +65,7 @@ def draw_tarot(
             detail="Tipo de extensión no soportado. Use 'three_card' o 'celtic_cross'.",
         )
     count = 3 if spread_type == "three_card" else 10
-    baraja = get_tarot_deck(db)
+    baraja = tarot.get_tarot_deck()
     cartas = draw_cards(baraja, count=count, spread_type=spread_type)
 
     session_in = DivinationSessionCreate(
@@ -66,10 +75,7 @@ def draw_tarot(
         encrypted_question=enc_question,
         question_iv=question_iv,
     )
-    session = DivinationSession(user_id=current_user.id, **session_in.model_dump())
-    db.add(session)
-    db.commit()
-    db.refresh(session)
+    session = div_repo.create(user_id=current_user.id, **session_in.model_dump())
     return session
 
 
@@ -79,8 +85,10 @@ def draw_tarot(
 @router.post("/ia", response_model=OracleConversationResponse)
 def ritual_ia(
     body: OracleQuestion,
-    db: Session = Depends(get_db),
     current_user: UserEntity = Depends(get_current_user),
+    natal_repo: NatalChartRepository = Depends(get_natal_chart_repo),
+    conv_repo: OracleConversationRepository = Depends(get_oracle_conversation_repo),
+    div_repo: DivinationSessionRepository = Depends(get_divination_session_repo),
 ):
     """
     Consulta ritual con Claude. El contexto astral se construye SERVER-SIDE a
@@ -108,14 +116,14 @@ def ritual_ia(
                 f"({daily_limit}/día). Vuelve mañana o mejora tu plan."),
     )
 
-    natal_chart = db.query(NatalChart).filter(NatalChart.user_id == current_user.id).first()
+    natal_chart = natal_repo.get_by_user_id(current_user.id)
     if natal_chart is None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Calcula primero tu carta natal con POST /astral/natal-chart.",
         )
 
-    context = build_oracle_context(current_user, natal_chart, db)
+    context = build_oracle_context(current_user, natal_chart)
 
     # Tirada opcional: SOLO si el cliente manda un id explícito (sin heurística
     # de "última tirada reciente"). Debe pertenecer al usuario y ser de tarot.
@@ -123,14 +131,7 @@ def ritual_ia(
     card_count = 0
     expected_cards: list[str] = []
     if body.divination_session_id is not None:
-        session = (
-            db.query(DivinationSession)
-            .filter(
-                DivinationSession.id == body.divination_session_id,
-                DivinationSession.user_id == current_user.id,
-            )
-            .first()
-        )
+        session = div_repo.get_owned(body.divination_session_id, current_user.id)
         if session is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -167,8 +168,9 @@ def ritual_ia(
         tradition_context=current_user.preferred_tradition,
         messages=messages,
     )
-    conv = OracleConversation(user_id=current_user.id, **conv_in.model_dump(mode="json"))
-    db.add(conv)
-    db.commit()
-    db.refresh(conv)
+    conv = conv_repo.create_or_update(
+        user_id=current_user.id,
+        messages=messages,
+        tradition_context=current_user.preferred_tradition,
+    )
     return conv
