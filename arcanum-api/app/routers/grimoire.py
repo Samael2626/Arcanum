@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.adapters.repositories import GrimoireEntryRepository
 from app.api.deps import get_grimoire_repo
 from app.core.security import get_current_user
-from app.models.user import User
+from app.domain.entities import UserEntity
 from app.schemas.grimoire_entry import (
     GrimoireEntryCreate,
     GrimoireEntryResponse,
@@ -21,7 +21,7 @@ from app.schemas.grimoire_entry import (
 router = APIRouter()
 
 
-def _owned(repo: GrimoireEntryRepository, entry_id: UUID, user: User):
+def _owned(repo: GrimoireEntryRepository, entry_id: UUID, user: UserEntity):
     entry = repo.get_owned(entry_id, user.id)
     if entry is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Entrada no encontrada")
@@ -31,7 +31,7 @@ def _owned(repo: GrimoireEntryRepository, entry_id: UUID, user: User):
 @router.get("", response_model=list[GrimoireEntrySummary])
 def list_entries(
     grimoire: GrimoireEntryRepository = Depends(get_grimoire_repo),
-    current_user: User = Depends(get_current_user),
+    current_user: UserEntity = Depends(get_current_user),
 ):
     return grimoire.list_by_user(current_user.id)
 
@@ -40,7 +40,7 @@ def list_entries(
 def create_entry(
     entry_in: GrimoireEntryCreate,
     grimoire: GrimoireEntryRepository = Depends(get_grimoire_repo),
-    current_user: User = Depends(get_current_user),
+    current_user: UserEntity = Depends(get_current_user),
 ):
     return grimoire.create(user_id=current_user.id, **entry_in.model_dump())
 
@@ -49,7 +49,7 @@ def create_entry(
 def get_entry(
     entry_id: UUID,
     grimoire: GrimoireEntryRepository = Depends(get_grimoire_repo),
-    current_user: User = Depends(get_current_user),
+    current_user: UserEntity = Depends(get_current_user),
 ):
     return _owned(grimoire, entry_id, current_user)
 
@@ -59,7 +59,7 @@ def update_entry(
     entry_id: UUID,
     entry_in: GrimoireEntryUpdate,
     grimoire: GrimoireEntryRepository = Depends(get_grimoire_repo),
-    current_user: User = Depends(get_current_user),
+    current_user: UserEntity = Depends(get_current_user),
 ):
     entry = _owned(grimoire, entry_id, current_user)
     for field, value in entry_in.model_dump(exclude_unset=True).items():
@@ -71,7 +71,7 @@ def update_entry(
 def delete_entry(
     entry_id: UUID,
     grimoire: GrimoireEntryRepository = Depends(get_grimoire_repo),
-    current_user: User = Depends(get_current_user),
+    current_user: UserEntity = Depends(get_current_user),
 ):
     entry = _owned(grimoire, entry_id, current_user)
     grimoire.delete(entry)

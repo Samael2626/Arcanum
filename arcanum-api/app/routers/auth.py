@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.adapters.repositories import UserRepository
 from app.api.deps import get_user_repo
 from app.db.session import get_db
-from app.models.user import User
+from app.domain.entities import UserEntity
 from app.schemas.user import UserCreate, UserResponse
 from app.schemas.refresh_token import TokenPair
 from app.core.security import (
@@ -107,7 +107,7 @@ def refresh(
 def logout(
     refresh_token: str = Body(..., embed=True),
     token: str = Depends(oauth2_scheme),
-    current_user: User = Depends(get_current_user),
+    current_user: UserEntity = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -126,7 +126,7 @@ def logout(
 
 @router.post("/logout-all", status_code=status.HTTP_204_NO_CONTENT)
 def logout_all(
-    current_user: User = Depends(get_current_user),
+    current_user: UserEntity = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """

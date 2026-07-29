@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.rate_limit import enforce_user_quota
 from app.core.security import get_current_user
-from app.models.user import User
+from app.domain.entities import UserEntity
 from app.schemas.geo import GeoResolveRequest, GeoResolveResponse
 from app.services import geocoding
 
@@ -20,7 +20,7 @@ router = APIRouter()
 @router.post("/resolve", response_model=GeoResolveResponse)
 def resolve_geo(
     body: GeoResolveRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: UserEntity = Depends(get_current_user),
 ):
     """Resuelve país+ciudad a lat/lon/timezone reales.
 

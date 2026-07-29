@@ -9,7 +9,7 @@ from app.core.config import settings
 from app.core.rate_limit import enforce_user_quota
 from app.db.session import get_db
 from app.core.security import get_current_user
-from app.models.user import User
+from app.domain.entities import UserEntity
 from app.models.divination_session import DivinationSession
 from app.models.natal_chart import NatalChart
 from app.models.oracle_conversation import OracleConversation
@@ -44,7 +44,7 @@ def draw_tarot(
     question_iv: str | None = None,
     spread_type: str = "three_card",
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserEntity = Depends(get_current_user),
 ):
     """
     Realiza una tirada de tarot y guarda la sesión.
@@ -80,7 +80,7 @@ def draw_tarot(
 def ritual_ia(
     body: OracleQuestion,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserEntity = Depends(get_current_user),
 ):
     """
     Consulta ritual con Claude. El contexto astral se construye SERVER-SIDE a

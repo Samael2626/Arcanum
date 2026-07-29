@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.materia_item import MateriaItem
-from app.models.user import User
+from app.domain.entities import UserEntity
 from app.schemas.materia_item import (
     ItemType,
     MateriaItemResponse,
@@ -57,7 +57,7 @@ def get_materia(slug: str, response: Response, db: Session = Depends(get_db)):
 def create_materia(
     materia_in: MateriaItemCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserEntity = Depends(get_current_user),
 ):
     # Check if slug already exists
     existing = db.query(MateriaItem).filter(MateriaItem.slug == materia_in.slug).first()
@@ -78,7 +78,7 @@ def update_materia(
     slug: str,
     materia_in: MateriaItemUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserEntity = Depends(get_current_user),
 ):
     item = db.query(MateriaItem).filter(MateriaItem.slug == slug).first()
     if not item:
@@ -95,7 +95,7 @@ def update_materia(
 def delete_materia(
     slug: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserEntity = Depends(get_current_user),
 ):
     item = db.query(MateriaItem).filter(MateriaItem.slug == slug).first()
     if not item:

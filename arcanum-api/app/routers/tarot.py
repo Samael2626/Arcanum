@@ -10,8 +10,8 @@ from app.core.config import settings
 from app.core.rate_limit import enforce_user_quota
 from app.core.security import get_current_user
 from app.db.session import get_db
+from app.domain.entities import UserEntity
 from app.models.tarot import TarotCard
-from app.models.user import User
 from app.schemas.tarot import (
     TarotCardResponse,
     TarotReadingResponse,
@@ -59,7 +59,7 @@ def card_detail(slug: str, db: Session = Depends(get_db)):
 # ── Sorteos (auth + cuota) ───────────────────────────────────────────────────
 
 
-def _apply_quota(user: User, scope: str, free: int, premium: int) -> None:
+def _apply_quota(user: UserEntity, scope: str, free: int, premium: int) -> None:
     """Aplica la cuota diaria por usuario según su tier."""
     is_premium = user.subscription_tier == "premium"
     daily = premium if is_premium else free
@@ -78,7 +78,7 @@ def draw_spread(
     spread_type: str = Body(..., embed=True, description="one_card|three_card|celtic_cross"),
     question: Optional[str] = Body(None, embed=True, max_length=1000),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserEntity = Depends(get_current_user),
 ):
     """Realiza una tirada y guarda la lectura.
 
@@ -122,7 +122,7 @@ def draw_spread(
 def draw_one(
     question: Optional[str] = Body(None, embed=True, max_length=1000),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserEntity = Depends(get_current_user),
 ):
     """Sorteo rápido de una carta. Mismas reglas que /spread con count=1."""
     _apply_quota(

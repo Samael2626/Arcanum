@@ -106,7 +106,8 @@ def get_current_user(
     db: Session = Depends(get_db),
 ):
     """Dependency de FastAPI para obtener el usuario autenticado a partir del Bearer token."""
-    from app.models.user import User  # import local para evitar circular imports
+    from app.domain.entities import UserEntity  # import local para evitar circular imports
+    from app.models.user import User
 
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -124,8 +125,27 @@ def get_current_user(
     if email is None:
         raise credentials_exception
 
-    user = db.query(User).filter(User.email == email).first()
-    if user is None:
+    row = db.query(User).filter(User.email == email).first()
+    if row is None:
         raise credentials_exception
 
-    return user
+    return UserEntity(
+        id=row.id,
+        email=row.email,
+        hashed_password=row.hashed_password,
+        display_name=row.display_name,
+        birth_date=row.birth_date,
+        birth_time=row.birth_time,
+        birth_lat=row.birth_lat,
+        birth_lon=row.birth_lon,
+        birth_city=row.birth_city,
+        birth_timezone=row.birth_timezone,
+        subscription_tier=row.subscription_tier,
+        subscription_expires_at=row.subscription_expires_at,
+        revenuecat_customer_id=row.revenuecat_customer_id,
+        preferred_tradition=row.preferred_tradition,
+        preferred_house_system=row.preferred_house_system,
+        onboarding_completed=row.onboarding_completed,
+        created_at=row.created_at,
+        updated_at=row.updated_at,
+    )

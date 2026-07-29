@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from app.core.security import get_current_user
 from app.db.session import get_db
 from app.models.natal_chart import NatalChart
-from app.models.user import User
+from app.domain.entities import UserEntity
 from app.schemas.natal_chart import NatalChartResponse
 from app.services import lunar_calendar as lc
 from app.services import natal_chart_engine as nce
@@ -64,7 +64,7 @@ def moon(
 
 # ── Carta natal (requiere auth + datos de nacimiento del usuario) ─────────────
 
-def _birth_data(user: User, house_system: str) -> nce.BirthData:
+def _birth_data(user: UserEntity, house_system: str) -> nce.BirthData:
     missing = [f for f in ("birth_date", "birth_time", "birth_lat", "birth_lon")
                if getattr(user, f) is None]
     if missing:
@@ -96,7 +96,7 @@ def _birth_data(user: User, house_system: str) -> nce.BirthData:
              status_code=status.HTTP_201_CREATED)
 def compute_natal_chart(
     house_system: str = Query("placidus"),
-    current_user: User = Depends(get_current_user),
+    current_user: UserEntity = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Calcula (o recalcula) y cachea la carta natal del usuario autenticado."""
@@ -128,7 +128,7 @@ def compute_natal_chart(
 
 @router.get("/natal-chart", response_model=NatalChartResponse)
 def get_natal_chart(
-    current_user: User = Depends(get_current_user),
+    current_user: UserEntity = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Devuelve la carta natal cacheada del usuario."""
@@ -144,7 +144,7 @@ def get_natal_chart(
 @router.get("/transits")
 def transits(
     at: Optional[datetime] = Query(None, description="ISO 8601; por defecto, ahora (UTC)"),
-    current_user: User = Depends(get_current_user),
+    current_user: UserEntity = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Cielo actual (o en `at`) y sus aspectos a la carta natal del usuario."""
@@ -160,7 +160,7 @@ def transits(
 
 @router.get("/overview")
 def overview(
-    current_user: User = Depends(get_current_user),
+    current_user: UserEntity = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Carta natal cacheada y tránsitos actuales en una sola respuesta."""
