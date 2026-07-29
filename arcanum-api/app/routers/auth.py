@@ -1,12 +1,13 @@
 from datetime import datetime, timezone
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
 
+from app.api.deps import get_auth_service, get_user_repo
+from app.application.services.auth_service import AuthService
 from app.adapters.repositories import UserRepository
-from app.api.deps import get_user_repo
-from app.db.session import get_db
 from app.domain.entities import UserEntity
 from app.schemas.user import UserCreate, UserResponse
 from app.schemas.refresh_token import TokenPair
@@ -17,7 +18,6 @@ from app.core.security import (
     oauth2_scheme,
 )
 from app.core.rate_limit import RateLimiter
-from app.services import auth_service
 
 router = APIRouter()
 
@@ -35,7 +35,7 @@ register_rate_limit = RateLimiter(max_calls=5, window_seconds=3600, scope="regis
 def register(
     user_in: UserCreate,
     users: UserRepository = Depends(get_user_repo),
-    db: Session = Depends(get_db),
+    auth: AuthService = Depends(get_auth_service),
 ):
     existing = users.get_by_email(user_in.email)
     if existing:
@@ -43,8 +43,7 @@ def register(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Este email ya está registrado",
         )
-    user = auth_service.create_user(
-        db,
+    user = auth.create_user(
         email=user_in.email,
         password=user_in.password,
         display_name=user_in.display_name,
@@ -67,33 +66,24 @@ def register(
 )
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db),
+    auth: AuthService = Depends(get_auth_service),
 ):
-    """
-    Login con email + contraseña (OAuth2 password flow).
-    Retorna access_token (15 min) + refresh_token (30 días).
-    El refresh token se persiste en BD como hash SHA-256.
-    """
-    user = auth_service.authenticate_user(db, form_data.username, form_data.password)
+    user = auth.authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email o contraseña incorrectos",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return auth_service.issue_token_pair(db, user)
+    return auth.issue_token_pair(user)
 
 
 @router.post("/refresh", response_model=TokenPair)
 def refresh(
     refresh_token: str = Body(..., embed=True),
-    db: Session = Depends(get_db),
+    auth: AuthService = Depends(get_auth_service),
 ):
-    """
-    Intercambia un refresh token válido por un nuevo par de tokens.
-    Implementa refresh token rotation: el token antiguo queda revocado.
-    """
-    token_pair = auth_service.rotate_refresh_token(db, refresh_token)
+    token_pair = auth.rotate_refresh_token(refresh_token)
     if token_pair is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -108,15 +98,9 @@ def logout(
     refresh_token: str = Body(..., embed=True),
     token: str = Depends(oauth2_scheme),
     current_user: UserEntity = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    auth: AuthService = Depends(get_auth_service),
 ):
-    """
-    Cierra sesión revocando el refresh token en BD y blacklisteando el access
-    token actual en Redis por su TTL restante, para que deje de ser válido de
-    inmediato (no solo cuando expire naturalmente).
-    """
-    auth_service.revoke_refresh_token(db, refresh_token)
-
+    auth.revoke_refresh_token(refresh_token)
     payload = verify_token(token, token_type="access")
     if payload and payload.get("exp"):
         remaining = int(payload["exp"] - datetime.now(timezone.utc).timestamp())
@@ -127,9 +111,6 @@ def logout(
 @router.post("/logout-all", status_code=status.HTTP_204_NO_CONTENT)
 def logout_all(
     current_user: UserEntity = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    auth: AuthService = Depends(get_auth_service),
 ):
-    """
-    Cierra sesión en todos los dispositivos revocando todos los refresh tokens del usuario.
-    """
-    auth_service.revoke_all_user_tokens(db, current_user.id)
+    auth.revoke_all_user_tokens(current_user.id)

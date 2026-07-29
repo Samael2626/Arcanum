@@ -16,6 +16,8 @@ from app.adapters.repositories import (
     TraditionRepository,
     UserRepository,
 )
+from app.application.services.auth_service import AuthService
+from app.application.services.tarot_service import TarotService
 from app.db.session import get_db
 
 
@@ -61,3 +63,20 @@ def get_oracle_conversation_repo(db: Session = Depends(get_db)) -> OracleConvers
 
 def get_tradition_repo(db: Session = Depends(get_db)) -> TraditionRepository:
     return TraditionRepository(db)
+
+
+# ── Servicios ──────────────────────────────────────────────────────────────────
+
+
+def get_auth_service(
+    user_repo: UserRepository = Depends(get_user_repo),
+    refresh_token_repo: RefreshTokenRepository = Depends(get_refresh_token_repo),
+) -> AuthService:
+    return AuthService(user_repo=user_repo, refresh_token_repo=refresh_token_repo)
+
+
+def get_tarot_service(
+    card_repo: TarotCardRepository = Depends(get_tarot_card_repo),
+    reading_repo: TarotReadingRepository = Depends(get_tarot_reading_repo),
+) -> TarotService:
+    return TarotService(card_repo=card_repo, reading_repo=reading_repo)

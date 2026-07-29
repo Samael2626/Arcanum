@@ -1,25 +1,23 @@
 """Endpoints del módulo Tarot: catálogo + sorteos + lecturas guardadas."""
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
 
+from app.api.deps import get_tarot_service
+from app.application.services.tarot_service import TarotService
 from app.core.config import settings
 from app.core.rate_limit import enforce_user_quota
 from app.core.security import get_current_user
-from app.db.session import get_db
 from app.domain.entities import UserEntity
-from app.models.tarot import TarotCard
 from app.schemas.tarot import (
     TarotCardResponse,
     TarotReadingResponse,
 )
-from app.services import tarot_service as svc
 from app.services import lunar_calendar as lc
 from app.services import planetary_hours as ph
-from datetime import datetime, timezone
 
 router = APIRouter(prefix="/tarot", tags=["tarot"])
 
@@ -33,21 +31,20 @@ _ONE_DAY_SECONDS = 86400
 def list_cards(
     arcana: Optional[str] = Query(None, description="'major' | 'minor'"),
     suit: Optional[str] = Query(None, description="bastos|copas|espadas|oros"),
-    db: Session = Depends(get_db),
+    tarot: TarotService = Depends(get_tarot_service),
 ):
-    """Catálogo de cartas. Sin auth — el dataset no expone PII."""
     if arcana and arcana not in ("major", "minor"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="arcana debe ser 'major' o 'minor'.",
         )
-    rows = svc.list_cards(db, arcana=arcana, suit=suit)
+    rows = tarot.list_cards(arcana=arcana, suit=suit)
     return [TarotCardResponse.model_validate(r) for r in rows]
 
 
 @router.get("/cards/{slug}", response_model=TarotCardResponse)
-def card_detail(slug: str, db: Session = Depends(get_db)):
-    card = svc.get_card(db, slug=slug)
+def card_detail(slug: str, tarot: TarotService = Depends(get_tarot_service)):
+    card = tarot.get_card(slug)
     if card is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -77,18 +74,11 @@ def _apply_quota(user: UserEntity, scope: str, free: int, premium: int) -> None:
 def draw_spread(
     spread_type: str = Body(..., embed=True, description="one_card|three_card|celtic_cross"),
     question: Optional[str] = Body(None, embed=True, max_length=1000),
-    db: Session = Depends(get_db),
     current_user: UserEntity = Depends(get_current_user),
+    tarot: TarotService = Depends(get_tarot_service),
 ):
-    """Realiza una tirada y guarda la lectura.
-
-    - El cliente SOLO envía la pregunta en texto plano (Pydantic valida longitud).
-    - El servidor añade automáticamente fase lunar + hora planetaria vigentes.
-    - El resultado es la lectura persistida con cartas ya hidratadas con sus
-      interpretaciones.
-    """
     try:
-        cards = svc.draw_spread(db, spread_type=spread_type)
+        cards = tarot.draw_spread(spread_type=spread_type)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -102,12 +92,10 @@ def draw_spread(
         premium=settings.TAROT_PREMIUM_DAILY,
     )
 
-    # Contexto astral del momento (no requiere carta natal: ya es snapshot del cielo).
     now = datetime.now(timezone.utc)
     moon_phase, planetary_hour = _sky_snapshot(now)
 
-    reading = svc.save_reading(
-        db,
+    return tarot.save_reading(
         user_id=current_user.id,
         spread_type=spread_type,
         question=question,
@@ -115,16 +103,14 @@ def draw_spread(
         moon_phase=moon_phase,
         planetary_hour=planetary_hour,
     )
-    return reading
 
 
 @router.post("/draw-one", response_model=TarotReadingResponse)
 def draw_one(
     question: Optional[str] = Body(None, embed=True, max_length=1000),
-    db: Session = Depends(get_db),
     current_user: UserEntity = Depends(get_current_user),
+    tarot: TarotService = Depends(get_tarot_service),
 ):
-    """Sorteo rápido de una carta. Mismas reglas que /spread con count=1."""
     _apply_quota(
         current_user,
         scope="tarot_spread",
@@ -132,11 +118,10 @@ def draw_one(
         premium=settings.TAROT_PREMIUM_DAILY,
     )
 
-    card = svc.draw_one(db)
+    card = tarot.draw_one()
     now = datetime.now(timezone.utc)
     moon_phase, planetary_hour = _sky_snapshot(now)
-    return svc.save_reading(
-        db,
+    return tarot.save_reading(
         user_id=current_user.id,
         spread_type="one_card",
         question=question,

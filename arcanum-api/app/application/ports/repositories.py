@@ -6,6 +6,7 @@ Cada Protocol define el contrato que un adaptador de infraestructura
 Tipado contra entidades de dominio puras, nunca contra modelos ORM.
 """
 
+from __future__ import annotations
 from typing import Protocol, runtime_checkable
 from uuid import UUID
 
