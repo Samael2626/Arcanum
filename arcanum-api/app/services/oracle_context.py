@@ -1,19 +1,10 @@
-"""Constructor de contexto astral server-side para el Oráculo IA.
+"""Constructor de contexto astral server-side para el Oráculo IA."""
 
-Cruza la carta natal cacheada del usuario con el cielo del momento (tránsitos,
-fase lunar, hora planetaria, regente del día) y produce un resumen LEGIBLE y
-COMPACTO en español. REUTILIZA los servicios astrales existentes (natal_chart_
-engine, lunar_calendar, planetary_hours); no reimplementa ningún cálculo.
-
-El cliente NUNCA arma este contexto: se construye aquí, en el servidor, a partir
-de datos de confianza (carta cacheada + datos de nacimiento del usuario).
-"""
 from __future__ import annotations
 
-from collections import OrderedDict
 from datetime import datetime, timezone
-from threading import Lock
 
+from app.core.cache import LRUCache
 from app.models.natal_chart import NatalChart
 from app.models.user import User
 from app.models.divination_session import DivinationSession
@@ -21,20 +12,15 @@ from app.services import lunar_calendar as lc
 from app.services import natal_chart_engine as nce
 from app.services import planetary_hours as ph
 
-# Fallback Bogotá si el usuario no tiene coordenadas de nacimiento parseables.
 _FALLBACK_LAT = 4.71
 _FALLBACK_LON = -74.07
-
-# Aspectos mayores con peso simbólico (para limitar tokens, priorizamos estos).
 _PLANETAS_PERSONALES = {"sun", "moon", "mercury", "venus", "mars"}
-_CONTEXT_CACHE_TTL_SECONDS = 300
-_CONTEXT_CACHE_MAX_SIZE = 512
-_context_cache: OrderedDict[tuple[str, ...], str] = OrderedDict()
-_context_cache_lock = Lock()
+
+_context_cache: LRUCache[tuple[str, ...], str] = LRUCache(max_size=512, ttl_seconds=300)
 
 
 def _context_cache_key(user: User, natal_chart: NatalChart, now: datetime) -> tuple[str, ...]:
-    bucket = str(int(now.timestamp()) // _CONTEXT_CACHE_TTL_SECONDS)
+    bucket = str(int(now.timestamp()) // _context_cache.ttl_seconds)
     return (
         str(user.id),
         str(natal_chart.calculated_at),
@@ -45,28 +31,8 @@ def _context_cache_key(user: User, natal_chart: NatalChart, now: datetime) -> tu
     )
 
 
-def _cached_context(key: tuple[str, ...]) -> str | None:
-    with _context_cache_lock:
-        value = _context_cache.get(key)
-        if value is not None:
-            _context_cache.move_to_end(key)
-        return value
-
-
-def _store_context(key: tuple[str, ...], value: str) -> None:
-    with _context_cache_lock:
-        _context_cache[key] = value
-        _context_cache.move_to_end(key)
-        while len(_context_cache) > _CONTEXT_CACHE_MAX_SIZE:
-            _context_cache.popitem(last=False)
-
-
 def invalidate_oracle_context(user_id: object) -> None:
-    """Elimina de memoria cualquier contexto personal del usuario."""
-    prefix = str(user_id)
-    with _context_cache_lock:
-        for key in [key for key in _context_cache if key[0] == prefix]:
-            del _context_cache[key]
+    _context_cache.invalidate_prefix(user_id)
 
 
 def _coords(user: User) -> tuple[float, float]:
@@ -137,7 +103,7 @@ def build_oracle_context(user: User, natal_chart: NatalChart, db) -> str:
     """
     now = datetime.now(timezone.utc)
     cache_key = _context_cache_key(user, natal_chart, now)
-    cached = _cached_context(cache_key)
+    cached = _context_cache.get(cache_key)
     if cached is not None:
         return cached
 
@@ -152,7 +118,6 @@ def build_oracle_context(user: User, natal_chart: NatalChart, db) -> str:
     lineas.extend(_resumen_natal(chart_data))
     lineas.append(_resumen_transitos(natal_planets, now))
 
-    # Fase lunar (cielo del momento).
     try:
         moon = lc.get_moon_info(now)
         lineas.append(
@@ -162,7 +127,6 @@ def build_oracle_context(user: User, natal_chart: NatalChart, db) -> str:
     except Exception:
         lineas.append("Luna: no disponible.")
 
-    # Hora planetaria + regente del día.
     try:
         hour = ph.get_planetary_hour(now, lat, lon)
         ruler = ph.get_day_ruler(now.date())
@@ -173,7 +137,7 @@ def build_oracle_context(user: User, natal_chart: NatalChart, db) -> str:
         lineas.append("Hora planetaria: no disponible.")
 
     context = "\n".join(lineas)
-    _store_context(cache_key, context)
+    _context_cache.set(cache_key, context)
     return context
 
 

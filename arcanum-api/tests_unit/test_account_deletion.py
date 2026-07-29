@@ -19,14 +19,15 @@ class _FakeDb:
 def test_delete_user_borra_cuenta_e_invalida_contexto():
     user = SimpleNamespace(id="user-delete")
     db = _FakeDb()
-    oracle_context._context_cache.clear()
-    oracle_context._context_cache[("user-delete", "chart", "bucket")] = "privado"
-    oracle_context._context_cache[("other-user", "chart", "bucket")] = "otro"
+    cache = oracle_context._context_cache
+    cache.clear()
+    cache.set(("user-delete", "chart", "bucket"), "privado")
+    cache.set(("other-user", "chart", "bucket"), "otro")
 
     response = delete_user_me(db=db, current_user=user)
 
     assert response.status_code == 204
     assert db.deleted is user
     assert db.commits == 1
-    assert all(key[0] != "user-delete" for key in oracle_context._context_cache)
-    assert any(key[0] == "other-user" for key in oracle_context._context_cache)
+    assert cache.get(("user-delete", "chart", "bucket")) is None
+    assert cache.get(("other-user", "chart", "bucket")) == "otro"

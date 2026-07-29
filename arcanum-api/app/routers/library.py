@@ -1,20 +1,10 @@
-"""Lecturas: obras en dominio público servidas como texto estructurado.
-
-Contenido de referencia y público, como Materia Arcana: no exige autenticación.
-Se sirve con `Cache-Control` largo porque una obra de 1653 no cambia — solo
-cambia cuando se corrige una traducción, y para eso está el ETag implícito del
-propio contenido.
-
-El texto viaja como texto, nunca como PDF: así se puede buscar, resaltar,
-anclar una lección a un párrafo y mandar ese pasaje al oráculo.
-"""
-
-import re
-from typing import Optional
+"""Lecturas: obras en dominio público servidas como texto estructurado."""
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session, selectinload
+
+from typing import Optional
 
 from app.db.session import get_db
 from app.models.library import LibraryChapter, LibraryParagraph, LibraryWork
@@ -26,66 +16,11 @@ from app.schemas.library import (
     WorkDetail,
     WorkSummary,
 )
+from app.services.library_bridge import find_ruling_excerpt
 
 router = APIRouter()
 
-# Una obra del XVII no cambia; solo se toca al corregir una traducción.
 _CACHE = "public, max-age=3600, stale-while-revalidate=86400"
-
-# Para el puente: palabras con las que un texto (EN original o ES traducido)
-# nombra a cada planeta regente. Sirve para localizar el pasaje donde el autor
-# declara la regencia y usarlo como anticipo en la ficha de la planta.
-_PLANET_WORDS: dict[str, tuple[str, ...]] = {
-    "sun": ("sun", "sol", "solar"),
-    "moon": ("moon", "luna", "lunar"),
-    "mercury": ("mercury", "mercurio"),
-    "venus": ("venus",),
-    "mars": ("mars", "marte"),
-    "jupiter": ("jupiter", "júpiter", "jove"),
-    "saturn": ("saturn", "saturno"),
-}
-
-# Frases que suelen preceder a la declaración de regencia en Culpeper y afines.
-# Si el pasaje que nombra al planeta trae además una de estas, es casi seguro
-# el que declara "de quién es la hierba" — se prefiere ese.
-_RULER_HINT = re.compile(
-    r"\b(herb of|dominion|govern|ruled by|owns|claims|under the|"
-    r"influence of|regid|domin|goberna|pertenece|planta de)\b",
-    re.IGNORECASE,
-)
-
-
-def _ruling_excerpt(
-    paragraphs: list[LibraryParagraph], ruling_planets: list[str]
-) -> tuple[Optional[str], bool]:
-    """Devuelve (texto, es_traduccion) del pasaje que declara la regencia.
-
-    Prioriza un párrafo que nombre el planeta Y traiga una frase de regencia;
-    si no, el primero que nombre el planeta; si nada, (None, False). Prefiere
-    la traducción ES cuando existe, porque el anticipo se muestra en español.
-    """
-    words = tuple(
-        w for planet in ruling_planets for w in _PLANET_WORDS.get(planet, ())
-    )
-    if not words:
-        return None, False
-    word_re = re.compile(
-        r"\b(" + "|".join(re.escape(w) for w in words) + r")\b", re.IGNORECASE
-    )
-
-    fallback: Optional[tuple[str, bool]] = None
-    for p in sorted(paragraphs, key=lambda x: x.position):
-        for text, is_es in ((p.text_es, True), (p.text_original, False)):
-            if not text or not word_re.search(text):
-                continue
-            if _RULER_HINT.search(text):
-                return text, is_es
-            if fallback is None:
-                fallback = (text, is_es)
-            break  # este párrafo ya aportó su mejor variante al fallback
-    if fallback is not None:
-        return fallback
-    return None, False
 
 
 @router.get("", response_model=list[WorkSummary])
@@ -159,7 +94,8 @@ def get_bridge_by_materia(
         single = meta.get("ruling_planet")
         ruling = [single] if single else []
 
-    excerpt, is_es = _ruling_excerpt(list(chapter.paragraphs), ruling)
+    result = find_ruling_excerpt(list(chapter.paragraphs), ruling)
+    excerpt, is_es = result.text, result.is_translation
 
     return MateriaBridge(
         work_slug=chapter.work.slug,
