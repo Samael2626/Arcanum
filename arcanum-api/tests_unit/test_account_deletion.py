@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 
+from app.adapters.repositories import UserRepository
 from app.routers.users import delete_user_me
 from app.services import oracle_context
 
@@ -19,12 +20,13 @@ class _FakeDb:
 def test_delete_user_borra_cuenta_e_invalida_contexto():
     user = SimpleNamespace(id="user-delete")
     db = _FakeDb()
+    users = UserRepository(db)
     cache = oracle_context._context_cache
     cache.clear()
     cache.set(("user-delete", "chart", "bucket"), "privado")
     cache.set(("other-user", "chart", "bucket"), "otro")
 
-    response = delete_user_me(db=db, current_user=user)
+    response = delete_user_me(users=users, current_user=user)
 
     assert response.status_code == 204
     assert db.deleted is user

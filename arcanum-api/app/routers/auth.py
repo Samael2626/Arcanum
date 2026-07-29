@@ -1,7 +1,11 @@
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
+from app.adapters.repositories import UserRepository
+from app.api.deps import get_user_repo
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserResponse
@@ -14,7 +18,6 @@ from app.core.security import (
 )
 from app.core.rate_limit import RateLimiter
 from app.services import auth_service
-from datetime import datetime, timezone
 
 router = APIRouter()
 
@@ -29,13 +32,12 @@ register_rate_limit = RateLimiter(max_calls=5, window_seconds=3600, scope="regis
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(register_rate_limit)],
 )
-def register(user_in: UserCreate, db: Session = Depends(get_db)):
-    """
-    Registra un nuevo usuario.
-    - Valida email único
-    - Hashea la contraseña con bcrypt
-    """
-    existing = db.query(User).filter(User.email == user_in.email).first()
+def register(
+    user_in: UserCreate,
+    users: UserRepository = Depends(get_user_repo),
+    db: Session = Depends(get_db),
+):
+    existing = users.get_by_email(user_in.email)
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
