@@ -713,82 +713,209 @@ function drawDecorations(ctx, W, H) {
   ctx.restore();
 }
 
+const PLANET_INFO = [
+  { name:'Saturno',  sephirah:'Binah',  num:3,  sym:'♄' },
+  { name:'Jupiter',  sephirah:'Chesed', num:4,  sym:'♃' },
+  { name:'Marte',    sephirah:'Geburah',num:5,  sym:'♂' },
+  { name:'Sol',      sephirah:'Tiphareth',num:6,sym:'☉' },
+  { name:'Venus',    sephirah:'Netzach',num:7,  sym:'♀' },
+  { name:'Mercurio', sephirah:'Hod',    num:8,  sym:'☿' },
+  { name:'Luna',     sephirah:'Yesod',  num:9,  sym:'☽' },
+];
+
+// ═══════════════════════════════════════════════════════════════
+//  CENTER EMBLEM — 7 planetary archetypes
+// ═══════════════════════════════════════════════════════════════
+
+// Utility: generate N points on a circle
+function ptsOnCircle(cx, cy, r, n, off) {
+  const p = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + (off || 0);
+    p.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
+  }
+  return p;
+}
+
+function drawPlanetSaturn(ctx, cx, cy, R, p) {
+  for (let i = 0; i < 3; i++) {
+    const r = R * (0.15 + i * 0.3);
+    ctx.save(); ctx.globalAlpha = 0.35 - i * 0.08;
+    ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 2.5 - i * 0.6;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+  for (let s of [-1, 1]) {
+    ctx.save(); ctx.globalAlpha = 0.25;
+    ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.ellipse(cx + s * R * 0.12, cy, R * 1.0, R * 0.2, p.rot, 0, Math.PI * 2);
+    ctx.stroke(); ctx.restore();
+  }
+}
+
+function drawPlanetJupiter(ctx, cx, cy, R, p) {
+  ctx.save(); ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 2.2;
+  ctx.globalAlpha = 0.45;
+  for (let i = 0; i < 4; i++) {
+    const a = i * Math.PI / 4 + p.rot;
+    ctx.beginPath(); ctx.moveTo(cx - R * 0.2 * Math.cos(a), cy - R * 0.2 * Math.sin(a));
+    ctx.lineTo(cx + R * 0.95 * Math.cos(a), cy + R * 0.95 * Math.sin(a)); ctx.stroke();
+  }
+  ctx.restore();
+  ctx.save(); ctx.globalAlpha = 0.25;
+  ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 0.8;
+  const s = ptsOnCircle(cx, cy, R * 0.75, 4, p.rot);
+  ctx.beginPath(); ctx.moveTo(s[0].x, s[0].y);
+  for (let i = 1; i < 4; i++) ctx.lineTo(s[i].x, s[i].y);
+  ctx.closePath(); ctx.stroke(); ctx.restore();
+}
+
+function drawPlanetMars(ctx, cx, cy, R, p) {
+  const n = 5, step = 2 + (p.innerStep % 3);
+  const outer = ptsOnCircle(cx, cy, R * 0.9, n, p.rot);
+  ctx.save(); ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.8; ctx.globalAlpha = 0.5;
+  for (let i = 0; i < n; i++) {
+    const j = (i + step) % n;
+    ctx.beginPath(); ctx.moveTo(outer[i].x, outer[i].y);
+    ctx.lineTo(outer[j].x, outer[j].y); ctx.stroke();
+  }
+  ctx.restore();
+  ctx.save(); ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.2; ctx.globalAlpha = 0.3;
+  for (let i = 0; i < 4; i++) {
+    const a = i * Math.PI / 2 + p.rot;
+    ctx.beginPath(); ctx.moveTo(cx + R * 0.3 * Math.cos(a), cy + R * 0.3 * Math.sin(a));
+    ctx.lineTo(cx + R * 1.0 * Math.cos(a - 0.2), cy + R * 1.0 * Math.sin(a - 0.2));
+    ctx.moveTo(cx + R * 0.3 * Math.cos(a), cy + R * 0.3 * Math.sin(a));
+    ctx.lineTo(cx + R * 1.0 * Math.cos(a + 0.2), cy + R * 1.0 * Math.sin(a + 0.2));
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawPlanetSun(ctx, cx, cy, R, p) {
+  const rays = 6 + (p.n % 4) * 2;
+  ctx.save(); if (optGlow) { ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 20; }
+  for (let i = 0; i < rays; i++) {
+    const a = (i / rays) * Math.PI * 2 + p.rot;
+    const thick = i % 2 === 0;
+    ctx.strokeStyle = thick ? 'rgba(184,134,11,0.6)' : 'rgba(184,134,11,0.2)';
+    ctx.lineWidth = thick ? 2.5 : 0.8;
+    ctx.beginPath(); ctx.moveTo(cx + R * 0.08 * Math.cos(a), cy + R * 0.08 * Math.sin(a));
+    ctx.lineTo(cx + R * 0.95 * Math.cos(a), cy + R * 0.95 * Math.sin(a)); ctx.stroke();
+  }
+  ctx.restore();
+  ctx.save(); ctx.globalAlpha = 0.3;
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.2, 0, Math.PI * 2);
+  ctx.fillStyle = '#b8860b'; ctx.fill(); ctx.restore();
+}
+
+function drawPlanetVenus(ctx, cx, cy, R, p) {
+  const petals = 4 + (p.sum % 4);
+  ctx.save(); ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.2;
+  ctx.globalAlpha = 0.45;
+  for (let i = 0; i < petals; i++) {
+    const a = (i / petals) * Math.PI * 2 + p.rot;
+    const ex = cx + R * 0.85 * Math.cos(a);
+    const ey = cy + R * 0.85 * Math.sin(a);
+    const mx = cx + R * 0.25 * Math.cos(a + Math.PI / petals);
+    const my = cy + R * 0.25 * Math.sin(a + Math.PI / petals);
+    ctx.beginPath(); ctx.moveTo(cx, cy);
+    ctx.quadraticCurveTo(ex, ey, mx, my);
+    ctx.quadraticCurveTo(cx + R * 0.55 * Math.cos(a + p.rot * 0.3), cy + R * 0.55 * Math.sin(a + p.rot * 0.3), cx, cy);
+    ctx.stroke();
+  }
+  ctx.restore();
+  ctx.fillStyle = 'rgba(184,134,11,0.4)';
+  for (let i = 0; i < petals; i++) {
+    const a = (i / petals) * Math.PI * 2 + p.rot;
+    ctx.beginPath(); ctx.arc(cx + R * 0.7 * Math.cos(a), cy + R * 0.7 * Math.sin(a), 3, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+function drawPlanetMercury(ctx, cx, cy, R, p) {
+  const n = Math.max(3, 3 + (p.n % 5));
+  const outer = ptsOnCircle(cx, cy, R * 0.8, n, p.rot);
+  const inner = ptsOnCircle(cx, cy, R * 0.35, n, p.rot + Math.PI / n);
+  ctx.save(); ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.0;
+  ctx.globalAlpha = 0.4;
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n;
+    ctx.beginPath(); ctx.moveTo(outer[i].x, outer[i].y);
+    ctx.lineTo(inner[j].x, inner[j].y);
+    ctx.lineTo(outer[(i + 2) % n].x, outer[(i + 2) % n].y);
+    ctx.stroke();
+  }
+  ctx.restore();
+  ctx.save(); ctx.strokeStyle = 'rgba(184,134,11,0.2)'; ctx.lineWidth = 0.7;
+  for (let s of [-1, 1]) {
+    for (let w = 0; w < 3; w++) {
+      const bx = cx + s * R * (0.25 + w * 0.1);
+      ctx.beginPath(); ctx.arc(bx, cy, R * 0.12, s * 0.8, s * 2.34); ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function drawPlanetMoon(ctx, cx, cy, R, p) {
+  const cres = 3 + (p.sum % 4);
+  ctx.save(); ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.0; ctx.globalAlpha = 0.3;
+  for (let i = 0; i < cres; i++) {
+    const a = (i / cres) * Math.PI * 2 + p.rot;
+    ctx.beginPath();
+    ctx.arc(cx + R * 0.35 * Math.cos(a), cy + R * 0.35 * Math.sin(a), R * 0.55, a - 1.0, a + 1.0);
+    ctx.stroke();
+  }
+  ctx.restore();
+  ctx.save(); ctx.strokeStyle = 'rgba(184,134,11,0.15)'; ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  for (let t = 0; t <= 60; t++) {
+    const frac = t / 60;
+    const a = p.rot + frac * Math.PI * 3;
+    const r = R * 0.05 + frac * R * 0.65;
+    ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+  }
+  ctx.stroke(); ctx.restore();
+}
+
 function drawCenterEmblem(ctx, cx, cy, size, letters) {
   if (letters.length < 2) return;
-  const n = letters.length;
   const vals = letters.map(val);
   const sum = vals.reduce((a,b)=>a+b,0);
   const prod = vals.reduce((a,b)=>a*b,1) % 100;
-  const prim = [2,3,5,7,11,13,17,19,23,29];
+  const n = letters.length;
 
-  function modP(i) { return prim[i % prim.length]; }
+  const planet = sum % 7;
+  const params = {
+    n, sum, prod,
+    rot: (prod % 12) * Math.PI / 6,
+    innerStep: 1 + (sum % 5),
+    planets: ['saturn','jupiter','mars','sun','venus','mercury','moon']
+  };
 
-  const outerN = 3 + (sum % 5);       // petal count (3-7)
-  const innerN = 2 + (prod % 4);       // inner star points (2-5)
-  const rings = 1 + (sum % 3);         // concentric rings (1-3)
-  const phaseOff = (prod % 12) * Math.PI / 6;
-
-  const outerR = size * 0.85;
-  const innerR = size * 0.18;
-  const midR = (outerR + innerR) / 2;
-
-  // Ring 0: Concentric circles
+  const R = size * 0.8;
   ctx.save();
-  for (let ri = 0; ri < rings; ri++) {
-    const r = innerR + (outerR - innerR) * ((ri + 1) / (rings + 1));
-    const alpha = 0.12 + ri * 0.06;
-    ctx.strokeStyle = 'rgba(184,134,11,' + alpha + ')';
-    ctx.lineWidth = 0.5 + ri * 0.3;
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
-  }
+
+  // Medallion background — dark circle so emblem isnt lost in grid lines
+  ctx.beginPath(); ctx.arc(cx, cy, R + 4, 0, Math.PI * 2);
+  ctx.fillStyle = '#0a080d'; ctx.fill();
+  ctx.strokeStyle = 'rgba(184,134,11,0.15)'; ctx.lineWidth = 0.5;
+  ctx.stroke();
+
+  // Optional glow per archetype
+  if (optGlow) { ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 10; }
+
+  const drawers = [
+    drawPlanetSaturn, drawPlanetJupiter, drawPlanetMars,
+    drawPlanetSun, drawPlanetVenus, drawPlanetMercury, drawPlanetMoon
+  ];
+  drawers[planet](ctx, cx, cy, R, params);
+
   ctx.restore();
 
-  // Ring 1: Outer rosette (petals)
-  for (let li = 0; li < 2; li++) {
-    const alpha = 0.5 - li * 0.15;
-    if (alpha <= 0) continue;
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.2 - li * 0.4;
-    ctx.lineCap = 'round';
-    if (optGlow && li === 0) { ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 12; }
-    const off = li * Math.PI / outerN + phaseOff * 0.5;
-    for (let i = 0; i < outerN; i++) {
-      const a = (i / outerN) * Math.PI * 2 + off;
-      const ex = cx + outerR * Math.cos(a);
-      const ey = cy + outerR * Math.sin(a);
-      const mx = cx + midR * Math.cos(a + li * phaseOff * 0.3);
-      const my = cy + midR * Math.sin(a + li * phaseOff * 0.3);
-      ctx.beginPath(); ctx.moveTo(cx, cy);
-      ctx.quadraticCurveTo(ex, ey, mx, my);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
-  // Ring 2: Inner star polygon
-  if (innerN > 2) {
-    ctx.save();
-    ctx.strokeStyle = 'rgba(184,134,11,0.35)'; ctx.lineWidth = 0.8;
-    const innerStep = 2 + (prod % (innerN - 2));
-    const iPts = [];
-    for (let i = 0; i < innerN; i++) {
-      const a = (i / innerN) * Math.PI * 2 + phaseOff;
-      const r = midR * 0.65;
-      iPts.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
-    }
-    for (let i = 0; i < innerN; i++) {
-      const j = (i + innerStep) % innerN;
-      if (j === i) continue;
-      ctx.beginPath(); ctx.moveTo(iPts[i].x, iPts[i].y);
-      ctx.lineTo(iPts[j].x, iPts[j].y); ctx.stroke();
-    }
-    ctx.restore();
-  }
-
-  // Center glow point
+  // Center point
   ctx.save();
-  if (optGlow) { ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 35; }
+  if (optGlow) { ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 30; }
   ctx.fillStyle = '#b8860b';
   ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
@@ -902,7 +1029,7 @@ function render() {
   }
 
   // Layer 6: Center emblem — once at absolute center (not per transform)
-  drawCenterEmblem(ctx, cx, cy, emblemR * 0.45, letters);
+  drawCenterEmblem(ctx, cx, cy, emblemR * 0.65, letters);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -912,9 +1039,12 @@ function generate() {
   const t = document.getElementById('intention').value.trim();
   if (!t) { showToast('Escribe una intencion'); return; }
   letters = [...reduce(t)];
-  const vals = letters.map(c => c + (c.charCodeAt(0) - 64));
+  const vnums = letters.map(c => c.charCodeAt(0) - 64);
+  const vsum = vnums.reduce((a,b)=>a+b,0);
+  const planet = PLANET_INFO[vsum % 7];
   document.getElementById('reductionBox').innerHTML = letters.join('  ') +
-    '<br><span style="color:var(--gold);font-size:.6rem">' + vals.join(' ') + '</span>';
+    '<br><span style="color:var(--gold);font-size:.6rem">' + vnums.join(' ') + '</span>' +
+    (planet ? '<br><span style="color:var(--gold);font-size:.65rem">' + planet.sym + ' ' + planet.name + ' — ' + planet.sephirah + '</span>' : '');
   if (letters.length < 2) { showToast('Necesitas al menos 2 letras'); return; }
   render();
   showToast(letters.length + ' letras — ' + activeEngines.join('+'));
