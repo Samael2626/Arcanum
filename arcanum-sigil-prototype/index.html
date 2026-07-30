@@ -252,74 +252,45 @@ const engines = {
   // ── STAR ENGINE (original geometric) ──
   star: {
     render(ctx, cx, cy, radius, letters) {
-      if (letters.length < 2) return;
+      if (letters.length < 3) return;
       const n = letters.length;
       const vals = letters.map(val);
       const sum = vals.reduce((a,b)=>a+b,0);
-      const avg = sum / n;
-      const twist = (sum % 360) * 0.1;
-      const innerRatio = 0.3 + (avg / 52) * 0.4;
-      const complexity = 1 + (n % 4);
-      const spike = (vals[0] % 3) + 1;
+      const step = 2 + (sum % (n - 2));
+      const innerR = radius * (0.25 + (sum % 25) / 60);
+      const rots = 1 + (sum % 3);
+
+      const ring = [], inner = [];
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 - Math.PI / 2;
+        ring.push({ x: radius * Math.cos(a), y: radius * Math.sin(a) });
+        inner.push({ x: innerR * Math.cos(a), y: innerR * Math.sin(a) });
+      }
 
       const pts = [];
 
+      // Star polygon chords — connect every step-th point
       for (let i = 0; i < n; i++) {
-        const a = (i / n) * Math.PI * 2 + twist;
-        const r = i % 2 === 0 ? radius : radius * innerRatio;
-        pts.push({ x: r * Math.cos(a), y: r * Math.sin(a) });
+        pts.push(ring[i]);
+        const j = (i + step) % n;
+        pts.push({ x: (ring[i].x + ring[j].x) / 2, y: (ring[i].y + ring[j].y) / 2 });
       }
-      if (complexity >= 2) {
+
+      // Inner ring connections
+      for (let r = 0; r < rots; r++) {
         for (let i = 0; i < n; i++) {
-          const a = ((i + 0.5) / n) * Math.PI * 2 + twist;
-          const r = radius * (0.5 + (vals[i % n] / 52) * 0.5);
-          pts.push({ x: r * Math.cos(a), y: r * Math.sin(a) });
-        }
-      }
-      if (complexity >= 3) {
-        for (let i = 0; i < n; i++) {
-          const a = ((i + 0.25) / n) * Math.PI * 2 + twist;
-          const r = radius * 0.35 * (1 + (vals[i % n] / 52) * 0.3);
-          pts.push({ x: r * Math.cos(a), y: r * Math.sin(a) });
-        }
-      }
-      if (complexity >= 4) {
-        for (let i = 0; i < n * 2; i++) {
-          const a = (i / (n * 2)) * Math.PI * 2 + twist;
-          const r = i % 2 === 0 ? radius * 1.15 : radius * 0.6;
-          pts.push({ x: r * Math.cos(a), y: r * Math.sin(a) });
+          const j = (i + 1) % n;
+          const t = (r + 1) / (rots + 1);
+          const mx = ring[i].x + (inner[j].x - ring[i].x) * t;
+          const my = ring[i].y + (inner[j].y - ring[i].y) * t;
+          pts.push({ x: mx, y: my });
         }
       }
 
-      const extra = [];
-      const totalRings = complexity;
-      for (let ring = 0; ring < totalRings; ring++) {
-        const offset = ring * n;
-        const count = ring === 3 ? n * 2 : n;
-        const skip = spike + ring;
-        for (let i = 0; i < count; i++) {
-          const j = (i + skip) % count;
-          if (j === i || j === i + 1) continue;
-          const idx1 = offset + i, idx2 = offset + j;
-          if (idx1 < pts.length && idx2 < pts.length)
-            extra.push({ x: (pts[idx1].x + pts[idx2].x) / 2, y: (pts[idx1].y + pts[idx2].y) / 2 });
-        }
-      }
-
-      const all = [];
-      let total = pts.length + extra.length;
-      for (let i = 0; i < total; i++) {
-        if (i % 3 === 0 && extra.length > 0) all.push(extra.shift());
-        else if (pts.length > 0) all.push(pts.shift());
-      }
-      while (pts.length) all.push(pts.shift());
-      while (extra.length) all.push(extra.shift());
-      if (all.length < 3) return;
-
-      this._drawPath(ctx, cx, cy, all);
+      this._drawPath(ctx, cx, cy, pts, inner);
     },
 
-    _drawPath(ctx, cx, cy, pts) {
+    _drawPath(ctx, cx, cy, pts, inner) {
       const mapped = pts.map(p => ({ x: cx + p.x, y: cy + p.y }));
       if (optGlow) {
         drawGlowPath(ctx, mapped, 0, '#b8860b', 40, 6);
@@ -327,10 +298,12 @@ const engines = {
       ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 2.5;
       ctx.lineCap = 'round'; ctx.lineJoin = 'round';
       drawCurvedPath(ctx, mapped, 0);
-      ctx.fillStyle = 'rgba(184,134,11,0.04)';
-      ctx.beginPath(); ctx.moveTo(mapped[0].x, mapped[0].y);
-      for (let i = 1; i < mapped.length; i++) ctx.lineTo(mapped[i].x, mapped[i].y);
-      ctx.closePath(); ctx.fill();
+
+      // Inner ring dots
+      ctx.fillStyle = '#b8860b';
+      for (const p of inner) {
+        ctx.beginPath(); ctx.arc(cx + p.x, cy + p.y, 2.5, 0, Math.PI * 2); ctx.fill();
+      }
     }
   },
 
@@ -559,28 +532,26 @@ const engines = {
     _assign(letters, nodes) {
       const n = letters.length;
       if (n === 0) return [];
-      // Assign nodes by angle: map each letter to a well-distributed angle
+      const maxDist = Math.max(...nodes.map(n => Math.sqrt(n.x*n.x + n.y*n.y)));
       const result = [];
       const used = new Set();
       for (let i = 0; i < n; i++) {
         const targetAngle = (i / n) * Math.PI * 2 - Math.PI / 2;
-        let best = -1, bestScore = Infinity;
+        const targetR = maxDist * (0.35 + (i / n) * 0.55);
+        const tx = targetR * Math.cos(targetAngle);
+        const ty = targetR * Math.sin(targetAngle);
+        let best = -1, bestDist = Infinity;
         for (let j = 0; j < nodes.length; j++) {
           if (used.has(j)) continue;
-          const d = Math.sqrt(nodes[j].x * nodes[j].x + nodes[j].y * nodes[j].y);
-          const a = Math.atan2(nodes[j].y, nodes[j].x);
-          const aDiff = Math.abs(a - targetAngle);
-          const wAngle = Math.min(aDiff, Math.PI * 2 - aDiff);
-          const wRad = 1 - Math.min(d / (nodes.length > 0 ? Math.max(...nodes.map(nn => Math.sqrt(nn.x*nn.x + nn.y*nn.y))) : 1), 1);
-          const score = wAngle + wRad * 0.3;
-          if (score < bestScore) { bestScore = score; best = j; }
+          const dx = nodes[j].x - tx, dy = nodes[j].y - ty;
+          const dist = dx*dx + dy*dy;
+          if (dist < bestDist) { bestDist = dist; best = j; }
         }
         if (best >= 0) {
           used.add(best);
           result.push({ letter: letters[i], pos: nodes[best], value: val(letters[i]) });
         }
       }
-      // Sort by angle for smooth circular path
       result.sort((a, b) => Math.atan2(a.pos.y, a.pos.x) - Math.atan2(b.pos.y, b.pos.x));
       return result;
     },
@@ -606,7 +577,7 @@ const engines = {
         case 'fol': {
           const R = radius * 0.75;
           const s = R / 3;
-          const cR = s * 1.05;
+          const cR = s * 1.25;
           ctx.strokeStyle = 'rgba(184,134,11,0.08)'; ctx.lineWidth = 0.4;
           for (const n of nodes) {
             ctx.beginPath(); ctx.arc(cx + n.x, cy + n.y, cR, 0, Math.PI * 2); ctx.stroke();
@@ -749,13 +720,7 @@ function render() {
       ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.5;
       ctx.lineCap = 'round'; ctx.lineJoin = 'round';
       ctx.beginPath(); ctx.moveTo(tRing[0].x, tRing[0].y);
-      for (let i = 1; i < n; i++) {
-        if (i % 4 === 0) {
-          const mx = (tRing[i-1].x + tRing[i].x) / 2;
-          const my = (tRing[i-1].y + tRing[i].y) / 2 - 10;
-          ctx.quadraticCurveTo(mx, my, tRing[i].x, tRing[i].y);
-        } else ctx.lineTo(tRing[i].x, tRing[i].y);
-      }
+      for (let i = 1; i < n; i++) ctx.lineTo(tRing[i].x, tRing[i].y);
       ctx.closePath(); ctx.stroke();
 
       ctx.strokeStyle = 'rgba(184,134,11,0.04)'; ctx.lineWidth = 0.3;
@@ -881,9 +846,11 @@ document.getElementById('btnClearStamps').addEventListener('click', () => { stam
 document.getElementById('btnSVG').addEventListener('click', () => {
   if (!letters.length) { showToast('Genera primero'); return; }
   const W=canvas.width, H=canvas.height;
-  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'"><rect width="'+W+'" height="'+H+'" fill="#0a080d"/></svg>';
+  // Render SVG by serializing canvas commands into SVG paths
+  const svg = buildSVG(W, H);
   const blob = new Blob([svg],{type:'image/svg+xml'});
-  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='sigilo.svg'; a.click(); showToast('SVG');
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='sigilo.svg'; a.click();
+  showToast('SVG');
 });
 document.getElementById('btnPNG').addEventListener('click', () => {
   if (!letters.length) { showToast('Genera primero'); return; }
@@ -906,6 +873,12 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey||e.metaKey)&&e.key==='Enter') generate();
   if (e.key==='Escape') stampMode = false;
 });
+
+function buildSVG(W, H) {
+  const dataUrl = canvas.toDataURL('image/png');
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'">'+
+    '<image width="'+W+'" height="'+H+'" href="'+dataUrl+'"/></svg>';
+}
 
 let tt;
 function showToast(m) { const e=document.getElementById('toast'); e.textContent=m; e.classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>e.classList.remove('show'),1800); }
