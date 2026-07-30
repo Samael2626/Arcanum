@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Taller de Sigilos — ARCANUM</title>
+<style>
+:root { --bg:#0c0b0f; --panel:#15121a; --border:#2a2433; --gold:#b8860b; --text:#d4c9b8; --text-dim:#8a7f72; --font:'Cormorant Garamond','Georgia',serif; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;display:flex;justify-content:center;padding:16px}
+.app{max-width:1200px;width:100%}
+header{text-align:center;padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:12px}
+header h1{font-size:1.4rem;font-weight:400;color:var(--gold);letter-spacing:5px;text-transform:uppercase}
+header p{color:var(--text-dim);font-style:italic;font-size:.78rem}
+.workspace{display:flex;gap:12px}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:12px;width:220px;flex-shrink:0;overflow-y:auto;max-height:92vh}
+.panel h3{font-size:.58rem;text-transform:uppercase;letter-spacing:3px;color:var(--text-dim);margin:6px 0 2px;font-weight:400;border-top:1px solid var(--border);padding-top:5px}
+.panel h3:first-child{border:none;padding-top:0;margin-top:0}
+textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:4px 6px;color:var(--text);font-family:var(--font);font-size:.78rem;outline:none;resize:vertical;min-height:34px}
+textarea:focus{border-color:var(--gold)}
+.btn{background:var(--gold);color:#0c0b0f;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-family:var(--font);font-size:.72rem;font-weight:600}
+.btn:hover{background:#e6b422}
+.btn-dim{background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:4px 10px;border-radius:4px;cursor:pointer;font-family:var(--font);font-size:.72rem}
+.btn-dim:hover{border-color:var(--gold);color:var(--gold)}
+.btn-sm{padding:3px 8px;font-size:.65rem}
+.btn-group{display:flex;flex-wrap:wrap;gap:3px;margin:3px 0}
+.info-box{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:5px;font-size:.65rem;color:var(--text-dim);margin:3px 0}
+.toggle-row{display:flex;align-items:center;gap:5px;margin:1px 0}
+.toggle-row label{margin:0;cursor:pointer;font-size:.72rem}
+input[type=checkbox]{accent-color:var(--gold);width:12px;height:12px;cursor:pointer}
+input[type=range]{accent-color:var(--gold);flex:1;height:3px;cursor:pointer;background:transparent}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:var(--gold);cursor:pointer}
+.fam-select{display:flex;gap:0;margin:4px 0}
+.fam-btn{flex:1;background:var(--bg);border:1px solid var(--border);padding:4px 2px;text-align:center;font-size:.6rem;cursor:pointer;color:var(--text-dim);transition:all .15s}
+.fam-btn:first-child{border-radius:4px 0 0 4px}
+.fam-btn:last-child{border-radius:0 4px 4px 0}
+.fam-btn:not(:last-child){border-right:none}
+.fam-btn.active{background:var(--gold);color:#0c0b0f;border-color:var(--gold)}
+.fam-btn:hover:not(.active){border-color:var(--gold)}
+.param-group{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:4px;margin:3px 0}
+.param-row{display:flex;align-items:center;justify-content:space-between;gap:4px;margin:1px 0}
+.param-row label{font-size:.62rem;color:var(--text-dim);white-space:nowrap}
+.param-row select{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:.62rem;padding:1px 3px;border-radius:3px;outline:none;font-family:var(--font);max-width:90px}
+.param-row select:focus{border-color:var(--gold)}
+.param-row .val{color:var(--gold);font-size:.6rem;min-width:18px;text-align:right}
+.stamp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;margin:3px 0}
+.stamp-btn{background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:2px;cursor:pointer;text-align:center;font-size:1rem;color:var(--text-dim);line-height:1.1}
+.stamp-btn:hover{border-color:var(--gold);color:var(--gold)}
+.stamp-btn.active{border-color:var(--gold);background:#1a1220;color:var(--gold)}
+.canvas-wrap{background:#0a080d;border:1px solid var(--border);border-radius:6px;flex:1;overflow:hidden}
+canvas{display:block;width:100%;height:100%;min-height:700px}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--gold);color:#0c0b0f;padding:5px 16px;border-radius:20px;font-size:.78rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:100}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="app">
+<header><h1>⟠ <span>Taller de</span> Sigilos</h1><p>ARCANUM — emblemas sigilicos</p></header>
+<div class="workspace">
+<div class="panel">
+  <h3>Intencion</h3>
+  <textarea id="intention" placeholder="Tu intencion..."></textarea>
+  <div class="btn-group"><button class="btn" id="btnGenerate">✦ Forjar</button></div>
+  <h3>Reduccion</h3>
+  <div class="info-box" id="reductionBox">—</div>
+  <h3>Familia</h3>
+  <div class="fam-select">
+    <div class="fam-btn active" data-engine="star">Estrella</div>
+    <div class="fam-btn" data-engine="kamea">Sello</div>
+    <div class="fam-btn" data-engine="grid">Grid</div>
+  </div>
+
+  <div id="starParams" class="param-group">
+    <div class="toggle-row"><input type="checkbox" id="chkMirror" checked><label>Simetria bilateral</label></div>
+    <div class="toggle-row"><input type="checkbox" id="chkRadial"><label>Rotacion x4</label></div>
+  </div>
+
+  <div id="kameaParams" style="display:none" class="param-group">
+    <div class="param-row"><label>Kamea</label><select id="selKamea">
+      <option value="auto">Auto</option>
+      <option value="saturn">Saturno 3x3</option>
+      <option value="jupiter">Jupiter 4x4</option>
+      <option value="mars">Marte 5x5</option>
+    </select></div>
+    <div class="toggle-row"><input type="checkbox" id="chkGrid" checked><label>Mostrar grid</label></div>
+    <div class="param-row">
+      <label>Nodos</label>
+      <select id="selNodeStyle"><option value="both">Llenos+anillo</option><option value="fill">Llenos</option><option value="ring">Anillo</option></select>
+    </div>
+    <div class="param-row">
+      <label>Curvatura</label><input type="range" id="kameaCurve" min="0" max="100" value="0"><span class="val" id="kameaCurveVal">0%</span>
+    </div>
+  </div>
+
+  <div id="gridParams" style="display:none" class="param-group">
+    <div class="param-row"><label>Patron</label><select id="selGridPattern">
+      <option value="fol">Flor de Vida</option>
+      <option value="wheel">Rueda</option>
+      <option value="square">Cuadricula</option>
+    </select></div>
+    <div class="param-row"><label>Pliegue</label><select id="selGridFold">
+      <option value="1">1x</option><option value="2">2x</option>
+      <option value="3">3x</option><option value="4" selected>4x</option>
+      <option value="6">6x</option><option value="8">8x</option>
+    </select></div>
+    <div class="param-row">
+      <label>Curvatura</label><input type="range" id="gridCurve" min="0" max="100" value="30"><span class="val" id="gridCurveVal">30%</span>
+    </div>
+    <div class="toggle-row"><input type="checkbox" id="chkGridShow" checked><label>Mostrar grid</label></div>
+    <div class="param-row">
+      <label>Nodos</label>
+      <select id="selGridNodeStyle"><option value="both">Llenos+anillo</option><option value="fill">Llenos</option><option value="ring">Anillo</option></select>
+    </div>
+    <div class="param-row"><label>Resonancia</label><select id="selGridResonance">
+      <option value="none">—</option><option value="sun">☉ Sol</option>
+      <option value="moon">☽ Luna</option><option value="mercury">☿ Mercurio</option>
+      <option value="venus">♀ Venus</option><option value="mars">♂ Marte</option>
+      <option value="jupiter">♃ Jupiter</option><option value="saturn">♄ Saturno</option>
+    </select></div>
+  </div>
+
+  <h3>Presentacion</h3>
+  <div class="toggle-row"><input type="checkbox" id="chkGlow" checked><label>Brillo</label></div>
+  <div class="toggle-row"><input type="checkbox" id="chkCircle" checked><label>Circulo exterior</label></div>
+  <div class="toggle-row"><input type="checkbox" id="chkDots" checked><label>Puntos de poder</label></div>
+
+  <h3>Estampas</h3>
+  <div class="stamp-grid">
+    <button class="stamp-btn" data-s="♄">♄</button>
+    <button class="stamp-btn" data-s="♃">♃</button>
+    <button class="stamp-btn" data-s="♂">♂</button>
+    <button class="stamp-btn" data-s="☉">☉</button>
+    <button class="stamp-btn" data-s="♀">♀</button>
+    <button class="stamp-btn" data-s="☿">☿</button>
+    <button class="stamp-btn" data-s="☽">☽</button>
+    <button class="stamp-btn" data-s="✦">✦</button>
+    <button class="stamp-btn" data-s="✧">✧</button>
+    <button class="stamp-btn" data-s="◎">◎</button>
+  </div>
+  <div class="btn-group">
+    <button class="btn-dim btn-sm" id="btnStamp">🔨 Estampa</button>
+    <button class="btn-dim btn-sm" id="btnClearStamps">✕</button>
+  </div>
+  <h3>Exportar</h3>
+  <div class="btn-group">
+    <button class="btn btn-sm" id="btnSVG">SVG</button>
+    <button class="btn btn-sm" id="btnPNG">PNG</button>
+  </div>
+</div>
+<div class="canvas-wrap"><canvas id="canvas" width="1000" height="700"></canvas></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  TALLER DE SIGILOS — Multi-engine + Grid Sagrado
+// ═══════════════════════════════════════════════════════════════
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let letters = [];
+let stamps = [];
+let stampSym = '♄';
+let stampMode = false;
+let nextId = 1;
+
+let optMirror = true, optRadial = false, optGlow = true;
+let optCircle = true, optDots = true;
+let currentEngine = 'grid';
+let optKameaType = 'auto', optShowGrid = true, optNodeStyle = 'both', optKameaCurve = 0;
+let optGridPattern = 'fol', optGridFold = 4, optGridCurve = 30, optGridShow = true, optGridNodeStyle = 'both', optGridResonance = 'none';
+
+// ═══════════════════════════════════════════════════════════════
+//  REDUCTION
+// ═══════════════════════════════════════════════════════════════
+function reduce(t) {
+  const u = t.toUpperCase().replace(/[^A-Z]/g, '');
+  return [...new Set(u)].join('');
+}
+
+function val(ch) { return ch.charCodeAt(0) - 64; }
+
+// ═══════════════════════════════════════════════════════════════
+//  KAMEAS
+// ═══════════════════════════════════════════════════════════════
+const kameas = {
+  saturn: { name:'Saturno', grid:[[6,1,8],[7,5,3],[2,9,4]], size:3, max:9 },
+  jupiter: { name:'Jupiter', grid:[[4,14,15,1],[9,7,6,12],[5,11,10,8],[16,2,3,13]], size:4, max:16 },
+  mars: { name:'Marte', grid:[[11,24,7,20,3],[4,12,25,8,16],[17,5,13,21,9],[10,18,1,14,22],[23,6,19,2,15]], size:5, max:25 }
+};
+
+function pickKamea(n) {
+  if (optKameaType !== 'auto') return kameas[optKameaType];
+  if (n < 6) return kameas.saturn;
+  if (n < 11) return kameas.jupiter;
+  return kameas.mars;
+}
+
+function buildKameaLookup(k) {
+  const map = {};
+  for (let r = 0; r < k.size; r++)
+    for (let c = 0; c < k.size; c++)
+      map[k.grid[r][c]] = { row: r, col: c };
+  return map;
+}
+
+function kameaPosition(row, col, size, cx, cy, cellSize) {
+  const mid = (size - 1) / 2;
+  return { x: cx + (col - mid) * cellSize, y: cy + (row - mid) * cellSize };
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PATH HELPERS
+// ═══════════════════════════════════════════════════════════════
+function drawCurvedPath(ctx, pts, curve) {
+  if (pts.length < 2) return;
+  ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+  if (curve <= 0.05 || pts.length < 3) {
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  } else {
+    const n = pts.length, k = Math.min(curve * 2, 2);
+    for (let i = 0; i < n - 1; i++) {
+      const p = pts[i], pn = pts[i + 1];
+      const pp = i > 0 ? pts[i - 1] : p;
+      const pnn = i < n - 2 ? pts[i + 2] : pn;
+      ctx.bezierCurveTo(
+        p.x + (pn.x - pp.x) * k / 6, p.y + (pn.y - pp.y) * k / 6,
+        pn.x - (pnn.x - p.x) * k / 6, pn.y - (pnn.y - p.y) * k / 6,
+        pn.x, pn.y
+      );
+    }
+  }
+  ctx.stroke();
+}
+
+function drawGlowPath(ctx, pts, curve, color, blur, width) {
+  ctx.save();
+  ctx.shadowColor = color; ctx.shadowBlur = blur;
+  ctx.strokeStyle = 'rgba(184,134,11,0.12)';
+  ctx.lineWidth = width; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  drawCurvedPath(ctx, pts, curve);
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ENGINES
+// ═══════════════════════════════════════════════════════════════
+
+const engines = {
+
+  // ── STAR ENGINE (original geometric) ──
+  star: {
+    render(ctx, cx, cy, radius, letters) {
+      if (letters.length < 2) return;
+      const n = letters.length;
+      const vals = letters.map(val);
+      const sum = vals.reduce((a,b)=>a+b,0);
+      const avg = sum / n;
+      const twist = (sum % 360) * 0.1;
+      const innerRatio = 0.3 + (avg / 52) * 0.4;
+      const complexity = 1 + (n % 4);
+      const spike = (vals[0] % 3) + 1;
+
+      const pts = [];
+
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + twist;
+        const r = i % 2 === 0 ? radius : radius * innerRatio;
+        pts.push({ x: r * Math.cos(a), y: r * Math.sin(a) });
+      }
+      if (complexity >= 2) {
+        for (let i = 0; i < n; i++) {
+          const a = ((i + 0.5) / n) * Math.PI * 2 + twist;
+          const r = radius * (0.5 + (vals[i % n] / 52) * 0.5);
+          pts.push({ x: r * Math.cos(a), y: r * Math.sin(a) });
+        }
+      }
+      if (complexity >= 3) {
+        for (let i = 0; i < n; i++) {
+          const a = ((i + 0.25) / n) * Math.PI * 2 + twist;
+          const r = radius * 0.35 * (1 + (vals[i % n] / 52) * 0.3);
+          pts.push({ x: r * Math.cos(a), y: r * Math.sin(a) });
+        }
+      }
+      if (complexity >= 4) {
+        for (let i = 0; i < n * 2; i++) {
+          const a = (i / (n * 2)) * Math.PI * 2 + twist;
+          const r = i % 2 === 0 ? radius * 1.15 : radius * 0.6;
+          pts.push({ x: r * Math.cos(a), y: r * Math.sin(a) });
+        }
+      }
+
+      const extra = [];
+      const totalRings = complexity;
+      for (let ring = 0; ring < totalRings; ring++) {
+        const offset = ring * n;
+        const count = ring === 3 ? n * 2 : n;
+        const skip = spike + ring;
+        for (let i = 0; i < count; i++) {
+          const j = (i + skip) % count;
+          if (j === i || j === i + 1) continue;
+          const idx1 = offset + i, idx2 = offset + j;
+          if (idx1 < pts.length && idx2 < pts.length)
+            extra.push({ x: (pts[idx1].x + pts[idx2].x) / 2, y: (pts[idx1].y + pts[idx2].y) / 2 });
+        }
+      }
+
+      const all = [];
+      let total = pts.length + extra.length;
+      for (let i = 0; i < total; i++) {
+        if (i % 3 === 0 && extra.length > 0) all.push(extra.shift());
+        else if (pts.length > 0) all.push(pts.shift());
+      }
+      while (pts.length) all.push(pts.shift());
+      while (extra.length) all.push(extra.shift());
+      if (all.length < 3) return;
+
+      this._drawPath(ctx, cx, cy, all);
+    },
+
+    _drawPath(ctx, cx, cy, pts) {
+      const mapped = pts.map(p => ({ x: cx + p.x, y: cy + p.y }));
+      if (optGlow) {
+        drawGlowPath(ctx, mapped, 0, '#b8860b', 40, 6);
+      }
+      ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      drawCurvedPath(ctx, mapped, 0);
+      ctx.fillStyle = 'rgba(184,134,11,0.04)';
+      ctx.beginPath(); ctx.moveTo(mapped[0].x, mapped[0].y);
+      for (let i = 1; i < mapped.length; i++) ctx.lineTo(mapped[i].x, mapped[i].y);
+      ctx.closePath(); ctx.fill();
+    }
+  },
+
+  // ── KAMEA ENGINE (Goetia-style seal) ──
+  kamea: {
+    render(ctx, cx, cy, radius, letters) {
+      if (letters.length < 2) return;
+      const n = letters.length;
+      const k = pickKamea(n);
+      const lookup = buildKameaLookup(k);
+      const cellSize = (radius * 2 * 0.7) / k.size;
+      const curve = optKameaCurve / 100;
+
+      const positions = [];
+      for (const ch of letters) {
+        const v = val(ch);
+        const cell = ((v - 1) % k.max) + 1;
+        const pos = lookup[cell];
+        if (pos) positions.push(kameaPosition(pos.row, pos.col, k.size, cx, cy, cellSize));
+      }
+      if (positions.length < 2) return;
+
+      // Draw grid
+      if (optShowGrid) {
+        ctx.strokeStyle = 'rgba(184,134,11,0.08)'; ctx.lineWidth = 0.5;
+        for (let r = 0; r < k.size; r++) {
+          for (let c = 0; c < k.size; c++) {
+            const p = kameaPosition(r, c, k.size, cx, cy, cellSize);
+            ctx.beginPath(); ctx.arc(p.x, p.y, cellSize * 0.4, 0, Math.PI * 2); ctx.stroke();
+          }
+        }
+      }
+
+      // Main path
+      if (optGlow) drawGlowPath(ctx, positions, curve, '#b8860b', 30, 6);
+      ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round'; ctx.lineJoin = 'miter';
+      drawCurvedPath(ctx, positions, curve);
+
+      // Extra chords
+      ctx.strokeStyle = 'rgba(184,134,11,0.12)'; ctx.lineWidth = 0.7;
+      for (let step = 2; step <= 3; step++) {
+        for (let i = 0; i < positions.length; i++) {
+          const j = (i + step) % positions.length;
+          ctx.beginPath(); ctx.moveTo(positions[i].x, positions[i].y);
+          ctx.lineTo(positions[j].x, positions[j].y); ctx.stroke();
+        }
+      }
+
+      // Nodes
+      for (let i = 0; i < positions.length; i++) {
+        const p = positions[i];
+        const r = 3.5 + (val(letters[i]) % 4);
+        if (optGlow) {
+          ctx.save();
+          ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 20;
+          ctx.fillStyle = '#b8860b';
+          ctx.beginPath(); ctx.arc(p.x, p.y, r * 0.6, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+        }
+        if (optNodeStyle === 'both' || optNodeStyle === 'fill') {
+          ctx.fillStyle = '#b8860b';
+          ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
+        }
+        if (optNodeStyle === 'both' || optNodeStyle === 'ring') {
+          ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.arc(p.x, p.y, r + 2, 0, Math.PI * 2); ctx.stroke();
+        }
+        if (optNodeStyle === 'both') {
+          ctx.fillStyle = '#0a080d';
+          ctx.beginPath(); ctx.arc(p.x, p.y, r * 0.35, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+
+      // Cross marks
+      ctx.strokeStyle = 'rgba(184,134,11,0.4)'; ctx.lineWidth = 1;
+      for (let i = 0; i < positions.length; i += 2) {
+        if (i + 2 >= positions.length) break;
+        const p1 = positions[i], p2 = positions[i + 2];
+        const mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
+        const cs = 3;
+        ctx.beginPath();
+        ctx.moveTo(mx - cs, my - cs); ctx.lineTo(mx + cs, my + cs);
+        ctx.moveTo(mx + cs, my - cs); ctx.lineTo(mx - cs, my + cs);
+        ctx.stroke();
+      }
+    }
+  },
+
+  // ── GRID SAGRADO ENGINE (Dascent-style) ──
+  grid: {
+    _nodeCache: null,
+
+    render(ctx, cx, cy, radius, letters) {
+      if (letters.length < 2) return;
+      const pattern = optGridPattern;
+      const fold = parseInt(optGridFold);
+      const curve = optGridCurve / 100;
+      const showGrid = optGridShow;
+      const nodeStyle = optGridNodeStyle;
+      const resonance = optGridResonance;
+
+      // Generate nodes scaled to emblem radius
+      const nodes = this._genNodes(pattern, radius);
+      if (nodes.length < letters.length) return;
+
+      // Assign letters to best nodes
+      const assigned = this._assign(letters, nodes);
+
+      // Draw grid background
+      if (showGrid) this._drawGrid(ctx, pattern, nodes, radius, cx, cy);
+
+      // Build folded paths
+      const paths = this._buildFoldedPaths(assigned, fold, radius);
+
+      // Draw all folded paths
+      for (const path of paths) {
+        if (optGlow) drawGlowPath(ctx, path, curve, '#b8860b', 30, 5);
+        ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 2;
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        drawCurvedPath(ctx, path, curve);
+      }
+
+      // Draw nodes on letter positions
+      for (const a of assigned) {
+        const p = { x: cx + a.pos.x, y: cy + a.pos.y };
+        const r = 3.5 + (val(a.letter) % 4);
+        if (optGlow) {
+          ctx.save();
+          ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 18;
+          ctx.fillStyle = 'rgba(184,134,11,0.3)';
+          ctx.beginPath(); ctx.arc(p.x, p.y, r * 0.8, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+        }
+        if (nodeStyle === 'both' || nodeStyle === 'fill') {
+          ctx.fillStyle = '#b8860b';
+          ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
+        }
+        if (nodeStyle === 'both' || nodeStyle === 'ring') {
+          ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(p.x, p.y, r + 2.5, 0, Math.PI * 2); ctx.stroke();
+        }
+        if (nodeStyle === 'both') {
+          ctx.fillStyle = '#0a080d';
+          ctx.beginPath(); ctx.arc(p.x, p.y, r * 0.35, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+
+      // Center resonance
+      if (resonance !== 'none') {
+        this._drawResonance(ctx, cx, cy, radius * 0.15, resonance);
+      }
+
+      // Outer ring with fold symbols
+      if (fold > 1) {
+        this._drawFoldRing(ctx, cx, cy, radius * 1.25, fold);
+      }
+    },
+
+    // ── Node generators ──
+    _genNodes(pattern, radius) {
+      const key = pattern + '_' + radius.toFixed(1);
+      if (this._nodeCache && this._nodeCache.key === key) return this._nodeCache.nodes;
+      let nodes;
+      switch (pattern) {
+        case 'fol': nodes = this._genFol(radius); break;
+        case 'wheel': nodes = this._genWheel(radius); break;
+        case 'square': nodes = this._genSquare(radius); break;
+        default: nodes = this._genFol(radius);
+      }
+      this._nodeCache = { key, nodes };
+      return nodes;
+    },
+
+    _genFol(radius) {
+      const nodes = [];
+      const R = radius * 0.75;
+      const s = R / 3;
+      for (let q = -3; q <= 3; q++) {
+        for (let r = -3; r <= 3; r++) {
+          if (Math.abs(q + r) > 3) continue;
+          const x = s * (1.73205 * q + 0.86603 * r);
+          const y = s * 1.5 * r;
+          if (Math.sqrt(x * x + y * y) <= R) nodes.push({ x, y });
+        }
+      }
+      return nodes;
+    },
+
+    _genWheel(radius) {
+      const nodes = [];
+      const rings = 4;
+      const spokes = 10;
+      const R = radius * 0.8;
+      nodes.push({ x: 0, y: 0 });
+      for (let ri = 1; ri <= rings; ri++) {
+        const rr = (ri / rings) * R;
+        for (let si = 0; si < spokes; si++) {
+          const a = (si / spokes) * Math.PI * 2;
+          nodes.push({ x: rr * Math.cos(a), y: rr * Math.sin(a) });
+        }
+      }
+      return nodes;
+    },
+
+    _genSquare(radius) {
+      const nodes = [];
+      const R = radius * 0.8;
+      const layers = 4;
+      for (let li = 0; li <= layers; li++) {
+        const half = (li / layers) * R;
+        if (li === 0) { nodes.push({ x: 0, y: 0 }); continue; }
+        const pts = 4 * li;
+        for (let i = 0; i < pts; i++) {
+          const t = i / pts;
+          if (t < 0.25) { const lt = t / 0.25; nodes.push({ x: -half + lt * 2 * half, y: -half }); }
+          else if (t < 0.5) { const lt = (t - 0.25) / 0.25; nodes.push({ x: half, y: -half + lt * 2 * half }); }
+          else if (t < 0.75) { const lt = (t - 0.5) / 0.25; nodes.push({ x: half - lt * 2 * half, y: half }); }
+          else { const lt = (t - 0.75) / 0.25; nodes.push({ x: -half, y: half - lt * 2 * half }); }
+        }
+      }
+      return nodes;
+    },
+
+    // ── Letter assignment ──
+    _assign(letters, nodes) {
+      const n = letters.length;
+      if (n === 0) return [];
+      // Assign nodes by angle: map each letter to a well-distributed angle
+      const result = [];
+      const used = new Set();
+      for (let i = 0; i < n; i++) {
+        const targetAngle = (i / n) * Math.PI * 2 - Math.PI / 2;
+        let best = -1, bestScore = Infinity;
+        for (let j = 0; j < nodes.length; j++) {
+          if (used.has(j)) continue;
+          const d = Math.sqrt(nodes[j].x * nodes[j].x + nodes[j].y * nodes[j].y);
+          const a = Math.atan2(nodes[j].y, nodes[j].x);
+          const aDiff = Math.abs(a - targetAngle);
+          const wAngle = Math.min(aDiff, Math.PI * 2 - aDiff);
+          const wRad = 1 - Math.min(d / (nodes.length > 0 ? Math.max(...nodes.map(nn => Math.sqrt(nn.x*nn.x + nn.y*nn.y))) : 1), 1);
+          const score = wAngle + wRad * 0.3;
+          if (score < bestScore) { bestScore = score; best = j; }
+        }
+        if (best >= 0) {
+          used.add(best);
+          result.push({ letter: letters[i], pos: nodes[best], value: val(letters[i]) });
+        }
+      }
+      // Sort by angle for smooth circular path
+      result.sort((a, b) => Math.atan2(a.pos.y, a.pos.x) - Math.atan2(b.pos.y, b.pos.x));
+      return result;
+    },
+
+    // ── Fold system ──
+    _buildFoldedPaths(assigned, fold, radius) {
+      const paths = [];
+      const pts = assigned.map(a => a.pos);
+      for (let fi = 0; fi < fold; fi++) {
+        const angle = (fi / fold) * Math.PI * 2;
+        const cos = Math.cos(angle), sin = Math.sin(angle);
+        const rotated = pts.map(p => ({ x: p.x * cos - p.y * sin, y: p.x * sin + p.y * cos }));
+        paths.push(rotated);
+      }
+      return paths;
+    },
+
+    // ── Grid drawing ──
+    _drawGrid(ctx, pattern, nodes, radius, cx, cy) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(184,134,11,0.12)'; ctx.lineWidth = 0.5;
+      switch (pattern) {
+        case 'fol': {
+          const R = radius * 0.75;
+          const s = R / 3;
+          const cR = s * 1.05;
+          ctx.strokeStyle = 'rgba(184,134,11,0.08)'; ctx.lineWidth = 0.4;
+          for (const n of nodes) {
+            ctx.beginPath(); ctx.arc(cx + n.x, cy + n.y, cR, 0, Math.PI * 2); ctx.stroke();
+          }
+          ctx.strokeStyle = 'rgba(184,134,11,0.15)'; ctx.lineWidth = 0.6;
+          for (const n of nodes) {
+            const d = Math.sqrt(n.x*n.x + n.y*n.y);
+            if (d < 0.1) continue;
+            ctx.beginPath(); ctx.arc(cx + n.x, cy + n.y, 1.5, 0, Math.PI * 2); ctx.stroke();
+          }
+          break;
+        }
+        case 'wheel': {
+          const rings = 4, spokes = 10;
+          const R = radius * 0.8;
+          ctx.strokeStyle = 'rgba(184,134,11,0.1)'; ctx.lineWidth = 0.4;
+          for (let ri = 1; ri <= rings; ri++) {
+            const rr = (ri / rings) * R;
+            ctx.beginPath(); ctx.arc(cx, cy, rr, 0, Math.PI * 2); ctx.stroke();
+          }
+          ctx.strokeStyle = 'rgba(184,134,11,0.07)'; ctx.lineWidth = 0.3;
+          for (let si = 0; si < spokes; si++) {
+            const a = (si / spokes) * Math.PI * 2;
+            ctx.beginPath(); ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + R * Math.cos(a), cy + R * Math.sin(a)); ctx.stroke();
+          }
+          break;
+        }
+        case 'square': {
+          const R = radius * 0.8;
+          const layers = 4;
+          ctx.strokeStyle = 'rgba(184,134,11,0.1)'; ctx.lineWidth = 0.4;
+          for (let li = 0; li <= layers; li++) {
+            const half = (li / layers) * R;
+            ctx.strokeRect(cx - half, cy - half, half * 2, half * 2);
+          }
+          break;
+        }
+      }
+      ctx.restore();
+    },
+
+    // ── Center resonance ──
+    _drawResonance(ctx, cx, cy, r, type) {
+      const syms = { sun:'☉', moon:'☽', mercury:'☿', venus:'♀', mars:'♂', jupiter:'♃', saturn:'♄' };
+      const sym = syms[type] || '☉';
+      ctx.save();
+      if (optGlow) { ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 25; }
+      ctx.strokeStyle = 'rgba(184,134,11,0.3)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+      ctx.font = r + 'px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(184,134,11,0.5)'; ctx.fillText(sym, cx, cy);
+      ctx.restore();
+    },
+
+    // ── Fold outer ring ──
+    _drawFoldRing(ctx, cx, cy, r, fold) {
+      const syms = ['✦', '◈', '◇', '○', '△', '▽', '□', '☆'];
+      ctx.save();
+      ctx.strokeStyle = 'rgba(184,134,11,0.15)'; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+      ctx.font = Math.max(10, r * 0.12) + 'px serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      for (let i = 0; i < fold; i++) {
+        const a = (i / fold) * Math.PI * 2 - Math.PI / 2;
+        const px = cx + r * Math.cos(a), py = cy + r * Math.sin(a);
+        ctx.fillStyle = 'rgba(184,134,11,0.25)'; ctx.fillText(syms[i % syms.length], px, py);
+      }
+      ctx.restore();
+    }
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  TRANSFORMS
+// ═══════════════════════════════════════════════════════════════
+const tId = { x: (x,y) => x, y: (x,y) => y };
+function tMirror(cx) { return { x: (x,y) => 2*cx - x, y: (x,y) => y }; }
+function tRot90(cx,cy) { return { x: (x,y) => cx - (y - cy), y: (x,y) => cy + (x - cx) }; }
+function tRot180(cx,cy) { return { x: (x,y) => 2*cx - x, y: (x,y) => 2*cy - y }; }
+function tRot270(cx,cy) { return { x: (x,y) => cx + (y - cy), y: (x,y) => cy - (x - cx) }; }
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════════════
+function render() {
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0a080d'; ctx.fillRect(0, 0, W, H);
+
+  if (!letters.length) return;
+
+  const cx = W / 2, cy = H / 2;
+  const emblemR = Math.min(W, H) * 0.19;
+  const ringR = Math.min(W, H) * 0.38;
+  const n = letters.length;
+
+  const ringPts = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 - Math.PI / 2;
+    ringPts.push({ x: cx + ringR * Math.cos(a), y: cy + ringR * Math.sin(a) });
+  }
+
+  const tforms = [tId];
+  if (optMirror) tforms.push(tMirror(cx));
+  if (optRadial) {
+    tforms.push(tRot90(cx, cy));
+    tforms.push(tRot180(cx, cy));
+    tforms.push(tRot270(cx, cy));
+  }
+
+  const vig = ctx.createRadialGradient(cx, cy, 0, cx, cy, ringR * 1.4);
+  vig.addColorStop(0, 'rgba(18,14,26,0)');
+  vig.addColorStop(1, 'rgba(0,0,0,0.4)');
+  ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
+
+  for (const tf of tforms) {
+    const tcx = tf.x ? tf.x(cx, cy) : cx;
+    const tcy = tf.y ? tf.y(cx, cy) : cy;
+
+    if (optCircle) {
+      ctx.strokeStyle = 'rgba(184,134,11,0.3)'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.arc(tcx, tcy, ringR, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = 'rgba(184,134,11,0.08)'; ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.arc(tcx, tcy, ringR * 0.7, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    // Ring connection
+    if (n > 1) {
+      const tRing = ringPts.map(p => ({ x: tf.x ? tf.x(p.x, p.y) : p.x, y: tf.y ? tf.y(p.x, p.y) : p.y }));
+      if (optGlow) {
+        ctx.save();
+        ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 20;
+        ctx.strokeStyle = 'rgba(184,134,11,0.1)'; ctx.lineWidth = 3;
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.beginPath(); ctx.moveTo(tRing[0].x, tRing[0].y);
+        for (let i = 1; i < n; i++) ctx.lineTo(tRing[i].x, tRing[i].y);
+        ctx.closePath(); ctx.stroke(); ctx.restore();
+      }
+      ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.5;
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.beginPath(); ctx.moveTo(tRing[0].x, tRing[0].y);
+      for (let i = 1; i < n; i++) {
+        if (i % 4 === 0) {
+          const mx = (tRing[i-1].x + tRing[i].x) / 2;
+          const my = (tRing[i-1].y + tRing[i].y) / 2 - 10;
+          ctx.quadraticCurveTo(mx, my, tRing[i].x, tRing[i].y);
+        } else ctx.lineTo(tRing[i].x, tRing[i].y);
+      }
+      ctx.closePath(); ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(184,134,11,0.04)'; ctx.lineWidth = 0.3;
+      for (let t = 0; t < 2; t++) {
+        const step = 2 + t;
+        for (let i = 0; i < n; i++) {
+          const j = (i + step) % n;
+          ctx.beginPath(); ctx.moveTo(tRing[i].x, tRing[i].y);
+          ctx.lineTo(tRing[j].x, tRing[j].y); ctx.stroke();
+        }
+      }
+    }
+
+    // Dots at ring positions
+    if (optDots) {
+      for (let i = 0; i < n; i++) {
+        const p = { x: tf.x ? tf.x(ringPts[i].x, ringPts[i].y) : ringPts[i].x,
+                    y: tf.y ? tf.y(ringPts[i].x, ringPts[i].y) : ringPts[i].y };
+        ctx.fillStyle = '#b8860b';
+        ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#0a080d';
+        ctx.beginPath(); ctx.arc(p.x, p.y, 1.2, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+
+    // Central emblem (delegated to engine)
+    engines[currentEngine].render(ctx, tcx, tcy, emblemR, letters);
+
+    // Center point
+    ctx.fillStyle = 'rgba(184,134,11,0.7)';
+    ctx.beginPath(); ctx.arc(tcx, tcy, 2, 0, Math.PI * 2); ctx.fill();
+
+    // Stamps
+    for (const st of stamps) {
+      const sp = { x: tf.x ? tf.x(st.x, st.y) : st.x, y: tf.y ? tf.y(st.x, st.y) : st.y };
+      ctx.save(); ctx.translate(sp.x, sp.y);
+      ctx.font = '20px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(184,134,11,0.5)'; ctx.fillText(st.sym, 0, 0);
+      ctx.restore();
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  GENERATE
+// ═══════════════════════════════════════════════════════════════
+function generate() {
+  const t = document.getElementById('intention').value.trim();
+  if (!t) { showToast('Escribe una intencion'); return; }
+  letters = [...reduce(t)];
+  const vals = letters.map(c => c + (c.charCodeAt(0) - 64));
+  document.getElementById('reductionBox').innerHTML = letters.join('  ') +
+    '<br><span style="color:var(--gold);font-size:.6rem">' + vals.join(' ') + '</span>';
+  if (letters.length < 2) { showToast('Necesitas al menos 2 letras'); return; }
+  render();
+  showToast(letters.length + ' letras — ' + currentEngine);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ENGINE SWITCH
+// ═══════════════════════════════════════════════════════════════
+function switchEngine(name) {
+  currentEngine = name;
+  document.querySelectorAll('.fam-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.engine === name);
+  });
+  document.getElementById('starParams').style.display = name === 'star' ? 'block' : 'none';
+  document.getElementById('kameaParams').style.display = name === 'kamea' ? 'block' : 'none';
+  document.getElementById('gridParams').style.display = name === 'grid' ? 'block' : 'none';
+  if (letters.length) render();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  UI
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('btnGenerate').addEventListener('click', generate);
+
+document.querySelectorAll('.fam-btn').forEach(b => {
+  b.addEventListener('click', () => switchEngine(b.dataset.engine));
+});
+
+document.getElementById('chkMirror').addEventListener('change', e => { optMirror = e.target.checked; if(letters.length) render(); });
+document.getElementById('chkRadial').addEventListener('change', e => { optRadial = e.target.checked; if(letters.length) render(); });
+document.getElementById('chkGlow').addEventListener('change', e => { optGlow = e.target.checked; if(letters.length) render(); });
+document.getElementById('chkCircle').addEventListener('change', e => { optCircle = e.target.checked; if(letters.length) render(); });
+document.getElementById('chkDots').addEventListener('change', e => { optDots = e.target.checked; if(letters.length) render(); });
+
+// Kamea controls
+document.getElementById('chkGrid').addEventListener('change', e => { optShowGrid = e.target.checked; if(letters.length) render(); });
+document.getElementById('selKamea').addEventListener('change', e => { optKameaType = e.target.value; if(letters.length) render(); });
+document.getElementById('selNodeStyle').addEventListener('change', e => { optNodeStyle = e.target.value; if(letters.length) render(); });
+setupRange('kameaCurve', v => { optKameaCurve = v; if(letters.length) render(); });
+
+// Grid controls
+document.getElementById('selGridPattern').addEventListener('change', e => { optGridPattern = e.target.value; engines.grid._nodeCache = null; if(letters.length) render(); });
+document.getElementById('selGridFold').addEventListener('change', e => { optGridFold = e.target.value; if(letters.length) render(); });
+setupRange('gridCurve', v => { optGridCurve = v; if(letters.length) render(); });
+document.getElementById('chkGridShow').addEventListener('change', e => { optGridShow = e.target.checked; if(letters.length) render(); });
+document.getElementById('selGridNodeStyle').addEventListener('change', e => { optGridNodeStyle = e.target.value; if(letters.length) render(); });
+document.getElementById('selGridResonance').addEventListener('change', e => { optGridResonance = e.target.value; if(letters.length) render(); });
+
+function setupRange(id, cb) {
+  const el = document.getElementById(id);
+  const val = document.getElementById(id + 'Val');
+  if (val) val.textContent = el.value + '%';
+  el.addEventListener('input', e => {
+    if (val) val.textContent = e.target.value + '%';
+    cb(parseInt(e.target.value));
+  });
+}
+
+document.querySelectorAll('.stamp-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.stamp-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); stampSym = b.dataset.s;
+  });
+});
+document.getElementById('btnStamp').addEventListener('click', () => {
+  stampMode = !stampMode; showToast(stampMode ? 'Click en canvas para estampar' : 'Estampa off');
+});
+document.getElementById('btnClearStamps').addEventListener('click', () => { stamps = []; stampMode = false; if(letters.length) render(); });
+
+document.getElementById('btnSVG').addEventListener('click', () => {
+  if (!letters.length) { showToast('Genera primero'); return; }
+  const W=canvas.width, H=canvas.height;
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'"><rect width="'+W+'" height="'+H+'" fill="#0a080d"/></svg>';
+  const blob = new Blob([svg],{type:'image/svg+xml'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='sigilo.svg'; a.click(); showToast('SVG');
+});
+document.getElementById('btnPNG').addEventListener('click', () => {
+  if (!letters.length) { showToast('Genera primero'); return; }
+  const off = document.createElement('canvas'); off.width=canvas.width; off.height=canvas.height;
+  off.getContext('2d').drawImage(canvas,0,0);
+  off.toBlob(b => { const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='sigilo.png'; a.click(); showToast('PNG'); });
+});
+
+canvas.addEventListener('click', e => {
+  if (!stampMode) return;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
+  const x = (e.clientX - rect.left) * scaleX, y = (e.clientY - rect.top) * scaleY;
+  stamps.push({ x, y, sym: stampSym });
+  render();
+  showToast('Estampa: ' + stampSym);
+});
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey||e.metaKey)&&e.key==='Enter') generate();
+  if (e.key==='Escape') stampMode = false;
+});
+
+let tt;
+function showToast(m) { const e=document.getElementById('toast'); e.textContent=m; e.classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>e.classList.remove('show'),1800); }
+
+setTimeout(() => {
+  document.getElementById('intention').value = 'SABIDURIA';
+  switchEngine('grid');
+  optGridPattern = 'fol';
+  optGridFold = '4';
+  optGridCurve = 30;
+  generate();
+}, 100);
+</script>
+</body>
+</html>
