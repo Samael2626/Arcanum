@@ -68,6 +68,7 @@ canvas{display:block;width:100%;height:100%;min-height:700px}
     <div class="fam-btn" data-engine="star">Estrella</div>
     <div class="fam-btn" data-engine="kamea">Sello</div>
     <div class="fam-btn" data-engine="grid">Grid</div>
+    <div class="fam-btn" data-engine="alquimia">Alquimia</div>
   </div>
 
   <div id="starParams" class="param-group">
@@ -119,6 +120,34 @@ canvas{display:block;width:100%;height:100%;min-height:700px}
     </select></div>
   </div>
 
+  <div id="alquimiaParams" style="display:none" class="param-group">
+    <div class="param-row">
+      <label>Nudo</label>
+      <select id="selNudoStyle">
+        <option value="radiant">Radiante</option>
+        <option value="braid">Trenzado</option>
+        <option value="simple">Simple</option>
+      </select>
+    </div>
+    <div class="param-row">
+      <label>Terminales</label>
+      <select id="selTerminalStyle">
+        <option value="auto">Auto (real)</option>
+        <option value="simple">Simple</option>
+        <option value="cross">Cruz</option>
+        <option value="circle">Circulo</option>
+      </select>
+    </div>
+    <div class="toggle-row"><input type="checkbox" id="chkLoops" checked><label>Bucles</label></div>
+    <div class="param-row">
+      <label>Densidad</label>
+      <select id="selDensity">
+        <option value="low">Baja</option>
+        <option value="medium" selected>Media</option>
+        <option value="high">Alta</option>
+      </select>
+    </div>
+  </div>
   <h3>Presentacion</h3>
   <div class="toggle-row"><input type="checkbox" id="chkGlow" checked><label>Brillo</label></div>
   <div class="toggle-row"><input type="checkbox" id="chkCircle" checked><label>Circulo exterior</label></div>
@@ -170,6 +199,7 @@ let optCircle = true, optDots = true;
 let activeEngines = ['grid'];
 let optKameaType = 'auto', optShowGrid = true, optNodeStyle = 'both', optKameaCurve = 0;
 let optGridPattern = 'fol', optGridFold = 4, optGridCurve = 30, optGridShow = true, optGridNodeStyle = 'both', optGridResonance = 'none';
+let optNudoStyle = 'radiant', optTerminalStyle = 'auto', optLoops = true, optDensity = 'medium';
 
 // ═══════════════════════════════════════════════════════════════
 //  REDUCTION
@@ -649,6 +679,169 @@ const engines = {
       }
       ctx.restore();
     }
+  },
+
+  // ── ALQUIMIA ENGINE (Goetic grammar parametrized by letters) ──
+  alquimia: {
+    _anglePool: null,
+
+    _getAnglePool() {
+      if (this._anglePool) return this._anglePool;
+      const bins = [0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165];
+      const probs = [0.2651, 0.0358, 0.0336, 0.0555, 0.0279, 0.0621,
+                     0.2094, 0.0455, 0.0467, 0.0699, 0.0496, 0.0989];
+      const pool = [];
+      for (let b = 0; b < bins.length; b++) {
+        const count = Math.round(probs[b] * 100);
+        for (let i = 0; i < count; i++) {
+          pool.push(bins[b] + (i / count) * 15);
+        }
+      }
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = (i * 59 + 17) % (i + 1);
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      this._anglePool = pool;
+      return pool;
+    },
+
+    _pickTerminal(v, i) {
+      const types = ['simple', 'filled/cross', 'circle', 'horizontal_bar', 'vertical_bar'];
+      const probs = [0.7806, 0.1719, 0.0394, 0.0033, 0.0048];
+      if (optTerminalStyle !== 'auto') {
+        const map = { simple: 'simple', cross: 'filled/cross', circle: 'circle' };
+        return map[optTerminalStyle] || 'simple';
+      }
+      const roll = ((v * 3 + i * 7) % 1000) / 1000;
+      let cum = 0;
+      for (let t = 0; t < types.length; t++) {
+        cum += probs[t];
+        if (roll < cum) return types[t];
+      }
+      return 'simple';
+    },
+
+    _drawTerminal(ctx, x, y, type, s) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(184,134,11,0.5)'; ctx.lineWidth = 1.2;
+      switch(type) {
+        case 'circle':
+          ctx.beginPath(); ctx.arc(x, y, s, 0, Math.PI * 2); ctx.stroke(); break;
+        case 'filled/cross':
+          ctx.beginPath();
+          ctx.moveTo(x - s, y); ctx.lineTo(x + s, y);
+          ctx.moveTo(x, y - s); ctx.lineTo(x, y + s); ctx.stroke(); break;
+        case 'horizontal_bar':
+          ctx.beginPath(); ctx.moveTo(x - s * 1.5, y); ctx.lineTo(x + s * 1.5, y); ctx.stroke(); break;
+        case 'vertical_bar':
+          ctx.beginPath(); ctx.moveTo(x, y - s * 1.5); ctx.lineTo(x, y + s * 1.5); ctx.stroke(); break;
+        default: break;
+      }
+      ctx.restore();
+    },
+
+    _drawCenterKnot(ctx, cx, cy, r, n, vsum) {
+      ctx.save();
+      if (optGlow) { ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 20; }
+      ctx.strokeStyle = 'rgba(184,134,11,0.2)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+      if (optNudoStyle === 'radiant') {
+        ctx.strokeStyle = 'rgba(184,134,11,0.4)'; ctx.lineWidth = 1.2;
+        for (let i = 0; i < n; i++) {
+          const a = (i / n) * Math.PI * 2 - Math.PI / 2;
+          ctx.beginPath(); ctx.moveTo(cx, cy);
+          ctx.lineTo(cx + r * 0.8 * Math.cos(a), cy + r * 0.8 * Math.sin(a)); ctx.stroke();
+        }
+      } else if (optNudoStyle === 'braid') {
+        ctx.strokeStyle = 'rgba(184,134,11,0.35)'; ctx.lineWidth = 0.8;
+        for (let i = 0; i < Math.max(n, 3); i++) {
+          const a1 = (i / Math.max(n, 3)) * Math.PI * 2 - Math.PI / 2;
+          const a2 = ((i + 1) / Math.max(n, 3)) * Math.PI * 2 - Math.PI / 2;
+          ctx.beginPath(); ctx.arc(cx, cy, r * 0.6, a1, a2); ctx.stroke();
+        }
+      }
+      ctx.fillStyle = '#b8860b';
+      ctx.beginPath(); ctx.arc(cx, cy, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    },
+
+    render(ctx, cx, cy, radius, letters) {
+      if (letters.length < 1) return;
+      const n = letters.length;
+      const pool = this._getAnglePool();
+      const density = optDensity;
+      const maxSub = density === 'high' ? 3 : density === 'medium' ? 2 : 1;
+
+      for (let i = 0; i < n; i++) {
+        const ch = letters[i];
+        const v = val(ch);
+        const angleDeg = pool[(v * 7 + i * 13) % pool.length];
+        const angleRad = angleDeg * Math.PI / 180;
+        const length = radius * (0.25 + (v % 12) / 20);
+        const ex = cx + length * Math.cos(angleRad);
+        const ey = cy + length * Math.sin(angleRad);
+
+        ctx.save();
+        if (optGlow) { ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 12; }
+        ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(ex, ey); ctx.stroke();
+        ctx.restore();
+
+        const termType = this._pickTerminal(v, i);
+        this._drawTerminal(ctx, ex, ey, termType, 2 + (v % 4));
+
+        const hasSub = (v * 5 + i * 11) % 2 === 0;
+        if (hasSub && maxSub > 0) {
+          const nSub = 1 + (v % Math.min(maxSub, 2));
+          for (let s = 0; s < nSub; s++) {
+            const t = 0.35 + s * 0.25;
+            const bx = cx + t * (ex - cx);
+            const by = cy + t * (ey - cy);
+            const subAngle = angleDeg + [-90, -60, -45, 45, 60, 90][(v + s * 3) % 6];
+            const subRad = subAngle * Math.PI / 180;
+            const subLen = length * (0.15 + (v % 5) / 18);
+            const sex = bx + subLen * Math.cos(subRad);
+            const sey = by + subLen * Math.sin(subRad);
+
+            ctx.save();
+            ctx.strokeStyle = 'rgba(184,134,11,0.5)'; ctx.lineWidth = 1.2; ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(sex, sey); ctx.stroke();
+            ctx.restore();
+
+            const subTerm = this._pickTerminal(v + s, i + n);
+            this._drawTerminal(ctx, sex, sey, subTerm, 1.5 + (v % 3));
+          }
+        }
+      }
+
+      const vsum = letters.reduce((a, ch) => a + val(ch), 0);
+
+      if ((vsum * 3) % 10 < 6) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(184,134,11,0.3)'; ctx.lineWidth = 0.8;
+        const nBars = 1 + (vsum % 3);
+        for (let b = 0; b < nBars; b++) {
+          const barY = cy + (b - nBars / 2 + 0.5) * radius * 0.25;
+          const off = radius * (0.2 + b * 0.08);
+          ctx.beginPath(); ctx.moveTo(cx - off, barY); ctx.lineTo(cx + off, barY); ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      if (optLoops && (vsum * 7) % 100 < 53) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(184,134,11,0.25)'; ctx.lineWidth = 0.8;
+        const nLoops = 1 + (vsum % 2);
+        for (let l = 0; l < nLoops; l++) {
+          const lx = cx + (l - nLoops / 2 + 0.5) * radius * 0.2;
+          const ly = cy + ((l * 3) % 5 - 2) * radius * 0.08;
+          ctx.beginPath(); ctx.ellipse(lx, ly, 4 + (vsum % 8), 3 + ((vsum * l) % 6), 0, 0, Math.PI * 2); ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      this._drawCenterKnot(ctx, cx, cy, radius * 0.12, n, vsum);
+    }
   }
 };
 
@@ -722,204 +915,6 @@ const PLANET_INFO = [
   { name:'Mercurio', sephirah:'Hod',    num:8,  sym:'☿' },
   { name:'Luna',     sephirah:'Yesod',  num:9,  sym:'☽' },
 ];
-
-// ═══════════════════════════════════════════════════════════════
-//  CENTER EMBLEM — 7 planetary archetypes
-// ═══════════════════════════════════════════════════════════════
-
-// Utility: generate N points on a circle
-function ptsOnCircle(cx, cy, r, n, off) {
-  const p = [];
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * Math.PI * 2 + (off || 0);
-    p.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
-  }
-  return p;
-}
-
-function drawPlanetSaturn(ctx, cx, cy, R, p) {
-  for (let i = 0; i < 3; i++) {
-    const r = R * (0.15 + i * 0.3);
-    ctx.save(); ctx.globalAlpha = 0.35 - i * 0.08;
-    ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 2.5 - i * 0.6;
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
-    ctx.restore();
-  }
-  for (let s of [-1, 1]) {
-    ctx.save(); ctx.globalAlpha = 0.25;
-    ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.ellipse(cx + s * R * 0.12, cy, R * 1.0, R * 0.2, p.rot, 0, Math.PI * 2);
-    ctx.stroke(); ctx.restore();
-  }
-}
-
-function drawPlanetJupiter(ctx, cx, cy, R, p) {
-  ctx.save(); ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 2.2;
-  ctx.globalAlpha = 0.45;
-  for (let i = 0; i < 4; i++) {
-    const a = i * Math.PI / 4 + p.rot;
-    ctx.beginPath(); ctx.moveTo(cx - R * 0.2 * Math.cos(a), cy - R * 0.2 * Math.sin(a));
-    ctx.lineTo(cx + R * 0.95 * Math.cos(a), cy + R * 0.95 * Math.sin(a)); ctx.stroke();
-  }
-  ctx.restore();
-  ctx.save(); ctx.globalAlpha = 0.25;
-  ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 0.8;
-  const s = ptsOnCircle(cx, cy, R * 0.75, 4, p.rot);
-  ctx.beginPath(); ctx.moveTo(s[0].x, s[0].y);
-  for (let i = 1; i < 4; i++) ctx.lineTo(s[i].x, s[i].y);
-  ctx.closePath(); ctx.stroke(); ctx.restore();
-}
-
-function drawPlanetMars(ctx, cx, cy, R, p) {
-  const n = 5, step = 2 + (p.innerStep % 3);
-  const outer = ptsOnCircle(cx, cy, R * 0.9, n, p.rot);
-  ctx.save(); ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.8; ctx.globalAlpha = 0.5;
-  for (let i = 0; i < n; i++) {
-    const j = (i + step) % n;
-    ctx.beginPath(); ctx.moveTo(outer[i].x, outer[i].y);
-    ctx.lineTo(outer[j].x, outer[j].y); ctx.stroke();
-  }
-  ctx.restore();
-  ctx.save(); ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.2; ctx.globalAlpha = 0.3;
-  for (let i = 0; i < 4; i++) {
-    const a = i * Math.PI / 2 + p.rot;
-    ctx.beginPath(); ctx.moveTo(cx + R * 0.3 * Math.cos(a), cy + R * 0.3 * Math.sin(a));
-    ctx.lineTo(cx + R * 1.0 * Math.cos(a - 0.2), cy + R * 1.0 * Math.sin(a - 0.2));
-    ctx.moveTo(cx + R * 0.3 * Math.cos(a), cy + R * 0.3 * Math.sin(a));
-    ctx.lineTo(cx + R * 1.0 * Math.cos(a + 0.2), cy + R * 1.0 * Math.sin(a + 0.2));
-    ctx.stroke();
-  }
-  ctx.restore();
-}
-
-function drawPlanetSun(ctx, cx, cy, R, p) {
-  const rays = 6 + (p.n % 4) * 2;
-  ctx.save(); if (optGlow) { ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 20; }
-  for (let i = 0; i < rays; i++) {
-    const a = (i / rays) * Math.PI * 2 + p.rot;
-    const thick = i % 2 === 0;
-    ctx.strokeStyle = thick ? 'rgba(184,134,11,0.6)' : 'rgba(184,134,11,0.2)';
-    ctx.lineWidth = thick ? 2.5 : 0.8;
-    ctx.beginPath(); ctx.moveTo(cx + R * 0.08 * Math.cos(a), cy + R * 0.08 * Math.sin(a));
-    ctx.lineTo(cx + R * 0.95 * Math.cos(a), cy + R * 0.95 * Math.sin(a)); ctx.stroke();
-  }
-  ctx.restore();
-  ctx.save(); ctx.globalAlpha = 0.3;
-  ctx.beginPath(); ctx.arc(cx, cy, R * 0.2, 0, Math.PI * 2);
-  ctx.fillStyle = '#b8860b'; ctx.fill(); ctx.restore();
-}
-
-function drawPlanetVenus(ctx, cx, cy, R, p) {
-  const petals = 4 + (p.sum % 4);
-  ctx.save(); ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.2;
-  ctx.globalAlpha = 0.45;
-  for (let i = 0; i < petals; i++) {
-    const a = (i / petals) * Math.PI * 2 + p.rot;
-    const ex = cx + R * 0.85 * Math.cos(a);
-    const ey = cy + R * 0.85 * Math.sin(a);
-    const mx = cx + R * 0.25 * Math.cos(a + Math.PI / petals);
-    const my = cy + R * 0.25 * Math.sin(a + Math.PI / petals);
-    ctx.beginPath(); ctx.moveTo(cx, cy);
-    ctx.quadraticCurveTo(ex, ey, mx, my);
-    ctx.quadraticCurveTo(cx + R * 0.55 * Math.cos(a + p.rot * 0.3), cy + R * 0.55 * Math.sin(a + p.rot * 0.3), cx, cy);
-    ctx.stroke();
-  }
-  ctx.restore();
-  ctx.fillStyle = 'rgba(184,134,11,0.4)';
-  for (let i = 0; i < petals; i++) {
-    const a = (i / petals) * Math.PI * 2 + p.rot;
-    ctx.beginPath(); ctx.arc(cx + R * 0.7 * Math.cos(a), cy + R * 0.7 * Math.sin(a), 3, 0, Math.PI * 2); ctx.fill();
-  }
-}
-
-function drawPlanetMercury(ctx, cx, cy, R, p) {
-  const n = Math.max(3, 3 + (p.n % 5));
-  const outer = ptsOnCircle(cx, cy, R * 0.8, n, p.rot);
-  const inner = ptsOnCircle(cx, cy, R * 0.35, n, p.rot + Math.PI / n);
-  ctx.save(); ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.0;
-  ctx.globalAlpha = 0.4;
-  for (let i = 0; i < n; i++) {
-    const j = (i + 1) % n;
-    ctx.beginPath(); ctx.moveTo(outer[i].x, outer[i].y);
-    ctx.lineTo(inner[j].x, inner[j].y);
-    ctx.lineTo(outer[(i + 2) % n].x, outer[(i + 2) % n].y);
-    ctx.stroke();
-  }
-  ctx.restore();
-  ctx.save(); ctx.strokeStyle = 'rgba(184,134,11,0.2)'; ctx.lineWidth = 0.7;
-  for (let s of [-1, 1]) {
-    for (let w = 0; w < 3; w++) {
-      const bx = cx + s * R * (0.25 + w * 0.1);
-      ctx.beginPath(); ctx.arc(bx, cy, R * 0.12, s * 0.8, s * 2.34); ctx.stroke();
-    }
-  }
-  ctx.restore();
-}
-
-function drawPlanetMoon(ctx, cx, cy, R, p) {
-  const cres = 3 + (p.sum % 4);
-  ctx.save(); ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.0; ctx.globalAlpha = 0.3;
-  for (let i = 0; i < cres; i++) {
-    const a = (i / cres) * Math.PI * 2 + p.rot;
-    ctx.beginPath();
-    ctx.arc(cx + R * 0.35 * Math.cos(a), cy + R * 0.35 * Math.sin(a), R * 0.55, a - 1.0, a + 1.0);
-    ctx.stroke();
-  }
-  ctx.restore();
-  ctx.save(); ctx.strokeStyle = 'rgba(184,134,11,0.15)'; ctx.lineWidth = 0.5;
-  ctx.beginPath();
-  for (let t = 0; t <= 60; t++) {
-    const frac = t / 60;
-    const a = p.rot + frac * Math.PI * 3;
-    const r = R * 0.05 + frac * R * 0.65;
-    ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
-  }
-  ctx.stroke(); ctx.restore();
-}
-
-function drawCenterEmblem(ctx, cx, cy, size, letters) {
-  if (letters.length < 2) return;
-  const vals = letters.map(val);
-  const sum = vals.reduce((a,b)=>a+b,0);
-  const prod = vals.reduce((a,b)=>a*b,1) % 100;
-  const n = letters.length;
-
-  const planet = sum % 7;
-  const params = {
-    n, sum, prod,
-    rot: (prod % 12) * Math.PI / 6,
-    innerStep: 1 + (sum % 5),
-    planets: ['saturn','jupiter','mars','sun','venus','mercury','moon']
-  };
-
-  const R = size * 0.8;
-  ctx.save();
-
-  // Medallion background — dark circle so emblem isnt lost in grid lines
-  ctx.beginPath(); ctx.arc(cx, cy, R + 4, 0, Math.PI * 2);
-  ctx.fillStyle = '#0a080d'; ctx.fill();
-  ctx.strokeStyle = 'rgba(184,134,11,0.15)'; ctx.lineWidth = 0.5;
-  ctx.stroke();
-
-  // Optional glow per archetype
-  if (optGlow) { ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 10; }
-
-  const drawers = [
-    drawPlanetSaturn, drawPlanetJupiter, drawPlanetMars,
-    drawPlanetSun, drawPlanetVenus, drawPlanetMercury, drawPlanetMoon
-  ];
-  drawers[planet](ctx, cx, cy, R, params);
-
-  ctx.restore();
-
-  // Center point
-  ctx.save();
-  if (optGlow) { ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 30; }
-  ctx.fillStyle = '#b8860b';
-  ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, Math.PI * 2); ctx.fill();
-  ctx.restore();
-}
 
 // ═══════════════════════════════════════════════════════════════
 //  RENDER
@@ -1028,8 +1023,6 @@ function render() {
     }
   }
 
-  // Layer 6: Center emblem — once at absolute center (not per transform)
-  drawCenterEmblem(ctx, cx, cy, emblemR * 0.65, letters);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1071,6 +1064,7 @@ function refreshEngineUI() {
   document.getElementById('starParams').style.display = activeEngines.includes('star') ? 'block' : 'none';
   document.getElementById('kameaParams').style.display = activeEngines.includes('kamea') ? 'block' : 'none';
   document.getElementById('gridParams').style.display = activeEngines.includes('grid') ? 'block' : 'none';
+  document.getElementById('alquimiaParams').style.display = activeEngines.includes('alquimia') ? 'block' : 'none';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1101,6 +1095,12 @@ setupRange('gridCurve', v => { optGridCurve = v; if(letters.length) render(); })
 document.getElementById('chkGridShow').addEventListener('change', e => { optGridShow = e.target.checked; if(letters.length) render(); });
 document.getElementById('selGridNodeStyle').addEventListener('change', e => { optGridNodeStyle = e.target.value; if(letters.length) render(); });
 document.getElementById('selGridResonance').addEventListener('change', e => { optGridResonance = e.target.value; if(letters.length) render(); });
+
+// Alquimia controls
+document.getElementById('selNudoStyle').addEventListener('change', e => { optNudoStyle = e.target.value; if(letters.length) render(); });
+document.getElementById('selTerminalStyle').addEventListener('change', e => { optTerminalStyle = e.target.value; if(letters.length) render(); });
+document.getElementById('chkLoops').addEventListener('change', e => { optLoops = e.target.checked; if(letters.length) render(); });
+document.getElementById('selDensity').addEventListener('change', e => { optDensity = e.target.value; if(letters.length) render(); });
 
 function setupRange(id, cb) {
   const el = document.getElementById(id);
