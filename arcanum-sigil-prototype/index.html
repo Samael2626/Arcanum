@@ -14,7 +14,7 @@ header h1{font-size:1.4rem;font-weight:400;color:var(--gold);letter-spacing:5px;
 header p{color:var(--text-dim);font-style:italic;font-size:.78rem}
 .mobile-toggle{display:none}
 .mobile-panel-close{display:none}
-.workspace{display:flex;gap:12px}
+.workspace{align-items:flex-start;display:flex;gap:12px}
 .panel{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:12px;width:220px;flex-shrink:0;overflow-y:auto;max-height:92vh}
 .panel h3{font-size:.58rem;text-transform:uppercase;letter-spacing:3px;color:var(--text-dim);margin:6px 0 2px;font-weight:400;border-top:1px solid var(--border);padding-top:5px}
 .panel h3:first-child{border:none;padding-top:0;margin-top:0}
@@ -32,11 +32,9 @@ textarea:focus{border-color:var(--gold)}
 input[type=checkbox]{accent-color:var(--gold);width:12px;height:12px;cursor:pointer}
 input[type=range]{accent-color:var(--gold);flex:1;height:3px;cursor:pointer;background:transparent}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:var(--gold);cursor:pointer}
-.fam-select{display:flex;gap:0;margin:4px 0}
-.fam-btn{flex:1;background:var(--bg);border:1px solid var(--border);padding:4px 2px;text-align:center;font-size:.6rem;cursor:pointer;color:var(--text-dim);transition:all .15s}
-.fam-btn:first-child{border-radius:4px 0 0 4px}
-.fam-btn:last-child{border-radius:0 4px 4px 0}
-.fam-btn:not(:last-child){border-right:none}
+.fam-select{display:flex;flex-wrap:wrap;gap:2px;margin:4px 0}
+.fam-btn{background:var(--bg);border:1px solid var(--border);border-radius:3px;cursor:pointer;flex:1 1 calc(25% - 2px);font-size:.6rem;padding:4px 2px;text-align:center;color:var(--text-dim);transition:all .15s}
+.fam-btn[data-engine=spare]{flex-basis:100%;font-size:.68rem;letter-spacing:1px}
 .fam-btn.active{background:var(--gold);color:#0c0b0f;border-color:var(--gold)}
 .fam-btn:hover:not(.active){border-color:var(--gold)}
 .param-group{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:4px;margin:3px 0}
@@ -49,8 +47,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;heigh
 .stamp-btn{background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:2px;cursor:pointer;text-align:center;font-size:1rem;color:var(--text-dim);line-height:1.1}
 .stamp-btn:hover{border-color:var(--gold);color:var(--gold)}
 .stamp-btn.active{border-color:var(--gold);background:#1a1220;color:var(--gold)}
-.canvas-wrap{background:#0a080d;border:1px solid var(--border);border-radius:6px;flex:1;overflow:hidden}
-canvas{display:block;width:100%;height:100%;min-height:700px}
+.canvas-wrap{aspect-ratio:10/7;background:#0a080d;border:1px solid var(--border);border-radius:6px;flex:1;overflow:hidden}
+canvas{aspect-ratio:10/7;display:block;height:auto;min-height:0;width:100%}
 .panel-footer{border-top:1px solid var(--border);color:var(--text-dim);font-size:.58rem;line-height:1.35;margin-top:8px;padding-top:7px;text-align:center}
 .reduction-line{display:grid;grid-template-columns:52px 1fr;gap:4px;line-height:1.35}
 .reduction-line b{color:var(--gold);font-weight:400}
@@ -123,15 +121,17 @@ canvas{display:block;width:100%;height:100%;min-height:700px}
   <div class="info-box" id="reductionBox">—</div>
   <h3>Familia</h3>
   <div class="fam-select">
+    <div class="fam-btn" data-engine="spare" title="Combina los trazos simplificados de las letras en un glifo abstracto">Glifo Spare</div>
     <div class="fam-btn" data-engine="star" title="Geometría estelar derivada de letras y suma gemátrica">Estrella</div>
     <div class="fam-btn" data-engine="kamea" title="Traza las letras sobre cuadrados mágicos planetarios">Sello</div>
     <div class="fam-btn" data-engine="grid" title="Pliega el trazado sobre patrones de geometría sagrada">Grid</div>
     <div class="fam-btn" data-engine="alquimia" title="Gramática visual basada en terminales y ángulos goéticos">Alquimia</div>
   </div>
+  <div class="info-box">Elige un método. Spare combina gestos de las letras en un glifo; los demás son paradigmas opcionales. Máximo dos capas.</div>
 
   <div id="starParams" class="param-group">
-    <div class="toggle-row"><input type="checkbox" id="chkMirror" checked><label>Simetria bilateral</label></div>
-    <div class="toggle-row"><input type="checkbox" id="chkRadial"><label>Rotacion x4</label></div>
+    <div class="toggle-row"><input type="checkbox" id="chkMirror"><label>Simetría bilateral</label></div>
+    <div class="toggle-row"><input type="checkbox" id="chkRadial"><label>Rotación x4</label></div>
   </div>
 
   <div id="kameaParams" style="display:none" class="param-group">
@@ -206,10 +206,10 @@ canvas{display:block;width:100%;height:100%;min-height:700px}
       </select>
     </div>
   </div>
-  <h3>Presentacion</h3>
+  <h3>Presentación</h3>
   <div class="toggle-row"><input type="checkbox" id="chkGlow" checked><label>Brillo</label></div>
-  <div class="toggle-row"><input type="checkbox" id="chkCircle" checked><label>Circulo exterior</label></div>
-  <div class="toggle-row"><input type="checkbox" id="chkDots" checked><label>Puntos de poder</label></div>
+  <div class="toggle-row"><input type="checkbox" id="chkCircle"><label>Círculo exterior</label></div>
+  <div class="toggle-row"><input type="checkbox" id="chkDots"><label>Puntos de poder</label></div>
 
   <h3>Estampas</h3>
   <div class="stamp-grid">
@@ -281,9 +281,9 @@ let stampSym = '♄';
 let stampMode = false;
 let nextId = 1;
 
-let optMirror = true, optRadial = false, optGlow = true;
-let optCircle = true, optDots = true;
-let activeEngines = ['grid'];
+let optMirror = false, optRadial = false, optGlow = true;
+let optCircle = false, optDots = false;
+let activeEngines = ['spare'];
 let optKameaType = 'auto', optShowGrid = true, optNodeStyle = 'both', optKameaCurve = 0;
 let optGridPattern = 'fol', optGridFold = 4, optGridCurve = 30, optGridShow = true, optGridNodeStyle = 'both', optGridResonance = 'none';
 let optNudoStyle = 'radiant', optTerminalStyle = 'auto', optLoops = true, optDensity = 'medium';
@@ -373,7 +373,41 @@ function drawGlowPath(ctx, pts, curve, color, blur, width) {
 //  ENGINES
 // ═══════════════════════════════════════════════════════════════
 
+const LETTER_GLYPHS = {
+  A:[[[-.72,.82],[0,-.85],[.72,.82]],[[-.42,.18],[.42,.18]]],B:[[[-.58,-.84],[-.58,.84]],[[-.58,-.84],[.22,-.78],[.55,-.45],[.2,-.08],[-.58,-.02]],[[-.58,-.02],[.28,.02],[.58,.42],[.2,.82],[-.58,.84]]],
+  C:[[[.58,-.65],[.18,-.86],[-.38,-.68],[-.62,-.08],[-.48,.58],[.02,.86],[.58,.62]]],D:[[[-.56,-.84],[-.56,.84]],[[-.56,-.84],[.18,-.72],[.6,-.22],[.52,.45],[.08,.8],[-.56,.84]]],
+  E:[[[-.52,-.84],[-.52,.84]],[[-.52,-.84],[.58,-.84]],[[-.52,-.02],[.38,-.02]],[[-.52,.84],[.58,.84]]],F:[[[-.52,-.84],[-.52,.84]],[[-.52,-.84],[.58,-.84]],[[-.52,-.02],[.38,-.02]]],
+  G:[[[.58,-.6],[.18,-.86],[-.38,-.68],[-.62,-.08],[-.48,.58],[.02,.86],[.58,.58],[.58,.08],[.12,.08]]],H:[[[-.58,-.84],[-.58,.84]],[[.58,-.84],[.58,.84]],[[-.58,0],[.58,0]]],
+  I:[[[0,-.84],[0,.84]],[[-.38,-.84],[.38,-.84]],[[-.38,.84],[.38,.84]]],J:[[[.45,-.84],[.45,.48],[.15,.84],[-.3,.72],[-.5,.34]]],K:[[[-.55,-.84],[-.55,.84]],[[.55,-.84],[-.55,.05],[.62,.84]]],L:[[[-.52,-.84],[-.52,.84],[.58,.84]]],
+  M:[[[-.65,.84],[-.65,-.84],[0,.16],[.65,-.84],[.65,.84]]],N:[[[-.58,.84],[-.58,-.84],[.58,.84],[.58,-.84]]],O:[[[0,-.86],[.48,-.62],[.64,0],[.46,.62],[0,.86],[-.48,.62],[-.64,0],[-.48,-.62],[0,-.86]]],
+  P:[[[-.56,.84],[-.56,-.84]],[[-.56,-.84],[.2,-.8],[.58,-.42],[.2,0],[-.56,0]]],Q:[[[0,-.86],[.48,-.62],[.64,0],[.46,.62],[0,.86],[-.48,.62],[-.64,0],[-.48,-.62],[0,-.86]],[[.14,.42],[.7,.92]]],
+  R:[[[-.56,.84],[-.56,-.84]],[[-.56,-.84],[.2,-.8],[.58,-.42],[.2,0],[-.56,0]],[[.04,0],[.62,.84]]],S:[[[.55,-.64],[.16,-.86],[-.36,-.68],[-.52,-.28],[-.18,.02],[.34,.16],[.55,.52],[.22,.84],[-.38,.72],[-.58,.5]]],
+  T:[[[-.66,-.84],[.66,-.84]],[[0,-.84],[0,.84]]],U:[[[-.58,-.84],[-.58,.46],[-.28,.82],[.18,.86],[.58,.48],[.58,-.84]]],V:[[[-.65,-.84],[0,.86],[.65,-.84]]],W:[[[-.72,-.84],[-.38,.84],[0,.1],[.38,.84],[.72,-.84]]],
+  X:[[[-.62,-.84],[.62,.84]],[[.62,-.84],[-.62,.84]]],Y:[[[-.62,-.84],[0,0],[.62,-.84]],[[0,0],[0,.84]]],Z:[[[-.58,-.84],[.58,-.84],[-.58,.84],[.58,.84]]]
+};
+
 const engines = {
+  spare: {
+    render(ctx,cx,cy,radius,letters) {
+      const draw=()=>this._trace(ctx,cx,cy,radius,letters);
+      if(optGlow){ctx.save();ctx.shadowColor='#b8860b';ctx.shadowBlur=22;ctx.strokeStyle='rgba(184,134,11,.22)';ctx.lineWidth=6;ctx.lineCap='round';ctx.lineJoin='round';draw();ctx.restore();}
+      ctx.save();ctx.strokeStyle='#c99a1a';ctx.lineWidth=2.8;ctx.lineCap='round';ctx.lineJoin='round';const ends=draw();ctx.restore();
+      if(!ends)return;
+      ctx.save();ctx.strokeStyle='#c99a1a';ctx.fillStyle='#0a080d';ctx.lineWidth=2;ctx.beginPath();ctx.arc(ends.start.x,ends.start.y,4,0,Math.PI*2);ctx.fill();ctx.stroke();
+      const dx=ends.end.x-cx,dy=ends.end.y-cy,len=Math.hypot(dx,dy)||1,nx=-dy/len*7,ny=dx/len*7;ctx.beginPath();ctx.moveTo(ends.end.x-nx,ends.end.y-ny);ctx.lineTo(ends.end.x+nx,ends.end.y+ny);ctx.stroke();ctx.restore();
+    },
+    _trace(ctx,cx,cy,radius,letters){
+      if(!letters.length)return null;
+      const scale=radius*(letters.length>11?.52:.68);let start=null,end=null;ctx.beginPath();
+      letters.forEach((letter,index)=>{const glyph=LETTER_GLYPHS[letter]||LETTER_GLYPHS.X,strokes=[glyph.reduce((best,stroke)=>stroke.length>best.length?stroke:best,glyph[0])],value=val(letter),angle=((value*137.508+index*47)%360)*Math.PI/180,mirror=index%2?-1:1,localScale=scale*(1-(index%3)*.065),ox=((value%5)-2)*radius*.018,oy=(((value+index)%5)-2)*radius*.018;
+        const point=([x,y])=>{x*=mirror;const px=x*localScale,py=y*localScale;return{x:cx+ox+px*Math.cos(angle)-py*Math.sin(angle),y:cy+oy+px*Math.sin(angle)+py*Math.cos(angle)}};
+        strokes.forEach(stroke=>{const points=stroke.map(point);if(!start)start=points[0];end=points[points.length-1];ctx.moveTo(points[0].x,points[0].y);
+          if(points.length<4){for(let i=1;i<points.length;i++)ctx.lineTo(points[i].x,points[i].y);}
+          else for(let i=0;i<points.length-1;i++){const p0=points[Math.max(0,i-1)],p1=points[i],p2=points[i+1],p3=points[Math.min(points.length-1,i+2)];ctx.bezierCurveTo(p1.x+(p2.x-p0.x)/6,p1.y+(p2.y-p0.y)/6,p2.x-(p3.x-p1.x)/6,p2.y-(p3.y-p1.y)/6,p2.x,p2.y);}
+        });
+      });ctx.stroke();return{start,end};
+    }
+  },
 
   // ── STAR ENGINE (original geometric) ──
   star: {
@@ -1025,7 +1059,7 @@ function render() {
 
   const cx = W / 2, cy = H / 2;
   const emblemR = Math.min(W, H) * 0.19;
-  const ringR = Math.min(W, H) * 0.38;
+  const ringR = Math.min(W, H) * 0.34;
   const n = letters.length;
   const vals = letters.map(val);
   const vsum = vals.reduce((a,b)=>a+b,0);
@@ -1066,7 +1100,7 @@ function render() {
     }
 
     // Layer 1: Outer polygon + star polygon
-    if (n > 1) {
+    if (n > 1 && activeEngines.includes('star')) {
       const tRing = ringPts.map(p => ({ x: tf.x ? tf.x(p.x, p.y) : p.x, y: tf.y ? tf.y(p.x, p.y) : p.y }));
 
       // Glow polygon
@@ -1107,7 +1141,8 @@ function render() {
     for (const ename of activeEngines) {
       ctx.save();
       if (activeEngines.length > 1) ctx.globalAlpha = 0.65;
-      engines[ename].render(ctx, tcx, tcy, emblemR, letters);
+      const engineRadius = ename === 'spare' ? Math.min(W,H) * 0.31 : emblemR;
+      engines[ename].render(ctx, tcx, tcy, engineRadius, letters);
       ctx.restore();
     }
 
@@ -1158,6 +1193,7 @@ function toggleEngine(name) {
     if (activeEngines.length < 2) return; // keep at least one
     activeEngines.splice(idx, 1);
   } else {
+    if (activeEngines.length >= 2) { showToast('Máximo 2 métodos: más capas destruyen el glifo'); return; }
     activeEngines.push(name);
   }
   refreshEngineUI();
@@ -1269,7 +1305,7 @@ function restoreState(state) {
   optKameaType=saved.optKameaType; optShowGrid=saved.optShowGrid; optNodeStyle=saved.optNodeStyle; optKameaCurve=saved.optKameaCurve;
   optGridPattern=saved.optGridPattern; optGridFold=saved.optGridFold; optGridCurve=saved.optGridCurve; optGridShow=saved.optGridShow; optGridNodeStyle=saved.optGridNodeStyle; optGridResonance=saved.optGridResonance;
   optNudoStyle=saved.optNudoStyle; optTerminalStyle=saved.optTerminalStyle; optLoops=saved.optLoops; optDensity=saved.optDensity; optReduction=saved.optReduction||'unique'; optTransparent=Boolean(saved.optTransparent);
-  activeEngines=Array.isArray(saved.activeEngines)&&saved.activeEngines.length ? [...saved.activeEngines] : ['grid'];
+  activeEngines=Array.isArray(saved.activeEngines)&&saved.activeEngines.length ? [...saved.activeEngines].slice(0,2) : ['spare'];
   stamps=Array.isArray(saved.stamps) ? saved.stamps.map(st=>({...st})) : [];
   document.getElementById('intention').value=saved.intention||'';
   syncControls();
