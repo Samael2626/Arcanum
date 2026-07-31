@@ -15,40 +15,50 @@ header p{color:var(--text-dim);font-style:italic;font-size:.78rem}
 .mobile-toggle{display:none}
 .mobile-panel-close{display:none}
 .workspace{align-items:flex-start;display:flex;gap:12px}
-.panel{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:12px;width:220px;flex-shrink:0;overflow-y:auto;max-height:92vh}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:12px;width:232px;flex-shrink:0;overflow-y:auto;max-height:92vh}
 .panel h3{font-size:.58rem;text-transform:uppercase;letter-spacing:3px;color:var(--text-dim);margin:6px 0 2px;font-weight:400;border-top:1px solid var(--border);padding-top:5px}
 .panel h3:first-child{border:none;padding-top:0;margin-top:0}
+.panel h4{font-size:.55rem;text-transform:uppercase;letter-spacing:2px;color:var(--text-dim);margin:4px 0 1px;font-weight:400}
 textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:4px 6px;color:var(--text);font-family:var(--font);font-size:.78rem;outline:none;resize:vertical;min-height:34px}
-textarea:focus{border-color:var(--gold)}\n#latinInscription{background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--font);font-size:.62rem;max-width:105px;padding:2px 4px}
+textarea:focus{border-color:var(--gold)}
+#insText{background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--font);font-size:.62rem;max-width:120px;padding:2px 4px;width:100%}
 .btn{background:var(--gold);color:#0c0b0f;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-family:var(--font);font-size:.72rem;font-weight:600}
 .btn:hover{background:#e6b422}
 .btn-dim{background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:4px 10px;border-radius:4px;cursor:pointer;font-family:var(--font);font-size:.72rem}
 .btn-dim:hover{border-color:var(--gold);color:var(--gold)}
 .btn-sm{padding:3px 8px;font-size:.65rem}
 .btn-group{display:flex;flex-wrap:wrap;gap:3px;margin:3px 0}
-.info-box{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:5px;font-size:.65rem;color:var(--text-dim);margin:3px 0}
+.info-box{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:5px;font-size:.65rem;color:var(--text-dim);margin:3px 0;line-height:1.4}
 .toggle-row{display:flex;align-items:center;gap:5px;margin:1px 0}
 .toggle-row label{margin:0;cursor:pointer;font-size:.72rem}
 input[type=checkbox]{accent-color:var(--gold);width:12px;height:12px;cursor:pointer}
 input[type=range]{accent-color:var(--gold);flex:1;height:3px;cursor:pointer;background:transparent}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:var(--gold);cursor:pointer}
 .fam-select{display:flex;flex-wrap:wrap;gap:2px;margin:4px 0}
-.fam-btn{background:var(--bg);border:1px solid var(--border);border-radius:3px;cursor:pointer;flex:1 1 calc(25% - 2px);font-size:.6rem;padding:4px 2px;text-align:center;color:var(--text-dim);transition:all .15s}
-.fam-btn[data-engine=spare]{flex-basis:100%;font-size:.68rem;letter-spacing:1px}
+.fam-btn{background:var(--bg);border:1px solid var(--border);border-radius:3px;cursor:pointer;flex:1 1 calc(50% - 2px);font-size:.58rem;padding:4px 2px;text-align:center;color:var(--text-dim);transition:all .15s}
 .fam-btn.active{background:var(--gold);color:#0c0b0f;border-color:var(--gold)}
-.fam-btn:hover:not(.active){border-color:var(--gold)}
+.fam-btn:hover:not(.active):not(.locked){border-color:var(--gold)}
+.fam-btn.locked{opacity:.55;cursor:not-allowed}
+.fam-btn.locked::after{content:" 🔒";font-size:.5rem}
+.skeleton-group{display:flex;gap:3px;margin:3px 0}
+.skeleton-btn{background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text-dim);cursor:pointer;flex:1;font-size:.6rem;padding:4px 2px;text-align:center}
+.skeleton-btn.active{background:var(--gold);color:#0c0b0f;border-color:var(--gold)}
+.skeleton-btn:hover:not(.active){border-color:var(--gold)}
 .param-group{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:4px;margin:3px 0}
 .param-row{display:flex;align-items:center;justify-content:space-between;gap:4px;margin:1px 0}
 .param-row label{font-size:.62rem;color:var(--text-dim);white-space:nowrap}
-.param-row select{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:.62rem;padding:1px 3px;border-radius:3px;outline:none;font-family:var(--font);max-width:90px}
+.param-row select{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:.62rem;padding:1px 3px;border-radius:3px;outline:none;font-family:var(--font);max-width:96px}
 .param-row select:focus{border-color:var(--gold)}
 .param-row .val{color:var(--gold);font-size:.6rem;min-width:18px;text-align:right}
 .stamp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;margin:3px 0}
 .stamp-btn{background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:2px;cursor:pointer;text-align:center;font-size:1rem;color:var(--text-dim);line-height:1.1}
 .stamp-btn:hover{border-color:var(--gold);color:var(--gold)}
 .stamp-btn.active{border-color:var(--gold);background:#1a1220;color:var(--gold)}
-.canvas-wrap{aspect-ratio:10/7;background:#0a080d;border:1px solid var(--border);border-radius:6px;flex:1;overflow:hidden}
+.canvas-wrap{aspect-ratio:10/7;background:#0a080d;border:1px solid var(--border);border-radius:6px;flex:1;overflow:hidden;position:relative}
 canvas{aspect-ratio:10/7;display:block;height:auto;min-height:0;width:100%}
+.preview-box{align-items:center;border:1px solid var(--border);border-radius:4px;display:flex;gap:6px;margin:3px 0;padding:4px}
+.preview-box canvas{aspect-ratio:1;border:1px solid var(--border);display:block;height:44px;image-rendering:pixelated;width:44px}
+.preview-box span{color:var(--text-dim);font-size:.6rem;line-height:1.3}
 .panel-footer{border-top:1px solid var(--border);color:var(--text-dim);font-size:.58rem;line-height:1.35;margin-top:8px;padding-top:7px;text-align:center}
 .reduction-line{display:grid;grid-template-columns:52px 1fr;gap:4px;line-height:1.35}
 .reduction-line b{color:var(--gold);font-weight:400}
@@ -63,7 +73,24 @@ canvas{aspect-ratio:10/7;display:block;height:auto;min-height:0;width:100%}
 .gallery-item img{aspect-ratio:1;cursor:pointer;display:block;object-fit:cover;width:100%}
 .gallery-name{color:var(--text-dim);font-size:.58rem;overflow:hidden;padding:4px;padding-right:20px;text-overflow:ellipsis;white-space:nowrap}
 .gallery-delete{background:var(--burgundy);border:0;border-radius:50%;color:var(--text);cursor:pointer;font-size:.58rem;height:16px;position:absolute;right:3px;bottom:3px;width:16px}
-.gnosis-overlay{align-items:center;background:rgba(0,0,0,.97);display:none;inset:0;justify-content:center;padding:20px;position:fixed;z-index:300}
+.modal{background:rgba(0,0,0,.92);display:none;inset:0;overflow:auto;padding:24px;position:fixed;z-index:300}
+.modal.open{display:block}
+.modal-card{background:var(--panel);border:1px solid var(--border);border-radius:6px;margin:0 auto;max-width:560px;padding:14px 18px}
+.modal-card h2{color:var(--gold);font-size:.9rem;font-weight:400;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px}
+.modal-card h3{color:var(--text-dim);font-size:.62rem;letter-spacing:2px;text-transform:uppercase;margin:10px 0 3px;font-weight:400;border-top:1px solid var(--border);padding-top:6px}
+.prov-row{display:grid;grid-template-columns:56px 1fr;gap:4px;font-size:.68rem;line-height:1.45}
+.prov-row b{color:var(--gold);font-weight:400}
+.prov-strokes{font-size:.66rem;line-height:1.5}
+.prov-strokes .srow{display:flex;gap:6px;padding:1px 0}
+.prov-strokes .srow .uid{color:var(--gold);min-width:34px}
+.modal-close{float:right}
+.edit-overlay{background:var(--panel);border:1px solid var(--gold);border-radius:6px;bottom:10px;box-shadow:0 8px 40px rgba(0,0,0,.6);left:50%;max-height:46vh;overflow:auto;padding:10px;position:fixed;transform:translateX(-50%);width:min(560px,92vw);z-index:240}
+.edit-overlay h3{color:var(--gold);font-size:.68rem;font-weight:400;letter-spacing:3px;text-transform:uppercase}
+.edit-hint{color:var(--text-dim);font-size:.6rem;margin:3px 0 6px}
+.edit-list{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+.edit-chip{background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text-dim);cursor:pointer;font-size:.62rem;padding:2px 6px}
+.edit-chip.active{border-color:var(--gold);background:#1a1220;color:var(--gold)}
+.gnosis-overlay{align-items:center;background:rgba(0,0,0,.97);display:none;inset:0;justify-content:center;padding:20px;position:fixed;z-index:400}
 .gnosis-overlay.open{display:flex}
 .gnosis-stage{align-items:center;display:flex;flex-direction:column;max-width:720px;text-align:center;width:100%}
 .gnosis-stage h2{color:var(--gold);font-size:1rem;font-weight:400;letter-spacing:5px;text-transform:uppercase}
@@ -79,7 +106,7 @@ canvas{aspect-ratio:10/7;display:block;height:auto;min-height:0;width:100%}
 .gnosis-controls select{background:var(--panel);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--font);padding:5px 8px}
 .btn-forget{background:transparent;border:1px solid var(--border);color:var(--text-dim);opacity:.45;pointer-events:none}
 .btn-forget.ready{background:var(--gold);border-color:var(--gold);color:var(--bg);opacity:1;pointer-events:auto;box-shadow:0 0 30px rgba(184,134,11,.35)}
-.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--gold);color:#0c0b0f;padding:5px 16px;border-radius:20px;font-size:.78rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:100}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--gold);color:#0c0b0f;padding:5px 16px;border-radius:20px;font-size:.78rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:500}
 .toast.show{opacity:1}
 @media (max-width:768px){
   body{padding:8px}
@@ -99,110 +126,119 @@ canvas{aspect-ratio:10/7;display:block;height:auto;min-height:0;width:100%}
   .param-row label,.param-row select{font-size:.68rem}
   .gnosis-copy{font-size:.7rem}
   .gnosis-visual{height:42vh}
+  .edit-overlay{max-height:60vh;width:94vw}
 }
-#starParams,#kameaParams,#gridParams,#alquimiaParams{display:none!important}
 </style>
 </head>
 <body>
 <div class="app">
-<header><h1>⟠ <span>Taller de</span> Sigilos</h1><p>ARCANUM — emblemas sigílicos</p></header>
+<header><h1>⟠ <span>Taller de</span> Sigilos</h1><p>ARCANUM — glifo personal y marco ceremonial</p></header>
 <button class="btn-dim mobile-toggle" id="panelToggle" aria-controls="controlPanel" aria-expanded="false">&#9776; Panel</button>
 <div class="workspace">
 <div class="panel" id="controlPanel">
   <button class="btn-dim btn-sm mobile-panel-close" id="panelClose">X</button>
+
   <h3>Intención</h3>
   <textarea id="intention" placeholder="Tu intención..."></textarea>
   <div class="btn-group"><button class="btn" id="btnGenerate">✦ Forjar</button></div>
+
   <h3>Reducción</h3>
-  <div class="param-row"><label for="selReduction">Método</label><select id="selReduction" title="Elige cómo condensar la intención antes de componer el sigilo"><option value="cooper" selected>Cooper (iniciales)</option><option value="unique">Letras únicas</option><option value="spare">Sin vocales (variante moderna)</option></select></div>
+  <div class="param-row"><label for="selReduction">Método</label>
+    <select id="selReduction" title="Regla nombrada para condensar la intención">
+      <option value="cooper" selected>Cooper — iniciales</option>
+      <option value="novowels">Sin vocales (moderno)</option>
+      <option value="unique">Letras únicas</option>
+    </select></div>
   <div class="info-box" id="reductionBox">—</div>
+
   <h3>Familia</h3>
-  <div class="fam-select"><div class="fam-btn active" data-engine="spare" title="Composición personal asistida: un esqueleto, pocas primitivas, trazabilidad">Glifo personal</div></div><div class="info-box">V1 separa el glifo personal de kameas, Rosa-Cruz y sellos históricos. El ordenador propone; tú eliges y corriges.</div>
-
-  <div id="starParams" class="param-group">
-    <div class="toggle-row"><input type="checkbox" id="chkMirror"><label>Simetría bilateral</label></div>
-    <div class="toggle-row"><input type="checkbox" id="chkRadial"><label>Rotación x4</label></div>
+  <div class="fam-select">
+    <div class="fam-btn active" id="famPersonal" title="Composición personal asistida. El ordenador propone; tú eliges y corriges.">Glifo personal</div>
+    <div class="fam-btn active" id="famMarco" title="Círculo, estrella e inscripción como capas independientes del núcleo.">Marco ceremonial</div>
+    <div class="fam-btn locked" id="famRosaCruz" title="Motor separado futuro: diagrama de letras y transliteración explícitos.">Rosa-Cruz</div>
+    <div class="fam-btn locked" id="famKamea" title="Motor futuro: planeta, tabla histórica, transliteración y secuencia.">Kamea planetario</div>
+    <div class="fam-btn locked" id="famSeal" title="Catálogo documentado por manuscrito/edición. No se genera libremente.">Sello histórico</div>
+    <div class="fam-btn locked" id="famGoetia" title="Catálogo documentado. Ningún generador inventa entidades.">Goetia / Dee</div>
   </div>
 
-  <div id="kameaParams" style="display:none" class="param-group">
-    <div class="param-row"><label>Kamea</label><select id="selKamea">
-      <option value="auto">Auto</option>
-      <option value="saturn">Saturno 3x3</option>
-      <option value="jupiter">Jupiter 4x4</option>
-      <option value="mars">Marte 5x5</option>
+  <h3>Núcleo</h3>
+  <div class="info-box">Monograma compacto y trazable: eje, barras compartidas y curva única. Cada trazo guarda su origen.</div>
+  <h4>Esqueleto</h4>
+  <div class="skeleton-group">
+    <button class="skeleton-btn active" data-k="0" id="btnSkel0" title="Eje vertical dominante con trazos compartidos">Eje</button>
+    <button class="skeleton-btn" data-k="1" id="btnSkel1" title="Flujo diagonal dominante">Diagonal</button>
+    <button class="skeleton-btn" data-k="2" id="btnSkel2" title="Curva dominante">Curva</button>
+  </div>
+  <div class="param-row"><label for="rngOrganic">Carácter</label><input type="range" id="rngOrganic" min="0" max="100" value="35"><span class="val" id="organicVal">35%</span></div>
+  <div class="toggle-row"><input type="checkbox" id="chkJoin" checked><label title="Fusiona trazos casi-colineales en ligaduras con procedencia compartida">Unir trazos compatibles</label></div>
+  <div class="toggle-row"><input type="checkbox" id="chkTerminals"><label>Terminales</label>
+    <select id="selTerminalStyle" style="flex:1;min-width:0">
+      <option value="dot">Punto</option><option value="cross">Cruz</option><option value="ring">Anillo</option>
     </select></div>
-    <div class="toggle-row"><input type="checkbox" id="chkGrid" checked><label>Mostrar grid</label></div>
-    <div class="param-row">
-      <label>Nodos</label>
-      <select id="selNodeStyle"><option value="both">Llenos+anillo</option><option value="fill">Llenos</option><option value="ring">Anillo</option></select>
-    </div>
-    <div class="param-row">
-      <label>Curvatura</label><input type="range" id="kameaCurve" min="0" max="100" value="0"><span class="val" id="kameaCurveVal">0%</span>
-    </div>
+  <div class="btn-group">
+    <button class="btn-dim btn-sm" id="btnEditStrokes">✎ Editar trazos</button>
+    <button class="btn-dim btn-sm" id="btnSimplify" title="Re-fusiona, elimina duplicados y trazos aislados cortos">Simplificar</button>
   </div>
 
-  <div id="gridParams" style="display:none" class="param-group">
-    <div class="param-row"><label>Patron</label><select id="selGridPattern">
-      <option value="fol">Flor de Vida</option>
-      <option value="wheel">Rueda</option>
-      <option value="square">Cuadricula</option>
+  <h3>Marco ritual</h3>
+  <div class="param-group">
+    <div class="toggle-row"><input type="checkbox" id="chkCircle" checked><label>Círculo exterior</label></div>
+    <div class="param-row" id="circleScaleRow"><label>Escala</label><input type="range" id="rngCircleScale" min="80" max="115" value="100"><span class="val" id="circleScaleVal">100%</span></div>
+    <div class="param-row"><label>Grosor</label><input type="range" id="rngCircleThick" min="4" max="30" value="14"><span class="val" id="circleThickVal">1.4</span></div>
+    <div class="param-row"><label>Opacidad</label><input type="range" id="rngCircleOpacity" min="10" max="100" value="55"><span class="val" id="circleOpacityVal">55%</span></div>
+    <div class="toggle-row"><input type="checkbox" id="chkCircleDouble"><label>Anillo doble</label></div>
+  </div>
+  <div class="param-group">
+    <div class="toggle-row"><input type="checkbox" id="chkStar" checked><label>Estrella ritual</label></div>
+    <div class="param-row"><label>Puntas</label><select id="selStarPoints">
+      <option value="5" selected>5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
     </select></div>
-    <div class="param-row"><label>Pliegue</label><select id="selGridFold">
-      <option value="1">1x</option><option value="2">2x</option>
-      <option value="3">3x</option><option value="4" selected>4x</option>
-      <option value="6">6x</option><option value="8">8x</option>
-    </select></div>
-    <div class="param-row">
-      <label>Curvatura</label><input type="range" id="gridCurve" min="0" max="100" value="30"><span class="val" id="gridCurveVal">30%</span>
-    </div>
-    <div class="toggle-row"><input type="checkbox" id="chkGridShow" checked><label>Mostrar grid</label></div>
-    <div class="param-row">
-      <label>Nodos</label>
-      <select id="selGridNodeStyle"><option value="both">Llenos+anillo</option><option value="fill">Llenos</option><option value="ring">Anillo</option></select>
-    </div>
-    <div class="param-row"><label>Resonancia</label><select id="selGridResonance">
-      <option value="none">—</option><option value="sun">☉ Sol</option>
-      <option value="moon">☽ Luna</option><option value="mercury">☿ Mercurio</option>
-      <option value="venus">♀ Venus</option><option value="mars">♂ Marte</option>
-      <option value="jupiter">♃ Jupiter</option><option value="saturn">♄ Saturno</option>
-    </select></div>
+    <div class="param-row"><label>Escala</label><input type="range" id="rngStarScale" min="70" max="105" value="92"><span class="val" id="starScaleVal">92%</span></div>
+    <div class="param-row"><label>Rotación</label><input type="range" id="rngStarRot" min="0" max="360" value="0"><span class="val" id="starRotVal">0°</span></div>
+    <div class="param-row"><label>Grosor</label><input type="range" id="rngStarThick" min="4" max="30" value="18"><span class="val" id="starThickVal">1.8</span></div>
+    <div class="param-row"><label>Opacidad</label><input type="range" id="rngStarOpacity" min="10" max="100" value="80"><span class="val" id="starOpacityVal">80%</span></div>
+    <div class="param-row"><label>Interior</label><input type="range" id="rngStarInner" min="30" max="65" value="45"><span class="val" id="starInnerVal">45%</span></div>
+    <div class="param-row"><label>Separación núcleo</label><input type="range" id="rngStarGap" min="0" max="100" value="30"><span class="val" id="starGapVal">30%</span></div>
+    <div class="toggle-row"><input type="checkbox" id="chkStarChords" checked><label title="Acordes internos del polígono estelar (pentagrama, hexagrama…)">Acordes internos</label></div>
   </div>
 
-  <div id="alquimiaParams" style="display:none" class="param-group">
-    <div class="param-row">
-      <label>Nudo</label>
-      <select id="selNudoStyle">
-        <option value="radiant">Radiante</option>
-        <option value="braid">Trenzado</option>
-        <option value="simple">Simple</option>
-      </select>
-    </div>
-    <div class="param-row">
-      <label>Terminales</label>
-      <select id="selTerminalStyle">
-        <option value="auto">Auto (real)</option>
-        <option value="simple">Simple</option>
-        <option value="cross">Cruz</option>
-        <option value="circle">Circulo</option>
-      </select>
-    </div>
-    <div class="toggle-row"><input type="checkbox" id="chkLoops" checked><label>Bucles</label></div>
-    <div class="param-row">
-      <label>Densidad</label>
-      <select id="selDensity">
-        <option value="low">Baja</option>
-        <option value="medium" selected>Media</option>
-        <option value="high">Alta</option>
-      </select>
-    </div>
-  </div>
+  <h3>Inscripción</h3>
+  <div class="toggle-row"><input type="checkbox" id="chkInscription"><label>Inscripción latina</label></div>
+  <div class="param-row" id="insRow"><label>Texto</label><input id="insText" type="text" maxlength="42" placeholder="Lema, nombre o frase"></div>
+  <div class="param-row"><label>Posición</label><select id="selInsPos">
+    <option value="top">Arriba</option><option value="bottom">Abajo</option>
+    <option value="upperArc" selected>Arco superior</option><option value="lowerArc">Arco inferior</option>
+  </select></div>
+  <div class="param-row"><label>Tamaño</label><input type="range" id="rngInsSize" min="9" max="30" value="17"><span class="val" id="insSizeVal">17</span></div>
+  <div class="param-row"><label>Espaciado</label><input type="range" id="rngInsSpacing" min="0" max="16" value="3"><span class="val" id="insSpacingVal">3</span></div>
+  <div class="param-row"><label>Orientación</label><select id="selInsOrientation">
+    <option value="normal">Normal</option><option value="mirror">Espejo</option>
+  </select></div>
+  <div class="info-box">El texto nunca se añade solo. El hebreo es un motor separado con transliteración y mapa de letras; aquí no se improvisan letras hebreas.</div>
+
   <h3>Presentación</h3>
-  <div class="toggle-row"><input type="checkbox" id="chkGlow" checked><label>Brillo</label></div>
-  <div class="toggle-row"><input type="checkbox" id="chkCircle" checked><label>Círculo exterior</label></div>
-  <div class="toggle-row"><input type="checkbox" id="chkStar"><label>Estrella ritual</label></div>
-  <div class="param-row" id="starLayerParams"><label>Puntas</label><select id="selStarPoints"><option value="5" selected>5</option><option value="6">6</option><option value="7">7</option></select></div>
-  <div class="param-row"><label>Inscripción latina</label><input id="latinInscription" type="text" maxlength="42" placeholder="Opcional"></div>
-  <div class="toggle-row"><input type="checkbox" id="chkDots"><label>Puntos de poder</label></div>
+  <div class="toggle-row"><input type="checkbox" id="chkGlow"><label title="Halo dorado opcional. La estructura manda; el brillo decora.">Brillo suave</label></div>
+  <div class="toggle-row"><input type="checkbox" id="chkMirror"><label title="Simetría bilateral del núcleo (decisión de usuario)">Simetría bilateral</label></div>
+  <div class="toggle-row"><input type="checkbox" id="chkPreview" checked><label>Vista previa 80×80</label></div>
+  <div class="preview-box"><canvas id="previewCanvas" width="80" height="80" title="Minatura a 80×80: la silueta debe seguir siendo legible"></canvas><span>Silueta a 80×80<br>legible y trazable</span></div>
+  <h4>Presets</h4>
+  <div class="btn-group">
+    <button class="btn-dim btn-sm" id="btnPresetSolo">Solo núcleo</button>
+    <button class="btn-dim btn-sm" id="btnPresetCircle">Núcleo + círculo</button>
+  </div>
+  <div class="btn-group">
+    <button class="btn-dim btn-sm" id="btnPresetStar">Núcleo + estrella</button>
+    <button class="btn-dim btn-sm" id="btnPresetCircleStar">Núcleo + círculo + estrella</button>
+  </div>
+  <div class="btn-group"><button class="btn-dim btn-sm" id="btnPresetCircleIns">Núcleo + círculo + inscripción</button></div>
+  <div class="btn-group"><button class="btn-dim btn-sm" id="btnProvenance">☰ Ver procedencia</button></div>
+
+  <h3>Exportar</h3>
+  <div class="toggle-row" title="Omite el fondo oscuro en PNG y SVG"><input type="checkbox" id="chkTransparent"><label>Fondo transparente</label></div>
+  <div class="btn-group">
+    <button class="btn btn-sm" id="btnSVG">SVG por capas</button>
+    <button class="btn btn-sm" id="btnPNG">PNG</button>
+  </div>
 
   <h3>Estampas</h3>
   <div class="stamp-grid">
@@ -221,26 +257,49 @@ canvas{aspect-ratio:10/7;display:block;height:auto;min-height:0;width:100%}
     <button class="btn-dim btn-sm" id="btnStamp">🔨 Estampa</button>
     <button class="btn-dim btn-sm" id="btnClearStamps">✕</button>
   </div>
-  <h3>Exportar</h3>
-  <div class="toggle-row" title="Omite el fondo oscuro en PNG y SVG"><input type="checkbox" id="chkTransparent"><label>Fondo transparente</label></div>
-  <div class="btn-group">
-    <button class="btn btn-sm" id="btnSVG">SVG</button>
-    <button class="btn btn-sm" id="btnPNG">PNG</button>
-  </div>
+
   <h3>Ritual</h3>
   <div class="btn-group">
     <button class="btn" id="btnCharge">&#10208; Cargar</button>
     <button class="btn-dim" id="btnSave">Guardar</button>
     <button class="btn-dim" id="btnGallery">Galería</button>
   </div>
-  <div class="panel-footer">Método de Austin Osman Spare &mdash; Chaos Magic &mdash; ARCANUM</div>
+  <div class="panel-footer">Glifo personal Spare/Cooper + marco ceremonial — ARCANUM</div>
 </div>
+
 <div class="canvas-wrap"><canvas id="canvas" width="1000" height="700"></canvas></div>
+
 <aside class="gallery" id="galleryPanel" aria-hidden="true">
   <div class="gallery-head"><h2>Galería</h2><button class="btn-dim btn-sm" id="btnGalleryClose">X</button></div>
   <div class="gallery-grid" id="galleryGrid"></div>
 </aside>
 </div>
+
+<div class="edit-overlay" id="editOverlay" role="dialog" aria-modal="true" aria-hidden="true">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <h3>✎ Edición de trazos</h3>
+    <button class="btn-dim btn-sm" id="btnEditClose">Listo</button>
+  </div>
+  <p class="edit-hint">Selecciona un trazo en el lienzo o en la lista. Arrastra los puntos para moverlos; arrastra el cuerpo para desplazar el trazo.</p>
+  <div class="edit-list" id="editList"></div>
+  <div class="btn-group">
+    <button class="btn-dim btn-sm" id="btnStRot" title="Rotar 15°">⟳ Rotar</button>
+    <button class="btn-dim btn-sm" id="btnStFlipH" title="Reflejar horizontal">⇋ H</button>
+    <button class="btn-dim btn-sm" id="btnStFlipV" title="Reflejar vertical">⇵ V</button>
+    <button class="btn-dim btn-sm" id="btnStJoin" title="Unir con el trazo anterior">Unir</button>
+    <button class="btn-dim btn-sm" id="btnStDup" title="Duplicar">Duplicar</button>
+    <button class="btn-dim btn-sm" id="btnStDel" title="Eliminar">Eliminar</button>
+  </div>
+</div>
+
+<div class="modal" id="provModal" role="dialog" aria-modal="true" aria-labelledby="provTitle">
+  <div class="modal-card">
+    <button class="btn-dim btn-sm modal-close" id="btnProvClose">X</button>
+    <h2 id="provTitle">Procedencia del sigilo</h2>
+    <div id="provBody"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <div class="gnosis-overlay" id="gnosisOverlay" role="dialog" aria-modal="true" aria-labelledby="gnosisTitle">
   <div class="gnosis-stage">
@@ -261,113 +320,81 @@ canvas{aspect-ratio:10/7;display:block;height:auto;min-height:0;width:100%}
 </div>
 
 <script>
+'use strict';
 // ═══════════════════════════════════════════════════════════════
-//  TALLER DE SIGILOS — Multi-engine + Grid Sagrado
+//  TALLER DE SIGILOS v2 — glifo personal (Spare/Cooper) + marco
+//  ceremonial en capas independientes. Determinista y trazable.
 // ═══════════════════════════════════════════════════════════════
 
 const canvas = document.getElementById('canvas');
-let ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d');
+const W = 1000, H = 700, CX = W / 2, CY = H / 2;
+const CORE_R = 170, RING_R = 290;
 
-let letters = [];
-let stamps = [];
-let stampSym = '♄';
-let stampMode = false;
-let nextId = 1;
+// ── Estado ──────────────────────────────────────────────────────
+const state = {
+  intention: '',
+  reductionMethod: 'cooper',
+  reduction: null,
+  skeleton: 0,
+  organic: 35,
+  autoJoin: true,
+  terminals: { enabled: false, style: 'dot' },
+  frame: {
+    circle: { enabled: true, scale: 100, thickness: 14, opacity: 55, double: false },
+    star: { enabled: true, points: 5, scale: 92, rotation: 0, thickness: 18, opacity: 80, inner: 45, gap: 30, chords: true }
+  },
+  inscription: { enabled: false, text: '', pos: 'upperArc', size: 17, spacing: 3, orientation: 'normal' },
+  presentation: { glow: false, mirror: false, preview: true },
+  stamps: [],
+  core: { strokes: [], merges: [], removed: [] },
+  userDecisions: [],
+  ritualState: 'draft'
+};
 
-let optMirror = false, optRadial = false, optGlow = true;
-let optCircle = true, optStar = false, optStarPoints = 5, optDots = false, optInscription = '';
-let activeEngines = ['spare'];
-let optKameaType = 'auto', optShowGrid = true, optNodeStyle = 'both', optKameaCurve = 0;
-let optGridPattern = 'fol', optGridFold = 4, optGridCurve = 30, optGridShow = true, optGridNodeStyle = 'both', optGridResonance = 'none';
-let optNudoStyle = 'radiant', optTerminalStyle = 'auto', optLoops = true, optDensity = 'medium';
-let optReduction = 'cooper', optTransparent = false;
-let sigilProvenance = [];
-const STORAGE_KEY = 'arcanum_sigils';
+let stamps = state.stamps;
+let stampSym = '♄', stampMode = false;
+let nextId = 100;
 
-// ═══════════════════════════════════════════════════════════════
-//  REDUCTION
-// ═══════════════════════════════════════════════════════════════
-function getReduction(t, method = optReduction) {
+// ── Utilidades ──────────────────────────────────────────────────
+function hashStr(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
+function val(ch) { return ch.charCodeAt(0) - 64; }
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c])); }
+
+// ── Reducción nombrada ──────────────────────────────────────────
+// cooper: iniciales únicas (Cooper). Si quedan <3 unidades, se
+// completan con las letras únicas restantes del texto [AR].
+const REDUCTION_RULES = {
+  cooper: { label: 'Cooper — iniciales únicas', rule: 'Inicial de cada palabra + primera aparición. Intención corta: se completan con las letras únicas restantes [AR].' },
+  novowels: { label: 'Letras únicas sin vocales', rule: 'Normalizar, quitar vocales, conservar la primera consonante de cada tipo. Desarrollo moderno, no receta exclusiva de Spare.' },
+  unique: { label: 'Letras únicas', rule: 'Conservar la primera aparición de cada letra. Variante moderna [AR].' }
+};
+
+function getReduction(t, method = state.reductionMethod) {
   const normalized = t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
   const words = normalized.trim().split(/\s+/).filter(Boolean);
   const cleaned = normalized.replace(/[^A-Z]/g, '');
   let reduced;
-  if (method === 'cooper') reduced = [...new Set(words.map(word => word[0]).filter(Boolean))].join('');
-  else if (method === 'spare') reduced = [...new Set(cleaned.replace(/[AEIOU]/g, ''))].join('');
-  else reduced = [...new Set(cleaned)].join('');
-  return { original:t, cleaned, reduced, values:[...reduced].map(val), rule: method === 'cooper' ? 'Iniciales + primera aparición (variante Cooper)' : method === 'spare' ? 'Letras únicas sin vocales (variante moderna)' : 'Letras únicas con vocales' };
-}
-
-function reduce(t) { return getReduction(t).reduced; }
-
-function val(ch) { return ch.charCodeAt(0) - 64; }
-
-// ═══════════════════════════════════════════════════════════════
-//  KAMEAS
-// ═══════════════════════════════════════════════════════════════
-const kameas = {
-  saturn: { name:'Saturno', grid:[[6,1,8],[7,5,3],[2,9,4]], size:3, max:9 },
-  jupiter: { name:'Jupiter', grid:[[4,14,15,1],[9,7,6,12],[5,11,10,8],[16,2,3,13]], size:4, max:16 },
-  mars: { name:'Marte', grid:[[11,24,7,20,3],[4,12,25,8,16],[17,5,13,21,9],[10,18,1,14,22],[23,6,19,2,15]], size:5, max:25 }
-};
-
-function pickKamea(n) {
-  if (optKameaType !== 'auto') return kameas[optKameaType];
-  if (n < 6) return kameas.saturn;
-  if (n < 11) return kameas.jupiter;
-  return kameas.mars;
-}
-
-function buildKameaLookup(k) {
-  const map = {};
-  for (let r = 0; r < k.size; r++)
-    for (let c = 0; c < k.size; c++)
-      map[k.grid[r][c]] = { row: r, col: c };
-  return map;
-}
-
-function kameaPosition(row, col, size, cx, cy, cellSize) {
-  const mid = (size - 1) / 2;
-  return { x: cx + (col - mid) * cellSize, y: cy + (row - mid) * cellSize };
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  PATH HELPERS
-// ═══════════════════════════════════════════════════════════════
-function drawCurvedPath(ctx, pts, curve) {
-  if (pts.length < 2) return;
-  ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
-  if (curve <= 0.05 || pts.length < 3) {
-    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-  } else {
-    const n = pts.length, k = Math.min(curve * 2, 2);
-    for (let i = 0; i < n - 1; i++) {
-      const p = pts[i], pn = pts[i + 1];
-      const pp = i > 0 ? pts[i - 1] : p;
-      const pnn = i < n - 2 ? pts[i + 2] : pn;
-      ctx.bezierCurveTo(
-        p.x + (pn.x - pp.x) * k / 6, p.y + (pn.y - pp.y) * k / 6,
-        pn.x - (pnn.x - p.x) * k / 6, pn.y - (pnn.y - p.y) * k / 6,
-        pn.x, pn.y
-      );
+  if (method === 'cooper') {
+    reduced = [...new Set(words.map(w => w[0]).filter(Boolean))].join('');
+    if (reduced.length < 3 && cleaned.length > reduced.length) {
+      const extras = [...new Set(cleaned.split(''))].filter(c => !reduced.includes(c)).join('');
+      reduced += extras;
     }
+  } else if (method === 'novowels') {
+    reduced = [...new Set(cleaned.replace(/[AEIOU]/g, ''))].join('');
+  } else {
+    reduced = [...new Set(cleaned.split(''))].join('');
   }
-  ctx.stroke();
+  return {
+    original: t, words, cleaned,
+    reduced, values: [...reduced].map(val),
+    rule: REDUCTION_RULES[method].rule,
+    label: REDUCTION_RULES[method].label
+  };
 }
 
-function drawGlowPath(ctx, pts, curve, color, blur, width) {
-  ctx.save();
-  ctx.shadowColor = color; ctx.shadowBlur = blur;
-  ctx.strokeStyle = 'rgba(184,134,11,0.12)';
-  ctx.lineWidth = width; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  drawCurvedPath(ctx, pts, curve);
-  ctx.restore();
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  ENGINES
-// ═══════════════════════════════════════════════════════════════
-
+// ── Glifos de letras (normalizados, y crece hacia abajo) ────────
 const LETTER_GLYPHS = {
   A:[[[-.72,.82],[0,-.85],[.72,.82]],[[-.42,.18],[.42,.18]]],B:[[[-.58,-.84],[-.58,.84]],[[-.58,-.84],[.22,-.78],[.55,-.45],[.2,-.08],[-.58,-.02]],[[-.58,-.02],[.28,.02],[.58,.42],[.2,.82],[-.58,.84]]],
   C:[[[.58,-.65],[.18,-.86],[-.38,-.68],[-.62,-.08],[-.48,.58],[.02,.86],[.58,.62]]],D:[[[-.56,-.84],[-.56,.84]],[[-.56,-.84],[.18,-.72],[.6,-.22],[.52,.45],[.08,.8],[-.56,.84]]],
@@ -381,1205 +408,1038 @@ const LETTER_GLYPHS = {
   X:[[[-.62,-.84],[.62,.84]],[[.62,-.84],[-.62,.84]]],Y:[[[-.62,-.84],[0,0],[.62,-.84]],[[0,0],[0,.84]]],Z:[[[-.58,-.84],[.58,-.84],[-.58,.84],[.58,.84]]]
 };
 
-const engines = {
-  spare: {
-    render(ctx,cx,cy,radius,letters) {
-      const draw=()=>this._trace(ctx,cx,cy,radius,letters);
-      if(optGlow){ctx.save();ctx.shadowColor='#b8860b';ctx.shadowBlur=22;ctx.strokeStyle='rgba(184,134,11,.22)';ctx.lineWidth=6;ctx.lineCap='round';ctx.lineJoin='round';draw();ctx.restore();}
-      ctx.save();ctx.strokeStyle='#c99a1a';ctx.lineWidth=2.8;ctx.lineCap='round';ctx.lineJoin='round';const ends=draw();ctx.restore();
-      if(!ends)return;
-      ctx.save();ctx.strokeStyle='#c99a1a';ctx.fillStyle='#0a080d';ctx.lineWidth=2;ctx.beginPath();ctx.arc(ends.start.x,ends.start.y,4,0,Math.PI*2);ctx.fill();ctx.stroke();
-      const dx=ends.end.x-cx,dy=ends.end.y-cy,len=Math.hypot(dx,dy)||1,nx=-dy/len*7,ny=dx/len*7;ctx.beginPath();ctx.moveTo(ends.end.x-nx,ends.end.y-ny);ctx.lineTo(ends.end.x+nx,ends.end.y+ny);ctx.stroke();ctx.restore();
-    },
-    _trace(ctx,cx,cy,radius,letters){
-      if(!letters.length)return null;
-      const scale=radius*(letters.length>11?.52:.68);let start=null,end=null;ctx.beginPath();
-      letters.forEach((letter,index)=>{const glyph=LETTER_GLYPHS[letter]||LETTER_GLYPHS.X,strokes=[glyph.reduce((best,stroke)=>stroke.length>best.length?stroke:best,glyph[0])],value=val(letter),angle=((value*137.508+index*47)%360)*Math.PI/180,mirror=index%2?-1:1,localScale=scale*(1-(index%3)*.065),ox=((value%5)-2)*radius*.018,oy=(((value+index)%5)-2)*radius*.018;
-        const point=([x,y])=>{x*=mirror;const px=x*localScale,py=y*localScale;return{x:cx+ox+px*Math.cos(angle)-py*Math.sin(angle),y:cy+oy+px*Math.sin(angle)+py*Math.cos(angle)}};
-        strokes.forEach(stroke=>{const points=stroke.map(point);if(!start)start=points[0];end=points[points.length-1];ctx.moveTo(points[0].x,points[0].y);
-          if(points.length<4){for(let i=1;i<points.length;i++)ctx.lineTo(points[i].x,points[i].y);}
-          else for(let i=0;i<points.length-1;i++){const p0=points[Math.max(0,i-1)],p1=points[i],p2=points[i+1],p3=points[Math.min(points.length-1,i+2)];ctx.bezierCurveTo(p1.x+(p2.x-p0.x)/6,p1.y+(p2.y-p0.y)/6,p2.x-(p3.x-p1.x)/6,p2.y-(p3.y-p1.y)/6,p2.x,p2.y);}
-        });
-      });ctx.stroke();return{start,end};
-    }
-  },
+// Ancla: x del trazo vertical dominante (para compartir la espina)
+const AXIS_ANCHOR = { B:-.55, D:-.56, E:-.52, F:-.52, H:-.58, K:-.55, L:-.52, P:-.56, R:-.56, T:0, I:0, Y:0 };
+const DIAG_CHARS = 'AVWXMNYZ';
+const CURVE_CHARS = 'SCGOQUJ';
+function anchorX(ch) { return AXIS_ANCHOR[ch] ?? 0; }
 
-  // ── STAR ENGINE (original geometric) ──
-  star: {
-    render(ctx, cx, cy, radius, letters) {
-      if (letters.length < 3) return;
-      const n = letters.length;
-      const vals = letters.map(val);
-      const sum = vals.reduce((a,b)=>a+b,0);
-      const step = 2 + (sum % (n - 2));
-      const innerR = radius * (0.25 + (sum % 25) / 60);
-      const rots = 1 + (sum % 3);
+// Jitter orgánico determinista (hash puro, nunca aleatorio)
+function jitter(ch, i, organic) {
+  const h = hashStr(ch + ':' + i), o = organic / 100;
+  return {
+    rot: (((h % 13) - 6) * o) * 0.035,
+    dx: ((((h >> 3) % 7) - 3) * o) * 0.05,
+    dy: ((((h >> 6) % 7) - 3) * o) * 0.05,
+    sx: 1 + ((((h >> 9) % 5) - 2) * o) * 0.06,
+    sy: 1 + ((((h >> 12) % 5) - 2) * o) * 0.06
+  };
+}
 
-      const ring = [], inner = [];
-      for (let i = 0; i < n; i++) {
-        const a = (i / n) * Math.PI * 2 - Math.PI / 2;
-        ring.push({ x: radius * Math.cos(a), y: radius * Math.sin(a) });
-        inner.push({ x: innerR * Math.cos(a), y: innerR * Math.sin(a) });
-      }
+// ── Esqueletos: transform por unidad ─────────────────────────────
+const SKELETON_NAMES = ['Eje vertical', 'Diagonal', 'Curva dominante'];
 
-      const pts = [];
-
-      // Star polygon chords — connect every step-th point
-      for (let i = 0; i < n; i++) {
-        pts.push(ring[i]);
-        const j = (i + step) % n;
-        pts.push({ x: (ring[i].x + ring[j].x) / 2, y: (ring[i].y + ring[j].y) / 2 });
-      }
-
-      // Inner ring connections
-      for (let r = 0; r < rots; r++) {
-        for (let i = 0; i < n; i++) {
-          const j = (i + 1) % n;
-          const t = (r + 1) / (rots + 1);
-          const mx = ring[i].x + (inner[j].x - ring[i].x) * t;
-          const my = ring[i].y + (inner[j].y - ring[i].y) * t;
-          pts.push({ x: mx, y: my });
-        }
-      }
-
-      this._drawPath(ctx, cx, cy, pts, inner);
-    },
-
-    _drawPath(ctx, cx, cy, pts, inner) {
-      const mapped = pts.map(p => ({ x: cx + p.x, y: cy + p.y }));
-      if (optGlow) {
-        drawGlowPath(ctx, mapped, 0, '#b8860b', 40, 6);
-      }
-      ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 2.5;
-      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      drawCurvedPath(ctx, mapped, 0);
-
-      // Inner ring dots
-      ctx.fillStyle = '#b8860b';
-      for (const p of inner) {
-        ctx.beginPath(); ctx.arc(cx + p.x, cy + p.y, 2.5, 0, Math.PI * 2); ctx.fill();
-      }
-    }
-  },
-
-  // ── KAMEA ENGINE (Goetia-style seal) ──
-  kamea: {
-    render(ctx, cx, cy, radius, letters) {
-      if (letters.length < 2) return;
-      const n = letters.length;
-      const k = pickKamea(n);
-      const lookup = buildKameaLookup(k);
-      const cellSize = (radius * 2 * 0.7) / k.size;
-      const curve = optKameaCurve / 100;
-
-      const positions = [];
-      for (const ch of letters) {
-        const v = val(ch);
-        const cell = ((v - 1) % k.max) + 1;
-        const pos = lookup[cell];
-        if (pos) positions.push(kameaPosition(pos.row, pos.col, k.size, cx, cy, cellSize));
-      }
-      if (positions.length < 2) return;
-
-      // Draw grid
-      if (optShowGrid) {
-        ctx.strokeStyle = 'rgba(184,134,11,0.08)'; ctx.lineWidth = 0.5;
-        for (let r = 0; r < k.size; r++) {
-          for (let c = 0; c < k.size; c++) {
-            const p = kameaPosition(r, c, k.size, cx, cy, cellSize);
-            ctx.beginPath(); ctx.arc(p.x, p.y, cellSize * 0.4, 0, Math.PI * 2); ctx.stroke();
-          }
-        }
-      }
-
-      // Main path
-      if (optGlow) drawGlowPath(ctx, positions, curve, '#b8860b', 30, 6);
-      ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 2.5;
-      ctx.lineCap = 'round'; ctx.lineJoin = 'miter';
-      drawCurvedPath(ctx, positions, curve);
-
-      // Extra chords
-      ctx.strokeStyle = 'rgba(184,134,11,0.12)'; ctx.lineWidth = 0.7;
-      for (let step = 2; step <= 3; step++) {
-        for (let i = 0; i < positions.length; i++) {
-          const j = (i + step) % positions.length;
-          ctx.beginPath(); ctx.moveTo(positions[i].x, positions[i].y);
-          ctx.lineTo(positions[j].x, positions[j].y); ctx.stroke();
-        }
-      }
-
-      // Nodes
-      for (let i = 0; i < positions.length; i++) {
-        const p = positions[i];
-        const r = 3.5 + (val(letters[i]) % 4);
-        if (optGlow) {
-          ctx.save();
-          ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 20;
-          ctx.fillStyle = '#b8860b';
-          ctx.beginPath(); ctx.arc(p.x, p.y, r * 0.6, 0, Math.PI * 2); ctx.fill();
-          ctx.restore();
-        }
-        if (optNodeStyle === 'both' || optNodeStyle === 'fill') {
-          ctx.fillStyle = '#b8860b';
-          ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
-        }
-        if (optNodeStyle === 'both' || optNodeStyle === 'ring') {
-          ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.2;
-          ctx.beginPath(); ctx.arc(p.x, p.y, r + 2, 0, Math.PI * 2); ctx.stroke();
-        }
-        if (optNodeStyle === 'both') {
-          ctx.fillStyle = '#0a080d';
-          ctx.beginPath(); ctx.arc(p.x, p.y, r * 0.35, 0, Math.PI * 2); ctx.fill();
-        }
-      }
-
-      // Cross marks
-      ctx.strokeStyle = 'rgba(184,134,11,0.4)'; ctx.lineWidth = 1;
-      for (let i = 0; i < positions.length; i += 2) {
-        if (i + 2 >= positions.length) break;
-        const p1 = positions[i], p2 = positions[i + 2];
-        const mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
-        const cs = 3;
-        ctx.beginPath();
-        ctx.moveTo(mx - cs, my - cs); ctx.lineTo(mx + cs, my + cs);
-        ctx.moveTo(mx + cs, my - cs); ctx.lineTo(mx - cs, my + cs);
-        ctx.stroke();
-      }
-    }
-  },
-
-  // ── GRID SAGRADO ENGINE (Dascent-style) ──
-  grid: {
-    _nodeCache: null,
-
-    render(ctx, cx, cy, radius, letters) {
-      if (letters.length < 2) return;
-      const pattern = optGridPattern;
-      const fold = parseInt(optGridFold);
-      const curve = optGridCurve / 100;
-      const showGrid = optGridShow;
-      const nodeStyle = optGridNodeStyle;
-      const resonance = optGridResonance;
-
-      // Generate nodes scaled to emblem radius
-      const nodes = this._genNodes(pattern, radius);
-      if (nodes.length < letters.length) return;
-
-      // Assign letters to best nodes
-      const assigned = this._assign(letters, nodes);
-
-      // Draw grid background
-      if (showGrid) this._drawGrid(ctx, pattern, nodes, radius, cx, cy);
-
-      // Build folded paths
-      const paths = this._buildFoldedPaths(assigned, fold, radius);
-
-      // Draw all folded paths
-      for (const path of paths) {
-        const opath = path.map(p => ({ x: p.x + cx, y: p.y + cy }));
-        if (optGlow) drawGlowPath(ctx, opath, curve, '#b8860b', 30, 5);
-        ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 2;
-        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-        drawCurvedPath(ctx, opath, curve);
-      }
-
-      // Draw nodes on letter positions
-      for (const a of assigned) {
-        const p = { x: cx + a.pos.x, y: cy + a.pos.y };
-        const r = 3.5 + (val(a.letter) % 4);
-        if (optGlow) {
-          ctx.save();
-          ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 18;
-          ctx.fillStyle = 'rgba(184,134,11,0.3)';
-          ctx.beginPath(); ctx.arc(p.x, p.y, r * 0.8, 0, Math.PI * 2); ctx.fill();
-          ctx.restore();
-        }
-        if (nodeStyle === 'both' || nodeStyle === 'fill') {
-          ctx.fillStyle = '#b8860b';
-          ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
-        }
-        if (nodeStyle === 'both' || nodeStyle === 'ring') {
-          ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.arc(p.x, p.y, r + 2.5, 0, Math.PI * 2); ctx.stroke();
-        }
-        if (nodeStyle === 'both') {
-          ctx.fillStyle = '#0a080d';
-          ctx.beginPath(); ctx.arc(p.x, p.y, r * 0.35, 0, Math.PI * 2); ctx.fill();
-        }
-      }
-
-      // Center resonance
-      if (resonance !== 'none') {
-        this._drawResonance(ctx, cx, cy, radius * 0.15, resonance);
-      }
-
-      // Outer ring with fold symbols
-      if (fold > 1) {
-        this._drawFoldRing(ctx, cx, cy, radius * 1.25, fold);
-      }
-    },
-
-    // ── Node generators ──
-    _genNodes(pattern, radius) {
-      const key = pattern + '_' + radius.toFixed(1);
-      if (this._nodeCache && this._nodeCache.key === key) return this._nodeCache.nodes;
-      let nodes;
-      switch (pattern) {
-        case 'fol': nodes = this._genFol(radius); break;
-        case 'wheel': nodes = this._genWheel(radius); break;
-        case 'square': nodes = this._genSquare(radius); break;
-        default: nodes = this._genFol(radius);
-      }
-      this._nodeCache = { key, nodes };
-      return nodes;
-    },
-
-    _genFol(radius) {
-      const nodes = [];
-      const R = radius * 0.75;
-      const s = R / 3;
-      for (let q = -3; q <= 3; q++) {
-        for (let r = -3; r <= 3; r++) {
-          if (Math.abs(q + r) > 3) continue;
-          const x = s * (1.73205 * q + 0.86603 * r);
-          const y = s * 1.5 * r;
-          if (Math.sqrt(x * x + y * y) <= R) nodes.push({ x, y });
-        }
-      }
-      return nodes;
-    },
-
-    _genWheel(radius) {
-      const nodes = [];
-      const rings = 4;
-      const spokes = 10;
-      const R = radius * 0.8;
-      nodes.push({ x: 0, y: 0 });
-      for (let ri = 1; ri <= rings; ri++) {
-        const rr = (ri / rings) * R;
-        for (let si = 0; si < spokes; si++) {
-          const a = (si / spokes) * Math.PI * 2;
-          nodes.push({ x: rr * Math.cos(a), y: rr * Math.sin(a) });
-        }
-      }
-      return nodes;
-    },
-
-    _genSquare(radius) {
-      const nodes = [];
-      const R = radius * 0.8;
-      const layers = 4;
-      for (let li = 0; li <= layers; li++) {
-        const half = (li / layers) * R;
-        if (li === 0) { nodes.push({ x: 0, y: 0 }); continue; }
-        const pts = 4 * li;
-        for (let i = 0; i < pts; i++) {
-          const t = i / pts;
-          if (t < 0.25) { const lt = t / 0.25; nodes.push({ x: -half + lt * 2 * half, y: -half }); }
-          else if (t < 0.5) { const lt = (t - 0.25) / 0.25; nodes.push({ x: half, y: -half + lt * 2 * half }); }
-          else if (t < 0.75) { const lt = (t - 0.5) / 0.25; nodes.push({ x: half - lt * 2 * half, y: half }); }
-          else { const lt = (t - 0.75) / 0.25; nodes.push({ x: -half, y: half - lt * 2 * half }); }
-        }
-      }
-      return nodes;
-    },
-
-    // ── Letter assignment ──
-    _assign(letters, nodes) {
-      const n = letters.length;
-      if (n === 0) return [];
-      const maxDist = Math.max(...nodes.map(n => Math.sqrt(n.x*n.x + n.y*n.y)));
-      const result = [];
-      const used = new Set();
-      for (let i = 0; i < n; i++) {
-        const targetAngle = (i / n) * Math.PI * 2 - Math.PI / 2;
-        const targetR = maxDist * (0.35 + (i / n) * 0.55);
-        const tx = targetR * Math.cos(targetAngle);
-        const ty = targetR * Math.sin(targetAngle);
-        let best = -1, bestDist = Infinity;
-        for (let j = 0; j < nodes.length; j++) {
-          if (used.has(j)) continue;
-          const dx = nodes[j].x - tx, dy = nodes[j].y - ty;
-          const dist = dx*dx + dy*dy;
-          if (dist < bestDist) { bestDist = dist; best = j; }
-        }
-        if (best >= 0) {
-          used.add(best);
-          result.push({ letter: letters[i], pos: nodes[best], value: val(letters[i]) });
-        }
-      }
-      result.sort((a, b) => Math.atan2(a.pos.y, a.pos.x) - Math.atan2(b.pos.y, b.pos.x));
-      return result;
-    },
-
-    // ── Fold system ──
-    _buildFoldedPaths(assigned, fold, radius) {
-      const paths = [];
-      const pts = assigned.map(a => a.pos);
-      for (let fi = 0; fi < fold; fi++) {
-        const angle = (fi / fold) * Math.PI * 2;
-        const cos = Math.cos(angle), sin = Math.sin(angle);
-        const rotated = pts.map(p => ({ x: p.x * cos - p.y * sin, y: p.x * sin + p.y * cos }));
-        paths.push(rotated);
-      }
-      return paths;
-    },
-
-    // ── Grid drawing ──
-    _drawGrid(ctx, pattern, nodes, radius, cx, cy) {
-      ctx.save();
-      ctx.strokeStyle = 'rgba(184,134,11,0.12)'; ctx.lineWidth = 0.5;
-      switch (pattern) {
-        case 'fol': {
-          const R = radius * 0.75;
-          const s = R / 3;
-          const cR = s * 1.25;
-          ctx.strokeStyle = 'rgba(184,134,11,0.08)'; ctx.lineWidth = 0.4;
-          for (const n of nodes) {
-            ctx.beginPath(); ctx.arc(cx + n.x, cy + n.y, cR, 0, Math.PI * 2); ctx.stroke();
-          }
-          ctx.strokeStyle = 'rgba(184,134,11,0.15)'; ctx.lineWidth = 0.6;
-          for (const n of nodes) {
-            const d = Math.sqrt(n.x*n.x + n.y*n.y);
-            if (d < 0.1) continue;
-            ctx.beginPath(); ctx.arc(cx + n.x, cy + n.y, 1.5, 0, Math.PI * 2); ctx.stroke();
-          }
-          break;
-        }
-        case 'wheel': {
-          const rings = 4, spokes = 10;
-          const R = radius * 0.8;
-          ctx.strokeStyle = 'rgba(184,134,11,0.1)'; ctx.lineWidth = 0.4;
-          for (let ri = 1; ri <= rings; ri++) {
-            const rr = (ri / rings) * R;
-            ctx.beginPath(); ctx.arc(cx, cy, rr, 0, Math.PI * 2); ctx.stroke();
-          }
-          ctx.strokeStyle = 'rgba(184,134,11,0.07)'; ctx.lineWidth = 0.3;
-          for (let si = 0; si < spokes; si++) {
-            const a = (si / spokes) * Math.PI * 2;
-            ctx.beginPath(); ctx.moveTo(cx, cy);
-            ctx.lineTo(cx + R * Math.cos(a), cy + R * Math.sin(a)); ctx.stroke();
-          }
-          break;
-        }
-        case 'square': {
-          const R = radius * 0.8;
-          const layers = 4;
-          ctx.strokeStyle = 'rgba(184,134,11,0.1)'; ctx.lineWidth = 0.4;
-          for (let li = 0; li <= layers; li++) {
-            const half = (li / layers) * R;
-            ctx.strokeRect(cx - half, cy - half, half * 2, half * 2);
-          }
-          break;
-        }
-      }
-      ctx.restore();
-    },
-
-    // ── Center resonance ──
-    _drawResonance(ctx, cx, cy, r, type) {
-      const syms = { sun:'☉', moon:'☽', mercury:'☿', venus:'♀', mars:'♂', jupiter:'♃', saturn:'♄' };
-      const sym = syms[type] || '☉';
-      ctx.save();
-      if (optGlow) { ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 25; }
-      ctx.strokeStyle = 'rgba(184,134,11,0.3)'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
-      ctx.font = r + 'px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillStyle = 'rgba(184,134,11,0.5)'; ctx.fillText(sym, cx, cy);
-      ctx.restore();
-    },
-
-    // ── Fold outer ring ──
-    _drawFoldRing(ctx, cx, cy, r, fold) {
-      const syms = ['✦', '◈', '◇', '○', '△', '▽', '□', '☆'];
-      ctx.save();
-      ctx.strokeStyle = 'rgba(184,134,11,0.15)'; ctx.lineWidth = 0.8;
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
-      ctx.font = Math.max(10, r * 0.12) + 'px serif';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      for (let i = 0; i < fold; i++) {
-        const a = (i / fold) * Math.PI * 2 - Math.PI / 2;
-        const px = cx + r * Math.cos(a), py = cy + r * Math.sin(a);
-        ctx.fillStyle = 'rgba(184,134,11,0.25)'; ctx.fillText(syms[i % syms.length], px, py);
-      }
-      ctx.restore();
-    }
-  },
-
-  // ── ALQUIMIA ENGINE (Goetic grammar parametrized by letters) ──
-  alquimia: {
-    _anglePool: null,
-
-    _getAnglePool() {
-      if (this._anglePool) return this._anglePool;
-      const bins = [0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165];
-      const probs = [0.2651, 0.0358, 0.0336, 0.0555, 0.0279, 0.0621,
-                     0.2094, 0.0455, 0.0467, 0.0699, 0.0496, 0.0989];
-      const pool = [];
-      for (let b = 0; b < bins.length; b++) {
-        const count = Math.round(probs[b] * 100);
-        for (let i = 0; i < count; i++) {
-          pool.push(bins[b] + (i / count) * 15);
-        }
-      }
-      for (let i = pool.length - 1; i > 0; i--) {
-        const j = (i * 59 + 17) % (i + 1);
-        [pool[i], pool[j]] = [pool[j], pool[i]];
-      }
-      this._anglePool = pool;
-      return pool;
-    },
-
-    _pickTerminal(v, i) {
-      const types = ['simple', 'filled/cross', 'circle', 'horizontal_bar', 'vertical_bar'];
-      const probs = [0.7806, 0.1719, 0.0394, 0.0033, 0.0048];
-      if (optTerminalStyle !== 'auto') {
-        const map = { simple: 'simple', cross: 'filled/cross', circle: 'circle' };
-        return map[optTerminalStyle] || 'simple';
-      }
-      const roll = ((v * 3 + i * 7) % 1000) / 1000;
-      let cum = 0;
-      for (let t = 0; t < types.length; t++) {
-        cum += probs[t];
-        if (roll < cum) return types[t];
-      }
-      return 'simple';
-    },
-
-    _drawTerminal(ctx, x, y, type, s) {
-      ctx.save();
-      ctx.strokeStyle = 'rgba(184,134,11,0.5)'; ctx.lineWidth = 1.2;
-      switch(type) {
-        case 'circle':
-          ctx.beginPath(); ctx.arc(x, y, s, 0, Math.PI * 2); ctx.stroke(); break;
-        case 'filled/cross':
-          ctx.beginPath();
-          ctx.moveTo(x - s, y); ctx.lineTo(x + s, y);
-          ctx.moveTo(x, y - s); ctx.lineTo(x, y + s); ctx.stroke(); break;
-        case 'horizontal_bar':
-          ctx.beginPath(); ctx.moveTo(x - s * 1.5, y); ctx.lineTo(x + s * 1.5, y); ctx.stroke(); break;
-        case 'vertical_bar':
-          ctx.beginPath(); ctx.moveTo(x, y - s * 1.5); ctx.lineTo(x, y + s * 1.5); ctx.stroke(); break;
-        default: break;
-      }
-      ctx.restore();
-    },
-
-    _drawCenterKnot(ctx, cx, cy, r, n, vsum) {
-      ctx.save();
-      if (optGlow) { ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 20; }
-      ctx.strokeStyle = 'rgba(184,134,11,0.2)'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
-      if (optNudoStyle === 'radiant') {
-        ctx.strokeStyle = 'rgba(184,134,11,0.4)'; ctx.lineWidth = 1.2;
-        for (let i = 0; i < n; i++) {
-          const a = (i / n) * Math.PI * 2 - Math.PI / 2;
-          ctx.beginPath(); ctx.moveTo(cx, cy);
-          ctx.lineTo(cx + r * 0.8 * Math.cos(a), cy + r * 0.8 * Math.sin(a)); ctx.stroke();
-        }
-      } else if (optNudoStyle === 'braid') {
-        ctx.strokeStyle = 'rgba(184,134,11,0.35)'; ctx.lineWidth = 0.8;
-        for (let i = 0; i < Math.max(n, 3); i++) {
-          const a1 = (i / Math.max(n, 3)) * Math.PI * 2 - Math.PI / 2;
-          const a2 = ((i + 1) / Math.max(n, 3)) * Math.PI * 2 - Math.PI / 2;
-          ctx.beginPath(); ctx.arc(cx, cy, r * 0.6, a1, a2); ctx.stroke();
-        }
-      }
-      ctx.fillStyle = '#b8860b';
-      ctx.beginPath(); ctx.arc(cx, cy, 2, 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
-    },
-
-    render(ctx, cx, cy, radius, letters) {
-      if (letters.length < 1) return;
-      const n = letters.length;
-      const pool = this._getAnglePool();
-      const density = optDensity;
-      const maxSub = density === 'high' ? 3 : density === 'medium' ? 2 : 1;
-
-      for (let i = 0; i < n; i++) {
-        const ch = letters[i];
-        const v = val(ch);
-        const angleDeg = pool[(v * 7 + i * 13) % pool.length];
-        const angleRad = angleDeg * Math.PI / 180;
-        const length = radius * (0.25 + (v % 12) / 20);
-        const ex = cx + length * Math.cos(angleRad);
-        const ey = cy + length * Math.sin(angleRad);
-
-        ctx.save();
-        if (optGlow) { ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 12; }
-        ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(ex, ey); ctx.stroke();
-        ctx.restore();
-
-        const termType = this._pickTerminal(v, i);
-        this._drawTerminal(ctx, ex, ey, termType, 2 + (v % 4));
-
-        const hasSub = (v * 5 + i * 11) % 2 === 0;
-        if (hasSub && maxSub > 0) {
-          const nSub = 1 + (v % Math.min(maxSub, 2));
-          for (let s = 0; s < nSub; s++) {
-            const t = 0.35 + s * 0.25;
-            const bx = cx + t * (ex - cx);
-            const by = cy + t * (ey - cy);
-            const subAngle = angleDeg + [-90, -60, -45, 45, 60, 90][(v + s * 3) % 6];
-            const subRad = subAngle * Math.PI / 180;
-            const subLen = length * (0.15 + (v % 5) / 18);
-            const sex = bx + subLen * Math.cos(subRad);
-            const sey = by + subLen * Math.sin(subRad);
-
-            ctx.save();
-            ctx.strokeStyle = 'rgba(184,134,11,0.5)'; ctx.lineWidth = 1.2; ctx.lineCap = 'round';
-            ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(sex, sey); ctx.stroke();
-            ctx.restore();
-
-            const subTerm = this._pickTerminal(v + s, i + n);
-            this._drawTerminal(ctx, sex, sey, subTerm, 1.5 + (v % 3));
-          }
-        }
-      }
-
-      const vsum = letters.reduce((a, ch) => a + val(ch), 0);
-
-      if ((vsum * 3) % 10 < 6) {
-        ctx.save();
-        ctx.strokeStyle = 'rgba(184,134,11,0.3)'; ctx.lineWidth = 0.8;
-        const nBars = 1 + (vsum % 3);
-        for (let b = 0; b < nBars; b++) {
-          const barY = cy + (b - nBars / 2 + 0.5) * radius * 0.25;
-          const off = radius * (0.2 + b * 0.08);
-          ctx.beginPath(); ctx.moveTo(cx - off, barY); ctx.lineTo(cx + off, barY); ctx.stroke();
-        }
-        ctx.restore();
-      }
-
-      if (optLoops && (vsum * 7) % 100 < 53) {
-        ctx.save();
-        ctx.strokeStyle = 'rgba(184,134,11,0.25)'; ctx.lineWidth = 0.8;
-        const nLoops = 1 + (vsum % 2);
-        for (let l = 0; l < nLoops; l++) {
-          const lx = cx + (l - nLoops / 2 + 0.5) * radius * 0.2;
-          const ly = cy + ((l * 3) % 5 - 2) * radius * 0.08;
-          ctx.beginPath(); ctx.ellipse(lx, ly, 4 + (vsum % 8), 3 + ((vsum * l) % 6), 0, 0, Math.PI * 2); ctx.stroke();
-        }
-        ctx.restore();
-      }
-
-      this._drawCenterKnot(ctx, cx, cy, radius * 0.12, n, vsum);
-    }
-  }
-};
-
-// ═══════════════════════════════════════════════════════════════
-//  TRANSFORMS
-// ═══════════════════════════════════════════════════════════════
-const tId = { x: (x,y) => x, y: (x,y) => y };
-function tMirror(cx) { return { x: (x,y) => 2*cx - x, y: (x,y) => y }; }
-function tRot90(cx,cy) { return { x: (x,y) => cx - (y - cy), y: (x,y) => cy + (x - cx) }; }
-function tRot180(cx,cy) { return { x: (x,y) => 2*cx - x, y: (x,y) => 2*cy - y }; }
-function tRot270(cx,cy) { return { x: (x,y) => cx + (y - cy), y: (x,y) => cy - (x - cx) }; }
-
-// ═══════════════════════════════════════════════════════════════
-//  OUTER FRAME helpers
-// ═══════════════════════════════════════════════════════════════
-function drawStarPolygon(ctx, pts, step, glow) {
-  const n = pts.length;
-  if (glow) {
-    ctx.save();
-    ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 20;
-    ctx.strokeStyle = 'rgba(184,134,11,0.08)'; ctx.lineWidth = 2.5;
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    ctx.beginPath();
-    for (let i = 0; i < n; i++) {
-      const j = (i + step) % n;
-      if (j === i) continue;
-      ctx.moveTo(pts[i].x, pts[i].y);
-      ctx.lineTo(pts[j].x, pts[j].y);
-    }
-    ctx.stroke(); ctx.restore();
-  }
-  ctx.strokeStyle = 'rgba(184,134,11,0.12)'; ctx.lineWidth = 0.6;
-  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  ctx.beginPath();
+function layoutAxis(units, organic) {
+  const n = units.length;
+  const tfs = [];
+  const step = n > 1 ? 2.0 / (n - 1) : 0;
   for (let i = 0; i < n; i++) {
-    const j = (i + step) % n;
-    if (j === i) continue;
-    ctx.moveTo(pts[i].x, pts[i].y);
-    ctx.lineTo(pts[j].x, pts[j].y);
+    const ch = units[i], j = jitter(ch, i, organic);
+    tfs.push({ dx: -anchorX(ch) + j.dx, dy: (i - (n - 1) / 2) * step + j.dy, rot: j.rot, sx: 1 + j.sx, sy: 1 + j.sy });
+  }
+  return tfs;
+}
+
+function layoutDiagonal(units, organic) {
+  const n = units.length;
+  const tfs = [];
+  for (let i = 0; i < n; i++) {
+    const ch = units[i], j = jitter(ch, i, organic);
+    const t = n > 1 ? (i / (n - 1) - 0.5) : 0;
+    const rot = (DIAG_CHARS.includes(ch) ? -0.78 : 0.5) + j.rot;
+    tfs.push({ dx: t * 2.1 + j.dx, dy: t * 2.1 + j.dy, rot, sx: 1 + j.sx, sy: 1 + j.sy });
+  }
+  return tfs;
+}
+
+function layoutCurve(units, organic) {
+  const n = units.length;
+  const tfs = [];
+  for (let i = 0; i < n; i++) {
+    const ch = units[i], j = jitter(ch, i, organic);
+    const t = n > 1 ? (i / (n - 1) - 0.5) : 0;
+    const ang = t * Math.PI * 0.85;
+    const px = 0.95 * Math.sin(ang);
+    const py = t * 1.9;
+    const tangent = Math.atan2(1.9, 0.95 * Math.PI * 0.85 * Math.cos(ang));
+    const rot = tangent + (CURVE_CHARS.includes(ch) ? 0.35 : 0) + j.rot;
+    tfs.push({ dx: px + j.dx, dy: py + j.dy, rot, sx: 0.85 * (1 + j.sx), sy: 0.85 * (1 + j.sy) });
+  }
+  return tfs;
+}
+
+// ── Fusión de trazos (ligaduras) ────────────────────────────────
+function dirOf(st) {
+  if (!st.pts.length) return null;
+  const a = st.pts[0], b = st.pts[st.pts.length - 1];
+  const dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy);
+  return l < 1e-6 ? null : { x: dx / l, y: dy / l };
+}
+function proj(st, d) {
+  const n = { x: -d.y, y: d.x };
+  let min = Infinity, max = -Infinity, off = 0, c = 0;
+  for (const p of st.pts) {
+    const t = p.x * d.x + p.y * d.y, o = p.x * n.x + p.y * n.y;
+    if (t < min) min = t; if (t > max) max = t;
+    off += o; c++;
+  }
+  return { min, max, off: off / c };
+}
+function tryMerge(a, b, thr) {
+  const da = dirOf(a), db = dirOf(b);
+  if (!da || !db) return null;
+  if (Math.abs(da.x * db.y - da.y * db.x) > Math.sin(20 * Math.PI / 180)) return null;
+  const A = proj(a, da), B = proj(b, da);
+  const ov = Math.min(A.max, B.max) - Math.max(A.min, B.min);
+  const un = Math.max(A.max, B.max) - Math.min(A.min, B.min);
+  if (un <= 0 || ov / un < thr) return null;
+  if (Math.abs(A.off - B.off) > 0.15) return null;
+  const t0 = Math.min(A.min, B.min), t1 = Math.max(A.max, B.max);
+  const off = (A.off + B.off) / 2;
+  const nx = -da.y, ny = da.x;
+  const pts = [
+    { x: da.x * t0 + nx * off, y: da.y * t0 + ny * off },
+    { x: da.x * t1 + nx * off, y: da.y * t1 + ny * off }
+  ];
+  return { id: ++nextId, unit: '⚭', kind: 'merge', units: [...new Set([...a.units, ...b.units])], pts };
+}
+function mergePass(strokes, merges, thr) {
+  let changed = true, guard = 0;
+  while (changed && guard++ < 14) {
+    changed = false;
+    for (let i = 0; i < strokes.length && !changed; i++) {
+      for (let j = i + 1; j < strokes.length && !changed; j++) {
+        const m = tryMerge(strokes[i], strokes[j], thr);
+        if (m) {
+          merges.push({ from: [strokes[i].id, strokes[j].id], to: m.id, units: [...m.units] });
+          strokes.splice(j, 1); strokes.splice(i, 1, m);
+          changed = true;
+        }
+      }
+    }
+  }
+  return strokes;
+}
+
+function normalizeStrokes(strokes) {
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const st of strokes) for (const p of st.pts) {
+    if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
+    if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
+  }
+  if (!isFinite(minX)) return;
+  const cxm = (minX + maxX) / 2, cym = (minY + maxY) / 2;
+  const s = Math.max(maxX - minX, maxY - minY) || 1;
+  const k = 2 / s;
+  for (const st of strokes) for (const p of st.pts) {
+    p.x = (p.x - cxm) * k; p.y = (p.y - cym) * k;
+  }
+}
+
+function buildCore(units) {
+  const skeleton = state.skeleton;
+  const tfs = skeleton === 0 ? layoutAxis(units, state.organic)
+    : skeleton === 1 ? layoutDiagonal(units, state.organic)
+    : layoutCurve(units, state.organic);
+  const strokes = [];
+  units.forEach((ch, i) => {
+    const glyph = LETTER_GLYPHS[ch] || LETTER_GLYPHS.X;
+    const tf = tfs[i];
+    const cos = Math.cos(tf.rot), sin = Math.sin(tf.rot);
+    glyph.forEach(pts => {
+      const mapped = pts.map(([x, y]) => {
+        const x2 = x * tf.sx + tf.dx, y2 = y * tf.sy + tf.dy;
+        return { x: x2 * cos - y2 * sin, y: x2 * sin + y2 * cos };
+      });
+      strokes.push({ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: mapped });
+    });
+  });
+  const merges = [];
+  let list = state.autoJoin ? mergePass(strokes, merges, 0.45) : strokes;
+  normalizeStrokes(list);
+  return { strokes: list, merges };
+}
+
+// ── Simplificar: re-fusión agresiva + limpieza ──────────────────
+function simplifyCore() {
+  const before = state.core.strokes.length;
+  const merges = state.core.merges;
+  let list = mergePass([...state.core.strokes], merges, 0.3);
+  const eps = 0.012;
+  const out = [];
+  for (const st of list) {
+    let dup = false;
+    for (const o of out) {
+      if (o.pts.length !== st.pts.length) continue;
+      let same = true;
+      for (let i = 0; i < o.pts.length; i++) {
+        if (Math.hypot(o.pts[i].x - st.pts[i].x, o.pts[i].y - st.pts[i].y) > eps) { same = false; break; }
+      }
+      if (same) { dup = true; break; }
+    }
+    if (!dup) out.push(st);
+  }
+  list = out;
+  const len = st => st.pts.reduce((s, p, i) => i ? s + Math.hypot(p.x - st.pts[i - 1].x, p.y - st.pts[i - 1].y) : 0, 0);
+  const avg = list.length ? list.reduce((s, st) => s + len(st), 0) / list.length : 1;
+  const keep = [];
+  for (const st of list) {
+    if (len(st) < avg * 0.18) { // aislado corto
+      const near = list.some(o => o !== st && o.pts.some(p => st.pts.some(q => Math.hypot(p.x - q.x, p.y - q.y) < 0.09)));
+      if (!near) continue;
+    }
+    keep.push(st);
+  }
+  state.core.strokes = keep;
+  state.core.removed.push({ n: before - keep.length, when: 'simplify' });
+  state.userDecisions.push({ type: 'simplify', removed: before - keep.length });
+  return before - keep.length;
+}
+
+// ── Geometría de escena ─────────────────────────────────────────
+function starGeom() {
+  const p = state.frame.star;
+  const n = p.points * 2;
+  const outer = RING_R * (p.scale / 100) + (p.gap / 100) * 42;
+  const inner = Math.max(outer * (p.inner / 100), CORE_R + 22 + (p.gap / 100) * 40);
+  const a0 = (p.rotation * Math.PI) / 180 - Math.PI / 2;
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const a = a0 + (i * Math.PI) / p.points;
+    const r = i % 2 ? inner : outer;
+    pts.push({ x: CX + Math.cos(a) * r, y: CY + Math.sin(a) * r });
+  }
+  const chordStep = p.points === 8 ? 3 : 2;
+  const chordVerts = [];
+  for (let k = 0; k < p.points; k++) {
+    const j = (k * chordStep) % p.points;
+    if (j <= k) continue;
+    chordVerts.push({ a: pts[k * 2], b: pts[j * 2] });
+  }
+  return { pts, chordVerts, chordStep };
+}
+
+function inscriptionGeom() {
+  const p = state.inscription;
+  const txt = p.text.trim().toUpperCase();
+  if (!txt) return { chars: [] };
+  const fs = p.size, sp = p.spacing;
+  const chars = [];
+  let seq = [...txt];
+  if (p.orientation === 'mirror') seq.reverse();
+  if (p.pos === 'top' || p.pos === 'bottom') {
+    const adv = fs * 0.62 + sp;
+    const total = seq.length * adv;
+    const x0 = CX - total / 2 + adv / 2;
+    const y = p.pos === 'top' ? CY - RING_R - fs * 1.25 : CY + RING_R + fs * 1.25;
+    seq.forEach((ch, i) => chars.push({ ch, x: x0 + i * adv, y, rot: 0 }));
+  } else {
+    const R = RING_R + fs * 1.1;
+    const arc = Math.max(0.5, Math.min(1.35, (seq.length * (fs * 0.62 + sp)) / R));
+    const a0 = -Math.PI / 2 - arc / 2;
+    const lower = p.pos === 'lowerArc';
+    seq.forEach((ch, i) => {
+      const t = seq.length === 1 ? 0.5 : i / (seq.length - 1);
+      const a = a0 + arc * t;
+      const ca = lower ? a + Math.PI : a;
+      const rot = lower ? a - Math.PI / 2 : a + Math.PI / 2;
+      chars.push({ ch, x: CX + Math.cos(ca) * R, y: CY + Math.sin(ca) * R, rot });
+    });
+  }
+  return { chars, fs, sp };
+}
+
+function buildScene() {
+  const layers = [];
+  const f = state.frame;
+  if (f.circle.enabled) layers.push({ type: 'circle', params: f.circle, geom: { r: RING_R * (f.circle.scale / 100) } });
+  if (f.star.enabled) layers.push({ type: 'star', params: f.star, geom: starGeom() });
+  if (state.inscription.enabled && state.inscription.text.trim()) layers.push({ type: 'inscription', params: state.inscription, geom: inscriptionGeom() });
+  layers.push({ type: 'core', strokes: state.core.strokes, terminals: state.terminals.enabled });
+  if (state.stamps.length) layers.push({ type: 'stamps', stamps: state.stamps });
+  return { W, H, CX, CY, coreR: CORE_R, layers };
+}
+
+function mapPoint(p, mirror) {
+  const x = CX + p.x * CORE_R;
+  const y = CY + p.y * CORE_R;
+  return mirror ? { x: 2 * CX - x, y } : { x, y };
+}
+
+// ── Pintado (canvas + geometría compartida con SVG) ─────────────
+function pathFromPts(pts, mirror) {
+  if (!pts.length) return '';
+  const mapped = pts.map(p => mapPoint(p, mirror));
+  let d = `M ${mapped[0].x.toFixed(2)} ${mapped[0].y.toFixed(2)}`;
+  if (mapped.length >= 4) {
+    for (let i = 1; i < mapped.length - 1; i++) {
+      const p0 = mapped[Math.max(0, i - 1)], p1 = mapped[i], p2 = mapped[i + 1], p3 = mapped[Math.min(mapped.length - 1, i + 2)];
+      d += ` C ${(p1.x + (p2.x - p0.x) / 6).toFixed(2)} ${(p1.y + (p2.y - p0.y) / 6).toFixed(2)} ${(p2.x - (p3.x - p1.x) / 6).toFixed(2)} ${(p2.y - (p3.y - p1.y) / 6).toFixed(2)} ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+    }
+    const last = mapped[mapped.length - 1];
+    d += ` L ${last.x.toFixed(2)} ${last.y.toFixed(2)}`;
+  } else {
+    for (let i = 1; i < mapped.length; i++) d += ` L ${mapped[i].x.toFixed(2)} ${mapped[i].y.toFixed(2)}`;
+  }
+  return d;
+}
+
+function tracePath(ctx, pts, mirror) {
+  if (pts.length < 2) return;
+  const mapped = pts.map(p => mapPoint(p, mirror));
+  ctx.beginPath();
+  ctx.moveTo(mapped[0].x, mapped[0].y);
+  if (mapped.length >= 4) {
+    for (let i = 1; i < mapped.length - 1; i++) {
+      const p0 = mapped[Math.max(0, i - 1)], p1 = mapped[i], p2 = mapped[i + 1], p3 = mapped[Math.min(mapped.length - 1, i + 2)];
+      ctx.bezierCurveTo(
+        p1.x + (p2.x - p0.x) / 6, p1.y + (p2.y - p0.y) / 6,
+        p2.x - (p3.x - p1.x) / 6, p2.y - (p3.y - p1.y) / 6,
+        p2.x, p2.y);
+    }
+    ctx.lineTo(mapped[mapped.length - 1].x, mapped[mapped.length - 1].y);
+  } else {
+    for (let i = 1; i < mapped.length; i++) ctx.lineTo(mapped[i].x, mapped[i].y);
   }
   ctx.stroke();
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  DECORATIONS
-// ═══════════════════════════════════════════════════════════════
-function drawDecorations(ctx, W, H) {
-  ctx.save();
-  // Double border
+function drawBackdrop(ctx, withVignette) {
+  ctx.fillStyle = '#0a080d';
+  ctx.fillRect(0, 0, W, H);
   ctx.strokeStyle = 'rgba(184,134,11,0.10)'; ctx.lineWidth = 1;
   ctx.strokeRect(10, 10, W - 20, H - 20);
   ctx.strokeStyle = 'rgba(184,134,11,0.05)'; ctx.lineWidth = 0.5;
   ctx.strokeRect(16, 16, W - 32, H - 32);
-
-  // Corner ornaments
-  for (const [x,y] of [[14,14],[W-14,14],[14,H-14],[W-14,H-14]]) {
+  for (const [x, y] of [[14, 14], [W - 14, 14], [14, H - 14], [W - 14, H - 14]]) {
     ctx.strokeStyle = 'rgba(184,134,11,0.15)'; ctx.lineWidth = 0.8;
     ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.stroke();
     ctx.strokeStyle = 'rgba(184,134,11,0.08)'; ctx.lineWidth = 0.5;
     ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.stroke();
   }
-  ctx.restore();
+  if (withVignette) {
+    const g = ctx.createRadialGradient(CX, CY, 0, CX, CY, RING_R * 1.4);
+    g.addColorStop(0, 'rgba(18,14,26,0)');
+    g.addColorStop(1, 'rgba(0,0,0,0.4)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
 }
 
-const PLANET_INFO = [
-  { name:'Saturno',  sephirah:'Binah',  num:3,  sym:'♄' },
-  { name:'Jupiter',  sephirah:'Chesed', num:4,  sym:'♃' },
-  { name:'Marte',    sephirah:'Geburah',num:5,  sym:'♂' },
-  { name:'Sol',      sephirah:'Tiphareth',num:6,sym:'☉' },
-  { name:'Venus',    sephirah:'Netzach',num:7,  sym:'♀' },
-  { name:'Mercurio', sephirah:'Hod',    num:8,  sym:'☿' },
-  { name:'Luna',     sephirah:'Yesod',  num:9,  sym:'☽' },
-];
-
-// ═══════════════════════════════════════════════════════════════
-//  RENDER
-// ═══════════════════════════════════════════════════════════════
-// V1: composición personal determinista. Cada trazo nace de una unidad reducida.
-engines.spare = {
-  render(ctx, cx, cy, radius, units) {
-    if (!units.length) return;
-    const scale = radius * (units.length > 8 ? .34 : .46);
-    const traces = [];
-    units.forEach((letter, index) => {
-      const glyph = LETTER_GLYPHS[letter] || LETTER_GLYPHS.X;
-      const stroke = glyph.reduce((best, candidate) => candidate.length > best.length ? candidate : best, glyph[0]);
-      const angle = ((index % 4) - 1.5) * 0.22;
-      const offsetX = ((index % 3) - 1) * radius * .09;
-      const offsetY = (index - (units.length - 1) / 2) * radius * .045;
-      const points = stroke.map(([x, y]) => ({ x: cx + offsetX + (x * scale * Math.cos(angle) - y * scale * Math.sin(angle)), y: cy + offsetY + (x * scale * Math.sin(angle) + y * scale * Math.cos(angle)) }));
-      traces.push(points);
-      sigilProvenance.push({ unit: letter, index, primitive: points.length > 3 ? 'bezier' : 'segment' });
-    });
-    const draw = () => traces.forEach(points => { ctx.beginPath(); ctx.moveTo(points[0].x, points[0].y); points.slice(1).forEach(point => ctx.lineTo(point.x, point.y)); ctx.stroke(); });
-    if (optGlow) { ctx.save(); ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 16; ctx.strokeStyle = 'rgba(184,134,11,.22)'; ctx.lineWidth = 7; ctx.lineCap = 'round'; draw(); ctx.restore(); }
-    ctx.save(); ctx.strokeStyle = '#c99a1a'; ctx.lineWidth = 2.8; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; draw();
-    ctx.fillStyle = '#0a080d'; ctx.strokeStyle = '#c99a1a'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(traces[0][0].x, traces[0][0].y, 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    const end = traces[traces.length - 1].at(-1), last = traces[traces.length - 1].at(-2) || end;
-    const dx = end.x - last.x, dy = end.y - last.y, len = Math.hypot(dx, dy) || 1, nx = -dy / len * 6, ny = dx / len * 6;
-    ctx.beginPath(); ctx.moveTo(end.x - nx, end.y - ny); ctx.lineTo(end.x + nx, end.y + ny); ctx.stroke(); ctx.restore();
+function paintLayer(ctx, layer) {
+  const mirror = state.presentation.mirror;
+  switch (layer.type) {
+    case 'circle': {
+      const p = layer.params;
+      ctx.save();
+      ctx.globalAlpha = p.opacity / 100;
+      ctx.strokeStyle = '#b8860b';
+      ctx.lineWidth = p.thickness / 10;
+      ctx.beginPath(); ctx.arc(CX, CY, layer.geom.r, 0, Math.PI * 2); ctx.stroke();
+      if (p.double) {
+        ctx.globalAlpha = p.opacity / 140;
+        ctx.lineWidth = p.thickness / 20;
+        ctx.beginPath(); ctx.arc(CX, CY, layer.geom.r * 0.92, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(CX, CY, layer.geom.r * 1.08, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.restore();
+      break;
+    }
+    case 'star': {
+      const p = layer.params, g = layer.geom;
+      ctx.save();
+      ctx.globalAlpha = p.opacity / 100;
+      ctx.strokeStyle = '#b8860b';
+      ctx.lineWidth = p.thickness / 10;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(g.pts[0].x, g.pts[0].y);
+      for (let i = 1; i < g.pts.length; i++) ctx.lineTo(g.pts[i].x, g.pts[i].y);
+      ctx.closePath();
+      ctx.stroke();
+      if (p.chords) {
+        ctx.globalAlpha = p.opacity / 180;
+        ctx.lineWidth = p.thickness / 22;
+        for (const c of g.chordVerts) {
+          ctx.beginPath(); ctx.moveTo(c.a.x, c.a.y); ctx.lineTo(c.b.x, c.b.y); ctx.stroke();
+        }
+      }
+      ctx.restore();
+      break;
+    }
+    case 'inscription': {
+      const p = layer.params;
+      ctx.save();
+      ctx.fillStyle = 'rgba(201,154,26,.85)';
+      ctx.font = p.size + 'px Georgia';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      for (const c of layer.geom.chars) {
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        if (c.rot) ctx.rotate(c.rot);
+        ctx.fillText(c.ch, 0, 0);
+        ctx.restore();
+      }
+      ctx.restore();
+      break;
+    }
+    case 'core': {
+      const glow = state.presentation.glow;
+      ctx.save();
+      ctx.strokeStyle = '#c99a1a';
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      if (glow) { ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 14; ctx.lineWidth = 7; ctx.strokeStyle = 'rgba(184,134,11,.28)'; for (const st of layer.strokes) tracePath(ctx, st.pts, mirror); }
+      ctx.shadowBlur = 0;
+      ctx.lineWidth = 2.8;
+      ctx.strokeStyle = '#c99a1a';
+      for (const st of layer.strokes) tracePath(ctx, st.pts, mirror);
+      if (layer.terminals) {
+        const style = state.terminals.style;
+        for (const st of layer.strokes) {
+          const ends = [mapPoint(st.pts[0], mirror), mapPoint(st.pts[st.pts.length - 1], mirror)];
+          for (const e of ends) {
+            ctx.fillStyle = '#c99a1a';
+            ctx.beginPath();
+            if (style === 'dot') { ctx.arc(e.x, e.y, 3, 0, Math.PI * 2); ctx.fill(); }
+            else if (style === 'ring') { ctx.arc(e.x, e.y, 3.6, 0, Math.PI * 2); ctx.stroke(); }
+            else { ctx.moveTo(e.x - 3, e.y - 3); ctx.lineTo(e.x + 3, e.y + 3); ctx.moveTo(e.x + 3, e.y - 3); ctx.lineTo(e.x - 3, e.y + 3); ctx.stroke(); }
+          }
+        }
+      }
+      ctx.restore();
+      break;
+    }
+    case 'stamps': {
+      ctx.save();
+      for (const st of layer.stamps) {
+        ctx.font = '20px serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'rgba(184,134,11,0.5)';
+        ctx.fillText(st.sym, st.x, st.y);
+      }
+      ctx.restore();
+      break;
+    }
   }
-};
-
-function drawRitualStar(ctx, cx, cy, radius, points) {
-  const vertices = [];
-  for (let i = 0; i < points * 2; i++) {
-    const angle = -Math.PI / 2 + i * Math.PI / points;
-    const r = i % 2 === 0 ? radius : radius * .42;
-    vertices.push({ x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r });
-  }
-  ctx.save();
-  if (optGlow) { ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 18; ctx.strokeStyle = 'rgba(184,134,11,.24)'; ctx.lineWidth = 5; }
-  ctx.beginPath(); ctx.moveTo(vertices[0].x, vertices[0].y); vertices.slice(1).forEach(p => ctx.lineTo(p.x, p.y)); ctx.closePath(); ctx.stroke();
-  ctx.shadowBlur = 0; ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.7; ctx.beginPath(); ctx.moveTo(vertices[0].x, vertices[0].y); vertices.slice(1).forEach(p => ctx.lineTo(p.x, p.y)); ctx.closePath(); ctx.stroke(); ctx.restore();
 }
 
-function drawLatinInscription(ctx, text, cx, cy, radius) {
-  if (!text.trim()) return;
-  ctx.save(); ctx.fillStyle = 'rgba(201,154,26,.82)'; ctx.font = '15px Georgia'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.letterSpacing = '2px';
-  ctx.fillText(text.trim().toUpperCase(), cx, cy - radius * 1.12); ctx.restore();
+function paintScene(ctx, transparent) {
+  ctx.clearRect(0, 0, W, H);
+  if (!transparent) drawBackdrop(ctx, true);
+  const scene = buildScene();
+  for (const layer of scene.layers) paintLayer(ctx, layer);
+  return scene;
 }
 
 function render() {
-  sigilProvenance = [];
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0, 0, W, H);
-  if (!optTransparent) { ctx.fillStyle = '#0a080d'; ctx.fillRect(0, 0, W, H); }
-  drawDecorations(ctx, W, H);
-
-  if (!letters.length) return;
-
-  const cx = W / 2, cy = H / 2;
-  const emblemR = Math.min(W, H) * 0.19;
-  const ringR = Math.min(W, H) * 0.34;
-  const n = letters.length;
-  const vals = letters.map(val);
-  const vsum = vals.reduce((a,b)=>a+b,0);
-  const rawStep = 2 + (vsum % Math.max(n - 2, 1));
-  const starStep = Math.min(rawStep, Math.floor(n / 2));
-
-  const ringPts = [];
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * Math.PI * 2 - Math.PI / 2;
-    ringPts.push({ x: cx + ringR * Math.cos(a), y: cy + ringR * Math.sin(a) });
-  }
-
-  const tforms = [tId];
-  if (optMirror) tforms.push(tMirror(cx));
-  if (optRadial) {
-    tforms.push(tRot90(cx, cy));
-    tforms.push(tRot180(cx, cy));
-    tforms.push(tRot270(cx, cy));
-  }
-
-  if (!optTransparent) {
-    const vig = ctx.createRadialGradient(cx, cy, 0, cx, cy, ringR * 1.4);
-    vig.addColorStop(0, 'rgba(18,14,26,0)');
-    vig.addColorStop(1, 'rgba(0,0,0,0.4)');
-    ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
-  }
-
-  for (const tf of tforms) {
-    const tcx = tf.x ? tf.x(cx, cy) : cx;
-    const tcy = tf.y ? tf.y(cx, cy) : cy;
-
-    // Layer 0: Outer circles
-    if (optCircle) {
-      ctx.strokeStyle = 'rgba(184,134,11,0.25)'; ctx.lineWidth = 1.2;
-      ctx.beginPath(); ctx.arc(tcx, tcy, ringR, 0, Math.PI * 2); ctx.stroke();
-      ctx.strokeStyle = 'rgba(184,134,11,0.06)'; ctx.lineWidth = 0.5;
-      ctx.beginPath(); ctx.arc(tcx, tcy, ringR * 0.7, 0, Math.PI * 2); ctx.stroke();
-    }
-
-    // Layer 1: Outer polygon + star polygon
-    if (n > 1 && activeEngines.includes('star')) {
-      const tRing = ringPts.map(p => ({ x: tf.x ? tf.x(p.x, p.y) : p.x, y: tf.y ? tf.y(p.x, p.y) : p.y }));
-
-      // Glow polygon
-      if (optGlow) {
-        ctx.save();
-        ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 18;
-        ctx.strokeStyle = 'rgba(184,134,11,0.08)'; ctx.lineWidth = 3;
-        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-        ctx.beginPath(); ctx.moveTo(tRing[0].x, tRing[0].y);
-        for (let i = 1; i < n; i++) ctx.lineTo(tRing[i].x, tRing[i].y);
-        ctx.closePath(); ctx.stroke(); ctx.restore();
-      }
-
-      // Solid polygon
-      ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.5;
-      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      ctx.beginPath(); ctx.moveTo(tRing[0].x, tRing[0].y);
-      for (let i = 1; i < n; i++) ctx.lineTo(tRing[i].x, tRing[i].y);
-      ctx.closePath(); ctx.stroke();
-
-      // Star polygon (every step-th point)
-      drawStarPolygon(ctx, tRing, starStep, optGlow);
-    }
-
-    // Layer ritual: estrella e inscripción. No altera el núcleo.
-    if (optStar) drawRitualStar(ctx, tcx, tcy, ringR * .82, optStarPoints);
-    drawLatinInscription(ctx, optInscription, tcx, tcy, ringR);
-    // Layer 2: Dots at ring positions
-    if (optDots) {
-      for (let i = 0; i < n; i++) {
-        const p = { x: tf.x ? tf.x(ringPts[i].x, ringPts[i].y) : ringPts[i].x,
-                    y: tf.y ? tf.y(ringPts[i].x, ringPts[i].y) : ringPts[i].y };
-        ctx.fillStyle = '#b8860b';
-        ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#0a080d';
-        ctx.beginPath(); ctx.arc(p.x, p.y, 1.2, 0, Math.PI * 2); ctx.fill();
-      }
-    }
-
-    // Layer 3-4: Central emblem (all active engines)
-    for (const ename of activeEngines) {
-      ctx.save();
-      if (activeEngines.length > 1) ctx.globalAlpha = 0.65;
-      const engineRadius = ename === 'spare' ? Math.min(W,H) * 0.31 : emblemR;
-      engines[ename].render(ctx, tcx, tcy, engineRadius, letters);
-      ctx.restore();
-    }
-
-    // Layer 5: Stamps
-    for (const st of stamps) {
-      const sp = { x: tf.x ? tf.x(st.x, st.y) : st.x, y: tf.y ? tf.y(st.x, st.y) : st.y };
-      ctx.save(); ctx.translate(sp.x, sp.y);
-      ctx.font = '20px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillStyle = 'rgba(184,134,11,0.5)'; ctx.fillText(st.sym, 0, 0);
-      ctx.restore();
-    }
-  }
-
+  paintScene(ctx, state.chkTransparent ? true : false);
+  state._scene = buildScene();
+  updatePreview();
+  if (editMode) renderEditHandles();
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  GENERATE
-// ═══════════════════════════════════════════════════════════════
+// ── Vista previa 80×80 ──────────────────────────────────────────
+const previewCanvas = document.getElementById('previewCanvas');
+function updatePreview() {
+  const box = document.getElementById('previewCanvas').closest('.preview-box');
+  if (!state.presentation.preview) { box.style.display = 'none'; return; }
+  box.style.display = 'flex';
+  const pc = previewCanvas.getContext('2d');
+  pc.clearRect(0, 0, 80, 80);
+  pc.drawImage(canvas, 0, 0, W, H, 0, 0, 80, 80);
+}
+
+// ── SVG real por capas ──────────────────────────────────────────
+function svgPathFor(pts, mirror) { return pathFromPts(pts, mirror); }
+
+function buildSVG() {
+  const transparent = document.getElementById('chkTransparent').checked;
+  const scene = buildScene();
+  const mirror = state.presentation.mirror;
+  const parts = [`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">`];
+  if (!transparent) parts.push(`<rect width="${W}" height="${H}" fill="#0a080d"/>`);
+  for (const layer of scene.layers) {
+    const g = layer.params ? layer.params : {};
+    parts.push(`<g data-layer="${layer.type}" ${layer.type === 'core' ? 'fill="none" stroke="#c99a1a" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"' : ''}>`);
+    switch (layer.type) {
+      case 'circle': {
+        const p = layer.params, r = layer.geom.r;
+        parts.push(`<circle cx="${CX}" cy="${CY}" r="${r.toFixed(2)}" fill="none" stroke="#b8860b" stroke-width="${(p.thickness / 10).toFixed(2)}" opacity="${(p.opacity / 100).toFixed(2)}"/>`);
+        if (p.double) {
+          parts.push(`<circle cx="${CX}" cy="${CY}" r="${(r * 0.92).toFixed(2)}" fill="none" stroke="#b8860b" stroke-width="${(p.thickness / 20).toFixed(2)}" opacity="${(p.opacity / 140).toFixed(2)}"/>`);
+          parts.push(`<circle cx="${CX}" cy="${CY}" r="${(r * 1.08).toFixed(2)}" fill="none" stroke="#b8860b" stroke-width="${(p.thickness / 20).toFixed(2)}" opacity="${(p.opacity / 140).toFixed(2)}"/>`);
+        }
+        break;
+      }
+      case 'star': {
+        const p = layer.params, g2 = layer.geom;
+        const d = 'M' + g2.pts.map(p2 => `${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`).join(' L') + ' Z';
+        parts.push(`<path d="${d}" fill="none" stroke="#b8860b" stroke-width="${(p.thickness / 10).toFixed(2)}" stroke-linejoin="round" opacity="${(p.opacity / 100).toFixed(2)}"/>`);
+        if (p.chords) {
+          for (const c of g2.chordVerts) {
+            parts.push(`<path d="M ${c.a.x.toFixed(2)} ${c.a.y.toFixed(2)} L ${c.b.x.toFixed(2)} ${c.b.y.toFixed(2)}" fill="none" stroke="#b8860b" stroke-width="${(p.thickness / 22).toFixed(2)}" opacity="${(p.opacity / 180).toFixed(2)}"/>`);
+          }
+        }
+        break;
+      }
+      case 'inscription': {
+        for (const c of layer.geom.chars) {
+          const t = c.rot ? ` transform="translate(${c.x.toFixed(2)} ${c.y.toFixed(2)}) rotate(${(c.rot * 180 / Math.PI).toFixed(2)})"` : ` x="${c.x.toFixed(2)}" y="${c.y.toFixed(2)}"`;
+          parts.push(`<text${t} text-anchor="middle" dominant-baseline="middle" font-family="Georgia,serif" font-size="${layer.params.size}" fill="rgba(201,154,26,0.85)">${esc(c.ch)}</text>`);
+        }
+        break;
+      }
+      case 'core': {
+        for (const st of layer.strokes) parts.push(`<path d="${svgPathFor(st.pts, mirror)}"/>`);
+        if (state.terminals.enabled) {
+          const style = state.terminals.style;
+          for (const st of layer.strokes) {
+            for (const p0 of [st.pts[0], st.pts[st.pts.length - 1]]) {
+              const e = mapPoint(p0, mirror);
+              if (style === 'dot') parts.push(`<circle cx="${e.x.toFixed(2)}" cy="${e.y.toFixed(2)}" r="3" fill="#c99a1a" stroke="none"/>`);
+              else if (style === 'ring') parts.push(`<circle cx="${e.x.toFixed(2)}" cy="${e.y.toFixed(2)}" r="3.6" fill="none" stroke="#c99a1a" stroke-width="1.4"/>`);
+              else parts.push(`<path d="M ${(e.x - 3).toFixed(2)} ${(e.y - 3).toFixed(2)} L ${(e.x + 3).toFixed(2)} ${(e.y + 3).toFixed(2)} M ${(e.x + 3).toFixed(2)} ${(e.y - 3).toFixed(2)} L ${(e.x - 3).toFixed(2)} ${(e.y + 3).toFixed(2)}" fill="none" stroke="#c99a1a" stroke-width="1.4"/>`);
+            }
+          }
+        }
+        break;
+      }
+      case 'stamps': {
+        for (const st of layer.stamps) {
+          parts.push(`<text x="${st.x.toFixed(2)}" y="${st.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-family="serif" font-size="20" fill="rgba(184,134,11,0.5)">${esc(st.sym)}</text>`);
+        }
+        break;
+      }
+    }
+    parts.push('</g>');
+  }
+  parts.push('</svg>');
+  return parts.join('');
+}
+
+// ── Generar ─────────────────────────────────────────────────────
 function generate() {
   const t = document.getElementById('intention').value.trim();
   if (!t) { showToast('Escribe una intención'); return; }
-  const reduction = getReduction(t);
-  letters = [...reduction.reduced];
-  const vnums = reduction.values;
-  const vsum = vnums.reduce((a,b)=>a+b,0);
-  const planet = null;
-  document.getElementById('reductionBox').innerHTML =
-    '<div class="reduction-line"><b>Original</b><span>' + escapeHTML(reduction.original) + '</span></div>' +
-    '<div class="reduction-line"><b>Letras</b><span>' + reduction.cleaned + '</span></div>' +
-    '<div class="reduction-line"><b>Regla</b><span>' + reduction.rule + '</span></div>' +
-    '<div class="reduction-line"><b>Final</b><span>' + reduction.reduced + '</span></div>' +
-    '<div class="reduction-line"><b>Valores</b><span>' + vnums.join(' ') + '</span></div>' +
-    (planet ? '<br><span style="color:var(--gold);font-size:.65rem">' + planet.sym + ' ' + planet.name + ' — ' + planet.sephirah + '</span>' : '');
-  if (letters.length < 2) { showToast('Necesitas al menos 2 letras'); return; }
+  const r = getReduction(t);
+  state.reduction = r;
+  state.intention = t;
+  state.core = buildCore([...r.reduced]);
+  state.userDecisions = [];
+  state.core.removed = [];
+  const box = document.getElementById('reductionBox');
+  box.innerHTML =
+    '<div class="reduction-line"><b>Original</b><span>' + esc(r.original) + '</span></div>' +
+    '<div class="reduction-line"><b>Letras</b><span>' + esc(r.cleaned) + '</span></div>' +
+    '<div class="reduction-line"><b>Regla</b><span>' + esc(r.rule) + '</span></div>' +
+    '<div class="reduction-line"><b>Unidades</b><span>' + esc(r.reduced) + '</span></div>' +
+    '<div class="reduction-line"><b>Valores</b><span>' + r.values.join(' ') + '</span></div>';
+  if (state.core.strokes.length < 2) { showToast('Necesitas al menos 2 unidades'); return; }
   render();
-  showToast(letters.length + ' unidades — glifo personal trazable');
+  showToast(state.core.strokes.length + ' trazos — glifo personal trazable');
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  ENGINE TOGGLE (fusion)
-// ═══════════════════════════════════════════════════════════════
-function escapeHTML(value) {
-  return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
+// ── Presets ─────────────────────────────────────────────────────
+function applyPreset(preset) {
+  const f = state.frame, i = state.inscription;
+  if (preset === 'solo') { f.circle.enabled = false; f.star.enabled = false; i.enabled = false; }
+  else if (preset === 'circle') { f.circle.enabled = true; f.star.enabled = false; i.enabled = false; }
+  else if (preset === 'star') { f.circle.enabled = false; f.star.enabled = true; i.enabled = false; }
+  else if (preset === 'circleStar') { f.circle.enabled = true; f.star.enabled = true; i.enabled = false; }
+  else if (preset === 'circleIns') { f.circle.enabled = true; f.star.enabled = false; i.enabled = true; }
+  syncControls();
+  render();
 }
 
-function toggleEngine(name) {
-  if (name !== 'spare') { showToast('V1 usa solo glifo personal; motores historicos van separados'); return; }
-  const idx = activeEngines.indexOf(name);
-  if (idx >= 0) {
-    if (activeEngines.length < 2) return; // keep at least one
-    activeEngines.splice(idx, 1);
-  } else {
-    if (activeEngines.length >= 2) { showToast('Máximo 2 métodos: más capas destruyen el glifo'); return; }
-    activeEngines.push(name);
+// ── Procedencia ─────────────────────────────────────────────────
+function showProvenance() {
+  const r = state.reduction;
+  const body = document.getElementById('provBody');
+  let html = '';
+  if (!r) { html = '<p style="font-size:.7rem;color:var(--text-dim)">Genera primero.</p>'; }
+  else {
+    html += '<h3>Reducción</h3>' +
+      '<div class="prov-row"><b>Intención</b><span>' + esc(r.original) + '</span></div>' +
+      '<div class="prov-row"><b>Método</b><span>' + esc(r.label) + '</span></div>' +
+      '<div class="prov-row"><b>Regla</b><span>' + esc(r.rule) + '</span></div>' +
+      '<div class="prov-row"><b>Unidades</b><span>' + [...r.reduced].map((c, i) => esc(c) + '(' + r.values[i] + ')').join(' ') + '</span></div>' +
+      '<div class="prov-row"><b>Esqueleto</b><span>' + SKELETON_NAMES[state.skeleton] + '</span></div>';
+    html += '<h3>Trazos (cada uno con su origen)</h3><div class="prov-strokes">';
+    state.core.strokes.forEach(st => {
+      const src = st.kind === 'merge' ? 'fusión ' + st.units.join('+') : 'letra ' + st.unit;
+      html += '<div class="srow"><span class="uid">#' + st.id + '</span><span>' + esc(src) + ' · ' + st.pts.length + ' pts</span></div>';
+    });
+    html += '</div>';
+    if (state.userDecisions.length) {
+      html += '<h3>Decisiones de usuario</h3><div class="prov-strokes">';
+      state.userDecisions.forEach(d => { html += '<div class="srow"><span class="uid">·</span><span>' + esc(d.type + (d.removed ? ' (' + d.removed + ' trazos)' : '')) + '</span></div>'; });
+      html += '</div>';
+    }
+    const f = state.frame;
+    html += '<h3>Capas rituales</h3>' +
+      '<div class="prov-row"><b>Círculo</b><span>' + (f.circle.enabled ? 'activo' : 'inactivo') + '</span></div>' +
+      '<div class="prov-row"><b>Estrella</b><span>' + (f.star.enabled ? f.star.points + ' puntas' : 'inactiva') + '</span></div>' +
+      '<div class="prov-row"><b>Inscripción</b><span>' + (state.inscription.enabled && state.inscription.text ? esc(state.inscription.text) + ' · ' + state.inscription.pos : 'inactiva') + '</span></div>';
+    html += '<h3>Cómo trazar a mano</h3><p style="font-size:.68rem;color:var(--text-dim);line-height:1.5">' +
+      '1) Escribe la intención y aplica la regla nombrada. 2) Elige el eje dominante de una letra. ' +
+      '3) Reutiliza trazos compatibles (barras y espina compartidos). 4) Añade una curva única. ' +
+      '5) Borra todo trazo sin función y redibuja de memoria.</p>';
+    html += '<p style="font-size:.62rem;color:var(--text-dim);margin-top:8px">La procedencia se muestra aquí pero nunca se exporta al SVG.</p>';
   }
-  refreshEngineUI();
-  if (letters.length) render();
+  body.innerHTML = html;
+  document.getElementById('provModal').classList.add('open');
 }
-function refreshEngineUI() {
-  document.querySelectorAll('.fam-btn').forEach(b => {
-    b.classList.toggle('active', activeEngines.includes(b.dataset.engine));
+
+// ── Edición de trazos ───────────────────────────────────────────
+let editMode = false, selectedStroke = null, editing = { type: null, strokeId: null, ptIdx: null, moved: false };
+
+function editPoints() {
+  const strokes = state.core.strokes;
+  if (!strokes.length) return { stroke: null, point: -1 };
+  let best = null, bestD = Infinity;
+  const screen = [];
+  strokes.forEach((st, i) => st.pts.forEach((p, j) => screen.push({ st: st, i: i, j: j, x: p.x, y: p.y })));
+  for (const s of screen) {
+    const p = mapPoint({ x: s.x, y: s.y }, state.presentation.mirror);
+    const d = Math.hypot(p.x - editing.mx, p.y - editing.my);
+    if (d < 10 && d < bestD) { bestD = d; best = { type: 'point', stroke: s.st, i: s.i, j: s.j }; }
+  }
+  if (!best) {
+    let bestS = null, bestSD = Infinity;
+    for (const st of strokes) {
+      const mapped = st.pts.map(p => mapPoint(p, state.presentation.mirror));
+      for (let k = 0; k < mapped.length - 1; k++) {
+        const d = segDist(editing.mx, editing.my, mapped[k].x, mapped[k].y, mapped[k + 1].x, mapped[k + 1].y);
+        if (d < 7 && d < bestSD) { bestSD = d; bestS = st; }
+      }
+    }
+    if (bestS) best = { type: 'stroke', stroke: bestS };
+  }
+  return best;
+}
+function segDist(px, py, x1, y1, x2, y2) {
+  const dx = x2 - x1, dy = y2 - y1;
+  const l = dx * dx + dy * dy;
+  let t = l ? ((px - x1) * dx + (py - y1) * dy) / l : 0;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+}
+
+function renderEditHandles() {
+  if (!editMode) return;
+  ctx.save();
+  for (const st of state.core.strokes) {
+    const mapped = st.pts.map(p => mapPoint(p, state.presentation.mirror));
+    const active = selectedStroke === st.id;
+    ctx.strokeStyle = active ? '#e6b422' : 'rgba(201,154,26,.55)';
+    ctx.lineWidth = active ? 3.4 : 1.6;
+    tracePath(ctx, st.pts, state.presentation.mirror);
+    ctx.fillStyle = active ? '#e6b422' : '#c99a1a';
+    ctx.strokeStyle = '#0a080d'; ctx.lineWidth = 1;
+    for (const p of mapped) { ctx.beginPath(); ctx.arc(p.x, p.y, active ? 5 : 3.4, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+  }
+  ctx.restore();
+}
+
+function refreshEditList() {
+  const list = document.getElementById('editList');
+  list.innerHTML = '';
+  state.core.strokes.forEach(st => {
+    const chip = document.createElement('button');
+    chip.className = 'edit-chip' + (selectedStroke === st.id ? ' active' : '');
+    chip.textContent = '#' + st.id + ' ' + (st.kind === 'merge' ? st.units.join('+') : st.unit) + ' (' + st.pts.length + ')';
+    chip.addEventListener('click', () => { selectedStroke = st.id; render(); });
+    list.append(chip);
   });
-  document.getElementById('starParams').style.display = activeEngines.includes('star') ? 'block' : 'none';
-  document.getElementById('kameaParams').style.display = activeEngines.includes('kamea') ? 'block' : 'none';
-  document.getElementById('gridParams').style.display = activeEngines.includes('grid') ? 'block' : 'none';
-  document.getElementById('alquimiaParams').style.display = activeEngines.includes('alquimia') ? 'block' : 'none';
+  render();
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  UI
-// ═══════════════════════════════════════════════════════════════
-document.getElementById('btnGenerate').addEventListener('click', generate);
+function strokeById(id) { return state.core.strokes.find(s => s.id === id) || null; }
 
-document.querySelectorAll('.fam-btn').forEach(b => {
-  b.addEventListener('click', () => toggleEngine(b.dataset.engine));
+function editAction(fn, label) {
+  const st = strokeById(selectedStroke);
+  if (!st) { showToast('Selecciona un trazo'); return; }
+  fn(st);
+  state.userDecisions.push({ type: label, stroke: selectedStroke });
+  refreshEditList();
+}
+function rotateStroke(st) {
+  const cx = st.pts.reduce((s, p) => s + p.x, 0) / st.pts.length;
+  const cy = st.pts.reduce((s, p) => s + p.y, 0) / st.pts.length;
+  const a = 15 * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+  st.pts.forEach(p => { const x = p.x - cx, y = p.y - cy; p.x = cx + x * c - y * s; p.y = cy + x * s + y * c; });
+}
+function flipStroke(st, horizontal) {
+  const cx = st.pts.reduce((s, p) => s + p.x, 0) / st.pts.length;
+  const cy = st.pts.reduce((s, p) => s + p.y, 0) / st.pts.length;
+  st.pts.forEach(p => { if (horizontal) p.x = 2 * cx - p.x; else p.y = 2 * cy - p.y; });
+}
+function joinStroke(st) {
+  const idx = state.core.strokes.indexOf(st);
+  if (idx <= 0) { showToast('Es el primer trazo: no hay anterior'); return; }
+  const prev = state.core.strokes[idx - 1];
+  const a = prev.pts[prev.pts.length - 1], b = st.pts[0];
+  if (Math.hypot(a.x - b.x, a.y - b.y) > 0.5) { showToast('Extremos lejanos: no se pueden unir'); return; }
+  const merged = { id: ++nextId, unit: '⚭', kind: 'merge', units: [...new Set([...prev.units, ...st.units])], pts: [...prev.pts, ...st.pts.slice(1)] };
+  state.core.strokes.splice(idx - 1, 2, merged);
+  state.core.merges.push({ from: [prev.id, st.id], to: merged.id, units: [...merged.units] });
+  selectedStroke = merged.id;
+}
+
+// ── UI wiring ───────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+
+function syncControls() {
+  $('chkCircle').checked = state.frame.circle.enabled;
+  $('rngCircleScale').value = state.frame.circle.scale; $('circleScaleVal').textContent = state.frame.circle.scale + '%';
+  $('rngCircleThick').value = state.frame.circle.thickness; $('circleThickVal').textContent = (state.frame.circle.thickness / 10).toFixed(1);
+  $('rngCircleOpacity').value = state.frame.circle.opacity; $('circleOpacityVal').textContent = state.frame.circle.opacity + '%';
+  $('chkCircleDouble').checked = state.frame.circle.double;
+  $('chkStar').checked = state.frame.star.enabled;
+  $('selStarPoints').value = String(state.frame.star.points);
+  $('rngStarScale').value = state.frame.star.scale; $('starScaleVal').textContent = state.frame.star.scale + '%';
+  $('rngStarRot').value = state.frame.star.rotation; $('starRotVal').textContent = state.frame.star.rotation + '°';
+  $('rngStarThick').value = state.frame.star.thickness; $('starThickVal').textContent = (state.frame.star.thickness / 10).toFixed(1);
+  $('rngStarOpacity').value = state.frame.star.opacity; $('starOpacityVal').textContent = state.frame.star.opacity + '%';
+  $('rngStarInner').value = state.frame.star.inner; $('starInnerVal').textContent = state.frame.star.inner + '%';
+  $('rngStarGap').value = state.frame.star.gap; $('starGapVal').textContent = state.frame.star.gap + '%';
+  $('chkStarChords').checked = state.frame.star.chords;
+  $('chkInscription').checked = state.inscription.enabled;
+  $('insText').value = state.inscription.text;
+  $('selInsPos').value = state.inscription.pos;
+  $('rngInsSize').value = state.inscription.size; $('insSizeVal').textContent = state.inscription.size;
+  $('rngInsSpacing').value = state.inscription.spacing; $('insSpacingVal').textContent = state.inscription.spacing;
+  $('selInsOrientation').value = state.inscription.orientation;
+  $('chkGlow').checked = state.presentation.glow;
+  $('chkMirror').checked = state.presentation.mirror;
+  $('chkPreview').checked = state.presentation.preview;
+  $('rngOrganic').value = state.organic; $('organicVal').textContent = state.organic + '%';
+  $('chkJoin').checked = state.autoJoin;
+  $('chkTerminals').checked = state.terminals.enabled;
+  $('selTerminalStyle').value = state.terminals.style;
+  document.querySelectorAll('.skeleton-btn').forEach(b => b.classList.toggle('active', Number(b.dataset.k) === state.skeleton));
+  document.getElementById('selReduction').value = state.reductionMethod;
+  document.getElementById('chkTransparent').checked = state.chkTransparent || false;
+}
+
+function setupRange(id, valId, fmt, cb) {
+  const el = $(id), val = $(valId);
+  el.addEventListener('input', () => { val.textContent = fmt(parseInt(el.value)); cb(parseInt(el.value)); });
+}
+
+$('btnGenerate').addEventListener('click', generate);
+$('selReduction').addEventListener('change', e => { state.reductionMethod = e.target.value; if ($('intention').value.trim()) generate(); });
+
+document.querySelectorAll('.skeleton-btn').forEach(b => {
+  b.addEventListener('click', () => { state.skeleton = Number(b.dataset.k); syncControls(); if ($('intention').value.trim()) generate(); });
+});
+setupRange('rngOrganic', 'organicVal', v => v + '%', v => { state.organic = v; if ($('intention').value.trim()) generate(); });
+$('chkJoin').addEventListener('change', e => { state.autoJoin = e.target.checked; if ($('intention').value.trim()) generate(); });
+$('chkTerminals').addEventListener('change', e => { state.terminals.enabled = e.target.checked; render(); });
+$('selTerminalStyle').addEventListener('change', e => { state.terminals.style = e.target.value; render(); });
+
+document.querySelectorAll('.fam-btn.locked').forEach(b => {
+  b.addEventListener('click', () => showToast('Motor histórico separado: no se mezcla con el glifo personal'));
 });
 
-document.getElementById('chkMirror').addEventListener('change', e => { optMirror = e.target.checked; if(letters.length) render(); });
-document.getElementById('chkRadial').addEventListener('change', e => { optRadial = e.target.checked; if(letters.length) render(); });
-document.getElementById('chkGlow').addEventListener('change', e => { optGlow = e.target.checked; if(letters.length) render(); });
-document.getElementById('chkCircle').addEventListener('change', e => { optCircle = e.target.checked; if(letters.length) render(); });
-document.getElementById('chkDots').addEventListener('change', e => { optDots = e.target.checked; if(letters.length) render(); });
-document.getElementById('chkStar').addEventListener('change', e => { optStar = e.target.checked; if(letters.length) render(); });
-document.getElementById('selStarPoints').addEventListener('change', e => { optStarPoints = Number(e.target.value); if(letters.length) render(); });
-document.getElementById('latinInscription').addEventListener('input', e => { optInscription = e.target.value; if(letters.length) render(); });
+$('chkCircle').addEventListener('change', e => { state.frame.circle.enabled = e.target.checked; render(); });
+setupRange('rngCircleScale', 'circleScaleVal', v => v + '%', v => { state.frame.circle.scale = v; render(); });
+setupRange('rngCircleThick', 'circleThickVal', v => (v / 10).toFixed(1), v => { state.frame.circle.thickness = v; render(); });
+setupRange('rngCircleOpacity', 'circleOpacityVal', v => v + '%', v => { state.frame.circle.opacity = v; render(); });
+$('chkCircleDouble').addEventListener('change', e => { state.frame.circle.double = e.target.checked; render(); });
 
+$('chkStar').addEventListener('change', e => { state.frame.star.enabled = e.target.checked; render(); });
+$('selStarPoints').addEventListener('change', e => { state.frame.star.points = Number(e.target.value); render(); });
+setupRange('rngStarScale', 'starScaleVal', v => v + '%', v => { state.frame.star.scale = v; render(); });
+setupRange('rngStarRot', 'starRotVal', v => v + '°', v => { state.frame.star.rotation = v; render(); });
+setupRange('rngStarThick', 'starThickVal', v => (v / 10).toFixed(1), v => { state.frame.star.thickness = v; render(); });
+setupRange('rngStarOpacity', 'starOpacityVal', v => v + '%', v => { state.frame.star.opacity = v; render(); });
+setupRange('rngStarInner', 'starInnerVal', v => v + '%', v => { state.frame.star.inner = v; render(); });
+setupRange('rngStarGap', 'starGapVal', v => v + '%', v => { state.frame.star.gap = v; render(); });
+$('chkStarChords').addEventListener('change', e => { state.frame.star.chords = e.target.checked; render(); });
 
-// Kamea controls
-document.getElementById('chkGrid').addEventListener('change', e => { optShowGrid = e.target.checked; if(letters.length) render(); });
-document.getElementById('selKamea').addEventListener('change', e => { optKameaType = e.target.value; if(letters.length) render(); });
-document.getElementById('selNodeStyle').addEventListener('change', e => { optNodeStyle = e.target.value; if(letters.length) render(); });
-setupRange('kameaCurve', v => { optKameaCurve = v; if(letters.length) render(); });
+$('chkInscription').addEventListener('change', e => { state.inscription.enabled = e.target.checked; render(); });
+$('insText').addEventListener('input', e => { state.inscription.text = e.target.value; render(); });
+$('selInsPos').addEventListener('change', e => { state.inscription.pos = e.target.value; render(); });
+setupRange('rngInsSize', 'insSizeVal', v => v, v => { state.inscription.size = v; render(); });
+setupRange('rngInsSpacing', 'insSpacingVal', v => v, v => { state.inscription.spacing = v; render(); });
+$('selInsOrientation').addEventListener('change', e => { state.inscription.orientation = e.target.value; render(); });
 
-// Grid controls
-document.getElementById('selGridPattern').addEventListener('change', e => { optGridPattern = e.target.value; engines.grid._nodeCache = null; if(letters.length) render(); });
-document.getElementById('selGridFold').addEventListener('change', e => { optGridFold = e.target.value; if(letters.length) render(); });
-setupRange('gridCurve', v => { optGridCurve = v; if(letters.length) render(); });
-document.getElementById('chkGridShow').addEventListener('change', e => { optGridShow = e.target.checked; if(letters.length) render(); });
-document.getElementById('selGridNodeStyle').addEventListener('change', e => { optGridNodeStyle = e.target.value; if(letters.length) render(); });
-document.getElementById('selGridResonance').addEventListener('change', e => { optGridResonance = e.target.value; if(letters.length) render(); });
+$('chkGlow').addEventListener('change', e => { state.presentation.glow = e.target.checked; render(); });
+$('chkMirror').addEventListener('change', e => { state.presentation.mirror = e.target.checked; render(); });
+$('chkPreview').addEventListener('change', e => { state.presentation.preview = e.target.checked; updatePreview(); });
+$('chkTransparent').addEventListener('change', e => { state.chkTransparent = e.target.checked; render(); });
 
-// Alquimia controls
-document.getElementById('selNudoStyle').addEventListener('change', e => { optNudoStyle = e.target.value; if(letters.length) render(); });
-document.getElementById('selTerminalStyle').addEventListener('change', e => { optTerminalStyle = e.target.value; if(letters.length) render(); });
-document.getElementById('chkLoops').addEventListener('change', e => { optLoops = e.target.checked; if(letters.length) render(); });
-document.getElementById('selDensity').addEventListener('change', e => { optDensity = e.target.value; if(letters.length) render(); });
+[['btnPresetSolo', 'solo'], ['btnPresetCircle', 'circle'], ['btnPresetStar', 'star'], ['btnPresetCircleStar', 'circleStar'], ['btnPresetCircleIns', 'circleIns']].forEach(([id, p]) => $('btnPresetSolo') && $(id).addEventListener('click', () => applyPreset(p)));
 
-function setupRange(id, cb) {
-  const el = document.getElementById(id);
-  const val = document.getElementById(id + 'Val');
-  if (val) val.textContent = el.value + '%';
-  el.addEventListener('input', e => {
-    if (val) val.textContent = e.target.value + '%';
-    cb(parseInt(e.target.value));
-  });
+$('btnProvenance').addEventListener('click', showProvenance);
+$('btnProvClose').addEventListener('click', () => $('provModal').classList.remove('open'));
+
+$('btnEditStrokes').addEventListener('click', () => { editMode = !editMode; if (editMode) { refreshEditList(); } else { selectedStroke = null; render(); } });
+$('btnEditClose').addEventListener('click', () => { editMode = false; selectedStroke = null; render(); });
+$('btnStRot').addEventListener('click', () => editAction(rotateStroke, 'rotar'));
+$('btnStFlipH').addEventListener('click', () => editAction(st => flipStroke(st, true), 'reflejar-H'));
+$('btnStFlipV').addEventListener('click', () => editAction(st => flipStroke(st, false), 'reflejar-V'));
+$('btnStJoin').addEventListener('click', () => editAction(joinStroke, 'unir'));
+$('btnStDup').addEventListener('click', () => editAction(st => {
+  const copy = { id: ++nextId, unit: st.unit, kind: st.kind, units: [...st.units], pts: st.pts.map(p => ({ x: p.x + 0.03, y: p.y + 0.03 })) };
+  state.core.strokes.push(copy); selectedStroke = copy.id;
+}, 'duplicar'));
+$('btnStDel').addEventListener('click', () => editAction(st => {
+  const idx = state.core.strokes.indexOf(st);
+  if (idx >= 0) state.core.strokes.splice(idx, 1);
+  selectedStroke = null;
+}, 'eliminar'));
+
+$('btnSimplify').addEventListener('click', () => {
+  if (!state.core.strokes.length) { showToast('Genera primero'); return; }
+  const removed = simplifyCore();
+  render(); showToast(removed + ' trazo(s) retirado(s) — estructura intacta');
+});
+
+// ── Pointer editing ─────────────────────────────────────────────
+function canvasPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+  return { x: (sx / rect.width) * W, y: (sy / rect.height) * H };
 }
+let dragState = null;
+canvas.addEventListener('pointerdown', e => {
+  if (!editMode) return;
+  editing.mx = canvasPos(e).x; editing.my = canvasPos(e).y;
+  const hit = editPoints();
+  if (hit) {
+    selectedStroke = hit.stroke.id;
+    dragState = { type: hit.type, stroke: hit.stroke, j: hit.j || -1 };
+    refreshEditList();
+  } else { render(); }
+});
+canvas.addEventListener('pointermove', e => {
+  if (!editMode || !dragState) return;
+  const p = canvasPos(e);
+  const nx = (p.x - CX) / CORE_R, ny = (p.y - CY) / CORE_R;
+  const mirror = state.presentation.mirror;
+  const rx = mirror ? -nx : nx;
+  if (dragState.type === 'point') { dragState.stroke.pts[dragState.j].x = rx; dragState.stroke.pts[dragState.j].y = ny; }
+  else {
+    const dx = rx - editing.mx, dy = ny - editing.my;
+    dragState.stroke.pts.forEach(pt => { pt.x += dx; pt.y += dy; });
+  }
+  editing.mx = rx; editing.my = ny;
+  renderEditHandles();
+});
+canvas.addEventListener('pointerup', () => {
+  if (dragState) { state.userDecisions.push({ type: 'mover-trazo', stroke: dragState.stroke.id }); }
+  dragState = null;
+});
 
+// ── Estampas ────────────────────────────────────────────────────
 document.querySelectorAll('.stamp-btn').forEach(b => {
   b.addEventListener('click', () => {
     document.querySelectorAll('.stamp-btn').forEach(x => x.classList.remove('active'));
     b.classList.add('active'); stampSym = b.dataset.s;
   });
 });
-document.getElementById('btnStamp').addEventListener('click', () => {
-  stampMode = !stampMode; showToast(stampMode ? 'Click en canvas para estampar' : 'Estampa off');
-});
-document.getElementById('btnClearStamps').addEventListener('click', () => { stamps = []; stampMode = false; if(letters.length) render(); });
+$('btnStamp').addEventListener('click', () => { stampMode = !stampMode; showToast(stampMode ? 'Click en canvas para estampar' : 'Estampa off'); });
+$('btnClearStamps').addEventListener('click', () => { state.stamps = []; stampMode = false; render(); });
 
-document.getElementById('btnSVG').addEventListener('click', () => {
-  if (!letters.length) { showToast('Genera primero'); return; }
-  const W=canvas.width, H=canvas.height;
-  // Render SVG by serializing canvas commands into SVG paths
-  const svg = buildSVG(W, H);
-  const blob = new Blob([svg],{type:'image/svg+xml'});
-  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='sigilo.svg'; a.click();
-  showToast('SVG');
-});
-document.getElementById('btnPNG').addEventListener('click', () => {
-  if (!letters.length) { showToast('Genera primero'); return; }
-  const off = document.createElement('canvas'); off.width=canvas.width; off.height=canvas.height;
-  off.getContext('2d').drawImage(canvas,0,0);
-  off.toBlob(b => { const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='sigilo.png'; a.click(); showToast('PNG'); });
-});
-
-document.getElementById('selReduction').addEventListener('change', e => {
-  optReduction = e.target.value;
-  if (document.getElementById('intention').value.trim()) generate();
-});
-document.getElementById('chkTransparent').addEventListener('change', e => {
-  optTransparent = e.target.checked;
-  render();
-});
-
-function captureState() {
-  return {
-    intention:document.getElementById('intention').value, letters:[...letters], stamps:stamps.map(st=>({...st})), activeEngines:[...activeEngines],
-    optMirror,optRadial,optGlow,optCircle,optDots,optKameaType,optShowGrid,optNodeStyle,optKameaCurve,
-    optGridPattern,optGridFold,optGridCurve,optGridShow,optGridNodeStyle,optGridResonance,
-    optNudoStyle,optTerminalStyle,optLoops,optDensity,optReduction,optTransparent
-  };
+function placeStamp(clientX, clientY) {
+  if (!stampMode || editMode) return;
+  const rect = canvas.getBoundingClientRect();
+  state.stamps.push({ x: (clientX - rect.left) * (W / rect.width), y: (clientY - rect.top) * (H / rect.height), sym: stampSym });
+  render(); showToast('Estampa: ' + stampSym);
 }
+canvas.addEventListener('click', e => placeStamp(e.clientX, e.clientY));
+canvas.addEventListener('touchstart', e => {
+  if (!stampMode) return;
+  e.preventDefault();
+  const t = e.changedTouches[0];
+  placeStamp(t.clientX, t.clientY);
+}, { passive: false });
 
-function restoreState(state) {
-  const saved={...captureState(),...state};
-  optMirror=saved.optMirror; optRadial=saved.optRadial; optGlow=saved.optGlow; optCircle=saved.optCircle; optDots=saved.optDots;
-  optKameaType=saved.optKameaType; optShowGrid=saved.optShowGrid; optNodeStyle=saved.optNodeStyle; optKameaCurve=saved.optKameaCurve;
-  optGridPattern=saved.optGridPattern; optGridFold=saved.optGridFold; optGridCurve=saved.optGridCurve; optGridShow=saved.optGridShow; optGridNodeStyle=saved.optGridNodeStyle; optGridResonance=saved.optGridResonance;
-  optNudoStyle=saved.optNudoStyle; optTerminalStyle=saved.optTerminalStyle; optLoops=saved.optLoops; optDensity=saved.optDensity; optReduction=saved.optReduction||'unique'; optTransparent=Boolean(saved.optTransparent);
-  activeEngines=Array.isArray(saved.activeEngines)&&saved.activeEngines.length ? [...saved.activeEngines].slice(0,2) : ['spare'];
-  stamps=Array.isArray(saved.stamps) ? saved.stamps.map(st=>({...st})) : [];
-  document.getElementById('intention').value=saved.intention||'';
+// ── Exportar ────────────────────────────────────────────────────
+$('btnSVG').addEventListener('click', () => {
+  if (!state.core.strokes.length) { showToast('Genera primero'); return; }
+  const svg = buildSVG();
+  const blob = new Blob([svg], { type: 'image/svg+xml' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'sigilo.svg';
+  a.click();
+  showToast('SVG por capas exportado');
+});
+$('btnPNG').addEventListener('click', () => {
+  if (!state.core.strokes.length) { showToast('Genera primero'); return; }
+  canvas.toBlob(b => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = 'sigilo.png';
+    a.click();
+    showToast('PNG exportado');
+  });
+});
+
+// ── Galería ─────────────────────────────────────────────────────
+const STORAGE_KEY = 'arcanum_sigils';
+function captureState() {
+  return JSON.parse(JSON.stringify({
+    intention: $('intention').value, reductionMethod: state.reductionMethod, skeleton: state.skeleton,
+    organic: state.organic, autoJoin: state.autoJoin, terminals: state.terminals, frame: state.frame,
+    inscription: state.inscription, presentation: state.presentation, stamps: state.stamps,
+    core: state.core, userDecisions: state.userDecisions, chkTransparent: state.chkTransparent
+  }));
+}
+function restoreState(saved) {
+  Object.assign(state, JSON.parse(JSON.stringify(saved)));
+  state.reduction = null;
+  $('intention').value = state.intention;
   syncControls();
   generate();
 }
-
-function syncControls() {
-  const checks={chkMirror:optMirror,chkRadial:optRadial,chkGlow:optGlow,chkCircle:optCircle,chkDots:optDots,chkGrid:optShowGrid,chkGridShow:optGridShow,chkLoops:optLoops,chkTransparent:optTransparent};
-  Object.entries(checks).forEach(([id,value])=>document.getElementById(id).checked=Boolean(value));
-  const selects={selReduction:optReduction,selKamea:optKameaType,selNodeStyle:optNodeStyle,selGridPattern:optGridPattern,selGridFold:String(optGridFold),selGridNodeStyle:optGridNodeStyle,selGridResonance:optGridResonance,selNudoStyle:optNudoStyle,selTerminalStyle:optTerminalStyle,selDensity:optDensity};
-  Object.entries(selects).forEach(([id,value])=>document.getElementById(id).value=value);
-  [['kameaCurve',optKameaCurve],['gridCurve',optGridCurve]].forEach(([id,value])=>{document.getElementById(id).value=value;document.getElementById(id+'Val').textContent=value+'%';});
-  refreshEngineUI();
-}
-
 function readGallery() {
-  try { const data=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); return Array.isArray(data)?data:[]; }
+  try { const d = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); return Array.isArray(d) ? d : []; }
   catch { return []; }
 }
-
 function writeGallery(items) {
-  try { localStorage.setItem(STORAGE_KEY,JSON.stringify(items)); return true; }
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); return true; }
   catch { showToast('Galería llena: elimina un sigilo'); return false; }
 }
-
-function makeThumbnail() {
-  const thumb=document.createElement('canvas'); thumb.width=160; thumb.height=112;
-  thumb.getContext('2d').drawImage(canvas,0,0,thumb.width,thumb.height);
-  return thumb.toDataURL('image/png');
-}
-
 function saveSigil() {
-  if (!letters.length) { showToast('Genera primero'); return; }
-  const intention=document.getElementById('intention').value.trim();
-  const now=new Date();
-  const item={id:`sigil-${now.getTime()}`,name:`${now.toLocaleDateString('es-CO')} - ${intention.slice(0,24)}`,createdAt:now.toISOString(),thumbnail:makeThumbnail(),state:captureState()};
-  const items=readGallery(); items.unshift(item);
+  if (!state.core.strokes.length) { showToast('Genera primero'); return; }
+  const intention = $('intention').value.trim();
+  const now = new Date();
+  const thumb = document.createElement('canvas');
+  thumb.width = 160; thumb.height = 112;
+  thumb.getContext('2d').drawImage(canvas, 0, 0, thumb.width, thumb.height);
+  const item = { id: 'sigil-' + now.getTime(), name: now.toLocaleDateString('es-CO') + ' - ' + intention.slice(0, 24), createdAt: now.toISOString(), thumbnail: thumb.toDataURL('image/png'), state: captureState() };
+  const items = readGallery();
+  items.unshift(item);
   if (writeGallery(items)) { renderGallery(); showToast('Sigilo guardado'); }
 }
-
 function renderGallery() {
-  const grid=document.getElementById('galleryGrid'); grid.innerHTML='';
-  const items=readGallery();
-  if (!items.length) { grid.innerHTML='<div class="gallery-empty">Aún no hay sigilos guardados.</div>'; return; }
-  items.forEach(item=>{
-    const card=document.createElement('article'); card.className='gallery-item';
-    const image=document.createElement('img'); image.src=item.thumbnail; image.alt=item.name; image.title='Restaurar '+item.name;
-    image.addEventListener('click',()=>{restoreState(item.state);toggleGallery(false);showToast('Sigilo restaurado');});
-    const name=document.createElement('div'); name.className='gallery-name'; name.textContent=item.name;
-    const remove=document.createElement('button'); remove.className='gallery-delete'; remove.textContent='X'; remove.title='Eliminar';
-    remove.addEventListener('click',()=>{writeGallery(readGallery().filter(saved=>saved.id!==item.id));renderGallery();showToast('Sigilo eliminado');});
-    card.append(image,name,remove); grid.append(card);
+  const grid = $('galleryGrid');
+  grid.innerHTML = '';
+  const items = readGallery();
+  if (!items.length) { grid.innerHTML = '<div class="gallery-empty">Aún no hay sigilos guardados.</div>'; return; }
+  items.forEach(item => {
+    const card = document.createElement('article');
+    card.className = 'gallery-item';
+    const image = document.createElement('img');
+    image.src = item.thumbnail; image.alt = item.name; image.title = 'Restaurar ' + item.name;
+    image.addEventListener('click', () => { restoreState(item.state); toggleGallery(false); showToast('Sigilo restaurado'); });
+    const name = document.createElement('div');
+    name.className = 'gallery-name'; name.textContent = item.name;
+    const remove = document.createElement('button');
+    remove.className = 'gallery-delete'; remove.textContent = 'X'; remove.title = 'Eliminar';
+    remove.addEventListener('click', () => { writeGallery(readGallery().filter(s => s.id !== item.id)); renderGallery(); showToast('Sigilo eliminado'); });
+    card.append(image, name, remove);
+    grid.append(card);
   });
 }
-
 function toggleGallery(force) {
-  const panel=document.getElementById('galleryPanel');
-  const open=typeof force==='boolean'?force:!panel.classList.contains('open');
-  panel.classList.toggle('open',open); panel.setAttribute('aria-hidden',String(!open));
-  if(open) renderGallery();
+  const panel = $('galleryPanel');
+  const open = typeof force === 'boolean' ? force : !panel.classList.contains('open');
+  panel.classList.toggle('open', open);
+  panel.setAttribute('aria-hidden', String(!open));
+  if (open) renderGallery();
 }
+$('btnSave').addEventListener('click', saveSigil);
+$('btnGallery').addEventListener('click', () => toggleGallery());
+$('btnGalleryClose').addEventListener('click', () => toggleGallery(false));
 
-document.getElementById('btnSave').addEventListener('click',saveSigil);
-document.getElementById('btnGallery').addEventListener('click',()=>toggleGallery());
-document.getElementById('btnGalleryClose').addEventListener('click',()=>toggleGallery(false));
-document.getElementById('panelToggle').addEventListener('click',e=>{
-  const panel=document.getElementById('controlPanel'), open=panel.classList.toggle('open');
-  e.currentTarget.setAttribute('aria-expanded',String(open));
-});
-document.getElementById('panelClose').addEventListener('click',()=>document.getElementById('controlPanel').classList.remove('open'));
-
-let gnosisInterval=null, gnosisDeadline=0;
-const gnosisOverlay=document.getElementById('gnosisOverlay');
+// ── Ritual / gnosis (conservado, bajo riesgo) ───────────────────
+let gnosisInterval = null, gnosisDeadline = 0;
+const gnosisOverlay = $('gnosisOverlay');
 function setGnosisTime(seconds) {
-  document.getElementById('gnosisTimer').textContent=`${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(Math.ceil(seconds%60)).padStart(2,'0')}`;
+  $('gnosisTimer').textContent = String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(Math.ceil(seconds % 60)).padStart(2, '0');
 }
 function stopGnosis() {
-  clearInterval(gnosisInterval); gnosisInterval=null; gnosisOverlay.classList.remove('running');
-  document.getElementById('gnosisDuration').disabled=false; document.getElementById('btnStartCharge').disabled=false;
+  clearInterval(gnosisInterval);
+  gnosisInterval = null;
+  gnosisOverlay.classList.remove('running');
+  $('gnosisDuration').disabled = false;
+  $('btnStartCharge').disabled = false;
 }
 function openGnosis() {
-  if (!letters.length) { showToast('Genera primero'); return; }
-  stopGnosis(); document.getElementById('gnosisSigil').src=canvas.toDataURL('image/png');
-  setGnosisTime(Number(document.getElementById('gnosisDuration').value));
-  document.getElementById('btnForget').classList.remove('ready');
+  if (!state.core.strokes.length) { showToast('Genera primero'); return; }
+  stopGnosis();
+  $('gnosisSigil').src = canvas.toDataURL('image/png');
+  setGnosisTime(Number($('gnosisDuration').value));
+  $('btnForget').classList.remove('ready');
   gnosisOverlay.classList.add('open');
 }
 function closeGnosis() { stopGnosis(); gnosisOverlay.classList.remove('open'); }
 function startGnosis() {
-  const duration=Number(document.getElementById('gnosisDuration').value);
-  gnosisDeadline=performance.now()+duration*1000; gnosisOverlay.classList.add('running');
-  document.getElementById('gnosisDuration').disabled=true; document.getElementById('btnStartCharge').disabled=true;
-  const tick=()=>{
-    const remaining=Math.max(0,(gnosisDeadline-performance.now())/1000); setGnosisTime(remaining);
-    const phase=Math.floor(((duration-remaining)%16)/4); document.getElementById('breathLabel').textContent=['Inhala','Sostén','Exhala','Sostén'][phase];
-    if(remaining<=0){stopGnosis();document.getElementById('btnForget').classList.add('ready');playGnosisTone();}
+  const duration = Number($('gnosisDuration').value);
+  gnosisDeadline = performance.now() + duration * 1000;
+  gnosisOverlay.classList.add('running');
+  $('gnosisDuration').disabled = true;
+  $('btnStartCharge').disabled = true;
+  const tick = () => {
+    const remaining = Math.max(0, (gnosisDeadline - performance.now()) / 1000);
+    setGnosisTime(remaining);
+    const phase = Math.floor(((duration - remaining) % 16) / 4);
+    $('breathLabel').textContent = ['Inhala', 'Sostén', 'Exhala', 'Sostén'][phase];
+    if (remaining <= 0) { stopGnosis(); $('btnForget').classList.add('ready'); playGnosisTone(); }
   };
-  tick(); gnosisInterval=setInterval(tick,200);
+  tick();
+  gnosisInterval = setInterval(tick, 200);
 }
 function playGnosisTone() {
-  try { const audio=new (window.AudioContext||window.webkitAudioContext)(), osc=audio.createOscillator(), gain=audio.createGain(); osc.frequency.value=220; gain.gain.setValueAtTime(.035,audio.currentTime); gain.gain.exponentialRampToValueAtTime(.001,audio.currentTime+1.4); osc.connect(gain).connect(audio.destination); osc.start(); osc.stop(audio.currentTime+1.4); }
-  catch {}
+  try {
+    const audio = new (window.AudioContext || window.webkitAudioContext)(), osc = audio.createOscillator(), gain = audio.createGain();
+    osc.frequency.value = 220;
+    gain.gain.setValueAtTime(.035, audio.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.001, audio.currentTime + 1.4);
+    osc.connect(gain).connect(audio.destination);
+    osc.start(); osc.stop(audio.currentTime + 1.4);
+  } catch {}
 }
 function forgetSigil() {
-  closeGnosis(); letters=[]; stamps=[]; stampMode=false;
-  document.getElementById('intention').value=''; document.getElementById('reductionBox').textContent='-';
-  render(); showToast('El sigilo obra en el Caos');
-}
-document.getElementById('btnCharge').addEventListener('click',openGnosis);
-document.getElementById('btnStartCharge').addEventListener('click',startGnosis);
-document.getElementById('btnForget').addEventListener('click',forgetSigil);
-document.getElementById('btnGnosisClose').addEventListener('click',closeGnosis);
-document.getElementById('gnosisDuration').addEventListener('change',e=>setGnosisTime(Number(e.target.value)));
-
-const PARAM_HELP={
-  chkMirror:'Refleja el trazado sobre el eje vertical.',chkRadial:'Repite la forma a 90, 180 y 270 grados.',
-  selKamea:'Elige el cuadrado mágico que recibe los valores de las letras.',chkGrid:'Muestra la estructura numérica del kamea.',
-  selNodeStyle:'Define si los puntos se dibujan llenos, como anillos o ambos.',kameaCurve:'Suaviza las uniones del trazado planetario.',
-  selGridPattern:'Elige la geometría base donde se proyecta la intención.',selGridFold:'Repite el trazado mediante simetría radial.',
-  gridCurve:'Controla cuánto se arquean las conexiones.',chkGridShow:'Muestra u oculta la geometría auxiliar.',
-  selGridNodeStyle:'Cambia la terminación visual de cada nodo.',selGridResonance:'Superpone la firma simbólica de un planeta.',
-  selNudoStyle:'Cambia la gramática del centro goético.',selTerminalStyle:'Fuerza o distribuye terminales según el modelo.',
-  chkLoops:'Permite recintos cerrados dentro del sello.',selDensity:'Controla cantidad de ramas y detalles.',
-  chkGlow:'Agrega halo dorado al trazo.',chkCircle:'Encierra la obra en un limite ritual.',chkDots:'Marca las posiciones derivadas de letras.',
-  chkTransparent:'Elimina fondo y viñeta para exportación por capas.'
-};
-Object.entries(PARAM_HELP).forEach(([id,help])=>{const el=document.getElementById(id);if(el){el.title=help;(el.closest('.param-row,.toggle-row')||el).title=help;}});
-
-refreshEngineUI();
-
-function placeStamp(clientX, clientY) {
-  if (!stampMode) return;
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
-  const x = (clientX - rect.left) * scaleX, y = (clientY - rect.top) * scaleY;
-  stamps.push({ x, y, sym: stampSym });
+  closeGnosis();
+  state.core.strokes = [];
+  state.stamps = [];
+  state.userDecisions = [];
+  $('intention').value = '';
+  $('reductionBox').textContent = '-';
   render();
-  showToast('Estampa: ' + stampSym);
+  showToast('El sigilo obra en el Caos');
 }
-let lastTouchStamp=0;
-canvas.addEventListener('click', e => { if(Date.now()-lastTouchStamp>500) placeStamp(e.clientX,e.clientY); });
-canvas.addEventListener('touchstart', e => {
-  if(!stampMode) return;
-  e.preventDefault(); lastTouchStamp=Date.now();
-  const touch=e.changedTouches[0]; placeStamp(touch.clientX,touch.clientY);
-},{passive:false});
+$('btnCharge').addEventListener('click', openGnosis);
+$('btnStartCharge').addEventListener('click', startGnosis);
+$('btnForget').addEventListener('click', forgetSigil);
+$('btnGnosisClose').addEventListener('click', closeGnosis);
+$('gnosisDuration').addEventListener('change', e => setGnosisTime(Number(e.target.value)));
 
+// ── Paneles móviles ─────────────────────────────────────────────
+$('panelToggle').addEventListener('click', e => {
+  const panel = $('controlPanel'), open = panel.classList.toggle('open');
+  e.currentTarget.setAttribute('aria-expanded', String(open));
+});
+$('panelClose').addEventListener('click', () => $('controlPanel').classList.remove('open'));
 document.addEventListener('keydown', e => {
-  if ((e.ctrlKey||e.metaKey)&&e.key==='Enter') generate();
-  if (e.key==='Escape') { stampMode=false; closeGnosis(); toggleGallery(false); document.getElementById('controlPanel').classList.remove('open'); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate();
+  if (e.key === 'Escape') {
+    stampMode = false; dragState = null; closeGnosis(); toggleGallery(false);
+    $('provModal').classList.remove('open');
+    $('controlPanel').classList.remove('open');
+    if (editMode) { editMode = false; selectedStroke = null; render(); }
+  }
 });
 
-class SVGRecorder {
-  constructor(width, height) {
-    this.width = width; this.height = height; this.elements = []; this.gradients = []; this.stack = [];
-    this.strokeStyle = '#000'; this.fillStyle = '#000'; this.lineWidth = 1; this.lineCap = 'butt'; this.lineJoin = 'miter';
-    this.globalAlpha = 1; this.shadowColor = 'transparent'; this.shadowBlur = 0; this.font = '10px serif';
-    this.textAlign = 'start'; this.textBaseline = 'alphabetic'; this.tx = 0; this.ty = 0; this.path = '';
-  }
-  save() { this.stack.push(this._state()); }
-  restore() { const state = this.stack.pop(); if (state) Object.assign(this, state); }
-  _state() { return {strokeStyle:this.strokeStyle,fillStyle:this.fillStyle,lineWidth:this.lineWidth,lineCap:this.lineCap,lineJoin:this.lineJoin,globalAlpha:this.globalAlpha,shadowColor:this.shadowColor,shadowBlur:this.shadowBlur,font:this.font,textAlign:this.textAlign,textBaseline:this.textBaseline,tx:this.tx,ty:this.ty}; }
-  clearRect() {}
-  beginPath() { this.path = ''; }
-  closePath() { this.path += ' Z'; }
-  moveTo(x,y) { this.path += ` M ${this._n(x+this.tx)} ${this._n(y+this.ty)}`; }
-  lineTo(x,y) { this.path += ` L ${this._n(x+this.tx)} ${this._n(y+this.ty)}`; }
-  bezierCurveTo(a,b,c,d,e,f) { this.path += ` C ${this._n(a+this.tx)} ${this._n(b+this.ty)} ${this._n(c+this.tx)} ${this._n(d+this.ty)} ${this._n(e+this.tx)} ${this._n(f+this.ty)}`; }
-  arc(x,y,r,start,end,ccw=false) {
-    x += this.tx; y += this.ty;
-    const delta = Math.abs(end-start), sx=x+r*Math.cos(start), sy=y+r*Math.sin(start);
-    if (delta >= Math.PI*2-.001) {
-      this.path += ` M ${this._n(sx)} ${this._n(sy)} A ${this._n(r)} ${this._n(r)} 0 1 1 ${this._n(x-r*Math.cos(start))} ${this._n(y-r*Math.sin(start))} A ${this._n(r)} ${this._n(r)} 0 1 1 ${this._n(sx)} ${this._n(sy)}`;
-      return;
-    }
-    const ex=x+r*Math.cos(end), ey=y+r*Math.sin(end), large=delta>Math.PI?1:0, sweep=ccw?0:1;
-    this.path += ` L ${this._n(sx)} ${this._n(sy)} A ${this._n(r)} ${this._n(r)} 0 ${large} ${sweep} ${this._n(ex)} ${this._n(ey)}`;
-  }
-  ellipse(x,y,rx,ry,rotation) {
-    x += this.tx; y += this.ty;
-    const deg=this._n(rotation*180/Math.PI), sx=x+rx*Math.cos(rotation), sy=y+rx*Math.sin(rotation);
-    const ex=x-rx*Math.cos(rotation), ey=y-rx*Math.sin(rotation);
-    this.path += ` M ${this._n(sx)} ${this._n(sy)} A ${this._n(rx)} ${this._n(ry)} ${deg} 1 1 ${this._n(ex)} ${this._n(ey)} A ${this._n(rx)} ${this._n(ry)} ${deg} 1 1 ${this._n(sx)} ${this._n(sy)}`;
-  }
-  stroke() { if (this.path.trim()) this.elements.push(`<path d="${this.path.trim()}" ${this._strokeAttrs()}/>`); }
-  fill() { if (this.path.trim()) this.elements.push(`<path d="${this.path.trim()}" ${this._fillAttrs()}/>`); }
-  strokeRect(x,y,w,h) { this.elements.push(`<rect x="${this._n(x+this.tx)}" y="${this._n(y+this.ty)}" width="${this._n(w)}" height="${this._n(h)}" ${this._strokeAttrs()}/>`); }
-  fillRect(x,y,w,h) { this.elements.push(`<rect x="${this._n(x+this.tx)}" y="${this._n(y+this.ty)}" width="${this._n(w)}" height="${this._n(h)}" ${this._fillAttrs()}/>`); }
-  translate(x,y) { this.tx += x; this.ty += y; }
-  fillText(text,x,y) {
-    const size = (/([\d.]+)px/.exec(this.font)||[])[1] || 10;
-    const anchor = this.textAlign === 'center' ? 'middle' : this.textAlign === 'right' || this.textAlign === 'end' ? 'end' : 'start';
-    this.elements.push(`<text x="${this._n(x+this.tx)}" y="${this._n(y+this.ty)}" text-anchor="${anchor}" dominant-baseline="middle" font-size="${size}" font-family="serif" ${this._fillAttrs()}>${escapeHTML(text)}</text>`);
-  }
-  createRadialGradient(x1,y1,r1,x2,y2,r2) {
-    const gradient = {id:`gradient-${this.gradients.length+1}`,x1,y1,r1,x2,y2,r2,stops:[],addColorStop(offset,color){this.stops.push({offset,color});}};
-    this.gradients.push(gradient); return gradient;
-  }
-  _paint(value) { return value && value.id ? `url(#${value.id})` : value; }
-  _strokeAttrs() { return `fill="none" stroke="${this._paint(this.strokeStyle)}" stroke-width="${this._n(this.lineWidth)}" stroke-linecap="${this.lineCap}" stroke-linejoin="${this.lineJoin}" opacity="${this._n(this.globalAlpha)}"`; }
-  _fillAttrs() { return `fill="${this._paint(this.fillStyle)}" stroke="none" opacity="${this._n(this.globalAlpha)}"`; }
-  _n(value) { return Number(value.toFixed(3)); }
-  toSVG() {
-    const defs = this.gradients.map(g => `<radialGradient id="${g.id}" gradientUnits="userSpaceOnUse" cx="${g.x2}" cy="${g.y2}" r="${g.r2}">${g.stops.map(s=>`<stop offset="${s.offset*100}%" stop-color="${s.color}"/>`).join('')}</radialGradient>`).join('');
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${this.width} ${this.height}" width="${this.width}" height="${this.height}"><defs>${defs}</defs>${this.elements.join('')}</svg>`;
-  }
-}
-
-function buildSVG(W, H) {
-  const displayCtx = ctx;
-  const recorder = new SVGRecorder(W, H);
-  ctx = recorder;
-  try { render(); } finally { ctx = displayCtx; }
-  return recorder.toSVG();
-}
-
 let tt;
-function showToast(m) { const e=document.getElementById('toast'); e.textContent=m; e.classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>e.classList.remove('show'),1800); }
+function showToast(m) {
+  const e = $('toast');
+  e.textContent = m;
+  e.classList.add('show');
+  clearTimeout(tt);
+  tt = setTimeout(() => e.classList.remove('show'), 1800);
+}
 
+// ── Arranque ────────────────────────────────────────────────────
+syncControls();
 setTimeout(() => {
-  refreshEngineUI();
-  document.getElementById('intention').value = 'SABIDURIA';
-  optGridFold = '4';
-  optGridCurve = 30;
+  $('intention').value = 'SABIDURIA';
   generate();
 }, 100);
 </script>
