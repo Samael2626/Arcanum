@@ -19,7 +19,7 @@ header p{color:var(--text-dim);font-style:italic;font-size:.78rem}
 .panel h3{font-size:.58rem;text-transform:uppercase;letter-spacing:3px;color:var(--text-dim);margin:6px 0 2px;font-weight:400;border-top:1px solid var(--border);padding-top:5px}
 .panel h3:first-child{border:none;padding-top:0;margin-top:0}
 textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:4px 6px;color:var(--text);font-family:var(--font);font-size:.78rem;outline:none;resize:vertical;min-height:34px}
-textarea:focus{border-color:var(--gold)}
+textarea:focus{border-color:var(--gold)}\n#latinInscription{background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--font);font-size:.62rem;max-width:105px;padding:2px 4px}
 .btn{background:var(--gold);color:#0c0b0f;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-family:var(--font);font-size:.72rem;font-weight:600}
 .btn:hover{background:#e6b422}
 .btn-dim{background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:4px 10px;border-radius:4px;cursor:pointer;font-family:var(--font);font-size:.72rem}
@@ -198,7 +198,10 @@ canvas{aspect-ratio:10/7;display:block;height:auto;min-height:0;width:100%}
   </div>
   <h3>Presentación</h3>
   <div class="toggle-row"><input type="checkbox" id="chkGlow" checked><label>Brillo</label></div>
-  <div class="toggle-row"><input type="checkbox" id="chkCircle"><label>Círculo exterior</label></div>
+  <div class="toggle-row"><input type="checkbox" id="chkCircle" checked><label>Círculo exterior</label></div>
+  <div class="toggle-row"><input type="checkbox" id="chkStar"><label>Estrella ritual</label></div>
+  <div class="param-row" id="starLayerParams"><label>Puntas</label><select id="selStarPoints"><option value="5" selected>5</option><option value="6">6</option><option value="7">7</option></select></div>
+  <div class="param-row"><label>Inscripción latina</label><input id="latinInscription" type="text" maxlength="42" placeholder="Opcional"></div>
   <div class="toggle-row"><input type="checkbox" id="chkDots"><label>Puntos de poder</label></div>
 
   <h3>Estampas</h3>
@@ -272,7 +275,7 @@ let stampMode = false;
 let nextId = 1;
 
 let optMirror = false, optRadial = false, optGlow = true;
-let optCircle = false, optDots = false;
+let optCircle = true, optStar = false, optStarPoints = 5, optDots = false, optInscription = '';
 let activeEngines = ['spare'];
 let optKameaType = 'auto', optShowGrid = true, optNodeStyle = 'both', optKameaCurve = 0;
 let optGridPattern = 'fol', optGridFold = 4, optGridCurve = 30, optGridShow = true, optGridNodeStyle = 'both', optGridResonance = 'none';
@@ -1067,6 +1070,25 @@ engines.spare = {
   }
 };
 
+function drawRitualStar(ctx, cx, cy, radius, points) {
+  const vertices = [];
+  for (let i = 0; i < points * 2; i++) {
+    const angle = -Math.PI / 2 + i * Math.PI / points;
+    const r = i % 2 === 0 ? radius : radius * .42;
+    vertices.push({ x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r });
+  }
+  ctx.save();
+  if (optGlow) { ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 18; ctx.strokeStyle = 'rgba(184,134,11,.24)'; ctx.lineWidth = 5; }
+  ctx.beginPath(); ctx.moveTo(vertices[0].x, vertices[0].y); vertices.slice(1).forEach(p => ctx.lineTo(p.x, p.y)); ctx.closePath(); ctx.stroke();
+  ctx.shadowBlur = 0; ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.7; ctx.beginPath(); ctx.moveTo(vertices[0].x, vertices[0].y); vertices.slice(1).forEach(p => ctx.lineTo(p.x, p.y)); ctx.closePath(); ctx.stroke(); ctx.restore();
+}
+
+function drawLatinInscription(ctx, text, cx, cy, radius) {
+  if (!text.trim()) return;
+  ctx.save(); ctx.fillStyle = 'rgba(201,154,26,.82)'; ctx.font = '15px Georgia'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.letterSpacing = '2px';
+  ctx.fillText(text.trim().toUpperCase(), cx, cy - radius * 1.12); ctx.restore();
+}
+
 function render() {
   sigilProvenance = [];
   const W = canvas.width, H = canvas.height;
@@ -1144,6 +1166,9 @@ function render() {
       drawStarPolygon(ctx, tRing, starStep, optGlow);
     }
 
+    // Layer ritual: estrella e inscripción. No altera el núcleo.
+    if (optStar) drawRitualStar(ctx, tcx, tcy, ringR * .82, optStarPoints);
+    drawLatinInscription(ctx, optInscription, tcx, tcy, ringR);
     // Layer 2: Dots at ring positions
     if (optDots) {
       for (let i = 0; i < n; i++) {
@@ -1244,6 +1269,10 @@ document.getElementById('chkRadial').addEventListener('change', e => { optRadial
 document.getElementById('chkGlow').addEventListener('change', e => { optGlow = e.target.checked; if(letters.length) render(); });
 document.getElementById('chkCircle').addEventListener('change', e => { optCircle = e.target.checked; if(letters.length) render(); });
 document.getElementById('chkDots').addEventListener('change', e => { optDots = e.target.checked; if(letters.length) render(); });
+document.getElementById('chkStar').addEventListener('change', e => { optStar = e.target.checked; if(letters.length) render(); });
+document.getElementById('selStarPoints').addEventListener('change', e => { optStarPoints = Number(e.target.value); if(letters.length) render(); });
+document.getElementById('latinInscription').addEventListener('input', e => { optInscription = e.target.value; if(letters.length) render(); });
+
 
 // Kamea controls
 document.getElementById('chkGrid').addEventListener('change', e => { optShowGrid = e.target.checked; if(letters.length) render(); });
