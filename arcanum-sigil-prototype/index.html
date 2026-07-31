@@ -37,6 +37,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;heigh
 .fam-btn[data-engine=spare]{flex-basis:100%;font-size:.68rem;letter-spacing:1px}
 .fam-btn.active{background:var(--gold);color:#0c0b0f;border-color:var(--gold)}
 .fam-btn:hover:not(.active){border-color:var(--gold)}
+.spare-tools{background:linear-gradient(135deg,rgba(184,134,11,.08),rgba(75,16,28,.08));border:1px solid rgba(184,134,11,.32)}
+.composition-progress{color:var(--gold);font-size:.61rem;letter-spacing:.8px;margin:4px 0 1px}
+.composition-hint{color:var(--text-dim);font-size:.61rem;line-height:1.35}
 .param-group{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:4px;margin:3px 0}
 .param-row{display:flex;align-items:center;justify-content:space-between;gap:4px;margin:1px 0}
 .param-row label{font-size:.62rem;color:var(--text-dim);white-space:nowrap}
@@ -119,7 +122,7 @@ canvas{aspect-ratio:10/7;display:block;height:auto;min-height:0;width:100%}
     <option value="ao">A-O Principle</option>
   </select></div>
   <div class="info-box" id="reductionBox">—</div>
-  <h3>Familia</h3>
+  <h3>Composición</h3>
   <div class="fam-select">
     <div class="fam-btn" data-engine="spare" title="Combina los trazos simplificados de las letras en un glifo abstracto">Glifo Spare</div>
     <div class="fam-btn" data-engine="star" title="Geometría estelar derivada de letras y suma gemátrica">Estrella</div>
@@ -127,7 +130,17 @@ canvas{aspect-ratio:10/7;display:block;height:auto;min-height:0;width:100%}
     <div class="fam-btn" data-engine="grid" title="Pliega el trazado sobre patrones de geometría sagrada">Grid</div>
     <div class="fam-btn" data-engine="alquimia" title="Gramática visual basada en terminales y ángulos goéticos">Alquimia</div>
   </div>
-  <div class="info-box">Elige un método. Spare combina gestos de las letras en un glifo; los demás son paradigmas opcionales. Máximo dos capas.</div>
+  <div class="info-box">Primero reconoce cada letra-forma. Muévela sobre el lienzo. Después júntalas hasta que nazca un solo signo.</div>
+
+  <div id="spareParams" class="param-group spare-tools">
+    <div class="toggle-row"><input type="checkbox" id="chkLetterGuides" checked><label for="chkLetterGuides">Ver letras de origen</label></div>
+    <div class="btn-group">
+      <button class="btn-dim btn-sm" id="btnSeparate" title="Devuelve las letras a una composición legible">Separar</button>
+      <button class="btn btn-sm" id="btnMerge" title="Acerca las letras un paso, sin cambiar su forma">Juntar</button>
+    </div>
+    <div class="composition-progress" id="compositionProgress">CONSTRUCCIÓN · 0/4</div>
+    <div class="composition-hint">Arrastra una letra-forma. Juntar abstrae sin inventar trazos. El paso 4 oculta las guías.</div>
+  </div>
 
   <div id="starParams" class="param-group">
     <div class="toggle-row"><input type="checkbox" id="chkMirror"><label>Simetría bilateral</label></div>
@@ -276,6 +289,9 @@ const canvas = document.getElementById('canvas');
 let ctx = canvas.getContext('2d');
 
 let letters = [];
+let letterNodes = [];
+let fusionLevel = 0;
+let optLetterGuides = true;
 let stamps = [];
 let stampSym = '♄';
 let stampMode = false;
@@ -386,26 +402,92 @@ const LETTER_GLYPHS = {
   X:[[[-.62,-.84],[.62,.84]],[[.62,-.84],[-.62,.84]]],Y:[[[-.62,-.84],[0,0],[.62,-.84]],[[0,0],[0,.84]]],Z:[[[-.58,-.84],[.58,-.84],[-.58,.84],[.58,.84]]]
 };
 
+function makeLetterNodes(source) {
+  const count = source.length;
+  const columns = Math.min(count, 8);
+  const rows = Math.ceil(count / columns);
+  const spacingX = Math.min(102, 700 / Math.max(columns - 1, 1));
+  const spacingY = 150;
+  return source.map((letter,index)=>{
+    const row=Math.floor(index/columns), inRow=Math.min(columns,count-row*columns);
+    const col=index-row*columns;
+    return {
+      letter,index,
+      x:canvas.width/2+(col-(inRow-1)/2)*spacingX,
+      y:canvas.height/2+(row-(rows-1)/2)*spacingY,
+      rotation:0,
+      scale:42
+    };
+  });
+}
+
+function updateCompositionProgress() {
+  const el=document.getElementById('compositionProgress');
+  if(el) el.textContent=(fusionLevel===4?'SIGILO':'CONSTRUCCIÓN')+' · '+fusionLevel+'/4';
+}
+
+function setFusionLevel(level) {
+  if(!letters.length)return;
+  const target=Math.max(0,Math.min(4,level));
+  if(target===0){
+    letterNodes=makeLetterNodes(letters);
+    optLetterGuides=true;
+  }else{
+    const factors=[1,.72,.48,.28,.12];
+    const distanceRatio=factors[target]/factors[fusionLevel];
+    const scaleRatio=(1+target*.2)/(1+fusionLevel*.2);
+    letterNodes=letterNodes.map((node,index)=>({
+      ...node,
+      x:canvas.width/2+(node.x-canvas.width/2)*distanceRatio,
+      y:canvas.height/2+(node.y-canvas.height/2)*distanceRatio,
+      rotation:node.rotation+(index-(letters.length-1)/2)*.065,
+      scale:node.scale*scaleRatio
+    }));
+    if(target===4)optLetterGuides=false;
+  }
+  fusionLevel=target;
+  document.getElementById('chkLetterGuides').checked=optLetterGuides;
+  updateCompositionProgress();
+  render();
+}
+
+function drawLetterGlyph(ctx,node,showGuide) {
+  const glyph=LETTER_GLYPHS[node.letter]||LETTER_GLYPHS.X;
+  const cos=Math.cos(node.rotation),sin=Math.sin(node.rotation);
+  const point=([x,y])=>({x:node.x+x*node.scale*cos-y*node.scale*sin,y:node.y+x*node.scale*sin+y*node.scale*cos});
+  ctx.save();
+  ctx.strokeStyle='#c99a1a';
+  ctx.lineWidth=2.8;
+  ctx.lineCap='round';
+  ctx.lineJoin='round';
+  if(optGlow){ctx.shadowColor='#b8860b';ctx.shadowBlur=10;}
+  glyph.forEach(stroke=>{
+    ctx.beginPath();
+    stroke.forEach((raw,index)=>{
+      const p=point(raw);
+      if(index)ctx.lineTo(p.x,p.y);else ctx.moveTo(p.x,p.y);
+    });
+    ctx.stroke();
+  });
+  if(showGuide){
+    ctx.shadowBlur=0;
+    ctx.strokeStyle='rgba(184,134,11,.28)';
+    ctx.lineWidth=1;
+    ctx.beginPath();ctx.arc(node.x,node.y,node.scale*1.18,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='#d4c9b8';
+    ctx.font='600 15px Georgia';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(node.letter,node.x,node.y+node.scale*1.55);
+  }
+  ctx.restore();
+}
+
 const engines = {
   spare: {
     render(ctx,cx,cy,radius,letters) {
-      const draw=()=>this._trace(ctx,cx,cy,radius,letters);
-      if(optGlow){ctx.save();ctx.shadowColor='#b8860b';ctx.shadowBlur=22;ctx.strokeStyle='rgba(184,134,11,.22)';ctx.lineWidth=6;ctx.lineCap='round';ctx.lineJoin='round';draw();ctx.restore();}
-      ctx.save();ctx.strokeStyle='#c99a1a';ctx.lineWidth=2.8;ctx.lineCap='round';ctx.lineJoin='round';const ends=draw();ctx.restore();
-      if(!ends)return;
-      ctx.save();ctx.strokeStyle='#c99a1a';ctx.fillStyle='#0a080d';ctx.lineWidth=2;ctx.beginPath();ctx.arc(ends.start.x,ends.start.y,4,0,Math.PI*2);ctx.fill();ctx.stroke();
-      const dx=ends.end.x-cx,dy=ends.end.y-cy,len=Math.hypot(dx,dy)||1,nx=-dy/len*7,ny=dx/len*7;ctx.beginPath();ctx.moveTo(ends.end.x-nx,ends.end.y-ny);ctx.lineTo(ends.end.x+nx,ends.end.y+ny);ctx.stroke();ctx.restore();
-    },
-    _trace(ctx,cx,cy,radius,letters){
-      if(!letters.length)return null;
-      const scale=radius*(letters.length>11?.52:.68);let start=null,end=null;ctx.beginPath();
-      letters.forEach((letter,index)=>{const glyph=LETTER_GLYPHS[letter]||LETTER_GLYPHS.X,strokes=[glyph.reduce((best,stroke)=>stroke.length>best.length?stroke:best,glyph[0])],value=val(letter),angle=((value*137.508+index*47)%360)*Math.PI/180,mirror=index%2?-1:1,localScale=scale*(1-(index%3)*.065),ox=((value%5)-2)*radius*.018,oy=(((value+index)%5)-2)*radius*.018;
-        const point=([x,y])=>{x*=mirror;const px=x*localScale,py=y*localScale;return{x:cx+ox+px*Math.cos(angle)-py*Math.sin(angle),y:cy+oy+px*Math.sin(angle)+py*Math.cos(angle)}};
-        strokes.forEach(stroke=>{const points=stroke.map(point);if(!start)start=points[0];end=points[points.length-1];ctx.moveTo(points[0].x,points[0].y);
-          if(points.length<4){for(let i=1;i<points.length;i++)ctx.lineTo(points[i].x,points[i].y);}
-          else for(let i=0;i<points.length-1;i++){const p0=points[Math.max(0,i-1)],p1=points[i],p2=points[i+1],p3=points[Math.min(points.length-1,i+2)];ctx.bezierCurveTo(p1.x+(p2.x-p0.x)/6,p1.y+(p2.y-p0.y)/6,p2.x-(p3.x-p1.x)/6,p2.y-(p3.y-p1.y)/6,p2.x,p2.y);}
-        });
-      });ctx.stroke();return{start,end};
+      if(!letterNodes.length||letterNodes.map(n=>n.letter).join('')!==letters.join(''))letterNodes=makeLetterNodes(letters);
+      letterNodes.forEach(node=>drawLetterGlyph(ctx,node,optLetterGuides));
     }
   },
 
@@ -1165,7 +1247,10 @@ function generate() {
   const t = document.getElementById('intention').value.trim();
   if (!t) { showToast('Escribe una intención'); return; }
   const reduction = getReduction(t);
-  letters = [...reduction.reduced];
+  const nextLetters=[...reduction.reduced];
+  const changed=nextLetters.join('')!==letters.join('');
+  letters = nextLetters;
+  if(changed||!letterNodes.length){letterNodes=makeLetterNodes(letters);fusionLevel=0;updateCompositionProgress();}
   const vnums = reduction.values;
   const vsum = vnums.reduce((a,b)=>a+b,0);
   const planet = PLANET_INFO[vsum % 7];
@@ -1207,6 +1292,7 @@ function refreshEngineUI() {
   document.getElementById('kameaParams').style.display = activeEngines.includes('kamea') ? 'block' : 'none';
   document.getElementById('gridParams').style.display = activeEngines.includes('grid') ? 'block' : 'none';
   document.getElementById('alquimiaParams').style.display = activeEngines.includes('alquimia') ? 'block' : 'none';
+  document.getElementById('spareParams').style.display = activeEngines.includes('spare') ? 'block' : 'none';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1223,6 +1309,12 @@ document.getElementById('chkRadial').addEventListener('change', e => { optRadial
 document.getElementById('chkGlow').addEventListener('change', e => { optGlow = e.target.checked; if(letters.length) render(); });
 document.getElementById('chkCircle').addEventListener('change', e => { optCircle = e.target.checked; if(letters.length) render(); });
 document.getElementById('chkDots').addEventListener('change', e => { optDots = e.target.checked; if(letters.length) render(); });
+document.getElementById('chkLetterGuides').addEventListener('change',e=>{optLetterGuides=e.target.checked;if(letters.length)render();});
+document.getElementById('btnSeparate').addEventListener('click',()=>setFusionLevel(0));
+document.getElementById('btnMerge').addEventListener('click',()=>{
+  if(fusionLevel===4){showToast('Ya es un solo signo');return;}
+  setFusionLevel(fusionLevel+1);
+});
 
 // Kamea controls
 document.getElementById('chkGrid').addEventListener('change', e => { optShowGrid = e.target.checked; if(letters.length) render(); });
@@ -1292,7 +1384,7 @@ document.getElementById('chkTransparent').addEventListener('change', e => {
 
 function captureState() {
   return {
-    intention:document.getElementById('intention').value, letters:[...letters], stamps:stamps.map(st=>({...st})), activeEngines:[...activeEngines],
+    intention:document.getElementById('intention').value, letters:[...letters], letterNodes:letterNodes.map(node=>({...node})), fusionLevel, optLetterGuides, stamps:stamps.map(st=>({...st})), activeEngines:[...activeEngines],
     optMirror,optRadial,optGlow,optCircle,optDots,optKameaType,optShowGrid,optNodeStyle,optKameaCurve,
     optGridPattern,optGridFold,optGridCurve,optGridShow,optGridNodeStyle,optGridResonance,
     optNudoStyle,optTerminalStyle,optLoops,optDensity,optReduction,optTransparent
@@ -1306,6 +1398,10 @@ function restoreState(state) {
   optGridPattern=saved.optGridPattern; optGridFold=saved.optGridFold; optGridCurve=saved.optGridCurve; optGridShow=saved.optGridShow; optGridNodeStyle=saved.optGridNodeStyle; optGridResonance=saved.optGridResonance;
   optNudoStyle=saved.optNudoStyle; optTerminalStyle=saved.optTerminalStyle; optLoops=saved.optLoops; optDensity=saved.optDensity; optReduction=saved.optReduction||'unique'; optTransparent=Boolean(saved.optTransparent);
   activeEngines=Array.isArray(saved.activeEngines)&&saved.activeEngines.length ? [...saved.activeEngines].slice(0,2) : ['spare'];
+  letters=Array.isArray(saved.letters)?[...saved.letters]:[];
+  letterNodes=Array.isArray(saved.letterNodes) ? saved.letterNodes.map(node=>({...node})) : [];
+  fusionLevel=Number.isFinite(saved.fusionLevel)?saved.fusionLevel:0;
+  optLetterGuides=saved.optLetterGuides!==false;
   stamps=Array.isArray(saved.stamps) ? saved.stamps.map(st=>({...st})) : [];
   document.getElementById('intention').value=saved.intention||'';
   syncControls();
@@ -1313,12 +1409,13 @@ function restoreState(state) {
 }
 
 function syncControls() {
-  const checks={chkMirror:optMirror,chkRadial:optRadial,chkGlow:optGlow,chkCircle:optCircle,chkDots:optDots,chkGrid:optShowGrid,chkGridShow:optGridShow,chkLoops:optLoops,chkTransparent:optTransparent};
+  const checks={chkMirror:optMirror,chkRadial:optRadial,chkGlow:optGlow,chkCircle:optCircle,chkDots:optDots,chkLetterGuides:optLetterGuides,chkGrid:optShowGrid,chkGridShow:optGridShow,chkLoops:optLoops,chkTransparent:optTransparent};
   Object.entries(checks).forEach(([id,value])=>document.getElementById(id).checked=Boolean(value));
   const selects={selReduction:optReduction,selKamea:optKameaType,selNodeStyle:optNodeStyle,selGridPattern:optGridPattern,selGridFold:String(optGridFold),selGridNodeStyle:optGridNodeStyle,selGridResonance:optGridResonance,selNudoStyle:optNudoStyle,selTerminalStyle:optTerminalStyle,selDensity:optDensity};
   Object.entries(selects).forEach(([id,value])=>document.getElementById(id).value=value);
   [['kameaCurve',optKameaCurve],['gridCurve',optGridCurve]].forEach(([id,value])=>{document.getElementById(id).value=value;document.getElementById(id+'Val').textContent=value+'%';});
   refreshEngineUI();
+  updateCompositionProgress();
 }
 
 function readGallery() {
@@ -1445,6 +1542,27 @@ function placeStamp(clientX, clientY) {
   render();
   showToast('Estampa: ' + stampSym);
 }
+function canvasPoint(clientX,clientY){
+  const rect=canvas.getBoundingClientRect();
+  return{x:(clientX-rect.left)*canvas.width/rect.width,y:(clientY-rect.top)*canvas.height/rect.height};
+}
+let draggedLetter=null;
+canvas.addEventListener('pointerdown',e=>{
+  if(stampMode||!activeEngines.includes('spare'))return;
+  const point=canvasPoint(e.clientX,e.clientY);
+  draggedLetter=[...letterNodes].reverse().find(node=>Math.hypot(node.x-point.x,node.y-point.y)<=node.scale*1.35)||null;
+  if(draggedLetter){canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing';e.preventDefault();}
+});
+canvas.addEventListener('pointermove',e=>{
+  if(!draggedLetter)return;
+  const point=canvasPoint(e.clientX,e.clientY);
+  draggedLetter.x=Math.max(55,Math.min(canvas.width-55,point.x));
+  draggedLetter.y=Math.max(55,Math.min(canvas.height-55,point.y));
+  render();
+});
+function stopLetterDrag(){draggedLetter=null;canvas.style.cursor='default';}
+canvas.addEventListener('pointerup',stopLetterDrag);
+canvas.addEventListener('pointercancel',stopLetterDrag);
 let lastTouchStamp=0;
 canvas.addEventListener('click', e => { if(Date.now()-lastTouchStamp>500) placeStamp(e.clientX,e.clientY); });
 canvas.addEventListener('touchstart', e => {
