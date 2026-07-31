@@ -62,6 +62,11 @@ canvas{aspect-ratio:10/7;display:block;height:auto;min-height:0;width:100%}
 .panel-footer{border-top:1px solid var(--border);color:var(--text-dim);font-size:.58rem;line-height:1.35;margin-top:8px;padding-top:7px;text-align:center}
 .reduction-line{display:grid;grid-template-columns:52px 1fr;gap:4px;line-height:1.35}
 .reduction-line b{color:var(--gold);font-weight:400}
+.reduction-chips{margin-top:5px}
+.chip-label{display:block;font-size:.58rem;color:var(--text-dim);margin-bottom:2px}
+.chip-row{display:flex;flex-wrap:wrap;gap:3px}
+.unit-chip{background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--gold);cursor:pointer;font-family:var(--font);font-size:.7rem;font-weight:600;min-width:22px;padding:2px 0;text-align:center;transition:all .12s}
+.unit-chip:hover{background:var(--gold);color:#0c0b0f;border-color:var(--gold)}
 .gallery{background:rgba(12,11,15,.98);border:1px solid var(--border);border-radius:6px;display:none;flex:0 0 220px;max-height:92vh;overflow:auto;padding:10px}
 .gallery.open{display:block}
 .gallery-head{align-items:center;display:flex;justify-content:space-between;margin-bottom:8px}
@@ -218,6 +223,7 @@ canvas{aspect-ratio:10/7;display:block;height:auto;min-height:0;width:100%}
 
   <h3>Presentación</h3>
   <div class="toggle-row"><input type="checkbox" id="chkGlow"><label title="Halo dorado opcional. La estructura manda; el brillo decora.">Brillo suave</label></div>
+  <div class="toggle-row"><input type="checkbox" id="chkGuide" checked><label title="Muestra cada letra de la intención en un color y posición propios debajo del glifo. Apaga para ver el sigilo puro.">Ver construcción</label></div>
   <div class="toggle-row"><input type="checkbox" id="chkMirror"><label title="Simetría bilateral del núcleo (decisión de usuario)">Simetría bilateral</label></div>
   <div class="toggle-row"><input type="checkbox" id="chkPreview" checked><label>Vista previa 80×80</label></div>
   <div class="preview-box"><canvas id="previewCanvas" width="80" height="80" title="Minatura a 80×80: la silueta debe seguir siendo legible"></canvas><span>Silueta a 80×80<br>legible y trazable</span></div>
@@ -345,7 +351,8 @@ const state = {
     star: { enabled: true, points: 5, scale: 92, rotation: 0, thickness: 18, opacity: 80, inner: 45, gap: 30, chords: true }
   },
   inscription: { enabled: false, text: '', pos: 'upperArc', size: 17, spacing: 3, orientation: 'normal' },
-  presentation: { glow: false, mirror: false, preview: true },
+  presentation: { glow: false, mirror: false, preview: true, guide: true },
+  highlightUnit: null,
   stamps: [],
   core: { strokes: [], merges: [], removed: [] },
   userDecisions: [],
@@ -360,6 +367,9 @@ let nextId = 100;
 function hashStr(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
 function val(ch) { return ch.charCodeAt(0) - 64; }
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c])); }
+
+// Colores distinguibles para la capa "Ver construcción" (una por letra)
+const GUIDE_COLORS = ['#e0b64c', '#c65a3b', '#8fa6c9', '#7fb08a', '#b58ac9', '#c99a1a', '#5fa3a0', '#c26a7a', '#9aa67a', '#d9c46a', '#6a7fb0', '#b0805a'];
 
 // ── Reducción nombrada ──────────────────────────────────────────
 // cooper: iniciales únicas (Cooper). Si quedan <3 unidades, se
@@ -488,7 +498,7 @@ function proj(st, d) {
 function tryMerge(a, b, thr) {
   const da = dirOf(a), db = dirOf(b);
   if (!da || !db) return null;
-  if (Math.abs(da.x * db.y - da.y * db.x) > Math.sin(20 * Math.PI / 180)) return null;
+  if (Math.abs(da.x * db.y - da.y * db.x) > Math.sin(12 * Math.PI / 180)) return null;
   const A = proj(a, da), B = proj(b, da);
   const ov = Math.min(A.max, B.max) - Math.max(A.min, B.min);
   const un = Math.max(A.max, B.max) - Math.min(A.min, B.min);
@@ -505,7 +515,7 @@ function tryMerge(a, b, thr) {
 }
 function mergePass(strokes, merges, thr) {
   let changed = true, guard = 0;
-  while (changed && guard++ < 14) {
+  while (changed && guard++ < 6) {
     changed = false;
     for (let i = 0; i < strokes.length && !changed; i++) {
       for (let j = i + 1; j < strokes.length && !changed; j++) {
@@ -522,18 +532,22 @@ function mergePass(strokes, merges, thr) {
 }
 
 function normalizeStrokes(strokes) {
+  const p = normParams(strokes);
+  if (!p) return;
+  for (const st of strokes) for (const pt of st.pts) {
+    pt.x = (pt.x - p.cxm) * p.k; pt.y = (pt.y - p.cym) * p.k;
+  }
+}
+function normParams(strokes) {
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   for (const st of strokes) for (const p of st.pts) {
     if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
     if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
   }
-  if (!isFinite(minX)) return;
+  if (!isFinite(minX)) return null;
   const cxm = (minX + maxX) / 2, cym = (minY + maxY) / 2;
   const s = Math.max(maxX - minX, maxY - minY) || 1;
-  const k = 2 / s;
-  for (const st of strokes) for (const p of st.pts) {
-    p.x = (p.x - cxm) * k; p.y = (p.y - cym) * k;
-  }
+  return { cxm, cym, k: 2 / s };
 }
 
 function buildCore(units) {
@@ -554,9 +568,14 @@ function buildCore(units) {
       strokes.push({ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: mapped });
     });
   });
+  state._guideStrokes = strokes.map(st => ({ id: st.id, unit: st.unit, pts: st.pts.map(p => ({ x: p.x, y: p.y })) }));
   const merges = [];
-  let list = state.autoJoin ? mergePass(strokes, merges, 0.45) : strokes;
-  normalizeStrokes(list);
+  let list = state.autoJoin ? mergePass(strokes, merges, 0.62) : strokes;
+  const np = normParams(list);
+  if (np) {
+    for (const st of list) for (const p of st.pts) { p.x = (p.x - np.cxm) * np.k; p.y = (p.y - np.cym) * np.k; }
+    for (const st of state._guideStrokes) for (const p of st.pts) { p.x = (p.x - np.cxm) * np.k; p.y = (p.y - np.cym) * np.k; }
+  }
   return { strokes: list, merges };
 }
 
@@ -591,6 +610,7 @@ function simplifyCore() {
     keep.push(st);
   }
   state.core.strokes = keep;
+  state._guideStrokes = null;
   state.core.removed.push({ n: before - keep.length, when: 'simplify' });
   state.userDecisions.push({ type: 'simplify', removed: before - keep.length });
   return before - keep.length;
@@ -785,14 +805,43 @@ function paintLayer(ctx, layer) {
     }
     case 'core': {
       const glow = state.presentation.glow;
+      const guide = state.presentation.guide && state._guideStrokes;
+      const hl = state.highlightUnit;
       ctx.save();
-      ctx.strokeStyle = '#c99a1a';
       ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      if (guide) {
+        const guideByUnit = {};
+        for (const g of state._guideStrokes) (guideByUnit[g.unit] = guideByUnit[g.unit] || []).push(g.pts);
+        const units = Object.keys(guideByUnit);
+        units.forEach((u, i) => {
+          const col = GUIDE_COLORS[i % GUIDE_COLORS.length];
+          const active = hl === null || hl === u;
+          ctx.globalAlpha = active ? 0.95 : 0.12;
+          ctx.strokeStyle = col; ctx.lineWidth = active ? 3.2 : 1.6;
+          for (const pts of guideByUnit[u]) tracePath(ctx, pts, mirror);
+        });
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = 'rgba(201,154,26,0.35)'; ctx.lineWidth = 1.6;
+        for (const st of layer.strokes) tracePath(ctx, st.pts, mirror);
+        ctx.globalAlpha = 1;
+        break;
+      }
       if (glow) { ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 14; ctx.lineWidth = 7; ctx.strokeStyle = 'rgba(184,134,11,.28)'; for (const st of layer.strokes) tracePath(ctx, st.pts, mirror); }
       ctx.shadowBlur = 0;
       ctx.lineWidth = 2.8;
       ctx.strokeStyle = '#c99a1a';
-      for (const st of layer.strokes) tracePath(ctx, st.pts, mirror);
+      for (const st of layer.strokes) {
+        if (hl && !st.units.includes(hl)) { ctx.globalAlpha = 0.28; }
+        tracePath(ctx, st.pts, mirror);
+        ctx.globalAlpha = 1;
+      }
+      if (guide) {
+        ctx.lineWidth = 2.4;
+        for (const g of state._guideStrokes) {
+          if (g.unit === hl) { ctx.strokeStyle = '#fff4c8'; ctx.globalAlpha = 0.9; tracePath(ctx, g.pts, mirror); }
+        }
+        ctx.globalAlpha = 1;
+      }
       if (layer.terminals) {
         const style = state.terminals.style;
         for (const st of layer.strokes) {
@@ -927,13 +976,21 @@ function generate() {
   state.core = buildCore([...r.reduced]);
   state.userDecisions = [];
   state.core.removed = [];
+  state.highlightUnit = null;
   const box = document.getElementById('reductionBox');
   box.innerHTML =
     '<div class="reduction-line"><b>Original</b><span>' + esc(r.original) + '</span></div>' +
     '<div class="reduction-line"><b>Letras</b><span>' + esc(r.cleaned) + '</span></div>' +
     '<div class="reduction-line"><b>Regla</b><span>' + esc(r.rule) + '</span></div>' +
     '<div class="reduction-line"><b>Unidades</b><span>' + esc(r.reduced) + '</span></div>' +
-    '<div class="reduction-line"><b>Valores</b><span>' + r.values.join(' ') + '</span></div>';
+    '<div class="reduction-line"><b>Valores</b><span>' + r.values.join(' ') + '</span></div>' +
+    '<div class="reduction-chips"><span class="chip-label">Pasa el ratón por cada letra para verla en el glifo:</span><div class="chip-row">' +
+    [...r.reduced].map((ch, i) => '<button class="unit-chip" data-u="' + ch + '" title="Letra ' + ch + ' de la intención">' + ch + '</button>').join('') +
+    '</div></div>';
+  box.querySelectorAll('.unit-chip').forEach(btn => {
+    btn.addEventListener('mouseenter', () => { state.highlightUnit = btn.dataset.u; render(); });
+    btn.addEventListener('mouseleave', () => { state.highlightUnit = null; render(); });
+  });
   if (state.core.strokes.length < 2) { showToast('Necesitas al menos 2 unidades'); return; }
   render();
   showToast(state.core.strokes.length + ' trazos — glifo personal trazable');
@@ -1060,6 +1117,7 @@ function editAction(fn, label) {
   const st = strokeById(selectedStroke);
   if (!st) { showToast('Selecciona un trazo'); return; }
   fn(st);
+  state._guideStrokes = null;
   state.userDecisions.push({ type: label, stroke: selectedStroke });
   refreshEditList();
 }
@@ -1111,6 +1169,7 @@ function syncControls() {
   $('rngInsSpacing').value = state.inscription.spacing; $('insSpacingVal').textContent = state.inscription.spacing;
   $('selInsOrientation').value = state.inscription.orientation;
   $('chkGlow').checked = state.presentation.glow;
+  $('chkGuide').checked = state.presentation.guide;
   $('chkMirror').checked = state.presentation.mirror;
   $('chkPreview').checked = state.presentation.preview;
   $('rngOrganic').value = state.organic; $('organicVal').textContent = state.organic + '%';
@@ -1166,6 +1225,7 @@ setupRange('rngInsSpacing', 'insSpacingVal', v => v, v => { state.inscription.sp
 $('selInsOrientation').addEventListener('change', e => { state.inscription.orientation = e.target.value; render(); });
 
 $('chkGlow').addEventListener('change', e => { state.presentation.glow = e.target.checked; render(); });
+$('chkGuide').addEventListener('change', e => { state.presentation.guide = e.target.checked; render(); });
 $('chkMirror').addEventListener('change', e => { state.presentation.mirror = e.target.checked; render(); });
 $('chkPreview').addEventListener('change', e => { state.presentation.preview = e.target.checked; updatePreview(); });
 $('chkTransparent').addEventListener('change', e => { state.chkTransparent = e.target.checked; render(); });

@@ -120,7 +120,16 @@ const noHebrew = await page.evaluate(() => !buildSVG().match(/[\u0590-\u05FF]/))
 check('4 familias bloqueadas', famLocked === 4, famLocked + '');
 check('sin hebreo automatico', noHebrew, '');
 
-// 8) Interaccion: editar + simplificar
+// 8) Capa "Ver construcción" (guía por letra) presente tras generar
+const guideOk = await page.evaluate(() => {
+  const strokes = state.core.strokes;
+  const hasGuide = Array.isArray(state._guideStrokes) && state._guideStrokes.length > 0;
+  const units = strokes.map(s => s.unit || s.units.join('+'));
+  return { hasGuide, units, count: strokes.length };
+});
+check('guia por letra presente', guideOk.hasGuide && guideOk.units.length > 0, guideOk.count + ' trazos');
+
+// 9) Interaccion: editar + simplificar
 const before = await page.evaluate(() => state.core.strokes.length);
 await page.click('#btnEditStrokes');
 await page.waitForTimeout(150);
@@ -133,7 +142,7 @@ const after = await page.evaluate(() => state.core.strokes.length);
 check('editar trazos', editOn === true, '');
 check('simplificar', after <= before, `${before} -> ${after}`);
 
-// 9) Sin errores de pagina
+// 10) Sin errores de pagina
 check('sin errores de pagina', pageErrors.length === 0, pageErrors.slice(0, 2).join(' | '));
 
 await browser.close();

@@ -1,0 +1,6 @@
+node_modules/
+test-results/
+_*.png
+_*.mjs
+_*.txt
+_*.cjs
