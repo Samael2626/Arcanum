@@ -100,6 +100,7 @@ canvas{aspect-ratio:10/7;display:block;height:auto;min-height:0;width:100%}
   .gnosis-copy{font-size:.7rem}
   .gnosis-visual{height:42vh}
 }
+#starParams,#kameaParams,#gridParams,#alquimiaParams{display:none!important}
 </style>
 </head>
 <body>
@@ -113,21 +114,10 @@ canvas{aspect-ratio:10/7;display:block;height:auto;min-height:0;width:100%}
   <textarea id="intention" placeholder="Tu intención..."></textarea>
   <div class="btn-group"><button class="btn" id="btnGenerate">✦ Forjar</button></div>
   <h3>Reducción</h3>
-  <div class="param-row"><label for="selReduction">Método</label><select id="selReduction" title="Elige cómo condensar la intención antes de componer el sigilo">
-    <option value="spare">Spare (sin vocales, únicas)</option>
-    <option value="unique" selected>Con vocales (únicas)</option>
-    <option value="ao">A-O Principle</option>
-  </select></div>
+  <div class="param-row"><label for="selReduction">Método</label><select id="selReduction" title="Elige cómo condensar la intención antes de componer el sigilo"><option value="cooper" selected>Cooper (iniciales)</option><option value="unique">Letras únicas</option><option value="spare">Sin vocales (variante moderna)</option></select></div>
   <div class="info-box" id="reductionBox">—</div>
   <h3>Familia</h3>
-  <div class="fam-select">
-    <div class="fam-btn" data-engine="spare" title="Combina los trazos simplificados de las letras en un glifo abstracto">Glifo Spare</div>
-    <div class="fam-btn" data-engine="star" title="Geometría estelar derivada de letras y suma gemátrica">Estrella</div>
-    <div class="fam-btn" data-engine="kamea" title="Traza las letras sobre cuadrados mágicos planetarios">Sello</div>
-    <div class="fam-btn" data-engine="grid" title="Pliega el trazado sobre patrones de geometría sagrada">Grid</div>
-    <div class="fam-btn" data-engine="alquimia" title="Gramática visual basada en terminales y ángulos goéticos">Alquimia</div>
-  </div>
-  <div class="info-box">Elige un método. Spare combina gestos de las letras en un glifo; los demás son paradigmas opcionales. Máximo dos capas.</div>
+  <div class="fam-select"><div class="fam-btn active" data-engine="spare" title="Composición personal asistida: un esqueleto, pocas primitivas, trazabilidad">Glifo personal</div></div><div class="info-box">V1 separa el glifo personal de kameas, Rosa-Cruz y sellos históricos. El ordenador propone; tú eliges y corriges.</div>
 
   <div id="starParams" class="param-group">
     <div class="toggle-row"><input type="checkbox" id="chkMirror"><label>Simetría bilateral</label></div>
@@ -287,7 +277,8 @@ let activeEngines = ['spare'];
 let optKameaType = 'auto', optShowGrid = true, optNodeStyle = 'both', optKameaCurve = 0;
 let optGridPattern = 'fol', optGridFold = 4, optGridCurve = 30, optGridShow = true, optGridNodeStyle = 'both', optGridResonance = 'none';
 let optNudoStyle = 'radiant', optTerminalStyle = 'auto', optLoops = true, optDensity = 'medium';
-let optReduction = 'unique', optTransparent = false;
+let optReduction = 'cooper', optTransparent = false;
+let sigilProvenance = [];
 const STORAGE_KEY = 'arcanum_sigils';
 
 // ═══════════════════════════════════════════════════════════════
@@ -295,12 +286,13 @@ const STORAGE_KEY = 'arcanum_sigils';
 // ═══════════════════════════════════════════════════════════════
 function getReduction(t, method = optReduction) {
   const normalized = t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+  const words = normalized.trim().split(/\s+/).filter(Boolean);
   const cleaned = normalized.replace(/[^A-Z]/g, '');
   let reduced;
-  if (method === 'spare') reduced = [...new Set(cleaned.replace(/[AEIOU]/g, ''))].join('');
-  else if (method === 'ao') reduced = cleaned.split('').map(ch => 'AEIOU'.includes(ch) ? 'A' : 'O').join('');
+  if (method === 'cooper') reduced = [...new Set(words.map(word => word[0]).filter(Boolean))].join('');
+  else if (method === 'spare') reduced = [...new Set(cleaned.replace(/[AEIOU]/g, ''))].join('');
   else reduced = [...new Set(cleaned)].join('');
-  return { original:t, cleaned, reduced, values:[...reduced].map(val) };
+  return { original:t, cleaned, reduced, values:[...reduced].map(val), rule: method === 'cooper' ? 'Iniciales + primera aparición (variante Cooper)' : method === 'spare' ? 'Letras únicas sin vocales (variante moderna)' : 'Letras únicas con vocales' };
 }
 
 function reduce(t) { return getReduction(t).reduced; }
@@ -1049,7 +1041,34 @@ const PLANET_INFO = [
 // ═══════════════════════════════════════════════════════════════
 //  RENDER
 // ═══════════════════════════════════════════════════════════════
+// V1: composición personal determinista. Cada trazo nace de una unidad reducida.
+engines.spare = {
+  render(ctx, cx, cy, radius, units) {
+    if (!units.length) return;
+    const scale = radius * (units.length > 8 ? .34 : .46);
+    const traces = [];
+    units.forEach((letter, index) => {
+      const glyph = LETTER_GLYPHS[letter] || LETTER_GLYPHS.X;
+      const stroke = glyph.reduce((best, candidate) => candidate.length > best.length ? candidate : best, glyph[0]);
+      const angle = ((index % 4) - 1.5) * 0.22;
+      const offsetX = ((index % 3) - 1) * radius * .09;
+      const offsetY = (index - (units.length - 1) / 2) * radius * .045;
+      const points = stroke.map(([x, y]) => ({ x: cx + offsetX + (x * scale * Math.cos(angle) - y * scale * Math.sin(angle)), y: cy + offsetY + (x * scale * Math.sin(angle) + y * scale * Math.cos(angle)) }));
+      traces.push(points);
+      sigilProvenance.push({ unit: letter, index, primitive: points.length > 3 ? 'bezier' : 'segment' });
+    });
+    const draw = () => traces.forEach(points => { ctx.beginPath(); ctx.moveTo(points[0].x, points[0].y); points.slice(1).forEach(point => ctx.lineTo(point.x, point.y)); ctx.stroke(); });
+    if (optGlow) { ctx.save(); ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 16; ctx.strokeStyle = 'rgba(184,134,11,.22)'; ctx.lineWidth = 7; ctx.lineCap = 'round'; draw(); ctx.restore(); }
+    ctx.save(); ctx.strokeStyle = '#c99a1a'; ctx.lineWidth = 2.8; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; draw();
+    ctx.fillStyle = '#0a080d'; ctx.strokeStyle = '#c99a1a'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(traces[0][0].x, traces[0][0].y, 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    const end = traces[traces.length - 1].at(-1), last = traces[traces.length - 1].at(-2) || end;
+    const dx = end.x - last.x, dy = end.y - last.y, len = Math.hypot(dx, dy) || 1, nx = -dy / len * 6, ny = dx / len * 6;
+    ctx.beginPath(); ctx.moveTo(end.x - nx, end.y - ny); ctx.lineTo(end.x + nx, end.y + ny); ctx.stroke(); ctx.restore();
+  }
+};
+
 function render() {
+  sigilProvenance = [];
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
   if (!optTransparent) { ctx.fillStyle = '#0a080d'; ctx.fillRect(0, 0, W, H); }
@@ -1168,16 +1187,17 @@ function generate() {
   letters = [...reduction.reduced];
   const vnums = reduction.values;
   const vsum = vnums.reduce((a,b)=>a+b,0);
-  const planet = PLANET_INFO[vsum % 7];
+  const planet = null;
   document.getElementById('reductionBox').innerHTML =
     '<div class="reduction-line"><b>Original</b><span>' + escapeHTML(reduction.original) + '</span></div>' +
     '<div class="reduction-line"><b>Letras</b><span>' + reduction.cleaned + '</span></div>' +
+    '<div class="reduction-line"><b>Regla</b><span>' + reduction.rule + '</span></div>' +
     '<div class="reduction-line"><b>Final</b><span>' + reduction.reduced + '</span></div>' +
     '<div class="reduction-line"><b>Valores</b><span>' + vnums.join(' ') + '</span></div>' +
     (planet ? '<br><span style="color:var(--gold);font-size:.65rem">' + planet.sym + ' ' + planet.name + ' — ' + planet.sephirah + '</span>' : '');
   if (letters.length < 2) { showToast('Necesitas al menos 2 letras'); return; }
   render();
-  showToast(letters.length + ' letras — ' + activeEngines.join('+'));
+  showToast(letters.length + ' unidades — glifo personal trazable');
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1188,6 +1208,7 @@ function escapeHTML(value) {
 }
 
 function toggleEngine(name) {
+  if (name !== 'spare') { showToast('V1 usa solo glifo personal; motores historicos van separados'); return; }
   const idx = activeEngines.indexOf(name);
   if (idx >= 0) {
     if (activeEngines.length < 2) return; // keep at least one
