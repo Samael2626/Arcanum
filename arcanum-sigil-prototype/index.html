@@ -60,6 +60,23 @@ canvas{aspect-ratio:10/7;display:block;height:auto;min-height:0;width:100%}
 .preview-box canvas{aspect-ratio:1;border:1px solid var(--border);display:block;height:44px;image-rendering:pixelated;width:44px}
 .preview-box span{color:var(--text-dim);font-size:.6rem;line-height:1.3}
 .panel-footer{border-top:1px solid var(--border);color:var(--text-dim);font-size:.58rem;line-height:1.35;margin-top:8px;padding-top:7px;text-align:center}
+.step{border:1px solid var(--border);border-radius:6px;margin:8px 0;overflow:hidden}
+.step>summary{align-items:center;background:linear-gradient(180deg,rgba(75,16,28,.28),transparent);cursor:pointer;display:flex;gap:8px;list-style:none;padding:7px 8px;user-select:none}
+.step>summary::-webkit-details-marker{display:none}
+.step>summary:hover{background:linear-gradient(180deg,rgba(184,134,11,.16),rgba(75,16,28,.18))}
+.step-num{align-items:center;background:var(--gold);border-radius:50%;color:#0c0b0f;display:flex;flex:0 0 20px;font-size:.62rem;font-weight:700;height:20px;justify-content:center}
+.step-title{color:var(--text);font-size:.74rem;font-weight:600;letter-spacing:2px;text-transform:uppercase}
+.step-chevron{margin-left:auto;transition:transform .18s}
+.step[open]>.step-chevron{display:none}
+.step[open]>summary>.step-chevron{transform:rotate(90deg)}
+.step-body{padding:6px 8px 8px}
+.step-body>h3{border:none;margin-top:6px;padding-top:0}
+.step-helper{color:var(--text-dim);font-size:.66rem;font-style:italic;line-height:1.4;margin:2px 0 6px}
+.sub-step{border:1px solid var(--border);border-radius:5px;margin:7px 0 2px}
+.sub-step>summary{color:var(--gold);cursor:pointer;font-size:.66rem;letter-spacing:1px;list-style:none;padding:6px 8px;text-transform:uppercase;user-select:none}
+.sub-step>summary::-webkit-details-marker{display:none}
+.sub-step>summary:hover{background:rgba(184,134,11,.08)}
+.sub-body{padding:4px 8px 8px}
 .reduction-line{display:grid;grid-template-columns:52px 1fr;gap:4px;line-height:1.35}
 .reduction-line b{color:var(--gold);font-weight:400}
 .reduction-chips{margin-top:5px}
@@ -143,134 +160,174 @@ canvas{aspect-ratio:10/7;display:block;height:auto;min-height:0;width:100%}
 <div class="panel" id="controlPanel">
   <button class="btn-dim btn-sm mobile-panel-close" id="panelClose">X</button>
 
-  <h3>Intención</h3>
-  <textarea id="intention" placeholder="Tu intención..."></textarea>
-  <div class="btn-group"><button class="btn" id="btnGenerate">✦ Forjar</button></div>
+  <details class="step" open>
+    <summary><span class="step-num">1</span><span class="step-title">Intención</span><span class="step-chevron">▸</span></summary>
+    <div class="step-body">
+      <p class="step-helper">Una acción o disposición propia que quieras cultivar. Clara, tuya, sin daño a terceros.</p>
+      <textarea id="intention" placeholder="Ej.: mi práctica mantiene enfoque sereno"></textarea>
+      <div class="btn-group"><button class="btn" id="btnGenerate">✦ Forjar</button></div>
+    </div>
+  </details>
 
-  <h3>Reducción</h3>
-  <div class="param-row"><label for="selReduction">Método</label>
-    <select id="selReduction" title="Regla nombrada para condensar la intención">
-      <option value="cooper" selected>Cooper — iniciales</option>
-      <option value="novowels">Sin vocales (moderno)</option>
-      <option value="unique">Letras únicas</option>
-    </select></div>
-  <div class="info-box" id="reductionBox">—</div>
+  <details class="step" open>
+    <summary><span class="step-num">2</span><span class="step-title">Reducción</span><span class="step-chevron">▸</span></summary>
+    <div class="step-body">
+      <p class="step-helper">La intención se condensa con una regla nombrada y documentada.</p>
+      <div class="param-row"><label for="selReduction">Método</label>
+        <select id="selReduction" title="Regla nombrada para condensar la intención">
+          <option value="cooper" selected>Cooper — iniciales</option>
+          <option value="novowels">Sin vocales (moderno)</option>
+          <option value="unique">Letras únicas</option>
+        </select></div>
+      <div class="info-box" id="reductionBox">—</div>
+      <details class="sub-step">
+        <summary id="subFamilias">Familias (no se mezclan)</summary>
+        <div class="sub-body">
+          <div class="fam-select">
+            <div class="fam-btn active" id="famPersonal" title="Composición personal asistida. El ordenador propone; tú eliges y corriges.">Glifo personal</div>
+            <div class="fam-btn active" id="famMarco" title="Círculo, estrella e inscripción como capas independientes del núcleo.">Marco ceremonial</div>
+            <div class="fam-btn" id="famRosaCruz" title="Motor separado: diagrama de letras de la Rosa y transliteración explícita. No se mezcla con el glifo personal.">Rosa-Cruz</div>
+            <div class="fam-btn locked" id="famKamea" title="Motor futuro: planeta, tabla histórica, transliteración y secuencia.">Kamea planetario</div>
+            <div class="fam-btn locked" id="famSeal" title="Catálogo documentado por manuscrito/edición. No se genera libremente.">Sello histórico</div>
+            <div class="fam-btn locked" id="famGoetia" title="Catálogo documentado. Ningún generador inventa entidades.">Goetia / Dee</div>
+          </div>
+          <div class="rosa-panel" id="rosaPanel" hidden>
+            <h4>Rosa-Cruz — motor separado</h4>
+            <p class="step-helper">Translitera un nombre al hebreo y une sus letras sobre la Rosa de 22 pétalos. Sistema de coordenadas alfabéticas; no es reducción estilo Spare.</p>
+            <div class="param-row"><label for="rosaName">Nombre</label><input id="rosaName" type="text" maxlength="20" placeholder="Ej.: VOLUNTAS"></div>
+            <div class="btn-group"><button class="btn btn-sm" id="btnRosaGenerate">✜ Transliterar y trazar</button></div>
+            <div class="toggle-row"><input type="checkbox" id="chkRosaDiagram" checked><label title="Muestra los 22 pétalos con su letra y correspondencia">Mostrar diagrama de letras</label></div>
+            <div class="info-box" id="rosaBox">—</div>
+          </div>
+        </div>
+      </details>
+    </div>
+  </details>
 
-  <h3>Familia</h3>
-  <div class="fam-select">
-    <div class="fam-btn active" id="famPersonal" title="Composición personal asistida. El ordenador propone; tú eliges y corriges.">Glifo personal</div>
-    <div class="fam-btn active" id="famMarco" title="Círculo, estrella e inscripción como capas independientes del núcleo.">Marco ceremonial</div>
-    <div class="fam-btn locked" id="famRosaCruz" title="Motor separado futuro: diagrama de letras y transliteración explícitos.">Rosa-Cruz</div>
-    <div class="fam-btn locked" id="famKamea" title="Motor futuro: planeta, tabla histórica, transliteración y secuencia.">Kamea planetario</div>
-    <div class="fam-btn locked" id="famSeal" title="Catálogo documentado por manuscrito/edición. No se genera libremente.">Sello histórico</div>
-    <div class="fam-btn locked" id="famGoetia" title="Catálogo documentado. Ningún generador inventa entidades.">Goetia / Dee</div>
-  </div>
+  <details class="step" open>
+    <summary><span class="step-num">3</span><span class="step-title">Tótem</span><span class="step-chevron">▸</span></summary>
+    <div class="step-body">
+      <p class="step-helper">Un poste vertical con bandas: cada letra talla su registro sobre el asta. Sin letras amontonadas.</p>
+      <h4>Talla</h4>
+      <div class="skeleton-group">
+        <button class="skeleton-btn active" data-k="0" id="btnSkel0" title="Asta y soportes rectos, talla sobria">Poste</button>
+        <button class="skeleton-btn" data-k="1" id="btnSkel1" title="Soportes con hombro y remates, talla ceremonial">Totémico</button>
+        <button class="skeleton-btn" data-k="2" id="btnSkel2" title="Soportes con curva y lomo orgánico">Tronco vivo</button>
+      </div>
+      <div class="param-row"><label for="rngOrganic">Carácter</label><input type="range" id="rngOrganic" min="0" max="100" value="35"><span class="val" id="organicVal">35%</span></div>
+      <div class="toggle-row"><input type="checkbox" id="chkJoin" checked><label title="Fusiona trazos casi-colineales en ligaduras con procedencia compartida">Unir trazos compatibles</label></div>
+      <div class="toggle-row"><input type="checkbox" id="chkMirror" checked><label title="Simetría bilateral del tótem (decisión de usuario)">Simetría bilateral</label></div>
+      <div class="toggle-row"><input type="checkbox" id="chkTerminals"><label>Terminales</label>
+        <select id="selTerminalStyle" style="flex:1;min-width:0">
+          <option value="dot">Punto</option><option value="cross">Cruz</option><option value="ring">Anillo</option>
+        </select></div>
+      <div class="btn-group">
+        <button class="btn-dim btn-sm" id="btnEditStrokes">✎ Editar trazos</button>
+        <button class="btn-dim btn-sm" id="btnSimplify" title="Re-fusiona, elimina duplicados y trazos aislados cortos">Simplificar</button>
+      </div>
+      <div class="btn-group"><button class="btn-dim btn-sm" id="btnProvenance">☰ Ver procedencia</button></div>
 
-  <h3>Núcleo</h3>
-  <div class="info-box">Monograma compacto y trazable: eje, barras compartidas y curva única. Cada trazo guarda su origen.</div>
-  <h4>Esqueleto</h4>
-  <div class="skeleton-group">
-    <button class="skeleton-btn active" data-k="0" id="btnSkel0" title="Eje vertical dominante con trazos compartidos">Eje</button>
-    <button class="skeleton-btn" data-k="1" id="btnSkel1" title="Flujo diagonal dominante">Diagonal</button>
-    <button class="skeleton-btn" data-k="2" id="btnSkel2" title="Curva dominante">Curva</button>
-  </div>
-  <div class="param-row"><label for="rngOrganic">Carácter</label><input type="range" id="rngOrganic" min="0" max="100" value="35"><span class="val" id="organicVal">35%</span></div>
-  <div class="toggle-row"><input type="checkbox" id="chkJoin" checked><label title="Fusiona trazos casi-colineales en ligaduras con procedencia compartida">Unir trazos compatibles</label></div>
-  <div class="toggle-row"><input type="checkbox" id="chkTerminals"><label>Terminales</label>
-    <select id="selTerminalStyle" style="flex:1;min-width:0">
-      <option value="dot">Punto</option><option value="cross">Cruz</option><option value="ring">Anillo</option>
-    </select></div>
-  <div class="btn-group">
-    <button class="btn-dim btn-sm" id="btnEditStrokes">✎ Editar trazos</button>
-    <button class="btn-dim btn-sm" id="btnSimplify" title="Re-fusiona, elimina duplicados y trazos aislados cortos">Simplificar</button>
-  </div>
+      <details class="sub-step">
+        <summary id="subMarco">Marco ritual (círculo, estrella, inscripción)</summary>
+        <div class="sub-body">
+          <div class="param-group">
+            <div class="toggle-row"><input type="checkbox" id="chkCircle" checked><label>Círculo exterior</label></div>
+            <div class="param-row" id="circleScaleRow"><label>Escala</label><input type="range" id="rngCircleScale" min="80" max="115" value="100"><span class="val" id="circleScaleVal">100%</span></div>
+            <div class="param-row"><label>Grosor</label><input type="range" id="rngCircleThick" min="4" max="30" value="14"><span class="val" id="circleThickVal">1.4</span></div>
+            <div class="param-row"><label>Opacidad</label><input type="range" id="rngCircleOpacity" min="10" max="100" value="55"><span class="val" id="circleOpacityVal">55%</span></div>
+            <div class="toggle-row"><input type="checkbox" id="chkCircleDouble"><label>Anillo doble</label></div>
+          </div>
+          <div class="param-group">
+            <div class="toggle-row"><input type="checkbox" id="chkStar" checked><label>Estrella ritual</label></div>
+            <div class="param-row"><label>Puntas</label><select id="selStarPoints">
+              <option value="5" selected>5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+            </select></div>
+            <div class="param-row"><label>Escala</label><input type="range" id="rngStarScale" min="70" max="105" value="92"><span class="val" id="starScaleVal">92%</span></div>
+            <div class="param-row"><label>Rotación</label><input type="range" id="rngStarRot" min="0" max="360" value="0"><span class="val" id="starRotVal">0°</span></div>
+            <div class="param-row"><label>Grosor</label><input type="range" id="rngStarThick" min="4" max="30" value="18"><span class="val" id="starThickVal">1.8</span></div>
+            <div class="param-row"><label>Opacidad</label><input type="range" id="rngStarOpacity" min="10" max="100" value="80"><span class="val" id="starOpacityVal">80%</span></div>
+            <div class="param-row"><label>Interior</label><input type="range" id="rngStarInner" min="30" max="65" value="45"><span class="val" id="starInnerVal">45%</span></div>
+            <div class="param-row"><label>Separación núcleo</label><input type="range" id="rngStarGap" min="0" max="100" value="30"><span class="val" id="starGapVal">30%</span></div>
+            <div class="toggle-row"><input type="checkbox" id="chkStarChords" checked><label title="Acordes internos del polígono estelar (pentagrama, hexagrama…)">Acordes internos</label></div>
+          </div>
+          <div class="toggle-row"><input type="checkbox" id="chkInscription"><label>Inscripción latina</label></div>
+          <div class="param-row" id="insRow"><label>Texto</label><input id="insText" type="text" maxlength="42" placeholder="Lema, nombre o frase"></div>
+          <div class="param-row"><label>Posición</label><select id="selInsPos">
+            <option value="top">Arriba</option><option value="bottom">Abajo</option>
+            <option value="upperArc" selected>Arco superior</option><option value="lowerArc">Arco inferior</option>
+          </select></div>
+          <div class="param-row"><label>Tamaño</label><input type="range" id="rngInsSize" min="9" max="30" value="17"><span class="val" id="insSizeVal">17</span></div>
+          <div class="param-row"><label>Espaciado</label><input type="range" id="rngInsSpacing" min="0" max="16" value="3"><span class="val" id="insSpacingVal">3</span></div>
+          <div class="param-row"><label>Orientación</label><select id="selInsOrientation">
+            <option value="normal">Normal</option><option value="mirror">Espejo</option>
+          </select></div>
+          <div class="info-box">El texto nunca se añade solo. El hebreo es un motor separado con transliteración y mapa de letras; aquí no se improvisan letras hebreas.</div>
+        </div>
+      </details>
 
-  <h3>Marco ritual</h3>
-  <div class="param-group">
-    <div class="toggle-row"><input type="checkbox" id="chkCircle" checked><label>Círculo exterior</label></div>
-    <div class="param-row" id="circleScaleRow"><label>Escala</label><input type="range" id="rngCircleScale" min="80" max="115" value="100"><span class="val" id="circleScaleVal">100%</span></div>
-    <div class="param-row"><label>Grosor</label><input type="range" id="rngCircleThick" min="4" max="30" value="14"><span class="val" id="circleThickVal">1.4</span></div>
-    <div class="param-row"><label>Opacidad</label><input type="range" id="rngCircleOpacity" min="10" max="100" value="55"><span class="val" id="circleOpacityVal">55%</span></div>
-    <div class="toggle-row"><input type="checkbox" id="chkCircleDouble"><label>Anillo doble</label></div>
-  </div>
-  <div class="param-group">
-    <div class="toggle-row"><input type="checkbox" id="chkStar" checked><label>Estrella ritual</label></div>
-    <div class="param-row"><label>Puntas</label><select id="selStarPoints">
-      <option value="5" selected>5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
-    </select></div>
-    <div class="param-row"><label>Escala</label><input type="range" id="rngStarScale" min="70" max="105" value="92"><span class="val" id="starScaleVal">92%</span></div>
-    <div class="param-row"><label>Rotación</label><input type="range" id="rngStarRot" min="0" max="360" value="0"><span class="val" id="starRotVal">0°</span></div>
-    <div class="param-row"><label>Grosor</label><input type="range" id="rngStarThick" min="4" max="30" value="18"><span class="val" id="starThickVal">1.8</span></div>
-    <div class="param-row"><label>Opacidad</label><input type="range" id="rngStarOpacity" min="10" max="100" value="80"><span class="val" id="starOpacityVal">80%</span></div>
-    <div class="param-row"><label>Interior</label><input type="range" id="rngStarInner" min="30" max="65" value="45"><span class="val" id="starInnerVal">45%</span></div>
-    <div class="param-row"><label>Separación núcleo</label><input type="range" id="rngStarGap" min="0" max="100" value="30"><span class="val" id="starGapVal">30%</span></div>
-    <div class="toggle-row"><input type="checkbox" id="chkStarChords" checked><label title="Acordes internos del polígono estelar (pentagrama, hexagrama…)">Acordes internos</label></div>
-  </div>
+      <details class="sub-step">
+        <summary id="subPresentacion">Presentación</summary>
+        <div class="sub-body">
+          <div class="toggle-row"><input type="checkbox" id="chkGlow"><label title="Halo dorado opcional. La estructura manda; el brillo decora.">Brillo suave</label></div>
+          <div class="toggle-row"><input type="checkbox" id="chkGuide"><label title="Colorea cada banda para ver de qué letra viene cada talla. Apaga para ver el tótem puro.">Ver construcción (colores)</label></div>
+          <div class="toggle-row"><input type="checkbox" id="chkPreview" checked><label>Vista previa 80×80</label></div>
+          <div class="preview-box"><canvas id="previewCanvas" width="80" height="80" title="Minatura a 80×80: la silueta debe seguir siendo legible"></canvas><span>Silueta a 80×80<br>legible y trazable</span></div>
+          <h4>Presets</h4>
+          <div class="btn-group">
+            <button class="btn-dim btn-sm" id="btnPresetSolo">Solo tótem</button>
+            <button class="btn-dim btn-sm" id="btnPresetCircle">Tótem + círculo</button>
+          </div>
+          <div class="btn-group">
+            <button class="btn-dim btn-sm" id="btnPresetStar">Tótem + estrella</button>
+            <button class="btn-dim btn-sm" id="btnPresetCircleStar">Tótem + círculo + estrella</button>
+          </div>
+          <div class="btn-group"><button class="btn-dim btn-sm" id="btnPresetCircleIns">Tótem + círculo + inscripción</button></div>
+        </div>
+      </details>
+    </div>
+  </details>
 
-  <h3>Inscripción</h3>
-  <div class="toggle-row"><input type="checkbox" id="chkInscription"><label>Inscripción latina</label></div>
-  <div class="param-row" id="insRow"><label>Texto</label><input id="insText" type="text" maxlength="42" placeholder="Lema, nombre o frase"></div>
-  <div class="param-row"><label>Posición</label><select id="selInsPos">
-    <option value="top">Arriba</option><option value="bottom">Abajo</option>
-    <option value="upperArc" selected>Arco superior</option><option value="lowerArc">Arco inferior</option>
-  </select></div>
-  <div class="param-row"><label>Tamaño</label><input type="range" id="rngInsSize" min="9" max="30" value="17"><span class="val" id="insSizeVal">17</span></div>
-  <div class="param-row"><label>Espaciado</label><input type="range" id="rngInsSpacing" min="0" max="16" value="3"><span class="val" id="insSpacingVal">3</span></div>
-  <div class="param-row"><label>Orientación</label><select id="selInsOrientation">
-    <option value="normal">Normal</option><option value="mirror">Espejo</option>
-  </select></div>
-  <div class="info-box">El texto nunca se añade solo. El hebreo es un motor separado con transliteración y mapa de letras; aquí no se improvisan letras hebreas.</div>
+  <details class="step" open>
+    <summary><span class="step-num">4</span><span class="step-title">Cargar</span><span class="step-chevron">▸</span></summary>
+    <div class="step-body">
+      <p class="step-helper">Contempla el tótem, respira natural y decide guardar u olvidar.</p>
+      <div class="btn-group">
+        <button class="btn" id="btnCharge">&#10208; Cargar</button>
+        <button class="btn-dim" id="btnSave">Guardar</button>
+        <button class="btn-dim" id="btnGallery">Galería</button>
+      </div>
+      <h4>Estampas</h4>
+      <div class="stamp-grid">
+        <button class="stamp-btn" data-s="♄">♄</button>
+        <button class="stamp-btn" data-s="♃">♃</button>
+        <button class="stamp-btn" data-s="♂">♂</button>
+        <button class="stamp-btn" data-s="☉">☉</button>
+        <button class="stamp-btn" data-s="♀">♀</button>
+        <button class="stamp-btn" data-s="☿">☿</button>
+        <button class="stamp-btn" data-s="☽">☽</button>
+        <button class="stamp-btn" data-s="✦">✦</button>
+        <button class="stamp-btn" data-s="✧">✧</button>
+        <button class="stamp-btn" data-s="◎">◎</button>
+      </div>
+      <div class="btn-group">
+        <button class="btn-dim btn-sm" id="btnStamp">🔨 Estampa</button>
+        <button class="btn-dim btn-sm" id="btnClearStamps">✕</button>
+      </div>
+    </div>
+  </details>
 
-  <h3>Presentación</h3>
-  <div class="toggle-row"><input type="checkbox" id="chkGlow"><label title="Halo dorado opcional. La estructura manda; el brillo decora.">Brillo suave</label></div>
-  <div class="toggle-row"><input type="checkbox" id="chkGuide" checked><label title="Muestra cada letra de la intención en un color y posición propios debajo del glifo. Apaga para ver el sigilo puro.">Ver construcción</label></div>
-  <div class="toggle-row"><input type="checkbox" id="chkMirror"><label title="Simetría bilateral del núcleo (decisión de usuario)">Simetría bilateral</label></div>
-  <div class="toggle-row"><input type="checkbox" id="chkPreview" checked><label>Vista previa 80×80</label></div>
-  <div class="preview-box"><canvas id="previewCanvas" width="80" height="80" title="Minatura a 80×80: la silueta debe seguir siendo legible"></canvas><span>Silueta a 80×80<br>legible y trazable</span></div>
-  <h4>Presets</h4>
-  <div class="btn-group">
-    <button class="btn-dim btn-sm" id="btnPresetSolo">Solo núcleo</button>
-    <button class="btn-dim btn-sm" id="btnPresetCircle">Núcleo + círculo</button>
-  </div>
-  <div class="btn-group">
-    <button class="btn-dim btn-sm" id="btnPresetStar">Núcleo + estrella</button>
-    <button class="btn-dim btn-sm" id="btnPresetCircleStar">Núcleo + círculo + estrella</button>
-  </div>
-  <div class="btn-group"><button class="btn-dim btn-sm" id="btnPresetCircleIns">Núcleo + círculo + inscripción</button></div>
-  <div class="btn-group"><button class="btn-dim btn-sm" id="btnProvenance">☰ Ver procedencia</button></div>
+  <details class="step" open>
+    <summary><span class="step-num">5</span><span class="step-title">Exportar</span><span class="step-chevron">▸</span></summary>
+    <div class="step-body">
+      <div class="toggle-row" title="Omite el fondo oscuro en PNG y SVG"><input type="checkbox" id="chkTransparent"><label>Fondo transparente</label></div>
+      <div class="btn-group">
+        <button class="btn btn-sm" id="btnSVG">SVG por capas</button>
+        <button class="btn btn-sm" id="btnPNG">PNG</button>
+      </div>
+    </div>
+  </details>
 
-  <h3>Exportar</h3>
-  <div class="toggle-row" title="Omite el fondo oscuro en PNG y SVG"><input type="checkbox" id="chkTransparent"><label>Fondo transparente</label></div>
-  <div class="btn-group">
-    <button class="btn btn-sm" id="btnSVG">SVG por capas</button>
-    <button class="btn btn-sm" id="btnPNG">PNG</button>
-  </div>
-
-  <h3>Estampas</h3>
-  <div class="stamp-grid">
-    <button class="stamp-btn" data-s="♄">♄</button>
-    <button class="stamp-btn" data-s="♃">♃</button>
-    <button class="stamp-btn" data-s="♂">♂</button>
-    <button class="stamp-btn" data-s="☉">☉</button>
-    <button class="stamp-btn" data-s="♀">♀</button>
-    <button class="stamp-btn" data-s="☿">☿</button>
-    <button class="stamp-btn" data-s="☽">☽</button>
-    <button class="stamp-btn" data-s="✦">✦</button>
-    <button class="stamp-btn" data-s="✧">✧</button>
-    <button class="stamp-btn" data-s="◎">◎</button>
-  </div>
-  <div class="btn-group">
-    <button class="btn-dim btn-sm" id="btnStamp">🔨 Estampa</button>
-    <button class="btn-dim btn-sm" id="btnClearStamps">✕</button>
-  </div>
-
-  <h3>Ritual</h3>
-  <div class="btn-group">
-    <button class="btn" id="btnCharge">&#10208; Cargar</button>
-    <button class="btn-dim" id="btnSave">Guardar</button>
-    <button class="btn-dim" id="btnGallery">Galería</button>
-  </div>
-  <div class="panel-footer">Glifo personal Spare/Cooper + marco ceremonial — ARCANUM</div>
+  <div class="panel-footer">Tótem personal Spare/Cooper + marco ceremonial — ARCANUM</div>
 </div>
 
 <div class="canvas-wrap"><canvas id="canvas" width="1000" height="700"></canvas></div>
@@ -351,12 +408,14 @@ const state = {
     star: { enabled: true, points: 5, scale: 92, rotation: 0, thickness: 18, opacity: 80, inner: 45, gap: 30, chords: true }
   },
   inscription: { enabled: false, text: '', pos: 'upperArc', size: 17, spacing: 3, orientation: 'normal' },
-  presentation: { glow: false, mirror: false, preview: true, guide: true },
+  presentation: { glow: false, mirror: true, preview: true, guide: false },
   highlightUnit: null,
   stamps: [],
   core: { strokes: [], merges: [], removed: [] },
   userDecisions: [],
-  ritualState: 'draft'
+  ritualState: 'draft',
+  family: 'personal',
+  rosa: { name: '', mapping: [], resolved: [], gematria: 0, diagram: true }
 };
 
 let stamps = state.stamps;
@@ -370,6 +429,78 @@ function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<'
 
 // Colores distinguibles para la capa "Ver construcción" (una por letra)
 const GUIDE_COLORS = ['#e0b64c', '#c65a3b', '#8fa6c9', '#7fb08a', '#b58ac9', '#c99a1a', '#5fa3a0', '#c26a7a', '#9aa67a', '#d9c46a', '#6a7fb0', '#b0805a'];
+
+// ── Rosa-Cruz: diagrama de letras (motor separado) ──────────────
+// Golden Dawn, Rose Cross Lamen: 22 pétalos = 3 letras madre
+// (elementos) + 7 dobles (planetas) + 12 simples (signos). Sistema
+// de coordenadas alfabéticas: translitera un nombre al hebreo y une
+// sus letras sobre la Rosa. No es eliminación estilo Spare. NUNCA se
+// mezcla con el glifo personal [HP][RC].
+const HEBREW_VALUES = { 'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,'כ':20,'ל':30,'מ':40,'נ':50,'ס':60,'ע':70,'פ':80,'צ':90,'ק':100,'ר':200,'ש':300,'ת':400 };
+const LATIN_TO_HEBREW = { a:'א',b:'ב',c:'כ',g:'ג',d:'ד',h:'ה',v:'ו',w:'ו',u:'ו',z:'ז',ch:'ח',t:'ט',i:'י',y:'י',j:'י',k:'כ',l:'ל',m:'מ',n:'נ',s:'ס',o:'ע',p:'פ',tz:'צ',q:'ק',r:'ר',sh:'ש',th:'ת' };
+const ROSE_CROSS = {
+  edition: 'Golden Dawn, Rose Cross Lamen — 22 pétalos (3+7+12). Diagrama prototipo ARCANUM [RC], atribución estándar.',
+  elements: [ // 3 letras madre: elementos
+    { he:'א', name:'Aleph', en:'Aire' }, { he:'מ', name:'Mem', en:'Agua' }, { he:'ש', name:'Shin', en:'Fuego' }
+  ],
+  planets: [ // 7 dobles: planetas en orden de exaltación
+    { he:'ר', name:'Resh', en:'Sol', sym:'☉' }, { he:'ג', name:'Gimel', en:'Luna', sym:'☽' },
+    { he:'ת', name:'Tav', en:'Saturno', sym:'♄' }, { he:'כ', name:'Kaph', en:'Júpiter', sym:'♃' },
+    { he:'פ', name:'Peh', en:'Marte', sym:'♂' }, { he:'ד', name:'Daleth', en:'Venus', sym:'♀' },
+    { he:'ב', name:'Beth', en:'Mercurio', sym:'☿' }
+  ],
+  signs: [ // 12 simples: zodíaco en orden, Heh (Aries) arriba
+    { he:'ה', name:'Heh', en:'Aries', sym:'♈' }, { he:'ו', name:'Vav', en:'Tauro', sym:'♉' },
+    { he:'ז', name:'Zayin', en:'Géminis', sym:'♊' }, { he:'ח', name:'Cheth', en:'Cáncer', sym:'♋' },
+    { he:'ט', name:'Teth', en:'Leo', sym:'♌' }, { he:'י', name:'Yod', en:'Virgo', sym:'♍' },
+    { he:'ל', name:'Lamed', en:'Libra', sym:'♎' }, { he:'נ', name:'Nun', en:'Escorpio', sym:'♏' },
+    { he:'ס', name:'Samekh', en:'Sagitario', sym:'♐' }, { he:'ע', name:'Ayin', en:'Capricornio', sym:'♑' },
+    { he:'צ', name:'Tzaddi', en:'Acuario', sym:'♒' }, { he:'ק', name:'Qoph', en:'Piscis', sym:'♓' }
+  ]
+};
+const ROSE_RINGS = { element: 108, planet: 186, sign: 260 };
+
+function roseLayout() {
+  const items = [];
+  const a0 = -Math.PI / 2;
+  const ring = (arr, ringName, R) => arr.forEach((it, i) => {
+    const a = a0 + (i * 2 * Math.PI) / arr.length;
+    items.push({ ...it, ring: ringName, i, x: CX + Math.cos(a) * R, y: CY + Math.sin(a) * R });
+  });
+  ring(ROSE_CROSS.elements, 'element', ROSE_RINGS.element);
+  ring(ROSE_CROSS.planets, 'planet', ROSE_RINGS.planet);
+  ring(ROSE_CROSS.signs, 'sign', ROSE_RINGS.sign);
+  return items;
+}
+
+// Transliteración latina → hebreo con coincidencia de dígrafos
+// (ch, sh, th, tz) antes que letras simples. Sin correspondencia:
+// la letra se omite y se marca en la procedencia.
+function transliterateToHebrew(name) {
+  const norm = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const keys = Object.keys(LATIN_TO_HEBREW).sort((a, b) => b.length - a.length);
+  const layout = roseLayout();
+  const byHe = {};
+  layout.forEach(L => { byHe[L.he] = L; });
+  const mapping = [], resolved = [];
+  let i = 0;
+  while (i < norm.length) {
+    let m = null;
+    for (const k of keys) { if (norm.startsWith(k, i)) { m = { latin: k, he: LATIN_TO_HEBREW[k] }; break; } }
+    if (m) {
+      mapping.push(m);
+      const pos = byHe[m.he];
+      resolved.push(pos ? { ...m, x: pos.x, y: pos.y, ring: pos.ring, label: pos.name, val: HEBREW_VALUES[m.he] || 0 }
+                        : { ...m, x: null, y: null, missing: true });
+      i += m.latin.length;
+    } else {
+      mapping.push({ latin: norm[i], he: null, omitted: true });
+      i++;
+    }
+  }
+  const gematria = mapping.filter(m => m.he).reduce((s, m) => s + (HEBREW_VALUES[m.he] || 0), 0);
+  return { mapping, resolved, gematria };
+}
 
 // ── Reducción nombrada ──────────────────────────────────────────
 // cooper: iniciales únicas (Cooper). Si quedan <3 unidades, se
@@ -404,78 +535,71 @@ function getReduction(t, method = state.reductionMethod) {
   };
 }
 
-// ── Glifos de letras (normalizados, y crece hacia abajo) ────────
-const LETTER_GLYPHS = {
-  A:[[[-.72,.82],[0,-.85],[.72,.82]],[[-.42,.18],[.42,.18]]],B:[[[-.58,-.84],[-.58,.84]],[[-.58,-.84],[.22,-.78],[.55,-.45],[.2,-.08],[-.58,-.02]],[[-.58,-.02],[.28,.02],[.58,.42],[.2,.82],[-.58,.84]]],
-  C:[[[.58,-.65],[.18,-.86],[-.38,-.68],[-.62,-.08],[-.48,.58],[.02,.86],[.58,.62]]],D:[[[-.56,-.84],[-.56,.84]],[[-.56,-.84],[.18,-.72],[.6,-.22],[.52,.45],[.08,.8],[-.56,.84]]],
-  E:[[[-.52,-.84],[-.52,.84]],[[-.52,-.84],[.58,-.84]],[[-.52,-.02],[.38,-.02]],[[-.52,.84],[.58,.84]]],F:[[[-.52,-.84],[-.52,.84]],[[-.52,-.84],[.58,-.84]],[[-.52,-.02],[.38,-.02]]],
-  G:[[[.58,-.6],[.18,-.86],[-.38,-.68],[-.62,-.08],[-.48,.58],[.02,.86],[.58,.58],[.58,.08],[.12,.08]]],H:[[[-.58,-.84],[-.58,.84]],[[.58,-.84],[.58,.84]],[[-.58,0],[.58,0]]],
-  I:[[[0,-.84],[0,.84]],[[-.38,-.84],[.38,-.84]],[[-.38,.84],[.38,.84]]],J:[[[.45,-.84],[.45,.48],[.15,.84],[-.3,.72],[-.5,.34]]],K:[[[-.55,-.84],[-.55,.84]],[[.55,-.84],[-.55,.05],[.62,.84]]],L:[[[-.52,-.84],[-.52,.84],[.58,.84]]],
-  M:[[[-.65,.84],[-.65,-.84],[0,.16],[.65,-.84],[.65,.84]]],N:[[[-.58,.84],[-.58,-.84],[.58,.84],[.58,-.84]]],O:[[[0,-.86],[.48,-.62],[.64,0],[.46,.62],[0,.86],[-.48,.62],[-.64,0],[-.48,-.62],[0,-.86]]],
-  P:[[[-.56,.84],[-.56,-.84]],[[-.56,-.84],[.2,-.8],[.58,-.42],[.2,0],[-.56,0]]],Q:[[[0,-.86],[.48,-.62],[.64,0],[.46,.62],[0,.86],[-.48,.62],[-.64,0],[-.48,-.62],[0,-.86]],[[.14,.42],[.7,.92]]],
-  R:[[[-.56,.84],[-.56,-.84]],[[-.56,-.84],[.2,-.8],[.58,-.42],[.2,0],[-.56,0]],[[.04,0],[.62,.84]]],S:[[[.55,-.64],[.16,-.86],[-.36,-.68],[-.52,-.28],[-.18,.02],[.34,.16],[.55,.52],[.22,.84],[-.38,.72],[-.58,.5]]],
-  T:[[[-.66,-.84],[.66,-.84]],[[0,-.84],[0,.84]]],U:[[[-.58,-.84],[-.58,.46],[-.28,.82],[.18,.86],[.58,.48],[.58,-.84]]],V:[[[-.65,-.84],[0,.86],[.65,-.84]]],W:[[[-.72,-.84],[-.38,.84],[0,.1],[.38,.84],[.72,-.84]]],
-  X:[[[-.62,-.84],[.62,.84]],[[.62,-.84],[-.62,.84]]],Y:[[[-.62,-.84],[0,0],[.62,-.84]],[[0,0],[0,.84]]],Z:[[[-.58,-.84],[.58,-.84],[-.58,.84],[.58,.84]]]
-};
+// ── Tótem: poste vertical con bandas ─────────────────────────────
+// Estructura: asta continua + una banda por unidad reducida (cada
+// letra talla su registro: soportes, remates, cabeza o base). Los
+// motivos son deterministas por letra (hash puro), nunca letras
+// amontonadas. La silueta es una estela vertical redibujable.
+const TOTEM_STYLES = ['Poste', 'Totémico', 'Tronco vivo'];
 
-// Ancla: x del trazo vertical dominante (para compartir la espina)
-const AXIS_ANCHOR = { B:-.55, D:-.56, E:-.52, F:-.52, H:-.58, K:-.55, L:-.52, P:-.56, R:-.56, T:0, I:0, Y:0 };
-const DIAG_CHARS = 'AVWXMNYZ';
-const CURVE_CHARS = 'SCGOQUJ';
-function anchorX(ch) { return AXIS_ANCHOR[ch] ?? 0; }
-
-// Jitter orgánico determinista (hash puro, nunca aleatorio)
-function jitter(ch, i, organic) {
-  const h = hashStr(ch + ':' + i), o = organic / 100;
-  return {
-    rot: (((h % 13) - 6) * o) * 0.035,
-    dx: ((((h >> 3) % 7) - 3) * o) * 0.05,
-    dy: ((((h >> 6) % 7) - 3) * o) * 0.05,
-    sx: 1 + ((((h >> 9) % 5) - 2) * o) * 0.06,
-    sy: 1 + ((((h >> 12) % 5) - 2) * o) * 0.06
-  };
+function dotPts(x, y, r, seg) {
+  const pts = [];
+  for (let k = 0; k <= seg; k++) { const t = (k / seg) * Math.PI * 2; pts.push({ x: x + Math.cos(t) * r, y: y + Math.sin(t) * r }); }
+  return pts;
 }
 
-// ── Esqueletos: transform por unidad ─────────────────────────────
-const SKELETON_NAMES = ['Eje vertical', 'Diagonal', 'Curva dominante'];
-
-function layoutAxis(units, organic) {
-  const n = units.length;
-  const tfs = [];
-  const step = n > 1 ? 2.0 / (n - 1) : 0;
-  for (let i = 0; i < n; i++) {
-    const ch = units[i], j = jitter(ch, i, organic);
-    tfs.push({ dx: -anchorX(ch) + j.dx, dy: (i - (n - 1) / 2) * step + j.dy, rot: j.rot, sx: 1 + j.sx, sy: 1 + j.sy });
+function bandMotif(ch, i, n, bandH, y0, y1) {
+  const o = state.organic / 100;
+  const h = hashStr(ch + ':' + i);
+  const bars = 1 + (h % 3);
+  const len = (0.30 + ((h >> 4) % 9) / 10 * 0.34) * (1 + 0.15 * o);
+  const remate = (h >> 8) % 3;
+  const sideAlt = (h >> 12) & 1;
+  const strokes = [];
+  for (let k = 0; k < bars; k++) {
+    const yk = y0 + bandH * (k + 1) / (bars + 1);
+    const side = (k + sideAlt) % 2 ? 1 : -1;
+    const sx = side * len;
+    const lift = bandH * (0.10 + 0.16 * o);
+    const last = k === bars - 1;
+    if (state.skeleton === 0) {
+      const bend = 0.05 * o;
+      strokes.push({ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: [{ x: 0, y: yk }, { x: sx, y: yk - bend }] });
+      if (last && remate === 0) strokes.push({ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: dotPts(sx, yk - bend, 0.03, 5) });
+    } else if (state.skeleton === 1) {
+      strokes.push({ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: [{ x: 0, y: yk }, { x: sx * 0.72, y: yk }, { x: sx, y: yk - lift }] });
+      if (last && remate === 1) strokes.push({ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: dotPts(sx, yk - lift, 0.028, 6) });
+    } else {
+      const c = Math.min(0.55, bandH * 0.9 + 0.08 * o);
+      strokes.push({ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: [{ x: 0, y: yk }, { x: sx * 0.45, y: yk - c * 0.6 }, { x: sx * 0.8, y: yk - c * 0.25 }, { x: sx, y: yk - c * 0.1 }] });
+      if (last && remate === 2) strokes.push({ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: [{ x: sx, y: yk - c * 0.1 }, { x: sx * 1.18, y: yk - c * 0.28 }] });
+    }
   }
-  return tfs;
+  if (i === 0) strokes.push(...totemHead(ch, bandH, y0, h));
+  if (i === n - 1) strokes.push(...totemBase(ch, bandH, y1, h));
+  return strokes;
 }
 
-function layoutDiagonal(units, organic) {
-  const n = units.length;
-  const tfs = [];
-  for (let i = 0; i < n; i++) {
-    const ch = units[i], j = jitter(ch, i, organic);
-    const t = n > 1 ? (i / (n - 1) - 0.5) : 0;
-    const rot = (DIAG_CHARS.includes(ch) ? -0.78 : 0.5) + j.rot;
-    tfs.push({ dx: t * 2.1 + j.dx, dy: t * 2.1 + j.dy, rot, sx: 1 + j.sx, sy: 1 + j.sy });
+function totemHead(ch, bandH, y0, h) {
+  const y = y0 + bandH * 0.16;
+  const kind = (h >> 16) % 3;
+  const half = 0.14 + (bandH > 0.5 ? 0.10 : 0);
+  if (kind === 0) {
+    return [{ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: [{ x: -half, y }, { x: 0, y: y - bandH * 0.20 }, { x: half, y }] }];
   }
-  return tfs;
+  if (kind === 1) {
+    return [{ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: dotPts(0, y - bandH * 0.06, 0.075 + (bandH > 0.5 ? 0.06 : 0), 8) }];
+  }
+  return [{ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: [{ x: -half, y }, { x: -half * 0.5, y: y - bandH * 0.14 }, { x: 0, y }, { x: half * 0.5, y: y - bandH * 0.14 }, { x: half, y }] }];
 }
 
-function layoutCurve(units, organic) {
-  const n = units.length;
-  const tfs = [];
-  for (let i = 0; i < n; i++) {
-    const ch = units[i], j = jitter(ch, i, organic);
-    const t = n > 1 ? (i / (n - 1) - 0.5) : 0;
-    const ang = t * Math.PI * 0.85;
-    const px = 0.95 * Math.sin(ang);
-    const py = t * 1.9;
-    const tangent = Math.atan2(1.9, 0.95 * Math.PI * 0.85 * Math.cos(ang));
-    const rot = tangent + (CURVE_CHARS.includes(ch) ? 0.35 : 0) + j.rot;
-    tfs.push({ dx: px + j.dx, dy: py + j.dy, rot, sx: 0.85 * (1 + j.sx), sy: 0.85 * (1 + j.sy) });
-  }
-  return tfs;
+function totemBase(ch, bandH, y1, h) {
+  const y = y1 - bandH * 0.14;
+  const half = 0.30 + ((h >> 20) % 6) / 10 * 0.22;
+  const out = [{ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: [{ x: -half, y }, { x: half, y }] }];
+  out.push({ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: [{ x: -half, y }, { x: -half * 0.55, y: y1 - bandH * 0.02 }] });
+  out.push({ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: [{ x: half, y }, { x: half * 0.55, y: y1 - bandH * 0.02 }] });
+  return out;
 }
 
 // ── Fusión de trazos (ligaduras) ────────────────────────────────
@@ -551,24 +675,15 @@ function normParams(strokes) {
 }
 
 function buildCore(units) {
-  const skeleton = state.skeleton;
-  const tfs = skeleton === 0 ? layoutAxis(units, state.organic)
-    : skeleton === 1 ? layoutDiagonal(units, state.organic)
-    : layoutCurve(units, state.organic);
-  const strokes = [];
-  units.forEach((ch, i) => {
-    const glyph = LETTER_GLYPHS[ch] || LETTER_GLYPHS.X;
-    const tf = tfs[i];
-    const cos = Math.cos(tf.rot), sin = Math.sin(tf.rot);
-    glyph.forEach(pts => {
-      const mapped = pts.map(([x, y]) => {
-        const x2 = x * tf.sx + tf.dx, y2 = y * tf.sy + tf.dy;
-        return { x: x2 * cos - y2 * sin, y: x2 * sin + y2 * cos };
-      });
-      strokes.push({ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: mapped });
-    });
-  });
-  state._guideStrokes = strokes.map(st => ({ id: st.id, unit: st.unit, pts: st.pts.map(p => ({ x: p.x, y: p.y })) }));
+  const n = units.length;
+  const bandH = 1.92 / n;
+  const top = 0.96 - bandH / 2;
+  const strokes = [{ id: ++nextId, unit: '⚭', kind: 'merge', units: [...units], pts: [{ x: 0, y: 0.98 }, { x: 0, y: -0.98 }] }];
+  for (let i = 0; i < n; i++) {
+    const cy = top - i * bandH;
+    strokes.push(...bandMotif(units[i], i, n, bandH, cy - bandH / 2, cy + bandH / 2));
+  }
+  state._guideStrokes = strokes.filter(st => st.unit !== '⚭').map(st => ({ id: st.id, unit: st.unit, pts: st.pts.map(p => ({ x: p.x, y: p.y })) }));
   const merges = [];
   let list = state.autoJoin ? mergePass(strokes, merges, 0.62) : strokes;
   const np = normParams(list);
@@ -671,6 +786,10 @@ function inscriptionGeom() {
 
 function buildScene() {
   const layers = [];
+  if (state.family === 'rosacruz') {
+    if (state.rosa.resolved.length) layers.push({ type: 'rose', params: { diagram: state.rosa.diagram } });
+    return { W, H, CX, CY, coreR: CORE_R, layers };
+  }
   const f = state.frame;
   if (f.circle.enabled) layers.push({ type: 'circle', params: f.circle, geom: { r: RING_R * (f.circle.scale / 100) } });
   if (f.star.enabled) layers.push({ type: 'star', params: f.star, geom: starGeom() });
@@ -938,6 +1057,26 @@ function buildSVG() {
         }
         break;
       }
+      case 'rose': {
+        if (layer.params.diagram) {
+          for (const r of Object.values(ROSE_RINGS)) {
+            parts.push(`<circle cx="${CX}" cy="${CY}" r="${r}" fill="none" stroke="rgba(184,134,11,0.38)" stroke-width="1.2"/>`);
+          }
+          for (const L of roseLayout()) {
+            parts.push(`<text x="${L.x.toFixed(2)}" y="${L.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-family="Arial Hebrew, serif" font-size="16" fill="rgba(201,154,26,0.9)">${esc(L.he)}</text>`);
+            parts.push(`<text x="${L.x.toFixed(2)}" y="${(L.y + 15).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-family="Georgia, serif" font-size="8" fill="rgba(138,127,114,0.75)">${esc(L.sym || L.en)}</text>`);
+          }
+        }
+        const pts = state.rosa.resolved.filter(p => !p.missing);
+        if (pts.length >= 2) {
+          const d = 'M ' + pts.map(p => `${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' L ');
+          parts.push(`<path d="${d}" fill="none" stroke="#e6b422" stroke-width="2.2" stroke-linecap="round"/>`);
+          parts.push(`<circle cx="${pts[0].x.toFixed(2)}" cy="${pts[0].y.toFixed(2)}" r="12" fill="none" stroke="#e6b422" stroke-width="1.6"/>`);
+          const last = pts[pts.length - 1];
+          parts.push(`<circle cx="${last.x.toFixed(2)}" cy="${last.y.toFixed(2)}" r="6" fill="none" stroke="#c65a3b" stroke-width="1.6"/>`);
+        }
+        break;
+      }
       case 'core': {
         for (const st of layer.strokes) parts.push(`<path d="${svgPathFor(st.pts, mirror)}"/>`);
         if (state.terminals.enabled) {
@@ -953,7 +1092,38 @@ function buildSVG() {
         }
         break;
       }
-      case 'stamps': {
+    case 'rose': {
+      ctx.save();
+      if (layer.params.diagram) {
+        ctx.strokeStyle = 'rgba(184,134,11,.38)'; ctx.lineWidth = 1.2;
+        for (const r of Object.values(ROSE_RINGS)) { ctx.beginPath(); ctx.arc(CX, CY, r, 0, Math.PI * 2); ctx.stroke(); }
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        for (const L of roseLayout()) {
+          ctx.fillStyle = 'rgba(201,154,26,.9)';
+          ctx.font = '16px "Segoe UI", "Arial Hebrew", serif';
+          ctx.fillText(L.he, L.x, L.y);
+          ctx.fillStyle = 'rgba(138,127,114,.75)';
+          ctx.font = '8px Georgia, serif';
+          ctx.fillText(L.sym || L.en, L.x, L.y + 15);
+        }
+      }
+      const pts = state.rosa.resolved.filter(p => !p.missing);
+      if (pts.length >= 2) {
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#e6b422'; ctx.lineWidth = 2.2;
+        ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.stroke();
+        ctx.strokeStyle = '#e6b422'; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.arc(pts[0].x, pts[0].y, 12, 0, Math.PI * 2); ctx.stroke();
+        const last = pts[pts.length - 1];
+        ctx.strokeStyle = '#c65a3b'; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.arc(last.x, last.y, 6, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.restore();
+      break;
+    }
+    case 'stamps': {
         for (const st of layer.stamps) {
           parts.push(`<text x="${st.x.toFixed(2)}" y="${st.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-family="serif" font-size="20" fill="rgba(184,134,11,0.5)">${esc(st.sym)}</text>`);
         }
@@ -964,6 +1134,42 @@ function buildSVG() {
   }
   parts.push('</svg>');
   return parts.join('');
+}
+
+// ── Rosa-Cruz (motor separado) ──────────────────────────────────
+function rosaGenerate() {
+  const name = document.getElementById('rosaName').value.trim();
+  if (!name) { showToast('Escribe un nombre'); return; }
+  const r = transliterateToHebrew(name);
+  state.rosa.name = name;
+  state.rosa.mapping = r.mapping;
+  state.rosa.resolved = r.resolved;
+  state.rosa.gematria = r.gematria;
+  const box = document.getElementById('rosaBox');
+  const pairs = r.mapping.filter(m => !m.omitted).map(m =>
+    '<div class="reduction-line"><b>' + esc(m.latin) + '</b><span>' + (m.he ? m.he + ' · ' + (HEBREW_VALUES[m.he] || 0) : 'sin correspondencia') + '</span></div>').join('');
+  const omitted = r.mapping.filter(m => m.omitted).map(m => m.latin);
+  box.innerHTML =
+    '<div class="reduction-line"><b>Original</b><span>' + esc(name) + '</span></div>' +
+    '<div class="reduction-line"><b>Unidades (hebreo)</b><span>' + (r.mapping.length ? r.mapping.filter(m => m.he).map(m => m.he).join(' ') : '—') + '</span></div>' +
+    (omitted.length ? '<div class="reduction-line"><b>Sin correspondencia</b><span>' + esc(omitted.join(' ')) + '</span></div>' : '') +
+    '<div class="reduction-line"><b>Gematría</b><span>' + r.gematria + '</span></div>' +
+    '<div class="reduction-line"><b>Regla</b><span>Coordenadas alfabéticas: trazo de letra en letra; círculo en la primera, marca en la última.</span></div>' +
+    '<div class="reduction-line"><b>Tradición</b><span>Golden Dawn, Rose Cross Lamen.</span></div>' +
+    (pairs ? '<div class="prov-strokes" style="margin-top:6px">' + pairs + '</div>' : '');
+  render();
+  showToast(state.rosa.resolved.length + ' letras trazadas sobre la Rosa');
+}
+
+function setFamily(f) {
+  state.family = f;
+  const personal = f === 'personal';
+  document.getElementById('famPersonal').classList.toggle('active', personal);
+  document.getElementById('famMarco').classList.toggle('active', personal);
+  document.getElementById('famRosaCruz').classList.toggle('active', !personal);
+  document.getElementById('rosaPanel').hidden = personal;
+  if (!personal && document.getElementById('rosaName').value.trim()) rosaGenerate();
+  render();
 }
 
 // ── Generar ─────────────────────────────────────────────────────
@@ -1010,8 +1216,31 @@ function applyPreset(preset) {
 
 // ── Procedencia ─────────────────────────────────────────────────
 function showProvenance() {
-  const r = state.reduction;
   const body = document.getElementById('provBody');
+  if (state.family === 'rosacruz') {
+    const ro = state.rosa;
+    let html = '<h3>Rosa-Cruz</h3>' +
+      '<div class="prov-row"><b>Nombre</b><span>' + esc(ro.name || '—') + '</span></div>' +
+      '<div class="prov-row"><b>Unidades</b><span>' + (ro.mapping.length ? ro.mapping.filter(m => m.he).map(m => m.he).join(' ') : '—') + '</span></div>' +
+      '<div class="prov-row"><b>Gematría</b><span>' + ro.gematria + '</span></div>' +
+      '<div class="prov-row"><b>Tradición</b><span>Golden Dawn, Rose Cross Lamen (22 pétalos: 3 madres, 7 dobles, 12 simples).</span></div>';
+    const mapping = ro.mapping.filter(m => !m.omitted);
+    if (mapping.length) {
+      html += '<h3>Transliteración letra a letra</h3><div class="prov-strokes">';
+      mapping.forEach(m => {
+        html += '<div class="srow"><span class="uid">' + esc(m.latin) + '</span><span>' + m.he + ' · ' + (HEBREW_VALUES[m.he] || 0) + '</span></div>';
+      });
+      html += '</div>';
+    }
+    html += '<h3>Regla</h3><p style="font-size:.68rem;color:var(--text-dim);line-height:1.5">' +
+      'Coordenadas alfabéticas: une las letras del nombre sobre la Rosa en orden. ' +
+      'Círculo en la primera letra, marca en la última. Diagrama prototipo ARCANUM [RC] sobre la atribución estándar.</p>' +
+      '<p style="font-size:.62rem;color:var(--text-dim);margin-top:8px">La procedencia se muestra aquí pero nunca se exporta al SVG.</p>';
+    body.innerHTML = html;
+    document.getElementById('provModal').classList.add('open');
+    return;
+  }
+  const r = state.reduction;
   let html = '';
   if (!r) { html = '<p style="font-size:.7rem;color:var(--text-dim)">Genera primero.</p>'; }
   else {
@@ -1020,7 +1249,7 @@ function showProvenance() {
       '<div class="prov-row"><b>Método</b><span>' + esc(r.label) + '</span></div>' +
       '<div class="prov-row"><b>Regla</b><span>' + esc(r.rule) + '</span></div>' +
       '<div class="prov-row"><b>Unidades</b><span>' + [...r.reduced].map((c, i) => esc(c) + '(' + r.values[i] + ')').join(' ') + '</span></div>' +
-      '<div class="prov-row"><b>Esqueleto</b><span>' + SKELETON_NAMES[state.skeleton] + '</span></div>';
+      '<div class="prov-row"><b>Talla</b><span>' + TOTEM_STYLES[state.skeleton] + '</span></div>';
     html += '<h3>Trazos (cada uno con su origen)</h3><div class="prov-strokes">';
     state.core.strokes.forEach(st => {
       const src = st.kind === 'merge' ? 'fusión ' + st.units.join('+') : 'letra ' + st.unit;
@@ -1038,9 +1267,9 @@ function showProvenance() {
       '<div class="prov-row"><b>Estrella</b><span>' + (f.star.enabled ? f.star.points + ' puntas' : 'inactiva') + '</span></div>' +
       '<div class="prov-row"><b>Inscripción</b><span>' + (state.inscription.enabled && state.inscription.text ? esc(state.inscription.text) + ' · ' + state.inscription.pos : 'inactiva') + '</span></div>';
     html += '<h3>Cómo trazar a mano</h3><p style="font-size:.68rem;color:var(--text-dim);line-height:1.5">' +
-      '1) Escribe la intención y aplica la regla nombrada. 2) Elige el eje dominante de una letra. ' +
-      '3) Reutiliza trazos compatibles (barras y espina compartidos). 4) Añade una curva única. ' +
-      '5) Borra todo trazo sin función y redibuja de memoria.</p>';
+      '1) Escribe la intención y aplica la regla nombrada. 2) Dibuja el asta vertical (la espina del poste). ' +
+      '3) Talla una banda por letra: soportes o muescas a los lados del asta, en su propio registro. ' +
+      '4) Remata la cabeza arriba y la base abajo. 5) Borra todo trazo sin función y redibuja de memoria.</p>';
     html += '<p style="font-size:.62rem;color:var(--text-dim);margin-top:8px">La procedencia se muestra aquí pero nunca se exporta al SVG.</p>';
   }
   body.innerHTML = html;
@@ -1179,6 +1408,12 @@ function syncControls() {
   document.querySelectorAll('.skeleton-btn').forEach(b => b.classList.toggle('active', Number(b.dataset.k) === state.skeleton));
   document.getElementById('selReduction').value = state.reductionMethod;
   document.getElementById('chkTransparent').checked = state.chkTransparent || false;
+  const personal = state.family !== 'rosacruz';
+  document.getElementById('famPersonal').classList.toggle('active', personal);
+  document.getElementById('famMarco').classList.toggle('active', personal);
+  document.getElementById('famRosaCruz').classList.toggle('active', !personal);
+  document.getElementById('rosaPanel').hidden = personal;
+  document.getElementById('chkRosaDiagram').checked = state.rosa.diagram;
 }
 
 function setupRange(id, valId, fmt, cb) {
@@ -1200,6 +1435,12 @@ $('selTerminalStyle').addEventListener('change', e => { state.terminals.style = 
 document.querySelectorAll('.fam-btn.locked').forEach(b => {
   b.addEventListener('click', () => showToast('Motor histórico separado: no se mezcla con el glifo personal'));
 });
+
+$('famPersonal').addEventListener('click', () => setFamily('personal'));
+$('famMarco').addEventListener('click', () => setFamily('personal'));
+$('famRosaCruz').addEventListener('click', () => setFamily('rosacruz'));
+$('btnRosaGenerate').addEventListener('click', rosaGenerate);
+$('chkRosaDiagram').addEventListener('change', e => { state.rosa.diagram = e.target.checked; render(); });
 
 $('chkCircle').addEventListener('change', e => { state.frame.circle.enabled = e.target.checked; render(); });
 setupRange('rngCircleScale', 'circleScaleVal', v => v + '%', v => { state.frame.circle.scale = v; render(); });
@@ -1235,7 +1476,10 @@ $('chkTransparent').addEventListener('change', e => { state.chkTransparent = e.t
 $('btnProvenance').addEventListener('click', showProvenance);
 $('btnProvClose').addEventListener('click', () => $('provModal').classList.remove('open'));
 
-$('btnEditStrokes').addEventListener('click', () => { editMode = !editMode; if (editMode) { refreshEditList(); } else { selectedStroke = null; render(); } });
+$('btnEditStrokes').addEventListener('click', () => {
+  if (state.family === 'rosacruz') { showToast('Edición disponible solo en el glifo personal'); return; }
+  editMode = !editMode; if (editMode) { refreshEditList(); } else { selectedStroke = null; render(); }
+});
 $('btnEditClose').addEventListener('click', () => { editMode = false; selectedStroke = null; render(); });
 $('btnStRot').addEventListener('click', () => editAction(rotateStroke, 'rotar'));
 $('btnStFlipH').addEventListener('click', () => editAction(st => flipStroke(st, true), 'reflejar-H'));
@@ -1252,6 +1496,7 @@ $('btnStDel').addEventListener('click', () => editAction(st => {
 }, 'eliminar'));
 
 $('btnSimplify').addEventListener('click', () => {
+  if (state.family === 'rosacruz') { showToast('Simplificar solo aplica al glifo personal'); return; }
   if (!state.core.strokes.length) { showToast('Genera primero'); return; }
   const removed = simplifyCore();
   render(); showToast(removed + ' trazo(s) retirado(s) — estructura intacta');
@@ -1319,21 +1564,23 @@ canvas.addEventListener('touchstart', e => {
 
 // ── Exportar ────────────────────────────────────────────────────
 $('btnSVG').addEventListener('click', () => {
-  if (!state.core.strokes.length) { showToast('Genera primero'); return; }
+  const ready = state.family === 'rosacruz' ? state.rosa.resolved.length : state.core.strokes.length;
+  if (!ready) { showToast('Genera primero'); return; }
   const svg = buildSVG();
   const blob = new Blob([svg], { type: 'image/svg+xml' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'sigilo.svg';
+  a.download = state.family === 'rosacruz' ? 'rosa-cruz.svg' : 'sigilo.svg';
   a.click();
   showToast('SVG por capas exportado');
 });
 $('btnPNG').addEventListener('click', () => {
-  if (!state.core.strokes.length) { showToast('Genera primero'); return; }
+  const ready = state.family === 'rosacruz' ? state.rosa.resolved.length : state.core.strokes.length;
+  if (!ready) { showToast('Genera primero'); return; }
   canvas.toBlob(b => {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(b);
-    a.download = 'sigilo.png';
+    a.download = state.family === 'rosacruz' ? 'rosa-cruz.png' : 'sigilo.png';
     a.click();
     showToast('PNG exportado');
   });
@@ -1346,7 +1593,8 @@ function captureState() {
     intention: $('intention').value, reductionMethod: state.reductionMethod, skeleton: state.skeleton,
     organic: state.organic, autoJoin: state.autoJoin, terminals: state.terminals, frame: state.frame,
     inscription: state.inscription, presentation: state.presentation, stamps: state.stamps,
-    core: state.core, userDecisions: state.userDecisions, chkTransparent: state.chkTransparent
+    core: state.core, userDecisions: state.userDecisions, chkTransparent: state.chkTransparent,
+    family: state.family, rosa: state.rosa
   }));
 }
 function restoreState(saved) {
@@ -1354,6 +1602,7 @@ function restoreState(saved) {
   state.reduction = null;
   $('intention').value = state.intention;
   syncControls();
+  if (state.family === 'rosacruz') { render(); return; }
   generate();
 }
 function readGallery() {
@@ -1365,8 +1614,9 @@ function writeGallery(items) {
   catch { showToast('Galería llena: elimina un sigilo'); return false; }
 }
 function saveSigil() {
-  if (!state.core.strokes.length) { showToast('Genera primero'); return; }
-  const intention = $('intention').value.trim();
+  const ready = state.family === 'rosacruz' ? state.rosa.resolved.length : state.core.strokes.length;
+  if (!ready) { showToast('Genera primero'); return; }
+  const intention = state.family === 'rosacruz' ? state.rosa.name : $('intention').value.trim();
   const now = new Date();
   const thumb = document.createElement('canvas');
   thumb.width = 160; thumb.height = 112;
@@ -1421,6 +1671,7 @@ function stopGnosis() {
   $('btnStartCharge').disabled = false;
 }
 function openGnosis() {
+  if (state.family === 'rosacruz') { showToast('La carga ritual aplica al glifo personal'); return; }
   if (!state.core.strokes.length) { showToast('Genera primero'); return; }
   stopGnosis();
   $('gnosisSigil').src = canvas.toDataURL('image/png');
