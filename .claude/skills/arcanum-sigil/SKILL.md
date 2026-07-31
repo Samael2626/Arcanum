@@ -1,168 +1,139 @@
 ---
 name: arcanum-sigil
 description: >
-  Diseña y audita el Taller de Sigilos de ARCANUM con énfasis en sigilos gráficos
-  simples, compactos y trazables. Activar ante sigilos, sigilización, Austin Osman
-  Spare, Phillip Cooper, composición de letras, canvas, SVG, kamea, sellos
-  ceremoniales, gnosis o generadores visuales. Impide mezclar familias simbólicas,
-  producir mandalas automáticos, garabatos aleatorios o composiciones ilegibles.
+  Dueño visual y taxonómico del Taller de Sigilos de ARCANUM. Diseña y audita
+  sigilos personales compactos, trazables y editables; separa glifos modernos,
+  kameas, Rosa-Cruz, sellos ceremoniales, repertorios transmitidos, bindrunes y
+  galdrastafir. Activar ante sigilos, Spare, Cooper, canvas, SVG, kamea, sellos,
+  runas o generadores visuales. Impide mezclas históricas y mandalas automáticos.
 ---
 
-# Taller de Sigilos — ARCANUM
+# ARCANUM Sigil — dueño visual
 
-> Un sigilo no es decoración generativa. Cada trazo nace de la intención.
+> Cada trazo debe tener origen. Parecido visual no implica parentesco histórico.
 
-## Fuente y criterio
+## Frontera con arcanum-chaos
 
-Leer [metodo-visual-cooper.md](references/metodo-visual-cooper.md) antes de diseñar,
-implementar o auditar el render principal.
+- **arcanum-sigil:** taxonomía, procedencia, reducción, composición, SVG, edición y pruebas visuales.
+- **arcanum-chaos:** formulación ritual, carga, liberación, olvido, continuidad y seguridad.
+- Una decisión de ritual no altera el motor visual. Una familia histórica no hereda el ritual de magia del caos.
 
-Jerarquía:
+Antes de diseñar el glifo v1, leer [metodo-visual-cooper.md](references/metodo-visual-cooper.md).
 
-1. Fuentes primarias suministradas por el usuario.
-2. Obras originales de Austin Osman Spare.
-3. Referencias visuales aprobadas por el usuario.
-4. Pinterest como inspiración secundaria, nunca como autoridad doctrinal.
+## Etiquetas obligatorias
 
-Si las fuentes discrepan, nombrar la variante. No presentar una reducción como la
-única forma “Spare”.
+- **HP:** fuente histórica primaria.
+- **OM:** desarrollo ocultista moderno con autor identificable.
+- **RC:** reconstrucción contemporánea.
+- **AR:** decisión de ARCANUM.
 
-## Familias separadas
+Toda afirmación doctrinal guarda autor, obra y localización. Pinterest sirve solo como corpus visual secundario.
 
-### Glifo gráfico
+## Familias: nunca fusionar
 
-Modo principal. Condensa letras en un emblema simple.
+| Familia | Entrada | Construcción | Tratamiento |
+|---|---|---|---|
+| Sigilo personal | Intención personal | Condensación verbal, gráfica, pictórica o mántrica | Generador v1 [OM][AR] |
+| Sello ceremonial | Grimoire/sistema | Figura prescrita | Catálogo, no generador [HP] |
+| Talismán planetario | Planeta, kamea, número/nombre | Coordenadas sobre tabla concreta | Motor futuro separado [HP] |
+| Sello transmitido | Visión/revelación documentada | Figura recibida | Contexto, no lienzo libre [HP/OM] |
+| Marca rúnica/protectora | Inscripción o repertorio | Ligadura o función contextual | Catálogo o reconstrucción etiquetada [HP/RC] |
 
-- Usar pocos trazos compartidos.
-- Superponer, rotar, invertir o reutilizar formas compatibles.
-- Mantener silueta compacta y centro visual claro.
-- Permitir curvas, diagonales, barras, ganchos, puntos y terminales.
-- Usar simetría solo cuando mejora la forma; nunca por defecto.
+Reglas duras:
 
-### Sello ceremonial
+- Sigillum Dei Aemeth pertenece al sistema documentado de Dee. No genera intenciones.
+- Sellos salomónicos y goéticos se reproducen con manuscrito/edición. Un análisis estadístico solo imita estilo [RC].
+- Bindrunes históricas son ligaduras. “Runas de intención” modernas son [RC] salvo evidencia concreta.
+- Galdrastafir se citan por manuscrito, folio, fecha y función; no llamarlos “sigilos vikingos”.
+- Kamea exige planeta, cuadrado completo, transliteración/reducción y secuencia.
+- Rosa-Cruz exige diagrama de letras y transliteración. No es Spare.
 
-Modo independiente. Puede contener círculo, triángulo, nombres, caracteres,
-correspondencias y borde ritual. No mezclar automáticamente con el glifo gráfico.
+## Reducciones v1
 
-### Kamea
+Mostrar entrada, normalización, regla, unidades descartadas y resultado.
 
-Modo independiente. El trazado deriva de posiciones numéricas sobre un cuadrado
-mágico concreto. Mostrar planeta y kamea usados.
+- `initials-unique`: inicial de cada palabra + primera aparición. Variante Cooper [OM]. Predeterminada.
+- `unique-no-vowels`: letras únicas sin vocales. Desarrollo moderno [OM], no receta exclusiva de Spare.
+- `unique`: letras únicas con vocales. Variante moderna [OM/AR].
+- `phonetic`: sonidos reducidos para mantra. Salida verbal, no SVG [OM].
 
-### Sigilo mántrico
+No usar `ao` ni “A‑O Principle” como doctrina Spare. No hay respaldo primario verificado con ese nombre y procedimiento; solo podría volver con autor, edición y página, etiquetado correctamente.
 
-Modo verbal, no gráfico. Reducir fonéticamente, reorganizar sonidos y producir una
-frase eufónica. No convertirlo automáticamente en geometría.
+## Gramática visual v1
 
-## Reducciones explícitas
+Resultado = grafo determinista de primitivas SVG:
 
-Ofrecer variantes nombradas:
-
-- initials: primera letra de cada palabra y eliminación de repetidas. Variante
-  gráfica descrita por Cooper.
-- unique-no-vowels: eliminar vocales y letras repetidas.
-- unique: conservar vocales y eliminar repetidas.
-- ao: transformación A–O, identificada como método distinto.
-
-Siempre mostrar entrada, normalización, regla aplicada y resultado. Nunca mezclar
-reglas sin indicarlo.
-
-## Gramática visual del glifo
-
-Construir el resultado como grafo de primitivas SVG:
-
-- Segmento
-- Arco o Bézier
-- Círculo o punto terminal
-- Barra o flecha terminal
+- Segmento.
+- Arco/Bézier.
+- Círculo o punto terminal.
+- Barra o terminal elegido.
 
 Proceso:
 
-1. Elegir un trazo dominante derivado de una letra: eje, diagonal o curva.
-2. Reutilizar ese trazo para representar otras letras compatibles.
-3. Acoplar barras, arcos y diagonales en intersecciones existentes.
-4. Eliminar segmentos duplicados y cruces sin función.
-5. Normalizar, centrar y escalar la silueta.
-6. Añadir terminales o borde solo por decisión del usuario.
+1. Elegir eje, diagonal o curva dominante derivada de una unidad.
+2. Reutilizar trazos entre unidades compatibles.
+3. Acoplar formas en intersecciones existentes.
+4. Quitar duplicados y cruces sin función.
+5. Centrar y escalar.
+6. Añadir terminales o borde solo por decisión humana.
 
-No dibujar cada letra completa. No usar rotaciones pseudoaleatorias. No ubicar
-letras en órbitas. No añadir geometría sagrada para “hacerlo mágico”.
+No dibujar alfabetos completos, rotar pseudoaleatoriamente, poner letras en órbitas, rellenar canvas ni añadir geometría sagrada automática.
 
-## Dirección visual aprobada
+## Control humano
 
-- Negro sobre fondo claro durante construcción; dorado mate sobre oscuro al
-  presentar.
-- Trazo uniforme, orgánico o geométrico según la intención.
+- Ofrecer 2–3 esqueletos, no una obra cerrada.
+- Permitir mover puntos, rotar, invertir, compartir y eliminar trazos.
+- Permitir eje, curvatura, simetría, terminales y borde.
+- Mostrar procedencia por unidad; nunca exportarla en el SVG final.
+- Exigir que un tutorial permita producir el símbolo con papel y lápiz.
+
+## Dirección visual
+
+- Compacto, memorable, trazable y editable.
 - Uno o dos ejes dominantes.
-- Silueta reconocible a tamaño pequeño.
+- Silueta clara a 80×80.
 - Espacio negativo suficiente.
-- Complejidad baja: debe poder recordarse y redibujarse.
-- Decoración subordinada al núcleo.
+- Negro sobre claro al construir; dorado mate sobre oscuro al presentar.
+- Decoración subordinada al esqueleto.
 
-Evitar:
+Rechazar mandala multicapa, espagueti, flor de vida, estrella/anillos automáticos, glow fuerte, simetría radial por defecto, ruido y mezcla de motores.
 
-- Mandala multicapa.
-- Espagueti de líneas.
-- Flor de vida, estrella o anillos automáticos.
-- Glow fuerte.
-- Simetría radial de cuatro u ocho brazos por defecto.
-- Letras separadas dentro de círculos como resultado principal.
-- Mezcla simultánea de motores.
-- Ruido generado para llenar el canvas.
+## Modelo mínimo
 
-## Control del usuario
+```text
+SigilWork
+  encryptedIntention
+  methodId
+  methodVersion
+  authorityClass
+  sourceRefs[]
+  reducedUnits[]
+  primitives[]
+  provenance[]
+  userDecisions[]
+  persistencePolicy
+```
 
-Dar control sin convertir el taller en fichas alfabéticas:
+## Gate visual
 
-- Mostrar 2–3 propuestas estructurales limpias.
-- Permitir elegir eje, curvatura, simetría, terminales y borde.
-- Permitir mover puntos de control y eliminar trazos.
-- Ofrecer una vista de procedencia que resalte qué letra originó cada trazo.
-- Mantener esa procedencia fuera del resultado exportado.
+1. Cada trazo tiene unidad o decisión de usuario.
+2. Se distingue a 80×80.
+3. Puede describirse y redibujarse con pocas primitivas.
+4. Quitar un trazo inútil no empeora la identidad.
+5. Tres intenciones producen estructuras distintas.
+6. Misma entrada, versión y decisiones producen mismo SVG.
+7. SVG usa paths reales; cero PNG embebido.
+8. No mezcla glifo, kamea, Rosa-Cruz, geometría, Goetia o Dee.
 
-El ordenador asiste. El usuario elige y corrige.
+Si falla trazabilidad, miniatura, redibujo o separación, no entregar.
 
-## Pruebas de aceptación
+## Fuentes mínimas
 
-Un glifo pasa solo si cumple:
+- Austin Osman Spare, *The Book of Pleasure*: sigilos y Alfabeto del Deseo [OM].
+- Phillip Cooper, *Basic Sigil Magic*: iniciales, superposición y simplicidad [OM].
+- Agrippa, *Three Books of Occult Philosophy*, II.22: kameas [HP].
+- Golden Dawn, documentos de Rosa-Cruz: coordenadas de letras [OM].
+- Claves de Salomón, *Lemegeton* y diarios de Dee: repertorios prescritos [HP].
+- Runología académica e investigación del Instituto Árni Magnússon: runas y galdrastafir [HP/investigación].
 
-1. **Trazabilidad:** cada trazo corresponde a una letra reducida o adorno elegido.
-2. **Miniatura:** se lee como una silueta a 80×80.
-3. **Memoria:** puede describirse con pocas primitivas.
-4. **Simplicidad:** quitar un trazo inútil mejora o conserva el símbolo.
-5. **Identidad:** tres intenciones distintas producen estructuras distintas.
-6. **Determinismo:** misma intención y configuración producen el mismo SVG.
-7. **Exportación:** SVG usa paths reales; cero PNG embebido.
-8. **Separación:** glifo, sello ceremonial y kamea nunca se fusionan por defecto.
-
-Si falla trazabilidad, miniatura o simplicidad, no entregar.
-
-## Flujo ARCANUM
-
-    intención
-      → reducción nombrada
-      → 2–3 propuestas simples
-      → edición de estructura
-      → decoración opcional
-      → exportación
-      → carga
-      → olvido
-
-La carga y el olvido pertenecen al ritual, no al algoritmo visual. Consultar
-arcanum-chaos para gnosis y estado del sigilo.
-
-## Modelo de datos mínimo
-
-    {
-      intention,
-      reductionMethod,
-      reducedUnits,
-      family,
-      primitives,
-      provenance,
-      decorations,
-      state
-    }
-
-primitives define el SVG. provenance explica el origen y no se exporta.
-
+Consulta la guía de producto del vault antes de implementar cambios doctrinales.

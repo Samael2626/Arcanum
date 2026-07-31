@@ -1,200 +1,144 @@
 ---
 name: arcanum-chaos
 description: >
-  Experto en Chaos Magic para ARCANUM. Cubre el método de sigilos de Austin Osman Spare, paradigmas mágicos, estados de gnosis, el modelo del olvido, y la filosofía del Caos como meta-sistema. Activa SIEMPRE que Samuel necesite: implementar el generador de sigilos de ARCANUM, diseñar el flujo de sigilización (intención → reducción → composición → carga → olvido), crear contenido sobre chaos magic para la app, diseñar el módulo de paradigmas, o cuando diga "sigilo", "gnosis", "paradigma", "Austin Spare", "chaos magic", "olvido", "carga del sigilo", "ZOS KIA", "servitor", "modelo del caos". Activa también ante implementaciones concretas del generador de sigilos en Flutter o Python. No esperar términos exactos — si hay sigilos o chaos magic involucrados, este skill responde.
+  Dueño ritual y de seguridad para magia del caos en ARCANUM. Cubre formulación
+  de intención, carga, gnosis de bajo riesgo, liberación, olvido o continuidad,
+  paradigmas, hipersigilos y servidores con atribución por autor. Activar ante
+  sigilos, Spare, Carroll, Sherwin, Hine, gnosis, olvido, carga o servidores.
+  No diseña el SVG: delega taxonomía y composición visual en arcanum-sigil.
 ---
 
-# ARCANUM Chaos
+# ARCANUM Chaos — dueño ritual
 
-> El caos no es desorden. Es el sistema que contiene todos los sistemas. Opera en paradoja.
+> Tradición descrita no equivale a eficacia demostrada. Práctica adulta no equivale a práctica insegura.
 
----
+## Frontera con arcanum-sigil
 
-## FUNDAMENTOS TÉCNICOS DEL CAOS
+- **arcanum-chaos:** intención, práctica ritual, carga, liberación, olvido/continuidad, seguridad y voz editorial.
+- **arcanum-sigil:** familia histórica, reducción, composición, procedencia, edición SVG y gates visuales.
+- Nunca imponer un ritual de magia del caos a kameas, Rosa-Cruz, sellos históricos, Dee, bindrunes o galdrastafir.
 
-### El meta-modelo
-Chaos magic no tiene dogma. Tiene un método:
-1. **Adopt a paradigm** — cualquier sistema es válido si funciona
-2. **Believe totally while working** — suspensión del escepticismo durante la operación
-3. **Discard it after** — el olvido es parte del mecanismo, no descuido
-4. **Result > tradition** — lo que funciona es verdad provisional
+## Procedencia por autor
 
-### Los 8 rayos del Caos (Peter Carroll)
-Cada rayo = un tipo de magia, un color, un modo:
-| Rayo | Color | Dominio |
-|------|-------|---------|
-| Magia de guerra | Rojo | Voluntad, destrucción, defensa |
-| Magia de amor | Verde | Deseo, atracción, relación |
-| Magia de riqueza | Amarillo/dorado | Prosperidad, intercambio |
-| Magia de ego | Naranja | Identidad, presencia, poder personal |
-| Magia de pensamiento | Azul | Comunicación, información, conocimiento |
-| Magia de muerte | Violeta/negro | Transformación, fin, umbral |
-| Magia sexual | Plateado | Gnosis, creación, Eros |
-| Magia del caos | Puro negro | Azahar, azar puro, anti-sistema |
+- **Austin Osman Spare:** sigilos personales, deseo, Alfabeto del Deseo e indiferencia/vacuidad en su sistema [OM]. Su texto no ofrece la receta escolar universal “quitar vocales”.
+- **Ray Sherwin:** codificación temprana de trabajo sigílico en magia del caos [OM].
+- **Peter J. Carroll:** sistematización de gnosis inhibitoria/excitatoria, sigilos y desapego [OM].
+- **Phil Hine:** proceso moderno de formular, enlazar a portador, cargar, disparar y olvidar; admite portadores gráficos, mántricos y otros [OM].
+- **Frater U.D.:** taxonomía y variantes prácticas posteriores [OM].
+- **Grant Morrison:** hipersigilo narrativo [OM].
+- **Phillip Cooper:** iniciales y composición visual simple; consultar arcanum-sigil [OM].
 
----
+No escribir “Spare dice” sin obra y página. “A‑O Principle” no se atribuye a Spare: nombre/procedimiento no verificados.
 
-## SIGILOS — MÉTODO AUSTIN OSMAN SPARE
+## Formulación de intención
 
-### El flujo completo
-```
-1. INTENCIÓN      → Frase en presente positivo afirmativo
-2. REDUCCIÓN      → Eliminar vocales + letras repetidas
-3. COMPOSICIÓN    → Combinar letras restantes en forma visual
-4. CARGA          → Estado de gnosis durante la contemplación
-5. OLVIDO         → Destruir/guardar y olvidar conscientemente
-6. MANIFESTACIÓN  → Ocurre cuando el ego deja de interferir
-```
+“Presente, positivo y afirmativo” es convención moderna, no ley universal. ARCANUM aplica:
 
-### Paso 1 — Intención correcta
-❌ "Quiero dinero" → ego consciente, resistencia
-❌ "No quiero estar enfermo" → negación activa el problema
-✅ "Tengo abundancia suficiente" → presente, positivo, específico
-✅ "Mi cuerpo funciona con vitalidad" → afirmativo, sensorial
+1. Agencia propia.
+2. Claridad sin obsesión por controlar detalles.
+3. Resultado o conducta observable.
+4. Cero coerción, vigilancia, daño o control sexual de terceros.
+5. Acción real paralela: el ritual no reemplaza atención médica, legal, financiera o de emergencia.
 
-### Paso 2 — Reducción algorítmica
-```python
-import re
+Ejemplo: cambiar “X me ama” por “Me comunico con honestidad y respeto límites mutuos”.
 
-def reduce_statement(intention: str) -> str:
-    """
-    Elimina vocales y letras repetidas, mantiene orden de aparición.
-    'MY WILL IS STRONG' → 'MYWLSTR'
-    """
-    # Normalizar: mayúsculas, solo letras
-    cleaned = re.sub(r'[^A-Z]', '', intention.upper())
-    
-    # Eliminar vocales
-    no_vowels = re.sub(r'[AEIOU]', '', cleaned)
-    
-    # Eliminar letras repetidas (mantener primera aparición)
-    seen = set()
-    result = []
-    for char in no_vowels:
-        if char not in seen:
-            seen.add(char)
-            result.append(char)
-    
-    return ''.join(result)
+## Flujo ARCANUM
 
-# Ejemplo:
-# "I HAVE CREATIVE POWER" → "HVCRTPW"
+```text
+intención
+  → reducción nombrada (arcanum-sigil)
+  → composición humana asistida (arcanum-sigil)
+  → práctica/carga opcional
+  → liberación
+  → olvido o continuidad según método
+  → registro privado opcional
 ```
 
-### Paso 3 — Composición visual (Flutter canvas)
-El usuario combina las letras resultantes en una forma abstracta:
-- Canvas táctil con las letras como elementos arrastrables
-- Herramientas: rotar, escalar, superponer, invertir letras
-- El objetivo es que el resultado NO parezca letras — forma abstracta
-- Guardar como SVG path en el grimorio
+La práctica no valida causalidad sobrenatural. La app registra experiencia, no “manifestación confirmada”.
 
-```dart
-// Estructura del sigilo en base de datos
-class Sigil {
-  final String id;
-  final String intention;        // cifrada AES-256
-  final String reducedLetters;   // 'HVCRTPW'
-  final String svgPath;          // la forma visual
-  final SigilState state;        // draft | charged | forgotten
-  final DateTime createdAt;
-  final DateTime? chargedAt;
-}
+## Carga: opciones por nivel de seguridad
 
-enum SigilState { draft, charged, forgotten }
-```
+### Nivel verde — permitido en v1
 
-### Paso 4 — Gnosis y carga
-El estado de gnosis = suspensión del monólogo interno.
-Métodos para implementar en ARCANUM:
+- Contemplación breve con salida libre.
+- Respiración natural, sin ritmos forzados ni retenciones.
+- Repetición vocal cómoda.
+- Música o ritmo a volumen seguro.
+- Dibujo repetido.
+- Movimiento suave y estable.
+- Cierre sin carga: guardar directamente.
 
-| Método | Descripción | Implementación UI |
-|--------|-------------|------------------|
-| Contemplación | Fijar la vista en el sigilo hasta disociarse | Timer + pantalla solo sigilo + fade gradual |
-| Respiración | Hiperventilación suave → estado alterado | Guía de respiración animada antes del sigilo |
-| Risa | Gnosis por humor absurdo — menos común | Instrucción de texto, sin UI especial |
-| Dolor menor | ❌ No implementar en ARCANUM | — |
+### Nivel ámbar — contenido adulto contextual, no guiado
 
-**Modo carga en ARCANUM:**
-```
-1. Pantalla full-screen con el sigilo del usuario
-2. Guía de respiración opcional (4-7-8 o box breathing)
-3. Timer configurable (3-10 min)
-4. Al terminar: vibración háptica + opción "Sigilo cargado"
-5. Transición suave a la pantalla de olvido
-```
+- Excitación sexual individual o consensuada.
+- Ayuno, privación sensorial, agotamiento o prácticas intensas mencionadas solo como historia de autores.
 
-### Paso 5 — Olvido
-El olvido es el mecanismo activo, no pasivo.
-Después de cargar, el usuario elige:
-- **Destruir**: quemar virtual (animación de fuego → el sigilo desaparece de la UI)
-- **Guardar oculto**: sigilo va al grimorio pero bloqueado — no aparece en la lista principal hasta X días
+Mostrar contexto, riesgos y alternativas. Sin instrucciones operativas. Consentimiento adulto, afirmativo, específico, reversible y sobrio. Terceros nunca participan sin saberlo.
 
-```dart
-// Pantalla de olvido
-enum ForgetMethod { destroy, hide }
+### Nivel rojo — prohibido
 
-// Si destroy: eliminación con animación + registro mínimo en bitácora (sin intención)
-// Si hide: ocultar por días configurables (default: 28 días = un ciclo lunar)
-```
+- Hiperventilación, asfixia o retención extrema.
+- Pérdida de conciencia.
+- Dolor, autolesión o exposición peligrosa.
+- Sustancias o dosificación.
+- Privación peligrosa de sueño, agua o alimento.
+- Coerción sexual, incapacidad para consentir o participación oculta.
 
----
+No gamificar duración, disociación, dolor ni “intensidad de gnosis”. Detener ante mareo, dolor, pánico, entumecimiento o desorientación.
 
-## MÓDULO PARADIGMAS — DISEÑO ARCANUM
+## Liberación, conservación y olvido
 
-### Concepto
-El practicante puede "equipar" un paradigma activo que colorea la experiencia:
-- **Paradigma hermético**: lenguaje de correspondencias, planetas, elementos
-- **Paradigma caótico**: lenguaje de probabilidades, memes, resultados
-- **Paradigma gnóstico**: lenguaje de Pleroma, Demiurgo, chispas divinas
-- **Paradigma personal**: el usuario define el suyo
+El olvido es central en Carroll/Hine y otros autores modernos, pero no universal.
 
-El paradigma activo afecta:
-- El tono del oracle
-- Las metáforas usadas en el grimorio
-- Los colores y símbolos del calendario astral
+Opciones:
 
-```python
-# En el system prompt del oracle
-PARADIGM_CONTEXT = {
-    "hermetic": "Hablas en términos de planetas, elementos y correspondencias.",
-    "chaos": "Hablas en términos de probabilidades, resultados y paradigmas provisionales.",
-    "gnostic": "Hablas en términos de luz, oscuridad, Pleroma y despertar.",
-    "custom": "{user_paradigm_description}",
-}
-```
+- **Soltar y archivar:** cierre ritual, registro cifrado accesible.
+- **Ocultar temporalmente:** duración elegida; cero “28 días” doctrinal por defecto.
+- **Conservar visible:** Alfabeto del Deseo, talismán, hipersigilo o práctica repetida.
+- **Destruir copia:** elimina la representación elegida con confirmación.
 
----
+Destruir copia visual y borrar registro cifrado son acciones distintas. No borrar silenciosamente. No esconder para siempre por diseño.
 
-## SERVITORS (v2)
+## Paradigmas
 
-Un servitor es una entidad construida conscientemente para una función específica.
-Estructura básica:
-- **Nombre**: generado o elegido por el usuario
-- **Función**: una sola, específica
-- **Apariencia**: descripción o imagen generada
-- **Alimentación**: qué refuerza al servitor (atención, resultados)
-- **Condición de disolución**: cuándo termina
+La magia del caos trata la creencia como marco provisional en autores concretos [OM]. ARCANUM puede cambiar voz y metáfora, pero debe:
 
-En ARCANUM v2: módulo de creación y seguimiento de servitors, vinculado al grimorio.
+- Nombrar el paradigma activo.
+- No mezclar correspondencias sin decisión del usuario.
+- Mantener hechos históricos y política de seguridad fuera del cambio de voz.
+- Evitar “resultado = verdad”. Registrar correlación y experiencia, no certeza causal.
 
----
+## Hipersigilos y servidores
 
-## CONTENIDO APP — VOZ CHAOS
+- **Hipersigilo:** obra narrativa prolongada al estilo desarrollado por Morrison. No es un glifo decorado.
+- **Servidor:** construcción moderna con nombre, función limitada, límites éticos, modo de mantenimiento y condición de disolución.
+- Su firma es un sigilo personal; nunca un sello goético inventado.
+- No presentar entidades como objetivamente verificadas ni alimentar paranoia o dependencia.
 
-| Contexto | Texto ARCANUM |
-|----------|--------------|
-| Inicio sigilización | "La intención entra. Las letras que sobran son la forma." |
-| Post-composición | "La forma está hecha. Ahora viene el olvido activo." |
-| Modo carga activo | "Aquí. Solo esto. El resto no existe." |
-| Post-olvido | "Hecho. Suéltalo. El trabajo ocurre sin tí." |
-| Paradigma activo | "Operas desde {paradigma}. Cambia cuando necesites." |
+## Voz editorial
 
----
+Usar:
 
-## REGLAS TÉCNICAS
+- “Este método busca condensar la intención.”
+- “Hine propone el olvido para reducir la interferencia consciente.”
+- “Observa y registra sin convertir coincidencia en prueba.”
 
-1. **El olvido no es opcional** — es el mecanismo central. La UI debe facilitarlo activamente
-2. **El sigilo no debe "significar" conscientemente** — si el usuario puede leer su intención en el sigilo, no funcionó la composición
-3. **No mezclar paradigmas sin intención** — elegir uno y operar desde ahí
-4. **Resultados > fe** — en chaos magic, si no funciona, se cambia el método, no se aumenta la creencia
-5. Fuentes: Peter Carroll (*Liber Null & Psychonaut*), Austin Osman Spare (*The Book of Pleasure*), Phil Hine (*Condensed Chaos*)
+Prohibido:
+
+- “Garantizado.”
+- “El universo recibió tu orden.”
+- “Falló porque no creíste.”
+- “Manifestación completada.”
+- “El olvido es obligatorio para todo sigilo.”
+
+## Gate ritual
+
+1. Método y afirmaciones atribuidos por autor.
+2. Carga opcional y de bajo riesgo en v1.
+3. Olvido, conservación o destrucción dependen del método y del usuario.
+4. Cero coerción o terceros ocultos.
+5. Cero prácticas rojas.
+6. Datos íntimos cifrados; nada en logs, analytics o prompts remotos sin consentimiento granular.
+7. El tutorial produce una práctica manual sin depender de automatización.
+
+Si falla seguridad, consentimiento, procedencia o privacidad, no publicar.
