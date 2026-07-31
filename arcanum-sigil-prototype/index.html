@@ -437,7 +437,7 @@ const GUIDE_COLORS = ['#e0b64c', '#c65a3b', '#8fa6c9', '#7fb08a', '#b58ac9', '#c
 // sus letras sobre la Rosa. No es eliminación estilo Spare. NUNCA se
 // mezcla con el glifo personal [HP][RC].
 const HEBREW_VALUES = { 'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,'כ':20,'ל':30,'מ':40,'נ':50,'ס':60,'ע':70,'פ':80,'צ':90,'ק':100,'ר':200,'ש':300,'ת':400 };
-const LATIN_TO_HEBREW = { a:'א',b:'ב',c:'כ',g:'ג',d:'ד',h:'ה',v:'ו',w:'ו',u:'ו',z:'ז',ch:'ח',t:'ט',i:'י',y:'י',j:'י',k:'כ',l:'ל',m:'מ',n:'נ',s:'ס',o:'ע',p:'פ',tz:'צ',q:'ק',r:'ר',sh:'ש',th:'ת' };
+const LATIN_TO_HEBREW = { a:'א',b:'ב',c:'כ',g:'ג',d:'ד',h:'ה',v:'ו',w:'ו',u:'ו',z:'ז',ch:'ח',t:'ט',i:'י',y:'י',j:'י',e:'י',f:'פ',k:'כ',l:'ל',m:'מ',n:'נ',s:'ס',o:'ע',p:'פ',tz:'צ',q:'ק',r:'ר',sh:'ש',th:'ת' };
 const ROSE_CROSS = {
   edition: 'Golden Dawn, Rose Cross Lamen — 22 pétalos (3+7+12). Diagrama prototipo ARCANUM [RC], atribución estándar.',
   elements: [ // 3 letras madre: elementos
@@ -977,6 +977,37 @@ function paintLayer(ctx, layer) {
       ctx.restore();
       break;
     }
+    case 'rose': {
+      ctx.save();
+      if (layer.params.diagram) {
+        ctx.strokeStyle = 'rgba(184,134,11,.38)'; ctx.lineWidth = 1.2;
+        for (const r of Object.values(ROSE_RINGS)) { ctx.beginPath(); ctx.arc(CX, CY, r, 0, Math.PI * 2); ctx.stroke(); }
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        for (const L of roseLayout()) {
+          ctx.fillStyle = 'rgba(201,154,26,.9)';
+          ctx.font = '16px "Segoe UI", "Arial Hebrew", serif';
+          ctx.fillText(L.he, L.x, L.y);
+          ctx.fillStyle = 'rgba(138,127,114,.75)';
+          ctx.font = '8px Georgia, serif';
+          ctx.fillText(L.sym || L.en, L.x, L.y + 15);
+        }
+      }
+      const pts = state.rosa.resolved.filter(p => !p.missing);
+      if (pts.length >= 2) {
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#e6b422'; ctx.lineWidth = 2.2;
+        ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.stroke();
+        ctx.strokeStyle = '#e6b422'; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.arc(pts[0].x, pts[0].y, 12, 0, Math.PI * 2); ctx.stroke();
+        const last = pts[pts.length - 1];
+        ctx.strokeStyle = '#c65a3b'; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.arc(last.x, last.y, 6, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.restore();
+      break;
+    }
     case 'stamps': {
       ctx.save();
       for (const st of layer.stamps) {
@@ -1092,37 +1123,6 @@ function buildSVG() {
         }
         break;
       }
-    case 'rose': {
-      ctx.save();
-      if (layer.params.diagram) {
-        ctx.strokeStyle = 'rgba(184,134,11,.38)'; ctx.lineWidth = 1.2;
-        for (const r of Object.values(ROSE_RINGS)) { ctx.beginPath(); ctx.arc(CX, CY, r, 0, Math.PI * 2); ctx.stroke(); }
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        for (const L of roseLayout()) {
-          ctx.fillStyle = 'rgba(201,154,26,.9)';
-          ctx.font = '16px "Segoe UI", "Arial Hebrew", serif';
-          ctx.fillText(L.he, L.x, L.y);
-          ctx.fillStyle = 'rgba(138,127,114,.75)';
-          ctx.font = '8px Georgia, serif';
-          ctx.fillText(L.sym || L.en, L.x, L.y + 15);
-        }
-      }
-      const pts = state.rosa.resolved.filter(p => !p.missing);
-      if (pts.length >= 2) {
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = '#e6b422'; ctx.lineWidth = 2.2;
-        ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-        ctx.stroke();
-        ctx.strokeStyle = '#e6b422'; ctx.lineWidth = 1.6;
-        ctx.beginPath(); ctx.arc(pts[0].x, pts[0].y, 12, 0, Math.PI * 2); ctx.stroke();
-        const last = pts[pts.length - 1];
-        ctx.strokeStyle = '#c65a3b'; ctx.lineWidth = 1.6;
-        ctx.beginPath(); ctx.arc(last.x, last.y, 6, 0, Math.PI * 2); ctx.stroke();
-      }
-      ctx.restore();
-      break;
-    }
     case 'stamps': {
         for (const st of layer.stamps) {
           parts.push(`<text x="${st.x.toFixed(2)}" y="${st.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-family="serif" font-size="20" fill="rgba(184,134,11,0.5)">${esc(st.sym)}</text>`);
