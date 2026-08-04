@@ -47,6 +47,10 @@ dependencies:
   # rive: ^0.14.8
   # model_viewer_plus: ^1.10.0
 
+  # Monetización
+  purchases_flutter: ^8.2.1
+  google_mobile_ads: ^5.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

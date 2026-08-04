@@ -9,6 +9,7 @@ import '../../features/lecturas/presentation/lector_screen.dart';
 import '../../features/lecturas/presentation/obra_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/oraculo/oraculo_screen.dart';
+import '../../features/paywall/paywall_screen.dart';
 import '../../features/perfil/perfil_screen.dart';
 import '../../features/saber/saber_screen.dart';
 import '../../features/settings/settings_screen.dart';
@@ -23,6 +24,7 @@ final appRouter = GoRouter(
     GoRoute(path: '/onboarding', builder: (c, s) => const OnboardingScreen()),
     GoRoute(path: '/settings', builder: (c, s) => const SettingsScreen()),
     GoRoute(path: '/perfil', builder: (c, s) => const PerfilScreen()),
+    GoRoute(path: '/paywall', builder: (c, s) => const PaywallScreen()),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           AppShell(navigationShell: navigationShell),

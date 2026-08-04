@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/api/arcanum_api.dart';
 import '../../core/api/oracle_error.dart';
 import '../../core/auth/auth_controller.dart';
+import '../../core/monetization/monetization_service.dart';
+import '../../core/monetization/quota_service.dart';
 import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
-// El "?" de Oráculo vive ahora en la barra superior del shell (InfoDot allí).
 import '../../shared/widgets/login_prompt.dart';
 import 'tarot_learn.dart';
 import 'widgets/tarot_card.dart';
@@ -242,6 +244,18 @@ class _OracleViewState extends ConsumerState<_OracleView> {
   }
 
   Future<void> _draw() async {
+    // Verificar cupo diario antes de tirar.
+    final tier = ref.read(subscriptionProvider).value?.tier ?? SubscriptionTier.free;
+    final quota = ref.read(quotaServiceProvider);
+    final canDraw = await quota.canPerform('tarot', tier);
+    if (!canDraw) {
+      final remaining = await quota.remaining('tarot', tier);
+      if (remaining <= 0 && mounted) {
+        _showQuotaExceeded('tiradas de tarot');
+      }
+      return;
+    }
+
     setState(() {
       _drawing = true;
       _drawError = null;
@@ -252,6 +266,7 @@ class _OracleViewState extends ConsumerState<_OracleView> {
       final data = await _api.tarotDraw(_spread);
       final cards = ((data['cards_drawn'] as Map)['cards'] as List)
           .cast<Map<String, dynamic>>();
+      await quota.recordUsage('tarot');
       setState(() {
         _cards = cards;
         _sessionId = data['id'] as String?;
@@ -273,7 +288,20 @@ class _OracleViewState extends ConsumerState<_OracleView> {
 
   Future<void> _askIa() async {
     final sessionId = _sessionId;
-    if (sessionId == null) return; // el botón no se muestra sin tirada visible.
+    if (sessionId == null) return;
+
+    // Verificar cupo diario de oracle.
+    final tier = ref.read(subscriptionProvider).value?.tier ?? SubscriptionTier.free;
+    final quota = ref.read(quotaServiceProvider);
+    final canRead = await quota.canPerform('oracle', tier);
+    if (!canRead) {
+      final remaining = await quota.remaining('oracle', tier);
+      if (remaining <= 0 && mounted) {
+        _showQuotaExceeded('lecturas del oráculo');
+      }
+      return;
+    }
+
     final q = _question.text.trim();
     setState(() {
       _iaLoading = true;
@@ -281,17 +309,69 @@ class _OracleViewState extends ConsumerState<_OracleView> {
       _iaReply = null;
     });
     try {
-      // Modo 2 (con pregunta) o modo 3 (solo la tirada) — decide el servicio.
       final res = await _api.oracleIa(
         question: q.isEmpty ? null : q,
         divinationSessionId: sessionId,
       );
+      await quota.recordUsage('oracle');
       setState(() => _iaReply = assistantReply(res));
     } catch (e) {
       setState(() => _iaError = oracleErrorMessage(e));
     } finally {
       setState(() => _iaLoading = false);
     }
+  }
+
+  void _showQuotaExceeded(String feature) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: ArcanumColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              '✦',
+              style: TextStyle(fontSize: 36, color: ArcanumColors.gold),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Cupo diario agotado',
+              style: ArcanumText.heading(22),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Has usado todas tus $feature de hoy.',
+              textAlign: TextAlign.center,
+              style: ArcanumText.body(
+                15,
+                color: ArcanumColors.ivoryMuted,
+              ),
+            ),
+            const SizedBox(height: 20),
+            GoldButton(
+              label: 'Desbloquear con Premium',
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                context.push('/paywall');
+              },
+            ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(
+                'Volver',
+                style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -370,6 +450,8 @@ class _OracleViewState extends ConsumerState<_OracleView> {
           loading: _drawing,
           onPressed: _draw,
         ),
+        const SizedBox(height: 8),
+        _QuotaIndicator(),
         if (_drawError != null) ...[
           const SizedBox(height: 14),
           Text(
@@ -513,6 +595,35 @@ class _OracleViewState extends ConsumerState<_OracleView> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Indicador sutil de cupo diario: muestra cuántas tiradas/lecturas quedan.
+class _QuotaIndicator extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tier = ref.watch(subscriptionProvider).value?.tier ?? SubscriptionTier.free;
+    final quota = ref.watch(quotaServiceProvider);
+
+    return FutureBuilder<List<int>>(
+      future: Future.wait([
+        quota.remaining('tarot', tier),
+        quota.remaining('oracle', tier),
+      ]),
+      builder: (context, snap) {
+        if (!snap.hasData) return const SizedBox.shrink();
+        final tarotLeft = snap.data![0];
+        final oracleLeft = snap.data![1];
+        return Text(
+          'Tiradas: $tarotLeft  ·  Oráculo: $oracleLeft',
+          textAlign: TextAlign.center,
+          style: ArcanumText.body(
+            12,
+            color: ArcanumColors.ivoryMuted.withValues(alpha: 0.7),
+          ),
+        );
+      },
     );
   }
 }

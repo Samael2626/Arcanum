@@ -8,6 +8,8 @@ import '../../core/api/oracle_error.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/content/glossary.dart';
 import '../../core/content/transit_reading.dart';
+import '../../core/monetization/monetization_service.dart';
+import '../../core/monetization/quota_service.dart';
 import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
@@ -475,6 +477,17 @@ class _AspectRowState extends ConsumerState<_AspectRow> {
   /// Pide al oráculo la lectura personalizada de ESTE tránsito.
   /// El servidor ya inyecta la carta natal: solo hay que nombrar el tránsito.
   Future<void> _askOracle() async {
+    final tier = ref.read(subscriptionProvider).value?.tier ?? SubscriptionTier.free;
+    final quota = ref.read(quotaServiceProvider);
+    final canInvestigate = await quota.canPerform('cielos', tier);
+    if (!canInvestigate) {
+      final remaining = await quota.remaining('cielos', tier);
+      if (remaining <= 0 && mounted) {
+        _showQuotaExceeded();
+      }
+      return;
+    }
+
     final a = widget.aspect;
     setState(() {
       _asking = true;
@@ -491,6 +504,7 @@ class _AspectRowState extends ConsumerState<_AspectRow> {
               aspect: a['aspect'] as String,
             ),
           );
+      await quota.recordUsage('cielos');
       if (!mounted) return;
       setState(() => _oracleReply = assistantReply(res));
     } catch (e) {
@@ -499,6 +513,55 @@ class _AspectRowState extends ConsumerState<_AspectRow> {
     } finally {
       if (mounted) setState(() => _asking = false);
     }
+  }
+
+  void _showQuotaExceeded() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: ArcanumColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              '✦',
+              style: TextStyle(fontSize: 36, color: ArcanumColors.gold),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Cupo diario agotado',
+              style: ArcanumText.heading(22),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Has usado todas tus investigaciones de cielos de hoy.',
+              textAlign: TextAlign.center,
+              style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
+            ),
+            const SizedBox(height: 20),
+            GoldButton(
+              label: 'Desbloquear con Premium',
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                context.push('/paywall');
+              },
+            ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(
+                'Volver',
+                style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   static const _toneColor = {
