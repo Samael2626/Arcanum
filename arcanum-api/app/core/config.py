@@ -42,17 +42,21 @@ class Settings(BaseSettings):
     CLAUDE_MAX_TOKENS: int = 1024
     CLAUDE_TEMPERATURE: float = 0.6
     CLAUDE_TIMEOUT_SECONDS: int = 30
-    ORACLE_FREE_DAILY: int = 3
+    ORACLE_FREE_DAILY: int = 1
     ORACLE_PREMIUM_DAILY: int = 20
 
     # Tarot
-    TAROT_FREE_DAILY: int = 5
+    TAROT_FREE_DAILY: int = 1
     TAROT_PREMIUM_DAILY: int = 50
 
     # Geocoding (Nominatim + timezonefinder) — resuelve lugar de nacimiento
     # real en el onboarding, reemplaza el default hardcodeado a Bogotá.
     NOMINATIM_USER_AGENT: str = "ARCANUM-app/1.0 (contacto: soporte@arcanum-app.com)"
     GEOCODING_MIN_INTERVAL_SECONDS: float = 1.0
+
+    # RevenueCat webhook
+    REVENUECAT_WEBHOOK_SECRET: Optional[str] = None
+    REVENUECAT_API_SECRET: Optional[str] = None
 
     model_config = ConfigDict(
         env_file=".env",

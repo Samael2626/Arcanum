@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/api/arcanum_api.dart';
+import '../../core/auth/auth_controller.dart';
+import '../../core/monetization/monetization_service.dart';
+import '../../core/monetization/quota_service.dart';
 import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
+import '../../shared/widgets/gold_button.dart';
 import 'materia_lore.dart';
 import 'materia_specimen.dart';
 
@@ -316,7 +321,23 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
     );
   }
 
-  void _openDetail(Map<String, dynamic> item) {
+  Future<void> _openDetail(Map<String, dynamic> item) async {
+    final auth = ref.read(authProvider);
+    if (!auth.isAuthenticated) {
+      if (!mounted) return;
+      context.push('/login');
+      return;
+    }
+
+    final tier = ref.read(subscriptionProvider).value?.tier ?? SubscriptionTier.free;
+    final quota = ref.read(quotaServiceProvider);
+    final canView = await quota.canPerform('materia', tier);
+    if (!canView) {
+      if (mounted) _showQuotaExceeded();
+      return;
+    }
+
+    if (!mounted) return;
     final slug = item['slug'] as String;
     final isHerb = item['item_type'] == 'herb';
     showMateriaLoreSheet(
@@ -328,9 +349,57 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
       planet: item['planet'] as String?,
       element: item['element'] as String?,
       zodiac: item['zodiac'] as String?,
-      // El puente vive en Culpeper, que es un herbario: solo las hierbas
-      // pueden tener capítulo enlazado. 404 (sin puente) se ignora en silencio.
       bridgeFuture: isHerb ? _api.materiaBridge(slug) : null,
+    );
+    await quota.recordUsage('materia');
+  }
+
+  void _showQuotaExceeded() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: ArcanumColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              '✦',
+              style: TextStyle(fontSize: 36, color: ArcanumColors.gold),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Cupo diario agotado',
+              style: ArcanumText.heading(22),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Has visto todas las correspondencias de materia de hoy.',
+              textAlign: TextAlign.center,
+              style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
+            ),
+            const SizedBox(height: 20),
+            GoldButton(
+              label: 'Desbloquear con Premium',
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                context.push('/paywall');
+              },
+            ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(
+                'Volver',
+                style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
