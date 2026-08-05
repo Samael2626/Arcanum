@@ -1,5 +1,8 @@
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -9,12 +12,32 @@ import 'core/monetization/monetization_service.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/arcanum_theme.dart';
 import 'features/onboarding/application/onboarding_controller.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Crashlytics: capturar errores no atrapados
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
+
   await MobileAds.instance.initialize();
   await MonetizationService.initialize('PLACEHOLDER_RC_API_KEY');
-  runApp(const ProviderScope(child: ArcanumApp()));
+
+  // En desarrollo, log a consola en vez de Crashlytics
+  if (kDebugMode) {
+    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
+  }
+
+  runZonedGuarded(() {
+    runApp(const ProviderScope(child: ArcanumApp()));
+  }, (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+  });
 }
 
 class ArcanumApp extends ConsumerWidget {
