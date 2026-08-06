@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#
+# Preserva el post-commit global (~/.agents/git-hooks/post-commit, auto-checkpoint).
+#
+# Al fijar core.hooksPath a .githooks para este repo, el hooksPath global deja
+# de aplicar. Este shim lo vuelve a invocar. Ademas evita el error ruidoso
+# "env: 'pwsh': No such file or directory" que salta en cada commit porque
+# PowerShell Core no esta instalado (solo Windows PowerShell 5.1).
+#
+set -uo pipefail
+
+CHECKPOINT="$HOME/.agents/scripts/checkpoint.ps1"
+
+[ -f "$CHECKPOINT" ] || exit 0
+
+# Solo pwsh: checkpoint.ps1 esta escrito para PowerShell Core y bajo Windows
+# PowerShell 5.1 revienta con un error de binding que ensucia cada commit.
+# Sin pwsh instalado esto es un no-op limpio, igual que antes.
+if command -v pwsh >/dev/null 2>&1; then
+  pwsh -File "$CHECKPOINT" -RepoPath "$(git rev-parse --show-toplevel)" || true
+fi
+
+exit 0

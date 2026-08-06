@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+#
+# ARCANUM — pre-commit. Bloquea commits que rompan el proyecto.
+#
+# Corre, en orden y solo lo que aplica a los archivos en stage:
+#   1. Escaneo CJK        (siempre)
+#   2. pytest suite completa (si hay .py de arcanum-api)
+#   3. flutter analyze    (si hay .dart de arcanum_app)
+#
+# LIMITACION CONOCIDA: valida el ARBOL DE TRABAJO, no el contenido exacto
+# en stage. Hacer stash de lo no-stageado seria mas correcto pero en este
+# repo el arbol vive sucio y un stash automatico es un riesgo de perder
+# trabajo. Si commiteas parcialmente, el hook puede dar verde sobre codigo
+# que no es el que entra. Asumido a proposito.
+#
+# Escape hatch (usalo solo si sabes por que):
+#   ARCANUM_SKIP_HOOKS=1 git commit ...
+#
+set -uo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT" || exit 1
+
+RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'; OFF=$'\033[0m'
+
+fail() { echo "${RED}[pre-commit] $*${OFF}" >&2; }
+info() { echo "${YELLOW}[pre-commit] $*${OFF}"; }
+ok()   { echo "${GREEN}[pre-commit] $*${OFF}"; }
+
+if [ "${ARCANUM_SKIP_HOOKS:-}" = "1" ]; then
+  info "ARCANUM_SKIP_HOOKS=1 — verificaciones SALTADAS. Bajo tu responsabilidad."
+  exit 0
+fi
+
+STAGED="$(git diff --cached --name-only --diff-filter=ACM)"
+if [ -z "$STAGED" ]; then
+  exit 0
+fi
+
+PY_BIN="${PYTHON:-python}"
+
+# ── 1. CJK ───────────────────────────────────────────────────────────────────
+info "Escaneando CJK en archivos en stage..."
+# shellcheck disable=SC2086
+if ! echo "$STAGED" | tr '\n' '\0' | xargs -0 -r "$PY_BIN" scripts/check_cjk.py; then
+  fail "Commit BLOQUEADO: caracteres asiaticos en el codigo."
+  exit 1
+fi
+ok "CJK: limpio."
+
+# ── 2. Backend ───────────────────────────────────────────────────────────────
+if echo "$STAGED" | grep -q '^arcanum-api/.*\.py$'; then
+  info "Cambios en backend — corriendo suite completa..."
+
+  DB_URL="${TEST_DATABASE_URL:-postgresql://postgres@127.0.0.1:5433/arcanum_test}"
+
+  if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^arcanum-test-db$'; then
+    info "arcanum-test-db no esta arriba — intentando levantarlo..."
+    if ! docker start arcanum-test-db >/dev/null 2>&1; then
+      fail "No se pudo levantar arcanum-test-db."
+      fail "Sin Postgres los tests de integracion se SALTAN en silencio y el"
+      fail "hook daria un verde mentiroso. Commit BLOQUEADO."
+      fail "Arregla con: docker start arcanum-test-db"
+      exit 1
+    fi
+    # El contenedor tarda un momento en aceptar conexiones.
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+      docker exec arcanum-test-db pg_isready -q >/dev/null 2>&1 && break
+      sleep 1
+    done
+  fi
+
+  # pytest DEBE correr desde arcanum-api/: tests/ y tests_unit/ cuelgan de ahi,
+  # no de la raiz del repo.
+  if ! (cd arcanum-api && TEST_DATABASE_URL="$DB_URL" DATABASE_URL="$DB_URL" \
+        "$PY_BIN" -m pytest tests/ tests_unit/ -q --no-header --disable-warnings 2>&1) \
+       | tee /tmp/arcanum_pytest.log | tail -25; then
+    fail "Commit BLOQUEADO: pytest en rojo. Log completo: /tmp/arcanum_pytest.log"
+    exit 1
+  fi
+
+  # Un "skipped" masivo significa que los tests de integracion no corrieron.
+  # Verde con la mitad de la suite dormida es peor que rojo.
+  SKIPPED="$(grep -oE '[0-9]+ skipped' /tmp/arcanum_pytest.log | tail -1 | grep -oE '[0-9]+' || echo 0)"
+  if [ "${SKIPPED:-0}" -gt 10 ]; then
+    fail "Commit BLOQUEADO: $SKIPPED tests saltados — falta TEST_DATABASE_URL."
+    fail "Verde con la suite de integracion dormida no cuenta como verde."
+    exit 1
+  fi
+  ok "pytest: verde ($SKIPPED skipped)."
+fi
+
+# ── 3. Flutter ───────────────────────────────────────────────────────────────
+if echo "$STAGED" | grep -q '^arcanum_app/.*\.dart$'; then
+  if ! command -v flutter >/dev/null 2>&1; then
+    fail "Hay .dart en stage pero flutter no esta en PATH. Commit BLOQUEADO."
+    exit 1
+  fi
+  info "Cambios en Flutter — corriendo flutter analyze..."
+  if ! (cd arcanum_app && flutter analyze lib/); then
+    fail "Commit BLOQUEADO: flutter analyze con issues."
+    exit 1
+  fi
+  ok "flutter analyze: 0 issues."
+fi
+
+ok "Todo verde. Commiteando."
+exit 0
