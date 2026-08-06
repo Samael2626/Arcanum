@@ -5,17 +5,18 @@ cancelación y expiración. El Authorization header contiene el webhook secret
 para verificar que la petición es legítima.
 
 Eventos manejados:
-- INITIAL_PURCHASE: primeira compra → premium
-- RENEWAL: renovación → mantiene premium
-- CANCELLATION: cancelación → premium hasta expiration_at
-- EXPIRATION: expiración → vuelve a free
+- INITIAL_PURCHASE / RENEWAL / PRODUCT_CHANGE: → premium (solo productos de suscripcion)
+- UNCANCELLATION: se deshizo la cancelacion → premium restaurado
+- CANCELLATION: cancelacion → premium hasta expiration_at
+- EXPIRATION / SUBSCRIPTION_PAUSED: → vuelve a free
 - BILLING_ISSUE: problema de cobro → log, sin cambio de tier
-- SUBSCRIBER_ALIAS: alias applied → ignora
+- NON_RENEWING_PURCHASE: consumibles → creditos (pendiente, no otorga premium)
+- SUBSCRIBER_ALIAS / TRANSFER: → log, sin cambio de tier
 """
-import hashlib
 import hmac
 import json
 import logging
+import os
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Header, HTTPException, Request, status
@@ -28,22 +29,48 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# ── Eventos que activan premium ──────────────────────────────────────────────
-_PREMIUM_EVENTS = {"INITIAL_PURCHASE", "RENEWAL"}
-# ── Eventos que revocan premium (expiración real) ────────────────────────────
-_EXPIRE_EVENTS = {"EXPIRATION", "UNCANCELLATION"}
+# ── Productos que SI otorgan premium ─────────────────────────────────────────
+# Critico: sin este filtro, comprar un consumible de $1.99 que RC reporte como
+# INITIAL_PURCHASE otorgaria premium completo.
+_SUBSCRIPTION_PRODUCTS = {
+    "arcanum_premium_monthly",
+    "arcanum_premium_annual",
+}
+# ── Eventos que activan premium (si el producto es de suscripcion) ───────────
+_PREMIUM_EVENTS = {"INITIAL_PURCHASE", "RENEWAL", "PRODUCT_CHANGE", "UNCANCELLATION"}
+# ── Eventos que revocan premium de inmediato ─────────────────────────────────
+_REVOKE_EVENTS = {"EXPIRATION", "SUBSCRIPTION_PAUSED"}
 # ── Cancellation no revoca inmediatamente — mantiene hasta expiration_at ──────
 
 
-def _verify_signature(body: bytes, authorization: str | None) -> bool:
-    """Verifica la firma HMAC del webhook de RevenueCat.
+def _is_production() -> bool:
+    return (
+        settings.ENVIRONMENT == "production"
+        or os.getenv("RAILWAY_ENVIRONMENT_NAME", "").lower() == "production"
+    )
 
-    RevenueCat envía un Authorization header con el webhook secret.
-    En modo desarrollo (sin secret configurado) se acepta sin verificar.
+
+def _normalize_product_id(product_id: str) -> str:
+    """Play Store anexa el base plan al SKU: 'arcanum_premium_monthly:monthly'."""
+    return product_id.split(":", 1)[0].strip()
+
+
+def _verify_signature(authorization: str | None) -> bool:
+    """Verifica el secret del webhook de RevenueCat.
+
+    RevenueCat envia el secret configurado en el dashboard como Authorization
+    header. Fail-CLOSED en produccion: sin secret configurado el endpoint seria
+    una via libre para auto-promoverse a premium con un POST.
     """
     if not settings.REVENUECAT_WEBHOOK_SECRET:
-        # Sin secret configurado: aceptar (desarrollo local)
-        logger.warning("REVENUECAT_WEBHOOK_SECRET no configurado — webhook aceptado sin verificación")
+        if _is_production():
+            logger.error(
+                "REVENUECAT_WEBHOOK_SECRET no configurado en produccion — webhook RECHAZADO"
+            )
+            return False
+        logger.warning(
+            "REVENUECAT_WEBHOOK_SECRET no configurado — webhook aceptado (solo dev/test)"
+        )
         return True
     if not authorization:
         return False
@@ -70,7 +97,7 @@ async def revenuecat_webhook(
     """
     body = await request.body()
 
-    if not _verify_signature(body, authorization):
+    if not _verify_signature(authorization):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid webhook signature",
@@ -86,7 +113,7 @@ async def revenuecat_webhook(
 
     event = payload.get("event", {})
     event_type = event.get("type")
-    product_id = event.get("product_id", "")
+    product_id = _normalize_product_id(event.get("product_id") or "")
     expiration_ms = event.get("expiration_at_ms")
 
     # Customer info
@@ -130,26 +157,28 @@ async def revenuecat_webhook(
 
         # Procesar según tipo de evento
         if event_type in _PREMIUM_EVENTS:
-            user.subscription_tier = "premium"
-            user.subscription_expires_at = _parse_expiration_ms(expiration_ms)
-            logger.info("User %s → premium (expires %s)", user.id, user.subscription_expires_at)
+            # Solo suscripciones otorgan premium. Un consumible reportado como
+            # INITIAL_PURCHASE no debe regalar el tier completo.
+            if product_id not in _SUBSCRIPTION_PRODUCTS:
+                logger.warning(
+                    "Evento %s con producto no-suscripcion '%s' — premium NO otorgado",
+                    event_type,
+                    product_id,
+                )
+            else:
+                user.subscription_tier = "premium"
+                user.subscription_expires_at = _parse_expiration_ms(expiration_ms)
+                logger.info("User %s → premium (expires %s)", user.id, user.subscription_expires_at)
 
         elif event_type == "CANCELLATION":
             # Cancelación: mantiene premium hasta expiration_at
             user.subscription_expires_at = _parse_expiration_ms(expiration_ms)
             logger.info("User %s: cancelado, premium hasta %s", user.id, user.subscription_expires_at)
 
-        elif event_type in _EXPIRE_EVENTS:
-            # Expiración real o uncancellation
-            if event_type == "EXPIRATION":
-                user.subscription_tier = "free"
-                user.subscription_expires_at = None
-                logger.info("User %s → free (expirado)", user.id)
-            else:
-                # UNCANCELLATION: restaurar premium
-                user.subscription_tier = "premium"
-                user.subscription_expires_at = _parse_expiration_ms(expiration_ms)
-                logger.info("User %s → premium restaurado (uncancellation)", user.id)
+        elif event_type in _REVOKE_EVENTS:
+            user.subscription_tier = "free"
+            user.subscription_expires_at = None
+            logger.info("User %s → free (%s)", user.id, event_type)
 
         elif event_type == "BILLING_ISSUE":
             logger.warning("User %s: problema de cobro detectado", user.id)
