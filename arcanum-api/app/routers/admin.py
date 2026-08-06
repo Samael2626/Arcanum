@@ -1,35 +1,18 @@
 """
 Admin endpoints (protegidos).
-- GET /admin/migrate/status — verifica estado de migraciones
-- POST /admin/migrate — ejecuta migraciones pendientes
-- POST /admin/migrate-direct — ejecuta migraciones con BD custom (parámetro URL)
+- GET /admin/migrate/status â€” verifica estado de migraciones
+- POST /admin/migrate â€” ejecuta migraciones pendientes
+- POST /admin/migrate-direct â€” ejecuta migraciones con BD custom (parÃ¡metro URL)
 """
-
-import secrets
 
 from fastapi import APIRouter, HTTPException, status, Header, Query
 from sqlalchemy import create_engine
 from app.core.config import settings
 from app.db.session import engine, get_pool_class
 from app.db.migrate import run_migrations, check_migration_status
+from app.api.deps import verify_admin_token
 
 router = APIRouter(prefix="/admin", tags=["admin"])
-
-
-def verify_admin_token(x_admin_token: str = Header(None)):
-    """Valida el token sin comparaciones sensibles al tiempo."""
-    if settings.ADMIN_TOKEN is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Administración deshabilitada",
-        )
-    if not x_admin_token or not secrets.compare_digest(
-        x_admin_token, settings.ADMIN_TOKEN
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Token de admin inválido o ausente",
-        )
 
 
 @router.get("/migrate/status")
@@ -70,7 +53,7 @@ def execute_migrations(x_admin_token: str = Header(None)):
             detail=result.get("message"),
         )
 
-    # Verifica estado después
+    # Verifica estado despuÃ©s
     status_after = check_migration_status(engine)
 
     return {
@@ -87,22 +70,22 @@ def execute_migrations_direct(
     database_url: str = Query(None)
 ):
     """
-    Ejecuta migraciones contra BD custom (parámetro URL).
+    Ejecuta migraciones contra BD custom (parÃ¡metro URL).
     Query: database_url=postgresql://...
     Header: X-Admin-Token: <token>
 
-    Útil cuando Render env vars están cacheadas. Acepta cualquier connection string.
+    Ãštil cuando Render env vars estÃ¡n cacheadas. Acepta cualquier connection string.
     """
     verify_admin_token(x_admin_token)
 
     if not database_url:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Parámetro requerido: database_url",
+            detail="ParÃ¡metro requerido: database_url",
         )
 
     try:
-        # Detecta poolclass (pgbouncer transaction mode → NullPool)
+        # Detecta poolclass (pgbouncer transaction mode â†’ NullPool)
         pool_class = get_pool_class(database_url)
         custom_engine = create_engine(
             database_url,
@@ -129,7 +112,7 @@ def execute_migrations_direct(
                 detail=result.get("message"),
             )
 
-        # Verifica después
+        # Verifica despuÃ©s
         custom_engine = create_engine(database_url, poolclass=pool_class, echo=False)
         status_after = check_migration_status(custom_engine)
         custom_engine.dispose()

@@ -80,3 +80,15 @@ def get_tarot_service(
     reading_repo: TarotReadingRepository = Depends(get_tarot_reading_repo),
 ) -> TarotService:
     return TarotService(card_repo=card_repo, reading_repo=reading_repo)
+
+import secrets
+from fastapi import Header, HTTPException, status
+from app.core.config import settings
+
+
+def verify_admin_token(x_admin_token: str = Header(None)) -> None:
+    """Valida el token sin comparaciones sensibles al tiempo."""
+    if settings.ADMIN_TOKEN is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Administracion deshabilitada")
+    if not x_admin_token or not secrets.compare_digest(x_admin_token, settings.ADMIN_TOKEN):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Token de admin invalido o ausente")

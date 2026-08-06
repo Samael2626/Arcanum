@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
-    # Desarrollo local solamente. Producción debe inyectar DATABASE_URL.
+    # Desarrollo local solamente. ProducciÃ³n debe inyectar DATABASE_URL.
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/arcanum_db"
 
     # Redis
@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     RUN_STARTUP_MIGRATIONS: bool = False
     RUN_STARTUP_SEEDS: bool = False
 
-    # Oráculo IA (Groq — free tier, sin cuota diaria estricta)
+    # OrÃ¡culo IA (Groq â€” free tier, sin cuota diaria estricta)
     GROQ_API_KEY: Optional[str] = None
     CLAUDE_MODEL_FREE: str = "llama-3.3-70b-versatile"   # ignorado en servicio; free tier
     CLAUDE_MODEL_PREMIUM: str = "llama-3.3-70b-versatile"  # ignorado en servicio; free tier
@@ -49,8 +49,13 @@ class Settings(BaseSettings):
     TAROT_FREE_DAILY: int = 1
     TAROT_PREMIUM_DAILY: int = 50
 
-    # Geocoding (Nominatim + timezonefinder) — resuelve lugar de nacimiento
-    # real en el onboarding, reemplaza el default hardcodeado a Bogotá.
+    # Cielos (transits)
+    CIELOS_FREE_DAILY: int = 3
+    CIELOS_PREMIUM_DAILY: int = 50
+
+
+    # Geocoding (Nominatim + timezonefinder) â€” resuelve lugar de nacimiento
+    # real en el onboarding, reemplaza el default hardcodeado a BogotÃ¡.
     NOMINATIM_USER_AGENT: str = "ARCANUM-app/1.0 (contacto: soporte@arcanum-app.com)"
     GEOCODING_MIN_INTERVAL_SECONDS: float = 1.0
 
@@ -86,7 +91,7 @@ class Settings(BaseSettings):
             problems.append("DATABASE_URL")
         if problems:
             raise ValueError(
-                "Configuración insegura para producción: " + ", ".join(problems)
+                "ConfiguraciÃ³n insegura para producciÃ³n: " + ", ".join(problems)
             )
         return self
 

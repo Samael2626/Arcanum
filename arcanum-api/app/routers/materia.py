@@ -1,14 +1,14 @@
-"""Materia Arcana: catálogo de correspondencias (hierbas, piedras, metales, etc.).
+"""Materia Arcana: catÃ¡logo de correspondencias (hierbas, piedras, metales, etc.).
 
-Contenido de referencia, público (la app puede gatear por premium más adelante).
+Contenido de referencia, pÃºblico (la app puede gatear por premium mÃ¡s adelante).
 """
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 
-from app.api.deps import get_materia_repo
+from app.api.deps import get_materia_repo, verify_admin_token
 from app.adapters.repositories import MateriaItemRepository
-from app.domain.entities import MateriaItemEntity, UserEntity
+from app.domain.entities import MateriaItemEntity
 from app.schemas.materia_item import (
     ItemType,
     MateriaItemResponse,
@@ -16,7 +16,6 @@ from app.schemas.materia_item import (
     MateriaItemCreate,
     MateriaItemUpdate,
 )
-from app.core.security import get_current_user
 
 router = APIRouter()
 
@@ -49,27 +48,27 @@ def get_materia(slug: str, response: Response, repo: MateriaItemRepository = Dep
     return MateriaItemResponse.model_validate(item)
 
 
-@router.post("", response_model=MateriaItemResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=MateriaItemResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(verify_admin_token)])
 def create_materia(
     materia_in: MateriaItemCreate,
-    current_user: UserEntity = Depends(get_current_user),
     repo: MateriaItemRepository = Depends(get_materia_repo),
 ):
     existing = repo.get_by_slug(materia_in.slug)
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Ya existe un ítem con ese slug",
+            detail="Ya existe un Ã­tem con ese slug",
         )
     item = repo.create(**materia_in.model_dump())
     return MateriaItemResponse.model_validate(item)
 
 
-@router.put("/{slug}", response_model=MateriaItemResponse)
+@router.put("/{slug}", response_model=MateriaItemResponse,
+            dependencies=[Depends(verify_admin_token)])
 def update_materia(
     slug: str,
     materia_in: MateriaItemUpdate,
-    current_user: UserEntity = Depends(get_current_user),
     repo: MateriaItemRepository = Depends(get_materia_repo),
 ):
     item = repo.get_by_slug(slug)
@@ -80,10 +79,10 @@ def update_materia(
     return MateriaItemResponse.model_validate(item)
 
 
-@router.delete("/{slug}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{slug}", status_code=status.HTTP_204_NO_CONTENT,
+               dependencies=[Depends(verify_admin_token)])
 def delete_materia(
     slug: str,
-    current_user: UserEntity = Depends(get_current_user),
     repo: MateriaItemRepository = Depends(get_materia_repo),
 ):
     item = repo.get_by_slug(slug)
