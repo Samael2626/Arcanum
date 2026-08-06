@@ -48,6 +48,15 @@ if ! echo "$STAGED" | tr '\n' '\0' | xargs -0 -r "$PY_BIN" scripts/check_cjk.py;
 fi
 ok "CJK: limpio."
 
+# ── 1b. Codificacion ─────────────────────────────────────────────────────────
+info "Verificando codificacion (mojibake / no-UTF-8)..."
+# shellcheck disable=SC2086
+if ! echo "$STAGED" | tr '\n' '\0' | xargs -0 -r "$PY_BIN" scripts/check_encoding.py; then
+  fail "Commit BLOQUEADO: codificacion corrupta."
+  exit 1
+fi
+ok "Codificacion: limpia."
+
 # ── 2. Backend ───────────────────────────────────────────────────────────────
 if echo "$STAGED" | grep -q '^arcanum-api/.*\.py$'; then
   info "Cambios en backend — corriendo suite completa..."
