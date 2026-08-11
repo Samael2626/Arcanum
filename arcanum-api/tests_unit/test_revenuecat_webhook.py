@@ -43,9 +43,9 @@ def test_sin_secret_en_railway_production_rechaza(monkeypatch, no_secret):
     assert rc._verify_signature("Bearer lo-que-sea") is False
 
 
-def test_sin_secret_en_desarrollo_acepta(monkeypatch, no_secret):
+def test_sin_secret_en_desarrollo_rechaza(monkeypatch, no_secret):
     _set_env(monkeypatch, "development")
-    assert rc._verify_signature(None) is True
+    assert rc._verify_signature(None) is False
 
 
 # ── Comparacion del secret ───────────────────────────────────────────────────
@@ -105,8 +105,18 @@ def test_uncancellation_es_premium_no_revocacion():
     assert "UNCANCELLATION" not in rc._REVOKE_EVENTS
 
 
-def test_expiration_y_pause_revocan():
-    assert rc._REVOKE_EVENTS == {"EXPIRATION", "SUBSCRIPTION_PAUSED"}
+def test_solo_expiration_revoca():
+    assert rc._REVOKE_EVENTS == {"EXPIRATION"}
+
+
+def test_subscription_paused_no_revoca():
+    """RC: la pausa se programa para el fin del periodo ya pagado.
+
+    Revocar al recibir SUBSCRIPTION_PAUSED le corta el acceso a un usuario que
+    todavia tiene derecho a el. El acceso se quita en el EXPIRATION posterior.
+    """
+    assert "SUBSCRIPTION_PAUSED" not in rc._REVOKE_EVENTS
+    assert "SUBSCRIPTION_PAUSED" not in rc._PREMIUM_EVENTS
 
 
 def test_cancellation_no_revoca_de_inmediato():

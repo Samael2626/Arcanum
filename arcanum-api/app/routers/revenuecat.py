@@ -1,201 +1,193 @@
-"""Webhook de RevenueCat — sincroniza subscription_tier y revenuecat_customer_id.
-
-RevenueCat envía POST a /webhooks/revenuecat con eventos de compra, renovación,
-cancelación y expiración. El Authorization header contiene el webhook secret
-para verificar que la petición es legítima.
-
-Eventos manejados:
-- INITIAL_PURCHASE / RENEWAL / PRODUCT_CHANGE: → premium (solo productos de suscripcion)
-- UNCANCELLATION: se deshizo la cancelacion → premium restaurado
-- CANCELLATION: cancelacion → premium hasta expiration_at
-- EXPIRATION / SUBSCRIPTION_PAUSED: → vuelve a free
-- BILLING_ISSUE: problema de cobro → log, sin cambio de tier
-- NON_RENEWING_PURCHASE: consumibles → creditos (pendiente, no otorga premium)
-- SUBSCRIBER_ALIAS / TRANSFER: → log, sin cambio de tier
-"""
+"""Webhook RevenueCat con inbox idempotente y orden temporal."""
 import hmac
 import json
 import logging
-import os
 from datetime import datetime, timezone
+from uuid import UUID
 
 from fastapi import APIRouter, Header, HTTPException, Request, status
+from sqlalchemy import BigInteger, cast, func
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
+from app.application.services.credit_service import CreditService
 from app.core.config import settings
-from app.db.session import SessionLocal
+from app.db.session import get_session_factory
+from app.models.credit_ledger import CreditLedger
+from app.models.revenuecat_event import RevenueCatEvent
 from app.models.user import User
 
 logger = logging.getLogger(__name__)
-
 router = APIRouter()
 
-# ── Productos que SI otorgan premium ─────────────────────────────────────────
-# Critico: sin este filtro, comprar un consumible de $1.99 que RC reporte como
-# INITIAL_PURCHASE otorgaria premium completo.
-_SUBSCRIPTION_PRODUCTS = {
-    "arcanum_premium_monthly",
-    "arcanum_premium_annual",
-}
-# ── Eventos que activan premium (si el producto es de suscripcion) ───────────
+_CONSUMABLE_CREDITS = {"arcanum_credits_10": 10, "arcanum_credits_50": 50, "arcanum_bundle_explora_carta": 5}
+_SUBSCRIPTION_PRODUCTS = {"arcanum_premium_monthly", "arcanum_premium_annual"}
 _PREMIUM_EVENTS = {"INITIAL_PURCHASE", "RENEWAL", "PRODUCT_CHANGE", "UNCANCELLATION"}
-# ── Eventos que revocan premium de inmediato ─────────────────────────────────
-_REVOKE_EVENTS = {"EXPIRATION", "SUBSCRIPTION_PAUSED"}
-# ── Cancellation no revoca inmediatamente — mantiene hasta expiration_at ──────
-
-
-def _is_production() -> bool:
-    return (
-        settings.ENVIRONMENT == "production"
-        or os.getenv("RAILWAY_ENVIRONMENT_NAME", "").lower() == "production"
-    )
+_REVOKE_EVENTS = {"EXPIRATION"}
 
 
 def _normalize_product_id(product_id: str) -> str:
-    """Play Store anexa el base plan al SKU: 'arcanum_premium_monthly:monthly'."""
     return product_id.split(":", 1)[0].strip()
 
 
 def _verify_signature(authorization: str | None) -> bool:
-    """Verifica el secret del webhook de RevenueCat.
-
-    RevenueCat envia el secret configurado en el dashboard como Authorization
-    header. Fail-CLOSED en produccion: sin secret configurado el endpoint seria
-    una via libre para auto-promoverse a premium con un POST.
-    """
-    if not settings.REVENUECAT_WEBHOOK_SECRET:
-        if _is_production():
-            logger.error(
-                "REVENUECAT_WEBHOOK_SECRET no configurado en produccion — webhook RECHAZADO"
-            )
-            return False
-        logger.warning(
-            "REVENUECAT_WEBHOOK_SECRET no configurado — webhook aceptado (solo dev/test)"
-        )
-        return True
-    if not authorization:
+    if not settings.REVENUECAT_WEBHOOK_SECRET or not authorization:
         return False
-    # RevenueCat envía: "Bearer <token>" o "<token>" directo
     token = authorization.removeprefix("Bearer ").strip()
     return hmac.compare_digest(token, settings.REVENUECAT_WEBHOOK_SECRET)
 
 
-def _parse_expiration_ms(ms: int | None) -> datetime | None:
-    if ms is None:
+def _expiration(ms: int | None) -> datetime | None:
+    return datetime.fromtimestamp(ms / 1000, tz=timezone.utc) if ms else None
+
+
+def _event_time(event: dict) -> int:
+    value = event.get("event_timestamp_ms") or event.get("purchased_at_ms") or 0
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _find_user(db, app_user_id: str) -> User | None:
+    user = db.query(User).filter(User.revenuecat_customer_id == app_user_id).first()
+    if user is not None:
+        return user
+    try:
+        return db.query(User).filter(User.id == UUID(app_user_id)).first()
+    except (ValueError, AttributeError):
         return None
-    return datetime.fromtimestamp(ms / 1000, tz=timezone.utc)
+
+
+def _is_stale(db, transaction_id: str | None, occurred_at_ms: int) -> bool:
+    if not transaction_id or not occurred_at_ms:
+        return False
+    newer = db.query(RevenueCatEvent).filter(
+        RevenueCatEvent.transaction_id == transaction_id,
+        # occurred_at_ms se guarda como texto: comparar sin castear seria
+        # lexicografico ("9" > "10") y ordenaria mal los eventos.
+        cast(RevenueCatEvent.occurred_at_ms, BigInteger) > occurred_at_ms,
+        RevenueCatEvent.processed_at.is_not(None),
+    ).first()
+    return newer is not None
+
+
+def _pending_refund_credits(db, transaction_id: str | None) -> int:
+    """Creditos retirados por refunds de esta transaccion y aun no devueltos.
+
+    REFUND_REVERSED solo puede compensar un reverso previo relacionado. La
+    correlacion va por `transaction_id` en el inbox y por `rc_event_id` en el
+    ledger, que ya enlaza cada asiento con el evento que lo creo: sin eso, un
+    REFUND_REVERSED huerfano (o repetido) regalaria creditos.
+    """
+    if not transaction_id:
+        return 0
+    event_ids = [
+        row[0] for row in db.query(RevenueCatEvent.event_id)
+        .filter(RevenueCatEvent.transaction_id == transaction_id).all()
+    ]
+    if not event_ids:
+        return 0
+    rows = (
+        db.query(CreditLedger.reason, func.coalesce(func.sum(CreditLedger.delta), 0))
+        .filter(
+            CreditLedger.rc_event_id.in_(event_ids),
+            CreditLedger.reason.in_(("refund", "refund_reversed")),
+        )
+        .group_by(CreditLedger.reason)
+        .all()
+    )
+    totals = {reason: int(total) for reason, total in rows}
+    # refund suma negativo; refund_reversed suma positivo.
+    return -totals.get("refund", 0) - totals.get("refund_reversed", 0)
 
 
 @router.post("/revenuecat")
-async def revenuecat_webhook(
-    request: Request,
-    authorization: str | None = Header(None),
-):
-    """Endpoint webhook de RevenueCat.
-
-    Recibe eventos de compra/suscripción y actualiza el tier del usuario
-    en la base de datos.
-    """
-    body = await request.body()
-
+async def revenuecat_webhook(request: Request, authorization: str | None = Header(None)):
     if not _verify_signature(authorization):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid webhook signature",
-        )
-
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid webhook signature")
     try:
-        payload = json.loads(body)
-    except json.JSONDecodeError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid JSON",
-        )
+        payload = json.loads(await request.body())
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid JSON") from exc
 
-    event = payload.get("event", {})
-    event_type = event.get("type")
+    event = payload.get("event") or {}
+    event_id = event.get("id")
+    if not event_id:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "RevenueCat event.id is required")
+    event_type = event.get("type") or ""
     product_id = _normalize_product_id(event.get("product_id") or "")
-    expiration_ms = event.get("expiration_at_ms")
-
-    # Customer info
-    customer = payload.get("customer", {})
+    transaction_id = event.get("transaction_id") or event.get("original_transaction_id")
+    occurred_at_ms = _event_time(event)
+    customer = payload.get("customer") or {}
     app_user_id = customer.get("original_app_user_id") or event.get("app_user_id")
 
-    if not app_user_id:
-        logger.warning("Webhook RC sin app_user_id — ignorado")
-        return {"status": "ignored"}
-
-    logger.info(
-        "Webhook RC: event=%s user=%s product=%s",
-        event_type,
-        app_user_id,
-        product_id,
-    )
-
-    # Buscar usuario por RevenueCat customer ID (app_user_id de RC)
-    db = SessionLocal()
+    db = get_session_factory()()
     try:
-        user = db.query(User).filter(
-            User.revenuecat_customer_id == app_user_id
-        ).first()
-
-        # Fallback: buscar por UUID directo si el app_user_id es un UUID
+        inbox = RevenueCatEvent(event_id=event_id, transaction_id=transaction_id, occurred_at_ms=str(occurred_at_ms) if occurred_at_ms else None, payload=payload)
+        db.add(inbox)
+        try:
+            db.flush()
+        except IntegrityError:
+            db.rollback()
+            return {"status": "duplicate", "event": event_type}
+        user = _find_user(db, app_user_id) if app_user_id else None
         if user is None:
-            try:
-                from uuid import UUID
-                user_uuid = UUID(app_user_id)
-                user = db.query(User).filter(User.id == user_uuid).first()
-            except (ValueError, AttributeError):
-                pass
+            # 5xx a proposito, y sin persistir el inbox: RevenueCat reintenta y
+            # el evento vuelve a entrar limpio. Responder 200 aqui daria el pago
+            # por procesado y el usuario se quedaria sin sus creditos para
+            # siempre; ademas el event_id quedaria quemado como duplicado.
+            db.rollback()
+            logger.error(
+                "RevenueCat: sin usuario para app_user_id=%s (event=%s tipo=%s)",
+                app_user_id, event_id, event_type,
+            )
+            raise HTTPException(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                "Usuario no asociable todavia; reintentar.",
+            )
+        user.revenuecat_customer_id = app_user_id
+        if _is_stale(db, transaction_id, occurred_at_ms):
+            inbox.processed_at = datetime.now(timezone.utc)
+            db.commit()
+            return {"status": "stale", "event": event_type}
 
-        if user is None:
-            logger.warning("Webhook RC: usuario no encontrado para app_user_id=%s", app_user_id)
-            return {"status": "user_not_found"}
-
-        # Guardar revenuecat_customer_id si no estaba
-        if user.revenuecat_customer_id != app_user_id:
-            user.revenuecat_customer_id = app_user_id
-
-        # Procesar según tipo de evento
-        if event_type in _PREMIUM_EVENTS:
-            # Solo suscripciones otorgan premium. Un consumible reportado como
-            # INITIAL_PURCHASE no debe regalar el tier completo.
-            if product_id not in _SUBSCRIPTION_PRODUCTS:
+        if event_type == "NON_RENEWING_PURCHASE":
+            amount = _CONSUMABLE_CREDITS.get(product_id)
+            if amount is not None:
+                CreditService().grant(db, user.id, amount, "purchase", product_id, event_id)
+        elif event_type == "REFUND" and product_id in _CONSUMABLE_CREDITS:
+            CreditService().grant(db, user.id, -_CONSUMABLE_CREDITS[product_id], "refund", product_id, event_id)
+        elif event_type == "REFUND_REVERSED" and product_id in _CONSUMABLE_CREDITS:
+            pending = _pending_refund_credits(db, transaction_id)
+            if pending <= 0:
+                # Sin reverso previo pendiente no hay nada que compensar. Se
+                # marca procesado: reintentarlo no cambiaria el resultado.
+                inbox.processed_at = datetime.now(timezone.utc)
+                db.commit()
                 logger.warning(
-                    "Evento %s con producto no-suscripcion '%s' — premium NO otorgado",
-                    event_type,
-                    product_id,
+                    "RevenueCat: REFUND_REVERSED sin refund previo (tx=%s event=%s)",
+                    transaction_id, event_id,
                 )
-            else:
-                user.subscription_tier = "premium"
-                user.subscription_expires_at = _parse_expiration_ms(expiration_ms)
-                logger.info("User %s → premium (expires %s)", user.id, user.subscription_expires_at)
-
-        elif event_type == "CANCELLATION":
-            # Cancelación: mantiene premium hasta expiration_at
-            user.subscription_expires_at = _parse_expiration_ms(expiration_ms)
-            logger.info("User %s: cancelado, premium hasta %s", user.id, user.subscription_expires_at)
-
-        elif event_type in _REVOKE_EVENTS:
+                return {"status": "no_refund_to_reverse", "event": event_type}
+            amount = min(_CONSUMABLE_CREDITS[product_id], pending)
+            CreditService().grant(db, user.id, amount, "refund_reversed", product_id, event_id)
+        elif event_type in _PREMIUM_EVENTS and product_id in _SUBSCRIPTION_PRODUCTS:
+            user.subscription_tier = "premium"
+            user.subscription_expires_at = _expiration(event.get("expiration_at_ms"))
+        elif event_type == "CANCELLATION" and product_id in _SUBSCRIPTION_PRODUCTS:
+            user.subscription_expires_at = _expiration(event.get("expiration_at_ms"))
+        elif event_type == "EXPIRATION" and product_id in _SUBSCRIPTION_PRODUCTS:
             user.subscription_tier = "free"
             user.subscription_expires_at = None
-            logger.info("User %s → free (%s)", user.id, event_type)
+        elif event_type == "SUBSCRIPTION_PAUSED":
+            logger.info("Subscription paused; access stays until EXPIRATION")
 
-        elif event_type == "BILLING_ISSUE":
-            logger.warning("User %s: problema de cobro detectado", user.id)
-            # No cambiar tier — RevenueCat reintenta cobro automáticamente
-
-        else:
-            logger.info("Webhook RC: evento no manejado=%s", event_type)
-
+        inbox.processed_at = datetime.now(timezone.utc)
         db.commit()
         return {"status": "processed", "event": event_type}
-
-    except Exception as e:
+    except SQLAlchemyError as exc:
         db.rollback()
-        logger.error("Error procesando webhook RC: %s", e, exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Webhook processing error",
-        )
+        logger.exception("RevenueCat webhook database failure")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Webhook processing error") from exc
     finally:
         db.close()
