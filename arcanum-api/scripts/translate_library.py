@@ -24,6 +24,11 @@ Uso:
     python scripts/translate_library.py culpeper-complete-herbal
     python scripts/translate_library.py culpeper-complete-herbal --limit 5
     python scripts/translate_library.py culpeper-complete-herbal --review
+    python scripts/translate_library.py culpeper-complete-herbal --model openai/gpt-oss-120b
+
+Cambiar de modelo cambia TAMBIEN sus limites de cuota: --tpd y --tpm existen
+para eso. Los valores por defecto son los de llama-3.3-70b-versatile, y con
+otro modelo dejan de ser ciertos (consultar console.groq.com/settings/limits).
 """
 
 from __future__ import annotations
@@ -55,10 +60,11 @@ DATA_DIR = Path(__file__).parent / "library_data"
 # prosa sin defectos. llama-3.1-8b erraba concordancias ("bajo la dominio") y
 # dejaba "Pisces" sin traducir; groq/compound calcaba la sintaxis inglesa y
 # gastaba 3.050 tokens de entrada por llamada.
-MODEL = "llama-3.3-70b-versatile"
+DEFAULT_MODEL = "llama-3.3-70b-versatile"
 
-# Límites del free tier para este modelo (console.groq.com/settings/limits).
+# Límites del free tier PARA ESE MODELO (console.groq.com/settings/limits).
 # El techo real es TPD: TPM y RPD no llegan a ser vinculantes con 423 capítulos.
+# Con --model hay que pasar tambien --tpd/--tpm: cada modelo tiene los suyos.
 TOKENS_PER_DAY = 100_000
 TOKENS_PER_MINUTE = 12_000
 MARGIN = 0.92  # no apurar el límite: la cuenta de tokens del proveedor manda
@@ -68,7 +74,6 @@ MARGIN = 0.92  # no apurar el límite: la cuenta de tokens del proveedor manda
 # cupo, el oráculo deja de responder a los usuarios reales — y el fallo sería
 # invisible desde aquí. Por eso la tanda diaria reserva cupo para producción.
 ORACLE_RESERVE = 30_000
-DEFAULT_BUDGET = TOKENS_PER_DAY - ORACLE_RESERVE
 
 SYSTEM = """Eres traductor de textos herbarios y astrológicos ingleses del siglo XVII al español.
 
@@ -192,13 +197,13 @@ def suspicious_terms(source: list[str], translated: list[str]) -> list[str]:
 
 
 def translate_chapter(
-    client: Groq, chapter: dict, attempts: int = 2
+    client: Groq, model: str, chapter: dict, attempts: int = 2
 ) -> tuple[list[str] | None, int, list[str]]:
     paragraphs = [p["text"] for p in chapter["paragraphs"]]
     used = 0
     for attempt in range(attempts):
         response = client.chat.completions.create(
-            model=MODEL,
+            model=model,
             messages=[
                 {"role": "system", "content": SYSTEM},
                 {"role": "user", "content": build_prompt(paragraphs)},
@@ -218,9 +223,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("work", help="slug de la obra, p.ej. culpeper-complete-herbal")
     parser.add_argument("--limit", type=int, help="traducir solo N capítulos (prueba)")
-    parser.add_argument("--budget", type=int, default=DEFAULT_BUDGET,
-                        help=f"tokens máximos de esta tanda (por defecto {DEFAULT_BUDGET:,}, "
-                             f"reservando {ORACLE_RESERVE:,} para el oráculo en producción)")
+    parser.add_argument("--model", default=DEFAULT_MODEL,
+                        help=f"modelo de Groq (por defecto {DEFAULT_MODEL})")
+    parser.add_argument("--tpd", type=int, default=TOKENS_PER_DAY,
+                        help=f"tokens/día del modelo en tu plan (por defecto {TOKENS_PER_DAY:,})")
+    parser.add_argument("--tpm", type=int, default=TOKENS_PER_MINUTE,
+                        help=f"tokens/minuto del modelo (por defecto {TOKENS_PER_MINUTE:,})")
+    parser.add_argument("--budget", type=int, default=None,
+                        help=f"tokens máximos de esta tanda (por defecto, --tpd menos "
+                             f"{ORACLE_RESERVE:,} reservados para el oráculo en producción)")
     parser.add_argument("--review", action="store_true",
                         help="solo listar lo pendiente y lo marcado para revisar")
     args = parser.parse_args()
@@ -234,8 +245,18 @@ def main() -> None:
     done: dict = (
         json.loads(target_path.read_text(encoding="utf-8"))
         if target_path.exists()
-        else {"work": args.work, "model": MODEL, "chapters": {}}
+        else {"work": args.work, "model": args.model, "chapters": {}}
     )
+
+    # Mezclar modelos parte el libro en dos voces: media obra con el registro de
+    # uno y media con el de otro, sin que nada lo señale al lector.
+    previous = done.get("model")
+    if previous and previous != args.model and done["chapters"]:
+        raise SystemExit(
+            f"Lo ya traducido ({len(done['chapters'])} capítulos) usó {previous}, "
+            f"y ahora pides {args.model}. O sigues con {previous}, o borras "
+            f"{target_path.name} y retraduces la obra entera con el nuevo."
+        )
 
     pending = [c for c in work["chapters"] if c["slug"] not in done["chapters"]]
     # Las hierbas primero: son lo que se lee y lo que conecta con Materia
@@ -260,7 +281,7 @@ def main() -> None:
         raise SystemExit("Falta GROQ_API_KEY en .env")
     client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
-    budget = args.budget
+    budget = args.budget if args.budget is not None else args.tpd - ORACLE_RESERVE
     spent = 0
     minute_start, minute_tokens = time.time(), 0
     translated = failed = 0
@@ -275,14 +296,14 @@ def main() -> None:
         # Ventana de tokens por minuto.
         if time.time() - minute_start >= 60:
             minute_start, minute_tokens = time.time(), 0
-        elif minute_tokens >= TOKENS_PER_MINUTE * MARGIN:
+        elif minute_tokens >= args.tpm * MARGIN:
             wait = 60 - (time.time() - minute_start)
             print(f"  · pausa {wait:.0f}s (tokens por minuto)")
             time.sleep(max(wait, 1))
             minute_start, minute_tokens = time.time(), 0
 
         try:
-            texts, used, review = translate_chapter(client, chapter)
+            texts, used, review = translate_chapter(client, args.model, chapter)
         except Exception as error:  # noqa: BLE001 — cualquier fallo de red o cuota
             print(f"  ! {chapter['slug']}: {str(error)[:120]}")
             print("    Se detiene la tanda; lo traducido queda guardado.")
@@ -312,7 +333,7 @@ def main() -> None:
     print(f"\n{translated} traducidos, {failed} fallidos · {spent:,} tokens")
     remaining = len(work["chapters"]) - len(done["chapters"])
     if remaining:
-        days = -(-remaining * max(spent // max(translated, 1), 1) // TOKENS_PER_DAY)
+        days = -(-remaining * max(spent // max(translated, 1), 1) // max(budget, 1))
         print(f"Quedan {remaining} capítulos (~{max(days, 1)} día(s) a este ritmo).")
 
 

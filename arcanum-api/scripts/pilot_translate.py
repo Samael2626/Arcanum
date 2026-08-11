@@ -15,10 +15,12 @@ forzado— para decidir con datos en vez de con intuición.
 
 Uso:
     python scripts/pilot_translate.py
+    python scripts/pilot_translate.py --model openai/gpt-oss-120b
 """
 
 from __future__ import annotations
 
+import argparse
 import os
 import sys
 import time
@@ -32,7 +34,9 @@ load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 from groq import Groq  # noqa: E402
 
-MODEL = "llama-3.3-70b-versatile"
+# Ganador de la comparativa de cuatro modelos que motivo este piloto. Se puede
+# sustituir con --model para revalidar otro antes de comprometer la obra entera.
+DEFAULT_MODEL = "llama-3.3-70b-versatile"
 
 # Pasajes reales de la ingesta, elegidos porque concentran las trampas.
 PASSAGES = [
@@ -83,10 +87,10 @@ REGLAS INNEGOCIABLES:
 """
 
 
-def translate(client: Groq, system: str, text: str) -> tuple[str, dict]:
+def translate(client: Groq, model: str, system: str, text: str) -> tuple[str, dict]:
     started = time.perf_counter()
     response = client.chat.completions.create(
-        model=MODEL,
+        model=model,
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": text},
@@ -113,10 +117,16 @@ CHECKS = {
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--model", default=DEFAULT_MODEL,
+                        help=f"modelo de Groq a evaluar (por defecto {DEFAULT_MODEL})")
+    args = parser.parse_args()
+
     if not os.getenv("GROQ_API_KEY"):
         raise SystemExit("Falta GROQ_API_KEY en .env")
     client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
+    print(f"Modelo: {args.model}\n")
     totals = {"baseline": [0, 0, 0.0], "glosario": [0, 0, 0.0]}
 
     for title, source in PASSAGES:
@@ -126,7 +136,7 @@ def main() -> None:
         print(f"\n[ORIGINAL]\n{source}\n")
 
         for label, system in (("baseline", BASELINE), ("glosario", GLOSSARY)):
-            text, usage = translate(client, system, source)
+            text, usage = translate(client, args.model, system, source)
             totals[label][0] += usage["in"]
             totals[label][1] += usage["out"]
             totals[label][2] += usage["s"]
