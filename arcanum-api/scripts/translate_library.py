@@ -10,11 +10,25 @@ El riesgo de agrupar es que el modelo omita párrafos en pasajes largos. Por eso
 se numeran al enviar y se verifica que vuelven todos: si falta uno, se reintenta
 el capítulo entero.
 
+## Qué se verifica de cada capítulo
+
+Cuatro controles, todos nacidos de un fallo real observado: términos
+doctrinales perdidos, palabras inglesas sin traducir, marcas de sección que el
+modelo tradujo en vez de dejar literales, y párrafos que volvieron resumidos en
+vez de traducidos. Un capítulo que falle alguno NO se guarda con una marca y ya:
+se le devuelven los defectos al modelo para que lo rehaga, y solo si el
+reintento no mejora queda marcado para revisión humana. Esperar a que alguien
+lea 423 capítulos a mano no es un plan.
+
 ## Por qué reanudable
 
 El free tier de Groq da 100K tokens/día para llama-3.3-70b, y Culpeper necesita
 ~800K: son ~8 días. El script guarda tras cada capítulo, detecta el límite
 diario y para limpio. Al día siguiente sigue donde quedó.
+
+Solo la cuota DIARIA para la tanda. Un bache de red o un 429 por
+tokens-por-minuto se esperan y se reintentan: antes tumbaban la tanda entera
+aunque quedaran 60K tokens del día, y ahí se iban las horas de verdad.
 
 Ese cupo lo comparte el ORÁCULO EN PRODUCCIÓN, que corre con la misma cuenta.
 Por eso la tanda diaria deja reserva: agotar el cupo dejaría sin oráculo a los
@@ -52,7 +66,13 @@ load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 import os  # noqa: E402
 
-from groq import Groq  # noqa: E402
+from groq import (  # noqa: E402
+    APIConnectionError,
+    APITimeoutError,
+    Groq,
+    InternalServerError,
+    RateLimitError,
+)
 
 DATA_DIR = Path(__file__).parent / "library_data"
 
@@ -74,6 +94,15 @@ MARGIN = 0.92  # no apurar el límite: la cuenta de tokens del proveedor manda
 # cupo, el oráculo deja de responder a los usuarios reales — y el fallo sería
 # invisible desde aquí. Por eso la tanda diaria reserva cupo para producción.
 ORACLE_RESERVE = 30_000
+
+# Un bache de red o un 429 por tokens-por-minuto tumbaban la tanda entera
+# aunque quedaran 60K tokens del día: se perdían horas de traducción por un
+# tropiezo de segundos. Solo la cuota DIARIA debe parar la tanda; lo demás se
+# espera. El umbral separa las dos: el proveedor pide segundos para el límite
+# por minuto y horas cuando el día se acabó.
+TRANSIENT_ERRORS = (APIConnectionError, APITimeoutError, InternalServerError)
+TRANSIENT_RETRIES = 3
+MAX_TRANSIENT_WAIT = 120  # segundos; más que esto ya no es un bache
 
 SYSTEM = """Eres traductor de textos herbarios y astrológicos ingleses del siglo XVII al español.
 
@@ -120,6 +149,27 @@ TERM_CHECKS = {
 
 _NUMBERED = re.compile(r"^\s*\[(\d+)\]\s*", re.M)
 
+
+def retry_after_seconds(error: RateLimitError) -> float:
+    """Lo que el proveedor pide esperar. 0 si no lo dice."""
+    try:
+        raw = error.response.headers.get("retry-after")
+        return float(raw) if raw else 0.0
+    except (AttributeError, TypeError, ValueError):
+        return 0.0
+
+
+def is_daily_quota(error: RateLimitError) -> bool:
+    """Distingue el techo del día del límite por minuto.
+
+    Los dos llegan como 429 y tratarlos igual es lo que mataba las tandas: uno
+    se espera unos segundos, el otro significa volver mañana.
+    """
+    if retry_after_seconds(error) > MAX_TRANSIENT_WAIT:
+        return True
+    text = str(error).lower()
+    return "per day" in text or "tpd" in text or "rpd" in text
+
 # Sufijos que no existen en español. Sirven para detectar palabras inglesas
 # que se cuelan sin traducir: apareció "como es la moda vulgar y apish", con
 # "apish" (simiesca) crudo en mitad de la frase — una fuga que ningún control
@@ -130,11 +180,46 @@ _NUMBERED = re.compile(r"^\s*\[(\d+)\]\s*", re.M)
 _ENGLISH_SUFFIXES = ("ish", "ness", "ing", "ship", "ful", "less", "hood")
 _LOWER_WORD = re.compile(r"\b[a-záéíóúñü]{4,}\b")
 
-# Excepciones: palabras españolas legítimas que terminan igual.
+# Excepciones: palabras españolas legítimas que terminan igual. Los préstamos
+# en -ing son español corriente y marcarlos llenaba la cola de revisión de
+# ruido, que es la forma más segura de que nadie mire la cola.
 _NOT_LEAKS = {
     "hashish",
     "fetiching",
+    "camping",
+    "marketing",
+    "ranking",
+    "pudding",
+    "living",
+    "casting",
+    "hosting",
 }
+
+# Marcas de sección del original (_Descript._] _Place._] _Time._]). La regla 6
+# del prompt manda conservarlas literales, pero nada lo verificaba. Al pasar
+# este control sobre los 82 capítulos ya traducidos aparecieron 4 que las
+# tradujeron ("_Place and Time._]" -> "_Lugar y Tiempo._]"): 71 a 4 contra la
+# norma, o sea el libro partido en dos estructuras sin que nada lo señalara.
+#
+# Importa más de lo que parece: `ingest_library.py` identifica las entradas de
+# hierba y extrae los planetas regentes buscando estas marcas LITERALES
+# (_HERB_MARKERS, _extract_rulers). Hoy eso corre sobre el inglés y no se
+# rompe, pero una marca traducida deja el capítulo fuera de cualquier pasada
+# equivalente sobre el español — y el puente con Materia Arcana con él.
+#
+# El patrón acepta acentos para reconocer la forma traducida como lo que es:
+# la marca original, ausente.
+_SECTION_MARK = re.compile(r"_[A-Za-zÀ-ÿ][^_\n]{0,40}\._\]")
+
+# Un párrafo traducido mucho más corto que el original es un resumen, no una
+# traducción. Es la pérdida de contenido que `parse_response` no ve: el párrafo
+# vuelve con su número, pero vacío de la mitad de lo que decía.
+#
+# El español se alarga ~15-25% sobre el inglés, así que caer por debajo del 55%
+# no es variación de idioma. Solo se miran párrafos largos: en los cortos la
+# proporción oscila demasiado para significar nada.
+_SHRINK_RATIO = 0.55
+_SHRINK_MIN_CHARS = 200
 
 
 def english_leaks(translated: list[str]) -> list[str]:
@@ -147,6 +232,22 @@ def english_leaks(translated: list[str]) -> list[str]:
             if word.endswith(_ENGLISH_SUFFIXES):
                 found.add(word)
     return sorted(found)
+
+
+def missing_section_marks(source: list[str], translated: list[str]) -> list[str]:
+    """Marcas de sección del original que no aparecen en la traducción."""
+    present = set(_SECTION_MARK.findall(" ".join(translated)))
+    lost = {m for m in _SECTION_MARK.findall(" ".join(source))} - present
+    return sorted(lost)
+
+
+def shrunken_paragraphs(source: list[str], translated: list[str]) -> list[int]:
+    """Números de párrafo (1-indexados) que volvieron sospechosamente cortos."""
+    return [
+        i + 1
+        for i, (src, dst) in enumerate(zip(source, translated))
+        if len(src) >= _SHRINK_MIN_CHARS and len(dst) < len(src) * _SHRINK_RATIO
+    ]
 
 
 def build_prompt(paragraphs: list[str]) -> str:
@@ -183,6 +284,11 @@ def suspicious_terms(source: list[str], translated: list[str]) -> list[str]:
        debe impedir— pasaba el control.
     2. Palabras inglesas coladas sin traducir, que el control anterior no ve
        porque el término vigilado sí estaba bien.
+    3. Marcas de sección perdidas (regla 6 del prompt).
+    4. Párrafos que volvieron resumidos en vez de traducidos.
+
+    Los cuatro devuelven texto legible porque alimentan dos cosas: la cola de
+    revisión humana y el reintento correctivo, que se los repite al modelo.
     """
     src = " ".join(source).lower()
     dst = " ".join(translated).lower()
@@ -193,29 +299,97 @@ def suspicious_terms(source: list[str], translated: list[str]) -> list[str]:
         if not re.search(rf"\b{re.escape(spanish)}\b", dst):
             flagged.append(english)
     flagged.extend(f"sin traducir: {word}" for word in english_leaks(translated))
+    flagged.extend(
+        f"la marca {mark} debe quedar literal, ni traducida ni quitada"
+        for mark in missing_section_marks(source, translated)
+    )
+    shrunk = shrunken_paragraphs(source, translated)
+    flagged.extend(f"párrafo [{n}] resumido" for n in shrunk)
     return flagged
 
 
+def estimate_tokens(paragraphs: list[str]) -> int:
+    """Coste aproximado de traducir estos párrafos, ANTES de pedirlo.
+
+    La cuenta real solo se sabe al recibir la respuesta, y para entonces el
+    límite por minuto ya se pasó. Con ~4 caracteres por token: el glosario, más
+    la entrada, más una salida que en español se alarga sobre el inglés.
+
+    Se redondea al alza a propósito. Pasarse de prudente cuesta una pausa;
+    quedarse corto cuesta un 429 y una tanda muerta.
+    """
+    chars = sum(len(p) for p in paragraphs)
+    return int(len(SYSTEM) / 4 + chars / 4 * 2.3)
+
+
+def correction_prompt(flags: list[str]) -> str:
+    """Le devuelve al modelo sus propios fallos para que rehaga la traducción."""
+    return (
+        "Tu traducción anterior tiene estos defectos:\n"
+        + "\n".join(f"- {f}" for f in flags)
+        + "\n\nRehazla entera corrigiéndolos, respetando las reglas "
+        "innegociables y el mismo formato numerado. No comentes los cambios."
+    )
+
+
 def translate_chapter(
-    client: Groq, model: str, chapter: dict, attempts: int = 2
+    client: Groq,
+    model: str,
+    chapter: dict,
+    budget_left: int | None = None,
+    attempts: int = 2,
 ) -> tuple[list[str] | None, int, list[str]]:
+    """Traduce un capítulo y devuelve (párrafos, tokens gastados, a revisar).
+
+    Reintenta por dos motivos distintos: porque la respuesta vino mal formada
+    —y entonces no hay nada que guardar— o porque pasó los controles de
+    calidad con defectos, y ahí se le señalan al modelo para que la rehaga. El
+    segundo caso antes se guardaba tal cual con una marca de revisión que
+    esperaba a un humano que nunca iba a leer 423 capítulos.
+
+    Si el reintento no mejora se conserva la PRIMERA versión: un reintento peor
+    también es posible, y sustituir a ciegas empeoraría la media.
+    """
     paragraphs = [p["text"] for p in chapter["paragraphs"]]
+    messages = [
+        {"role": "system", "content": SYSTEM},
+        {"role": "user", "content": build_prompt(paragraphs)},
+    ]
     used = 0
+    best: tuple[list[str], list[str]] | None = None
+
     for attempt in range(attempts):
+        # Un reintento cuesta lo mismo que el intento: si no cabe en lo que
+        # queda del día, mejor guardar lo que hay que quedarse sin nada.
+        if attempt and budget_left is not None and used * 2 > budget_left:
+            break
+
         response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": SYSTEM},
-                {"role": "user", "content": build_prompt(paragraphs)},
-            ],
-            temperature=0.2,
+            model=model, messages=messages, temperature=0.2
         )
         used += response.usage.prompt_tokens + response.usage.completion_tokens
-        parsed = parse_response(response.choices[0].message.content, len(paragraphs))
-        if parsed:
-            return parsed, used, suspicious_terms(paragraphs, parsed)
-        if attempt + 1 < attempts:
-            time.sleep(2)
+        raw = response.choices[0].message.content
+        parsed = parse_response(raw, len(paragraphs))
+
+        if parsed is None:
+            if attempt + 1 < attempts:
+                time.sleep(2)
+            continue
+
+        flags = suspicious_terms(paragraphs, parsed)
+        if not flags:
+            return parsed, used, []
+        if best is None:
+            best = (parsed, flags)
+        elif len(flags) < len(best[1]):
+            best = (parsed, flags)
+        messages = messages[:2] + [
+            {"role": "assistant", "content": raw},
+            {"role": "user", "content": correction_prompt(flags)},
+        ]
+
+    if best is not None:
+        return best[0], used, best[1]
     return None, used, []
 
 
@@ -293,21 +467,48 @@ def main() -> None:
                   f"el progreso está guardado.")
             break
 
-        # Ventana de tokens por minuto.
+        # Ventana de tokens por minuto. Se reserva el coste ESTIMADO antes de
+        # llamar: contarlo después, con el gasto real, es enterarse del límite
+        # cuando ya se pasó.
+        estimate = estimate_tokens([p["text"] for p in chapter["paragraphs"]])
         if time.time() - minute_start >= 60:
             minute_start, minute_tokens = time.time(), 0
-        elif minute_tokens >= args.tpm * MARGIN:
+        if minute_tokens and minute_tokens + estimate > args.tpm * MARGIN:
             wait = 60 - (time.time() - minute_start)
-            print(f"  · pausa {wait:.0f}s (tokens por minuto)")
-            time.sleep(max(wait, 1))
+            if wait > 0:
+                print(f"  · pausa {wait:.0f}s (tokens por minuto)")
+                time.sleep(wait)
             minute_start, minute_tokens = time.time(), 0
 
-        try:
-            texts, used, review = translate_chapter(client, args.model, chapter)
-        except Exception as error:  # noqa: BLE001 — cualquier fallo de red o cuota
-            print(f"  ! {chapter['slug']}: {str(error)[:120]}")
-            print("    Se detiene la tanda; lo traducido queda guardado.")
+        texts = None
+        for retry in range(TRANSIENT_RETRIES):
+            try:
+                texts, used, review = translate_chapter(
+                    client, args.model, chapter, budget - spent
+                )
+                break
+            except RateLimitError as error:
+                spent += estimate  # el intento fallido también consumió cupo
+                if is_daily_quota(error):
+                    print("\nCuota diaria agotada. Vuelve mañana: "
+                          "el progreso está guardado.")
+                    used = 0
+                    break
+                wait = retry_after_seconds(error) or 5 * (retry + 1)
+                print(f"  · 429 pasajero, espero {wait:.0f}s")
+                time.sleep(min(wait, MAX_TRANSIENT_WAIT))
+                minute_start, minute_tokens = time.time(), 0
+            except TRANSIENT_ERRORS as error:
+                wait = 5 * (retry + 1)
+                print(f"  · {type(error).__name__}, reintento en {wait}s")
+                time.sleep(wait)
+        else:
+            print(f"  ! {chapter['slug']}: {TRANSIENT_RETRIES} fallos seguidos. "
+                  f"Se detiene la tanda; lo traducido queda guardado.")
             break
+
+        if texts is None and not used:
+            break  # cuota diaria: parar sin marcar el capítulo como fallido
 
         spent += used
         minute_tokens += used

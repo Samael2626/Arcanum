@@ -11,8 +11,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from translate_library import (  # noqa: E402
     build_prompt,
+    correction_prompt,
     english_leaks,
+    estimate_tokens,
+    missing_section_marks,
     parse_response,
+    shrunken_paragraphs,
     suspicious_terms,
 )
 
@@ -51,6 +55,76 @@ class TestEnglishLeaks:
 
     def test_no_repite_la_misma_palabra(self):
         assert english_leaks(["apish", "otra vez apish"]) == ["apish"]
+
+    def test_no_marca_prestamos_normales_en_espanol(self):
+        # Marcarlos llenaba la cola de revisión de ruido, y una cola con ruido
+        # es una cola que nadie mira.
+        texto = ["fue al camping y consultó el ranking del marketing"]
+        assert english_leaks(texto) == []
+
+
+class TestSectionMarks:
+    """La regla 6 manda conservarlas literales, y nada lo verificaba.
+
+    Los dos casos salieron de correr este control sobre los 82 capítulos ya
+    traducidos: 4 habían traducido la marca, y nadie lo había visto.
+    """
+
+    def test_detecta_la_marca_perdida(self):
+        src = ["_Descript._] It grows in gardens.", "_Time._] It flowers in May."]
+        dst = ["Crece en los jardines.", "_Time._] Florece en mayo."]
+        assert missing_section_marks(src, dst) == ["_Descript._]"]
+
+    def test_detecta_la_marca_traducida(self):
+        # Caso real de 'anemone': la marca no se perdió, se tradujo. Para
+        # `ingest_library.py`, que las busca literales, es lo mismo que perderla.
+        src = ["_Place and Time._] They are sown in the gardens of the curious."]
+        dst = ["_Lugar y Tiempo._] Se siembran en los jardines de los curiosos."]
+        assert missing_section_marks(src, dst) == ["_Place and Time._]"]
+
+    def test_no_marca_cuando_sobreviven(self):
+        src = ["_Government and virtues._] Under Mars."]
+        dst = ["_Government and virtues._] Bajo Marte."]
+        assert missing_section_marks(src, dst) == []
+
+    def test_entra_en_los_controles_generales(self):
+        src = ["_Place._] It grows by the water side in many places."]
+        dst = ["Crece junto al agua en muchos lugares."]
+        assert any("_Place._]" in f for f in suspicious_terms(src, dst))
+
+
+class TestShrunkenParagraphs:
+    """Un párrafo resumido vuelve con su número: `parse_response` no lo ve.
+
+    Es la pérdida de contenido silenciosa que quedaba fuera de toda red.
+    """
+
+    def test_detecta_el_parrafo_resumido(self):
+        largo = (
+            "It is an herb of Mars, and therefore it is hot and dry, and of a "
+            "binding quality; the decoction of the leaves being drunk is very "
+            "good against the bitings of venomous beasts, and the powder of "
+            "the root taken in wine helps the retentive faculty exceedingly, "
+            "as many grave authors have written before me."
+        )
+        assert shrunken_paragraphs([largo], ["Es una hierba de Marte."]) == [1]
+
+    def test_no_marca_una_traduccion_completa(self):
+        src = [
+            "It is an herb of Mars, hot and dry, and the decoction of the "
+            "leaves being drunk is very good against the bitings of venomous "
+            "beasts, as many grave authors have written before me."
+        ]
+        dst = [
+            "Es una hierba de Marte, caliente y seca, y la decocción de las "
+            "hojas bebida es muy buena contra las mordeduras de las bestias "
+            "venenosas, como muchos autores graves han escrito antes que yo."
+        ]
+        assert shrunken_paragraphs(src, dst) == []
+
+    def test_ignora_los_parrafos_cortos(self):
+        # En textos breves la proporción oscila demasiado para significar nada.
+        assert shrunken_paragraphs(["_Time._] It flowers in May."], ["Mayo."]) == []
 
 
 class TestSuspiciousTerms:
@@ -111,3 +185,19 @@ class TestNumberedRoundTrip:
     def test_tolera_texto_multilinea(self):
         parsed = parse_response("[1] primera\nlínea\n\n[2] segunda", 2)
         assert parsed == ["primera\nlínea", "segunda"]
+
+
+class TestBudgetGuards:
+    def test_la_estimacion_crece_con_el_texto(self):
+        assert estimate_tokens(["x" * 4000]) > estimate_tokens(["x" * 400])
+
+    def test_la_estimacion_no_se_queda_corta(self):
+        # Quedarse corto cuesta un 429 y una tanda muerta: debe sobreestimar
+        # frente a la cuenta ingenua de solo la entrada.
+        parrafos = ["x" * 4000]
+        assert estimate_tokens(parrafos) > 4000 / 4
+
+    def test_el_reintento_correctivo_le_dice_que_fallo(self):
+        prompt = correction_prompt(["by sympathy", "sin traducir: apish"])
+        assert "by sympathy" in prompt
+        assert "sin traducir: apish" in prompt
