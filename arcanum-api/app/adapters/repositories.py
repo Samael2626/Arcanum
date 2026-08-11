@@ -11,7 +11,8 @@ from dataclasses import fields
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session, noload, selectinload
 
 from app.core.config import settings
 from app.core.security import create_access_token, create_refresh_token, get_password_hash, verify_password
@@ -335,10 +336,61 @@ class LibraryWorkRepository:
         self._db = db
 
     def list_works(self) -> list[LibraryWorkEntity]:
-        return _list_to_entities(
-            LibraryWorkEntity,
-            self._db.query(LibraryWork).order_by(LibraryWork.author, LibraryWork.title).all(),
+        """Indice de obras con sus conteos, en UNA sola consulta.
+
+        Los conteos salen agregados en SQL, no recorriendo capitulos y parrafos
+        en Python: el indice es la primera pantalla de Lecturas y cargar el
+        texto entero de Culpeper para contarlo seria absurdo.
+
+        `translated_chapters` cuenta capitulos COMPLETAMENTE traducidos: uno con
+        parrafos a medias no cuenta. Un capitulo a medias abierto desde el
+        indice enseña huecos en castellano, y prometerlo como traducido es peor
+        que no anunciarlo. Un capitulo sin parrafos tampoco cuenta: no hay nada
+        traducido en el.
+        """
+        translated = func.count(LibraryParagraph.id).filter(
+            LibraryParagraph.text_es.isnot(None),
+            func.btrim(LibraryParagraph.text_es) != "",
         )
+        per_chapter = (
+            select(
+                LibraryChapter.id.label("chapter_id"),
+                LibraryChapter.work_id.label("work_id"),
+                func.count(LibraryParagraph.id).label("total"),
+                translated.label("translated"),
+            )
+            .select_from(LibraryChapter)
+            .outerjoin(LibraryParagraph, LibraryParagraph.chapter_id == LibraryChapter.id)
+            .group_by(LibraryChapter.id, LibraryChapter.work_id)
+            .subquery()
+        )
+        rows = self._db.execute(
+            select(
+                LibraryWork,
+                func.count(per_chapter.c.chapter_id).label("chapter_count"),
+                func.count(per_chapter.c.chapter_id)
+                .filter(
+                    per_chapter.c.total > 0,
+                    per_chapter.c.total == per_chapter.c.translated,
+                )
+                .label("translated_chapters"),
+            )
+            .outerjoin(per_chapter, per_chapter.c.work_id == LibraryWork.id)
+            .group_by(LibraryWork.id)
+            .order_by(LibraryWork.author, LibraryWork.title)
+            # Sin esto el mapeo a entidad lee `row.chapters` y dispara un SELECT
+            # de capitulos por obra: el N+1 clasico, invisible hasta que la
+            # biblioteca crece. El indice no muestra capitulos.
+            .options(noload(LibraryWork.chapters))
+        ).all()
+
+        works: list[LibraryWorkEntity] = []
+        for row, chapter_count, translated_chapters in rows:
+            work = _to_entity(LibraryWorkEntity, row)
+            work.chapter_count = chapter_count
+            work.translated_chapters = translated_chapters
+            works.append(work)
+        return works
 
     def get_by_slug(self, slug: str) -> LibraryWorkEntity | None:
         row = (

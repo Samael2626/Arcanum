@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
 import '../../../shared/widgets/arcanum_card.dart';
+import '../library_messages.dart';
 import '../data/library_repository.dart';
 import '../domain/library_models.dart';
 
@@ -59,11 +60,12 @@ class _ObraScreenState extends ConsumerState<ObraScreen> {
             );
           }
           if (snapshot.hasError) {
+            logLibraryFailure('obra', snapshot.error);
             return Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 36),
                 child: Text(
-                  'No se pudo abrir la obra.\n${snapshot.error}',
+                  workUnavailableMessage,
                   textAlign: TextAlign.center,
                   style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
                 ),

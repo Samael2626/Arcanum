@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
 import '../../../shared/widgets/arcanum_card.dart';
+import '../library_messages.dart';
 import '../data/library_repository.dart';
 import '../domain/library_models.dart';
 
@@ -43,13 +44,11 @@ class _LecturasScreenState extends ConsumerState<LecturasScreen> {
               }
               final works = snapshot.data ?? const <LibraryWorkSummary>[];
               if (snapshot.hasError && works.isEmpty) {
-                return _Message(
+                logLibraryFailure('indice', snapshot.error);
+                return const _Message(
                   glyph: '✶',
                   title: 'La biblioteca no responde',
-                  body:
-                      'Desliza hacia abajo para reintentar. Lo que ya hayas '
-                      'leído sigue disponible sin conexión.',
-                  detail: '${snapshot.error}',
+                  body: libraryUnavailableMessage,
                 );
               }
               if (works.isEmpty) {
@@ -161,13 +160,11 @@ class _Message extends StatelessWidget {
   final String glyph;
   final String title;
   final String body;
-  final String? detail;
 
   const _Message({
     required this.glyph,
     required this.title,
     required this.body,
-    this.detail,
   });
 
   @override
@@ -189,18 +186,6 @@ class _Message extends StatelessWidget {
         textAlign: TextAlign.center,
         style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
       ),
-      if (detail != null) ...[
-        const SizedBox(height: 10),
-        // El error crudo se muestra: un fallo desconocido debe verse.
-        Text(
-          detail!,
-          textAlign: TextAlign.center,
-          style: ArcanumText.body(
-            11,
-            color: ArcanumColors.ivoryMuted.withValues(alpha: 0.6),
-          ),
-        ),
-      ],
     ],
   );
 }

@@ -129,6 +129,11 @@ class LibraryWorkEntity:
     chapters: list[LibraryChapterEntity] | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
+    # Conteos del indice, resueltos con agregacion SQL en list_works. Nacen en
+    # None a proposito: un 0 por defecto disfrazaria de "obra vacia" cualquier
+    # camino que olvide calcularlos, que es justo el fallo que rompio /library.
+    chapter_count: int | None = None
+    translated_chapters: int | None = None
 
 
 @dataclass

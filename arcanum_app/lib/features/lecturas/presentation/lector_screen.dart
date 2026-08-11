@@ -8,6 +8,7 @@ import '../../../core/api/arcanum_api.dart';
 import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
 import '../../arte/materia_lore.dart';
+import '../library_messages.dart';
 import '../data/library_repository.dart';
 import '../domain/library_models.dart';
 
@@ -67,8 +68,8 @@ class _LectorScreenState extends ConsumerState<LectorScreen> {
             return const _Loading();
           }
           if (snapshot.hasError) {
+            logLibraryFailure('capitulo', snapshot.error);
             return _ErrorState(
-              error: '${snapshot.error}',
               onRetry: () => setState(() => _future = _load()),
             );
           }
@@ -614,9 +615,8 @@ class _Loading extends StatelessWidget {
 }
 
 class _ErrorState extends StatelessWidget {
-  final String error;
   final VoidCallback onRetry;
-  const _ErrorState({required this.error, required this.onRetry});
+  const _ErrorState({required this.onRetry});
 
   @override
   Widget build(BuildContext context) => Center(
@@ -643,13 +643,12 @@ class _ErrorState extends StatelessWidget {
             style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
           ),
           const SizedBox(height: 8),
-          // El error crudo se muestra: un fallo desconocido debe verse.
           Text(
-            error,
+            chapterUnavailableMessage,
             textAlign: TextAlign.center,
             style: ArcanumText.body(
-              11,
-              color: ArcanumColors.ivoryMuted.withValues(alpha: 0.6),
+              13,
+              color: ArcanumColors.ivoryMuted.withValues(alpha: 0.75),
             ),
           ),
           const SizedBox(height: 20),
