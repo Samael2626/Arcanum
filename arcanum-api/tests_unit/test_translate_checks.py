@@ -19,6 +19,7 @@ from translate_library import (  # noqa: E402
     shrunken_paragraphs,
     suspicious_terms,
 )
+from recheck_translation import evaluate  # noqa: E402
 
 
 class TestEnglishLeaks:
@@ -185,6 +186,51 @@ class TestNumberedRoundTrip:
     def test_tolera_texto_multilinea(self):
         parsed = parse_response("[1] primera\nlínea\n\n[2] segunda", 2)
         assert parsed == ["primera\nlínea", "segunda"]
+
+
+class TestRecheck:
+    """Repasar lo ya traducido con los controles de hoy.
+
+    Un control anadido despues no ve nada de lo anterior: asi es como 4
+    capitulos con la marca de seccion traducida pasaron 82 traducciones sin
+    que nadie los viera.
+    """
+
+    @staticmethod
+    def _work(*chapters):
+        return {
+            "title": "Prueba",
+            "chapters": [
+                {"slug": slug, "paragraphs": [{"text": t} for t in textos]}
+                for slug, textos in chapters
+            ],
+        }
+
+    def test_marca_lo_que_falla_los_controles_de_hoy(self):
+        work = self._work(("anemone", ["_Place and Time._] They are sown in gardens."]))
+        done = {"chapters": {"anemone": {"paragraphs": ["_Lugar y Tiempo._] Se siembran."]}}}
+        flagged, mismatched = evaluate(work, done)
+        assert "anemone" in flagged
+        assert mismatched == []
+
+    def test_no_marca_lo_que_esta_bien(self):
+        work = self._work(("anemone", ["_Place._] They are sown in gardens."]))
+        done = {"chapters": {"anemone": {"paragraphs": ["_Place._] Se siembran en jardines."]}}}
+        assert evaluate(work, done) == ({}, [])
+
+    def test_separa_el_descuadre_de_parrafos(self):
+        # No es un fallo de calidad sino de integridad: no hay nada que
+        # revisar a mano, solo retraducir.
+        work = self._work(("anemone", ["uno", "dos"]))
+        done = {"chapters": {"anemone": {"paragraphs": ["uno"]}}}
+        flagged, mismatched = evaluate(work, done)
+        assert mismatched == ["anemone"]
+        assert flagged == {}
+
+    def test_ignora_un_capitulo_que_ya_no_esta_en_el_original(self):
+        work = self._work(("anemone", ["uno"]))
+        done = {"chapters": {"borrado": {"paragraphs": ["uno"]}}}
+        assert evaluate(work, done) == ({}, [])
 
 
 class TestBudgetGuards:

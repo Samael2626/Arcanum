@@ -406,6 +406,7 @@ def main() -> None:
     parser.add_argument("--budget", type=int, default=None,
                         help=f"tokens máximos de esta tanda (por defecto, --tpd menos "
                              f"{ORACLE_RESERVE:,} reservados para el oráculo en producción)")
+    parser.add_argument("--only", help="traducir solo estos slugs, separados por comas")
     parser.add_argument("--review", action="store_true",
                         help="solo listar lo pendiente y lo marcado para revisar")
     args = parser.parse_args()
@@ -433,6 +434,22 @@ def main() -> None:
         )
 
     pending = [c for c in work["chapters"] if c["slug"] not in done["chapters"]]
+
+    # --only sirve para rehacer capitulos concretos tras un purgado de
+    # `recheck_translation.py`: sin esto habria que tragarse la cola entera por
+    # orden para llegar a cinco capitulos sueltos. Un slug que no esta pendiente
+    # es un error del que pide, no un no-op silencioso: o ya esta traducido
+    # —y entonces falta purgarlo— o esta mal escrito.
+    if args.only:
+        wanted = [s.strip() for s in args.only.split(",") if s.strip()]
+        available = {c["slug"] for c in pending}
+        missing = [s for s in wanted if s not in available]
+        if missing:
+            raise SystemExit(
+                f"No estan pendientes: {', '.join(missing)}. "
+                f"Si ya estan traducidos, purgalos antes con recheck_translation.py."
+            )
+        pending = [c for c in pending if c["slug"] in wanted]
     # Las hierbas primero: son lo que se lee y lo que conecta con Materia
     # Arcana. Si una tanda se corta, lo que falta son las dedicatorias.
     order = {"herb": 0, "appendix": 1, "catalogue": 2, "front": 3}
