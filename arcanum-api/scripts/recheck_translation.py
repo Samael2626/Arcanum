@@ -39,7 +39,12 @@ if hasattr(sys.stdout, "reconfigure"):
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from translate_library import DATA_DIR, suspicious_terms  # noqa: E402
+from translate_library import DATA_DIR, spanish_words, suspicious_terms  # noqa: E402
+
+# Umbral de wordfreq: 0 significa "no aparece NUNCA en un corpus grande de
+# espanol". Las palabras de epoca legitimas si aparecen (decoccion 2.17,
+# flemático 1.70, pleuresía 1.82), asi que el corte no las toca.
+UNKNOWN_ZIPF = 0.0
 
 
 def evaluate(work: dict, done: dict) -> tuple[dict[str, list[str]], list[str]]:
@@ -69,11 +74,51 @@ def evaluate(work: dict, done: dict) -> tuple[dict[str, list[str]], list[str]]:
     return flagged, mismatched
 
 
+def vocabulary_report(work: dict, done: dict) -> list[tuple[str, int, list[str]]]:
+    """Palabras que no existen en ningun corpus grande de espanol.
+
+    Red MUY ancha, a proposito, y por eso NO purga ni dispara reintentos: sobre
+    los 82 capitulos marca el 2,9% del vocabulario con una precision de mas o
+    menos la mitad. Pesca fugas del ingles que ningun otro control ve
+    ("treacle", "rheums", "caudle", "burdock") y erratas de concordancia
+    ("zanjos" por "zanjas"), pero tambien castellano de epoca legitimo
+    ("estranguria", "meliloto", "pelitorio") y gerundios que el corpus no
+    recoge ("secandolas", "apliquela").
+
+    Es una lista para mirar con ojos, no un criterio automatico. Meterla en
+    `suspicious_terms` haria purgar y retraducir capitulos correctos.
+    """
+    from wordfreq import zipf_frequency  # dependencia opcional, solo de scripts
+
+    source = {c["slug"] for c in work["chapters"]}
+    seen: dict[str, tuple[int, set[str]]] = {}
+    for slug, chapter in done["chapters"].items():
+        if slug not in source:
+            continue
+        for text in chapter["paragraphs"]:
+            for word in spanish_words(text):
+                count, slugs = seen.get(word, (0, set()))
+                slugs.add(slug)
+                seen[word] = (count + 1, slugs)
+
+    return sorted(
+        (
+            (word, count, sorted(slugs))
+            for word, (count, slugs) in seen.items()
+            if zipf_frequency(word, "es") <= UNKNOWN_ZIPF
+        ),
+        key=lambda row: -row[1],
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("work", help="slug de la obra, p.ej. culpeper-complete-herbal")
     parser.add_argument("--purge", action="store_true",
                         help="sacar del JSON lo que falle, para que se retraduzca")
+    parser.add_argument("--vocabulario", action="store_true",
+                        help="listar palabras inexistentes en espanol (ruidoso, "
+                             "para revisar a ojo; nunca purga)")
     args = parser.parse_args()
 
     source_path = DATA_DIR / f"{args.work}.json"
@@ -91,6 +136,22 @@ def main() -> None:
     for slug in sorted(mismatched):
         chapter = done["chapters"][slug]
         print(f"  ! {slug:<34} descuadrado ({len(chapter['paragraphs'])} parrafos)")
+
+    if args.vocabulario:
+        try:
+            rows = vocabulary_report(work, done)
+        except ImportError:
+            raise SystemExit(
+                "--vocabulario necesita wordfreq, que NO esta en requirements.txt "
+                "a proposito: pesa demasiado para meterlo en el deploy por una "
+                "revision manual. Instalalo aparte: pip install wordfreq"
+            )
+        print(f"\nVocabulario sin respaldo en espanol ({len(rows)} palabras).")
+        print("Ruidoso a proposito: mezcla fugas del ingles con castellano de")
+        print("epoca legitimo. Se mira a ojo, no purga nada.\n")
+        for word, count, slugs in rows:
+            donde = ", ".join(slugs[:3]) + (" …" if len(slugs) > 3 else "")
+            print(f"  {count:>3}  {word:<20} {donde}")
 
     total = len(flagged) + len(mismatched)
     if not total:

@@ -35,6 +35,10 @@ from app.models.library import (  # noqa: E402
 
 DATA_DIR = Path(__file__).parent / "library_data"
 
+# Estado de una traducción que aún no ha revisado nadie. Lo que NO está así
+# lleva mano humana encima y este script no lo toca.
+MACHINE = "machine"
+
 # Culpeper afirma curar la peste, la ictericia y la hidropesía. Google Play
 # prohíbe las afirmaciones de salud engañosas: presentar esto como consejo
 # sería un problema; presentarlo como documento histórico, no.
@@ -88,7 +92,7 @@ def main() -> None:
 
         existing = {c.slug: c for c in work.chapters}
         seen: set[str] = set()
-        created = updated = 0
+        created = updated = preserved = 0
 
         for position, chapter_data in enumerate(data["chapters"]):
             slug = chapter_data["slug"]
@@ -117,10 +121,18 @@ def main() -> None:
                 paragraph.anchor = paragraph_data["anchor"]
                 paragraph.text_original = paragraph_data["text"]
                 if index < len(spanish):
-                    paragraph.text_es = spanish[index]
-                    # "machine" hasta que alguien la revise. Se muestra al
-                    # usuario: una traducción automática debe declararse.
-                    paragraph.translation_status = paragraph.translation_status or "machine"
+                    # Una corrección a mano NO se pisa con texto de máquina.
+                    # Antes se sobrescribía el texto pero se conservaba el
+                    # estado: el párrafo acababa declarando "human" con la
+                    # traducción automática dentro. Perder la corrección ya es
+                    # malo; perderla y seguir diciendo que está revisada, peor.
+                    if paragraph.translation_status in (None, MACHINE):
+                        paragraph.text_es = spanish[index]
+                        # "machine" hasta que alguien la revise. Se muestra al
+                        # usuario: una traducción automática debe declararse.
+                        paragraph.translation_status = MACHINE
+                    else:
+                        preserved += 1
 
             # Párrafos que ya no existen tras una reingesta.
             for position_gone in set(by_position) - set(range(len(chapter_data["paragraphs"]))):
@@ -140,6 +152,8 @@ def main() -> None:
         print(f"\n  capítulos nuevos    : {created}")
         print(f"  capítulos actualizados: {updated}")
         print(f"  eliminados          : {len(set(existing) - seen)}")
+        if preserved:
+            print(f"  correcciones a mano respetadas: {preserved}")
     finally:
         db.close()
 

@@ -178,7 +178,15 @@ def is_daily_quota(error: RateLimitError) -> bool:
 # Solo se miran palabras en MINÚSCULA: los nombres de planta deben quedarse en
 # inglés a propósito y van capitalizados ("Alehoof", "Arssmart").
 _ENGLISH_SUFFIXES = ("ish", "ness", "ing", "ship", "ful", "less", "hood")
-_LOWER_WORD = re.compile(r"\b[a-záéíóúñü]{4,}\b")
+
+# El token incluye los guiones internos a propósito. Partiendo por el guion,
+# "Blue-bottle" —nombre de planta, que debe quedarse en inglés— se leía como la
+# palabra suelta "bottle" y se marcaba como fuga.
+_WORD = re.compile(r"[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'-]{3,}")
+
+# Culpeper cita nombres populares ingleses entrecomillados ("tetter-berries"):
+# están en inglés porque son una cita, no porque el modelo se despistara.
+_QUOTED = re.compile(r"[\"«»“”‘’](.*?)[\"«»“”‘’]")
 
 # Excepciones: palabras españolas legítimas que terminan igual. Los préstamos
 # en -ing son español corriente y marcarlos llenaba la cola de revisión de
@@ -221,15 +229,56 @@ _SECTION_MARK = re.compile(r"_[A-Za-zÀ-ÿ][^_\n]{0,40}\._\]")
 _SHRINK_RATIO = 0.55
 _SHRINK_MIN_CHARS = 200
 
+# Consonantes dobles que el español no tiene. Solo dobla cc, ll, nn, rr (y ee,
+# oo en cultismos); el resto es interferencia del inglés o del italiano.
+#
+# Es el control más barato que existe contra dos fallos que ningún otro veía:
+# palabras inglesas sin traducir que no acaban en los sufijos vigilados
+# ("pottage"), y erratas por contagio ("fossos" por "fosos"). Se probó primero
+# con un corrector ortográfico de verdad (pyspellchecker, diccionario español):
+# marcaba el 53% del vocabulario —no conoce "hojas" ni "flores"— y era
+# inservible. Esto marca el 0,06%, y en los 82 capítulos las dos únicas
+# marcas eran defectos reales.
+_IMPOSSIBLE_DOUBLES = re.compile(r"ss|ff|tt|pp|mm|dd|gg|bb|vv|zz|hh|kk|jj|ww|yy")
+
+# Préstamos asentados que sí llevan doble. La lista crece cuando aparezca uno,
+# no antes: inventar excepciones por si acaso es lo que ciega un control.
+_DOUBLE_ALLOWED = {
+    "jazz",
+    "pizza",
+    "hobby",
+    "whisky",
+    "byte",
+}
+
+
+def spanish_words(text: str) -> list[str]:
+    """Palabras del texto que deberían estar en español.
+
+    Deja fuera lo que está en inglés a propósito: los nombres de planta, que
+    van capitalizados, y las citas entrecomilladas de nombres populares.
+    """
+    quoted = {w for m in _QUOTED.finditer(text) for w in _WORD.findall(m.group(1))}
+    return [
+        word
+        for word in _WORD.findall(text)
+        if word not in quoted and not any(c.isupper() for c in word)
+    ]
+
 
 def english_leaks(translated: list[str]) -> list[str]:
-    """Palabras que parecen inglesas sin traducir dentro del texto español."""
+    """Palabras que parecen inglesas sin traducir dentro del texto español.
+
+    Dos señales independientes: los sufijos que el español no tiene, y las
+    consonantes dobles que el español no dobla. La segunda pilla lo que la
+    primera no ve — "pottage" no acaba en ninguno de los sufijos vigilados.
+    """
     found = set()
     for text in translated:
-        for word in _LOWER_WORD.findall(text):
-            if word in _NOT_LEAKS:
+        for word in spanish_words(text):
+            if word in _NOT_LEAKS or word in _DOUBLE_ALLOWED:
                 continue
-            if word.endswith(_ENGLISH_SUFFIXES):
+            if word.endswith(_ENGLISH_SUFFIXES) or _IMPOSSIBLE_DOUBLES.search(word):
                 found.add(word)
     return sorted(found)
 

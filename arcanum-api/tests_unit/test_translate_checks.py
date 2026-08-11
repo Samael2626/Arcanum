@@ -7,6 +7,8 @@ caso de aquí salió de un fallo real observado en la traducción de Culpeper.
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from translate_library import (  # noqa: E402
@@ -61,6 +63,32 @@ class TestEnglishLeaks:
         # Marcarlos llenaba la cola de revisión de ruido, y una cola con ruido
         # es una cola que nadie mira.
         texto = ["fue al camping y consultó el ranking del marketing"]
+        assert english_leaks(texto) == []
+
+    def test_detecta_ingles_sin_sufijo_delator(self):
+        # Caso real: "ya sabes para qué es buena la pottage de Alejandro".
+        # No acaba en ninguno de los sufijos vigilados, así que solo la doble
+        # consonante lo delata.
+        assert english_leaks(["es buena la pottage de Alejandro"]) == ["pottage"]
+
+    def test_detecta_la_errata_por_contagio(self):
+        # Caso real: "la orilla de los fossos" por "fosos". No es inglés, es
+        # una palabra mal escrita — y ningún otro control la veía.
+        assert english_leaks(["crece en la orilla de los fossos"]) == ["fossos"]
+
+    def test_no_parte_los_nombres_de_planta_por_el_guion(self):
+        # "Blue-bottle" es nombre de planta y se queda en inglés. Partiendo por
+        # el guion se leía "bottle" suelto y se marcaba como fuga.
+        assert english_leaks(["las hojas secas de la Blue-bottle se administran"]) == []
+
+    def test_no_marca_los_nombres_populares_citados(self):
+        # Van en inglés porque son una cita, no por descuido del modelo.
+        texto = ['las bayas son llamadas por los campesinos "tetter-berries"']
+        assert english_leaks(texto) == []
+
+    def test_no_marca_el_espanol_con_dobles_legitimas(self):
+        # El español dobla cc, ll, nn, rr: no deben marcarse nunca.
+        texto = ["la acción del perro innato en aquella llama perenne y leer"]
         assert english_leaks(texto) == []
 
 
@@ -230,6 +258,18 @@ class TestRecheck:
     def test_ignora_un_capitulo_que_ya_no_esta_en_el_original(self):
         work = self._work(("anemone", ["uno"]))
         done = {"chapters": {"borrado": {"paragraphs": ["uno"]}}}
+        assert evaluate(work, done) == ({}, [])
+
+    def test_el_informe_de_vocabulario_no_toca_los_criterios_automaticos(self):
+        # wordfreq es opcional a proposito: pesa demasiado para requirements.txt.
+        pytest.importorskip("wordfreq")
+        from recheck_translation import vocabulary_report
+
+        work = self._work(("anemone", ["It grows by the ditch side."]))
+        done = {"chapters": {"anemone": {"paragraphs": ["Crece junto a los zanjos."]}}}
+        assert [row[0] for row in vocabulary_report(work, done)] == ["zanjos"]
+        # Pero NO entra en evaluate(): purgar por esta lista retraduciria
+        # capitulos correctos, porque marca tambien castellano de epoca.
         assert evaluate(work, done) == ({}, [])
 
 
