@@ -37,8 +37,8 @@ class Settings(BaseSettings):
 
     # OrÃ¡culo IA (Groq â€” free tier, sin cuota diaria estricta)
     GROQ_API_KEY: Optional[str] = None
-    CLAUDE_MODEL_FREE: str = "llama-3.3-70b-versatile"   # ignorado en servicio; free tier
-    CLAUDE_MODEL_PREMIUM: str = "llama-3.3-70b-versatile"  # ignorado en servicio; free tier
+    ORACLE_MODEL_FREE: str = "openai/gpt-oss-120b"
+    ORACLE_MODEL_PREMIUM: str = "openai/gpt-oss-120b"
     CLAUDE_MAX_TOKENS: int = 1024
     CLAUDE_TEMPERATURE: float = 0.6
     CLAUDE_TIMEOUT_SECONDS: int = 30
