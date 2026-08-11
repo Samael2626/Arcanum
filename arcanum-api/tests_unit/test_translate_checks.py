@@ -18,6 +18,7 @@ from translate_library import (  # noqa: E402
     estimate_tokens,
     missing_section_marks,
     parse_response,
+    plant_names_lost,
     shrunken_paragraphs,
     suspicious_terms,
 )
@@ -120,6 +121,65 @@ class TestSectionMarks:
         src = ["_Place._] It grows by the water side in many places."]
         dst = ["Crece junto al agua en muchos lugares."]
         assert any("_Place._]" in f for f in suspicious_terms(src, dst))
+
+
+class TestPlantNames:
+    """La regla 4 manda dejar los nombres de planta en ingles.
+
+    Es la regla que el proyecto llama mas peligrosa —una planta mal traducida
+    es una planta equivocada, y la gente las usa— y no tenia ningun control.
+    Informa, no purga: ver `plant_names_lost` para el porque.
+    """
+
+    def test_detecta_el_nombre_perdido(self):
+        # Caso real: 'Archangel' (Lamium album) desaparecio de su propio capitulo.
+        src = ["The physicians call this herb Archangel, whether from folly."]
+        dst = ["Los medicos llaman a esta hierba, ya sea por necedad."]
+        assert plant_names_lost("Archangel", src, dst) == ["Archangel"]
+
+    def test_no_marca_cuando_sobrevive(self):
+        src = ["THEY are also called Personata and great Burdock."]
+        dst = ["También se les llama Personata y gran Burdock."]
+        assert plant_names_lost("The Burdock", src, dst) == []
+
+    def test_ignora_los_calificadores_del_titulo(self):
+        # "The Ordinary Small Centaury" solo identifica por "Centaury": el
+        # resto describe cual es, y en espanol se traduce sin riesgo.
+        src = ["The Ordinary Small Centaury grows here."]
+        dst = ["La Centaury pequeña ordinaria crece aquí."]
+        assert plant_names_lost("The Ordinary Small Centaury", src, dst) == []
+
+    def test_detecta_la_perdida_parcial(self):
+        # Que el nombre sobreviva una vez no es que el capítulo esté bien: es
+        # que está mal las otras. Antes bastaba una aparición para pasar.
+        src = ["The White Archangel grows here. The White Archangel is hot."]
+        dst = ["El White Archangel crece aquí. El Arcángel Blanco es caliente."]
+        assert "Archangel" in plant_names_lost("Archangel", src, dst)
+
+    def test_detecta_el_nombre_del_cuerpo_que_el_titulo_no_nombra(self):
+        # Caso real de 'And Whortle-Berries': ese compuesto no se repite en el
+        # cuerpo, así que por título no se comprobaba NADA — mientras la planta
+        # de la que trata el capítulo se traducía mal.
+        # El nucleo es "Bilberry": que "Red" pase a "roja" es correcto, el
+        # defecto es que Bilberry (Vaccinium) se vuelva mora (Rubus).
+        src = ["The Red Bilberry, or Whortle-Bush, rises up like the former."]
+        dst = ["La mora roja, o arbusto de Whortle, se eleva como la anterior."]
+        assert plant_names_lost("And Whortle-Berries", src, dst) == [
+            "Bilberry",
+            "Whortle-Bush",
+        ]
+
+    def test_no_confunde_el_arranque_de_frase_con_una_planta(self):
+        # El compuesto se tragaba la palabra anterior: "Besides Amara Dulcis".
+        src = ["Besides Amara Dulcis, there is another herb."]
+        dst = ["Además de Amara Dulcis, hay otra hierba."]
+        assert plant_names_lost("Amara Dulcis", src, dst) == []
+
+    def test_ignora_lo_que_no_esta_en_el_original(self):
+        # Si el cuerpo no nombra la planta, no hay nada que conservar.
+        src = ["It grows in gardens and flowers in May."]
+        dst = ["Crece en los jardines y florece en mayo."]
+        assert plant_names_lost("Agrimony", src, dst) == []
 
 
 class TestShrunkenParagraphs:

@@ -283,6 +283,114 @@ def english_leaks(translated: list[str]) -> list[str]:
     return sorted(found)
 
 
+# Palabras del titulo que no identifican a la planta, sino que la califican.
+# "The Ordinary Small Centaury" solo aporta "Centaury": lo demas describe cual
+# de las centaureas es, y en espanol se traduce sin riesgo.
+_TITLE_QUALIFIERS = {
+    "the", "of", "or", "and", "a", "an",
+    "common", "ordinary", "great", "greater", "small", "lesser", "sweet",
+    "wild", "garden", "water", "prickly", "french", "english",
+    "black", "white", "red", "yellow", "blue", "green",
+    "tree", "herb", "wort", "ladies",
+}
+
+_TITLE_WORD = re.compile(r"[A-Za-z][A-Za-z’'-]{2,}")
+
+# Nombre compuesto capitalizado: "Dead Nettle", "Alder-tree", "Whortle-Bush",
+# "St. John's Wort". Es la senal mas fiable de nombre propio de planta en el
+# CUERPO del texto — las mayusculas sueltas daban un 63% de ruido (meses,
+# paises, pronombres a principio de frase).
+_COMPOUND_NAME = re.compile(r"\b[A-Z][a-z]{2,}(?:[- ][A-Z][a-z]{2,}|-[a-z]{3,})+\b")
+
+# El compuesto se traga la palabra anterior cuando la frase empieza por ella:
+# "The Red Bilberry", "Besides Amara Dulcis", "Although Gerrard".
+_LEADING_NOISE = re.compile(
+    r"^(The|This|That|These|Those|They|There|And|But|For|Nor|Yet|So|If|When|"
+    r"While|Being|Both|Some|Such|Since|Besides|Although|Though|After|Before|"
+    r"Our|Your|Their|His|Her|Its|New|Old|Saint|God|Lord|Doctor|Mistress|"
+    r"Blessed|West|East|North|South)\b[- ]*"
+)
+
+
+# Compuestos capitalizados que no son plantas y sobreviven al recorte.
+_NOT_PLANTS = {"Virgin", "Country", "Countries", "College", "Physician", "Author"}
+
+
+def _plant_candidate(name: str) -> str:
+    """Reduce un compuesto capitalizado al nucleo que identifica a la planta.
+
+    Dos recortes. El primero quita el arranque de frase que el patron se llevo
+    por delante: descartar la coincidencia entera perdia la planta, porque "The
+    Red Bilberry" se tiraba por empezar en "The" y Bilberry era justo el nombre
+    mal traducido.
+
+    El segundo quita los calificadores. "The Ordinary Small Centaury" identifica
+    por "Centaury"; que "ordinaria" y "pequeña" se traduzcan es correcto y
+    marcarlo era ruido. Lo mismo con "Red Bilberry": el defecto es Bilberry ->
+    "mora", no que "Red" sea "roja".
+    """
+    while True:
+        trimmed = _LEADING_NOISE.sub("", name)
+        if trimmed == name:
+            break
+        name = trimmed
+
+    # Se recorta por rebanado, no reconstruyendo: el separador original importa
+    # y "Alder-tree" no es "Alder tree".
+    while True:
+        head = re.match(r"([A-Za-z]+)[- ]+(?=[A-Za-z])", name)
+        if not head or head.group(1).lower() not in _TITLE_QUALIFIERS:
+            break
+        name = name[head.end() :]
+
+    if len(name) < 4 or name in _NOT_PLANTS:
+        return ""
+    return name
+
+
+def plant_names_lost(title: str, source: list[str], translated: list[str]) -> list[str]:
+    """Nombres de planta que no sobrevivieron a la traduccion.
+
+    La regla 4 los manda dejar en ingles: una planta mal traducida es una
+    planta equivocada, y la gente las usa. Nada lo verificaba.
+
+    Mira dos sitios, porque el titulo solo no basta. El capitulo "And
+    Whortle-Berries" no repite ese compuesto en el cuerpo, asi que por titulo
+    no se comprobaba NADA — mientras "Bilberry", la planta de la que trata,
+    se iba a "mora" las dos veces que aparece. Bilberry es Vaccinium
+    myrtillus y mora es Rubus: familias distintas, y esto lo lee gente que
+    luego recoge plantas.
+
+    Se comparan OCURRENCIAS, no presencia. Que el nombre sobreviva una vez de
+    siete no es que el capitulo este bien: es que esta mal seis veces.
+
+    OJO — esto NO entra en `suspicious_terms`, y no es un descuido. Parte de lo
+    que marca son traducciones correctas: "Burdock" -> "Bardana" y "Centaury"
+    -> "Centaurea" son los nombres castellanos inequivocos y se leen mejor que
+    el ingles. O sea que la regla 4 puede estar mal formulada —dejar en ingles
+    una planta con nombre castellano exacto no protege de nada— y hasta que eso
+    se decida, purgar por este criterio retraduciria un tercio del corpus
+    siguiendo una regla dudosa. Se informa, no se actua.
+    """
+    body = " ".join(source)
+    spanish = " ".join(translated)
+    lost: dict[str, None] = {}
+
+    for word in _TITLE_WORD.findall(title):
+        if word.lower() in _TITLE_QUALIFIERS:
+            continue
+        # Si el original no lo nombra, no hay nada que conservar.
+        if word in body and body.count(word) > spanish.count(word):
+            lost[word] = None
+
+    for match in _COMPOUND_NAME.findall(body):
+        name = _plant_candidate(match)
+        if name and body.count(name) > spanish.count(name):
+            lost[name] = None
+
+    return sorted(lost)
+
+
 def missing_section_marks(source: list[str], translated: list[str]) -> list[str]:
     """Marcas de sección del original que no aparecen en la traducción."""
     present = set(_SECTION_MARK.findall(" ".join(translated)))

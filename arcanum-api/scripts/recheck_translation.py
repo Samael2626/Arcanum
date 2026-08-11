@@ -39,7 +39,12 @@ if hasattr(sys.stdout, "reconfigure"):
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from translate_library import DATA_DIR, spanish_words, suspicious_terms  # noqa: E402
+from translate_library import (  # noqa: E402
+    DATA_DIR,
+    plant_names_lost,
+    spanish_words,
+    suspicious_terms,
+)
 
 # Umbral de wordfreq: 0 significa "no aparece NUNCA en un corpus grande de
 # espanol". Las palabras de epoca legitimas si aparecen (decoccion 2.17,
@@ -72,6 +77,29 @@ def evaluate(work: dict, done: dict) -> tuple[dict[str, list[str]], list[str]]:
         if defects:
             flagged[slug] = defects
     return flagged, mismatched
+
+
+def plant_report(work: dict, done: dict) -> list[tuple[str, str, list[str]]]:
+    """Capitulos de hierba que perdieron el nombre de su propia planta.
+
+    Informe, no criterio: ver `plant_names_lost`. Marca 25 de 77 hierbas y
+    parte son traducciones correctas ("Burdock" -> "Bardana"), asi que hasta
+    decidir si la regla 4 esta bien formulada esto no purga nada.
+    """
+    chapters = {c["slug"]: c for c in work["chapters"]}
+    out = []
+    for slug, translated in done["chapters"].items():
+        chapter = chapters.get(slug)
+        if not chapter or chapter.get("kind") != "herb":
+            continue
+        lost = plant_names_lost(
+            chapter["title"],
+            [p["text"] for p in chapter["paragraphs"]],
+            translated["paragraphs"],
+        )
+        if lost:
+            out.append((slug, chapter["title"], lost))
+    return sorted(out)
 
 
 def vocabulary_report(work: dict, done: dict) -> list[tuple[str, int, list[str]]]:
@@ -116,6 +144,9 @@ def main() -> None:
     parser.add_argument("work", help="slug de la obra, p.ej. culpeper-complete-herbal")
     parser.add_argument("--purge", action="store_true",
                         help="sacar del JSON lo que falle, para que se retraduzca")
+    parser.add_argument("--plantas", action="store_true",
+                        help="listar capitulos que perdieron el nombre de su "
+                             "planta (informe; nunca purga)")
     parser.add_argument("--vocabulario", action="store_true",
                         help="listar palabras inexistentes en espanol (ruidoso, "
                              "para revisar a ojo; nunca purga)")
@@ -136,6 +167,14 @@ def main() -> None:
     for slug in sorted(mismatched):
         chapter = done["chapters"][slug]
         print(f"  ! {slug:<34} descuadrado ({len(chapter['paragraphs'])} parrafos)")
+
+    if args.plantas:
+        rows = plant_report(work, done)
+        print(f"\nCapitulos que perdieron el nombre de su planta ({len(rows)}).")
+        print("Informe, no criterio: parte son traducciones correctas")
+        print("('Burdock' -> 'Bardana'). No purga nada.\n")
+        for slug, title, lost in rows:
+            print(f"  {slug:<34} {title:<38} falta: {', '.join(lost)}")
 
     if args.vocabulario:
         try:
