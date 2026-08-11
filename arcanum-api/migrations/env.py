@@ -20,7 +20,7 @@ if config.config_file_name is not None:
 # target_metadata = mymodel.Base.metadata
 from app.db.session import Base
 # Import all models to ensure they are registered with Base.metadata
-from app.models import user, refresh_token, natal_chart, grimoire_entry, tradition, materia_item, divination_session, oracle_conversation, credit_ledger, usage_operation, revenuecat_event  # noqa
+from app.models import user, refresh_token, natal_chart, grimoire_entry, tradition, materia_item, divination_session, oracle_conversation, credit_ledger, usage_operation, revenuecat_event, admin_credit_grant  # noqa
 
 target_metadata = Base.metadata
 

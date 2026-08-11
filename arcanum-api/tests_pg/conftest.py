@@ -33,6 +33,15 @@ def _guard(url: str) -> str:
     return url
 
 
+def _repo_head() -> str:
+    """Revision head del repositorio, para no fijar un numero a mano."""
+    from alembic.script import ScriptDirectory
+
+    from app.db.migrate import get_alembic_config
+
+    return ScriptDirectory.from_config(get_alembic_config(RAW_URL)).get_current_head()
+
+
 @pytest.fixture(scope="session")
 def engine():
     if RAW_URL is None:
@@ -40,8 +49,9 @@ def engine():
     eng = create_engine(_guard(RAW_URL), pool_pre_ping=True)
     with eng.connect() as c:
         revision = c.execute(text("SELECT version_num FROM alembic_version")).scalar()
-        if revision != "006":
-            pytest.skip(f"la base de pruebas esta en {revision}, se requiere 006")
+        head = _repo_head()
+        if revision != head:
+            pytest.skip(f"la base de pruebas esta en {revision}, se requiere {head}")
     yield eng
     eng.dispose()
 

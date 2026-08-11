@@ -11,6 +11,7 @@ from app.models.library import LibraryWork, LibraryChapter, LibraryParagraph
 from app.models.credit_ledger import CreditLedger
 from app.models.usage_operation import UsageOperation
 from app.models.revenuecat_event import RevenueCatEvent
+from app.models.admin_credit_grant import AdminCreditGrant
 
 __all__ = [
     "User",
@@ -29,4 +30,5 @@ __all__ = [
     "CreditLedger",
     "UsageOperation",
     "RevenueCatEvent",
+    "AdminCreditGrant",
 ]

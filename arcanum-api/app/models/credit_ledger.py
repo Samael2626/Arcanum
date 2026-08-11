@@ -22,7 +22,16 @@ class CreditLedger(Base):
     product_id = Column(String(80), nullable=True)
     usage_operation_id = Column(PGUUID(as_uuid=True), ForeignKey("usage_operations.id"), nullable=True, index=True)
     rc_event_id = Column(String(80), unique=True, nullable=True)
+    # Origen administrativo. FK propia y no rc_event_id: un credito regalado no
+    # es un evento de RevenueCat, y mezclarlos falsearia la auditoria de pagos.
+    admin_grant_id = Column(
+        PGUUID(as_uuid=True),
+        ForeignKey("admin_credit_grants.grant_id"),
+        nullable=True,
+        index=True,
+    )
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     user = relationship("User", back_populates="credit_ledger")
     usage_operation = relationship("UsageOperation", back_populates="ledger_entries")
+    admin_grant = relationship("AdminCreditGrant", back_populates="ledger_entries")
