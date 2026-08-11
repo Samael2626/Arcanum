@@ -45,7 +45,8 @@ class TarotService:
 
     def save_reading(self, *, user_id, spread_type: str, question: Optional[str],
                      cards: list[TarotCardInDeck], moon_phase: Optional[str] = None,
-                     planetary_hour: Optional[str] = None) -> TarotReadingResponse:
+                     planetary_hour: Optional[str] = None,
+                     commit: bool = True) -> TarotReadingResponse:
         cards_payload = [
             {"slug": c.slug, "position": c.position, "reversed": bool(c.reversed)}
             for c in cards
@@ -53,6 +54,7 @@ class TarotService:
         entity = self._reading_repo.create(
             user_id=user_id, spread_type=spread_type, question=question,
             cards=cards_payload, moon_phase=moon_phase, planetary_hour=planetary_hour,
+            commit=commit,
         )
         return TarotReadingResponse(
             id=entity.id,
