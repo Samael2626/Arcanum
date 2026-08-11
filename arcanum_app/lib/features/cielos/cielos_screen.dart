@@ -8,8 +8,6 @@ import '../../core/api/oracle_error.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/content/glossary.dart';
 import '../../core/content/transit_reading.dart';
-import '../../core/monetization/monetization_service.dart';
-import '../../core/monetization/quota_service.dart';
 import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
@@ -465,6 +463,7 @@ class _AspectRowState extends ConsumerState<_AspectRow> {
   bool _asking = false;
   String? _oracleReply;
   String? _oracleError;
+  String? _idempotencyKey;
 
   /// Abre en Oráculo → Aprender la carta del planeta que transita. El planeta
   /// activo del tránsito tiene su Arcano Mayor (Golden Dawn): otro hilo entre
@@ -477,93 +476,44 @@ class _AspectRowState extends ConsumerState<_AspectRow> {
   /// Pide al oráculo la lectura personalizada de ESTE tránsito.
   /// El servidor ya inyecta la carta natal: solo hay que nombrar el tránsito.
   Future<void> _askOracle() async {
-    final tier = ref.read(subscriptionProvider).value?.tier ?? SubscriptionTier.free;
-    final quota = ref.read(quotaServiceProvider);
-    final canInvestigate = await quota.canPerform('cielos', tier);
-    if (!canInvestigate) {
-      final remaining = await quota.remaining('cielos', tier);
-      if (remaining <= 0 && mounted) {
-        _showQuotaExceeded();
-      }
-      return;
-    }
-
-    final a = widget.aspect;
+    final key = _idempotencyKey ??= IdempotencyKey.create();
+    final aspect = widget.aspect;
     setState(() {
       _asking = true;
       _oracleError = null;
       _oracleReply = null;
     });
     try {
-      final res = await ref
-          .read(arcanumApiProvider)
-          .oracleIa(
-            question: transitOracleQuestion(
-              transit: a['transit'] as String,
-              natal: a['natal'] as String,
-              aspect: a['aspect'] as String,
-            ),
-          );
-      await quota.recordUsage('cielos');
+      final response = await ref.read(arcanumApiProvider).oracleIa(
+        question: transitOracleQuestion(
+          transit: aspect['transit'] as String,
+          natal: aspect['natal'] as String,
+          aspect: aspect['aspect'] as String,
+        ),
+        idempotencyKey: key,
+      );
       if (!mounted) return;
-      setState(() => _oracleReply = assistantReply(res));
-    } catch (e) {
+      _idempotencyKey = null;
+      setState(() => _oracleReply = assistantReply(response));
+    } catch (error) {
+      if (isCreditsRequired(error)) await _openCreditsPaywall();
       if (!mounted) return;
-      setState(() => _oracleError = oracleErrorMessage(e));
+      setState(() => _oracleError = isCreditsRequired(error) ? 'Saldo insuficiente. Puedes comprar créditos.' : oracleErrorMessage(error));
     } finally {
       if (mounted) setState(() => _asking = false);
     }
   }
 
-  void _showQuotaExceeded() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: ArcanumColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              '✦',
-              style: TextStyle(fontSize: 36, color: ArcanumColors.gold),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Cupo diario agotado',
-              style: ArcanumText.heading(22),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Has usado todas tus investigaciones de cielos de hoy.',
-              textAlign: TextAlign.center,
-              style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
-            ),
-            const SizedBox(height: 20),
-            GoldButton(
-              label: 'Desbloquear con Premium',
-              onPressed: () {
-                Navigator.of(ctx).pop();
-                context.push('/paywall');
-              },
-            ),
-            const SizedBox(height: 10),
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(
-                'Volver',
-                style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  Future<void> _openCreditsPaywall() async {
+    try {
+      final balance = await ref.read(arcanumApiProvider).creditsBalance();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saldo actual: ${balance['balance'] ?? 0} créditos.')));
+      context.push('/paywall');
+    } catch (error) {
+      if (mounted) setState(() => _oracleError = 'No se pudo actualizar tu saldo. Inténtalo de nuevo.');
+    }
   }
-
   static const _toneColor = {
     AspectTone.fusion: ArcanumColors.aspectUnion,
     AspectTone.armonico: ArcanumColors.aspectHarmony,

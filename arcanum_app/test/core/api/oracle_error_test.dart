@@ -28,14 +28,43 @@ void main() {
     test('cae al mensaje canónico si no hay detail', () {
       expect(
         oracleErrorMessage(_http(429)),
-        'Cupo diario del oráculo alcanzado.',
+        'El oráculo está saturado. Intenta de nuevo en unos minutos.',
       );
       expect(oracleErrorMessage(_http(400)), 'Falta pregunta o tirada.');
       expect(oracleErrorMessage(_http(404)), 'Tirada no encontrada.');
-      expect(
-        oracleErrorMessage(_http(422)),
-        'Falta tu carta natal o la tirada no es válida.',
-      );
+      expect(oracleErrorMessage(_http(422)), validationFallbackMessage);
+    });
+
+    test('el 422 de dominio nombra la carta natal, sin rutas de la API', () {
+      final msg = oracleErrorMessage(_http(422, data: {
+        'detail': 'Calcula primero tu carta natal con POST /astral/natal-chart.',
+      }));
+      expect(msg, 'Falta tu carta natal. Calcúlala antes de consultar al oráculo.');
+      expect(msg, isNot(contains('/astral')));
+      expect(msg, isNot(contains('POST')));
+    });
+
+    test('el 422 de validacion con detail lista no habla de carta natal', () {
+      // Lo que devuelve FastAPI cuando falta la cabecera Idempotency-Key.
+      final msg = oracleErrorMessage(_http(422, data: {
+        'detail': [
+          {
+            'type': 'missing',
+            'loc': ['header', 'Idempotency-Key'],
+            'msg': 'Field required',
+            'input': null,
+            'url': 'https://errors.pydantic.dev/2.10/v/missing',
+          }
+        ],
+      }));
+      expect(msg, validationFallbackMessage);
+      expect(msg.toLowerCase(), isNot(contains('carta natal')));
+      expect(msg, isNot(contains('Idempotency-Key')));
+      expect(msg, isNot(contains('header')));
+      expect(msg, isNot(contains('missing')));
+      expect(msg, isNot(contains('pydantic')));
+      expect(msg, isNot(contains('DioException')));
+      expect(msg, isNot(contains('422')));
     });
 
     test('el 401 ignora el detail: el usuario debe reautenticarse', () {
@@ -56,10 +85,49 @@ void main() {
       );
     });
 
-    test('un fallo desconocido se muestra, no se esconde', () {
-      final msg = oracleErrorMessage(StateError('socket cerrado'));
-      expect(msg, startsWith('La IA ritual no respondió.'));
-      expect(msg, contains('socket cerrado'));
+    test('el 500 da mensaje humano y no filtra nada tecnico', () {
+      final msg = oracleErrorMessage(
+        _http(500, data: {'detail': "TypeError: build_oracle_context() missing 1 required positional argument: 'db'"}),
+      );
+      expect(
+        msg,
+        'El oráculo tuvo un problema temporal. Intenta de nuevo más tarde.',
+      );
+      expect(msg, isNot(contains('DioException')));
+      expect(msg, isNot(contains('500')));
+      expect(msg, isNot(contains('RequestOptions')));
+      expect(msg, isNot(contains('TypeError')));
+      expect(msg, isNot(contains('/oracle/ia')));
+    });
+
+    test('cualquier 5xx sin caso propio cae al mensaje temporal', () {
+      for (final status in [501, 502, 504, 599]) {
+        final msg = oracleErrorMessage(_http(status));
+        expect(
+          msg,
+          'El oráculo tuvo un problema temporal. Intenta de nuevo más tarde.',
+        );
+        expect(msg, isNot(contains('$status')));
+      }
+    });
+
+    test('un fallo desconocido no expone el objeto de error', () {
+      final msg = oracleErrorMessage(StateError('socket cerrado en /oracle/ia'));
+      expect(msg, 'La IA ritual no respondió. Intenta de nuevo.');
+      expect(msg, isNot(contains('socket cerrado')));
+      expect(msg, isNot(contains('StateError')));
+    });
+
+    test('un DioException sin response tampoco filtra detalles', () {
+      final msg = oracleErrorMessage(
+        DioException(
+          requestOptions: RequestOptions(path: '/oracle/ia'),
+          type: DioExceptionType.connectionTimeout,
+        ),
+      );
+      expect(msg, 'La IA ritual no respondió. Intenta de nuevo.');
+      expect(msg, isNot(contains('DioException')));
+      expect(msg, isNot(contains('RequestOptions')));
     });
   });
 
@@ -91,5 +159,17 @@ void main() {
     test('tolera una conversación sin campo messages', () {
       expect(assistantReply(const {}), '');
     });
+  });
+
+  test('el 402 lee detail objeto', () {
+    final error = DioException(
+      requestOptions: RequestOptions(path: '/oracle/ia'),
+      response: Response(
+        requestOptions: RequestOptions(path: '/oracle/ia'),
+        statusCode: 402,
+        data: {'detail': {'message': 'Compra créditos para continuar.'}},
+      ),
+    );
+    expect(oracleErrorMessage(error), 'Compra créditos para continuar.');
   });
 }

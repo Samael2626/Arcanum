@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/api/oracle_error.dart';
 import '../../../core/api/arcanum_api.dart';
@@ -411,37 +412,42 @@ class _PassageState extends ConsumerState<_Passage> {
   bool _asking = false;
   String? _reply;
   String? _error;
+  String? _idempotencyKey;
 
   Future<void> _explain() async {
+    final key = _idempotencyKey ??= IdempotencyKey.create();
     setState(() {
       _asking = true;
       _error = null;
       _reply = null;
     });
     try {
-      // Se manda SIEMPRE el original, no la traducción: es el texto que el
-      // autor escribió, y pedir sobre una traducción automática sería explicar
-      // el eco en vez de la voz.
-      final response = await ref
-          .read(arcanumApiProvider)
-          .oracleIa(
-            question:
-                'Explícame este pasaje de "${widget.workTitle}", de la entrada '
-                '"${widget.chapterTitle}":\n\n'
-                '"${widget.paragraph.textOriginal}"\n\n'
-                'Dime qué significa en su contexto histórico y qué utilidad '
-                'tiene hoy en la práctica.',
-          );
+      final response = await ref.read(arcanumApiProvider).oracleIa(
+        question: 'Explícame este pasaje de "${widget.workTitle}", de la entrada "${widget.chapterTitle}":\n\n"${widget.paragraph.textOriginal}"\n\nDime qué significa en su contexto histórico y qué utilidad tiene hoy en la práctica.',
+        idempotencyKey: key,
+      );
       if (!mounted) return;
+      _idempotencyKey = null;
       setState(() => _reply = assistantReply(response));
     } catch (error) {
+      if (isCreditsRequired(error)) await _openCreditsPaywall();
       if (!mounted) return;
-      setState(() => _error = oracleErrorMessage(error));
+      setState(() => _error = isCreditsRequired(error) ? 'Saldo insuficiente. Puedes comprar créditos.' : oracleErrorMessage(error));
     } finally {
       if (mounted) setState(() => _asking = false);
     }
   }
 
+  Future<void> _openCreditsPaywall() async {
+    try {
+      final balance = await ref.read(arcanumApiProvider).creditsBalance();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saldo actual: ${balance['balance'] ?? 0} créditos.')));
+      context.push('/paywall');
+    } catch (error) {
+      if (mounted) setState(() => _error = 'No se pudo actualizar tu saldo. Inténtalo de nuevo.');
+    }
+  }
   @override
   Widget build(BuildContext context) {
     final paragraph = widget.paragraph;

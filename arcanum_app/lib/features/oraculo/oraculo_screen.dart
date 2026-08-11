@@ -5,8 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../core/api/arcanum_api.dart';
 import '../../core/api/oracle_error.dart';
 import '../../core/auth/auth_controller.dart';
-import '../../core/monetization/monetization_service.dart';
-import '../../core/monetization/quota_service.dart';
 import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
@@ -175,6 +173,8 @@ class _OracleViewState extends ConsumerState<_OracleView> {
   bool _iaLoading = false;
   String? _iaError;
   String? _iaReply;
+  String? _drawIdempotencyKey;
+  String? _oracleIdempotencyKey;
 
   // Presentación (no toca datos): fuerza replay de animaciones por tirada
   // y guarda cuál carta corona el viewport (solo una activa a la vez).
@@ -244,18 +244,7 @@ class _OracleViewState extends ConsumerState<_OracleView> {
   }
 
   Future<void> _draw() async {
-    // Verificar cupo diario antes de tirar.
-    final tier = ref.read(subscriptionProvider).value?.tier ?? SubscriptionTier.free;
-    final quota = ref.read(quotaServiceProvider);
-    final canDraw = await quota.canPerform('tarot', tier);
-    if (!canDraw) {
-      final remaining = await quota.remaining('tarot', tier);
-      if (remaining <= 0 && mounted) {
-        _showQuotaExceeded('tiradas de tarot');
-      }
-      return;
-    }
-
+    final key = _drawIdempotencyKey ??= IdempotencyKey.create();
     setState(() {
       _drawing = true;
       _drawError = null;
@@ -263,10 +252,10 @@ class _OracleViewState extends ConsumerState<_OracleView> {
       _iaReply = null;
     });
     try {
-      final data = await _api.tarotDraw(_spread);
-      final cards = ((data['cards_drawn'] as Map)['cards'] as List)
-          .cast<Map<String, dynamic>>();
-      await quota.recordUsage('tarot');
+      final data = await _api.tarotDraw(_spread, idempotencyKey: key);
+      final cards = ((data['cards_drawn'] as Map)['cards'] as List).cast<Map<String, dynamic>>();
+      if (!mounted) return;
+      _drawIdempotencyKey = null;
       setState(() {
         _cards = cards;
         _sessionId = data['id'] as String?;
@@ -275,103 +264,58 @@ class _OracleViewState extends ConsumerState<_OracleView> {
         _cardKeys = List.generate(cards.length, (_) => GlobalKey());
         _showSticky = false;
       });
-    } catch (e) {
-      setState(() {
-        _cards = null;
-        _sessionId = null;
-        _drawError = 'No se pudo consultar el oráculo. $e';
-      });
+    } catch (error) {
+      if (isCreditsRequired(error)) await _openCreditsPaywall();
+      if (mounted) {
+        setState(() {
+          _cards = null;
+          _sessionId = null;
+          _drawError = isCreditsRequired(error) ? 'Saldo insuficiente. Puedes comprar créditos.' : oracleErrorMessage(error);
+        });
+      }
     } finally {
-      setState(() => _drawing = false);
+      if (mounted) setState(() => _drawing = false);
     }
   }
 
   Future<void> _askIa() async {
     final sessionId = _sessionId;
     if (sessionId == null) return;
-
-    // Verificar cupo diario de oracle.
-    final tier = ref.read(subscriptionProvider).value?.tier ?? SubscriptionTier.free;
-    final quota = ref.read(quotaServiceProvider);
-    final canRead = await quota.canPerform('oracle', tier);
-    if (!canRead) {
-      final remaining = await quota.remaining('oracle', tier);
-      if (remaining <= 0 && mounted) {
-        _showQuotaExceeded('lecturas del oráculo');
-      }
-      return;
-    }
-
-    final q = _question.text.trim();
+    final key = _oracleIdempotencyKey ??= IdempotencyKey.create();
+    final question = _question.text.trim();
     setState(() {
       _iaLoading = true;
       _iaError = null;
       _iaReply = null;
     });
     try {
-      final res = await _api.oracleIa(
-        question: q.isEmpty ? null : q,
+      final response = await _api.oracleIa(
+        question: question.isEmpty ? null : question,
         divinationSessionId: sessionId,
+        idempotencyKey: key,
       );
-      await quota.recordUsage('oracle');
-      setState(() => _iaReply = assistantReply(res));
-    } catch (e) {
-      setState(() => _iaError = oracleErrorMessage(e));
+      if (!mounted) return;
+      _oracleIdempotencyKey = null;
+      setState(() => _iaReply = assistantReply(response));
+    } catch (error) {
+      if (isCreditsRequired(error)) await _openCreditsPaywall();
+      if (mounted) setState(() => _iaError = isCreditsRequired(error) ? 'Saldo insuficiente. Puedes comprar créditos.' : oracleErrorMessage(error));
     } finally {
-      setState(() => _iaLoading = false);
+      if (mounted) setState(() => _iaLoading = false);
     }
   }
 
-  void _showQuotaExceeded(String feature) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: ArcanumColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              '✦',
-              style: TextStyle(fontSize: 36, color: ArcanumColors.gold),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Cupo diario agotado',
-              style: ArcanumText.heading(22),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Has usado todas tus $feature de hoy.',
-              textAlign: TextAlign.center,
-              style: ArcanumText.body(
-                15,
-                color: ArcanumColors.ivoryMuted,
-              ),
-            ),
-            const SizedBox(height: 20),
-            GoldButton(
-              label: 'Desbloquear con Premium',
-              onPressed: () {
-                Navigator.of(ctx).pop();
-                context.push('/paywall');
-              },
-            ),
-            const SizedBox(height: 10),
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(
-                'Volver',
-                style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  Future<void> _openCreditsPaywall() async {
+    try {
+      final balance = await _api.creditsBalance();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Saldo actual: ${balance['balance'] ?? 0} créditos.')),
+      );
+      context.push('/paywall');
+    } catch (error) {
+      if (mounted) setState(() => _iaError = 'No se pudo actualizar tu saldo. Inténtalo de nuevo.');
+    }
   }
 
   @override
@@ -451,7 +395,11 @@ class _OracleViewState extends ConsumerState<_OracleView> {
           onPressed: _draw,
         ),
         const SizedBox(height: 8),
-        _QuotaIndicator(),
+        Text(
+          'Los límites y créditos se actualizan desde el servidor.',
+          textAlign: TextAlign.center,
+          style: ArcanumText.body(12, color: ArcanumColors.ivoryMuted.withValues(alpha: 0.7)),
+        ),
         if (_drawError != null) ...[
           const SizedBox(height: 14),
           Text(
@@ -595,35 +543,6 @@ class _OracleViewState extends ConsumerState<_OracleView> {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Indicador sutil de cupo diario: muestra cuántas tiradas/lecturas quedan.
-class _QuotaIndicator extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final tier = ref.watch(subscriptionProvider).value?.tier ?? SubscriptionTier.free;
-    final quota = ref.watch(quotaServiceProvider);
-
-    return FutureBuilder<List<int>>(
-      future: Future.wait([
-        quota.remaining('tarot', tier),
-        quota.remaining('oracle', tier),
-      ]),
-      builder: (context, snap) {
-        if (!snap.hasData) return const SizedBox.shrink();
-        final tarotLeft = snap.data![0];
-        final oracleLeft = snap.data![1];
-        return Text(
-          'Tiradas: $tarotLeft  ·  Oráculo: $oracleLeft',
-          textAlign: TextAlign.center,
-          style: ArcanumText.body(
-            12,
-            color: ArcanumColors.ivoryMuted.withValues(alpha: 0.7),
-          ),
-        );
-      },
     );
   }
 }

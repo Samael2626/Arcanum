@@ -3,9 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api/arcanum_api.dart';
+import '../../core/api/oracle_error.dart';
 import '../../core/auth/auth_controller.dart';
-import '../../core/monetization/monetization_service.dart';
-import '../../core/monetization/quota_service.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/arcanum_card.dart';
@@ -67,6 +66,7 @@ class _TarotViewState extends ConsumerState<_TarotView> {
   bool _busy = false;
   String? _error;
   List<Map<String, dynamic>>? _resolved;
+  String? _idempotencyKey;
 
   @override
   void dispose() {
@@ -75,89 +75,42 @@ class _TarotViewState extends ConsumerState<_TarotView> {
   }
 
   Future<void> _draw() async {
-    final tier = ref.read(subscriptionProvider).value?.tier ?? SubscriptionTier.free;
-    final quota = ref.read(quotaServiceProvider);
-    final canDraw = await quota.canPerform('tarot', tier);
-    if (!canDraw) {
-      final remaining = await quota.remaining('tarot', tier);
-      if (remaining <= 0 && mounted) {
-        _showQuotaExceeded();
-      }
-      return;
-    }
-
+    final key = _idempotencyKey ??= IdempotencyKey.create();
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
-      final q = _question.text.trim().isEmpty ? null : _question.text.trim();
+      final question = _question.text.trim().isEmpty ? null : _question.text.trim();
       final data = _spread == 'one_card'
-          ? await _api.tarotDrawOne(question: q)
-          : await _api.tarotSpread(spreadType: _spread, question: q);
-      await quota.recordUsage('tarot');
-      final resolved = ((data['resolved'] as List?) ?? const [])
-          .cast<Map<String, dynamic>>();
-      setState(() => _resolved = resolved);
-    } catch (e) {
-      setState(() {
-        _resolved = null;
-        _error = 'No se pudo consultar el tarot. $e';
-      });
+          ? await _api.tarotDrawOne(question: question, idempotencyKey: key)
+          : await _api.tarotSpread(spreadType: _spread, question: question, idempotencyKey: key);
+      if (!mounted) return;
+      _idempotencyKey = null;
+      setState(() => _resolved = ((data['resolved'] as List?) ?? const []).cast<Map<String, dynamic>>());
+    } catch (error) {
+      if (isCreditsRequired(error)) await _openCreditsPaywall();
+      if (mounted) {
+        setState(() {
+          _resolved = null;
+          _error = isCreditsRequired(error) ? 'Saldo insuficiente. Puedes comprar créditos.' : oracleErrorMessage(error);
+        });
+      }
     } finally {
-      setState(() => _busy = false);
+      if (mounted) setState(() => _busy = false);
     }
   }
 
-  void _showQuotaExceeded() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: ArcanumColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              '✦',
-              style: TextStyle(fontSize: 36, color: ArcanumColors.gold),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Cupo diario agotado',
-              style: ArcanumText.heading(22),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Has usado todas tus tiradas de tarot de hoy.',
-              textAlign: TextAlign.center,
-              style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
-            ),
-            const SizedBox(height: 20),
-            GoldButton(
-              label: 'Desbloquear con Premium',
-              onPressed: () {
-                Navigator.of(ctx).pop();
-                context.push('/paywall');
-              },
-            ),
-            const SizedBox(height: 10),
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(
-                'Volver',
-                style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  Future<void> _openCreditsPaywall() async {
+    try {
+      final balance = await _api.creditsBalance();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saldo actual: ${balance['balance'] ?? 0} créditos.')));
+      context.push('/paywall');
+    } catch (error) {
+      if (mounted) setState(() => _error = 'No se pudo actualizar tu saldo. Inténtalo de nuevo.');
+    }
   }
-
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -168,11 +121,12 @@ class _TarotViewState extends ConsumerState<_TarotView> {
           children: [
             const ArcanumHeader(subtitle: 'El tarot'),
             const SizedBox(height: 10),
-            const Center(child: InfoDot('tarot_spread')),
+            const Center(child: InfoDot('tarot')),
             const SizedBox(height: 20),
             // Selector de spread.
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Wrap(
+              alignment: WrapAlignment.center,
+              runSpacing: 8,
               children: _spreads.map((s) {
                 final sel = s.$1 == _spread;
                 return Padding(
@@ -234,7 +188,7 @@ class _TarotViewState extends ConsumerState<_TarotView> {
               onPressed: _draw,
             ),
             const SizedBox(height: 8),
-            _QuotaIndicator(),
+            Text('Los límites y créditos se actualizan desde el servidor.', textAlign: TextAlign.center, style: ArcanumText.body(12, color: ArcanumColors.ivoryMuted.withValues(alpha: 0.7))),
             if (_error != null) ...[
               const SizedBox(height: 14),
               Text(
@@ -335,30 +289,6 @@ class _TarotViewState extends ConsumerState<_TarotView> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _QuotaIndicator extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final tier = ref.watch(subscriptionProvider).value?.tier ?? SubscriptionTier.free;
-    final quota = ref.watch(quotaServiceProvider);
-
-    return FutureBuilder<int>(
-      future: quota.remaining('tarot', tier),
-      builder: (context, snap) {
-        if (!snap.hasData) return const SizedBox.shrink();
-        final left = snap.data!;
-        return Text(
-          'Tiradas restantes hoy: $left',
-          textAlign: TextAlign.center,
-          style: ArcanumText.body(
-            12,
-            color: ArcanumColors.ivoryMuted.withValues(alpha: 0.7),
-          ),
-        );
-      },
     );
   }
 }
