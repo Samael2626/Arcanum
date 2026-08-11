@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, String, Boolean, text
+from sqlalchemy import Column, DateTime, String, Boolean, Integer, text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -21,6 +21,7 @@ class User(Base):
     subscription_tier = Column(String(20), nullable=False, server_default=text("'free'"))
     subscription_expires_at = Column(DateTime(timezone=True), nullable=True)
     revenuecat_customer_id = Column(String(100), nullable=True)
+    credits_balance = Column(Integer, nullable=False, server_default=text("0"))
     preferred_tradition = Column(String(50), nullable=True)
     preferred_house_system = Column(String(30), nullable=False, server_default=text("'placidus'"))
     onboarding_completed = Column(Boolean, nullable=False, server_default=text("false"))
@@ -34,3 +35,4 @@ class User(Base):
     divination_sessions = relationship("DivinationSession", back_populates="user", cascade="all, delete-orphan")
     oracle_conversations = relationship("OracleConversation", back_populates="user", cascade="all, delete-orphan")
     tarot_readings = relationship("TarotReading", back_populates="user", cascade="all, delete-orphan")
+    credit_ledger = relationship("CreditLedger", back_populates="user", cascade="all, delete-orphan")

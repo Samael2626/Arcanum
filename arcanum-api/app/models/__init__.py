@@ -8,6 +8,9 @@ from app.models.divination_session import DivinationSession
 from app.models.oracle_conversation import OracleConversation
 from app.models.tarot import TarotCard, TarotReading
 from app.models.library import LibraryWork, LibraryChapter, LibraryParagraph
+from app.models.credit_ledger import CreditLedger
+from app.models.usage_operation import UsageOperation
+from app.models.revenuecat_event import RevenueCatEvent
 
 __all__ = [
     "User",
@@ -23,4 +26,7 @@ __all__ = [
     "LibraryChapter",
     "LibraryParagraph",
     "TarotReading",
+    "CreditLedger",
+    "UsageOperation",
+    "RevenueCatEvent",
 ]
