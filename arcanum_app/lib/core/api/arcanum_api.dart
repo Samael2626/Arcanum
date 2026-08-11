@@ -1,12 +1,42 @@
+import 'dart:math';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/auth_controller.dart';
 
+/// Clave de idempotencia para las rutas que cobran.
+///
+/// La genera el cliente, no el servidor: solo el cliente sabe que un reintento
+/// tras un timeout es el MISMO intento y no una consulta nueva. Un UUIDv4 con
+/// `Random.secure()` para que dos usuarios no colisionen jamás.
+class IdempotencyKey {
+  static final Random _random = Random.secure();
+
+  static String create() {
+    final bytes = List<int>.generate(16, (_) => _random.nextInt(256));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    final hex = bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
+    return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}'
+        '-${hex.substring(16, 20)}-${hex.substring(20)}';
+  }
+}
+
+/// El backend responde 402 cuando se agotan cuota y créditos: es la señal para
+/// abrir el paywall, no un error que mostrar tal cual.
+bool isCreditsRequired(Object error) =>
+    error is DioException && error.response?.statusCode == 402;
+
 /// Cliente del backend Arcanum sobre Dio (auth vía interceptor).
 class ArcanumApi {
   ArcanumApi(this._dio);
   final Dio _dio;
+
+  /// Cabecera obligatoria en las cuatro rutas que cobran. Si la pantalla no
+  /// pasa clave se genera una nueva: nunca se manda la petición sin ella.
+  Options _idempotentOptions(String? key) =>
+      Options(headers: {'Idempotency-Key': key ?? IdempotencyKey.create()});
 
   Future<Map<String, dynamic>> today({
     double lat = 4.71,
@@ -136,10 +166,11 @@ class ArcanumApi {
 
   /// Tira de tarot. spread: 'three_card' | 'celtic_cross'. Requiere auth.
   /// Devuelve la sesión guardada (cartas en data['cards_drawn']['cards']).
-  Future<Map<String, dynamic>> tarotDraw(String spread) async {
+  Future<Map<String, dynamic>> tarotDraw(String spread, {String? idempotencyKey}) async {
     final res = await _dio.post(
       '/oracle/tarot/draw',
       queryParameters: {'spread_type': spread},
+      options: _idempotentOptions(idempotencyKey),
     );
     return res.data as Map<String, dynamic>;
   }
@@ -152,6 +183,7 @@ class ArcanumApi {
   Future<Map<String, dynamic>> oracleIa({
     String? question,
     String? divinationSessionId,
+    String? idempotencyKey,
   }) async {
     final q = question?.trim();
     final res = await _dio.post(
@@ -160,6 +192,7 @@ class ArcanumApi {
         if (q != null && q.isNotEmpty) 'question': q,
         'divination_session_id': ?divinationSessionId,
       },
+      options: _idempotentOptions(idempotencyKey),
     );
     return res.data as Map<String, dynamic>;
   }
@@ -186,10 +219,14 @@ class ArcanumApi {
 
   /// Sorteo de una carta. Requiere auth.
   /// La pregunta se envía en texto plano (Pydantic del lado servidor la trunca a 1000 chars).
-  Future<Map<String, dynamic>> tarotDrawOne({String? question}) async {
+  Future<Map<String, dynamic>> tarotDrawOne({
+    String? question,
+    String? idempotencyKey,
+  }) async {
     final res = await _dio.post(
       '/tarot/draw-one',
       data: {'question': ?question},
+      options: _idempotentOptions(idempotencyKey),
     );
     return res.data as Map<String, dynamic>;
   }
@@ -198,11 +235,20 @@ class ArcanumApi {
   Future<Map<String, dynamic>> tarotSpread({
     required String spreadType,
     String? question,
+    String? idempotencyKey,
   }) async {
     final res = await _dio.post(
       '/tarot/spread',
       data: {'spread_type': spreadType, 'question': ?question},
+      options: _idempotentOptions(idempotencyKey),
     );
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Saldo de créditos del usuario. Solo lectura: la app lo consulta al abrir
+  /// el paywall y después de un 402.
+  Future<Map<String, dynamic>> creditsBalance() async {
+    final res = await _dio.get('/credits/balance');
     return res.data as Map<String, dynamic>;
   }
 
