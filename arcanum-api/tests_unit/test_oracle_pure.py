@@ -141,8 +141,16 @@ def test_contexto_astral_se_cachea_durante_la_misma_ventana(monkeypatch):
         chart_data={"planets": [], "aspects": []},
     )
 
-    first = build_oracle_context(user, chart, None)
-    second = build_oracle_context(user, chart, None)
+    first = build_oracle_context(user, chart)
+    second = build_oracle_context(user, chart)
 
     assert second == first
     assert calls == {"transits": 1, "moon": 1, "hour": 1}
+
+
+def test_contexto_astral_recibe_dos_argumentos():
+    """Regresion del 500 en produccion: el router llama con (user, natal_chart)
+    y la firma exigia un tercer argumento `db` que la funcion nunca usaba."""
+    import inspect
+
+    assert list(inspect.signature(build_oracle_context).parameters) == ["user", "natal_chart"]

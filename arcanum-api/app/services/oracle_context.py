@@ -90,13 +90,15 @@ def _resumen_transitos(natal_planets: list[dict], now: datetime) -> str:
     return "Tránsitos actuales a la natal: " + txt + "."
 
 
-def build_oracle_context(user: User, natal_chart: NatalChart, db) -> str:
+def build_oracle_context(user: User, natal_chart: NatalChart) -> str:
     """Construye el contexto astral del consultante como string en español.
+
+    No toca base de datos: todo sale de `user`, de `natal_chart.chart_data` y
+    de los motores astrales en memoria. Por eso la firma no recibe sesion.
 
     Args:
         user: usuario autenticado (datos de nacimiento, tier).
         natal_chart: carta natal cacheada (NatalChart.chart_data JSONB).
-        db: sesión SQLAlchemy (reservada para extensiones; no se usa aún).
 
     Returns:
         Resumen compacto y legible del contexto astral, listo para el prompt.

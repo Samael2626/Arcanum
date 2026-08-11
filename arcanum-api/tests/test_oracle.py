@@ -1,5 +1,6 @@
 """Tests del Oráculo IA: constructor de contexto y endpoint POST /ia."""
 from datetime import datetime, timezone
+from uuid import uuid4
 
 from app.models.natal_chart import NatalChart
 from app.models.user import User
@@ -18,7 +19,7 @@ def test_build_oracle_context_menciona_astros():
     natal_chart = NatalChart(chart_data=chart_data, house_system="placidus",
                              calculated_at=datetime.now(timezone.utc))
 
-    ctx = build_oracle_context(user, natal_chart, db=None)
+    ctx = build_oracle_context(user, natal_chart)
 
     assert isinstance(ctx, str) and len(ctx) > 0
     low = ctx.lower()
@@ -36,7 +37,7 @@ def test_build_oracle_context_fallback_sin_coordenadas():
     natal_chart = NatalChart(chart_data=chart_data, house_system="placidus",
                              calculated_at=datetime.now(timezone.utc))
 
-    ctx = build_oracle_context(user, natal_chart, db=None)
+    ctx = build_oracle_context(user, natal_chart)
     assert "hora planetaria" in ctx.lower()
 
 
@@ -47,6 +48,16 @@ def _auth(client, payload):
     tok = client.post("/auth/login", data={"username": payload["email"],
                                            "password": payload["password"]}).json()
     return {"Authorization": f"Bearer {tok['access_token']}"}
+
+
+def _ia_headers(auth):
+    """Cabeceras para POST /ia, con clave de idempotencia nueva.
+
+    /ia la exige: gasta cuota y llama al modelo, asi que un reintento sin clave
+    se cobraria dos veces. Cada llamada lleva la suya — reutilizarla entre tests
+    haria que el segundo recibiese la respuesta cacheada del primero.
+    """
+    return {**auth, "Idempotency-Key": str(uuid4())}
 
 
 _BIRTH_USER = {
@@ -65,8 +76,10 @@ def test_ia_sin_carta_natal_devuelve_422(client):
     """POST /ia sin carta natal calculada -> 422 con mensaje de carta natal."""
     headers = _auth(client, _BIRTH_USER)
     resp = client.post("/oracle/ia", json={"question": "¿Qué me dice el cielo hoy?"},
-                       headers=headers)
+                       headers=_ia_headers(headers))
     assert resp.status_code == 422
+    # Se comprueba el mensaje, no solo el codigo: un 422 de validacion de FastAPI
+    # trae `detail` como lista y colaria como si fuese el fallo de carta natal.
     assert "carta natal" in resp.json()["detail"].lower()
 
 
@@ -79,7 +92,7 @@ def test_ia_con_carta_devuelve_conversacion(client):
     assert client.post("/astral/natal-chart", headers=headers).status_code == 201
 
     resp = client.post("/oracle/ia", json={"question": "¿Qué energía rige mi día?"},
-                       headers=headers)
+                       headers=_ia_headers(headers))
     assert resp.status_code == 200
     data = resp.json()
     roles = [m["role"] for m in data["messages"]]
