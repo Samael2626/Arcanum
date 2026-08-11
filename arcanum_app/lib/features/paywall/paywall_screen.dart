@@ -58,7 +58,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 // ── Tier 1: Gratis ──
                 _TierCard(
                   title: 'Explorador',
-                  subtitle: 'Siempre免费',
+                  subtitle: 'Siempre gratis',
                   price: '',
                   features: const [
                     'Carta natal y tránsitos',
@@ -88,6 +88,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   accent: ArcanumColors.goldMuted,
                   selected: false,
                   onTap: _showConsumablesSheet,
+                  ctaLabel: 'Ver créditos y packs',
                 ),
                 const SizedBox(height: 14),
 
@@ -275,6 +276,11 @@ class _TierCard extends StatelessWidget {
   final VoidCallback onTap;
   final String? badge;
 
+  /// Texto del boton cuando el automatico no describe lo que pasa al tocarlo.
+  /// Sin esto, un tier sin precio anuncia "Continuar gratis" aunque abra la
+  /// hoja de packs de pago.
+  final String? ctaLabel;
+
   const _TierCard({
     required this.title,
     required this.subtitle,
@@ -284,6 +290,7 @@ class _TierCard extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.badge,
+    this.ctaLabel,
   });
 
   @override
@@ -390,11 +397,12 @@ class _TierCard extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: GoldButton(
-                label: selected
-                    ? 'Empezar prueba gratis'
-                    : price.isEmpty
-                        ? 'Continuar gratis'
-                        : 'Ver opciones',
+                label: ctaLabel ??
+                    (selected
+                        ? 'Empezar prueba gratis'
+                        : price.isEmpty
+                            ? 'Continuar gratis'
+                            : 'Ver opciones'),
                 onPressed: onTap,
               ),
             ),
