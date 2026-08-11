@@ -178,7 +178,12 @@ class TarotReadingRepository:
         cards: list[dict],
         moon_phase: str | None = None,
         planetary_hour: str | None = None,
+        commit: bool = True,
     ) -> TarotReadingEntity:
+        """`commit=False` deja la escritura dentro de la transaccion del
+        llamador: la ruta persiste el contenido y captura el consumo en un
+        solo commit, de modo que un fallo posterior revierte ambos.
+        """
         row = TarotReading(
             user_id=user_id,
             spread_type=spread_type,
@@ -188,7 +193,10 @@ class TarotReadingRepository:
             planetary_hour=planetary_hour,
         )
         self._db.add(row)
-        self._db.commit()
+        if commit:
+            self._db.commit()
+        else:
+            self._db.flush()
         self._db.refresh(row)
         return _to_entity(TarotReadingEntity, row)
 
@@ -463,10 +471,17 @@ class DivinationSessionRepository:
         )
         return _to_entity(DivinationSessionEntity, row)
 
-    def create(self, user_id: UUID, **data) -> DivinationSessionEntity:
+    def create(self, user_id: UUID, commit: bool = True, **data) -> DivinationSessionEntity:
+        """`commit=False` deja la escritura dentro de la transaccion del
+        llamador: la ruta persiste el contenido y captura el consumo en un
+        solo commit, de modo que un fallo posterior revierte ambos.
+        """
         row = DivinationSession(user_id=user_id, **data)
         self._db.add(row)
-        self._db.commit()
+        if commit:
+            self._db.commit()
+        else:
+            self._db.flush()
         self._db.refresh(row)
         return _to_entity(DivinationSessionEntity, row)
 
@@ -485,15 +500,23 @@ class OracleConversationRepository:
         return _to_entity(OracleConversationEntity, row)
 
     def create_or_update(
-        self, user_id: UUID, messages: list[dict], tradition_context: str | None
+        self, user_id: UUID, messages: list[dict], tradition_context: str | None,
+        commit: bool = True,
     ) -> OracleConversationEntity:
+        """`commit=False` deja la escritura dentro de la transaccion del
+        llamador: la ruta persiste el contenido y captura el consumo en un
+        solo commit, de modo que un fallo posterior revierte ambos.
+        """
         row = OracleConversation(
             user_id=user_id,
             messages=messages,
             tradition_context=tradition_context,
         )
         self._db.add(row)
-        self._db.commit()
+        if commit:
+            self._db.commit()
+        else:
+            self._db.flush()
         self._db.refresh(row)
         return _to_entity(OracleConversationEntity, row)
 
