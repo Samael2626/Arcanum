@@ -144,6 +144,9 @@ def main() -> None:
     parser.add_argument("work", help="slug de la obra, p.ej. culpeper-complete-herbal")
     parser.add_argument("--purge", action="store_true",
                         help="sacar del JSON lo que falle, para que se retraduzca")
+    parser.add_argument("--purge-todo", action="store_true",
+                        help="sacar TODO, no solo lo que falle: para cuando cambia "
+                             "el glosario o el registro y la obra entera se rehace")
     parser.add_argument("--plantas", action="store_true",
                         help="listar capitulos que perdieron el nombre de su "
                              "planta (informe; nunca purga)")
@@ -193,14 +196,18 @@ def main() -> None:
             print(f"  {count:>3}  {word:<20} {donde}")
 
     total = len(flagged) + len(mismatched)
-    if not total:
-        print("\nTodo limpio con los controles actuales.")
-        return
-    print(f"\n{total} capitulos con defectos ({len(done['chapters'])} revisados).")
-
-    if not args.purge:
-        print("Ejecuta con --purge para sacarlos y que la proxima tanda los rehaga.")
-        return
+    # --purge-todo no depende de que nada falle: cuando cambia el glosario o el
+    # registro, los capitulos "limpios" tampoco valen. Pasan los controles
+    # porque no contienen ninguno de los terminos vigilados, no porque esten
+    # escritos en el registro nuevo.
+    if not args.purge_todo:
+        if not total:
+            print("\nTodo limpio con los controles actuales.")
+            return
+        print(f"\n{total} capitulos con defectos ({len(done['chapters'])} revisados).")
+        if not args.purge:
+            print("Ejecuta con --purge para sacarlos y que la proxima tanda los rehaga.")
+            return
 
     # La copia va ANTES de escribir: library_data/ esta en .gitignore y este es
     # el unico punto de retorno si el purgado se lleva algo que no debia.
@@ -209,8 +216,12 @@ def main() -> None:
     shutil.copy2(target_path, backup)
     print(f"\nCopia de seguridad: {backup.name}")
 
-    for slug in list(flagged) + mismatched:
-        del done["chapters"][slug]
+    if args.purge_todo:
+        total = len(done["chapters"])
+        done["chapters"] = {}
+    else:
+        for slug in list(flagged) + mismatched:
+            del done["chapters"][slug]
     target_path.write_text(
         json.dumps(done, ensure_ascii=False, indent=1), encoding="utf-8"
     )

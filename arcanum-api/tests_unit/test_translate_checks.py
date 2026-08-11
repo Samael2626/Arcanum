@@ -231,10 +231,10 @@ class TestSuspiciousTerms:
         # "los vulgos llaman" es incorrecto y contiene "vulgo" como subcadena:
         # un control por subcadena lo daba por bueno.
         src = ["which the vulgar call an ague"]
-        assert suspicious_terms(src, ["que los vulgos llaman fiebre"]) == [
+        assert suspicious_terms(src, ["que los vulgos llaman calentura"]) == [
             "the vulgar call"
         ]
-        assert suspicious_terms(src, ["que el vulgo llama fiebre"]) == []
+        assert suspicious_terms(src, ["que el vulgo llama calentura"]) == []
 
     def test_el_uso_adjetivo_de_vulgar_no_se_marca(self):
         # "the vulgar and apish fashion" es "la moda vulgar": adjetivo, no el
@@ -243,6 +243,20 @@ class TestSuspiciousTerms:
         assert "the vulgar call" not in suspicious_terms(
             src, ["como es la moda vulgar y simiesca"]
         )
+
+    def test_no_casa_el_termino_dentro_de_otra_palabra(self):
+        # "ague" vive dentro de "plague": por subcadena, un capítulo que solo
+        # hablaba de la peste se marcaba por no traducir un término ausente.
+        src = ["it is good against the plague and the pestilence"]
+        assert suspicious_terms(src, ["es bueno contra la peste"]) == []
+
+    def test_marca_el_termino_de_epoca_perdido(self):
+        # Registro de Laguna: "decoction" es "cocimiento", no "decocción".
+        src = ["the decoction of the leaves being drunk"]
+        assert suspicious_terms(src, ["la decocción de las hojas bebida"]) == [
+            "decoction"
+        ]
+        assert suspicious_terms(src, ["el cocimiento de las hojas bebido"]) == []
 
     def test_tambien_reporta_las_fugas(self):
         src = ["as the vulgar and apish fashion is"]

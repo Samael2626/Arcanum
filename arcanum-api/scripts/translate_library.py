@@ -82,6 +82,15 @@ DATA_DIR = Path(__file__).parent / "library_data"
 # gastaba 3.050 tokens de entrada por llamada.
 DEFAULT_MODEL = "llama-3.3-70b-versatile"
 
+# Sube cuando SYSTEM cambie de forma que altere el resultado: glosario, registro
+# o reglas. Cambiar el glosario a mitad de obra parte el libro en dos voces
+# igual que cambiar de modelo, y eso ya estaba prohibido — pero nada lo
+# detectaba, porque el JSON solo guardaba el modelo.
+#
+# 2: registro de Laguna (1570) y glosario médico de época con glosa moderna.
+#    Antes: castellano moderno, "decocción", "fiebre intermitente".
+PROMPT_VERSION = 2
+
 # Límites del free tier PARA ESE MODELO (console.groq.com/settings/limits).
 # El techo real es TPD: TPM y RPD no llegan a ser vinculantes con 423 capítulos.
 # Con --model hay que pasar tambien --tpd/--tpm: cada modelo tiene los suyos.
@@ -104,28 +113,129 @@ TRANSIENT_ERRORS = (APIConnectionError, APITimeoutError, InternalServerError)
 TRANSIENT_RETRIES = 3
 MAX_TRANSIENT_WAIT = 120  # segundos; más que esto ya no es un bache
 
+# El registro no es "castellano antiguo" a ojo: está modelado sobre el
+# Dioscórides de Andrés Laguna (Salamanca, 1570), que es el herbario castellano
+# canónico y contemporáneo de Culpeper. Las fórmulas de abajo salen de contar
+# ocurrencias sobre el texto real, no de imitar un tono.
+#
+# Cada término de época va con su glosa moderna entre paréntesis la PRIMERA vez
+# que aparece en el capítulo. Sin glosa, "gota coral" no lo entiende nadie hoy;
+# sin el término de época, el libro suena a prospecto. Con las dos, es fiel y
+# se lee.
 SYSTEM = """Eres traductor de textos herbarios y astrológicos ingleses del siglo XVII al español.
 
+Tu modelo de estilo es el "Dioscórides" de Andrés Laguna (1570): el herbario
+castellano de la misma época que el original que traduces. Escribe como él.
+
 REGLAS INNEGOCIABLES:
-1. Registro de época: solemne y preciso. Ni moderno ni arcaizante forzado.
-2. Términos doctrinales con traducción FIJA:
-   - "by sympathy" → "por simpatía"   (curación por afinidad)
-   - "by antipathy" → "por antipatía" (curación por oposición)
-     Son modos OPUESTOS de curar: nunca los unifiques ni los suavices.
-   - "retentive faculty" → "facultad retentiva"
+
+1. REGISTRO. Imita estas construcciones de Laguna, que son su marca:
+   - El sujeto es LA PLANTA o su parte, nunca el enfermo ni "se usa para":
+     "provoca la orina", "mitiga el dolor", "resuelve las ventosidades".
+   - El modo de administración va en PARTICIPIO ANTEPUESTO, no en subordinada:
+     "bebida con vino", "aplicada por defuera", "majada y aplicada en forma de
+     emplastro", "tomada en forma de lamedor".
+   - Cadena de virtudes unida por "y", sin listas ni viñetas.
+   - Al enumerar dolencias, REPITE la preposición: "vale contra la gota coral,
+     contra la ciática, contra la tos" — nunca "contra la gota, la ciática y la tos".
+   - Verbos de virtud propios: resuelve, mundifica, adelgaza, atrae, mollifica,
+     deseca, restriñe, corrobora, deshace, provoca, madura, suelda, desopila.
+   - Fórmulas de mérito: "es útil a", "vale contra", "aprovecha a", "tiene
+     virtud de", "es remedio a".
+   - Temperamento con ordinal PLENO: "caliente y seca en el segundo grado",
+     "en el tercero grado", "en el cuarto grado" (nunca "tercer grado").
+
+2. TÉRMINOS MÉDICOS DE ÉPOCA. Traducción FIJA, con la glosa moderna entre
+   paréntesis SOLO la primera vez que el término aparece en el capítulo:
+   - "ague" → "calentura"
+   - "tertian/quartan ague" → "calentura terciana/cuartana"
+   - "falling sickness" → "gota coral (epilepsia)"
+   - "imposthume" → "apostema"
+   - "tetter" → "empeines"
+   - "king's evil" → "lamparones (escrófula)"
+   - "strangury" → "estilicidio de orina"
+   - "pleurisy" → "dolor de costado (pleuresía)"
+   - "quinsy" → "esquinancia"
+   - "palsy" → "perlesía (parálisis)"
+   - "lethargy" → "modorra"
+   - "wen" → "lobanillo"
+   - "dropsy" → "hidropesía"
+   - "obstructions of the liver/spleen" → "opilaciones del hígado/del bazo"
+   - "wind" → "ventosidades"; "gripings" → "torcijones de vientre"
+   - "bloody flux" → "cámaras de sangre"; "flux" → "cámaras"
+   - "ulcer" → "llaga"
+   - "decoction" → "cocimiento" (NUNCA "decocción")
+   - "electuary" → "lamedor"
+   - "syrup" → "jarabe"; "ointment" → "ungüento"; "plaster" → "emplastro"
+   - "lotion" → "lavatorio"; "troches" → "trociscos"
+   - "dram" → "dracma" (jamás "dramo", que no existe)
+   - "treacle" (uso médico) → "triaca" (es un antídoto, no melaza)
+   - "canker" → "llaga corrompida"; NUNCA "cáncer", que hoy se lee como tumor
+   - "push/pushes" → "pústulas" (jamás "empujes")
+   - "the itch" → "sarna"; "kibes" → "sabañones"
+   - "ring-worm" → "tiña"; "French barley" → "cebada perlada"
+   - "Physic" (sustantivo) → "Medicina" (NO "Física": es falso amigo)
+   - "apple of the eye" → "la niña del ojo"
+
+3. DOCTRINA HUMORAL Y ASTROLÓGICA. Traducción FIJA:
+   - "by sympathy" → "por simpatía"   (cura por el semejante)
+   - "by antipathy" → "por antipatía" (cura por el contrario)
+     Son modos OPUESTOS de curar. Confundirlos INVIERTE la terapia: nunca los
+     unifiques, ni los suavices, ni los intercambies.
    - "the vulgar" → "el vulgo" (la gente común; NUNCA "los vulgares")
-   - "ague" → "fiebre intermitente"
-   - "decoction" → "decocción"
-   - "humours" → "humores"
-   - "choleric/phlegmatic/sanguine/melancholy" → "colérico/flemático/sanguíneo/melancólico"
-3. Planetas y signos siempre en español: Moon→Luna, Sol/Sun→Sol, Saturn→Saturno,
+   - "humours" → "humores"; "choler" → "cólera"; "phlegm" → "flema"
+   - "retentive/attractive/digestive/expulsive faculty" → "virtud retentiva/
+     atractiva/digestiva/expulsiva"
+   - "under the dominion of" → "debajo del dominio de"
+   - "governed by" → "es gobernada DE" (de, no "por"); también "señorea", "rige"
+   - "an herb of Mars" → "yerba de Marte"
+   - "in opposition to" → "en oposición a"
+   - Aspectos: conjunción, oposición, cuadrado, trino, sextil.
+   - Dignidades: casa (domicilio), exaltación, triplicidad, término, faz;
+     debilidades: detrimento y caída.
+
+4. Planetas y signos siempre en español: Moon→Luna, Sun→Sol, Saturn→Saturno,
    Jupiter→Júpiter, Mars→Marte, Venus→Venus, Mercury→Mercurio,
    Aries→Aries, Cancer→Cáncer, Pisces→Piscis, Scorpio→Escorpio, etc.
-4. NO traduzcas los nombres propios de planta: déjalos EN INGLÉS tal cual.
+
+5. NOMBRES DE PLANTA: NO los traduzcas, déjalos EN INGLÉS tal cual.
    Un nombre de planta mal traducido es una planta equivocada, y la gente las usa.
-5. Conserva las dudas del autor ("I suppose" → "supongo"). No le des certezas que no tuvo.
-6. Mantén las marcas de sección tal cual aparecen: _Descript._] _Place._] _Time._]
+   5a. Vale para TODO el capítulo, no solo la primera mención. Si el nombre sale
+       diez veces, queda en inglés las diez.
+   5b. "Wort" es sufijo de nombre propio, no una planta: "St. John's Wort" se
+       queda tal cual y JAMÁS es "verbena".
+   5c. No inventes ni sustituyas: "Alder-tree" no es "árbol Alnus"; "Bilberry"
+       no es "mora" (es Vaccinium, la mora es Rubus: otra familia).
+       Ante la duda, copia el nombre inglés literal.
+
+6. Conserva las dudas del autor ("I suppose" → "supongo"). No le des certezas
+   que no tuvo.
+
+7. Mantén las marcas de sección tal cual aparecen: _Descript._] _Place._] _Time._]
    _Government and virtues._] — no las traduzcas ni las quites.
+
+EJEMPLO DEL REGISTRO EXIGIDO (estúdialo: las reglas de arriba se ven aquí en obra):
+
+INGLÉS:
+_Government and virtues._] It is an herb of Mars, hot and dry in the second
+degree. The decoction of the leaves being drunk is good against the biting of
+venomous beasts, and the powder of the root taken in wine helps the retentive
+faculty. It is also good for the falling sickness, and applied outwardly it
+cures old ulcers and the tetters.
+
+CASTELLANO:
+_Government and virtues._] Es yerba de Marte, caliente y seca en el segundo
+grado. El cocimiento de las hojas, bebido, vale contra las mordeduras de las
+bestias venenosas; y el polvo de la raíz, tomado con vino, corrobora la virtud
+retentiva. Aprovecha asimismo a la gota coral (epilepsia), y aplicada por
+defuera encora las llagas viejas y los empeines.
+
+Fíjate en lo que hace esa traducción: "yerba de Marte" y no "una hierba de
+Marte"; "en el segundo grado" con ordinal pleno; "bebido" y "tomado con vino"
+en participio antepuesto en vez de "cuando se bebe"; "vale contra" y "aprovecha
+a" en vez de "es bueno para"; "aplicada por defuera" en vez de "aplicada
+externamente"; "encora las llagas viejas" con el verbo propio; y la glosa
+"(epilepsia)" solo en la primera aparición del término.
 
 FORMATO DE RESPUESTA (estricto):
 El usuario envía párrafos numerados como [1], [2], [3]...
@@ -134,6 +244,15 @@ No añadas, no fusiones, no resumas, no comentes. Solo la traducción numerada."
 
 # Comprobaciones de terminología: si el original tiene el término inglés y la
 # traducción no tiene el español, el capítulo queda marcado para revisión.
+#
+# Los dos lados se comparan por PALABRA COMPLETA. Por subcadena, "ague" casaba
+# dentro de "plague" y marcaba como término perdido capítulos que solo hablaban
+# de la peste.
+#
+# Solo entran términos donde la traducción libre produce un error de verdad, y
+# donde la palabra castellana es distintiva. "canker" queda fuera a propósito:
+# su traducción correcta es "llaga corrompida", y "llaga" sola es la de "ulcer",
+# así que el control no sabría distinguirlas.
 TERM_CHECKS = {
     "by sympathy": "simpatía",
     "by antipathy": "antipatía",
@@ -143,8 +262,24 @@ TERM_CHECKS = {
     # control marcaba capítulos bien traducidos.
     "the vulgar call": "vulgo",
     "the vulgar name": "vulgo",
-    "retentive faculty": "facultad retentiva",
-    "decoction": "decocción",
+    "retentive faculty": "virtud retentiva",
+    # Registro de Laguna: los de abajo salen de contar ocurrencias sobre el
+    # Dioscórides de 1570, no de elegir un sinónimo bonito.
+    "decoction": "cocimiento",
+    "ague": "calentura",
+    "falling sickness": "gota coral",
+    "imposthume": "apostema",
+    "palsy": "perlesía",
+    "quinsy": "esquinancia",
+    "lethargy": "modorra",
+    "wen": "lobanillo",
+    "king's evil": "lamparones",
+    "strangury": "estilicidio",
+    "pleurisy": "dolor de costado",
+    "electuary": "lamedor",
+    "ointment": "ungüento",
+    "dram": "dracma",
+    "treacle": "triaca",
 }
 
 _NUMBERED = re.compile(r"^\s*\[(\d+)\]\s*", re.M)
@@ -451,7 +586,7 @@ def suspicious_terms(source: list[str], translated: list[str]) -> list[str]:
     dst = " ".join(translated).lower()
     flagged = []
     for english, spanish in TERM_CHECKS.items():
-        if english not in src:
+        if not re.search(rf"\b{re.escape(english)}\b", src):
             continue
         if not re.search(rf"\b{re.escape(spanish)}\b", dst):
             flagged.append(english)
@@ -577,7 +712,12 @@ def main() -> None:
     done: dict = (
         json.loads(target_path.read_text(encoding="utf-8"))
         if target_path.exists()
-        else {"work": args.work, "model": args.model, "chapters": {}}
+        else {
+            "work": args.work,
+            "model": args.model,
+            "prompt_version": PROMPT_VERSION,
+            "chapters": {},
+        }
     )
 
     # Mezclar modelos parte el libro en dos voces: media obra con el registro de
@@ -589,6 +729,21 @@ def main() -> None:
             f"y ahora pides {args.model}. O sigues con {previous}, o borras "
             f"{target_path.name} y retraduces la obra entera con el nuevo."
         )
+
+    # Cambiar el glosario a mitad de obra parte el libro exactamente igual, y
+    # esto no se veía: el JSON guardaba el modelo pero no el prompt. Se coló una
+    # vez —82 capítulos en castellano moderno frente al registro de Laguna— y el
+    # unico aviso fue que alguien se puso a auditar la fidelidad a mano.
+    stored_version = done.get("prompt_version", 1)
+    if done["chapters"] and stored_version != PROMPT_VERSION:
+        raise SystemExit(
+            f"Lo ya traducido ({len(done['chapters'])} capítulos) usó la versión "
+            f"{stored_version} del prompt, y la actual es {PROMPT_VERSION}: el "
+            f"glosario y el registro han cambiado. Mezclarlos deja el libro con "
+            f"dos voces. Purga y retraduce la obra entera:\n"
+            f"  python scripts/recheck_translation.py {args.work} --purge-todo"
+        )
+    done["prompt_version"] = PROMPT_VERSION
 
     pending = [c for c in work["chapters"] if c["slug"] not in done["chapters"]]
 
