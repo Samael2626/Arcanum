@@ -19,12 +19,21 @@ def get_migrations_path() -> Path:
     return project_root / "migrations"
 
 
-def get_alembic_config() -> Config:
-    """Retorna Config de Alembic con DATABASE_URL del env."""
-    from app.db.session import SQLALCHEMY_DATABASE_URL
+def get_alembic_config(database_url: str | None = None) -> Config:
+    """Retorna Config de Alembic apuntando a `database_url`.
+
+    Sin argumento usa la URL del entorno (arranque de la app). Con URL explicita
+    apunta a esa base y nada mas: es lo que necesitan los verificadores para
+    correr contra una base de pruebas sin exportar variables ni arriesgarse a
+    tocar la de produccion por herencia del entorno.
+    """
+    if database_url is None:
+        from app.db.session import SQLALCHEMY_DATABASE_URL
+
+        database_url = SQLALCHEMY_DATABASE_URL
 
     config = Config(str(get_migrations_path().parent / "alembic.ini"))
-    config.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URL)
+    config.set_main_option("sqlalchemy.url", database_url)
     config.set_main_option("script_location", str(get_migrations_path()))
     return config
 
