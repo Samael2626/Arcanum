@@ -4,4 +4,13 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- HTTP en claro SOLO en debug, para poder apuntar la app a un backend
+         local (adb reverse tcp:8000) durante las pruebas fisicas.
+
+         Vive en el source set `debug` a proposito: no se fusiona en release,
+         donde Android sigue bloqueando cleartext por defecto desde API 28. Un
+         `usesCleartextTraffic` en el manifest principal lo abriria tambien en
+         produccion, que es justo lo que no puede pasar. -->
+    <application android:usesCleartextTraffic="true" />
 </manifest>
