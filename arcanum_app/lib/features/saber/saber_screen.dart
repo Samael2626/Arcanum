@@ -19,7 +19,7 @@ class SaberScreen extends StatefulWidget {
 }
 
 class _SaberScreenState extends State<SaberScreen> {
-  // 0 = Plantas (Materia), 1 = Libros (Lecturas).
+  // 0 = Plantas (Materia), 1 = Biblioteca (obras que se leen).
   int _tab = 0;
 
   @override
@@ -58,7 +58,7 @@ class _Toggle extends StatelessWidget {
             children: [
               _pill('Plantas', 0),
               const SizedBox(width: 10),
-              _pill('Libros', 1),
+              _pill('Biblioteca', 1),
             ],
           ),
         ),

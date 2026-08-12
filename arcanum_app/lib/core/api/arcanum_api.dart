@@ -270,6 +270,109 @@ class ArcanumApi {
     );
     return res.data as Map<String, dynamic>;
   }
+
+  // ── Biblioteca personal (/reading) ───────────────────────────────────────
+  //
+  // Al reves que /library, todo esto es privado y va autenticado. La posicion
+  // que se manda es siempre la estable (obra, capitulo, ancla, fragmento):
+  // NUNCA un numero de pagina, que cambia con la letra y la pantalla.
+  //
+  // Las notas de los pasajes viajan cifradas con la clave del Grimorio. Este
+  // cliente no las cifra: recibe y devuelve opacos, y de la criptografia se
+  // encarga ReadingRepository. Aqui no hay ningun campo de nota en claro.
+
+  /// Guarda donde se quedo el usuario. Idempotente por obra: repetirlo deja el
+  /// mismo estado, que es justo lo que hace falta cuando el lector guarda al
+  /// pasar pagina y al salir casi a la vez.
+  Future<Map<String, dynamic>> saveProgress({
+    required Map<String, dynamic> position,
+    required String language,
+  }) async {
+    final res = await _dio.put(
+      '/reading/progress',
+      data: {'position': position, 'language': language},
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Progreso de una obra. Lanza 404 cuando no hay lectura empezada: es la
+  /// senal de "Comenzar lectura", no un error.
+  Future<Map<String, dynamic>> progressForWork(String workSlug) async {
+    final res = await _dio.get('/reading/progress/$workSlug');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Todas las obras empezadas, la mas reciente primero.
+  Future<List<Map<String, dynamic>>> allProgress() async {
+    final res = await _dio.get('/reading/progress');
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> createBookmark({
+    required Map<String, dynamic> position,
+    String? label,
+  }) async {
+    final res = await _dio.post(
+      '/reading/bookmarks',
+      data: {'position': position, 'label': ?label},
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<List<Map<String, dynamic>>> bookmarks({String? workSlug}) async {
+    final res = await _dio.get(
+      '/reading/bookmarks',
+      queryParameters: {'work_slug': ?workSlug},
+    );
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<void> deleteBookmark(String id) =>
+      _dio.delete('/reading/bookmarks/$id');
+
+  /// Guarda un pasaje. [encryptedNote] e [iv] ya vienen cifrados del llamador.
+  Future<Map<String, dynamic>> createPassage({
+    required Map<String, dynamic> position,
+    required String quote,
+    required String language,
+    String? encryptedNote,
+    String? iv,
+  }) async {
+    final res = await _dio.post(
+      '/reading/passages',
+      data: {
+        'position': position,
+        'quote_text': quote,
+        'quote_language': language,
+        'encrypted_note': encryptedNote,
+        'note_iv': iv,
+      },
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<List<Map<String, dynamic>>> passages({String? workSlug}) async {
+    final res = await _dio.get(
+      '/reading/passages',
+      queryParameters: {'work_slug': ?workSlug},
+    );
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  /// Sustituye la nota cifrada. Ambos en null la borra sin tocar el pasaje.
+  Future<Map<String, dynamic>> updatePassageNote({
+    required String id,
+    String? encryptedNote,
+    String? iv,
+  }) async {
+    final res = await _dio.patch(
+      '/reading/passages/$id',
+      data: {'encrypted_note': encryptedNote, 'note_iv': iv},
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<void> deletePassage(String id) => _dio.delete('/reading/passages/$id');
 }
 
 final arcanumApiProvider = Provider((ref) => ArcanumApi(ref.read(dioProvider)));
