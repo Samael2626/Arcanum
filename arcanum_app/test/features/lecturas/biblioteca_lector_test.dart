@@ -17,6 +17,8 @@ import 'package:go_router/go_router.dart';
 const _work = 'culpeper-complete-herbal';
 const _chapter = 'amara-dulcis';
 const _next = 'all-heal';
+/// Capitulo de UNA sola pagina: el caso que no registraba nada.
+const _short = 'plate-1';
 
 Map<String, dynamic> _paragraph(int i, {required String chapter}) => {
   'anchor': '$_work.$chapter.$i',
@@ -42,9 +44,11 @@ class _FakeApi extends ArcanumApi {
   static Map<String, dynamic> _resolve(Map<String, dynamic> position) => {
     ...position,
     'work_title': 'The Complete Herbal',
-    'chapter_title': position['chapter_slug'] == _next
-        ? 'All-Heal'
-        : 'Amara Dulcis',
+    'chapter_title': switch (position['chapter_slug']) {
+      _next => 'All-Heal',
+      _short => 'Plate 1',
+      _ => 'Amara Dulcis',
+    },
   };
 
   @override
@@ -55,8 +59,8 @@ class _FakeApi extends ArcanumApi {
       'author': 'Nicholas Culpeper',
       'year': 1653,
       'language': 'en',
-      'chapter_count': 2,
-      'translated_chapters': 2,
+      'chapter_count': 3,
+      'translated_chapters': 3,
     },
   ];
 
@@ -86,6 +90,14 @@ class _FakeApi extends ArcanumApi {
         'meta': const {},
         'paragraph_count': 3,
       },
+      {
+        'slug': _short,
+        'title': 'Plate 1',
+        'kind': 'front',
+        'position': 0,
+        'meta': const {},
+        'paragraph_count': 1,
+      },
     ],
   };
 
@@ -95,6 +107,28 @@ class _FakeApi extends ArcanumApi {
     String chapterSlug,
   ) async {
     if (chapterError case final error?) throw error;
+    if (chapterSlug == _short) {
+      return {
+        'id': '00000000-0000-4000-8000-000000000002',
+        'slug': _short,
+        'title': 'Plate 1',
+        'kind': 'front',
+        'position': 0,
+        'meta': const {},
+        'work_slug': workSlug,
+        'work_title': 'The Complete Herbal',
+        'advisory': null,
+        'paragraphs': [
+          {
+            'anchor': '$_work.$_short.1',
+            'position': 1,
+            'text_original': 'A catalogue of simples.',
+            'text_es': 'Catalogo de simples.',
+            'translation_status': 'machine',
+          },
+        ],
+      };
+    }
     return {
       'id': '00000000-0000-4000-8000-000000000001',
       'slug': chapterSlug,
@@ -348,7 +382,7 @@ void main() {
 
       expect(find.text('Comenzar lectura'), findsOneWidget);
       expect(find.text('Índice'), findsOneWidget);
-      expect(find.text('2 capítulos'), findsOneWidget);
+      expect(find.text('3 capítulos'), findsOneWidget);
 
       // Procedencia y aviso van al pie de la portada: en la pantalla del test
       // caen bajo el pliegue, como en un movil pequeno.
@@ -453,13 +487,18 @@ void main() {
     testWidgets('marcar no mueve el progreso', (tester) async {
       await pumpAt(tester, '/saber/$_work/$_chapter');
 
+      await tester.pump(const Duration(seconds: 2));
+      final guardadosAntes = api.savedProgress.length;
+
       await tester.tap(find.text('Marcar'));
       await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
 
       expect(api.createdBookmarks, hasLength(1));
       expect(api.createdBookmarks.single['chapter_slug'], _chapter);
-      // Marcar es un gesto deliberado; el progreso es automatico.
-      expect(api.savedProgress, isEmpty);
+      // Marcar es un gesto deliberado; el progreso es automatico. Marcar no
+      // puede provocar ni un guardado mas.
+      expect(api.savedProgress, hasLength(guardadosAntes));
     });
 
     testWidgets('guardar un pasaje cifra la nota antes de enviarla', (
@@ -481,6 +520,98 @@ void main() {
       expect(saved['encrypted_note'], isNotNull);
       expect(saved['encrypted_note'], isNot(contains('mi nota privada')));
       expect(saved['position']['paragraph_anchor'], '$_work.$_chapter.1');
+    });
+
+    // ── Capitulo de una sola pagina ─────────────────────────────────────
+    //
+    // Regresion fisica: "Plate 1" cabe entero en una pantalla, asi que no hay
+    // ningun cambio de pagina que dispare el guardado. Se leia el capitulo
+    // completo y la obra seguia ofreciendo "Comenzar lectura".
+
+    testWidgets('un capitulo de una pagina registra el progreso al abrirlo', (
+      tester,
+    ) async {
+      await pumpAt(tester, '/saber/$_work/$_short');
+      await tester.pump(const Duration(seconds: 2));
+
+      expect(api.savedProgress, isNotEmpty);
+      final position = api.savedProgress.last;
+      expect(position['chapter_slug'], _short);
+      expect(position['paragraph_anchor'], '$_work.$_short.1');
+      expect(position['fragment_index'], 0);
+    });
+
+    testWidgets('la pagina de cierre hereda la posicion de la ultima de texto', (
+      tester,
+    ) async {
+      await pumpAt(tester, '/saber/$_work/$_short');
+      await tester.pump(const Duration(seconds: 2));
+
+      await tester.tap(find.text('Siguiente'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
+
+      expect(find.text('Fin del capítulo'), findsOneWidget);
+      // El cierre no es texto de la obra: no puede inventarse una posicion
+      // propia ni dejar de guardar. Hereda la ultima real.
+      final position = api.savedProgress.last;
+      expect(position['chapter_slug'], _short);
+      expect(position['paragraph_anchor'], '$_work.$_short.1');
+    });
+
+    testWidgets('salir desde el cierre conserva la ultima posicion', (
+      tester,
+    ) async {
+      await pumpAt(tester, '/saber/$_work/$_short');
+      await tester.pump(const Duration(seconds: 2));
+      await tester.tap(find.text('Siguiente'));
+      await tester.pumpAndSettle();
+
+      api.savedProgress.clear();
+
+      // Desmontar el lector: es lo que ocurre al salir con el boton de volver.
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+
+      expect(api.savedProgress, isNotEmpty, reason: 'salir debe guardar');
+      expect(api.savedProgress.last['paragraph_anchor'], '$_work.$_short.1');
+    });
+
+    testWidgets('nunca se manda un numero de pagina al servidor', (
+      tester,
+    ) async {
+      await pumpAt(tester, '/saber/$_work/$_short');
+      await tester.pump(const Duration(seconds: 2));
+      await tester.tap(find.text('Siguiente'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
+
+      for (final position in api.savedProgress) {
+        expect(position.keys.toSet(), {
+          'work_slug',
+          'chapter_slug',
+          'paragraph_anchor',
+          'fragment_index',
+        });
+      }
+    });
+
+    testWidgets('en un capitulo normal el guardado sigue siendo el de antes', (
+      tester,
+    ) async {
+      await pumpAt(tester, '/saber/$_work/$_chapter');
+      await tester.pump(const Duration(seconds: 2));
+      final alAbrir = api.savedProgress.last['paragraph_anchor'];
+
+      await tester.tap(find.text('Siguiente'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
+
+      // Al abrir registra la primera pagina; al pasar, la siguiente. La
+      // posicion avanza con la lectura, como antes del arreglo.
+      expect(alAbrir, '$_work.$_chapter.1');
+      expect(api.savedProgress.last['paragraph_anchor'], isNot(alAbrir));
+      expect(api.savedProgress.last['chapter_slug'], _chapter);
     });
 
     testWidgets('al final del capitulo ofrece continuar al siguiente', (
