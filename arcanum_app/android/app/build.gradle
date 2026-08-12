@@ -24,6 +24,19 @@ if (releaseRequested && !hasReleaseSigning) {
     )
 }
 
+// App ID de AdMob. Solo del entorno: un ID real en el repositorio se filtra en
+// cada clon. En debug se usa el de prueba oficial de Google, que no genera
+// impresiones facturables.
+def debugAdmobApplicationId = "ca-app-pub-3940256099942544~3347511713"
+def admobApplicationId = System.getenv("ADMOB_APP_ID")?.trim()
+if (releaseRequested && !admobApplicationId) {
+    throw new GradleException(
+        "ADMOB_APP_ID ausente. Exporta el App ID real de AdMob antes del build " +
+        "release: sin el, la app arranca y muere con 'Missing application ID'."
+    )
+}
+def resolvedAdmobApplicationId = admobApplicationId ?: debugAdmobApplicationId
+
 android {
     namespace = "com.arcanum.magick"
     compileSdk = flutter.compileSdkVersion
@@ -48,6 +61,7 @@ android {
         targetSdkVersion = flutter.targetSdkVersion
         versionCode = flutter.versionCode.toInteger()
         versionName = flutter.versionName
+        manifestPlaceholders["admobApplicationId"] = resolvedAdmobApplicationId
     }
 
     signingConfigs {
