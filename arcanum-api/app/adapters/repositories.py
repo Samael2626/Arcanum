@@ -12,6 +12,7 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from sqlalchemy import func, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session, contains_eager, noload, selectinload
 
 from app.core.config import settings
@@ -25,7 +26,11 @@ from app.domain.entities import (
     MateriaItemEntity,
     NatalChartEntity,
     OracleConversationEntity,
+    ReadingBookmarkEntity,
+    ReadingPosition,
+    ReadingProgressEntity,
     RefreshTokenEntity,
+    SavedPassageEntity,
     TarotCardEntity,
     TarotReadingEntity,
     TraditionEntity,
@@ -37,6 +42,7 @@ from app.models.library import LibraryChapter, LibraryParagraph, LibraryWork
 from app.models.materia_item import MateriaItem
 from app.models.natal_chart import NatalChart
 from app.models.oracle_conversation import OracleConversation
+from app.models.reading import ReadingBookmark, ReadingProgress, SavedPassage
 from app.models.refresh_token import RefreshToken
 from app.models.tarot import TarotCard, TarotReading
 from app.models.tradition import Tradition
@@ -565,3 +571,271 @@ class TraditionRepository:
     def get_by_slug(self, slug: str) -> TraditionEntity | None:
         row = self._db.query(Tradition).filter(Tradition.slug == slug).first()
         return _to_entity(TraditionEntity, row)
+
+
+# ── Biblioteca personal ─────────────────────────────────────────────────────
+
+
+def _position_of(row) -> ReadingPosition:
+    return ReadingPosition(
+        work_slug=row.work_slug,
+        chapter_slug=row.chapter_slug,
+        paragraph_anchor=row.paragraph_anchor,
+        fragment_index=row.fragment_index,
+    )
+
+
+class ReadingProgressRepository:
+    """Donde se quedo el usuario en cada obra."""
+
+    def __init__(self, db: Session) -> None:
+        self._db = db
+
+    def get(self, user_id: UUID, work_slug: str) -> ReadingProgressEntity | None:
+        row = (
+            self._db.query(ReadingProgress)
+            .filter(ReadingProgress.user_id == user_id, ReadingProgress.work_slug == work_slug)
+            .first()
+        )
+        return None if row is None else self._to_entity(row)
+
+    def list_by_user(self, user_id: UUID) -> list[ReadingProgressEntity]:
+        rows = (
+            self._db.query(ReadingProgress)
+            .filter(ReadingProgress.user_id == user_id)
+            .order_by(ReadingProgress.updated_at.desc())
+            .all()
+        )
+        return [self._to_entity(r) for r in rows]
+
+    def upsert(
+        self, user_id: UUID, position: ReadingPosition, language: str
+    ) -> ReadingProgressEntity:
+        """Guarda la posicion viva, creandola o pisando la anterior.
+
+        Se hace con ON CONFLICT y no con "buscar y decidir": el lector guarda
+        en cada cambio de pagina, y dos peticiones cercanas (pasar pagina y
+        salir de la app) pueden solaparse. Un SELECT seguido de INSERT dejaria
+        una ventana en la que las dos creen que no hay fila y la segunda
+        reventaria contra la restriccion unica. Aqui el conflicto es el camino
+        normal, no un error.
+        """
+        stmt = (
+            pg_insert(ReadingProgress)
+            .values(
+                user_id=user_id,
+                work_slug=position.work_slug,
+                chapter_slug=position.chapter_slug,
+                paragraph_anchor=position.paragraph_anchor,
+                fragment_index=position.fragment_index,
+                language=language,
+            )
+            .on_conflict_do_update(
+                constraint="uq_reading_progress_user_work",
+                set_={
+                    "chapter_slug": position.chapter_slug,
+                    "paragraph_anchor": position.paragraph_anchor,
+                    "fragment_index": position.fragment_index,
+                    "language": language,
+                    "updated_at": func.now(),
+                },
+            )
+            .returning(ReadingProgress)
+        )
+        row = self._db.execute(stmt).scalar_one()
+        self._db.commit()
+        return self._to_entity(row)
+
+    @staticmethod
+    def _to_entity(row) -> ReadingProgressEntity:
+        return ReadingProgressEntity(
+            id=row.id,
+            user_id=row.user_id,
+            position=_position_of(row),
+            language=row.language,
+            created_at=row.created_at,
+            updated_at=row.updated_at,
+        )
+
+
+class ReadingBookmarkRepository:
+    """Marcadores manuales. No tocan el progreso automatico."""
+
+    def __init__(self, db: Session) -> None:
+        self._db = db
+
+    def list_by_user(
+        self, user_id: UUID, work_slug: str | None = None
+    ) -> list[ReadingBookmarkEntity]:
+        q = self._db.query(ReadingBookmark).filter(ReadingBookmark.user_id == user_id)
+        if work_slug:
+            q = q.filter(ReadingBookmark.work_slug == work_slug)
+        rows = q.order_by(ReadingBookmark.created_at.desc()).all()
+        return [self._to_entity(r) for r in rows]
+
+    def get_owned(self, bookmark_id: UUID, user_id: UUID) -> ReadingBookmarkEntity | None:
+        """Filtra por duenno EN LA CONSULTA.
+
+        Nunca "buscar por id y comparar despues": ese patron acaba filtrando
+        filas ajenas el dia que alguien olvide el if.
+        """
+        row = (
+            self._db.query(ReadingBookmark)
+            .filter(ReadingBookmark.id == bookmark_id, ReadingBookmark.user_id == user_id)
+            .first()
+        )
+        return None if row is None else self._to_entity(row)
+
+    def create(
+        self, user_id: UUID, position: ReadingPosition, label: str | None
+    ) -> ReadingBookmarkEntity | None:
+        """Devuelve None si ya existe un marcador en esa posicion."""
+        if self._at_position(user_id, position) is not None:
+            return None
+        row = ReadingBookmark(
+            user_id=user_id,
+            work_slug=position.work_slug,
+            chapter_slug=position.chapter_slug,
+            paragraph_anchor=position.paragraph_anchor,
+            fragment_index=position.fragment_index,
+            label=label,
+        )
+        self._db.add(row)
+        self._db.commit()
+        self._db.refresh(row)
+        return self._to_entity(row)
+
+    def delete(self, bookmark_id: UUID, user_id: UUID) -> bool:
+        deleted = (
+            self._db.query(ReadingBookmark)
+            .filter(ReadingBookmark.id == bookmark_id, ReadingBookmark.user_id == user_id)
+            .delete()
+        )
+        self._db.commit()
+        return bool(deleted)
+
+    def _at_position(self, user_id: UUID, position: ReadingPosition):
+        return (
+            self._db.query(ReadingBookmark)
+            .filter(
+                ReadingBookmark.user_id == user_id,
+                ReadingBookmark.work_slug == position.work_slug,
+                ReadingBookmark.chapter_slug == position.chapter_slug,
+                ReadingBookmark.paragraph_anchor == position.paragraph_anchor,
+                ReadingBookmark.fragment_index == position.fragment_index,
+            )
+            .first()
+        )
+
+    @staticmethod
+    def _to_entity(row) -> ReadingBookmarkEntity:
+        return ReadingBookmarkEntity(
+            id=row.id,
+            user_id=row.user_id,
+            position=_position_of(row),
+            label=row.label,
+            created_at=row.created_at,
+        )
+
+
+class SavedPassageRepository:
+    """Pasajes guardados con nota cifrada. Es lo que lista el Grimorio."""
+
+    def __init__(self, db: Session) -> None:
+        self._db = db
+
+    def list_by_user(self, user_id: UUID, work_slug: str | None = None) -> list[SavedPassageEntity]:
+        q = self._db.query(SavedPassage).filter(SavedPassage.user_id == user_id)
+        if work_slug:
+            q = q.filter(SavedPassage.work_slug == work_slug)
+        rows = q.order_by(SavedPassage.created_at.desc()).all()
+        return [self._to_entity(r) for r in rows]
+
+    def get_owned(self, passage_id: UUID, user_id: UUID) -> SavedPassageEntity | None:
+        row = self._row_owned(passage_id, user_id)
+        return None if row is None else self._to_entity(row)
+
+    def create(
+        self,
+        user_id: UUID,
+        position: ReadingPosition,
+        quote_text: str,
+        quote_language: str,
+        encrypted_note: str | None,
+        note_iv: str | None,
+    ) -> SavedPassageEntity | None:
+        """Devuelve None si ese pasaje ya estaba guardado."""
+        if self._at_position(user_id, position) is not None:
+            return None
+        row = SavedPassage(
+            user_id=user_id,
+            work_slug=position.work_slug,
+            chapter_slug=position.chapter_slug,
+            paragraph_anchor=position.paragraph_anchor,
+            fragment_index=position.fragment_index,
+            quote_text=quote_text,
+            quote_language=quote_language,
+            encrypted_note=encrypted_note,
+            note_iv=note_iv,
+        )
+        self._db.add(row)
+        self._db.commit()
+        self._db.refresh(row)
+        return self._to_entity(row)
+
+    def set_note(
+        self, passage_id: UUID, user_id: UUID, encrypted_note: str | None, note_iv: str | None
+    ) -> SavedPassageEntity | None:
+        """Sustituye la nota cifrada. Ambos en None la borra."""
+        row = self._row_owned(passage_id, user_id)
+        if row is None:
+            return None
+        row.encrypted_note = encrypted_note
+        row.note_iv = note_iv
+        row.updated_at = datetime.now(timezone.utc)
+        self._db.commit()
+        self._db.refresh(row)
+        return self._to_entity(row)
+
+    def delete(self, passage_id: UUID, user_id: UUID) -> bool:
+        deleted = (
+            self._db.query(SavedPassage)
+            .filter(SavedPassage.id == passage_id, SavedPassage.user_id == user_id)
+            .delete()
+        )
+        self._db.commit()
+        return bool(deleted)
+
+    def _at_position(self, user_id: UUID, position: ReadingPosition):
+        return (
+            self._db.query(SavedPassage)
+            .filter(
+                SavedPassage.user_id == user_id,
+                SavedPassage.work_slug == position.work_slug,
+                SavedPassage.chapter_slug == position.chapter_slug,
+                SavedPassage.paragraph_anchor == position.paragraph_anchor,
+                SavedPassage.fragment_index == position.fragment_index,
+            )
+            .first()
+        )
+
+    def _row_owned(self, passage_id: UUID, user_id: UUID):
+        return (
+            self._db.query(SavedPassage)
+            .filter(SavedPassage.id == passage_id, SavedPassage.user_id == user_id)
+            .first()
+        )
+
+    @staticmethod
+    def _to_entity(row) -> SavedPassageEntity:
+        return SavedPassageEntity(
+            id=row.id,
+            user_id=row.user_id,
+            position=_position_of(row),
+            quote_text=row.quote_text,
+            quote_language=row.quote_language,
+            encrypted_note=row.encrypted_note,
+            note_iv=row.note_iv,
+            created_at=row.created_at,
+            updated_at=row.updated_at,
+        )

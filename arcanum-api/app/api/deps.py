@@ -10,7 +10,10 @@ from app.adapters.repositories import (
     MateriaItemRepository,
     NatalChartRepository,
     OracleConversationRepository,
+    ReadingBookmarkRepository,
+    ReadingProgressRepository,
     RefreshTokenRepository,
+    SavedPassageRepository,
     TarotCardRepository,
     TarotReadingRepository,
     TraditionRepository,
@@ -63,6 +66,18 @@ def get_oracle_conversation_repo(db: Session = Depends(get_db)) -> OracleConvers
 
 def get_tradition_repo(db: Session = Depends(get_db)) -> TraditionRepository:
     return TraditionRepository(db)
+
+
+def get_progress_repo(db: Session = Depends(get_db)) -> ReadingProgressRepository:
+    return ReadingProgressRepository(db)
+
+
+def get_bookmark_repo(db: Session = Depends(get_db)) -> ReadingBookmarkRepository:
+    return ReadingBookmarkRepository(db)
+
+
+def get_saved_passage_repo(db: Session = Depends(get_db)) -> SavedPassageRepository:
+    return SavedPassageRepository(db)
 
 
 # ── Servicios ──────────────────────────────────────────────────────────────────

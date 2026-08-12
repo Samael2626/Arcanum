@@ -208,3 +208,60 @@ class TraditionEntity:
     is_premium: bool = True
     language: str = "es"
     display_order: int = 0
+
+
+# ── Biblioteca personal ─────────────────────────────────────────────────────
+
+
+@dataclass(frozen=True)
+class ReadingPosition:
+    """Posicion estable dentro de una obra.
+
+    Deliberadamente NO existe un campo "pagina": la paginacion depende del
+    tamano de letra, del idioma y de la pantalla, asi que guardarla equivaldria
+    a guardar una posicion que no significa lo mismo dos veces seguidas. Estas
+    cuatro coordenadas sobreviven a un cambio de tipografia, de idioma y de
+    dispositivo, y el cliente reconstruye con ellas la pagina visual.
+
+    Es inmutable porque una posicion guardada no se edita: se sustituye.
+    """
+
+    work_slug: str
+    chapter_slug: str
+    paragraph_anchor: str
+    fragment_index: int = 0
+
+
+@dataclass
+class ReadingProgressEntity:
+    id: UUID
+    user_id: UUID
+    position: ReadingPosition
+    language: str = "es"
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+@dataclass
+class ReadingBookmarkEntity:
+    id: UUID
+    user_id: UUID
+    position: ReadingPosition
+    label: str | None = None
+    created_at: datetime | None = None
+
+
+@dataclass
+class SavedPassageEntity:
+    id: UUID
+    user_id: UUID
+    position: ReadingPosition
+    quote_text: str
+    quote_language: str = "es"
+    # Nota personal cifrada en el cliente. El servidor no tiene la clave y no
+    # existe variante en claro: si algun dia aparece un campo `note` aqui, es
+    # que alguien rompio la promesa del Grimorio.
+    encrypted_note: str | None = None
+    note_iv: str | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None

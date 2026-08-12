@@ -24,6 +24,19 @@ RAW_URL = os.getenv("MIGRATION_TEST_DATABASE_URL") or os.getenv("TEST_DATABASE_U
 pytestmark = pytest.mark.skipif(RAW_URL is None, reason="sin base PostgreSQL de pruebas")
 
 
+def _repo_head() -> str:
+    """La cabeza que declara el repositorio, no un numero escrito a mano.
+
+    Con "006" fijo, cada migracion nueva dejaba esta suite SALTANDOSE entera en
+    silencio, que es peor que verla en rojo.
+    """
+    from alembic.script import ScriptDirectory
+
+    from app.db.migrate import get_alembic_config
+
+    return ScriptDirectory.from_config(get_alembic_config(RAW_URL)).get_current_head()
+
+
 def _guard(url: str) -> str:
     """Cortafuegos: una URL que huela a produccion aborta la sesion entera."""
     lowered = url.lower()
@@ -40,8 +53,10 @@ def engine():
     eng = create_engine(_guard(RAW_URL), pool_pre_ping=True)
     with eng.connect() as c:
         revision = c.execute(text("SELECT version_num FROM alembic_version")).scalar()
-        if revision != "006":
-            pytest.skip(f"la base de pruebas esta en {revision}, se requiere 006")
+        if revision != _repo_head():
+            pytest.skip(
+                f"la base de pruebas esta en {revision}, se requiere {_repo_head()}"
+            )
     yield eng
     eng.dispose()
 

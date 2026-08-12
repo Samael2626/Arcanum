@@ -1,4 +1,5 @@
-# Verifica 005/006 contra PostgreSQL limpio; nunca usar en producción.
+# Verifica el ciclo completo de migraciones contra PostgreSQL limpio.
+# Nunca usar en produccion: hace downgrade a base.
 import os
 import sys
 from pathlib import Path
@@ -6,9 +7,23 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from alembic import command
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, inspect, text
 
 from app.db.migrate import get_alembic_config
+
+# Lo que cada revision debe haber dejado en pie. Se comprueba por contenido y no
+# solo por numero de revision: un `alembic upgrade` que corre sin explotar pero
+# olvida una tabla dejaria la version escrita igualmente.
+REQUIRED_TABLES = {
+    'users',
+    'credit_ledger',
+    'usage_operations',
+    'revenuecat_events',
+    'reading_progress',
+    'reading_bookmarks',
+    'saved_passages',
+}
 
 
 def main() -> int:
@@ -18,6 +33,10 @@ def main() -> int:
         return 2
 
     config = get_alembic_config(url)
+    # La cabeza se lee del repositorio, no se escribe a mano: con un numero fijo,
+    # cada migracion nueva rompia este verificador y el de tests_pg.
+    head = ScriptDirectory.from_config(config).get_current_head()
+
     command.downgrade(config, 'base')
     command.upgrade(config, 'head')
 
@@ -26,14 +45,27 @@ def main() -> int:
         revision = connection.execute(text('SELECT version_num FROM alembic_version')).scalar_one()
         inspector = inspect(connection)
         tables = set(inspector.get_table_names())
-        required = {'users', 'credit_ledger', 'usage_operations', 'revenuecat_events'}
-        missing = required - tables
-        if revision != '006' or missing:
-            raise RuntimeError(f'migration incompleta: revision={revision}, faltan={sorted(missing)}')
+        missing = REQUIRED_TABLES - tables
+        if revision != head or missing:
+            raise RuntimeError(
+                f'migracion incompleta: revision={revision}, esperada={head}, '
+                f'faltan={sorted(missing)}'
+            )
         columns = {column['name'] for column in inspector.get_columns('credit_ledger')}
         if 'usage_operation_id' not in columns:
-            raise RuntimeError('credit_ledger.usage_operation_id falta en 006')
-    print('Migraciones 005/006 verificadas.')
+            raise RuntimeError('credit_ledger.usage_operation_id falta tras migrar')
+
+        # El ciclo tiene que ser reversible: una migracion que solo sabe subir
+        # no sirve de plan de rollback el dia que haga falta.
+        command.downgrade(config, '006')
+    with engine.connect() as connection:
+        tables = set(inspect(connection).get_table_names())
+        quedan = {'reading_progress', 'reading_bookmarks', 'saved_passages'} & tables
+        if quedan:
+            raise RuntimeError(f'el downgrade dejo tablas atras: {sorted(quedan)}')
+
+    command.upgrade(config, 'head')
+    print(f'Migraciones verificadas: ciclo completo hasta {head} y vuelta.')
     return 0
 
 
