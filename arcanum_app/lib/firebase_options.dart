@@ -1,10 +1,11 @@
-// Archivo auto-generado por FlutterFire CLI.
-// Reemplazar con el real descargado desde Firebase Console
-// después de registrar la app Android (com.arcanum.magick).
+// Opciones de Firebase por plataforma.
 //
-// Para generar: flutterfire configure
-// O manualmente: Firebase Console → Project Settings → Add app → Android
-// → descargar google-services.json + crear firebase_options.dart
+// Los valores de Android salen de android/app/google-services.json (que NO se
+// versiona) y estan verificados contra el: appId = mobilesdk_app_id,
+// messagingSenderId = project_number. No son secretos: viajan dentro del APK y
+// se protegen restringiendo la clave por package y huella SHA en la consola.
+//
+// Regenerar con: flutterfire configure
 
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
@@ -24,16 +25,16 @@ class DefaultFirebaseOptions {
     }
   }
 
-  // TODO: Reemplazar con valores reales de Firebase Console
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'YOUR_API_KEY',
-    appId: 'YOUR_APP_ID',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
+    apiKey: 'AIzaSyCLPFlUf7uMo1Rg4vse99l41xuHQTANCaw',
+    appId: '1:330365004606:android:6dc30ffbaf05eec72c9a6f',
+    messagingSenderId: '330365004606',
     projectId: 'arcanum-app-magick',
     storageBucket: 'arcanum-app-magick.firebasestorage.app',
   );
 
-  // TODO: Configurar cuando se agregue iOS
+  // iOS sigue sin registrar en la consola: no hay cliente iOS en
+  // google-services.json, asi que estos valores no se pueden verificar.
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'YOUR_IOS_API_KEY',
     appId: 'YOUR_IOS_APP_ID',
