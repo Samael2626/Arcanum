@@ -67,6 +67,14 @@ class _LectorScreenState extends ConsumerState<LectorScreen> {
   int _pendingFragment = 0;
   bool _restored = false;
 
+  /// True cuando ya se sabe si habia una posicion que restaurar.
+  ///
+  /// Hasta entonces no se guarda nada: guardar la primera pagina antes de
+  /// resolver el punto de reanudacion pisaria el progreso real con el
+  /// principio del capitulo.
+  bool _resumeResolved = false;
+  bool _savedOpening = false;
+
   Timer? _saveDebounce;
 
   @override
@@ -75,7 +83,11 @@ class _LectorScreenState extends ConsumerState<LectorScreen> {
     _reading = ref.read(readingRepositoryProvider);
     _pendingAnchor = widget.anchor;
     _pendingFragment = widget.fragmentIndex;
-    if (_pendingAnchor == null) _resolveResumePoint();
+    if (_pendingAnchor == null) {
+      _resolveResumePoint();
+    } else {
+      _resumeResolved = true;
+    }
   }
 
   /// Sin ancla explícita, se intenta reanudar donde se quedó esta obra.
@@ -96,6 +108,8 @@ class _LectorScreenState extends ConsumerState<LectorScreen> {
     } catch (_) {
       // Sin sesión o sin red se empieza por el principio, en silencio: no es
       // un fallo que merezca interrumpir la lectura.
+    } finally {
+      if (mounted) setState(() => _resumeResolved = true);
     }
   }
 
@@ -122,8 +136,14 @@ class _LectorScreenState extends ConsumerState<LectorScreen> {
   }
 
   ReadingPosition? _positionAt(int index) {
-    if (index >= _pages.length || _pages[index].isEmpty) return null;
-    final fragment = _pages[index].first;
+    if (_pages.isEmpty) return null;
+    // La pagina de cierre no es texto de la obra, asi que no tiene posicion
+    // propia: hereda la de la ultima pagina real. Sin esto, un capitulo de una
+    // sola pagina no registraba NADA — se leia entero y la obra seguia
+    // diciendo "Comenzar lectura".
+    final page = _pages[index.clamp(0, _pages.length - 1)];
+    if (page.isEmpty) return null;
+    final fragment = page.first;
     return ReadingPosition(
       workSlug: widget.workSlug,
       chapterSlug: widget.chapterSlug,
@@ -205,6 +225,7 @@ class _LectorScreenState extends ConsumerState<LectorScreen> {
         );
 
         _restorePendingPage();
+        _saveOpeningPosition();
 
         // +1: la página de cierre del capítulo, que no es texto de la obra y
         // por eso no la genera el paginador.
@@ -292,6 +313,21 @@ class _LectorScreenState extends ConsumerState<LectorScreen> {
       textAlign: TextAlign.justify,
     )..layout(maxWidth: maxWidth < 0 ? 0 : maxWidth);
     return painter.height;
+  }
+
+  /// Registra la posicion nada mas abrir el capitulo.
+  ///
+  /// Un capitulo de una sola pagina no dispara ningun cambio de pagina, asi
+  /// que sin esto se podia leer entero y salir sin dejar rastro. Se hace una
+  /// vez, tras el primer reparto en paginas y despues de resolver la
+  /// reanudacion, y fuera del build: guardar durante el build seria un efecto
+  /// secundario en mitad del pintado.
+  void _saveOpeningPosition() {
+    if (_savedOpening || !_resumeResolved || _pages.isEmpty) return;
+    _savedOpening = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _flushProgress();
+    });
   }
 
   /// Lleva la vista a la página que contiene la posición pendiente.
