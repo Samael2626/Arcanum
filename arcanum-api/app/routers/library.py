@@ -63,10 +63,10 @@ def get_bridge_by_materia(
     excerpt, is_es = result.text, result.is_translation
 
     return MateriaBridge(
-        work_slug=chapter.work.slug,
-        work_title=chapter.work.title,
-        author=chapter.work.author,
-        year=chapter.work.year,
+        work_slug=chapter.work_slug,
+        work_title=chapter.work_title,
+        author=chapter.work_author,
+        year=chapter.work_year,
         chapter_slug=chapter.slug,
         chapter_title=chapter.title,
         ruling_planets=ruling,
@@ -145,11 +145,11 @@ def get_chapter(
         kind=chapter.kind,
         position=chapter.position,
         meta=chapter.meta or {},
-        work_slug=chapter.work.slug,
-        work_title=chapter.work.title,
+        work_slug=chapter.work_slug,
+        work_title=chapter.work_title,
         # Viaja con el capítulo: el aviso histórico debe estar donde se lee el
         # texto, no solo en la portada de la obra.
-        advisory=chapter.work.advisory,
+        advisory=chapter.work_advisory,
         paragraphs=[
             ParagraphResponse.model_validate(p) for p in chapter.paragraphs
         ],

@@ -146,6 +146,20 @@ class LibraryChapterEntity:
     position: int = 0
     meta: dict | None = None
     paragraphs: list[LibraryParagraphEntity] | None = None
+    # Datos de la obra que viajan CON el capitulo. La entidad no expone la
+    # relacion ORM `work`: si lo hiciera, cualquiera que leyese
+    # `chapter.work.algo` estaria disparando una consulta a espaldas del
+    # repositorio, y el router lo hacia contra un atributo inexistente (500 en
+    # todo /library/{obra}/{capitulo}). Solo lo minimo que necesitan
+    # ChapterDetail y MateriaBridge, nunca la obra entera con sus capitulos.
+    #
+    # Nacen en None: solo los pueblan las consultas de detalle. Un indice que
+    # no los resuelve deja el hueco visible en vez de inventarse una obra.
+    work_slug: str | None = None
+    work_title: str | None = None
+    work_author: str | None = None
+    work_year: int | None = None
+    work_advisory: str | None = None
 
 
 @dataclass

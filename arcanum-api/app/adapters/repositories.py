@@ -12,7 +12,7 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session, noload, selectinload
+from sqlalchemy.orm import Session, contains_eager, noload, selectinload
 
 from app.core.config import settings
 from app.core.security import create_access_token, create_refresh_token, get_password_hash, verify_password
@@ -420,19 +420,42 @@ class LibraryWorkRepository:
             ch_entity.paragraphs = _list_to_entities(LibraryParagraphEntity, ch_row.paragraphs)
         return work
 
+    # Solo la cabecera de la obra viaja con el capitulo. Se declara aparte para
+    # que get_chapter y get_bridge_chapter no puedan divergir: las dos rutas
+    # sirven la misma cabecera y un campo nuevo se añade en un unico sitio.
+    _WORK_HEADER = (
+        # contains_eager aprovecha el JOIN que la consulta ya hace: la obra
+        # llega en la MISMA fila, sin consulta extra. noload sobre chapters
+        # cierra la puerta al N+1: nadie que toque row.work.chapters va a
+        # arrastrar los 423 capitulos de Culpeper detras de un solo capitulo.
+        contains_eager(LibraryChapter.work).noload(LibraryWork.chapters),
+        selectinload(LibraryChapter.paragraphs),
+    )
+
+    @staticmethod
+    def _chapter_with_work(row) -> LibraryChapterEntity:
+        """Fila ORM → entidad, con parrafos y cabecera de obra ya resueltos."""
+        ch = _to_entity(LibraryChapterEntity, row)
+        ch.paragraphs = _list_to_entities(LibraryParagraphEntity, row.paragraphs)
+        work = row.work
+        ch.work_slug = work.slug
+        ch.work_title = work.title
+        ch.work_author = work.author
+        ch.work_year = work.year
+        ch.work_advisory = work.advisory
+        return ch
+
     def get_chapter(self, work_slug: str, chapter_slug: str) -> LibraryChapterEntity | None:
         row = (
             self._db.query(LibraryChapter)
-            .join(LibraryWork)
-            .options(selectinload(LibraryChapter.paragraphs))
+            .join(LibraryChapter.work)
+            .options(*self._WORK_HEADER)
             .filter(LibraryWork.slug == work_slug, LibraryChapter.slug == chapter_slug)
             .first()
         )
         if row is None:
             return None
-        ch = _to_entity(LibraryChapterEntity, row)
-        ch.paragraphs = _list_to_entities(LibraryParagraphEntity, row.paragraphs)
-        return ch
+        return self._chapter_with_work(row)
 
     def get_chapters(self, work_slug: str, kind: str | None = None) -> list[LibraryChapterEntity]:
         query = (
@@ -449,16 +472,14 @@ class LibraryWorkRepository:
     def get_bridge_chapter(self, materia_slug: str) -> LibraryChapterEntity | None:
         row = (
             self._db.query(LibraryChapter)
-            .join(LibraryWork)
-            .options(selectinload(LibraryChapter.paragraphs))
+            .join(LibraryChapter.work)
+            .options(*self._WORK_HEADER)
             .filter(LibraryChapter.meta["materia_slug"].as_string() == materia_slug)
             .first()
         )
         if row is None:
             return None
-        ch = _to_entity(LibraryChapterEntity, row)
-        ch.paragraphs = _list_to_entities(LibraryParagraphEntity, row.paragraphs)
-        return ch
+        return self._chapter_with_work(row)
 
 
 # ── Oracle ──────────────────────────────────────────────────────────────────
