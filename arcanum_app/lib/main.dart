@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -8,15 +7,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'core/auth/auth_controller.dart';
+import 'core/firebase/firebase_startup.dart';
 import 'core/monetization/monetization_service.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/arcanum_theme.dart';
 import 'features/onboarding/application/onboarding_controller.dart';
-import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // No usar Firebase.initializeApp directamente: en Android el provider nativo
+  // ya creo [DEFAULT] y el segundo intento mata el arranque.
+  await ensureFirebaseInitialized();
 
   // Crashlytics: capturar errores no atrapados
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
