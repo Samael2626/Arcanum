@@ -11,6 +11,8 @@ import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/oraculo/oraculo_screen.dart';
 import '../../features/paywall/paywall_screen.dart';
 import '../../features/perfil/perfil_screen.dart';
+import '../../features/grimorio/pasajes_screen.dart';
+import '../../features/lecturas/presentation/indice_screen.dart';
 import '../../features/saber/saber_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/tarot/tarot_screen.dart';
@@ -42,6 +44,12 @@ final appRouter = GoRouter(
             GoRoute(
               path: '/grimorio',
               builder: (c, s) => const GrimorioScreen(),
+              routes: [
+                GoRoute(
+                  path: 'pasajes',
+                  builder: (c, s) => const PasajesScreen(),
+                ),
+              ],
             ),
           ],
         ),
@@ -59,11 +67,29 @@ final appRouter = GoRouter(
                   builder: (c, s) =>
                       ObraScreen(workSlug: s.pathParameters['work']!),
                   routes: [
+                    // 'indice' se declara ANTES de ':chapter': si no, casaria
+                    // como si fuera el slug de un capitulo y el indice no se
+                    // abriria nunca. Ningun capitulo puede llamarse asi.
+                    GoRoute(
+                      path: 'indice',
+                      builder: (c, s) =>
+                          IndiceScreen(workSlug: s.pathParameters['work']!),
+                    ),
                     GoRoute(
                       path: ':chapter',
+                      // anchor/fragment son opcionales: sin ellos el capitulo
+                      // se abre por el principio, que es lo que hace el enlace
+                      // profundo de siempre. Con ellos, cae en la posicion
+                      // exacta que pidio "Reanudar" o un pasaje guardado.
                       builder: (c, s) => LectorScreen(
                         workSlug: s.pathParameters['work']!,
                         chapterSlug: s.pathParameters['chapter']!,
+                        anchor: s.uri.queryParameters['anchor'],
+                        fragmentIndex:
+                            int.tryParse(
+                              s.uri.queryParameters['fragment'] ?? '',
+                            ) ??
+                            0,
                       ),
                     ),
                   ],

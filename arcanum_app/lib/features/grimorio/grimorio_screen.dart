@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/api/arcanum_api.dart';
 import '../../core/auth/auth_controller.dart';
@@ -106,7 +107,18 @@ class _GrimorioScreenState extends ConsumerState<GrimorioScreen> {
                   }
                   final entries = snap.data ?? const [];
                   if (entries.isEmpty) {
-                    return _GrimoireEmpty(onWrite: _newEntry);
+                    return ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(22, 40, 22, 100),
+                      children: [
+                        // El enlace a los pasajes va tambien en el vacio: se
+                        // puede haber guardado un pasaje leyendo sin haber
+                        // escrito nunca una entrada.
+                        const _SavedPassagesLink(),
+                        const SizedBox(height: 18),
+                        _GrimoireEmpty(onWrite: _newEntry),
+                      ],
+                    );
                   }
                   return RefreshIndicator(
                     color: ArcanumColors.gold,
@@ -117,7 +129,9 @@ class _GrimorioScreenState extends ConsumerState<GrimorioScreen> {
                       padding: const EdgeInsets.fromLTRB(22, 40, 22, 100),
                       children: [
                         const _GrimoireHeader(),
-                        const SizedBox(height: 22),
+                        const SizedBox(height: 18),
+                        const _SavedPassagesLink(),
+                        const SizedBox(height: 18),
                         for (var i = 0; i < entries.length; i++)
                           Cascade(
                             delayMs: (i * 90).clamp(0, 600),
@@ -649,4 +663,59 @@ class _QuillFab extends StatelessWidget {
       child: const Icon(Icons.edit_outlined, size: 24),
     );
   }
+}
+
+
+/// Puerta a "Pasajes guardados": lo que el usuario subrayo leyendo.
+///
+/// Vive en el Grimorio y no en la Biblioteca porque no es contenido de la obra:
+/// es lo que esta persona hizo con ella.
+class _SavedPassagesLink extends StatelessWidget {
+  const _SavedPassagesLink();
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: 'Pasajes guardados',
+    child: InkWell(
+      onTap: () => context.push('/grimorio/pasajes'),
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: ArcanumColors.goldMuted.withValues(alpha: 0.45),
+          ),
+        ),
+        child: Row(
+          children: [
+            const Text(
+              '❧',
+              style: TextStyle(fontSize: 15, color: ArcanumColors.gold),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('PASAJES GUARDADOS', style: ArcanumText.label()),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Lo que subrayaste en la Biblioteca',
+                    style: ArcanumText.body(14, color: ArcanumColors.ivory),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              size: 18,
+              color: ArcanumColors.goldMuted,
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }

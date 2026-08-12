@@ -137,6 +137,27 @@ class LibraryCache {
     return total;
   }
 
+  /// Borra la descarga de UNA obra: sus capítulos y su índice.
+  ///
+  /// Por obra y no todo de golpe: quien descargó dos libros y quiere espacio
+  /// no tiene por qué perder los dos. El índice general se conserva — es
+  /// diminuto y sin él la estantería se queda en blanco sin conexión.
+  Future<int> clearWork(String workSlug) async {
+    final dir = await _dir();
+    if (dir == null) return 0;
+    final safe = _safe(workSlug);
+    var removed = 0;
+    await for (final entity in dir.list()) {
+      final name = entity.uri.pathSegments.last;
+      if (entity is File &&
+          (name.startsWith('chapter_${safe}_') || name == 'work_$safe.json')) {
+        await entity.delete();
+        removed++;
+      }
+    }
+    return removed;
+  }
+
   /// Libera el espacio. Lo pedirá el usuario desde Ajustes.
   Future<void> clear() async {
     final dir = await _dir();

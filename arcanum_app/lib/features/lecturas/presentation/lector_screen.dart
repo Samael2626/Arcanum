@@ -1,30 +1,43 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/api/oracle_error.dart';
-import '../../../core/api/arcanum_api.dart';
 import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
-import '../../arte/materia_lore.dart';
-import '../library_messages.dart';
 import '../data/library_repository.dart';
+import '../data/reader_settings.dart';
+import '../data/reading_repository.dart';
 import '../domain/library_models.dart';
+import '../domain/pagination.dart';
+import '../domain/reading_position.dart';
+import '../library_messages.dart';
+import 'reader_widgets.dart';
 
-/// El lector: un capítulo de una obra, en español o en su original.
+/// El lector: un capítulo, página a página.
 ///
-/// Tres capas de profundidad sobre el mismo texto, igual que en la carta natal:
-/// se lee traducido, se puede ver el original a un toque, y se le puede pedir
-/// al oráculo que explique un pasaje concreto.
+/// Página real, no una lista larga disfrazada: cada pantalla se compone
+/// midiendo el texto contra el alto disponible, así que no hay recorte ni una
+/// línea que se pierda al pasar. El precio es que la paginación cambia con la
+/// tipografía y la pantalla — por eso lo que se guarda NUNCA es el número de
+/// página, sino la posición estable, y al volver se recalcula qué página la
+/// contiene.
 class LectorScreen extends ConsumerStatefulWidget {
   final String workSlug;
   final String chapterSlug;
+
+  /// Ancla desde la que abrir. La usan "Reanudar lectura" y los pasajes
+  /// guardados para caer en el sitio exacto y no al principio del capítulo.
+  final String? anchor;
+  final int fragmentIndex;
 
   const LectorScreen({
     super.key,
     required this.workSlug,
     required this.chapterSlug,
+    this.anchor,
+    this.fragmentIndex = 0,
   });
 
   @override
@@ -32,571 +45,422 @@ class LectorScreen extends ConsumerStatefulWidget {
 }
 
 class _LectorScreenState extends ConsumerState<LectorScreen> {
-  late Future<LibraryChapter> _future = _load();
+  late Future<_ChapterBundle> _future = _load();
 
-  /// Idioma de lectura. Se mantiene mientras dure la sesión de lectura: quien
-  /// lee en el original no quiere reactivarlo capítulo a capítulo.
+  final _controller = PageController();
+
+  /// Se resuelve en initState y se guarda en un campo, nunca con `ref` dentro
+  /// de dispose(): al desmontarse, el BuildContext ya no es valido y Riverpod
+  /// lo prohibe. Y justo en dispose es cuando hay que guardar por donde ibas.
+  ///
+  /// Tampoco vale `late final ... = ref.read(...)`: eso es perezoso y la
+  /// primera lectura acabaria ocurriendo dentro del propio dispose.
+  late final ReadingRepository _reading;
+
   bool _spanish = true;
+  List<ReaderPage> _pages = const [];
+  int _page = 0;
 
-  /// Ancla del párrafo seleccionado. Solo uno a la vez: dos pasajes abiertos
-  /// convertirían la lectura en un tablero.
-  String? _selected;
+  /// Ancla pendiente de restaurar. Se consume en el primer layout: hasta
+  /// entonces no se sabe cuántas páginas hay ni en cuál cae.
+  String? _pendingAnchor;
+  int _pendingFragment = 0;
+  bool _restored = false;
 
-  Future<LibraryChapter> _load() => ref
-      .read(libraryRepositoryProvider)
-      .chapter(widget.workSlug, widget.chapterSlug);
+  Timer? _saveDebounce;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: ArcanumColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: ArcanumColors.ivoryMuted),
-        actions: [
-          _LanguageToggle(
-            spanish: _spanish,
-            onChanged: (value) => setState(() => _spanish = value),
-          ),
-        ],
-      ),
-      body: FutureBuilder<LibraryChapter>(
-        future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const _Loading();
-          }
-          if (snapshot.hasError) {
-            logLibraryFailure('capitulo', snapshot.error);
-            return _ErrorState(
-              onRetry: () => setState(() => _future = _load()),
-            );
-          }
-          return _content(snapshot.data!);
-        },
-      ),
-    );
+  void initState() {
+    super.initState();
+    _reading = ref.read(readingRepositoryProvider);
+    _pendingAnchor = widget.anchor;
+    _pendingFragment = widget.fragmentIndex;
+    if (_pendingAnchor == null) _resolveResumePoint();
   }
 
-  Widget _content(LibraryChapter chapter) {
-    // Si la obra aún no está traducida, se lee el original en vez de mostrar
-    // un hueco: por eso se puede publicar con la traducción a medias.
-    final untranslated = _spanish && !chapter.hasTranslation;
-
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 680),
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 60),
-          children: [
-            Text(
-              chapter.workTitle.toUpperCase(),
-              textAlign: TextAlign.center,
-              style: ArcanumText.label(),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              chapter.title,
-              textAlign: TextAlign.center,
-              style: ArcanumText.heading(30, color: ArcanumColors.gold),
-            ),
-            if (chapter.rulingPlanet != null) ...[
-              const SizedBox(height: 10),
-              _RulingPlanet(planet: chapter.rulingPlanet!),
-            ],
-            const SizedBox(height: 22),
-
-            // Puente inverso: si esta entrada es una hierba mapeada, se ofrece
-            // volver a su ficha de Materia Arcana antes de leer el texto.
-            if (chapter.materiaSlug != null) ...[
-              _MateriaLink(slug: chapter.materiaSlug!, herbName: chapter.title),
-              const SizedBox(height: 18),
-            ],
-
-            if (chapter.advisory != null) ...[
-              _Advisory(text: chapter.advisory!),
-              const SizedBox(height: 18),
-            ],
-            if (untranslated) ...[
-              const _UntranslatedNotice(),
-              const SizedBox(height: 18),
-            ],
-
-            ...chapter.paragraphs.map(
-              (paragraph) => _Passage(
-                paragraph: paragraph,
-                spanish: _spanish,
-                selected: _selected == paragraph.anchor,
-                onTap: () => setState(
-                  () => _selected = _selected == paragraph.anchor
-                      ? null
-                      : paragraph.anchor,
-                ),
-                chapterTitle: chapter.title,
-                workTitle: chapter.workTitle,
-              ),
-            ),
-
-            const SizedBox(height: 30),
-            Center(
-              child: Text(
-                '${chapter.workTitle} · dominio público',
-                style: ArcanumText.body(
-                  12,
-                  color: ArcanumColors.ivoryMuted,
-                  italic: true,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Alterna español y original. El original nunca desaparece: es lo que permite
-/// verificar una traducción automática y citar el pasaje tal cual se escribió.
-class _LanguageToggle extends StatelessWidget {
-  final bool spanish;
-  final ValueChanged<bool> onChanged;
-  const _LanguageToggle({required this.spanish, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 12),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _option('ES', spanish),
-          Text(
-            ' · ',
-            style: ArcanumText.body(13, color: ArcanumColors.goldMuted),
-          ),
-          _option('EN', !spanish),
-        ],
-      ),
-    );
-  }
-
-  Widget _option(String label, bool active) => InkWell(
-    onTap: () => onChanged(label == 'ES'),
-    borderRadius: BorderRadius.circular(6),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: Text(
-        label,
-        style: ArcanumText.body(
-          13,
-          color: active ? ArcanumColors.gold : ArcanumColors.ivoryMuted,
-        ),
-      ),
-    ),
-  );
-}
-
-/// Aviso histórico. Va con el capítulo, no solo en la portada: si se entra
-/// directo a una entrada que afirma curar la peste, el encuadre debe estar.
-class _Advisory extends StatelessWidget {
-  final String text;
-  const _Advisory({required this.text});
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-    decoration: BoxDecoration(
-      color: ArcanumColors.surface,
-      borderRadius: BorderRadius.circular(10),
-      border: Border(
-        left: BorderSide(color: ArcanumColors.burgundyLight, width: 2),
-      ),
-    ),
-    child: Text(
-      text,
-      style: ArcanumText.body(13, color: ArcanumColors.ivoryMuted),
-    ),
-  );
-}
-
-class _UntranslatedNotice extends StatelessWidget {
-  const _UntranslatedNotice();
-
-  @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      const Icon(Icons.translate, size: 15, color: ArcanumColors.goldMuted),
-      const SizedBox(width: 8),
-      Expanded(
-        child: Text(
-          'Este pasaje aún no está traducido. Se muestra en su idioma original.',
-          style: ArcanumText.body(
-            13,
-            color: ArcanumColors.ivoryMuted,
-            italic: true,
-          ),
-        ),
-      ),
-    ],
-  );
-}
-
-/// El planeta regente que la obra declara. Sale del texto ORIGINAL, extraído
-/// en la ingesta: la correspondencia con Materia Arcana no depende de la
-/// calidad de la traducción.
-class _RulingPlanet extends StatelessWidget {
-  final String planet;
-  const _RulingPlanet({required this.planet});
-
-  static const _glyphs = {
-    'sun': '☉',
-    'moon': '☽',
-    'mercury': '☿',
-    'venus': '♀',
-    'mars': '♂',
-    'jupiter': '♃',
-    'saturn': '♄',
-  };
-  static const _names = {
-    'sun': 'Sol',
-    'moon': 'Luna',
-    'mercury': 'Mercurio',
-    'venus': 'Venus',
-    'mars': 'Marte',
-    'jupiter': 'Júpiter',
-    'saturn': 'Saturno',
-  };
-
-  @override
-  Widget build(BuildContext context) => Text(
-    '${_glyphs[planet] ?? '✶'}  ${_names[planet] ?? planet}',
-    textAlign: TextAlign.center,
-    style: ArcanumText.body(15, color: ArcanumColors.goldMuted),
-  );
-}
-
-/// El puente inverso: de vuelta a la ficha de la planta en Materia Arcana.
-///
-/// Aparece arriba del capítulo, antes del texto: quien llega a "Rosemary" en
-/// Culpeper puede saltar a la correspondencia de la planta sin buscarla. Al
-/// tocar, pide el detalle y abre la MISMA hoja que en Saber, sin puente de
-/// vuelta (sería circular): ya se está en el capítulo que enlazaría.
-class _MateriaLink extends ConsumerStatefulWidget {
-  final String slug;
-  final String herbName;
-  const _MateriaLink({required this.slug, required this.herbName});
-
-  @override
-  ConsumerState<_MateriaLink> createState() => _MateriaLinkState();
-}
-
-class _MateriaLinkState extends ConsumerState<_MateriaLink> {
-  bool _opening = false;
-
-  Future<void> _open() async {
-    if (_opening) return;
-    setState(() => _opening = true);
+  /// Sin ancla explícita, se intenta reanudar donde se quedó esta obra.
+  ///
+  /// Solo si el progreso guardado es de ESTE capítulo: entrar por el índice a
+  /// un capítulo concreto y que el lector te lleve a otro sería desobedecer.
+  Future<void> _resolveResumePoint() async {
     try {
-      final detail = await ref
-          .read(arcanumApiProvider)
-          .materiaDetail(widget.slug);
-      if (!mounted) return;
-      showMateriaLoreSheet(
-        context,
-        future: Future.value(detail),
-        slug: widget.slug,
-        name: detail['name'] as String? ?? widget.herbName,
-        itemType: detail['item_type'] as String? ?? 'herb',
-        planet: detail['planet'] as String?,
-        element: detail['element'] as String?,
-        zodiac: detail['zodiac'] as String?,
-      );
+      final progress = await _reading.progressFor(widget.workSlug);
+      if (!mounted || progress == null) return;
+      if (progress.position.chapterSlug != widget.chapterSlug) return;
+      setState(() {
+        _pendingAnchor = progress.position.paragraphAnchor;
+        _pendingFragment = progress.position.fragmentIndex;
+        _spanish = progress.spanish;
+        _restored = false;
+      });
     } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo abrir la ficha de la planta.')),
-      );
-    } finally {
-      if (mounted) setState(() => _opening = false);
+      // Sin sesión o sin red se empieza por el principio, en silencio: no es
+      // un fallo que merezca interrumpir la lectura.
     }
+  }
+
+  Future<_ChapterBundle> _load() async {
+    final repo = ref.read(libraryRepositoryProvider);
+    final chapter = await repo.chapter(widget.workSlug, widget.chapterSlug);
+    LibraryWork? work;
+    try {
+      work = await repo.work(widget.workSlug);
+    } catch (_) {
+      // Sin el índice se puede leer igual; solo se pierde "siguiente capítulo".
+    }
+    return _ChapterBundle(chapter: chapter, work: work);
+  }
+
+  @override
+  void dispose() {
+    _saveDebounce?.cancel();
+    // Guardado final al salir: el debounce pendiente se perdería, y salir del
+    // lector es justo cuando más importa no perder por dónde ibas.
+    _flushProgress();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  ReadingPosition? _positionAt(int index) {
+    if (index >= _pages.length || _pages[index].isEmpty) return null;
+    final fragment = _pages[index].first;
+    return ReadingPosition(
+      workSlug: widget.workSlug,
+      chapterSlug: widget.chapterSlug,
+      paragraphAnchor: fragment.anchor,
+      fragmentIndex: fragment.fragmentIndex,
+    );
+  }
+
+  void _scheduleSave() {
+    _saveDebounce?.cancel();
+    // Un segundo de calma: pasar cinco páginas seguidas es UN sitio donde te
+    // quedaste, no cinco peticiones.
+    _saveDebounce = Timer(const Duration(seconds: 1), _flushProgress);
+  }
+
+  void _flushProgress() {
+    final position = _positionAt(_page);
+    if (position == null) return;
+    unawaited(_reading.saveProgress(position, spanish: _spanish));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'Ver ${widget.herbName} en Materia Arcana',
-      child: InkWell(
-        onTap: _opening ? null : _open,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            color: ArcanumColors.gold.withValues(alpha: 0.06),
-            border: Border.all(
-              color: ArcanumColors.gold.withValues(alpha: 0.35),
-            ),
-          ),
-          child: Row(
-            children: [
-              Text(
-                '❦',
-                style: TextStyle(
-                  color: ArcanumColors.gold.withValues(alpha: 0.85),
-                  fontSize: 18,
-                  height: 1,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('EN MATERIA ARCANA', style: ArcanumText.label()),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Ver la correspondencia de esta planta',
-                      style: ArcanumText.body(14.5, color: ArcanumColors.ivory),
-                    ),
-                  ],
-                ),
-              ),
-              if (_opening)
-                const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    color: ArcanumColors.gold,
-                    strokeWidth: 2,
-                  ),
-                )
-              else
-                const Icon(
-                  Icons.arrow_forward_rounded,
-                  size: 18,
-                  color: ArcanumColors.gold,
-                ),
-            ],
-          ),
+    final settings = ref.watch(readerSettingsProvider);
+    final palette = settings.palette;
+
+    return Scaffold(
+      backgroundColor: palette == ReaderPalette.sepia
+          ? ReaderColors.sepiaBackground
+          : ArcanumColors.background,
+      body: SafeArea(
+        child: FutureBuilder<_ChapterBundle>(
+          future: _future,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const _Loading();
+            }
+            if (snapshot.hasError) {
+              logLibraryFailure('capitulo', snapshot.error);
+              return ChapterUnavailable(
+                workSlug: widget.workSlug,
+                onRetry: () => setState(() => _future = _load()),
+              );
+            }
+            return _reader(snapshot.data!, settings);
+          },
         ),
       ),
     );
   }
-}
 
-/// Un párrafo. Al tocarlo se abren sus acciones: copiar, y pedir al oráculo
-/// que lo explique.
-class _Passage extends ConsumerStatefulWidget {
-  final LibraryParagraph paragraph;
-  final bool spanish;
-  final bool selected;
-  final VoidCallback onTap;
-  final String chapterTitle;
-  final String workTitle;
+  Widget _reader(_ChapterBundle bundle, ReaderSettings settings) {
+    final chapter = bundle.chapter;
+    final onSepia = settings.palette == ReaderPalette.sepia;
+    final textColor = onSepia ? ReaderColors.sepiaInk : ArcanumColors.ivory;
 
-  const _Passage({
-    required this.paragraph,
-    required this.spanish,
-    required this.selected,
-    required this.onTap,
-    required this.chapterTitle,
-    required this.workTitle,
-  });
+    final style = ArcanumText.body(settings.fontSize, color: textColor)
+        .copyWith(height: 1.62);
 
-  @override
-  ConsumerState<_Passage> createState() => _PassageState();
-}
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth.clamp(0.0, settings.maxWidth);
+        // El alto útil descuenta cabecera, barra inferior y respiración: si se
+        // paginase contra el alto total, la última línea quedaría debajo de la
+        // barra, que es exactamente el recorte que hay que evitar.
+        final usable = constraints.maxHeight - _chromeHeight;
 
-class _PassageState extends ConsumerState<_Passage> {
-  bool _asking = false;
-  String? _reply;
-  String? _error;
-  String? _idempotencyKey;
-
-  Future<void> _explain() async {
-    final key = _idempotencyKey ??= IdempotencyKey.create();
-    setState(() {
-      _asking = true;
-      _error = null;
-      _reply = null;
-    });
-    try {
-      final response = await ref.read(arcanumApiProvider).oracleIa(
-        question: 'Explícame este pasaje de "${widget.workTitle}", de la entrada "${widget.chapterTitle}":\n\n"${widget.paragraph.textOriginal}"\n\nDime qué significa en su contexto histórico y qué utilidad tiene hoy en la práctica.',
-        idempotencyKey: key,
-      );
-      if (!mounted) return;
-      _idempotencyKey = null;
-      setState(() => _reply = assistantReply(response));
-    } catch (error) {
-      if (isCreditsRequired(error)) await _openCreditsPaywall();
-      if (!mounted) return;
-      setState(() => _error = isCreditsRequired(error) ? 'Saldo insuficiente. Puedes comprar créditos.' : oracleErrorMessage(error));
-    } finally {
-      if (mounted) setState(() => _asking = false);
-    }
-  }
-
-  Future<void> _openCreditsPaywall() async {
-    try {
-      final balance = await ref.read(arcanumApiProvider).creditsBalance();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saldo actual: ${balance['balance'] ?? 0} créditos.')));
-      context.push('/paywall');
-    } catch (error) {
-      if (mounted) setState(() => _error = 'No se pudo actualizar tu saldo. Inténtalo de nuevo.');
-    }
-  }
-  @override
-  Widget build(BuildContext context) {
-    final paragraph = widget.paragraph;
-    final text = paragraph.textFor(spanish: widget.spanish);
-    final showingTranslation = widget.spanish && paragraph.hasTranslation;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          InkWell(
-            onTap: widget.onTap,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: widget.selected
-                    ? ArcanumColors.gold.withValues(alpha: 0.07)
-                    : Colors.transparent,
+        _pages = paginateChapter(
+          paragraphs: [
+            for (final p in chapter.paragraphs)
+              ParagraphSource(
+                anchor: p.anchor,
+                text: p.textFor(spanish: _spanish),
               ),
-              child: Text(
-                text,
-                textAlign: TextAlign.justify,
-                // Cormorant Garamond a 17: es un libro, no una ficha.
-                style: ArcanumText.body(17).copyWith(height: 1.62),
-              ),
-            ),
-          ),
-
-          if (widget.selected) ...[
-            const SizedBox(height: 4),
-            Wrap(
-              children: [
-                if (showingTranslation)
-                  _Action(
-                    label: paragraph.translationStatus?.label ?? 'Traducción',
-                    icon: Icons.translate,
-                    // Informativo: declara que la tradujo una máquina.
-                    onTap: null,
-                  ),
-                _Action(
-                  label: 'Copiar',
-                  icon: Icons.copy_all_outlined,
-                  onTap: () async {
-                    await Clipboard.setData(ClipboardData(text: text));
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Pasaje copiado')),
-                      );
-                    }
-                  },
-                ),
-                _Action(
-                  label: _asking ? 'Consultando…' : 'Explícame esto',
-                  icon: null,
-                  glyph: '✦',
-                  onTap: _asking ? null : _explain,
-                ),
-              ],
-            ),
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
-                child: Text(
-                  _error!,
-                  style: ArcanumText.body(
-                    13,
-                    color: ArcanumColors.burgundyLight,
-                  ),
-                ),
-              ),
-            if (_reply != null) _OracleReply(text: _reply!),
-            const SizedBox(height: 6),
           ],
-        ],
-      ),
-    );
-  }
-}
+          measure: (text) => _measure(text, style, width - 48),
+          pageHeight: usable,
+          paragraphSpacing: settings.fontSize * 0.9,
+        );
 
-class _Action extends StatelessWidget {
-  final String label;
-  final IconData? icon;
-  final String? glyph;
-  final VoidCallback? onTap;
+        _restorePendingPage();
 
-  const _Action({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-    this.glyph,
-  });
+        // +1: la página de cierre del capítulo, que no es texto de la obra y
+        // por eso no la genera el paginador.
+        final total = _pages.length + 1;
 
-  @override
-  Widget build(BuildContext context) {
-    final color = onTap == null ? ArcanumColors.ivoryMuted : ArcanumColors.gold;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+        return Column(
           children: [
-            if (glyph != null)
-              Text(glyph!, style: TextStyle(fontSize: 12, color: color))
-            else if (icon != null)
-              Icon(icon, size: 14, color: color),
-            const SizedBox(width: 6),
-            Text(label, style: ArcanumText.body(13, color: color)),
+            ReaderHeader(
+              chapterTitle: chapter.title,
+              page: _page + 1,
+              total: total,
+              spanish: _spanish,
+              onLanguageChanged: _changeLanguage,
+              onSettings: () => showReaderSettingsSheet(context, ref),
+              onClose: () => context.pop(),
+              onSepia: onSepia,
+            ),
+            Expanded(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: settings.maxWidth),
+                  child: PageView.builder(
+                    controller: _controller,
+                    itemCount: total,
+                    onPageChanged: (index) {
+                      setState(() => _page = index);
+                      _scheduleSave();
+                    },
+                    itemBuilder: (context, index) {
+                      if (index == _pages.length) {
+                        return ChapterClosing(
+                          chapter: chapter,
+                          next: bundle.nextChapter,
+                          onSepia: onSepia,
+                          onContinue: bundle.nextChapter == null
+                              ? null
+                              : () => _goToChapter(bundle.nextChapter!.slug),
+                        );
+                      }
+                      return _PageBody(
+                        page: _pages[index],
+                        style: style,
+                        chapter: chapter,
+                        showHeader: index == 0,
+                        onSepia: onSepia,
+                        onPassageActions: (fragment) => showPassageActionsSheet(
+                          context,
+                          text: fragment.text,
+                          chapterTitle: chapter.title,
+                          workTitle: chapter.workTitle,
+                          onSave: () => _savePassage(
+                            fragment.anchor,
+                            fragment.fragmentIndex,
+                            fragment.text,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+            ReaderBottomBar(
+              onSepia: onSepia,
+              canGoBack: _page > 0,
+              canGoForward: _page < total - 1,
+              onPrevious: () => _turn(-1),
+              onNext: () => _turn(1),
+              onIndex: () => context.push('/saber/${widget.workSlug}/indice'),
+              onBookmark: _addBookmark,
+            ),
           ],
+        );
+      },
+    );
+  }
+
+  /// Alto del cromo fijo: cabecera + barra inferior + márgenes verticales.
+  static const _chromeHeight = 168.0;
+
+  double _measure(String text, TextStyle style, double maxWidth) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.justify,
+    )..layout(maxWidth: maxWidth < 0 ? 0 : maxWidth);
+    return painter.height;
+  }
+
+  /// Lleva la vista a la página que contiene la posición pendiente.
+  ///
+  /// Se hace tras paginar y una sola vez: es el momento en el que la posición
+  /// estable se traduce por fin a una página concreta.
+  void _restorePendingPage() {
+    if (_restored || _pendingAnchor == null || _pages.isEmpty) return;
+    _restored = true;
+    final target = pageIndexForPosition(
+      _pages,
+      paragraphAnchor: _pendingAnchor!,
+      fragmentIndex: _pendingFragment,
+    );
+    if (target == _page) return;
+    _page = target;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _controller.hasClients) _controller.jumpToPage(target);
+    });
+  }
+
+  /// Cambiar de idioma repagina: el mismo párrafo ocupa distinto en cada
+  /// lengua. Se ancla al párrafo actual para no perder el sitio.
+  void _changeLanguage(bool spanish) {
+    final here = _positionAt(_page);
+    setState(() {
+      _spanish = spanish;
+      _pendingAnchor = here?.paragraphAnchor;
+      _pendingFragment = 0;
+      _restored = false;
+    });
+    _scheduleSave();
+  }
+
+  void _turn(int delta) {
+    _controller.animateToPage(
+      _page + delta,
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _goToChapter(String slug) =>
+      context.pushReplacement('/saber/${widget.workSlug}/$slug');
+
+  Future<void> _addBookmark() async {
+    final position = _positionAt(_page);
+    if (position == null) return;
+    final created = await _reading.addBookmark(position);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          created == null
+              ? 'Ya tenías un marcador aquí.'
+              : 'Marcador guardado en esta página.',
+        ),
+      ),
+    );
+  }
+
+  Future<void> _savePassage(String anchor, int fragment, String quote) async {
+    final note = await showPassageNoteDialog(context, quote: quote);
+    if (note == null || !mounted) return;
+
+    final saved = await _reading.savePassage(
+      position: ReadingPosition(
+        workSlug: widget.workSlug,
+        chapterSlug: widget.chapterSlug,
+        paragraphAnchor: anchor,
+        fragmentIndex: fragment,
+      ),
+      quote: quote,
+      spanish: _spanish,
+      note: note.isEmpty ? null : note,
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          saved == null
+              ? 'Ese pasaje ya estaba en tu grimorio.'
+              : 'Pasaje guardado en el grimorio.',
         ),
       ),
     );
   }
 }
 
-class _OracleReply extends StatelessWidget {
-  final String text;
-  const _OracleReply({required this.text});
+/// El capítulo y su obra: la obra solo hace falta para saber qué viene después.
+class _ChapterBundle {
+  final LibraryChapter chapter;
+  final LibraryWork? work;
+
+  const _ChapterBundle({required this.chapter, this.work});
+
+  /// El capítulo siguiente por posición, o null si este cierra la obra.
+  LibraryChapterSummary? get nextChapter {
+    final chapters = work?.chapters;
+    if (chapters == null || chapters.isEmpty) return null;
+    final ordered = [...chapters]
+      ..sort((a, b) => a.position.compareTo(b.position));
+    final index = ordered.indexWhere((c) => c.slug == chapter.slug);
+    if (index < 0 || index + 1 >= ordered.length) return null;
+    return ordered[index + 1];
+  }
+}
+
+/// Una página de texto. Sin tarjetas ni molduras: es una página de libro.
+class _PageBody extends StatelessWidget {
+  final ReaderPage page;
+  final TextStyle style;
+  final LibraryChapter chapter;
+  final bool showHeader;
+  final bool onSepia;
+  final void Function(ReaderFragment fragment) onPassageActions;
+
+  const _PageBody({
+    required this.page,
+    required this.style,
+    required this.chapter,
+    required this.showHeader,
+    required this.onSepia,
+    required this.onPassageActions,
+  });
 
   @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    margin: const EdgeInsets.fromLTRB(10, 4, 10, 4),
-    padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-    decoration: BoxDecoration(
-      color: ArcanumColors.surfaceHigh.withValues(alpha: 0.35),
-      borderRadius: BorderRadius.circular(10),
-      border: const Border(
-        left: BorderSide(color: ArcanumColors.gold, width: 2),
-      ),
-    ),
-    child: Column(
+  Widget build(BuildContext context) {
+    // La primera página lleva el encabezado del capítulo; las demás son texto
+    // limpio. Repetir el título en cada página sería cromo, no lectura.
+    final body = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('EL ORÁCULO', style: ArcanumText.label()),
-        const SizedBox(height: 8),
-        Text(
-          text.isEmpty ? 'El oráculo guardó silencio.' : text,
-          style: ArcanumText.body(15),
-        ),
+        if (showHeader) ...[
+          Text(
+            chapter.title,
+            style: ArcanumText.heading(
+              style.fontSize! + 8,
+              color: onSepia ? ReaderColors.sepiaGold : ArcanumColors.gold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ChapterOpening(chapter: chapter, onSepia: onSepia),
+        ],
+        for (final fragment in page.fragments)
+          Padding(
+            padding: EdgeInsets.only(bottom: style.fontSize! * 0.9),
+            child: Semantics(
+              label: 'Pasaje. Mantén pulsado para guardarlo o consultarlo.',
+              child: GestureDetector(
+                onLongPress: () => onPassageActions(fragment),
+                child: Text(
+                  fragment.text,
+                  textAlign: TextAlign.justify,
+                  style: style,
+                ),
+              ),
+            ),
+          ),
       ],
-    ),
-  );
+    );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 6, 24, 6),
+      // La primera página puede desbordar por el encabezado; solo ahí se
+      // permite desplazar. Las páginas de texto puro vienen medidas para caber.
+      child: showHeader ? SingleChildScrollView(child: body) : body,
+    );
+  }
 }
 
 class _Loading extends StatelessWidget {
@@ -609,57 +473,6 @@ class _Loading extends StatelessWidget {
       child: CircularProgressIndicator(
         color: ArcanumColors.gold,
         strokeWidth: 2,
-      ),
-    ),
-  );
-}
-
-class _ErrorState extends StatelessWidget {
-  final VoidCallback onRetry;
-  const _ErrorState({required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 36),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            '✶',
-            style: TextStyle(fontSize: 48, color: ArcanumColors.goldMuted),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            'No se pudo abrir este pasaje',
-            textAlign: TextAlign.center,
-            style: ArcanumText.heading(22),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Si ya lo habías leído antes, estaría disponible sin conexión. '
-            'Este todavía no se ha descargado.',
-            textAlign: TextAlign.center,
-            style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            chapterUnavailableMessage,
-            textAlign: TextAlign.center,
-            style: ArcanumText.body(
-              13,
-              color: ArcanumColors.ivoryMuted.withValues(alpha: 0.75),
-            ),
-          ),
-          const SizedBox(height: 20),
-          TextButton(
-            onPressed: onRetry,
-            child: Text(
-              'Reintentar',
-              style: ArcanumText.body(15, color: ArcanumColors.gold),
-            ),
-          ),
-        ],
       ),
     ),
   );
