@@ -22,9 +22,10 @@ lea 423 capítulos a mano no es un plan.
 
 ## Por qué reanudable
 
-El free tier de Groq da 100K tokens/día para llama-3.3-70b, y Culpeper necesita
-~800K: son ~8 días. El script guarda tras cada capítulo, detecta el límite
-diario y para limpio. Al día siguiente sigue donde quedó.
+El free tier de Groq da 200K tokens/día para openai/gpt-oss-120b. El primer
+capítulo real gastó 3.996 tokens y el script proyectó unas diez tandas diarias
+dejando reserva al oráculo. Guarda tras cada capítulo, detecta el límite diario
+y para limpio. Al día siguiente sigue donde quedó.
 
 Solo la cuota DIARIA para la tanda. Un bache de red o un 429 por
 tokens-por-minuto se esperan y se reintentan: antes tumbaban la tanda entera
@@ -41,7 +42,7 @@ Uso:
     python scripts/translate_library.py culpeper-complete-herbal --model openai/gpt-oss-120b
 
 Cambiar de modelo cambia TAMBIEN sus limites de cuota: --tpd y --tpm existen
-para eso. Los valores por defecto son los de llama-3.3-70b-versatile, y con
+para eso. Los valores por defecto son los de openai/gpt-oss-120b, y con
 otro modelo dejan de ser ciertos (consultar console.groq.com/settings/limits).
 """
 
@@ -76,11 +77,10 @@ from groq import (  # noqa: E402
 
 DATA_DIR = Path(__file__).parent / "library_data"
 
-# Elegido tras comparar cuatro modelos sobre el mismo pasaje: es el único con
-# prosa sin defectos. llama-3.1-8b erraba concordancias ("bajo la dominio") y
-# dejaba "Pisces" sin traducir; groq/compound calcaba la sintaxis inglesa y
-# gastaba 3.050 tokens de entrada por llamada.
-DEFAULT_MODEL = "llama-3.3-70b-versatile"
+# Reemplazo oficial de llama-3.3-70b-versatile, retirado por Groq el 2026-08-16.
+# Se revalida con pilot_translate.py antes de comprometer la obra entera.
+DEFAULT_MODEL = "openai/gpt-oss-120b"
+REASONING_EFFORT = "low"
 
 # Sube cuando SYSTEM cambie de forma que altere el resultado: glosario, registro
 # o reglas. Cambiar el glosario a mitad de obra parte el libro en dos voces
@@ -94,12 +94,12 @@ PROMPT_VERSION = 2
 # Límites del free tier PARA ESE MODELO (console.groq.com/settings/limits).
 # El techo real es TPD: TPM y RPD no llegan a ser vinculantes con 423 capítulos.
 # Con --model hay que pasar tambien --tpd/--tpm: cada modelo tiene los suyos.
-TOKENS_PER_DAY = 100_000
-TOKENS_PER_MINUTE = 12_000
+TOKENS_PER_DAY = 200_000
+TOKENS_PER_MINUTE = 8_000
 MARGIN = 0.92  # no apurar el límite: la cuenta de tokens del proveedor manda
 
 # CRÍTICO: el oráculo en producción usa esta MISMA cuenta de Groq, y el límite
-# de 100K tokens/día es por cuenta, no por key. Si la traducción se come el
+# de 200K tokens/día es por cuenta, no por key. Si la traducción se come el
 # cupo, el oráculo deja de responder a los usuarios reales — y el fallo sería
 # invisible desde aquí. Por eso la tanda diaria reserva cupo para producción.
 ORACLE_RESERVE = 30_000
@@ -624,6 +624,22 @@ def correction_prompt(flags: list[str]) -> str:
     )
 
 
+def select_translation_model(done: dict, requested: str, target_name: str) -> None:
+    """Fija el modelo o bloquea una mezcla de voces en una obra iniciada."""
+    previous = done.get("model")
+    if previous and previous != requested and done["chapters"]:
+        raise SystemExit(
+            f"Lo ya traducido ({len(done['chapters'])} capítulos) usó {previous}, "
+            f"y ahora pides {requested}. O sigues con {previous}, o borras "
+            f"{target_name} y retraduces la obra entera con el nuevo."
+        )
+    # Un JSON vacio puede conservar el modelo de una tanda nunca iniciada. Si
+    # no se actualiza aqui, el primer capitulo se guarda con metadatos falsos y
+    # la siguiente ejecucion se bloquea por una mezcla que nunca ocurrio.
+    if not done["chapters"]:
+        done["model"] = requested
+
+
 def translate_chapter(
     client: Groq,
     model: str,
@@ -657,7 +673,10 @@ def translate_chapter(
             break
 
         response = client.chat.completions.create(
-            model=model, messages=messages, temperature=0.2
+            model=model,
+            messages=messages,
+            temperature=0.2,
+            reasoning_effort=REASONING_EFFORT,
         )
         used += response.usage.prompt_tokens + response.usage.completion_tokens
         raw = response.choices[0].message.content
@@ -722,13 +741,7 @@ def main() -> None:
 
     # Mezclar modelos parte el libro en dos voces: media obra con el registro de
     # uno y media con el de otro, sin que nada lo señale al lector.
-    previous = done.get("model")
-    if previous and previous != args.model and done["chapters"]:
-        raise SystemExit(
-            f"Lo ya traducido ({len(done['chapters'])} capítulos) usó {previous}, "
-            f"y ahora pides {args.model}. O sigues con {previous}, o borras "
-            f"{target_path.name} y retraduces la obra entera con el nuevo."
-        )
+    select_translation_model(done, args.model, target_path.name)
 
     # Cambiar el glosario a mitad de obra parte el libro exactamente igual, y
     # esto no se veía: el JSON guardaba el modelo pero no el prompt. Se coló una

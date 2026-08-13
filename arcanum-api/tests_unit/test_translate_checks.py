@@ -12,6 +12,10 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from translate_library import (  # noqa: E402
+    DEFAULT_MODEL,
+    REASONING_EFFORT,
+    TOKENS_PER_DAY,
+    TOKENS_PER_MINUTE,
     build_prompt,
     correction_prompt,
     english_leaks,
@@ -19,6 +23,7 @@ from translate_library import (  # noqa: E402
     missing_section_marks,
     parse_response,
     plant_names_lost,
+    select_translation_model,
     shrunken_paragraphs,
     suspicious_terms,
 )
@@ -348,6 +353,12 @@ class TestRecheck:
 
 
 class TestBudgetGuards:
+    def test_defaults_corresponden_al_reemplazo_vigente(self):
+        assert DEFAULT_MODEL == "openai/gpt-oss-120b"
+        assert REASONING_EFFORT == "low"
+        assert TOKENS_PER_DAY == 200_000
+        assert TOKENS_PER_MINUTE == 8_000
+
     def test_la_estimacion_crece_con_el_texto(self):
         assert estimate_tokens(["x" * 4000]) > estimate_tokens(["x" * 400])
 
@@ -361,3 +372,18 @@ class TestBudgetGuards:
         prompt = correction_prompt(["by sympathy", "sin traducir: apish"])
         assert "by sympathy" in prompt
         assert "sin traducir: apish" in prompt
+
+
+class TestTranslationModel:
+    def test_json_vacio_adopta_el_modelo_solicitado(self):
+        done = {"model": "modelo-retirado", "chapters": {}}
+
+        select_translation_model(done, "modelo-vigente", "obra.es.json")
+
+        assert done["model"] == "modelo-vigente"
+
+    def test_obra_iniciada_rechaza_mezclar_modelos(self):
+        done = {"model": "modelo-anterior", "chapters": {"all-heal": {}}}
+
+        with pytest.raises(SystemExit, match="modelo-anterior"):
+            select_translation_model(done, "modelo-nuevo", "obra.es.json")

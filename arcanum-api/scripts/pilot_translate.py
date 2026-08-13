@@ -34,9 +34,10 @@ load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 from groq import Groq  # noqa: E402
 
-# Ganador de la comparativa de cuatro modelos que motivo este piloto. Se puede
-# sustituir con --model para revalidar otro antes de comprometer la obra entera.
-DEFAULT_MODEL = "llama-3.3-70b-versatile"
+# Reemplazo oficial de llama-3.3-70b-versatile, retirado por Groq el 2026-08-16.
+# Este piloto lo revalida antes de comprometer la obra entera.
+DEFAULT_MODEL = "openai/gpt-oss-120b"
+REASONING_EFFORT = "low"
 
 # Pasajes reales de la ingesta, elegidos porque concentran las trampas.
 PASSAGES = [
@@ -96,6 +97,7 @@ def translate(client: Groq, model: str, system: str, text: str) -> tuple[str, di
             {"role": "user", "content": text},
         ],
         temperature=0.2,  # fidelidad por encima de fluidez
+        reasoning_effort=REASONING_EFFORT,
     )
     elapsed = time.perf_counter() - started
     usage = response.usage
