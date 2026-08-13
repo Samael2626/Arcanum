@@ -140,4 +140,20 @@ void main() {
     expect(find.text('Nota de archivo'), findsOneWidget);
     expect(find.textContaining('https://'), findsNothing);
   });
+
+  testWidgets(
+    'guardar una parte cierra el dialogo antes de actualizar perfil',
+    (tester) async {
+      await pump(tester, const NameThresholdScreen(), value: null);
+
+      await tester.tap(find.text('Añadir parte del nombre'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, 'Andrés');
+      await tester.tap(find.text('Guardar cifrado'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Andrés'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

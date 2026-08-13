@@ -76,6 +76,8 @@ class _NamePartScreenState extends ConsumerState<NamePartScreen> {
 
   Widget _lettersCard(ReadingNamePart part, NameCatalogEntry? catalog) {
     return ArcanumCard(
+      padding: const EdgeInsets.all(20),
+      intensity: 0.4,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -90,7 +92,8 @@ class _NamePartScreenState extends ConsumerState<NamePartScreen> {
                 .where(
                   (origin) =>
                       origin != HebrewFormOrigin.historicalDocumented ||
-                      (catalog != null && part.type == NamePartType.givenName),
+                      (catalog?.hasHistoricalHebrew == true &&
+                          part.type == NamePartType.givenName),
                 )
                 .map(
                   (value) =>
@@ -104,7 +107,7 @@ class _NamePartScreenState extends ConsumerState<NamePartScreen> {
                 _proposal = null;
                 if (value == HebrewFormOrigin.historicalDocumented &&
                     catalog != null) {
-                  _hebrewController.text = catalog.hebrew;
+                  _hebrewController.text = catalog.hebrew!;
                 } else {
                   _hebrewController.clear();
                 }
@@ -161,7 +164,8 @@ class _NamePartScreenState extends ConsumerState<NamePartScreen> {
     if (proposal.ambiguities.isNotEmpty) {
       final ambiguity = proposal.ambiguities.first;
       return ArcanumCard(
-        frame: true,
+        padding: const EdgeInsets.all(20),
+        intensity: 0.4,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -191,7 +195,8 @@ class _NamePartScreenState extends ConsumerState<NamePartScreen> {
     }
 
     return ArcanumCard(
-      frame: true,
+      padding: const EdgeInsets.all(20),
+      intensity: 0.4,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -309,7 +314,7 @@ class _ArchiveCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             entry.meaning,
-            style: ArcanumText.heading(28, color: ArcanumColors.gold),
+            style: ArcanumText.heading(26, color: ArcanumColors.gold),
           ),
           const SizedBox(height: 8),
           Text(
@@ -318,6 +323,15 @@ class _ArchiveCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(entry.story ?? entry.etymology, style: ArcanumText.body(16)),
+          if (entry.archiveForm != null) ...[
+            const SizedBox(height: 18),
+            Text(entry.archiveFormLabel!, style: ArcanumText.label()),
+            const SizedBox(height: 6),
+            Text(
+              entry.archiveForm!,
+              style: ArcanumText.heading(28, color: ArcanumColors.gold),
+            ),
+          ],
           if (entry.traditionalRoots.isNotEmpty) ...[
             const SizedBox(height: 18),
             const SectionLabel('LECTURA TRADICIONAL DE LAS LETRAS'),
@@ -395,7 +409,8 @@ class _GematriaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ArcanumCard(
-    frame: true,
+    padding: const EdgeInsets.all(20),
+    intensity: 0.4,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -406,7 +421,7 @@ class _GematriaCard extends StatelessWidget {
           child: Text(
             form.pointedHebrew,
             textDirection: TextDirection.rtl,
-            style: const TextStyle(fontSize: 38, color: ArcanumColors.ivory),
+            style: const TextStyle(fontSize: 34, color: ArcanumColors.ivory),
           ),
         ),
         const SizedBox(height: 14),
@@ -427,7 +442,7 @@ class _GematriaCard extends StatelessWidget {
         const SizedBox(height: 16),
         Text(
           'Total: ${form.value}',
-          style: ArcanumText.heading(28, color: ArcanumColors.gold),
+          style: ArcanumText.heading(26, color: ArcanumColors.gold),
         ),
         const SizedBox(height: 6),
         Text(

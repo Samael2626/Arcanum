@@ -98,101 +98,28 @@ class NameThresholdScreen extends ConsumerWidget {
       );
       return;
     }
-    final controller = TextEditingController();
-    var type = availableTypes.first;
-    var dialect = ReadingDialect.latinAmerica;
-    final added = await showDialog<bool>(
+    final draft = await showDialog<_NamePartDraft>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: ArcanumColors.surfaceHigh,
-          title: Text('Añadir parte', style: ArcanumText.heading(24)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SegmentedButton<NamePartType>(
-                  segments: availableTypes
-                      .map(
-                        (value) => ButtonSegment(
-                          value: value,
-                          label: Text(value.label),
-                        ),
-                      )
-                      .toList(),
-                  selected: {type},
-                  onSelectionChanged: (value) =>
-                      setDialogState(() => type = value.single),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: controller,
-                  autofocus: true,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: InputDecoration(
-                    labelText: type.label,
-                    hintText: type == NamePartType.givenName
-                        ? 'Ej. María'
-                        : 'Ej. Rodríguez',
-                  ),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<ReadingDialect>(
-                  isExpanded: true,
-                  initialValue: dialect,
-                  decoration: const InputDecoration(labelText: 'Pronunciación'),
-                  items: ReadingDialect.values
-                      .map(
-                        (value) => DropdownMenuItem(
-                          value: value,
-                          child: Text(value.label),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value != null) setDialogState(() => dialect = value);
-                  },
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                if (controller.text.trim().isEmpty) return;
-                try {
-                  await ref
-                      .read(readingIdentityProvider.notifier)
-                      .addPart(
-                        type: type,
-                        originalText: controller.text,
-                        dialect: dialect,
-                      );
-                  if (dialogContext.mounted) {
-                    Navigator.pop(dialogContext, true);
-                  }
-                } on Object {
-                  if (dialogContext.mounted) {
-                    ScaffoldMessenger.of(dialogContext).showSnackBar(
-                      const SnackBar(
-                        content: Text('No se pudo guardar la parte cifrada.'),
-                      ),
-                    );
-                  }
-                }
-              },
-              child: const Text('Guardar cifrado'),
-            ),
-          ],
-        ),
-      ),
+      builder: (_) => _AddPartDialog(availableTypes: availableTypes),
     );
-    controller.dispose();
-    if (added == true && context.mounted) {
+    if (draft == null) return;
+    try {
+      await ref
+          .read(readingIdentityProvider.notifier)
+          .addPart(
+            type: draft.type,
+            originalText: draft.originalText,
+            dialect: draft.dialect,
+          );
+    } on Object {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo guardar la parte cifrada.')),
+        );
+      }
+      return;
+    }
+    if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Parte guardada solo en este dispositivo.'),
@@ -253,11 +180,11 @@ class _PrivacyIntro extends StatelessWidget {
       children: [
         const SectionLabel('PERFIL PRIVADO'),
         const SizedBox(height: 10),
-        Text('Cada nombre guarda una historia', style: ArcanumText.heading(23)),
+        Text('Cada nombre guarda una historia', style: ArcanumText.heading(22)),
         const SizedBox(height: 8),
         Text(
           'Aquí reúnes las formas, historias y cálculos que eliges explorar. Este archivo vive cifrado en tu dispositivo.',
-          style: ArcanumText.body(15),
+          style: ArcanumText.body(16),
         ),
       ],
     ),
@@ -283,10 +210,10 @@ class _PartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ArcanumCard(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
     child: ListTile(
       contentPadding: EdgeInsets.zero,
-      title: Text(part.originalText, style: ArcanumText.heading(22)),
+      title: Text(part.originalText, style: ArcanumText.heading(24)),
       subtitle: Text(
         '${part.type.label} · ${part.dialect.label}${part.currentForm == null ? '' : ' · ${part.currentForm!.value}'}',
         style: ArcanumText.body(13, color: ArcanumColors.ivoryMuted),
@@ -294,6 +221,109 @@ class _PartCard extends StatelessWidget {
       trailing: const Icon(Icons.chevron_right, color: ArcanumColors.gold),
       onTap: () => context.push('/perfil/identidad/nombre-y-umbral/${part.id}'),
     ),
+  );
+}
+
+class _NamePartDraft {
+  final NamePartType type;
+  final String originalText;
+  final ReadingDialect dialect;
+
+  const _NamePartDraft({
+    required this.type,
+    required this.originalText,
+    required this.dialect,
+  });
+}
+
+class _AddPartDialog extends StatefulWidget {
+  final List<NamePartType> availableTypes;
+
+  const _AddPartDialog({required this.availableTypes});
+
+  @override
+  State<_AddPartDialog> createState() => _AddPartDialogState();
+}
+
+class _AddPartDialogState extends State<_AddPartDialog> {
+  final _controller = TextEditingController();
+  late NamePartType _type = widget.availableTypes.first;
+  ReadingDialect _dialect = ReadingDialect.latinAmerica;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    backgroundColor: ArcanumColors.surfaceHigh,
+    title: Text('Añadir parte', style: ArcanumText.heading(24)),
+    content: SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SegmentedButton<NamePartType>(
+            segments: widget.availableTypes
+                .map(
+                  (value) =>
+                      ButtonSegment(value: value, label: Text(value.label)),
+                )
+                .toList(),
+            selected: {_type},
+            onSelectionChanged: (value) => setState(() => _type = value.single),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+            decoration: InputDecoration(
+              labelText: _type.label,
+              hintText: _type == NamePartType.givenName
+                  ? 'Ej. María'
+                  : 'Ej. Rodríguez',
+            ),
+          ),
+          const SizedBox(height: 16),
+          DropdownButtonFormField<ReadingDialect>(
+            isExpanded: true,
+            initialValue: _dialect,
+            decoration: const InputDecoration(labelText: 'Pronunciación'),
+            items: ReadingDialect.values
+                .map(
+                  (value) =>
+                      DropdownMenuItem(value: value, child: Text(value.label)),
+                )
+                .toList(),
+            onChanged: (value) {
+              if (value != null) setState(() => _dialect = value);
+            },
+          ),
+        ],
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Cancelar'),
+      ),
+      FilledButton(
+        onPressed: () {
+          if (_controller.text.trim().isEmpty) return;
+          Navigator.pop(
+            context,
+            _NamePartDraft(
+              type: _type,
+              originalText: _controller.text,
+              dialect: _dialect,
+            ),
+          );
+        },
+        child: const Text('Guardar cifrado'),
+      ),
+    ],
   );
 }
 

@@ -111,7 +111,6 @@ class ReadingIdentityController extends AsyncNotifier<ReadingIdentityProfile?> {
 
   Future<void> _persist(ReadingIdentityProfile profile) async {
     final previous = state;
-    state = const AsyncLoading();
     try {
       await _repository.save(profile);
       state = AsyncData(profile);

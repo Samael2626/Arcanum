@@ -6,7 +6,9 @@ class NameCatalogEntry {
   final String meaning;
   final String etymology;
   final String certainty;
-  final String hebrew;
+  final String? hebrew;
+  final String? documentedForm;
+  final String? documentedFormLabel;
   final String citation;
   final String sourceUrl;
   final String attribution;
@@ -23,7 +25,9 @@ class NameCatalogEntry {
     required this.meaning,
     required this.etymology,
     required this.certainty,
-    required this.hebrew,
+    this.hebrew,
+    this.documentedForm,
+    this.documentedFormLabel,
     required this.citation,
     required this.sourceUrl,
     required this.attribution,
@@ -32,6 +36,14 @@ class NameCatalogEntry {
     this.traditionalRoots = const [],
     this.traditionalRootsLimit,
   });
+
+  bool get hasHistoricalHebrew => hebrew != null && hebrew!.isNotEmpty;
+
+  String? get archiveForm => documentedForm ?? hebrew;
+
+  String? get archiveFormLabel =>
+      documentedFormLabel ??
+      (hasHistoricalHebrew ? 'Forma hebrea documentada' : null);
 }
 
 class NameRoot {
@@ -52,6 +64,99 @@ class NameCatalog {
       'Open Scriptures Hebrew Bible Project; WLC dominio público, lema y morfología CC BY 4.0.';
 
   static const entries = <NameCatalogEntry>[
+    NameCatalogEntry(
+      id: 'andres',
+      displayName: 'Andrés',
+      variants: ['Andres', 'Andreas', 'Andrew', 'Andre'],
+      origin: 'Griego antiguo, a través del latín y el español',
+      meaning: 'Hombre; asociado con valor.',
+      etymology:
+          'Forma española de Andreas, del griego Ἀνδρέας. Su familia léxica remite a ἀνήρ / ἀνδρός: «hombre».',
+      certainty: 'Alta',
+      documentedForm: 'Ἀνδρέας',
+      documentedFormLabel: 'Forma griega documentada',
+      citation: 'SBLGNT Juan 1:40; LSJ ἀνήρ y ἀνδρεῖος',
+      sourceUrl:
+          'https://atlas.perseus.tufts.edu/dictionaries/entry/urn%3Acite2%3Ascaife-viewer%3Adictionaries.v1%3Alsj-n8665/',
+      attribution:
+          'SBL Greek New Testament, CC BY 4.0; Liddell-Scott, CC BY-SA 3.0.',
+      editorialLimit:
+          'La historia de la palabra habla de una forma lingüística; no prescribe carácter ni destino.',
+      story:
+          'Andrés conserva la huella de Ἀνδρέας. En griego, ἀνήρ nombra al hombre; su familia también contiene ἀνδρεῖος, «valiente». De ahí nace una lectura de valor, no una sentencia sobre quién debes ser.',
+    ),
+    NameCatalogEntry(
+      id: 'alejandro',
+      displayName: 'Alejandro',
+      variants: ['Alexander', 'Alexandro', 'Alex'],
+      origin: 'Griego antiguo, a través del latín y el español',
+      meaning: 'Defensor de los hombres.',
+      etymology:
+          'Del griego Ἀλέξανδρος. El léxico lo glosa como «defensor de los hombres».',
+      certainty: 'Alta',
+      documentedForm: 'Ἀλέξανδρος',
+      documentedFormLabel: 'Forma griega documentada',
+      citation: 'LSJ ἀλέξανδρος',
+      sourceUrl:
+          'https://atlas.perseus.tufts.edu/dictionaries/entry/urn%3Acite2%3Ascaife-viewer%3Adictionaries.v1%3Alsj-n3997/',
+      attribution: 'Liddell-Scott, CC BY-SA 3.0.',
+      editorialLimit:
+          'El sentido etimológico no impone una misión de protección a la persona.',
+    ),
+    NameCatalogEntry(
+      id: 'felipe',
+      displayName: 'Felipe',
+      variants: ['Philip', 'Felipe'],
+      origin: 'Griego antiguo, a través del latín y el español',
+      meaning: 'Amigo de los caballos.',
+      etymology:
+          'Del griego φίλιππος, compuesto que el léxico define como «aficionado a los caballos».',
+      certainty: 'Alta',
+      documentedForm: 'Φίλιππος',
+      documentedFormLabel: 'Forma griega documentada',
+      citation: 'Middle Liddell φίλιππος',
+      sourceUrl:
+          'https://atlas.perseus.tufts.edu/dictionaries/entry/urn%3Acite2%3Ascaife-viewer%3Adictionary-entries.atlas_v1%3Amiddle-liddell.perseus-eng2-n34799/',
+      attribution: 'Middle Liddell en Scaife ATLAS, CC BY-SA 3.0.',
+      editorialLimit:
+          'No asigna afinidades, profesión ni temperamento a quien lleva el nombre.',
+    ),
+    NameCatalogEntry(
+      id: 'jorge',
+      displayName: 'Jorge',
+      variants: ['George', 'Georgios'],
+      origin: 'Griego antiguo, a través del latín y el español',
+      meaning: 'Quien trabaja la tierra.',
+      etymology:
+          'Se vincula con γεωργός, compuesto de «tierra» y «trabajo»: labrador o cultivador.',
+      certainty: 'Alta',
+      documentedForm: 'Γεώργιος',
+      documentedFormLabel: 'Forma griega documentada',
+      citation: 'LSJ γεωργός',
+      sourceUrl:
+          'https://atlas.perseus.tufts.edu/dictionaries/entry/urn%3Acite2%3Ascaife-viewer%3Adictionaries.v1%3Alsj-n22088/',
+      attribution: 'Liddell-Scott, CC BY-SA 3.0.',
+      editorialLimit:
+          'La imagen del cultivo es histórica; no describe oficio ni destino.',
+    ),
+    NameCatalogEntry(
+      id: 'sofia',
+      displayName: 'Sofía',
+      variants: ['Sofia', 'Sophia'],
+      origin: 'Griego antiguo, a través del latín y el español',
+      meaning: 'Sabiduría; destreza.',
+      etymology:
+          'Del griego σοφία. El léxico conserva sentidos de destreza técnica, arte y saber.',
+      certainty: 'Alta',
+      documentedForm: 'Σοφία',
+      documentedFormLabel: 'Forma griega documentada',
+      citation: 'LSJ σοφία',
+      sourceUrl:
+          'https://atlas.perseus.tufts.edu/dictionaries/entry/urn%3Acite2%3Ascaife-viewer%3Adictionaries.v1%3Alsj-n95641/',
+      attribution: 'Liddell-Scott, CC BY-SA 3.0.',
+      editorialLimit:
+          'No presenta el significado como capacidad, diagnóstico ni promesa personal.',
+    ),
     NameCatalogEntry(
       id: 'adan',
       displayName: 'Adán',
