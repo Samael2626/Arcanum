@@ -13,32 +13,42 @@ import 'core/router/app_router.dart';
 import 'core/theme/arcanum_theme.dart';
 import 'features/onboarding/application/onboarding_controller.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  // No usar Firebase.initializeApp directamente: en Android el provider nativo
-  // ya creo [DEFAULT] y el segundo intento mata el arranque.
-  await ensureFirebaseInitialized();
+void main() {
+  runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
+      // No usar Firebase.initializeApp directamente: en Android el provider nativo
+      // ya creo [DEFAULT] y el segundo intento mata el arranque.
+      await ensureFirebaseInitialized();
 
-  // Crashlytics: capturar errores no atrapados
-  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-  PlatformDispatcher.instance.onError = (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    return true;
-  };
+      FlutterError.onError = (details) {
+        if (kDebugMode) {
+          FlutterError.presentError(details);
+          return;
+        }
+        FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+      };
+      PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        return true;
+      };
 
-  await MobileAds.instance.initialize();
-  await MonetizationService.initialize('PLACEHOLDER_RC_API_KEY');
+      await MobileAds.instance.initialize();
+      await MonetizationService.initialize('PLACEHOLDER_RC_API_KEY');
 
-  // En desarrollo, log a consola en vez de Crashlytics
-  if (kDebugMode) {
-    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
-  }
+      // En desarrollo, log a consola en vez de Crashlytics
+      if (kDebugMode) {
+        await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
+          false,
+        );
+      }
 
-  runZonedGuarded(() {
-    runApp(const ProviderScope(child: ArcanumApp()));
-  }, (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-  });
+      runApp(const ProviderScope(child: ArcanumApp()));
+    },
+    (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    },
+  );
 }
 
 class ArcanumApp extends ConsumerWidget {

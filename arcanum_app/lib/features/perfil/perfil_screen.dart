@@ -56,6 +56,13 @@ class PerfilScreen extends ConsumerWidget {
       child: Column(
         children: [
           _row(
+            icon: Icons.fingerprint,
+            label: 'Identidad',
+            hint: 'Nombre para mostrar y perfil privado de lectura',
+            onTap: () => context.push('/perfil/identidad'),
+          ),
+          const Divider(height: 1, color: ArcanumColors.surfaceHigh),
+          _row(
             icon: Icons.settings_outlined,
             label: 'Ajustes',
             hint: 'Cuenta, custodia y zona irreversible',

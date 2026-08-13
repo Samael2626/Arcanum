@@ -8,6 +8,9 @@ import '../../features/hoy/hoy_screen.dart';
 import '../../features/lecturas/presentation/lector_screen.dart';
 import '../../features/lecturas/presentation/obra_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
+import '../../features/name_threshold/presentation/identity_screen.dart';
+import '../../features/name_threshold/presentation/name_part_screen.dart';
+import '../../features/name_threshold/presentation/name_threshold_screen.dart';
 import '../../features/oraculo/oraculo_screen.dart';
 import '../../features/paywall/paywall_screen.dart';
 import '../../features/perfil/perfil_screen.dart';
@@ -25,7 +28,29 @@ final appRouter = GoRouter(
     GoRoute(path: '/register', builder: (c, s) => const RegisterScreen()),
     GoRoute(path: '/onboarding', builder: (c, s) => const OnboardingScreen()),
     GoRoute(path: '/settings', builder: (c, s) => const SettingsScreen()),
-    GoRoute(path: '/perfil', builder: (c, s) => const PerfilScreen()),
+    GoRoute(
+      path: '/perfil',
+      builder: (c, s) => const PerfilScreen(),
+      routes: [
+        GoRoute(
+          path: 'identidad',
+          builder: (c, s) => const IdentityScreen(),
+          routes: [
+            GoRoute(
+              path: 'nombre-y-umbral',
+              builder: (c, s) => const NameThresholdScreen(),
+              routes: [
+                GoRoute(
+                  path: ':partId',
+                  builder: (c, s) =>
+                      NamePartScreen(partId: s.pathParameters['partId']!),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    ),
     GoRoute(path: '/paywall', builder: (c, s) => const PaywallScreen()),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
