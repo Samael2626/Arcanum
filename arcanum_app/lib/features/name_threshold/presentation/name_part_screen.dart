@@ -92,7 +92,9 @@ class _NamePartScreenState extends ConsumerState<NamePartScreen> {
                 .where(
                   (origin) =>
                       origin != HebrewFormOrigin.historicalDocumented ||
-                      (catalog?.hasHistoricalHebrew == true &&
+                      (catalog != null &&
+                          catalog.tradition.allowsHistoricalGematria &&
+                          catalog.hasHistoricalHebrew &&
                           part.type == NamePartType.givenName),
                 )
                 .map(
@@ -388,9 +390,19 @@ class _ArchiveCard extends StatelessWidget {
       builder: (dialogContext) => AlertDialog(
         backgroundColor: ArcanumColors.surfaceHigh,
         title: Text('Nota de archivo', style: ArcanumText.heading(23)),
-        content: Text(
-          'Certeza: ${entry.certainty}\n\nFuente: ${entry.citation}\n\n${entry.editorialLimit}\n\n${entry.attribution}',
-          style: ArcanumText.body(14),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _note('Tradición', entry.tradition.label),
+              _note('Certeza', entry.certainty),
+              _note('Fuente', entry.citation),
+              _note('Licencia', entry.license),
+              _note('Atribución', entry.attribution),
+              _note('Límite editorial', entry.editorialLimit),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -401,6 +413,18 @@ class _ArchiveCard extends StatelessWidget {
       ),
     );
   }
+
+  static Widget _note(String label, String value) => Padding(
+    padding: const EdgeInsets.only(bottom: 14),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label.toUpperCase(), style: ArcanumText.label()),
+        const SizedBox(height: 4),
+        Text(value, style: ArcanumText.body(14)),
+      ],
+    ),
+  );
 }
 
 class _GematriaCard extends StatelessWidget {

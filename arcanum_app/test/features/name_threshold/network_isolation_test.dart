@@ -17,6 +17,22 @@ void main() {
     expect(source, isNot(contains('firebase_analytics')));
     expect(source, isNot(contains('firebase_crashlytics')));
     expect(source, isNot(contains('ArcanumApi')));
+    expect(source, isNot(contains('package:cloud_firestore/')));
+    expect(source, isNot(contains('HttpClient')));
+    expect(source, isNot(contains('logEvent')));
+  });
+
+  test('el catalogo y la cola de apellidos no dependen de red ni de Flutter UI', () {
+    for (final path in [
+      'lib/features/name_threshold/data/name_catalog.dart',
+      'lib/features/name_threshold/data/name_sources.dart',
+      'lib/features/name_threshold/data/surname_queue.dart',
+    ]) {
+      final source = File(path).readAsStringSync();
+      expect(source, isNot(contains('dart:io')), reason: path);
+      expect(source, isNot(contains('package:flutter/material.dart')),
+          reason: path);
+    }
   });
 
   test('Tarot y Cielos no dependen del perfil de lectura', () {
