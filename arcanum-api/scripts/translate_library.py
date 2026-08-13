@@ -1,31 +1,11 @@
-"""Traduce una obra de Lecturas al español, por capítulos y de forma reanudable.
+"""Traduce Lecturas con Qwen, JSON, glosario y controles deterministas.
 
-## Por qué por capítulos y no por párrafo
+Corta cada capítulo por bloques semánticos de hasta 20 párrafos o 6.000 tokens
+de fuente. Rechaza IDs incompletos, términos prohibidos, plantas alteradas,
+números cambiados y dudas sin resolver. Guarda tras cada capítulo y reanuda.
 
-El glosario de términos doctrinales ocupa ~350 tokens y se paga en CADA
-llamada. Traducir los 5.014 párrafos de Culpeper uno a uno costaría 1,75M
-tokens solo de glosario; agrupando en 423 capítulos, 148k. Tres veces menos.
-
-El riesgo de agrupar es que el modelo omita párrafos en pasajes largos. Por eso
-se numeran al enviar y se verifica que vuelven todos: si falta uno, se reintenta
-el capítulo entero.
-
-## Qué se verifica de cada capítulo
-
-Cuatro controles, todos nacidos de un fallo real observado: términos
-doctrinales perdidos, palabras inglesas sin traducir, marcas de sección que el
-modelo tradujo en vez de dejar literales, y párrafos que volvieron resumidos en
-vez de traducidos. Un capítulo que falle alguno NO se guarda con una marca y ya:
-se le devuelven los defectos al modelo para que lo rehaga, y solo si el
-reintento no mejora queda marcado para revisión humana. Esperar a que alguien
-lea 423 capítulos a mano no es un plan.
-
-## Por qué reanudable
-
-El free tier de Groq da 200K tokens/día para openai/gpt-oss-120b. El primer
-capítulo real gastó 3.996 tokens y el script proyectó unas diez tandas diarias
-dejando reserva al oráculo. Guarda tras cada capítulo, detecta el límite diario
-y para limpio. Al día siguiente sigue donde quedó.
+Este script solo traduce. `correct_translation.py` usa un crítico independiente
+y repara párrafos fallidos. `analyze_translation.py` audita sin consumir API.
 
 Solo la cuota DIARIA para la tanda. Un bache de red o un 429 por
 tokens-por-minuto se esperan y se reintentan: antes tumbaban la tanda entera
@@ -39,10 +19,10 @@ Uso:
     python scripts/translate_library.py culpeper-complete-herbal
     python scripts/translate_library.py culpeper-complete-herbal --limit 5
     python scripts/translate_library.py culpeper-complete-herbal --review
-    python scripts/translate_library.py culpeper-complete-herbal --model openai/gpt-oss-120b
+    python scripts/translate_library.py culpeper-complete-herbal --model qwen/qwen3.6-27b
 
 Cambiar de modelo cambia TAMBIEN sus limites de cuota: --tpd y --tpm existen
-para eso. Los valores por defecto son los de openai/gpt-oss-120b, y con
+para eso. Los valores por defecto son los de la cuenta auditada para Qwen; con
 otro modelo dejan de ser ciertos (consultar console.groq.com/settings/limits).
 """
 
@@ -75,21 +55,33 @@ from groq import (  # noqa: E402
     RateLimitError,
 )
 
+from translation_pipeline import (  # noqa: E402
+    BLOCKED,
+    CRITIC_MODEL,
+    PIPELINE_VERSION,
+    TRANSLATOR_MODEL,
+    TRANSLATOR_SYSTEM,
+    call_translator,
+    extract_protected_terms,
+    load_glossary,
+    match_glossary,
+    migrate_pipeline_metadata,
+    parse_translation_response,
+    source_hash,
+    split_chapter_blocks,
+    translation_request,
+    validate_translation,
+    write_json_atomic,
+)
+
 DATA_DIR = Path(__file__).parent / "library_data"
 
-# Reemplazo oficial de llama-3.3-70b-versatile, retirado por Groq el 2026-08-16.
-# Se revalida con pilot_translate.py antes de comprometer la obra entera.
-DEFAULT_MODEL = "openai/gpt-oss-120b"
-REASONING_EFFORT = "low"
+# Candidato primario. No declararlo ganador hasta terminar el benchmark MQM.
+DEFAULT_MODEL = TRANSLATOR_MODEL
+REASONING_EFFORT = "none"
 
-# Sube cuando SYSTEM cambie de forma que altere el resultado: glosario, registro
-# o reglas. Cambiar el glosario a mitad de obra parte el libro en dos voces
-# igual que cambiar de modelo, y eso ya estaba prohibido — pero nada lo
-# detectaba, porque el JSON solo guardaba el modelo.
-#
-# 2: registro de Laguna (1570) y glosario médico de época con glosa moderna.
-#    Antes: castellano moderno, "decocción", "fiebre intermitente".
-PROMPT_VERSION = 2
+# Sube con cualquier cambio que altere traduccion, glosario o validacion.
+PROMPT_VERSION = PIPELINE_VERSION
 
 # Límites del free tier PARA ESE MODELO (console.groq.com/settings/limits).
 # El techo real es TPD: TPM y RPD no llegan a ser vinculantes con 423 capítulos.
@@ -122,7 +114,7 @@ MAX_TRANSIENT_WAIT = 120  # segundos; más que esto ya no es un bache
 # que aparece en el capítulo. Sin glosa, "gota coral" no lo entiende nadie hoy;
 # sin el término de época, el libro suena a prospecto. Con las dos, es fiel y
 # se lee.
-SYSTEM = """Eres traductor de textos herbarios y astrológicos ingleses del siglo XVII al español.
+LEGACY_SYSTEM = """Eres traductor de textos herbarios y astrológicos ingleses del siglo XVII al español.
 
 Tu modelo de estilo es el "Dioscórides" de Andrés Laguna (1570): el herbario
 castellano de la misma época que el original que traduces. Escribe como él.
@@ -305,6 +297,7 @@ def is_daily_quota(error: RateLimitError) -> bool:
     text = str(error).lower()
     return "per day" in text or "tpd" in text or "rpd" in text
 
+
 # Sufijos que no existen en español. Sirven para detectar palabras inglesas
 # que se cuelan sin traducir: apareció "como es la moda vulgar y apish", con
 # "apish" (simiesca) crudo en mitad de la frase — una fuga que ningún control
@@ -422,11 +415,35 @@ def english_leaks(translated: list[str]) -> list[str]:
 # "The Ordinary Small Centaury" solo aporta "Centaury": lo demas describe cual
 # de las centaureas es, y en espanol se traduce sin riesgo.
 _TITLE_QUALIFIERS = {
-    "the", "of", "or", "and", "a", "an",
-    "common", "ordinary", "great", "greater", "small", "lesser", "sweet",
-    "wild", "garden", "water", "prickly", "french", "english",
-    "black", "white", "red", "yellow", "blue", "green",
-    "tree", "herb", "wort", "ladies",
+    "the",
+    "of",
+    "or",
+    "and",
+    "a",
+    "an",
+    "common",
+    "ordinary",
+    "great",
+    "greater",
+    "small",
+    "lesser",
+    "sweet",
+    "wild",
+    "garden",
+    "water",
+    "prickly",
+    "french",
+    "english",
+    "black",
+    "white",
+    "red",
+    "yellow",
+    "blue",
+    "green",
+    "tree",
+    "herb",
+    "wort",
+    "ladies",
 }
 
 _TITLE_WORD = re.compile(r"[A-Za-z][A-Za-z’'-]{2,}")
@@ -552,7 +569,9 @@ def parse_response(text: str, expected: int) -> list[str] | None:
     Fallar aquí es preferible a guardar un capítulo con huecos: un párrafo
     perdido en silencio es contenido que desaparece del libro.
     """
-    positions = [(int(m.group(1)), m.start(), m.end()) for m in _NUMBERED.finditer(text)]
+    positions = [
+        (int(m.group(1)), m.start(), m.end()) for m in _NUMBERED.finditer(text)
+    ]
     if len(positions) != expected:
         return None
     if [n for n, _, _ in positions] != list(range(1, expected + 1)):
@@ -611,7 +630,7 @@ def estimate_tokens(paragraphs: list[str]) -> int:
     quedarse corto cuesta un 429 y una tanda muerta.
     """
     chars = sum(len(p) for p in paragraphs)
-    return int(len(SYSTEM) / 4 + chars / 4 * 2.3)
+    return int(len(TRANSLATOR_SYSTEM) / 4 + chars / 4 * 2.3)
 
 
 def correction_prompt(flags: list[str]) -> str:
@@ -646,80 +665,109 @@ def translate_chapter(
     chapter: dict,
     budget_left: int | None = None,
     attempts: int = 2,
-) -> tuple[list[str] | None, int, list[str]]:
-    """Traduce un capítulo y devuelve (párrafos, tokens gastados, a revisar).
-
-    Reintenta por dos motivos distintos: porque la respuesta vino mal formada
-    —y entonces no hay nada que guardar— o porque pasó los controles de
-    calidad con defectos, y ahí se le señalan al modelo para que la rehaga. El
-    segundo caso antes se guardaba tal cual con una marca de revisión que
-    esperaba a un humano que nunca iba a leer 423 capítulos.
-
-    Si el reintento no mejora se conserva la PRIMERA versión: un reintento peor
-    también es posible, y sustituir a ciegas empeoraría la media.
-    """
+) -> tuple[list[str] | None, int, list[str], dict]:
+    """Traducir un capitulo en bloques JSON y devolver trazabilidad."""
     paragraphs = [p["text"] for p in chapter["paragraphs"]]
-    messages = [
-        {"role": "system", "content": SYSTEM},
-        {"role": "user", "content": build_prompt(paragraphs)},
+    glossary_payload = load_glossary()
+    glossary = glossary_payload["entries"]
+    protected_terms = extract_protected_terms(chapter["title"], paragraphs)
+    indexed = [
+        {"id": index, "text": paragraph["text"]}
+        for index, paragraph in enumerate(chapter["paragraphs"], start=1)
     ]
     used = 0
-    best: tuple[list[str], list[str]] | None = None
+    translations: dict[int, str] = {}
+    uncertain_terms: list[dict] = []
 
-    for attempt in range(attempts):
-        # Un reintento cuesta lo mismo que el intento: si no cabe en lo que
-        # queda del día, mejor guardar lo que hay que quedarse sin nada.
-        if attempt and budget_left is not None and used * 2 > budget_left:
-            break
-
-        response = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=0.2,
-            reasoning_effort=REASONING_EFFORT,
+    for block in split_chapter_blocks(indexed):
+        source_text = "\n".join(row["text"] for row in block)
+        matched = match_glossary(source_text, glossary)
+        rows = [{"id": row["id"], "source": row["text"]} for row in block]
+        request = translation_request(
+            work=glossary_payload["work"],
+            chapter=chapter,
+            rows=rows,
+            glossary_version=glossary_payload["version"],
+            matched_entries=matched,
+            protected_terms=[term for term in protected_terms if term in source_text],
         )
-        used += response.usage.prompt_tokens + response.usage.completion_tokens
-        raw = response.choices[0].message.content
-        parsed = parse_response(raw, len(paragraphs))
-
+        expected_ids = [row["id"] for row in block]
+        parsed = None
+        for attempt in range(attempts):
+            if budget_left is not None and used >= budget_left:
+                break
+            raw, call_tokens = call_translator(client, model, request)
+            used += call_tokens
+            try:
+                parsed = parse_translation_response(raw, expected_ids)
+                break
+            except ValueError:
+                if attempt + 1 < attempts:
+                    time.sleep(2)
         if parsed is None:
-            if attempt + 1 < attempts:
-                time.sleep(2)
-            continue
+            return None, used, ["respuesta JSON inválida"], {}
+        translations.update(zip(expected_ids, parsed.translations))
+        uncertain_terms.extend(parsed.uncertain_terms)
 
-        flags = suspicious_terms(paragraphs, parsed)
-        if not flags:
-            return parsed, used, []
-        if best is None:
-            best = (parsed, flags)
-        elif len(flags) < len(best[1]):
-            best = (parsed, flags)
-        messages = messages[:2] + [
-            {"role": "assistant", "content": raw},
-            {"role": "user", "content": correction_prompt(flags)},
-        ]
-
-    if best is not None:
-        return best[0], used, best[1]
-    return None, used, []
+    texts = [translations[index] for index in range(1, len(paragraphs) + 1)]
+    report = validate_translation(
+        title=chapter["title"],
+        source=paragraphs,
+        translated=texts,
+        glossary=glossary,
+        protected_terms=protected_terms,
+        uncertain_terms=uncertain_terms,
+    )
+    review = [issue.message for issue in report.issues]
+    metadata = {
+        "status": report.status,
+        "risk": report.risk,
+        "translator_model": model,
+        "critic_model": None,
+        "prompt_version": PROMPT_VERSION,
+        "glossary_version": glossary_payload["version"],
+        "source_hash": source_hash(paragraphs),
+        "protected_terms": protected_terms,
+        "uncertain_terms": uncertain_terms,
+        "deterministic_issues": [issue.__dict__ for issue in report.issues],
+    }
+    return texts, used, review, metadata
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("work", help="slug de la obra, p.ej. culpeper-complete-herbal")
     parser.add_argument("--limit", type=int, help="traducir solo N capítulos (prueba)")
-    parser.add_argument("--model", default=DEFAULT_MODEL,
-                        help=f"modelo de Groq (por defecto {DEFAULT_MODEL})")
-    parser.add_argument("--tpd", type=int, default=TOKENS_PER_DAY,
-                        help=f"tokens/día del modelo en tu plan (por defecto {TOKENS_PER_DAY:,})")
-    parser.add_argument("--tpm", type=int, default=TOKENS_PER_MINUTE,
-                        help=f"tokens/minuto del modelo (por defecto {TOKENS_PER_MINUTE:,})")
-    parser.add_argument("--budget", type=int, default=None,
-                        help=f"tokens máximos de esta tanda (por defecto, --tpd menos "
-                             f"{ORACLE_RESERVE:,} reservados para el oráculo en producción)")
+    parser.add_argument(
+        "--model",
+        default=DEFAULT_MODEL,
+        help=f"modelo de Groq (por defecto {DEFAULT_MODEL})",
+    )
+    parser.add_argument(
+        "--tpd",
+        type=int,
+        default=TOKENS_PER_DAY,
+        help=f"tokens/día del modelo en tu plan (por defecto {TOKENS_PER_DAY:,})",
+    )
+    parser.add_argument(
+        "--tpm",
+        type=int,
+        default=TOKENS_PER_MINUTE,
+        help=f"tokens/minuto del modelo (por defecto {TOKENS_PER_MINUTE:,})",
+    )
+    parser.add_argument(
+        "--budget",
+        type=int,
+        default=None,
+        help=f"tokens máximos de esta tanda (por defecto, --tpd menos "
+        f"{ORACLE_RESERVE:,} reservados para el oráculo en producción)",
+    )
     parser.add_argument("--only", help="traducir solo estos slugs, separados por comas")
-    parser.add_argument("--review", action="store_true",
-                        help="solo listar lo pendiente y lo marcado para revisar")
+    parser.add_argument(
+        "--review",
+        action="store_true",
+        help="solo listar lo pendiente y lo marcado para revisar",
+    )
     args = parser.parse_args()
 
     source_path = DATA_DIR / f"{args.work}.json"
@@ -738,25 +786,14 @@ def main() -> None:
             "chapters": {},
         }
     )
-
-    # Mezclar modelos parte el libro en dos voces: media obra con el registro de
-    # uno y media con el de otro, sin que nada lo señale al lector.
-    select_translation_model(done, args.model, target_path.name)
-
-    # Cambiar el glosario a mitad de obra parte el libro exactamente igual, y
-    # esto no se veía: el JSON guardaba el modelo pero no el prompt. Se coló una
-    # vez —82 capítulos en castellano moderno frente al registro de Laguna— y el
-    # unico aviso fue que alguien se puso a auditar la fidelidad a mano.
-    stored_version = done.get("prompt_version", 1)
-    if done["chapters"] and stored_version != PROMPT_VERSION:
-        raise SystemExit(
-            f"Lo ya traducido ({len(done['chapters'])} capítulos) usó la versión "
-            f"{stored_version} del prompt, y la actual es {PROMPT_VERSION}: el "
-            f"glosario y el registro han cambiado. Mezclarlos deja el libro con "
-            f"dos voces. Purga y retraduce la obra entera:\n"
-            f"  python scripts/recheck_translation.py {args.work} --purge-todo"
-        )
-    done["prompt_version"] = PROMPT_VERSION
+    glossary_payload = load_glossary()
+    migrate_pipeline_metadata(
+        done,
+        args.model,
+        CRITIC_MODEL,
+        glossary_payload["version"],
+        PROMPT_VERSION,
+    )
 
     pending = [c for c in work["chapters"] if c["slug"] not in done["chapters"]]
 
@@ -779,14 +816,20 @@ def main() -> None:
     # Arcana. Si una tanda se corta, lo que falta son las dedicatorias.
     order = {"herb": 0, "appendix": 1, "catalogue": 2, "front": 3}
     pending.sort(key=lambda c: order.get(c.get("kind", "text"), 4))
-    flagged = [s for s, c in done["chapters"].items() if c.get("review")]
+    flagged = [
+        slug
+        for slug, chapter in done["chapters"].items()
+        if chapter.get("review") or chapter.get("status") in {"legacy_machine", BLOCKED}
+    ]
 
     print(f"{work['title']} — {len(work['chapters'])} capítulos")
     print(f"  traducidos : {len(done['chapters'])}")
     print(f"  pendientes : {len(pending)}")
     if flagged:
-        print(f"  a revisar  : {len(flagged)} -> {', '.join(flagged[:8])}"
-              f"{' …' if len(flagged) > 8 else ''}")
+        print(
+            f"  a revisar  : {len(flagged)} -> {', '.join(flagged[:8])}"
+            f"{' …' if len(flagged) > 8 else ''}"
+        )
 
     if args.review or not pending:
         if not pending:
@@ -805,14 +848,22 @@ def main() -> None:
     for chapter in pending[: args.limit] if args.limit else pending:
         # Un capítulo grande puede no caber en lo que queda del día.
         if spent >= budget * MARGIN:
-            print(f"\nLímite diario alcanzado ({spent:,} tokens). Vuelve mañana: "
-                  f"el progreso está guardado.")
+            print(
+                f"\nLímite diario alcanzado ({spent:,} tokens). Vuelve mañana: "
+                f"el progreso está guardado."
+            )
             break
 
         # Ventana de tokens por minuto. Se reserva el coste ESTIMADO antes de
         # llamar: contarlo después, con el gasto real, es enterarse del límite
         # cuando ya se pasó.
         estimate = estimate_tokens([p["text"] for p in chapter["paragraphs"]])
+        if spent + estimate > budget * MARGIN:
+            print(
+                f"\nEl siguiente capítulo necesita ~{estimate:,} tokens y no cabe "
+                f"en el presupuesto restante. Progreso guardado."
+            )
+            break
         if time.time() - minute_start >= 60:
             minute_start, minute_tokens = time.time(), 0
         if minute_tokens and minute_tokens + estimate > args.tpm * MARGIN:
@@ -825,15 +876,17 @@ def main() -> None:
         texts = None
         for retry in range(TRANSIENT_RETRIES):
             try:
-                texts, used, review = translate_chapter(
+                texts, used, review, metadata = translate_chapter(
                     client, args.model, chapter, budget - spent
                 )
                 break
             except RateLimitError as error:
                 spent += estimate  # el intento fallido también consumió cupo
                 if is_daily_quota(error):
-                    print("\nCuota diaria agotada. Vuelve mañana: "
-                          "el progreso está guardado.")
+                    print(
+                        "\nCuota diaria agotada. Vuelve mañana: "
+                        "el progreso está guardado."
+                    )
                     used = 0
                     break
                 wait = retry_after_seconds(error) or 5 * (retry + 1)
@@ -845,8 +898,10 @@ def main() -> None:
                 print(f"  · {type(error).__name__}, reintento en {wait}s")
                 time.sleep(wait)
         else:
-            print(f"  ! {chapter['slug']}: {TRANSIENT_RETRIES} fallos seguidos. "
-                  f"Se detiene la tanda; lo traducido queda guardado.")
+            print(
+                f"  ! {chapter['slug']}: {TRANSIENT_RETRIES} fallos seguidos. "
+                f"Se detiene la tanda; lo traducido queda guardado."
+            )
             break
 
         if texts is None and not used:
@@ -857,20 +912,22 @@ def main() -> None:
 
         if texts is None:
             failed += 1
-            print(f"  ! {chapter['slug']}: el modelo no devolvió los "
-                  f"{len(chapter['paragraphs'])} párrafos. Se omite.")
+            print(
+                f"  ! {chapter['slug']}: el modelo no devolvió los "
+                f"{len(chapter['paragraphs'])} párrafos. Se omite."
+            )
             continue
 
         done["chapters"][chapter["slug"]] = {
             "title": chapter["title"],
             "paragraphs": texts,
             "review": review or None,
+            **metadata,
         }
-        target_path.write_text(
-            json.dumps(done, ensure_ascii=False, indent=1), encoding="utf-8"
-        )
+        write_json_atomic(target_path, done)
         translated += 1
-        mark = f"  ⚠ revisar: {', '.join(review)}" if review else ""
+        state = metadata.get("status", BLOCKED)
+        mark = f"  ⚠ {state}: {', '.join(review)}" if review else f"  [{state}]"
         print(f"  ✓ {chapter['slug']:<34} {used:>5} tok{mark}")
 
     print(f"\n{translated} traducidos, {failed} fallidos · {spent:,} tokens")

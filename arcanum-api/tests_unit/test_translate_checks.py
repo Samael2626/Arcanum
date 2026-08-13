@@ -49,9 +49,7 @@ class TestEnglishLeaks:
 
     def test_no_marca_los_nombres_de_planta(self):
         # Se dejan en inglés a propósito, y van capitalizados.
-        texto = [
-            "La hierba Alehoof crece junto a Arssmart y Bishops-Weed en abril."
-        ]
+        texto = ["La hierba Alehoof crece junto a Arssmart y Bishops-Weed en abril."]
         assert english_leaks(texto) == []
 
     def test_no_marca_espanol_normal(self):
@@ -315,14 +313,20 @@ class TestRecheck:
 
     def test_marca_lo_que_falla_los_controles_de_hoy(self):
         work = self._work(("anemone", ["_Place and Time._] They are sown in gardens."]))
-        done = {"chapters": {"anemone": {"paragraphs": ["_Lugar y Tiempo._] Se siembran."]}}}
+        done = {
+            "chapters": {"anemone": {"paragraphs": ["_Lugar y Tiempo._] Se siembran."]}}
+        }
         flagged, mismatched = evaluate(work, done)
         assert "anemone" in flagged
         assert mismatched == []
 
     def test_no_marca_lo_que_esta_bien(self):
         work = self._work(("anemone", ["_Place._] They are sown in gardens."]))
-        done = {"chapters": {"anemone": {"paragraphs": ["_Place._] Se siembran en jardines."]}}}
+        done = {
+            "chapters": {
+                "anemone": {"paragraphs": ["_Place._] Se siembran en jardines."]}
+            }
+        }
         assert evaluate(work, done) == ({}, [])
 
     def test_separa_el_descuadre_de_parrafos(self):
@@ -354,8 +358,8 @@ class TestRecheck:
 
 class TestBudgetGuards:
     def test_defaults_corresponden_al_reemplazo_vigente(self):
-        assert DEFAULT_MODEL == "openai/gpt-oss-120b"
-        assert REASONING_EFFORT == "low"
+        assert DEFAULT_MODEL == "qwen/qwen3.6-27b"
+        assert REASONING_EFFORT == "none"
         assert TOKENS_PER_DAY == 200_000
         assert TOKENS_PER_MINUTE == 8_000
 

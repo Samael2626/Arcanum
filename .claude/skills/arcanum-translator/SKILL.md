@@ -30,10 +30,11 @@ No asumir que la política descrita aquí ya está implementada en Python. Verif
 4. Cortar por bloque semántico: 8-20 párrafos o hasta 6.000 tokens estimados. No cortar por cantidad ciega.
 5. Traducir con `qwen/qwen3.6-27b` como candidato primario.
 6. Ejecutar validadores deterministas antes del crítico.
-7. Criticar con `openai/gpt-oss-120b` contra original, contexto y glosario. Nunca permitir que el crítico apruebe un fallo determinista.
-8. Reparar solo párrafos fallidos. Repetir controles.
-9. Enviar a humano todo `critical`, conflicto entre modelos, término incierto o pasaje de alto riesgo.
-10. Guardar trazabilidad: hash de fuente, modelos, parámetros, prompt, glosario, errores, reparación, revisión y estado.
+7. Ejecutar `analyze_translation.py` para auditar sin API.
+8. Criticar con `openai/gpt-oss-120b` contra original, contexto y glosario. Nunca permitir que el crítico apruebe un fallo determinista.
+9. Reparar solo párrafos fallidos con `correct_translation.py`. Repetir controles y crítica.
+10. Enviar a humano todo `critical`, conflicto entre modelos, término incierto o pasaje de alto riesgo.
+11. Guardar trazabilidad: hash de fuente, modelos, parámetros, prompt, glosario, errores, reparación, revisión y estado.
 
 Usar los modelos como candidatos, no como verdad eterna. Verificar disponibilidad, parámetros y cuotas oficiales antes de cada campaña. No declarar ganador sin benchmark ciego suficiente.
 
@@ -61,13 +62,17 @@ Ejecutar desde `arcanum-api/`. Revisar `--help` antes porque las opciones pueden
 
 ```powershell
 python scripts\translate_library.py culpeper-complete-herbal --review
+python scripts\translate_library.py culpeper-complete-herbal --limit 1
+python scripts\analyze_translation.py culpeper-complete-herbal
+python scripts\correct_translation.py culpeper-complete-herbal --limit 1
+python scripts\correct_translation.py culpeper-complete-herbal --only amara-dulcis --write
 python scripts\recheck_translation.py culpeper-complete-herbal
 python scripts\recheck_translation.py culpeper-complete-herbal --plantas
 python scripts\recover_translation.py culpeper-complete-herbal --dry-run
 python scripts\seed_library.py culpeper-complete-herbal --dry-run
 ```
 
-No usar el comando de traducción masiva hasta que el código implemente traductor, crítico, glosario versionado y nuevos gates.
+No traducir masivamente hasta superar el benchmark MQM. `seed_library.py` bloquea estados `legacy_machine` y `blocked`.
 
 ## Criterio de terminado
 

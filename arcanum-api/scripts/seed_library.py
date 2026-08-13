@@ -32,6 +32,7 @@ from app.models.library import (  # noqa: E402
     LibraryParagraph,
     LibraryWork,
 )
+from translation_pipeline import filter_publishable_chapters  # noqa: E402
 
 DATA_DIR = Path(__file__).parent / "library_data"
 
@@ -64,16 +65,29 @@ def main() -> None:
     data = json.loads(source.read_text(encoding="utf-8"))
 
     translations = {}
+    excluded: dict[str, str] = {}
     translated_path = DATA_DIR / f"{args.work}.es.json"
     if translated_path.exists():
-        translations = json.loads(translated_path.read_text(encoding="utf-8"))["chapters"]
+        stored = json.loads(translated_path.read_text(encoding="utf-8"))["chapters"]
+        translations, excluded = filter_publishable_chapters(stored)
 
     print(f"{data['title']} — {data['author']}")
     print(f"  capítulos       : {len(data['chapters'])}")
-    print(f"  con traducción  : {len(translations)}")
+    print(f"  publicables     : {len(translations)}")
+    print(f"  excluidos       : {len(excluded)}")
+    if excluded:
+        by_status: dict[str, int] = {}
+        for status in excluded.values():
+            by_status[status] = by_status.get(status, 0) + 1
+        print(f"  por estado      : {by_status}")
     if args.dry_run:
         print("\n--dry-run: no se escribe nada.")
         return
+    if excluded:
+        raise SystemExit(
+            "Carga bloqueada: hay traducciones legacy_machine o blocked. "
+            "Ejecuta analyze_translation.py y correct_translation.py antes de sembrar."
+        )
 
     db = SessionLocal()
     try:
@@ -135,7 +149,9 @@ def main() -> None:
                         preserved += 1
 
             # Párrafos que ya no existen tras una reingesta.
-            for position_gone in set(by_position) - set(range(len(chapter_data["paragraphs"]))):
+            for position_gone in set(by_position) - set(
+                range(len(chapter_data["paragraphs"]))
+            ):
                 db.delete(by_position[position_gone])
 
             # Commit por capítulo, no uno solo al final. Sembrar 423 capítulos

@@ -27,7 +27,7 @@ python-multipart==0.0.9
 redis==5.0.3
 
 # LLM
-groq>=0.9.0
+groq>=1.6.0,<2.0.0
 
 # Astrologia (astral para horas planetarias).
 # pyswisseph compila extension C. En Windows requiere MS C++ Build Tools; si falla
