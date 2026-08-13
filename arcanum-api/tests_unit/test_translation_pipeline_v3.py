@@ -13,6 +13,7 @@ from translation_pipeline import (
     LEGACY_MACHINE,
     MACHINE,
     CriticResult,
+    TranslationContractError,
     call_critic,
     call_translator,
     detect_risk,
@@ -22,6 +23,7 @@ from translation_pipeline import (
     migrate_pipeline_metadata,
     parse_critic_response,
     parse_translation_response,
+    request_translation,
     split_chapter_blocks,
     validate_translation,
 )
@@ -231,6 +233,24 @@ class _FakeClient:
         self.chat = type("Chat", (), {"completions": self.completions})()
 
 
+class _SequenceCompletions(_FakeCompletions):
+    def __init__(self, responses: list[str]) -> None:
+        super().__init__()
+        self.responses = iter(responses)
+        self.requests = []
+
+    def create(self, **kwargs):
+        self.requests.append(kwargs)
+        self.raw = next(self.responses)
+        return super().create(**kwargs)
+
+
+class _SequenceClient:
+    def __init__(self, responses: list[str]) -> None:
+        self.completions = _SequenceCompletions(responses)
+        self.chat = type("Chat", (), {"completions": self.completions})()
+
+
 def test_qwen_uses_json_mode_without_reasoning() -> None:
     client = _FakeClient()
 
@@ -240,6 +260,59 @@ def test_qwen_uses_json_mode_without_reasoning() -> None:
     assert client.completions.kwargs["reasoning_effort"] == "none"
     assert client.completions.kwargs["response_format"] == {"type": "json_object"}
     assert client.completions.kwargs["top_p"] == 0.8
+
+
+def test_translation_retries_with_exact_contract_feedback() -> None:
+    invalid = json.dumps(
+        {"translations": [{"id": 1, "text": ""}], "uncertain_terms": []}
+    )
+    valid = json.dumps(
+        {"translations": [{"id": 1, "text": "Uno"}], "uncertain_terms": []}
+    )
+    client = _SequenceClient([invalid, valid])
+
+    result, tokens = request_translation(client, "qwen", "{}", [1], attempts=2)
+
+    assert result.translations == ["Uno"]
+    assert tokens == 30
+    retry = json.loads(client.completions.requests[1]["messages"][1]["content"])
+    assert retry["retry_feedback"]["required_translation_ids"] == [1]
+    assert "vacias" in retry["retry_feedback"]["previous_response_error"]
+
+
+def test_translation_contract_error_preserves_spent_tokens() -> None:
+    invalid = json.dumps({"translations": [], "uncertain_terms": []})
+    client = _SequenceClient([invalid, invalid])
+
+    with pytest.raises(TranslationContractError) as captured:
+        request_translation(client, "qwen", "{}", [1], attempts=2)
+
+    assert captured.value.used_tokens == 30
+    assert len(captured.value.errors) == 2
+
+
+def test_chapter_falls_back_to_single_paragraphs_after_invalid_block() -> None:
+    invalid = json.dumps({"translations": [], "uncertain_terms": []})
+    first = json.dumps(
+        {"translations": [{"id": 1, "text": "Primero."}], "uncertain_terms": []}
+    )
+    second = json.dumps(
+        {"translations": [{"id": 2, "text": "Segundo."}], "uncertain_terms": []}
+    )
+    client = _SequenceClient([invalid, invalid, first, second])
+    chapter = {
+        "slug": "fallback",
+        "title": "Fallback",
+        "kind": "herb",
+        "paragraphs": [{"text": "First."}, {"text": "Second."}],
+    }
+
+    texts, tokens, review, metadata = translate_chapter(client, "qwen", chapter)
+
+    assert texts == ["Primero.", "Segundo."]
+    assert tokens == 60
+    assert review == []
+    assert metadata["status"] == MACHINE
 
 
 def test_gpt_critic_uses_strict_schema_and_hides_reasoning() -> None:

@@ -154,6 +154,18 @@ class TranslationResult:
     uncertain_terms: list[dict[str, Any]]
 
 
+class TranslationContractError(ValueError):
+    """El traductor agoto reintentos sin respetar el contrato de salida."""
+
+    def __init__(self, errors: list[str], used_tokens: int) -> None:
+        self.errors = errors
+        self.used_tokens = used_tokens
+        detail = errors[-1] if errors else "respuesta invalida"
+        super().__init__(
+            f"El traductor incumplio el contrato tras {len(errors)} intentos: {detail}"
+        )
+
+
 @dataclass(frozen=True)
 class CriticResult:
     verdict: str
@@ -494,6 +506,11 @@ def translation_request(
         "glossary_version": glossary_version,
         "glossary": matched_entries,
         "paragraphs": rows,
+        "output_contract": {
+            "required_translation_ids": [row["id"] for row in rows],
+            "text_must_be_non_empty": True,
+            "required_top_level_fields": ["translations", "uncertain_terms"],
+        },
     }
     if repair_instruction:
         payload["repair_instruction"] = repair_instruction
@@ -543,6 +560,45 @@ def call_translator(
     )
     usage = response.usage.prompt_tokens + response.usage.completion_tokens
     return response.choices[0].message.content, usage
+
+
+def request_translation(
+    client: Any,
+    model: str,
+    request: str,
+    expected_ids: list[int],
+    *,
+    repair: bool = False,
+    attempts: int = 3,
+) -> tuple[TranslationResult, int]:
+    """Pedir traduccion y corregir incumplimientos del contrato JSON."""
+    if attempts < 1:
+        raise ValueError("attempts debe ser positivo")
+
+    used = 0
+    errors: list[str] = []
+    current_request = request
+    for _ in range(attempts):
+        raw, call_tokens = call_translator(
+            client, model, current_request, repair=repair
+        )
+        used += call_tokens
+        try:
+            return parse_translation_response(raw, expected_ids), used
+        except ValueError as error:
+            errors.append(str(error))
+            payload = json.loads(request)
+            payload["retry_feedback"] = {
+                "previous_response_error": str(error),
+                "required_translation_ids": expected_ids,
+                "instruction": (
+                    "Devuelve todos esos IDs una sola vez, en ese orden, con text no vacio. "
+                    "Devuelve tambien uncertain_terms, aunque sea una lista vacia."
+                ),
+            }
+            current_request = json.dumps(payload, ensure_ascii=False)
+
+    raise TranslationContractError(errors, used)
 
 
 def call_critic(client: Any, model: str, request: str) -> tuple[str, int]:

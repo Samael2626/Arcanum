@@ -61,12 +61,12 @@ from translation_pipeline import (  # noqa: E402
     PIPELINE_VERSION,
     TRANSLATOR_MODEL,
     TRANSLATOR_SYSTEM,
-    call_translator,
+    TranslationContractError,
     extract_protected_terms,
     load_glossary,
     match_glossary,
     migrate_pipeline_metadata,
-    parse_translation_response,
+    request_translation,
     source_hash,
     split_chapter_blocks,
     translation_request,
@@ -679,7 +679,8 @@ def translate_chapter(
     translations: dict[int, str] = {}
     uncertain_terms: list[dict] = []
 
-    for block in split_chapter_blocks(indexed):
+    def translate_block(block: list[dict]) -> str | None:
+        nonlocal used
         source_text = "\n".join(row["text"] for row in block)
         matched = match_glossary(source_text, glossary)
         rows = [{"id": row["id"], "source": row["text"]} for row in block]
@@ -692,22 +693,30 @@ def translate_chapter(
             protected_terms=[term for term in protected_terms if term in source_text],
         )
         expected_ids = [row["id"] for row in block]
-        parsed = None
-        for attempt in range(attempts):
-            if budget_left is not None and used >= budget_left:
-                break
-            raw, call_tokens = call_translator(client, model, request)
+        if budget_left is not None and used >= budget_left:
+            return "presupuesto agotado durante el capítulo"
+        try:
+            parsed, call_tokens = request_translation(
+                client, model, request, expected_ids, attempts=attempts
+            )
             used += call_tokens
-            try:
-                parsed = parse_translation_response(raw, expected_ids)
-                break
-            except ValueError:
-                if attempt + 1 < attempts:
-                    time.sleep(2)
-        if parsed is None:
-            return None, used, ["respuesta JSON inválida"], {}
+        except TranslationContractError as error:
+            used += error.used_tokens
+            if len(block) == 1:
+                return str(error)
+            for row in block:
+                nested_error = translate_block([row])
+                if nested_error:
+                    return nested_error
+            return None
         translations.update(zip(expected_ids, parsed.translations))
         uncertain_terms.extend(parsed.uncertain_terms)
+        return None
+
+    for block in split_chapter_blocks(indexed):
+        block_error = translate_block(block)
+        if block_error:
+            return None, used, [block_error], {}
 
     texts = [translations[index] for index in range(1, len(paragraphs) + 1)]
     report = validate_translation(
@@ -913,8 +922,8 @@ def main() -> None:
         if texts is None:
             failed += 1
             print(
-                f"  ! {chapter['slug']}: el modelo no devolvió los "
-                f"{len(chapter['paragraphs'])} párrafos. Se omite."
+                f"  ! {chapter['slug']}: "
+                f"{review[-1] if review else 'respuesta inválida'}. Se omite."
             )
             continue
 

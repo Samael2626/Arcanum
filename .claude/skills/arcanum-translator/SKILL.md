@@ -29,6 +29,9 @@ No asumir que la política descrita aquí ya está implementada en Python. Verif
 3. Extraer nombres y términos protegidos desde el original.
 4. Cortar por bloque semántico: 8-20 párrafos o hasta 6.000 tokens estimados. No cortar por cantidad ciega.
 5. Traducir con `qwen/qwen3.6-27b` como candidato primario.
+   - Exigir IDs exactos y textos no vacíos en el contrato de salida.
+   - Ante JSON incompleto, reintentar con el error exacto y los IDs requeridos.
+   - Si el lote sigue fallando, caer a reparación por párrafo. Si un párrafo falla, bloquear sin traceback ni escritura parcial.
 6. Ejecutar validadores deterministas antes del crítico.
 7. Ejecutar `analyze_translation.py` para auditar sin API.
 8. Criticar con `openai/gpt-oss-120b` contra original, contexto y glosario. Nunca permitir que el crítico apruebe un fallo determinista.
@@ -63,8 +66,10 @@ Ejecutar desde `arcanum-api/`. Revisar `--help` antes porque las opciones pueden
 ```powershell
 python scripts\translate_library.py culpeper-complete-herbal --review
 python scripts\translate_library.py culpeper-complete-herbal --limit 1
+python scripts\translate_library.py culpeper-complete-herbal --only all-heal --limit 1
 python scripts\analyze_translation.py culpeper-complete-herbal
 python scripts\correct_translation.py culpeper-complete-herbal --limit 1
+python scripts\correct_translation.py culpeper-complete-herbal --only all-heal --limit 1
 python scripts\correct_translation.py culpeper-complete-herbal --only amara-dulcis --write
 python scripts\recheck_translation.py culpeper-complete-herbal
 python scripts\recheck_translation.py culpeper-complete-herbal --plantas

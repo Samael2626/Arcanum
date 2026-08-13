@@ -34,15 +34,15 @@ from translation_pipeline import (  # noqa: E402
     MACHINE,
     PIPELINE_VERSION,
     TRANSLATOR_MODEL,
+    TranslationContractError,
     call_critic,
-    call_translator,
     critic_request,
     extract_protected_terms,
     load_glossary,
     match_glossary,
     migrate_pipeline_metadata,
     parse_critic_response,
-    parse_translation_response,
+    request_translation,
     source_hash,
     split_chapter_blocks,
     translation_request,
@@ -129,8 +129,13 @@ def _repair_paragraphs(
         protected_terms=[term for term in protected_terms if term in selected_source],
         repair_instruction=instruction,
     )
-    raw, used = call_translator(client, translator_model, request, repair=True)
-    result = parse_translation_response(raw, [row["id"] for row in selected])
+    result, used = request_translation(
+        client,
+        translator_model,
+        request,
+        [row["id"] for row in selected],
+        repair=True,
+    )
     repaired = list(translated)
     for paragraph_id, text in zip(sorted(paragraph_ids), result.translations):
         repaired[paragraph_id - 1] = text
@@ -254,30 +259,36 @@ def main() -> None:
         candidate = current
         uncertainties: list[dict[str, Any]] = []
         final_critic_issues = critic_issues
+        repair_error: str | None = None
         if blocking_ids:
             instruction_parts = [issue.message for issue in deterministic.issues]
             if critic_instruction:
                 instruction_parts.append(critic_instruction)
-            candidate, uncertainties, repair_tokens = _repair_paragraphs(
-                client,
-                args.work,
-                chapter,
-                current,
-                blocking_ids,
-                "\n".join(instruction_parts),
-                glossary_payload,
-                args.translator_model,
-            )
-            spent += repair_tokens
-            final_critic_issues, _, verify_tokens = _review_chapter(
-                client,
-                args.work,
-                chapter,
-                candidate,
-                glossary_payload,
-                args.critic_model,
-            )
-            spent += verify_tokens
+            try:
+                candidate, uncertainties, repair_tokens = _repair_paragraphs(
+                    client,
+                    args.work,
+                    chapter,
+                    current,
+                    blocking_ids,
+                    "\n".join(instruction_parts),
+                    glossary_payload,
+                    args.translator_model,
+                )
+                spent += repair_tokens
+                final_critic_issues, _, verify_tokens = _review_chapter(
+                    client,
+                    args.work,
+                    chapter,
+                    candidate,
+                    glossary_payload,
+                    args.critic_model,
+                )
+                spent += verify_tokens
+            except TranslationContractError as error:
+                spent += error.used_tokens
+                repair_error = str(error)
+                print(f"  ! {slug}: reparación rechazada: {repair_error}")
 
         final_report = validate_translation(
             title=chapter["title"],
@@ -292,7 +303,7 @@ def main() -> None:
             for issue in final_critic_issues
             if issue["severity"] in {"critical", "major"}
         ]
-        passed = not final_report.blocking and not critic_blocking
+        passed = not repair_error and not final_report.blocking and not critic_blocking
         status = MACHINE if passed else BLOCKED
         if passed:
             corrected += 1
@@ -323,6 +334,7 @@ def main() -> None:
                     "critic_issues": final_critic_issues,
                     "review": [issue.message for issue in final_report.issues]
                     + [issue["explanation"] for issue in final_critic_issues]
+                    + ([repair_error] if repair_error else [])
                     or None,
                 }
             )
