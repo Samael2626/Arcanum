@@ -143,19 +143,22 @@ def _repair_paragraphs(
 
 
 def _candidate_slugs(done: dict[str, Any], only: set[str] | None) -> list[str]:
-    candidates = []
+    candidates: list[tuple[int, str]] = []
     for slug, chapter in done.get("chapters", {}).items():
         if only and slug not in only:
             continue
-        if chapter.get("status", LEGACY_MACHINE) == HUMAN:
+        status = chapter.get("status", LEGACY_MACHINE)
+        if status == HUMAN:
             continue
         if (
             only
-            or chapter.get("status", LEGACY_MACHINE) in {LEGACY_MACHINE, BLOCKED}
+            or (status == MACHINE and not chapter.get("critic_model"))
+            or status in {LEGACY_MACHINE, BLOCKED}
             or chapter.get("review")
         ):
-            candidates.append(slug)
-    return candidates
+            priority = 0 if status == MACHINE and not chapter.get("critic_model") else 1
+            candidates.append((priority, slug))
+    return [slug for _, slug in sorted(candidates)]
 
 
 def main() -> None:

@@ -28,7 +28,7 @@ from translation_pipeline import (
     validate_translation,
 )
 from translate_library import translate_chapter
-from correct_translation import _repair_paragraphs, _review_chapter
+from correct_translation import _candidate_slugs, _repair_paragraphs, _review_chapter
 
 GLOSSARY = [
     {
@@ -177,14 +177,32 @@ def test_publish_filter_excludes_legacy_and_blocked() -> None:
     chapters = {
         "legacy": {"status": LEGACY_MACHINE, "paragraphs": ["x"]},
         "blocked": {"status": BLOCKED, "paragraphs": ["x"]},
-        "machine": {"status": MACHINE, "paragraphs": ["x"]},
+        "pending": {"status": MACHINE, "paragraphs": ["x"], "critic_model": None},
+        "machine": {"status": MACHINE, "paragraphs": ["x"], "critic_model": "critic"},
         "human": {"status": "human", "paragraphs": ["x"]},
     }
 
     publishable, excluded = filter_publishable_chapters(chapters)
 
     assert set(publishable) == {"machine", "human"}
-    assert excluded == {"legacy": LEGACY_MACHINE, "blocked": BLOCKED}
+    assert excluded == {
+        "legacy": LEGACY_MACHINE,
+        "blocked": BLOCKED,
+        "pending": "pending_critic",
+    }
+
+
+def test_correction_prioritizes_machine_without_critic() -> None:
+    done = {
+        "chapters": {
+            "legacy": {"status": LEGACY_MACHINE},
+            "blocked": {"status": BLOCKED},
+            "new": {"status": MACHINE, "critic_model": None},
+            "approved": {"status": MACHINE, "critic_model": "critic"},
+        }
+    }
+
+    assert _candidate_slugs(done, None) == ["new", "blocked", "legacy"]
 
 
 def test_critic_result_collects_blocking_paragraphs() -> None:

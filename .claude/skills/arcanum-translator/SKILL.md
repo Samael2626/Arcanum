@@ -49,6 +49,7 @@ Usar los modelos como candidatos, no como verdad eterna. Verificar disponibilida
 - `blocked`: contiene fallo crítico o incertidumbre sin resolver.
 
 Nunca rebajar `human` a `machine`. Nunca publicar `blocked`.
+Un capítulo `machine` sin `critic_model` sigue pendiente de crítica y no es publicable.
 
 ## Seguridad operativa
 

@@ -479,7 +479,9 @@ def filter_publishable_chapters(
     excluded: dict[str, str] = {}
     for slug, chapter in chapters.items():
         status = chapter.get("status", LEGACY_MACHINE)
-        if status in PUBLISHABLE_STATUSES:
+        if status == MACHINE and not chapter.get("critic_model"):
+            excluded[slug] = "pending_critic"
+        elif status in PUBLISHABLE_STATUSES:
             publishable[slug] = chapter
         else:
             excluded[slug] = status
