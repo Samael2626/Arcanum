@@ -1,0 +1,4 @@
+interface:
+  display_name: "ARCANUM Translator"
+  short_description: "Traducción histórica EN-ES con control terminológico"
+  default_prompt: "Usa $arcanum-translator para traducir y auditar un capítulo de Culpeper."

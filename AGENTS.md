@@ -18,6 +18,7 @@ Monorepo con `arcanum_app/` (Flutter) y `arcanum-api/` (FastAPI).
 - arcanum-clarividente: contenido esoterico y voz del oracle
 - arcanum-kabbalist: gematria y Arbol de la Vida
 - arcanum-tarot: tiradas e interpretacion (78 arcanos)
+- arcanum-translator: traduccion historica EN-ES, glosario, critica y control MQM
 
 ## Convenciones
 - Riverpod con @riverpod annotation + code generation

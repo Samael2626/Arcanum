@@ -1,0 +1,193 @@
+{
+  "work": "culpeper-complete-herbal",
+  "version": "2026-08-13.1",
+  "entries": [
+    {
+      "term": "felon",
+      "variants": ["felon", "felons"],
+      "context": "absceso o infección dolorosa del extremo de un dedo",
+      "required": ["panadizo", "panadizos"],
+      "forbidden": ["delincuente", "delincuentes", "felón", "felones", "felonía", "felonías"],
+      "category": "medical_historical",
+      "sources": ["https://www.merriam-webster.com/dictionary/felon", "https://dle.rae.es/panadizo"],
+      "confidence": "high",
+      "notes": "Desambiguar del sentido criminal."
+    },
+    {
+      "term": "whitlow",
+      "variants": ["whitlow", "whitlows"],
+      "context": "infección dolorosa de un dedo",
+      "required": ["panadizo", "panadizos"],
+      "forbidden": [],
+      "category": "medical_historical",
+      "sources": ["https://www.merriam-webster.com/dictionary/whitlow"],
+      "confidence": "high",
+      "notes": "Revisar el número gramatical."
+    },
+    {
+      "term": "crab apple",
+      "variants": ["crab apple", "crab apples", "crab", "crabs"],
+      "context": "fruto pequeño y ácido de un manzano silvestre",
+      "required": ["manzana silvestre ácida", "manzanas silvestres ácidas"],
+      "forbidden": ["cangrejo", "cangrejos"],
+      "category": "botanical",
+      "sources": ["https://www.merriam-webster.com/dictionary/crab%20apple"],
+      "confidence": "high",
+      "notes": "Aplicar solo cuando crab designa el fruto o árbol."
+    },
+    {
+      "term": "brought to bed",
+      "variants": ["brought to bed", "newly brought to bed"],
+      "context": "haber dado a luz",
+      "required": ["recién parida", "recién paridas", "dado a luz"],
+      "forbidden": ["llevada a la cama", "llevadas a la cama", "puesta en cama", "puestas en cama"],
+      "category": "obstetric_historical",
+      "sources": [],
+      "confidence": "high",
+      "notes": "No traducir como movimiento físico."
+    },
+    {
+      "term": "cheapness",
+      "variants": ["cheapness"],
+      "context": "precio bajo",
+      "required": ["baratura", "bajo precio"],
+      "forbidden": ["escasez"],
+      "category": "general_historical",
+      "sources": [],
+      "confidence": "high",
+      "notes": "Conservar el sentido económico."
+    },
+    {
+      "term": "ague",
+      "variants": ["ague", "agues", "tertian ague", "quartan ague"],
+      "context": "fiebre intermitente; conservar el tipo cuando aparezca",
+      "required": ["calentura", "calentura terciana", "calentura cuartana"],
+      "forbidden": [],
+      "category": "medical_historical",
+      "sources": [],
+      "confidence": "medium",
+      "notes": "No borrar tertian o quartan."
+    },
+    {
+      "term": "decoction",
+      "variants": ["decoction", "decoctions"],
+      "context": "preparación obtenida al cocer una sustancia",
+      "required": ["cocimiento", "cocimientos"],
+      "forbidden": ["decocción", "decocciones"],
+      "category": "pharmacy_historical",
+      "sources": [],
+      "confidence": "medium",
+      "notes": "Política editorial vigente; reevaluar en benchmark."
+    },
+    {
+      "term": "electuary",
+      "variants": ["electuary", "electuaries"],
+      "context": "preparación medicinal pastosa",
+      "required": ["lamedor", "lamedores"],
+      "forbidden": [],
+      "category": "pharmacy_historical",
+      "sources": [],
+      "confidence": "medium",
+      "notes": "Comparar electuario frente a lamedor durante revisión editorial."
+    },
+    {
+      "term": "dram",
+      "variants": ["dram", "drams"],
+      "context": "unidad de peso farmacéutica",
+      "required": ["dracma", "dracmas"],
+      "forbidden": ["drama", "dramas", "dramo", "dramos"],
+      "category": "measurement_historical",
+      "sources": [],
+      "confidence": "high",
+      "notes": "No convertir la medida."
+    },
+    {
+      "term": "treacle",
+      "variants": ["treacle"],
+      "context": "antídoto o preparado medicinal",
+      "required": ["triaca"],
+      "forbidden": ["melaza"],
+      "category": "pharmacy_historical",
+      "sources": [],
+      "confidence": "high",
+      "notes": "Aplicar en contexto médico."
+    },
+    {
+      "term": "physic",
+      "variants": ["physic", "Physic"],
+      "context": "medicina o práctica médica",
+      "required": ["medicina", "Medicina"],
+      "forbidden": ["física", "Física"],
+      "category": "medical_historical",
+      "sources": [],
+      "confidence": "high",
+      "notes": "Falso amigo."
+    },
+    {
+      "term": "flux",
+      "variants": ["flux", "bloody flux"],
+      "context": "evacuación intestinal patológica",
+      "required": ["cámaras", "cámaras de sangre"],
+      "forbidden": [],
+      "category": "medical_historical",
+      "sources": [],
+      "confidence": "medium",
+      "notes": "Conservar bloody como de sangre."
+    },
+    {
+      "term": "dropsy",
+      "variants": ["dropsy"],
+      "context": "acumulación patológica de líquido",
+      "required": ["hidropesía"],
+      "forbidden": [],
+      "category": "medical_historical",
+      "sources": [],
+      "confidence": "high",
+      "notes": "No duplicar glosa idéntica."
+    },
+    {
+      "term": "Government and virtues",
+      "variants": ["_Government and virtues._]"],
+      "context": "marca estructural de sección",
+      "required": ["_Government and virtues._]"],
+      "forbidden": [],
+      "category": "protected_section",
+      "sources": [],
+      "confidence": "high",
+      "notes": "Conservar byte a byte mientras esta sea la política editorial."
+    },
+    {
+      "term": "sympathy",
+      "variants": ["sympathy", "by sympathy"],
+      "context": "modo terapéutico por semejanza",
+      "required": ["simpatía", "por simpatía"],
+      "forbidden": ["afinidad"],
+      "category": "humoral_astrological",
+      "sources": [],
+      "confidence": "high",
+      "notes": "No confundir con antipatía."
+    },
+    {
+      "term": "antipathy",
+      "variants": ["antipathy", "by antipathy"],
+      "context": "modo terapéutico por oposición",
+      "required": ["antipatía", "por antipatía"],
+      "forbidden": ["aversión"],
+      "category": "humoral_astrological",
+      "sources": [],
+      "confidence": "high",
+      "notes": "No confundir con simpatía."
+    },
+    {
+      "term": "retentive faculty",
+      "variants": ["retentive faculty"],
+      "context": "facultad humoral que retiene",
+      "required": ["virtud retentiva", "facultad retentiva"],
+      "forbidden": ["capacidad de retener"],
+      "category": "humoral_astrological",
+      "sources": [],
+      "confidence": "medium",
+      "notes": "Preferir virtud retentiva si se mantiene registro Laguna."
+    }
+  ]
+}
