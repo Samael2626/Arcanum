@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/reading_identity_repository.dart';
 import '../domain/hebrew_gematria.dart';
 import '../domain/reading_identity.dart';
+import '../domain/threshold_bridge.dart';
 
 final readingIdentityRepositoryProvider = Provider<ReadingIdentityRepository>(
   (ref) => ReadingIdentityRepository(EncryptedReadingIdentityStorage()),
@@ -93,6 +94,25 @@ class ReadingIdentityController extends AsyncNotifier<ReadingIdentityProfile?> {
         updatedAt: now,
       ),
     );
+  }
+
+  /// Enciende o revoca un puente concreto.
+  ///
+  /// Uno a uno y nunca en grupo: el puente Oraculo publica texto en un
+  /// servidor ajeno y los otros dos no, asi que un interruptor comun seria
+  /// pedir un permiso pasando otro de contrabando.
+  ///
+  /// Revocar no deja residuo porque no hay nada derivado que borrar: la
+  /// resonancia se calcula al vuelo desde el perfil y desaparece con el flag.
+  Future<void> setBridge(ThresholdBridge bridge, bool enabled) async {
+    final current = state.value;
+    if (current == null) {
+      throw StateError('Perfil inexistente');
+    }
+    if (current.allows(bridge) == enabled) return;
+    final next = {...current.bridges};
+    enabled ? next.add(bridge) : next.remove(bridge);
+    await _persist(current.withBridges(next, DateTime.now().toUtc()));
   }
 
   Future<String> exportLocal() async {

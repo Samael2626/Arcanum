@@ -17,6 +17,7 @@ import '../../shared/widgets/gold_button.dart';
 import '../../shared/widgets/info_dot.dart';
 import '../hoy/hoy_guidance.dart';
 import '../hoy/hoy_lore.dart';
+import '../name_threshold/bridge.dart';
 import 'sign_lore.dart';
 import 'widgets/natal_wheel.dart';
 import 'widgets/sign_gallery.dart';
@@ -231,6 +232,11 @@ class _NatalViewState extends ConsumerState<_NatalView> {
         const _TapHint(),
         const SizedBox(height: 14),
         const _AspectLegend(),
+
+        // Al lado de la rueda ya calculada: no entra en las efemerides ni
+        // toca un solo grado. Vacio si el puente esta apagado.
+        const ThresholdResonanceCard(bridge: ThresholdBridge.skies),
+
         const SizedBox(height: 24),
 
         // ── Ángulos ──

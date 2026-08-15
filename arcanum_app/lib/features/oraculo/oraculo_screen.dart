@@ -11,6 +11,7 @@ import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
 import '../../shared/widgets/login_prompt.dart';
+import '../name_threshold/bridge.dart';
 import 'tarot_learn.dart';
 import 'widgets/tarot_card.dart';
 
@@ -289,8 +290,15 @@ class _OracleViewState extends ConsumerState<_OracleView> {
       _iaReply = null;
     });
     try {
+      // Unico punto del modulo donde algo del perfil privado sale del
+      // telefono. Si el puente esta apagado el provider devuelve null y la
+      // pregunta viaja literal, byte por byte, como antes de esta fase.
+      final composed = NameResonance.composeOracleQuestion(
+        question,
+        ref.read(nameResonanceProvider(ThresholdBridge.oracle)),
+      );
       final response = await _api.oracleIa(
-        question: question.isEmpty ? null : question,
+        question: composed.isEmpty ? null : composed,
         divinationSessionId: sessionId,
         idempotencyKey: key,
       );
@@ -437,6 +445,7 @@ class _OracleViewState extends ConsumerState<_OracleView> {
             loading: _iaLoading,
             onPressed: _askIa,
           ),
+          const _OracleBridgeNotice(),
           if (_iaError != null) ...[
             const SizedBox(height: 14),
             Text(
@@ -541,6 +550,36 @@ class _OracleViewState extends ConsumerState<_OracleView> {
                     ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Aviso en el punto de envio, no en un ajuste lejano.
+///
+/// Quien enciende el puente remoto tiene que poder ver, justo antes de
+/// pulsar, la frase exacta que va a salir del telefono. Vacio si el puente
+/// esta apagado o si el nombre no tiene ficha en el catalogo: sin ficha no
+/// cruza nada.
+class _OracleBridgeNotice extends ConsumerWidget {
+  const _OracleBridgeNotice();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final clause = ref
+        .watch(nameResonanceProvider(ThresholdBridge.oracle))
+        ?.oracleClause;
+    if (clause == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Text(
+        'Con tu pregunta viaja esta línea: «$clause»',
+        textAlign: TextAlign.center,
+        style: ArcanumText.body(
+          12,
+          italic: true,
+          color: ArcanumColors.ivoryMuted,
         ),
       ),
     );

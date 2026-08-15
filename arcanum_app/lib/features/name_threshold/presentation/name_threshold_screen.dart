@@ -9,6 +9,7 @@ import '../../../shared/widgets/arcanum_card.dart';
 import '../../../shared/widgets/gold_button.dart';
 import '../application/reading_identity_controller.dart';
 import '../domain/reading_identity.dart';
+import '../domain/threshold_bridge.dart';
 
 class NameThresholdScreen extends ConsumerWidget {
   const NameThresholdScreen({super.key});
@@ -48,6 +49,10 @@ class NameThresholdScreen extends ConsumerWidget {
                   label: 'Añadir parte del nombre',
                   onPressed: () => _showAddPart(context, ref, data),
                 ),
+                if (data != null && data.parts.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  _BridgesCard(profile: data),
+                ],
                 if (data != null) ...[
                   const SizedBox(height: 14),
                   Row(
@@ -189,6 +194,89 @@ class _PrivacyIntro extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// Los tres interruptores de consentimiento.
+///
+/// Apagados por defecto y uno por puente. El del Oraculo ademas pide
+/// confirmacion al encenderse, porque es el unico que publica texto fuera del
+/// telefono; apagarlo nunca pregunta nada, que revocar sea siempre mas facil
+/// que conceder.
+class _BridgesCard extends ConsumerWidget {
+  final ReadingIdentityProfile profile;
+  const _BridgesCard({required this.profile});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => ArcanumCard(
+    intensity: 0.35,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionLabel('PUENTES'),
+        const SizedBox(height: 10),
+        Text('Donde puede acompañarte', style: ArcanumText.heading(22)),
+        const SizedBox(height: 8),
+        Text(
+          'Cada módulo se enciende por separado y puedes apagarlo cuando quieras.',
+          style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
+        ),
+        const SizedBox(height: 6),
+        ...ThresholdBridge.values.map(
+          (bridge) => SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            value: profile.allows(bridge),
+            activeThumbColor: ArcanumColors.gold,
+            title: Text(bridge.label, style: ArcanumText.heading(19)),
+            subtitle: Text(
+              bridge.consentCaption,
+              style: ArcanumText.body(13, color: ArcanumColors.ivoryMuted),
+            ),
+            onChanged: (enabled) => _toggle(context, ref, bridge, enabled),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Future<void> _toggle(
+    BuildContext context,
+    WidgetRef ref,
+    ThresholdBridge bridge,
+    bool enabled,
+  ) async {
+    if (enabled && bridge.leavesDevice) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          backgroundColor: ArcanumColors.surfaceHigh,
+          title: Text('Esto sale del teléfono', style: ArcanumText.heading(22)),
+          content: Text(bridge.consentCaption, style: ArcanumText.body(15)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Ahora no'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Entiendo, enciéndelo'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+    try {
+      await ref
+          .read(readingIdentityProvider.notifier)
+          .setBridge(bridge, enabled);
+    } on Object {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo guardar el puente.')),
+        );
+      }
+    }
+  }
 }
 
 class _EmptyState extends StatelessWidget {

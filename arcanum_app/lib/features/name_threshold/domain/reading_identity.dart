@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import 'threshold_bridge.dart';
+
 enum NamePartType {
   givenName('Nombre'),
   surname('Apellido');
@@ -155,34 +157,66 @@ class ReadingNamePart {
 
 @immutable
 class ReadingIdentityProfile {
-  static const schemaVersion = 1;
+  static const schemaVersion = 2;
+
+  /// Versiones que este binario sabe abrir. La 1 es anterior a los puentes:
+  /// se lee sin ninguno encendido, que es el estado por defecto de todos
+  /// modos, asi que la migracion no puede conceder permisos por accidente.
+  static const supportedSchemaVersions = <int>{1, 2};
+
   final List<ReadingNamePart> parts;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  /// Puentes que la persona encendio explicitamente. El consentimiento vive
+  /// dentro del propio perfil cifrado: borrar el perfil borra el permiso por
+  /// construccion, no por acordarse de hacerlo en otro sitio.
+  final Set<ThresholdBridge> bridges;
 
   const ReadingIdentityProfile({
     required this.parts,
     required this.createdAt,
     required this.updatedAt,
+    this.bridges = const <ThresholdBridge>{},
   });
+
+  bool allows(ThresholdBridge bridge) => bridges.contains(bridge);
+
+  ReadingIdentityProfile withBridges(
+    Set<ThresholdBridge> next,
+    DateTime updatedAt,
+  ) => ReadingIdentityProfile(
+    parts: parts,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+    bridges: next,
+  );
 
   Map<String, Object> toJson() => {
     'schema_version': schemaVersion,
     'parts': parts.map((part) => part.toJson()).toList(),
     'created_at': createdAt.toUtc().toIso8601String(),
     'updated_at': updatedAt.toUtc().toIso8601String(),
+    'bridges': bridges.map((bridge) => bridge.name).toList(growable: false),
   };
 
   factory ReadingIdentityProfile.fromJson(Map<String, dynamic> json) {
-    if (json['schema_version'] != schemaVersion) {
+    if (!supportedSchemaVersions.contains(json['schema_version'])) {
       throw const FormatException('Version de perfil no compatible');
     }
+    final names = ThresholdBridge.values.asNameMap();
     return ReadingIdentityProfile(
       parts: (json['parts'] as List<dynamic>)
           .map((item) => ReadingNamePart.fromJson(item as Map<String, dynamic>))
           .toList(growable: false),
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      // Un puente desconocido se descarta en vez de romper la carga: un
+      // binario viejo nunca debe conceder un permiso que no sabe explicar.
+      bridges: ((json['bridges'] as List<dynamic>?) ?? const [])
+          .map((item) => names[item as String])
+          .nonNulls
+          .toSet(),
     );
   }
 }

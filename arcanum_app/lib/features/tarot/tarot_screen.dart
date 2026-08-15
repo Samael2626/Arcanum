@@ -7,6 +7,7 @@ import '../../core/api/oracle_error.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
+import '../name_threshold/bridge.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
 import '../../shared/widgets/info_dot.dart';
@@ -198,7 +199,12 @@ class _TarotViewState extends ConsumerState<_TarotView> {
               ),
             ],
             const SizedBox(height: 24),
-            if (_resolved != null) ..._resolved!.map(_renderCard),
+            if (_resolved != null) ...[
+              ..._resolved!.map(_renderCard),
+              // Despues de las cartas, nunca antes: acompana la tirada, no la
+              // encuadra. Vacio si el puente esta apagado.
+              const ThresholdResonanceCard(bridge: ThresholdBridge.tarot),
+            ],
             const SizedBox(height: 8),
             const SectionLabel('TIRADAS DEL SISTEMA'),
             const SizedBox(height: 10),
