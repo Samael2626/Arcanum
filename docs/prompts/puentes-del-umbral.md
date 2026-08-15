@@ -1,6 +1,6 @@
 # Prompt — Puentes del Umbral (ARCANUM)
 
-> Fase siguiente a Nombre y Umbral V1.1 (`81e79c1`, rama `feat/nombre-y-umbral-foundation`).
+> Fase siguiente a Nombre y Umbral V1.1 (`8b2a436`, rama `feat/nombre-y-umbral-foundation`).
 > Copiar de aqui hacia abajo.
 
 ---
@@ -13,10 +13,11 @@ Construir **Puentes del Umbral**: la integracion **opt-in** del nombre de la per
 
 ## Estado del que partes (verificado)
 
-- Rama `feat/nombre-y-umbral-foundation`, ultimo commit `81e79c1 feat(perfil): ampliar catalogo editorial de nombres`.
+- Rama `feat/nombre-y-umbral-foundation`, ultimo commit `8b2a436 feat(nombres): calibrar IA para el catalogo editorial`.
 - Catalogo de 128 fichas en cinco tradiciones con licencia verificada. Cola de 27 apellidos, **cero publicados**.
 - `NameTradition.allowsHistoricalGematria` es invariante tipado: solo hebrea abre el calculo 1-400.
 - `flutter analyze` limpio, 246 tests verdes, APK debug construido.
+- El catalogo NO se amplia en esta fase. Hay una cola de 66 candidatos sin verificar en `tools/names/`, y una medicion que dice que ningun modelo de Groq sirve para decidir significados: inventan entre 75% y 92% sobre etimologias no resueltas. Si en algun momento se te ocurre pedirle a un modelo que rellene una ficha, la respuesta ya esta medida y es no.
 - **Pendiente heredado:** verificacion fisica en el OnePlus no ejecutada (el equipo no estaba conectado). Si aparece, ejecutarla antes de cerrar.
 - La frontera actual esta fijada por `test/features/name_threshold/network_isolation_test.dart`, tercer test: Tarot y Cielos no pueden ni nombrar `name_threshold` ni `readingIdentityProvider`. **Ese test tiene que cambiar a proposito, no por accidente.** Cambiarlo es la decision, no el tramite.
 
