@@ -1,0 +1,2360 @@
+{
+  "schema": "arcanum-name-gold-1.0.0",
+  "count": 128,
+  "traditions": {
+    "hebrew": 50,
+    "greek": 26,
+    "latin": 33,
+    "germanic": 13,
+    "arabic": 6
+  },
+  "entries": [
+    {
+      "id": "adan",
+      "display_name": "Adán",
+      "variants": [
+        "Adam"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "Humano, hombre.",
+      "etymology": "El relato vincula el nombre con adamah, suelo.",
+      "documented_form": "אדם",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Génesis 2:20; BDB אדם"
+    },
+    {
+      "id": "eva",
+      "display_name": "Eva",
+      "variants": [
+        "Hava",
+        "Chava"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "El relato la llama madre de todo viviente.",
+      "etymology": "Explicación narrativa relacionada con vivir.",
+      "documented_form": "חוה",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Génesis 3:20; BDB חוה/חיה"
+    },
+    {
+      "id": "noe",
+      "display_name": "Noé",
+      "variants": [
+        "Noah"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "Asociado con descanso y consuelo.",
+      "etymology": "Juego narrativo de Génesis.",
+      "documented_form": "נח",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Génesis 5:29; BDB נוח"
+    },
+    {
+      "id": "abraham",
+      "display_name": "Abraham",
+      "variants": [
+        "Abram"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "Padre de multitud en el relato.",
+      "etymology": "Explicación narrativa del cambio de nombre.",
+      "documented_form": "אברהם",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Génesis 17:5"
+    },
+    {
+      "id": "sara",
+      "display_name": "Sara",
+      "variants": [
+        "Sarah"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Princesa o señora.",
+      "etymology": "Forma hebrea שרה.",
+      "documented_form": "שרה",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Génesis 17:15; BDB שרה"
+    },
+    {
+      "id": "isaac",
+      "display_name": "Isaac",
+      "variants": [
+        "Isac"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Él ríe; risa.",
+      "etymology": "Relacionado con el verbo hebreo reír.",
+      "documented_form": "יצחק",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Génesis 17:19; 21:6; BDB צחק"
+    },
+    {
+      "id": "jacob",
+      "display_name": "Jacob",
+      "variants": [
+        "Jacobo",
+        "Yaakov"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "El relato lo vincula con el talón.",
+      "etymology": "Juego narrativo con la raíz עקב.",
+      "documented_form": "יעקב",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Génesis 25:26; BDB עקב"
+    },
+    {
+      "id": "israel",
+      "display_name": "Israel",
+      "variants": [
+        "Yisrael"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "El relato lo explica como contender con Dios y hombres.",
+      "etymology": "Explicación narrativa de Génesis.",
+      "documented_form": "ישראל",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Génesis 32:29"
+    },
+    {
+      "id": "jose",
+      "display_name": "José",
+      "variants": [
+        "Joseph",
+        "Yosef"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Que añada.",
+      "etymology": "El relato lo relaciona con añadir.",
+      "documented_form": "יוסף",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Génesis 30:24; BDB יסף"
+    },
+    {
+      "id": "benjamin",
+      "display_name": "Benjamín",
+      "variants": [
+        "Benjamin",
+        "Binyamin"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "Hijo de la derecha o del sur.",
+      "etymology": "Contrasta con Ben-oní en el relato.",
+      "documented_form": "בנימין",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Génesis 35:18; BDB בנימין"
+    },
+    {
+      "id": "moises",
+      "display_name": "Moisés",
+      "variants": [
+        "Moses",
+        "Moshe"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "disputed",
+      "meaning": "Éxodo lo relaciona con sacar de las aguas.",
+      "etymology": "Posible origen egipcio; no existe consenso único.",
+      "documented_form": "משה",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Éxodo 2:10; BDB משה"
+    },
+    {
+      "id": "josue",
+      "display_name": "Josué",
+      "variants": [
+        "Joshua",
+        "Yehoshua"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "YHWH salva.",
+      "etymology": "Nombre teofórico hebreo.",
+      "documented_form": "יהושע",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Números 13:16; Josué 1:1; TBESH"
+    },
+    {
+      "id": "samuel",
+      "display_name": "Samuel",
+      "variants": [
+        "Shmuel"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "Dios ha escuchado.",
+      "etymology": "La etimología exacta de la forma hebrea sigue discutida.",
+      "documented_form": "שמואל",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "1 Samuel 1:20; BDB שמואל"
+    },
+    {
+      "id": "david",
+      "display_name": "David",
+      "variants": [
+        "Dawid"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "Probablemente amado.",
+      "etymology": "Relacionado con דוד.",
+      "documented_form": "דוד",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "1 Samuel 16:13; BDB דוד"
+    },
+    {
+      "id": "salomon",
+      "display_name": "Salomón",
+      "variants": [
+        "Solomon",
+        "Shlomo"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Relacionado con paz.",
+      "etymology": "El relato lo llama hombre de paz.",
+      "documented_form": "שלמה",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "1 Crónicas 22:9; BDB שלם"
+    },
+    {
+      "id": "daniel",
+      "display_name": "Daniel",
+      "variants": [
+        "Daniyyel"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Dios es mi juez.",
+      "etymology": "Nombre teofórico hebreo.",
+      "documented_form": "דניאל",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Daniel 1:6; TBESH"
+    },
+    {
+      "id": "elias",
+      "display_name": "Elías",
+      "variants": [
+        "Elijah",
+        "Eliyahu"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "YHWH es mi Dios.",
+      "etymology": "Nombre teofórico hebreo.",
+      "documented_form": "אליהו",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "1 Reyes 17:1; TBESH"
+    },
+    {
+      "id": "isaias",
+      "display_name": "Isaías",
+      "variants": [
+        "Isaiah",
+        "Yeshayahu"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "YHWH salva.",
+      "etymology": "Nombre teofórico hebreo.",
+      "documented_form": "ישעיהו",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Isaías 1:1; TBESH"
+    },
+    {
+      "id": "jonas",
+      "display_name": "Jonás",
+      "variants": [
+        "Jonah",
+        "Yonah"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Paloma.",
+      "etymology": "Sustantivo hebreo יונה.",
+      "documented_form": "יונה",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Jonás 1:1; BDB יונה"
+    },
+    {
+      "id": "ana",
+      "display_name": "Ana",
+      "variants": [
+        "Anna",
+        "Hannah"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Favor o gracia.",
+      "etymology": "Relacionado con la raíz חנן.",
+      "documented_form": "חנה",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "1 Samuel 1:2; BDB חנן/חנה"
+    },
+    {
+      "id": "juan",
+      "display_name": "Juan",
+      "variants": [
+        "Juana",
+        "Yohanan",
+        "John",
+        "Joao"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "YHWH ha sido favorable.",
+      "etymology": "De יוחנן, Yohanan, compuesto del nombre divino y la raíz חנן, «ser favorable». Pasó al griego Ἰωάννης y de ahí al español.",
+      "documented_form": "יוחנן",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "2 Reyes 25:23; 1 Crónicas 3:15; BDB חנן"
+    },
+    {
+      "id": "maria",
+      "display_name": "María",
+      "variants": [
+        "Maria",
+        "Miriam",
+        "Mariana",
+        "Mary"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "disputed",
+      "meaning": "Su significado no está resuelto.",
+      "etymology": "La forma hebrea מרים está firmemente atestiguada, pero su etimología sigue en disputa: se han propuesto vínculos con la raíz מרר, «amargo», y un posible origen egipcio. Ninguna propuesta tiene consenso.",
+      "documented_form": "מרים",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Éxodo 15:20; Números 12:1; BDB מרים"
+    },
+    {
+      "id": "miguel",
+      "display_name": "Miguel",
+      "variants": [
+        "Michael",
+        "Miguelangel",
+        "Micaela"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "¿Quién como Dios?",
+      "etymology": "De מיכאל: la pregunta מי כ-אל, «¿quién como El?». Es una interrogación, no una afirmación.",
+      "documented_form": "מיכאל",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Daniel 10:13; Números 13:13; BDB מיכאל"
+    },
+    {
+      "id": "gabriel",
+      "display_name": "Gabriel",
+      "variants": [
+        "Gabriela",
+        "Gabrielle"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Fuerza de Dios.",
+      "etymology": "De גבריאל, compuesto de גבר, «ser fuerte, varón», y אל, «Dios».",
+      "documented_form": "גבריאל",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Daniel 8:16; 9:21; BDB גבר"
+    },
+    {
+      "id": "rafael",
+      "display_name": "Rafael",
+      "variants": [
+        "Rafaela",
+        "Raphael"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Dios ha sanado.",
+      "etymology": "De רפאל: la raíz רפא, «sanar», con אל, «Dios».",
+      "documented_form": "רפאל",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "1 Crónicas 26:7; BDB רפא"
+    },
+    {
+      "id": "ezequiel",
+      "display_name": "Ezequiel",
+      "variants": [
+        "Ezekiel",
+        "Yehezkel"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Dios fortalece.",
+      "etymology": "De יחזקאל: raíz חזק, «ser fuerte», con אל, «Dios».",
+      "documented_form": "יחזקאל",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Ezequiel 1:3; BDB חזק"
+    },
+    {
+      "id": "jeremias",
+      "display_name": "Jeremías",
+      "variants": [
+        "Jeremiah",
+        "Yirmeyahu"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "disputed",
+      "meaning": "Se ha propuesto «YHWH exalta» o «YHWH establece».",
+      "etymology": "La forma ירמיהו combina el nombre divino con una raíz que los léxicos leen como רום, «elevar», o רמה, «arrojar, establecer». No hay acuerdo.",
+      "documented_form": "ירמיהו",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Jeremías 1:1; BDB ירמיהו"
+    },
+    {
+      "id": "zacarias",
+      "display_name": "Zacarías",
+      "variants": [
+        "Zachary",
+        "Zejaria"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "YHWH ha recordado.",
+      "etymology": "De זכריה: raíz זכר, «recordar», con el nombre divino.",
+      "documented_form": "זכריה",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Zacarías 1:1; BDB זכר"
+    },
+    {
+      "id": "jonatan",
+      "display_name": "Jonatán",
+      "variants": [
+        "Jonathan",
+        "Yehonatan"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "YHWH ha dado.",
+      "etymology": "De יהונתן: el nombre divino con la raíz נתן, «dar».",
+      "documented_form": "יהונתן",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "1 Samuel 14:1; BDB נתן"
+    },
+    {
+      "id": "natanael",
+      "display_name": "Natanael",
+      "variants": [
+        "Nathanael",
+        "Natán",
+        "Natan"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Dios ha dado.",
+      "etymology": "De נתנאל: raíz נתן, «dar», con אל, «Dios».",
+      "documented_form": "נתנאל",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Números 1:8; BDB נתנאל"
+    },
+    {
+      "id": "ismael",
+      "display_name": "Ismael",
+      "variants": [
+        "Ishmael",
+        "Yishmael"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Dios escucha.",
+      "etymology": "De ישמעאל: raíz שמע, «escuchar», con אל, «Dios».",
+      "documented_form": "ישמעאל",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Génesis 16:11; BDB שמע"
+    },
+    {
+      "id": "emanuel",
+      "display_name": "Emanuel",
+      "variants": [
+        "Emmanuel",
+        "Manuel",
+        "Manuela",
+        "Immanuel"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Dios con nosotros.",
+      "etymology": "De עמנואל: עם, «con», נו, «nosotros», y אל, «Dios».",
+      "documented_form": "עמנואל",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Isaías 7:14; 8:8; BDB עמנואל"
+    },
+    {
+      "id": "ariel",
+      "display_name": "Ariel",
+      "variants": [
+        "Arielle"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "León de Dios.",
+      "etymology": "De אריאל: אריה, «león», con אל, «Dios».",
+      "documented_form": "אריאל",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Isaías 29:1; Esdras 8:16; BDB אריאל"
+    },
+    {
+      "id": "uriel",
+      "display_name": "Uriel",
+      "variants": [
+        "Uriela"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Dios es mi luz.",
+      "etymology": "De אוריאל: אור, «luz», con אל, «Dios».",
+      "documented_form": "אוריאל",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "1 Crónicas 6:24; BDB אור"
+    },
+    {
+      "id": "simon",
+      "display_name": "Simón",
+      "variants": [
+        "Simeón",
+        "Simeon",
+        "Shimon"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "El relato lo vincula con ser escuchado.",
+      "etymology": "De שמעון, ligado en Génesis a la raíz שמע, «escuchar». Es una explicación narrativa del texto, no una derivación probada.",
+      "documented_form": "שמעון",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Génesis 29:33; BDB שמעון"
+    },
+    {
+      "id": "ruben",
+      "display_name": "Rubén",
+      "variants": [
+        "Reuben",
+        "Reuven"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "disputed",
+      "meaning": "El relato lo lee como «¡mirad, un hijo!».",
+      "etymology": "De ראובן. Génesis juega con ראה, «ver», y בן, «hijo». La derivación real es discutida.",
+      "documented_form": "ראובן",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Génesis 29:32; BDB ראובן"
+    },
+    {
+      "id": "levi",
+      "display_name": "Leví",
+      "variants": [
+        "Levi"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "El relato lo vincula con unirse, acompañar.",
+      "etymology": "De לוי, asociado en Génesis a la raíz לוה, «unirse a».",
+      "documented_form": "לוי",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Génesis 29:34; BDB לוה"
+    },
+    {
+      "id": "aaron",
+      "display_name": "Aarón",
+      "variants": [
+        "Aaron",
+        "Aharon"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "disputed",
+      "meaning": "Su significado no está resuelto.",
+      "etymology": "La forma אהרן está bien atestiguada, pero los léxicos no fijan su etimología; se ha propuesto un origen egipcio sin consenso.",
+      "documented_form": "אהרן",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Éxodo 4:14; BDB אהרן"
+    },
+    {
+      "id": "abigail",
+      "display_name": "Abigaíl",
+      "variants": [
+        "Abigail",
+        "Avigail"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Mi padre se alegra.",
+      "etymology": "De אביגיל: אב, «padre», con la raíz גיל, «regocijarse».",
+      "documented_form": "אביגיל",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "1 Samuel 25:3; BDB גיל"
+    },
+    {
+      "id": "raquel",
+      "display_name": "Raquel",
+      "variants": [
+        "Rachel",
+        "Rajel"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Oveja.",
+      "etymology": "De רחל, sustantivo hebreo que designa a la oveja.",
+      "documented_form": "רחל",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Génesis 29:6; BDB רחל"
+    },
+    {
+      "id": "rebeca",
+      "display_name": "Rebeca",
+      "variants": [
+        "Rebecca",
+        "Rivka"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "disputed",
+      "meaning": "Su significado no está resuelto.",
+      "etymology": "La forma רבקה está atestiguada, pero los léxicos declaran su etimología incierta. Las glosas populares que circulan no tienen base.",
+      "documented_form": "רבקה",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Génesis 24:15; BDB רבקה"
+    },
+    {
+      "id": "lea",
+      "display_name": "Lea",
+      "variants": [
+        "Leah",
+        "Lía"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "disputed",
+      "meaning": "Su significado es discutido.",
+      "etymology": "Para לאה se ha propuesto un vínculo con לאה, «estar fatigado», y también con un término para «vaca». Ninguna propuesta cierra la discusión.",
+      "documented_form": "לאה",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Génesis 29:16; BDB לאה"
+    },
+    {
+      "id": "debora",
+      "display_name": "Débora",
+      "variants": [
+        "Deborah",
+        "Dvora"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Abeja.",
+      "etymology": "De דבורה, sustantivo hebreo para la abeja.",
+      "documented_form": "דבורה",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Jueces 4:4; BDB דבורה"
+    },
+    {
+      "id": "ester",
+      "display_name": "Ester",
+      "variants": [
+        "Esther",
+        "Estheryna"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "disputed",
+      "meaning": "Su origen es discutido.",
+      "etymology": "La forma אסתר aparece en el libro de Ester, pero los léxicos la consideran de origen probablemente persa. El texto mismo da a la protagonista un segundo nombre hebreo, Hadasá.",
+      "documented_form": "אסתר",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Ester 2:7; BDB אסתר"
+    },
+    {
+      "id": "judith",
+      "display_name": "Judith",
+      "variants": [
+        "Judit",
+        "Yehudit"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Mujer de Judá.",
+      "etymology": "De יהודית, forma femenina del gentilicio de יהודה, Judá.",
+      "documented_form": "יהודית",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Génesis 26:34; BDB יהודית"
+    },
+    {
+      "id": "susana",
+      "display_name": "Susana",
+      "variants": [
+        "Susanna",
+        "Shoshana"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Lirio, flor de loto.",
+      "etymology": "Del sustantivo שושנה, que los léxicos glosan como lirio o flor de loto.",
+      "documented_form": "שושנה",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Cantar de los Cantares 2:1; BDB שושן"
+    },
+    {
+      "id": "isabel",
+      "display_name": "Isabel",
+      "variants": [
+        "Elizabeth",
+        "Elisabet",
+        "Isabela",
+        "Elisheva"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "Mi Dios es juramento.",
+      "etymology": "De אלישבע, Elishevá: אל, «Dios», con שבע, ligado al juramento y al número siete. Pasó al griego Ἐλισάβετ y de ahí a las formas romances.",
+      "documented_form": "אלישבע",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Éxodo 6:23; BDB שבע"
+    },
+    {
+      "id": "gedeon",
+      "display_name": "Gedeón",
+      "variants": [
+        "Gideon"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "Relacionado con talar, derribar.",
+      "etymology": "De גדעון, ligado a la raíz גדע, «cortar, derribar».",
+      "documented_form": "גדעון",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Jueces 6:11; BDB גדע"
+    },
+    {
+      "id": "tobias",
+      "display_name": "Tobías",
+      "variants": [
+        "Tobiah",
+        "Toby"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "YHWH es bueno.",
+      "etymology": "De טוביה: טוב, «bueno», con el nombre divino.",
+      "documented_form": "טוביה",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Esdras 2:60; Nehemías 2:10; BDB טוב"
+    },
+    {
+      "id": "esdras",
+      "display_name": "Esdras",
+      "variants": [
+        "Ezra"
+      ],
+      "tradition": "hebrew",
+      "allows_historical_gematria": true,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Ayuda.",
+      "etymology": "De עזרא, ligado a la raíz עזר, «ayudar, socorrer».",
+      "documented_form": "עזרא",
+      "has_historical_hebrew": true,
+      "source_id": "oshb",
+      "citation": "Esdras 7:1; BDB עזר"
+    },
+    {
+      "id": "andres",
+      "display_name": "Andrés",
+      "variants": [
+        "Andres",
+        "Andreas",
+        "Andrew",
+        "Andre"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Hombre; asociado con valor.",
+      "etymology": "Forma española de Andreas, del griego Ἀνδρέας. Su familia léxica remite a ἀνήρ / ἀνδρός: «hombre».",
+      "documented_form": "Ἀνδρέας",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "SBLGNT Juan 1:40; LSJ ἀνήρ y ἀνδρεῖος"
+    },
+    {
+      "id": "andrea",
+      "display_name": "Andrea",
+      "variants": [
+        "Andreína"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "De la familia de «hombre», ἀνήρ.",
+      "etymology": "Comparte raíz con Ἀνδρέας: la familia léxica de ἀνήρ / ἀνδρός. En español se asentó como nombre femenino.",
+      "documented_form": "Ἀνδρέας",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ ἀνήρ"
+    },
+    {
+      "id": "alejandro",
+      "display_name": "Alejandro",
+      "variants": [
+        "Alexander",
+        "Alexandro",
+        "Alex"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Defensor de los hombres.",
+      "etymology": "Del griego Ἀλέξανδρος. El léxico lo glosa como «defensor de los hombres».",
+      "documented_form": "Ἀλέξανδρος",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ ἀλέξανδρος"
+    },
+    {
+      "id": "alejandra",
+      "display_name": "Alejandra",
+      "variants": [
+        "Alexandra",
+        "Sandra"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Defensora de los hombres.",
+      "etymology": "Forma femenina Ἀλεξάνδρα, del mismo compuesto de ἀλέξω, «apartar, defender», y ἀνήρ.",
+      "documented_form": "Ἀλεξάνδρα",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ ἀλέξω y ἀνήρ"
+    },
+    {
+      "id": "felipe",
+      "display_name": "Felipe",
+      "variants": [
+        "Philip",
+        "Felipe"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Amigo de los caballos.",
+      "etymology": "Del griego φίλιππος, compuesto que el léxico define como «aficionado a los caballos».",
+      "documented_form": "Φίλιππος",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "Middle Liddell φίλιππος"
+    },
+    {
+      "id": "jorge",
+      "display_name": "Jorge",
+      "variants": [
+        "George",
+        "Georgios"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Quien trabaja la tierra.",
+      "etymology": "Se vincula con γεωργός, compuesto de «tierra» y «trabajo»: labrador o cultivador.",
+      "documented_form": "Γεώργιος",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ γεωργός"
+    },
+    {
+      "id": "sofia",
+      "display_name": "Sofía",
+      "variants": [
+        "Sofia",
+        "Sophia"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Sabiduría; destreza.",
+      "etymology": "Del griego σοφία. El léxico conserva sentidos de destreza técnica, arte y saber.",
+      "documented_form": "Σοφία",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ σοφία"
+    },
+    {
+      "id": "pedro",
+      "display_name": "Pedro",
+      "variants": [
+        "Peter",
+        "Petra",
+        "Pietro"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Piedra, roca.",
+      "etymology": "De Πέτρος, de la familia de πέτρα, «roca». En Juan 1:42 el nombre se da explícitamente como traducción de un apodo arameo.",
+      "documented_form": "Πέτρος",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ πέτρα; Juan 1:42"
+    },
+    {
+      "id": "nicolas",
+      "display_name": "Nicolás",
+      "variants": [
+        "Nicholas",
+        "Nicolasa",
+        "Nikolaos"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Victoria del pueblo.",
+      "etymology": "De Νικόλαος, compuesto de νίκη, «victoria», y λαός, «pueblo».",
+      "documented_form": "Νικόλαος",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ νίκη y λαός"
+    },
+    {
+      "id": "esteban",
+      "display_name": "Esteban",
+      "variants": [
+        "Stephen",
+        "Stefano",
+        "Estefanía",
+        "Stephanie"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Corona, guirnalda.",
+      "etymology": "De Στέφανος, del sustantivo στέφανος: la corona que se ceñía como premio o distinción.",
+      "documented_form": "Στέφανος",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ στέφανος"
+    },
+    {
+      "id": "sebastian",
+      "display_name": "Sebastián",
+      "variants": [
+        "Sebastian",
+        "Sebastiana"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Venerable, digno de reverencia.",
+      "etymology": "De Σεβαστιανός, derivado de σεβαστός, «venerable», el término griego con que se tradujo el latín Augustus.",
+      "documented_form": "Σεβαστιανός",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ σεβαστός"
+    },
+    {
+      "id": "cristian",
+      "display_name": "Cristian",
+      "variants": [
+        "Christian",
+        "Cristián",
+        "Cristina",
+        "Christina"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Relativo a χριστός, «ungido».",
+      "etymology": "Del adjetivo griego χριστός, «ungido», participio de χρίω, «untar, ungir con aceite».",
+      "documented_form": "Χριστιανός",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ χριστός y χρίω"
+    },
+    {
+      "id": "cristobal",
+      "display_name": "Cristóbal",
+      "variants": [
+        "Christopher",
+        "Cristoforo"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Portador de Cristo.",
+      "etymology": "De Χριστόφορος, compuesto de Χριστός y la familia de φέρω, «llevar, portar».",
+      "documented_form": "Χριστόφορος",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ φέρω y χριστός"
+    },
+    {
+      "id": "teodoro",
+      "display_name": "Teodoro",
+      "variants": [
+        "Theodore",
+        "Teodora",
+        "Dorotea",
+        "Dorothea"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Don de Dios.",
+      "etymology": "De Θεόδωρος, compuesto de θεός, «dios», y δῶρον, «don, regalo». Dorotea invierte los mismos elementos.",
+      "documented_form": "Θεόδωρος",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ θεός y δῶρον"
+    },
+    {
+      "id": "timoteo",
+      "display_name": "Timoteo",
+      "variants": [
+        "Timothy",
+        "Timotea"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Quien honra a Dios.",
+      "etymology": "De Τιμόθεος, compuesto de τιμή, «honor, estima», y θεός, «dios».",
+      "documented_form": "Τιμόθεος",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ τιμή y θεός"
+    },
+    {
+      "id": "gregorio",
+      "display_name": "Gregorio",
+      "variants": [
+        "Gregory",
+        "Gregoria"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "El que vela, el despierto.",
+      "etymology": "De Γρηγόριος, de γρηγορέω, «estar despierto, velar, mantenerse vigilante».",
+      "documented_form": "Γρηγόριος",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ γρηγορέω"
+    },
+    {
+      "id": "angel",
+      "display_name": "Ángel",
+      "variants": [
+        "Angela",
+        "Ángela",
+        "Angélica",
+        "Angelo"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Mensajero.",
+      "etymology": "Del sustantivo ἄγγελος, cuyo sentido primero en el léxico es «mensajero, el que anuncia», antes que cualquier lectura religiosa.",
+      "documented_form": "Ἄγγελος",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ ἄγγελος"
+    },
+    {
+      "id": "irene",
+      "display_name": "Irene",
+      "variants": [
+        "Eirene"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Paz.",
+      "etymology": "Del sustantivo εἰρήνη, «paz», también personificada como diosa.",
+      "documented_form": "Εἰρήνη",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ εἰρήνη"
+    },
+    {
+      "id": "zoe",
+      "display_name": "Zoé",
+      "variants": [
+        "Zoe"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Vida.",
+      "etymology": "Del sustantivo ζωή, «vida», entendida como el hecho de vivir más que como biografía.",
+      "documented_form": "Ζωή",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ ζωή"
+    },
+    {
+      "id": "margarita",
+      "display_name": "Margarita",
+      "variants": [
+        "Margaret",
+        "Marga",
+        "Rita"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Perla.",
+      "etymology": "De μαργαρίτης, «perla». El léxico señala que el griego lo tomó a su vez de una lengua oriental.",
+      "documented_form": "Μαργαρίτης",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ μαργαρίτης"
+    },
+    {
+      "id": "barbara",
+      "display_name": "Bárbara",
+      "variants": [
+        "Barbara"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Extranjera, de habla extraña.",
+      "etymology": "Del adjetivo βάρβαρος, que en el léxico designa a quien no habla griego, sin juicio moral en su uso más antiguo.",
+      "documented_form": "Βάρβαρος",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ βάρβαρος"
+    },
+    {
+      "id": "eugenio",
+      "display_name": "Eugenio",
+      "variants": [
+        "Eugenia",
+        "Eugene"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "De buen nacimiento.",
+      "etymology": "Del adjetivo εὐγενής, compuesto de εὖ, «bien», y la familia de γένος, «linaje, nacimiento».",
+      "documented_form": "Εὐγένιος",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ εὐγενής"
+    },
+    {
+      "id": "anastasia",
+      "display_name": "Anastasia",
+      "variants": [
+        "Anastasio",
+        "Anastasius"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Levantarse de nuevo, resurrección.",
+      "etymology": "Del sustantivo ἀνάστασις, «acción de levantarse», de ἀνίστημι, «poner en pie, levantar».",
+      "documented_form": "Ἀναστασία",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ ἀνάστασις"
+    },
+    {
+      "id": "catalina",
+      "display_name": "Catalina",
+      "variants": [
+        "Catherine",
+        "Katherine",
+        "Katalina",
+        "Caterina"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "disputed",
+      "meaning": "Su significado no está resuelto.",
+      "etymology": "La forma Αἰκατερίνη está atestiguada, pero su etimología no lo está. La glosa «pura», por καθαρός, es una reinterpretación posterior que alteró incluso la ortografía del nombre.",
+      "documented_form": "Αἰκατερίνη",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ καθαρός (para la reinterpretación posterior)"
+    },
+    {
+      "id": "elena",
+      "display_name": "Elena",
+      "variants": [
+        "Helena",
+        "Helen"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "disputed",
+      "meaning": "Su significado es discutido.",
+      "etymology": "La forma Ἑλένη está bien atestiguada desde Homero. Se ha propuesto un vínculo con ἑλένη, un término de antorcha o cesta, y con la familia de «luz», pero ninguna propuesta se ha impuesto.",
+      "documented_form": "Ἑλένη",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ ἑλένη"
+    },
+    {
+      "id": "tomas",
+      "display_name": "Tomás",
+      "variants": [
+        "Thomas",
+        "Tomasa"
+      ],
+      "tradition": "greek",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Gemelo.",
+      "etymology": "La forma griega Θωμᾶς transcribe un término arameo para «gemelo». El texto griego lo aclara al añadir el equivalente Δίδυμος.",
+      "documented_form": "Θωμᾶς",
+      "has_historical_hebrew": false,
+      "source_id": "lsj",
+      "citation": "LSJ δίδυμος; Juan 11:16"
+    },
+    {
+      "id": "antonio",
+      "display_name": "Antonio",
+      "variants": [
+        "Antonia",
+        "Anthony",
+        "Toño",
+        "Antonella"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "disputed",
+      "meaning": "Nombre de una gens romana; su sentido no está resuelto.",
+      "etymology": "Antonius es el nombre de una familia romana, probablemente de origen etrusco. El diccionario lo registra como nombre propio, sin etimología. La glosa «inestimable», por el griego ἄνθος, es una invención renacentista.",
+      "documented_form": "Antonius",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, Antonius"
+    },
+    {
+      "id": "lucia",
+      "display_name": "Lucía",
+      "variants": [
+        "Lucia",
+        "Lucio",
+        "Lucy",
+        "Luz"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Luz.",
+      "etymology": "Del praenomen Lucius, de la familia de lux, lucis, «luz». La tradición lo asociaba a quien nacía con la primera luz del día.",
+      "documented_form": "Lucia",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, lux y Lucius"
+    },
+    {
+      "id": "lucas",
+      "display_name": "Lucas",
+      "variants": [
+        "Luke",
+        "Lucano"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "De la familia de Lucius, «luz».",
+      "etymology": "Λουκᾶς es una forma griega abreviada de un nombre latino, Lucanus o Lucius, ambos de la familia de lux, «luz».",
+      "documented_form": "Lucanus",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, Lucanus y lux"
+    },
+    {
+      "id": "marco",
+      "display_name": "Marco",
+      "variants": [
+        "Marcos",
+        "Mark",
+        "Marcus"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "Se relaciona con Marte.",
+      "etymology": "Marcus es uno de los praenomina romanos más antiguos. La derivación desde Mars, Martis es la lectura habitual, pero se apoya en la forma, no en un testimonio antiguo explícito.",
+      "documented_form": "Marcus",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, Marcus y Mars"
+    },
+    {
+      "id": "marcela",
+      "display_name": "Marcela",
+      "variants": [
+        "Marcelo",
+        "Marcello",
+        "Marcella"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Diminutivo de Marcus.",
+      "etymology": "Marcellus es el diminutivo regular de Marcus, formado con el sufijo -ellus. El diminutivo latino marcaba afecto o descendencia, no tamaño.",
+      "documented_form": "Marcellus",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, Marcellus"
+    },
+    {
+      "id": "julio",
+      "display_name": "Julio",
+      "variants": [
+        "Julia",
+        "Julián",
+        "Juliana",
+        "Julius"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "disputed",
+      "meaning": "Nombre de la gens Iulia; su origen es discutido.",
+      "etymology": "Iulius es el nombre de una familia romana que decía descender de Iulus. Esa genealogía es una construcción literaria, no una etimología.",
+      "documented_form": "Iulius",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, Iulius y Iulus"
+    },
+    {
+      "id": "laura",
+      "display_name": "Laura",
+      "variants": [
+        "Lauro",
+        "Laureano",
+        "Lorena"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Laurel.",
+      "etymology": "Del sustantivo laurus, el laurel, árbol con el que se hacían las coronas de victoria y de honor poético.",
+      "documented_form": "Laura",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, laurus"
+    },
+    {
+      "id": "valentina",
+      "display_name": "Valentina",
+      "variants": [
+        "Valentín",
+        "Valentin",
+        "Valentino"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Fuerte, sano, vigoroso.",
+      "etymology": "De Valentinus, de valens, participio de valeo, «tener fuerza, estar sano». El mismo verbo del saludo vale, «que estés bien».",
+      "documented_form": "Valentinus",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, valeo y valens"
+    },
+    {
+      "id": "victoria",
+      "display_name": "Victoria",
+      "variants": [
+        "Víctor",
+        "Victor",
+        "Vittoria"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Victoria.",
+      "etymology": "Del sustantivo victoria, de vinco, «vencer». En Roma fue también el nombre de una diosa.",
+      "documented_form": "Victoria",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, victoria y vinco"
+    },
+    {
+      "id": "vicente",
+      "display_name": "Vicente",
+      "variants": [
+        "Vincent",
+        "Vicenta",
+        "Vincenzo"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "El que vence.",
+      "etymology": "De Vincentius, del participio vincens, de vinco, «vencer, prevalecer».",
+      "documented_form": "Vincentius",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, vinco"
+    },
+    {
+      "id": "pablo",
+      "display_name": "Pablo",
+      "variants": [
+        "Paula",
+        "Paul",
+        "Paolo",
+        "Paulina"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Pequeño, escaso.",
+      "etymology": "Del cognomen Paulus, del adjetivo paulus, «pequeño, poco». Era un sobrenombre romano corriente.",
+      "documented_form": "Paulus",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, paulus"
+    },
+    {
+      "id": "clara",
+      "display_name": "Clara",
+      "variants": [
+        "Claro",
+        "Clarisa",
+        "Claire"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Clara, brillante; también ilustre.",
+      "etymology": "Del adjetivo clarus, que en latín cubre a la vez lo luminoso, lo sonoro y lo célebre.",
+      "documented_form": "Clara",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, clarus"
+    },
+    {
+      "id": "camilo",
+      "display_name": "Camilo",
+      "variants": [
+        "Camila",
+        "Camille"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Joven que asistía en los ritos.",
+      "etymology": "De camillus, término ritual romano: el muchacho o la muchacha de familia libre que asistía al sacerdote durante el sacrificio.",
+      "documented_form": "Camillus",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, camillus"
+    },
+    {
+      "id": "natalia",
+      "display_name": "Natalia",
+      "variants": [
+        "Natalio",
+        "Natalie",
+        "Noel"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Relativo al nacimiento.",
+      "etymology": "Del adjetivo natalis, «del nacimiento», de nascor. La expresión dies natalis designaba el día en que se nace.",
+      "documented_form": "Natalia",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, natalis y nascor"
+    },
+    {
+      "id": "patricia",
+      "display_name": "Patricia",
+      "variants": [
+        "Patricio",
+        "Patrick"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Patricio, de la clase noble romana.",
+      "etymology": "Del adjetivo patricius, derivado de pater: el que pertenece a las familias fundadoras de Roma.",
+      "documented_form": "Patricia",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, patricius y pater"
+    },
+    {
+      "id": "maximo",
+      "display_name": "Máximo",
+      "variants": [
+        "Maximiliano",
+        "Máxima",
+        "Max",
+        "Maximo"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "El mayor, el más grande.",
+      "etymology": "De maximus, superlativo de magnus, «grande». Era un cognomen romano frecuente.",
+      "documented_form": "Maximus",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, magnus y maximus"
+    },
+    {
+      "id": "silvia",
+      "display_name": "Silvia",
+      "variants": [
+        "Silvio",
+        "Silvana",
+        "Sylvia"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Del bosque.",
+      "etymology": "Del sustantivo silva, «bosque, selva».",
+      "documented_form": "Silvia",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, silva"
+    },
+    {
+      "id": "marina",
+      "display_name": "Marina",
+      "variants": [
+        "Marino",
+        "Mar"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Del mar.",
+      "etymology": "Del adjetivo marinus, «marino», de mare, «mar».",
+      "documented_form": "Marina",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, marinus y mare"
+    },
+    {
+      "id": "aurora",
+      "display_name": "Aurora",
+      "variants": [
+        "Aurelio",
+        "Aurelia"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Amanecer.",
+      "etymology": "Del sustantivo aurora, la primera luz del día, personificada como diosa del alba.",
+      "documented_form": "Aurora",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, aurora"
+    },
+    {
+      "id": "beatriz",
+      "display_name": "Beatriz",
+      "variants": [
+        "Beatrice",
+        "Bea"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "La que hace feliz o la que es dichosa.",
+      "etymology": "De Beatrix, del adjetivo beatus, «feliz, dichoso, bienaventurado». La forma latina tardía Viatrix, «viajera», compitió con ella.",
+      "documented_form": "Beatrix",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, beatus"
+    },
+    {
+      "id": "rosa",
+      "display_name": "Rosa",
+      "variants": [
+        "Rosario",
+        "Rosalía",
+        "Rossy"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Rosa, la flor.",
+      "etymology": "Del sustantivo rosa. Rosario procede de rosarium, «rosaleda», que después nombró la devoción.",
+      "documented_form": "Rosa",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, rosa y rosarium"
+    },
+    {
+      "id": "mercedes",
+      "display_name": "Mercedes",
+      "variants": [
+        "Merced",
+        "Mercedez"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Pagas, recompensas; después, mercedes o gracias concedidas.",
+      "etymology": "Del plural de merces, mercedis, «paga, salario, recompensa». El sentido de «gracia concedida» es medieval y dio nombre a la devoción mariana.",
+      "documented_form": "Mercedes",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, merces"
+    },
+    {
+      "id": "esperanza",
+      "display_name": "Esperanza",
+      "variants": [
+        "Esperanto"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Esperanza.",
+      "etymology": "De la familia de spero, «esperar, confiar», y spes, «esperanza». El nombre español pertenece a la serie de nombres de virtud.",
+      "documented_form": "Sperantia",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, spes y spero"
+    },
+    {
+      "id": "consuelo",
+      "display_name": "Consuelo",
+      "variants": [
+        "Chelo",
+        "Consolación"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Consuelo, alivio.",
+      "etymology": "De consolatio, «consuelo», de consolor, «aliviar, confortar a alguien».",
+      "documented_form": "Consolatio",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, consolatio y consolor"
+    },
+    {
+      "id": "salvador",
+      "display_name": "Salvador",
+      "variants": [
+        "Salvadora",
+        "Salvatore"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "El que salva.",
+      "etymology": "De salvator, «salvador», de salvo, «poner a salvo». Es un término del latín cristiano, no del latín clásico.",
+      "documented_form": "Salvator",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, salvator y salvo"
+    },
+    {
+      "id": "adrian",
+      "display_name": "Adrián",
+      "variants": [
+        "Adriana",
+        "Hadrian",
+        "Adriano"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "De Hadria.",
+      "etymology": "De Hadrianus, «procedente de Hadria», ciudad que dio nombre al mar Adriático. Es un gentilicio, no un adjetivo.",
+      "documented_form": "Hadrianus",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, Hadria y Hadrianus"
+    },
+    {
+      "id": "celeste",
+      "display_name": "Celeste",
+      "variants": [
+        "Celestino",
+        "Celestina"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Celestial, del cielo.",
+      "etymology": "Del adjetivo caelestis, de caelum, «cielo».",
+      "documented_form": "Caelestis",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, caelestis y caelum"
+    },
+    {
+      "id": "renata",
+      "display_name": "Renata",
+      "variants": [
+        "Renato",
+        "René",
+        "Renee"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Renacido, vuelto a nacer.",
+      "etymology": "Del participio renatus, de renascor, «nacer de nuevo». Es un término del latín cristiano ligado al bautismo.",
+      "documented_form": "Renatus",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, renascor"
+    },
+    {
+      "id": "amanda",
+      "display_name": "Amanda",
+      "variants": [
+        "Amando",
+        "Amadeo"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Digna de ser amada.",
+      "etymology": "Del gerundivo amanda, de amo, «amar». El gerundivo latino expresa lo que debe o merece hacerse.",
+      "documented_form": "Amanda",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, amo"
+    },
+    {
+      "id": "cecilia",
+      "display_name": "Cecilia",
+      "variants": [
+        "Cecilio",
+        "Celia"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "Nombre de la gens Caecilia, ligado a caecus, «ciego».",
+      "etymology": "Caecilius es un nombre de familia romana que se relaciona con el adjetivo caecus, «ciego». La derivación es la habitual entre los cognomina de defecto físico, pero no está documentada explícitamente.",
+      "documented_form": "Caecilia",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, Caecilius y caecus"
+    },
+    {
+      "id": "fabian",
+      "display_name": "Fabián",
+      "variants": [
+        "Fabio",
+        "Fabiana",
+        "Fabiola"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "Nombre de la gens Fabia, ligado a faba, «haba».",
+      "etymology": "Fabius se relaciona con faba, «haba», siguiendo la serie de nombres romanos tomados de cultivos, como Lentulus o Cicero.",
+      "documented_form": "Fabianus",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, Fabius y faba"
+    },
+    {
+      "id": "diana",
+      "display_name": "Diana",
+      "variants": [
+        "Dayana",
+        "Diane"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "Nombre de la diosa romana de la caza y la luna.",
+      "etymology": "Diana se vincula con la familia de dius y divus, «divino, luminoso», y con la raíz que da dies, «día».",
+      "documented_form": "Diana",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, Diana y dius"
+    },
+    {
+      "id": "emilio",
+      "display_name": "Emilio",
+      "variants": [
+        "Emilia",
+        "Emily",
+        "Emiliano"
+      ],
+      "tradition": "latin",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "probable",
+      "meaning": "Nombre de la gens Aemilia, ligado a aemulus, «émulo, rival».",
+      "etymology": "Aemilius se relaciona con aemulus, «el que emula o compite». La derivación es la habitual, sin testimonio antiguo que la confirme.",
+      "documented_form": "Aemilius",
+      "has_historical_hebrew": false,
+      "source_id": "lewis-short",
+      "citation": "Lewis y Short, Aemilius y aemulus"
+    },
+    {
+      "id": "carlos",
+      "display_name": "Carlos",
+      "variants": [
+        "Carla",
+        "Carlota",
+        "Charles",
+        "Karl",
+        "Carolina"
+      ],
+      "tradition": "germanic",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Hombre libre; varón.",
+      "etymology": "Del germánico karl, que el Namenbuch registra con el sentido de varón adulto y hombre libre, por oposición al siervo.",
+      "documented_form": "KARL",
+      "has_historical_hebrew": false,
+      "source_id": "forstemann",
+      "citation": "Forstemann, Altdeutsches Namenbuch I, raíz KARL"
+    },
+    {
+      "id": "luis",
+      "display_name": "Luis",
+      "variants": [
+        "Luisa",
+        "Louis",
+        "Ludwig",
+        "Luz Marina"
+      ],
+      "tradition": "germanic",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Combate glorioso.",
+      "etymology": "De Hlodwig, compuesto de hlud, «fama, renombre», y wig, «combate». La forma francesa Louis y la española Luis descienden de ahí.",
+      "documented_form": "HLUD + WIG",
+      "has_historical_hebrew": false,
+      "source_id": "forstemann",
+      "citation": "Forstemann, Altdeutsches Namenbuch I, raíces HLUD y WIG"
+    },
+    {
+      "id": "fernando",
+      "display_name": "Fernando",
+      "variants": [
+        "Fernanda",
+        "Hernando",
+        "Ferdinand"
+      ],
+      "tradition": "germanic",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Audaz en la paz.",
+      "etymology": "De un compuesto de fridu, «paz, protección», y nand, «audaz, atrevido». Llegó al castellano por vía visigoda.",
+      "documented_form": "FRIDU + NAND",
+      "has_historical_hebrew": false,
+      "source_id": "forstemann",
+      "citation": "Forstemann, Altdeutsches Namenbuch I, raíces FRIDU y NAND"
+    },
+    {
+      "id": "alberto",
+      "display_name": "Alberto",
+      "variants": [
+        "Alberta",
+        "Albert",
+        "Adalberto"
+      ],
+      "tradition": "germanic",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Noble y brillante.",
+      "etymology": "De Adalberht, compuesto de adal, «noble, de estirpe», y berht, «brillante, resplandeciente».",
+      "documented_form": "ADAL + BERHT",
+      "has_historical_hebrew": false,
+      "source_id": "forstemann",
+      "citation": "Forstemann, Altdeutsches Namenbuch I, raíces ADAL y BERHT"
+    },
+    {
+      "id": "adela",
+      "display_name": "Adela",
+      "variants": [
+        "Adelaida",
+        "Adele",
+        "Adelina"
+      ],
+      "tradition": "germanic",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "De estirpe noble.",
+      "etymology": "De la raíz adal, «noble, de linaje». Adelaida añade heid, «clase, condición».",
+      "documented_form": "ADAL",
+      "has_historical_hebrew": false,
+      "source_id": "forstemann",
+      "citation": "Forstemann, Altdeutsches Namenbuch I, raíz ADAL"
+    },
+    {
+      "id": "ricardo",
+      "display_name": "Ricardo",
+      "variants": [
+        "Richard",
+        "Ricarda"
+      ],
+      "tradition": "germanic",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Fuerte en el poder.",
+      "etymology": "De Ricohard, compuesto de rik, «poderoso, señor», y hard, «duro, fuerte».",
+      "documented_form": "RIK + HARD",
+      "has_historical_hebrew": false,
+      "source_id": "forstemann",
+      "citation": "Forstemann, Altdeutsches Namenbuch I, raíces RIK y HARD"
+    },
+    {
+      "id": "roberto",
+      "display_name": "Roberto",
+      "variants": [
+        "Robert",
+        "Roberta",
+        "Ruperto"
+      ],
+      "tradition": "germanic",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Brillante en la fama.",
+      "etymology": "De Hrodberht, compuesto de hrod, «fama, gloria», y berht, «brillante».",
+      "documented_form": "HROD + BERHT",
+      "has_historical_hebrew": false,
+      "source_id": "forstemann",
+      "citation": "Forstemann, Altdeutsches Namenbuch I, raíces HROD y BERHT"
+    },
+    {
+      "id": "rodrigo",
+      "display_name": "Rodrigo",
+      "variants": [
+        "Roderick",
+        "Ruy"
+      ],
+      "tradition": "germanic",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Poderoso en la fama.",
+      "etymology": "De Hrodric, compuesto de hrod, «fama», y rik, «poderoso». Llegó al castellano por vía visigoda.",
+      "documented_form": "HROD + RIK",
+      "has_historical_hebrew": false,
+      "source_id": "forstemann",
+      "citation": "Forstemann, Altdeutsches Namenbuch I, raíces HROD y RIK"
+    },
+    {
+      "id": "guillermo",
+      "display_name": "Guillermo",
+      "variants": [
+        "William",
+        "Guillermina",
+        "Wilhelm"
+      ],
+      "tradition": "germanic",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Yelmo de la voluntad.",
+      "etymology": "De Willahelm, compuesto de wilja, «voluntad, deseo», y helm, «yelmo, protección».",
+      "documented_form": "WILJA + HELM",
+      "has_historical_hebrew": false,
+      "source_id": "forstemann",
+      "citation": "Forstemann, Altdeutsches Namenbuch I, raíces WILJA y HELM"
+    },
+    {
+      "id": "enrique",
+      "display_name": "Enrique",
+      "variants": [
+        "Henry",
+        "Enriqueta",
+        "Heinrich"
+      ],
+      "tradition": "germanic",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Señor de la casa.",
+      "etymology": "De Haimirich, compuesto de haim, «hogar, morada», y rik, «poderoso, señor».",
+      "documented_form": "HAIM + RIK",
+      "has_historical_hebrew": false,
+      "source_id": "forstemann",
+      "citation": "Forstemann, Altdeutsches Namenbuch I, raíces HAIM y RIK"
+    },
+    {
+      "id": "federico",
+      "display_name": "Federico",
+      "variants": [
+        "Frederick",
+        "Federica",
+        "Friedrich"
+      ],
+      "tradition": "germanic",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Poderoso en la paz.",
+      "etymology": "De Fridurik, compuesto de fridu, «paz, protección», y rik, «poderoso».",
+      "documented_form": "FRIDU + RIK",
+      "has_historical_hebrew": false,
+      "source_id": "forstemann",
+      "citation": "Forstemann, Altdeutsches Namenbuch I, raíces FRIDU y RIK"
+    },
+    {
+      "id": "matilde",
+      "display_name": "Matilde",
+      "variants": [
+        "Mathilde",
+        "Matilda"
+      ],
+      "tradition": "germanic",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Fuerza en el combate.",
+      "etymology": "De Mahthild, compuesto de maht, «poder, fuerza», y hild, «combate, batalla».",
+      "documented_form": "MAHT + HILD",
+      "has_historical_hebrew": false,
+      "source_id": "forstemann",
+      "citation": "Forstemann, Altdeutsches Namenbuch I, raíces MAHT y HILD"
+    },
+    {
+      "id": "gerardo",
+      "display_name": "Gerardo",
+      "variants": [
+        "Gerard",
+        "Geraldo",
+        "Gerarda"
+      ],
+      "tradition": "germanic",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "Fuerte con la lanza.",
+      "etymology": "De Gerhard, compuesto de ger, «lanza», y hard, «duro, fuerte».",
+      "documented_form": "GER + HARD",
+      "has_historical_hebrew": false,
+      "source_id": "forstemann",
+      "citation": "Forstemann, Altdeutsches Namenbuch I, raíces GER y HARD"
+    },
+    {
+      "id": "fatima",
+      "display_name": "Fátima",
+      "variants": [
+        "Fatima"
+      ],
+      "tradition": "arabic",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "La que desteta.",
+      "etymology": "De la raíz ف ط م, fa-ta-ma, que el léxico glosa como destetar, apartar de la leche.",
+      "documented_form": "فاطمة",
+      "has_historical_hebrew": false,
+      "source_id": "lane",
+      "citation": "Lane, raíz ف ط م"
+    },
+    {
+      "id": "omar",
+      "display_name": "Omar",
+      "variants": [
+        "Umar",
+        "Omara"
+      ],
+      "tradition": "arabic",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "De vida larga, floreciente.",
+      "etymology": "De la raíz ع م ر, ʿa-ma-ra, ligada a vivir largamente, habitar y prosperar. La misma raíz da ʿumr, «vida, edad».",
+      "documented_form": "عمر",
+      "has_historical_hebrew": false,
+      "source_id": "lane",
+      "citation": "Lane, raíz ع م ر"
+    },
+    {
+      "id": "amira",
+      "display_name": "Amira",
+      "variants": [
+        "Amir",
+        "Emir"
+      ],
+      "tradition": "arabic",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "La que manda; princesa.",
+      "etymology": "De la raíz أ م ر, ʾa-ma-ra, «ordenar, mandar». De ahí ʾamīr, el que tiene el mando.",
+      "documented_form": "أميرة",
+      "has_historical_hebrew": false,
+      "source_id": "lane",
+      "citation": "Lane, raíz أ م ر"
+    },
+    {
+      "id": "zaida",
+      "display_name": "Zaida",
+      "variants": [
+        "Zayda",
+        "Zaid"
+      ],
+      "tradition": "arabic",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "La que crece, la que se acrecienta.",
+      "etymology": "De la raíz ز ي د, za-ya-da, «aumentar, acrecentar, añadir».",
+      "documented_form": "زائدة",
+      "has_historical_hebrew": false,
+      "source_id": "lane",
+      "citation": "Lane, raíz ز ي د"
+    },
+    {
+      "id": "salma",
+      "display_name": "Salma",
+      "variants": [
+        "Selma",
+        "Salim"
+      ],
+      "tradition": "arabic",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "A salvo, indemne.",
+      "etymology": "De la raíz س ل م, sa-li-ma, «estar a salvo, sano y entero». La misma raíz de salām, «paz», e islām.",
+      "documented_form": "سلمى",
+      "has_historical_hebrew": false,
+      "source_id": "lane",
+      "citation": "Lane, raíz س ل م"
+    },
+    {
+      "id": "almudena",
+      "display_name": "Almudena",
+      "variants": [
+        "Almudema"
+      ],
+      "tradition": "arabic",
+      "allows_historical_gematria": false,
+      "form_evidence": "attested",
+      "meaning_evidence": "attested",
+      "meaning": "La ciudadela, la pequeña ciudad.",
+      "etymology": "Del diminutivo al-mudayna, de madīna, «ciudad», raíz م د ن. Nombra el recinto amurallado donde, según la tradición madrileña, apareció una imagen.",
+      "documented_form": "المدينة",
+      "has_historical_hebrew": false,
+      "source_id": "lane",
+      "citation": "Lane, raíz م د ن"
+    }
+  ]
+}

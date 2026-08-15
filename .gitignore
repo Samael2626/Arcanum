@@ -36,3 +36,7 @@ Brain/
 arcanum-api/scripts/library_data/*
 # Excepción: el puente Materia<->Culpeper es contenido curado a mano.
 !arcanum-api/scripts/library_data/culpeper_materia_bridge.json
+
+# Reportes del arnes de calibracion de nombres: se versiona la herramienta,
+# no su salida.
+tools/names/out/
