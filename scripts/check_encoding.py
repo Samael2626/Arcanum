@@ -18,12 +18,41 @@ Uso:
 Salida: 0 si limpio, 1 si encuentra algo.
 """
 import sys
+from typing import TextIO
 
 _SKIP_SUFFIXES = (
     ".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".pdf", ".zip",
     ".ttf", ".otf", ".woff", ".woff2", ".jar", ".keystore", ".so", ".dll",
     ".pyc", ".lock", ".bin", ".exe",
+    # Binarios que faltaban: los .glb versionados se leian como texto y salian
+    # como "NO es UTF-8 valido". Un falso positivo en el hook bloquea un commit
+    # por un archivo que es binario a proposito.
+    ".glb", ".gltf", ".ktx", ".hdr", ".wasm", ".class", ".dylib",
+    ".mp3", ".m4a", ".wav", ".ogg", ".mp4", ".webm", ".mov",
+    ".bmp", ".tiff", ".avif", ".heic",
+    ".apk", ".aab", ".jks", ".p12",
+    ".db", ".sqlite", ".sqlite3", ".gz", ".tar", ".7z", ".rar",
 )
+
+
+def _printable(text: str, stream: TextIO) -> str:
+    """Deja el texto escribible en `stream` pase lo que pase.
+
+    La consola de Windows es cp1252 y no sabe escribir la flecha U+2192 que el
+    propio informe genera al corregir mojibake: `print` levantaba
+    UnicodeEncodeError y abortaba a media lista, dejando INVISIBLES los
+    hallazgos que faltaban. Una herramienta que detecta corrupcion de
+    codificacion no puede morir escribiendo su salida.
+
+    Se sanea antes de escribir, no se atrapa el error despues: asi el informe
+    sale entero en cualquier consola.
+
+    `backslashreplace` y no `replace`: lo que no se puede escribir sale como
+    `\\u2192` y no como `?`. Una herramienta que habla de caracteres no puede
+    borrar justo el caracter del que habla.
+    """
+    encoding = getattr(stream, "encoding", None) or "utf-8"
+    return text.encode(encoding, "backslashreplace").decode(encoding, "replace")
 
 
 def _demojibake(line: str) -> str | None:
@@ -44,8 +73,15 @@ def scan(path: str) -> list[str]:
     if path.lower().endswith(_SKIP_SUFFIXES):
         return []
     try:
-        raw = open(path, "rb").read()
+        with open(path, "rb") as handle:
+            raw = handle.read()
     except (FileNotFoundError, IsADirectoryError, PermissionError):
+        return []
+
+    # La lista de sufijos siempre va por detras del repo. Un byte nulo no
+    # existe en texto: es la senal generica de binario, y cierra la clase de
+    # falso positivo en vez de un caso.
+    if b"\x00" in raw:
         return []
 
     try:
@@ -63,7 +99,8 @@ def scan(path: str) -> list[str]:
     return hits
 
 
-def main(argv: list[str]) -> int:
+def main(argv: list[str], stream: TextIO | None = None) -> int:
+    stream = sys.stdout if stream is None else stream
     all_hits = []
     for path in argv:
         all_hits.extend(scan(path))
@@ -71,10 +108,13 @@ def main(argv: list[str]) -> int:
     if not all_hits:
         return 0
 
-    print("CODIFICACION CORRUPTA - texto doblemente codificado o no-UTF-8.")
-    print("Reescribe el archivo leyendolo y guardandolo como UTF-8.\n")
-    for hit in all_hits:
-        print("  " + hit)
+    lines = [
+        "CODIFICACION CORRUPTA - texto doblemente codificado o no-UTF-8.",
+        "Reescribe el archivo leyendolo y guardandolo como UTF-8.",
+        "",
+    ]
+    lines.extend("  " + hit for hit in all_hits)
+    stream.write(_printable("\n".join(lines) + "\n", stream))
     return 1
 
 

@@ -1,8 +1,8 @@
 """
 Admin endpoints (protegidos).
-- GET /admin/migrate/status â€” verifica estado de migraciones
-- POST /admin/migrate â€” ejecuta migraciones pendientes
-- POST /admin/migrate-direct â€” ejecuta migraciones con BD custom (parÃ¡metro URL)
+- GET /admin/migrate/status — verifica estado de migraciones
+- POST /admin/migrate — ejecuta migraciones pendientes
+- POST /admin/migrate-direct — ejecuta migraciones con BD custom (parámetro URL)
 """
 
 from fastapi import APIRouter, HTTPException, status, Header, Query
@@ -53,7 +53,7 @@ def execute_migrations(x_admin_token: str = Header(None)):
             detail=result.get("message"),
         )
 
-    # Verifica estado despuÃ©s
+    # Verifica estado después
     status_after = check_migration_status(engine)
 
     return {
@@ -70,22 +70,22 @@ def execute_migrations_direct(
     database_url: str = Query(None)
 ):
     """
-    Ejecuta migraciones contra BD custom (parÃ¡metro URL).
+    Ejecuta migraciones contra BD custom (parámetro URL).
     Query: database_url=postgresql://...
     Header: X-Admin-Token: <token>
 
-    Ãštil cuando Render env vars estÃ¡n cacheadas. Acepta cualquier connection string.
+    Útil cuando Render env vars están cacheadas. Acepta cualquier connection string.
     """
     verify_admin_token(x_admin_token)
 
     if not database_url:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="ParÃ¡metro requerido: database_url",
+            detail="Parámetro requerido: database_url",
         )
 
     try:
-        # Detecta poolclass (pgbouncer transaction mode â†’ NullPool)
+        # Detecta poolclass (pgbouncer transaction mode → NullPool)
         pool_class = get_pool_class(database_url)
         custom_engine = create_engine(
             database_url,
@@ -112,7 +112,7 @@ def execute_migrations_direct(
                 detail=result.get("message"),
             )
 
-        # Verifica despuÃ©s
+        # Verifica después
         custom_engine = create_engine(database_url, poolclass=pool_class, echo=False)
         status_after = check_migration_status(custom_engine)
         custom_engine.dispose()

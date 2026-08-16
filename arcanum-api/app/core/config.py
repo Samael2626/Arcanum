@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
-    # Desarrollo local solamente. ProducciÃ³n debe inyectar DATABASE_URL.
+    # Desarrollo local solamente. Producción debe inyectar DATABASE_URL.
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/arcanum_db"
 
     # Redis
@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     RUN_STARTUP_MIGRATIONS: bool = False
     RUN_STARTUP_SEEDS: bool = False
 
-    # OrÃ¡culo IA (Groq â€” free tier, sin cuota diaria estricta)
+    # Oráculo IA (Groq — free tier, sin cuota diaria estricta)
     GROQ_API_KEY: Optional[str] = None
     ORACLE_MODEL_FREE: str = "openai/gpt-oss-120b"
     ORACLE_MODEL_PREMIUM: str = "openai/gpt-oss-120b"
@@ -54,8 +54,8 @@ class Settings(BaseSettings):
     CIELOS_PREMIUM_DAILY: int = 50
 
 
-    # Geocoding (Nominatim + timezonefinder) â€” resuelve lugar de nacimiento
-    # real en el onboarding, reemplaza el default hardcodeado a BogotÃ¡.
+    # Geocoding (Nominatim + timezonefinder) — resuelve lugar de nacimiento
+    # real en el onboarding, reemplaza el default hardcodeado a Bogotá.
     NOMINATIM_USER_AGENT: str = "ARCANUM-app/1.0 (contacto: soporte@arcanum-app.com)"
     GEOCODING_MIN_INTERVAL_SECONDS: float = 1.0
 
@@ -91,7 +91,7 @@ class Settings(BaseSettings):
             problems.append("DATABASE_URL")
         if problems:
             raise ValueError(
-                "ConfiguraciÃ³n insegura para producciÃ³n: " + ", ".join(problems)
+                "Configuración insegura para producción: " + ", ".join(problems)
             )
         return self
 
