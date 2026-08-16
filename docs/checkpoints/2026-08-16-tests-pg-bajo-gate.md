@@ -138,10 +138,37 @@ significar base mal migrada o URL a otro sitio.
    migraciones de arranque. Y ahi lo tapa un `except Exception` que devuelve
    `{"status": "error"}`: falla en silencio, con cara de resultado. Toca el
    camino de migraciones de produccion — commit aparte, y decision de Samuel.
-2. **El CI ya estaba en rojo antes de este commit**, y no por el backend: el job
-   de Flutter falla en `dart format --set-exit-if-changed` con 22 archivos sin
-   formatear. El verde compartido de esta rama no existia. Reformatear 22
-   archivos es otro commit.
+2. **El job de Flutter del CI sigue en rojo**, por `dart format
+   --set-exit-if-changed` con 22 archivos sin formatear. Es previo a este
+   trabajo y no lo toca. Reformatear 22 archivos es otro commit.
 3. **`arcanum-libfix-db` reclama el mismo puerto 55434.** Esta parado desde hace
    dias, pero si alguien lo arranca, `arcanum-svc-test` deja de poder levantar.
    Dos contenedores de pruebas peleando por un puerto es una trampa futura.
+
+
+## Anexo — el CI del backend estaba muerto desde el primer paso (`be72112`)
+
+Al instalar el gate en CI aparecio que el job de backend llevaba tiempo en rojo
+sin que nadie lo mirase, y no por `tests_pg`:
+
+```
+ModuleNotFoundError: No module named 'app'
+Interrupted: 10 errors during collection
+```
+
+El ejecutable `pytest` no pone el directorio actual en `sys.path`. En local no
+se notaba porque ahi se invoca `python -m pytest`, que si lo pone. **Ningun**
+test del backend corria en CI: era decorado entero.
+
+Corregidas las tres invocaciones. Primera corrida verde de la historia del job:
+
+```
+Tests unitarios                          258 passed, 4 skipped in 1.90s
+Tests de integracion                      74 passed             in 17.34s
+Base con el esquema real de Alembic       Migraciones 005/006 verificadas.
+Tests contra el esquema real (tests_pg)   58 passed             in 3.82s
+
+Backend (arcanum-api): success
+```
+
+Los 58 corren ya en los dos gates, no solo en esta maquina.
