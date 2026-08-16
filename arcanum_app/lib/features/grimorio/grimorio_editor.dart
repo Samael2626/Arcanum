@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/arcanum_api.dart';
 import '../../core/crypto/grimoire_crypto.dart';
+import '../../core/state/confirmed_place.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/arcanum_field.dart';
@@ -50,9 +51,21 @@ class _GrimorioEditorState extends ConsumerState<GrimorioEditor> {
           .encryptText(_content.text);
 
       // Captura el contexto astral del momento (best-effort).
+      //
+      // Sin lugar confirmado no se pide: la hora planetaria de otra ciudad
+      // quedaria sellada en la entrada como si fuera la de aqui, y una
+      // anotacion falsa dura mas que la falta de anotacion.
       String? moonPhase, planetaryHour, dayPlanet;
       try {
-        final today = await api.today();
+        final place = ref.read(confirmedPlaceProvider);
+        if (place == null) {
+          throw StateError('Sin lugar confirmado: no hay contexto astral.');
+        }
+        final today = await api.today(
+          lat: place.lat,
+          lon: place.lon,
+          tz: place.timezone,
+        );
         moonPhase = today['moon']?['phase_name'] as String?;
         planetaryHour = today['planetary_hour']?['planet'] as String?;
         dayPlanet = today['day_ruler'] as String?;

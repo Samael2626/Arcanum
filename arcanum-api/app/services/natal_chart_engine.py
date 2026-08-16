@@ -168,7 +168,15 @@ def current_positions(dt_utc: datetime) -> dict[str, dict]:
         except swe.Error:
             continue
         lon, speed = xx[0] % 360, xx[3]
-        out[name] = {**_sign_block(lon), "name": name, "retrograde": speed < 0}
+        # La velocidad viaja en la respuesta porque el selector del horoscopo
+        # necesita saber CUANDO perfecciona un aspecto, no solo cuanto le falta
+        # en grados. Sin velocidad no hay "aplicativo" ni "dias a exacto".
+        out[name] = {
+            **_sign_block(lon),
+            "name": name,
+            "retrograde": speed < 0,
+            "speed": round(speed, 6),
+        }
     return out
 
 

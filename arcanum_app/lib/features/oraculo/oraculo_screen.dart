@@ -12,6 +12,7 @@ import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
 import '../../shared/widgets/login_prompt.dart';
 import '../name_threshold/bridge.dart';
+import '../umbral/presentation/umbral_reading_view.dart';
 import 'tarot_learn.dart';
 import 'widgets/tarot_card.dart';
 
@@ -341,6 +342,10 @@ class _OracleViewState extends ConsumerState<_OracleView> {
       controller: _scroll,
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
       children: [
+        // La Lectura del Umbral abre el Oráculo: es lo que Hoy prometió al
+        // enviar aquí. Va antes de las tiradas porque es la lectura del día,
+        // no una opción más del menú.
+        const UmbralReadingView(),
         const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,

@@ -1,4 +1,5 @@
 import 'package:arcanum_app/core/api/arcanum_api.dart';
+import 'package:arcanum_app/core/state/confirmed_place.dart';
 import 'package:arcanum_app/features/hoy/hoy_screen.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_frame.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_motion.dart';
@@ -12,13 +13,20 @@ class _TodayApi extends ArcanumApi {
   _TodayApi() : super(Dio());
 
   var calls = 0;
+  final List<(double, double, String?)> places = [];
+
+  @override
+  Future<Map<String, dynamic>> umbral({String? tz}) async =>
+      throw StateError('el bloque del Umbral no es el sujeto de este test');
 
   @override
   Future<Map<String, dynamic>> today({
-    double lat = 4.71,
-    double lon = -74.07,
+    required double lat,
+    required double lon,
+    String? tz,
   }) async {
     calls++;
+    places.add((lat, lon, tz));
     return {
       'day_ruler': 'sun',
       'planetary_hour': {
@@ -44,7 +52,18 @@ void main() {
     final api = _TodayApi();
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [arcanumApiProvider.overrideWithValue(api)],
+        overrides: [
+          arcanumApiProvider.overrideWithValue(api),
+          // Hoy ya no adivina donde esta la persona: sin lugar confirmado no
+          // pide cielo. El test declara uno para poder ejercitar la pantalla.
+          confirmedPlaceProvider.overrideWithValue(
+            const ConfirmedPlace(
+              lat: 6.25,
+              lon: -75.56,
+              timezone: 'America/Bogota',
+            ),
+          ),
+        ],
         child: const MaterialApp(home: Scaffold(body: HoyScreen())),
       ),
     );
@@ -52,12 +71,17 @@ void main() {
     await tester.pump();
 
     expect(api.calls, 1);
+    expect(api.places.single, (6.25, -75.56, 'America/Bogota'));
     expect(find.text('Día de Sol'), findsOneWidget);
     expect(find.text('Venus'), findsOneWidget);
     expect(find.text('Gibosa creciente'), findsOneWidget);
     expect(find.byType(ArcanumTilt), findsNothing);
     expect(find.byType(ArcanumFrame), findsNothing);
-    expect(find.byType(ArcanumSurface), findsOneWidget);
+    // Dos y solo dos: el cielo de fondo y la tarjeta de la Lectura del Umbral.
+    // El resto de paneles de Hoy siguen siendo contenedores planos, que es lo
+    // que este test vigila: que nadie meta atmosferas de mas en la pantalla
+    // que se abre en cada arranque.
+    expect(find.byType(ArcanumSurface), findsNWidgets(2));
     expect(find.byType(TweenAnimationBuilder<double>), findsNothing);
   });
 }

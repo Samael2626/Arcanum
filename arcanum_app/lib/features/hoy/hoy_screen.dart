@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/api/arcanum_api.dart';
 import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
@@ -13,6 +12,9 @@ import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_surface.dart';
 import '../../shared/widgets/moon_disc.dart';
+import '../umbral/application/umbral_controller.dart';
+import '../umbral/presentation/umbral_block.dart';
+import 'application/today_sky.dart';
 import 'hoy_guidance.dart';
 import 'hoy_lore.dart';
 import 'presentation/widgets/planetary_hour_dial.dart';
@@ -24,51 +26,85 @@ class HoyScreen extends ConsumerStatefulWidget {
 }
 
 class _HoyScreenState extends ConsumerState<HoyScreen> {
-  late final ArcanumApi _api = ref.read(arcanumApiProvider);
-  late Future<Map<String, dynamic>> _future = _api.today();
+  void _reload() {
+    ref.invalidate(todaySkyProvider);
+    ref.read(umbralProvider.notifier).refresh();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: _future,
-      builder: (context, snap) {
-        // La atmósfera del cielo deriva del regente REAL del día; mientras
-        // carga, penumbra neutra.
-        final ruler = (snap.data?['day_ruler'] as String?);
-        final mood = ruler != null
-            ? ArcanumMood.forPlanet(ruler)
-            : ArcanumMood.neutral;
+    final sky = ref.watch(todaySkyProvider);
+    // La atmósfera del cielo deriva del regente REAL del día; mientras carga,
+    // penumbra neutra.
+    final ruler = sky.value?['day_ruler'] as String?;
+    final mood = ruler != null
+        ? ArcanumMood.forPlanet(ruler)
+        : ArcanumMood.neutral;
 
-        return Stack(
-          children: [
-            Positioned.fill(child: _LivingSky(mood: mood)),
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 460),
-                child: RefreshIndicator(
-                  color: ArcanumColors.gold,
-                  backgroundColor: ArcanumColors.surface,
-                  onRefresh: () async => setState(() => _future = _api.today()),
-                  child: ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(22, 36, 22, 28),
-                    children: [
-                      if (snap.connectionState == ConnectionState.waiting)
-                        const _SkyLoading()
-                      else if (snap.hasError)
-                        _error(snap.error.toString())
-                      else
-                        _content(snap.data!),
-                    ],
+    return Stack(
+      children: [
+        Positioned.fill(child: _LivingSky(mood: mood)),
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 460),
+            child: RefreshIndicator(
+              color: ArcanumColors.gold,
+              backgroundColor: ArcanumColors.surface,
+              onRefresh: () async => _reload(),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(22, 36, 22, 28),
+                children: [
+                  const UmbralBlock(),
+                  const SizedBox(height: 18),
+                  sky.when(
+                    loading: () => const _SkyLoading(),
+                    error: (error, _) => _error(error.toString()),
+                    data: (data) => data == null ? _noPlace() : _content(data),
                   ),
-                ),
+                ],
               ),
             ),
-          ],
-        );
-      },
+          ),
+        ),
+      ],
     );
   }
+
+  /// Sin lugar confirmado no hay cielo que mostrar. Se dice y se ofrece
+  /// arreglarlo; no se sustituye por el cielo de otra ciudad.
+  Widget _noPlace() => ArcanumCard(
+    intensity: 0.3,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionLabel('SIN LUGAR CONFIRMADO'),
+        const SizedBox(height: 12),
+        Text(
+          'La hora planetaria y el regente del día dependen del sitio exacto '
+          'donde estás. Sin un lugar confirmado no se muestran: el cielo de '
+          'otra ciudad no es una aproximación del tuyo.',
+          style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
+        ),
+        const SizedBox(height: 16),
+        OutlinedButton(
+          onPressed: () => context.go('/perfil'),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(double.infinity, 0),
+            padding: const EdgeInsets.symmetric(vertical: 13),
+            side: BorderSide(color: ArcanumColors.gold.withValues(alpha: 0.55)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: Text(
+            'Confirmar mi lugar',
+            style: ArcanumText.body(15, color: ArcanumColors.gold),
+          ),
+        ),
+      ],
+    ),
+  );
 
   // ── Estados premium ────────────────────────────────────────────────────
 
@@ -98,7 +134,7 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         ),
         const SizedBox(height: 18),
         OutlinedButton(
-          onPressed: () => setState(() => _future = _api.today()),
+          onPressed: _reload,
           style: OutlinedButton.styleFrom(
             side: BorderSide(color: ArcanumColors.gold.withValues(alpha: 0.6)),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),

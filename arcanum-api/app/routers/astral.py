@@ -13,10 +13,12 @@ from app.adapters.repositories import NatalChartRepository
 from app.core.security import get_current_user
 from app.domain.entities import NatalChartEntity, UserEntity
 from app.schemas.natal_chart import NatalChartResponse
+from app.services import local_window as lw
 from app.services import lunar_calendar as lc
 from app.services import natal_chart_engine as nce
 from app.services import planetary_hours as ph
 from app.services import ritual_calendar as rc
+from app.services import umbral_reading as ur
 
 router = APIRouter()
 
@@ -172,8 +174,15 @@ def today(
     response: Response,
     lat: float = Query(..., ge=-90, le=90),
     lon: float = Query(..., ge=-180, le=180),
+    tz: Optional[str] = Query(None, description="Zona IANA local; sin ella la fecha del día no se afirma"),
 ):
-    """Agregado para la pantalla 'Hoy': hora planetaria + regente del día + luna."""
+    """Agregado para la pantalla 'Hoy': hora planetaria + regente del día + luna.
+
+    `tz` no tiene valor por defecto a propósito. Resolver la fecha en UTC le da
+    a alguien en Bogotá el día siguiente durante las últimas cinco horas de cada
+    jornada. Sin zona declarada, la respuesta trae `local_date: null` y dice por
+    qué, en vez de afirmar un día que puede no ser el suyo.
+    """
     response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=120"
     now = datetime.now(timezone.utc)
     try:
@@ -183,12 +192,53 @@ def today(
     # Regente del día planetario (no del calendario UTC): se deriva de la hora
     # vigente -> planet = CHALDEAN[(ruler_idx + hour_number) % 7].
     day_ruler = ph.CHALDEAN[(ph.CHALDEAN.index(hour.planet) - hour.hour_number) % 7]
+
+    try:
+        zone = lw.resolve_zone(tz)
+    except lw.UnknownZone:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Zona horaria inválida: {tz}",
+        )
+    window = lw.local_window(now, zone) if zone else None
+
     return {
         "datetime": now.isoformat(),
         "day_ruler": day_ruler,
         "planetary_hour": hour.to_dict(),
         "moon": lc.get_moon_info(now).to_dict(),
+        "timezone": window.zone_name if window else None,
+        "local_date": window.local_date.isoformat() if window else None,
+        "day_window": window.to_dict() if window else None,
+        "degraded_reason": None if window else ur.REASON_NO_ZONE,
     }
+
+
+@router.get("/umbral")
+def umbral(
+    tz: Optional[str] = Query(None, description="Zona IANA local; si falta se usa la del perfil"),
+    current_user: UserEntity = Depends(get_current_user),
+    repo: NatalChartRepository = Depends(get_natal_chart_repo),
+):
+    """Lectura del Umbral del día: contrato `horoscope_daily/1`.
+
+    Responde siempre 200 con un contrato completo. Cuando falta un dato, el
+    contrato baja de precisión y lo declara — un 422 mudo dejaría la pantalla
+    de Hoy sin nada que decir, y un valor inventado sería peor que el error.
+    """
+    entity = repo.get_by_user_id(current_user.id)
+    zone_name = tz or current_user.birth_timezone
+    try:
+        return ur.build_reading(
+            zone_name=zone_name,
+            chart_data=entity.chart_data if entity else None,
+            has_birth_time=current_user.birth_time is not None,
+        )
+    except lw.UnknownZone:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Zona horaria inválida: {zone_name}",
+        )
 
 
 # ── Calendario ritual (próximos eventos) ──────────────────────────────────────

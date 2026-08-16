@@ -12,8 +12,6 @@ from app.services import lunar_calendar as lc
 from app.services import natal_chart_engine as nce
 from app.services import planetary_hours as ph
 
-_FALLBACK_LAT = 4.71
-_FALLBACK_LON = -74.07
 _PLANETAS_PERSONALES = {"sun", "moon", "mercury", "venus", "mars"}
 
 _context_cache: LRUCache[tuple[str, ...], str] = LRUCache(max_size=512, ttl_seconds=300)
@@ -35,12 +33,18 @@ def invalidate_oracle_context(user_id: object) -> None:
     _context_cache.invalidate_prefix(user_id)
 
 
-def _coords(user: User) -> tuple[float, float]:
-    """Coordenadas de nacimiento del usuario; Bogotá como fallback."""
+def _coords(user: User) -> tuple[float, float] | None:
+    """Coordenadas confirmadas del usuario, o None.
+
+    Antes devolvia Bogotá cuando faltaban. Una hora planetaria calculada sobre
+    un meridiano ajeno no es una aproximacion: es un dato falso presentado con
+    la misma seguridad que uno verdadero, y el consultante no tiene forma de
+    distinguirlos. Sin coordenadas, esa linea del contexto se declara ausente.
+    """
     try:
         return float(user.birth_lat), float(user.birth_lon)
     except (TypeError, ValueError):
-        return _FALLBACK_LAT, _FALLBACK_LON
+        return None
 
 
 def _resumen_natal(chart_data: dict) -> list[str]:
@@ -111,7 +115,7 @@ def build_oracle_context(user: User, natal_chart: NatalChart) -> str:
 
     chart_data = natal_chart.chart_data or {}
     natal_planets = chart_data.get("planets") or []
-    lat, lon = _coords(user)
+    coords = _coords(user)
 
     lineas: list[str] = ["CONTEXTO ASTRAL DEL CONSULTANTE"]
     nombre = user.display_name or "Consultante"
@@ -129,14 +133,21 @@ def build_oracle_context(user: User, natal_chart: NatalChart) -> str:
     except Exception:
         lineas.append("Luna: no disponible.")
 
-    try:
-        hour = ph.get_planetary_hour(now, lat, lon)
-        ruler = ph.get_day_ruler(now.date())
+    if coords is None:
         lineas.append(
-            f"Hora planetaria vigente: {hour.planet}. Regente del día: {ruler}."
+            "Hora planetaria: no disponible — el consultante no tiene "
+            "coordenadas confirmadas. No la inventes ni la sustituyas por otra "
+            "ciudad."
         )
-    except Exception:
-        lineas.append("Hora planetaria: no disponible.")
+    else:
+        try:
+            hour = ph.get_planetary_hour(now, coords[0], coords[1])
+            ruler = ph.get_day_ruler(now.date())
+            lineas.append(
+                f"Hora planetaria vigente: {hour.planet}. Regente del día: {ruler}."
+            )
+        except Exception:
+            lineas.append("Hora planetaria: no disponible.")
 
     context = "\n".join(lineas)
     _context_cache.set(cache_key, context)

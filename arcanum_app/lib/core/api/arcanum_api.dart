@@ -38,14 +38,34 @@ class ArcanumApi {
   Options _idempotentOptions(String? key) =>
       Options(headers: {'Idempotency-Key': key ?? IdempotencyKey.create()});
 
+  /// Cielo del momento en un lugar CONCRETO.
+  ///
+  /// `lat`/`lon` son obligatorios a propósito: antes traían Bogotá por
+  /// defecto y toda la app mostraba la hora planetaria de un meridiano ajeno
+  /// sin decirlo. Quien llama tiene que saber dónde está la persona o no
+  /// llamar. `tz` sitúa la fecha local; sin ella el servidor responde
+  /// `local_date: null` en vez de resolverla en UTC.
   Future<Map<String, dynamic>> today({
-    double lat = 4.71,
-    double lon = -74.07,
+    required double lat,
+    required double lon,
+    String? tz,
   }) async {
     final res = await _dio.get(
       '/astral/today',
-      queryParameters: {'lat': lat, 'lon': lon},
+      queryParameters: {'lat': lat, 'lon': lon, 'tz': ?tz},
       options: Options(extra: const {'noAuth': true}),
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Lectura del Umbral del día (contrato `horoscope_daily/1`). Requiere auth.
+  ///
+  /// Responde siempre con un contrato completo: cuando falta un dato baja de
+  /// precisión y lo declara, en vez de fallar o de rellenar el hueco.
+  Future<Map<String, dynamic>> umbral({String? tz}) async {
+    final res = await _dio.get(
+      '/astral/umbral',
+      queryParameters: {'tz': ?tz},
     );
     return res.data as Map<String, dynamic>;
   }
