@@ -151,3 +151,73 @@ Forma que tendria: script explicito en `arcanum-api/scripts/`, que se corre a
 mano, con `--dry-run` por defecto, acotado por `created_at < ` la fecha del
 despliegue del arreglo, y tocando **solo** `planetary_hour` — nunca `moon_phase`,
 que es correcto.
+
+---
+
+## Resolucion — B autorizada, script escrito, NO ejecutado (`bc08711`)
+
+Samuel eligio **B**. El script existe y esta probado. **No se ha corrido contra
+ningun dato real**, y no debe correrse todavia. Dos correcciones salieron al
+construirlo.
+
+### El alcance era mayor: tres tablas, dos bugs
+
+Este checkpoint decia que `_sky_snapshot` persistia en
+`divination_session.planetary_hour` y `grimoire_entry.planetary_hour`. **Es
+falso.** Trazado el camino real: `save_reading` → `TarotReadingRepository.create`
+→ `repositories.py:192` → tabla `tarot_readings`, y solo esa.
+
+Las otras dos las crea el **cliente**, con lo que le devolvio `today()` — que
+traia Bogotá por defecto hasta `8247325`. Mismo dato falso, procedencia distinta:
+
+| Tabla | Quien la escribe | Arreglado en |
+|---|---|---|
+| `tarot_readings` | `_sky_snapshot`, servidor | `5f4ec60` |
+| `divination_sessions` | cliente, desde el default de `today()` | `8247325` |
+| `grimoire_entries` | cliente, `grimorio_editor.dart:70` | `8247325` |
+
+El script cubre las tres. Cada una declara su propia columna de tiempo:
+`divination_sessions` no tiene `created_at`, usa `session_date`. Asumir un
+esquema uniforme habria hecho fallar el script justo en la tabla del medio, con
+parte del trabajo ya aplicado.
+
+### El corte no puede ser la fecha del commit
+
+**Ninguno de los dos arreglos esta desplegado.** Railway despliega desde
+`feat/onboarding-5-pasos`, que esta en `23f9c28` y no contiene ni `5f4ec60` ni
+`8247325`:
+
+```
+git merge-base --is-ancestor 5f4ec60 origin/feat/onboarding-5-pasos
+-> NO: el fix NO esta en la rama que despliega Railway
+```
+
+Produccion sigue sellando Bogotá en cada tirada. Anular filas hoy seria perseguir
+un blanco movil: limpiar hacia atras mientras el bug escribe hacia adelante.
+
+Por eso `--before` **no tiene default y es obligatorio**. La fecha del commit no
+es la del despliegue, y heredar una fecha inventada aqui repetiria exactamente el
+bug que el script viene a limpiar. Se rechaza sin zona, en el futuro y ausente.
+
+### Verificacion — base sembrada a mano, 6 filas con hora
+
+```
+SEMBRADO             tarot_readings 3 · divination_sessions 2 · grimoire_entries 1
+SIMULACRO            4 filas contadas (las anteriores al corte), cero escritas
+--apply              4 anuladas, respaldo de 4 valores a disco
+DESPUES              planetary_hour 1/1/0  ·  moon_phase 4/2/1  ·  filas 4/2/1
+```
+
+Lo que demuestra: cuenta solo lo anterior al corte; el simulacro no escribe (el
+`--apply` posterior encontro las mismas 4); `moon_phase` intacto en las tres
+tablas; ninguna fila borrada; los 4 valores quedan recuperables en el respaldo.
+
+Ocho tests en `tests_unit/test_null_bogota_script.py` fijan las reglas del corte
+y que ninguna sentencia toque `moon_phase`. Backend **372 verdes** (364 antes).
+
+### Que falta para poder ejecutarlo
+
+1. Que `5f4ec60` y `8247325` lleguen a `feat/onboarding-5-pasos` y se desplieguen.
+2. Anotar el instante real del despliegue.
+3. `--before <ese instante>` sin `--apply`, y leer el conteo.
+4. Solo entonces, `--apply`. El respaldo queda en `scripts/out/`.
