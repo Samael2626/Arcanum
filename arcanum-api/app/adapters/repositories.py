@@ -329,7 +329,12 @@ class NatalChartRepository:
             row.chart_data = chart_data
             row.house_system = house_system
         else:
-            row = NatalChart(user_id=user_id, chart_data=chart_data, house_system=house_system)
+            # calculated_at es NOT NULL sin default en la tabla: sin fijarlo
+            # aqui, crear la primera carta natal revienta con NotNullViolation.
+            row = NatalChart(
+                user_id=user_id, chart_data=chart_data, house_system=house_system,
+                calculated_at=datetime.now(timezone.utc),
+            )
             self._db.add(row)
         self._db.commit()
         self._db.refresh(row)
