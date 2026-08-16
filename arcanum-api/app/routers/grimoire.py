@@ -3,6 +3,7 @@
 El servidor NUNCA ve el contenido en claro: recibe `encrypted_content` (AES-256
 base64) + `content_iv` y los guarda opacos. Todo está scopeado al usuario auth.
 """
+from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -17,8 +18,25 @@ from app.schemas.grimoire_entry import (
     GrimoireEntrySummary,
     GrimoireEntryUpdate,
 )
+from app.services import user_sky as us
 
 router = APIRouter()
+
+
+def _sealed_hour(user: UserEntity) -> str | None:
+    """Hora planetaria que el servidor sella, ignorando la que mande el cliente.
+
+    El cliente la enviaba tomandola de `/astral/today`, que hasta ahora se
+    llamaba con Bogotá por defecto: la app instalada en el telefono de la gente
+    no se actualiza con un despliegue del backend, asi que confiar en ese campo
+    dejaria la tabla contaminandose despues del arreglo, y la adopcion de un
+    release nunca es completa.
+
+    El campo se ignora en vez de rechazarse con 422: un cliente viejo que lo
+    manda debe seguir funcionando. Romper el contrato dejaria sin Grimorio a
+    quien no haya actualizado.
+    """
+    return us.planetary_hour(user, datetime.now(timezone.utc))
 
 
 def _owned(repo: GrimoireEntryRepository, entry_id: UUID, user: UserEntity):
@@ -42,7 +60,9 @@ def create_entry(
     grimoire: GrimoireEntryRepository = Depends(get_grimoire_repo),
     current_user: UserEntity = Depends(get_current_user),
 ):
-    return grimoire.create(user_id=current_user.id, **entry_in.model_dump())
+    campos = entry_in.model_dump()
+    campos["planetary_hour"] = _sealed_hour(current_user)
+    return grimoire.create(user_id=current_user.id, **campos)
 
 
 @router.get("/{entry_id}", response_model=GrimoireEntryResponse)
@@ -62,7 +82,11 @@ def update_entry(
     current_user: UserEntity = Depends(get_current_user),
 ):
     entry = _owned(grimoire, entry_id, current_user)
-    for field, value in entry_in.model_dump(exclude_unset=True).items():
+    cambios = entry_in.model_dump(exclude_unset=True)
+    # Misma razon que en `create_entry`: una edicion desde un cliente viejo no
+    # puede reintroducir la hora de un meridiano ajeno en una fila ya limpia.
+    cambios.pop("planetary_hour", None)
+    for field, value in cambios.items():
         setattr(entry, field, value)
     return grimoire.save(entry)
 

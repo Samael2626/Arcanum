@@ -237,7 +237,13 @@ def test_tarot_write_failure_reverses_the_reservation(monkeypatch):
     operation = SimpleNamespace(result=None)
     reservation = SimpleNamespace(operation=operation, replay=False)
     reversed_operations = []
-    user = SimpleNamespace(id=uuid4(), subscription_tier="free")
+    # El doble tiene que declarar las coordenadas aunque sean nulas: ahora el
+    # router las consulta para decidir si sella la hora planetaria. Un objeto
+    # sin `birth_lat` levanta AttributeError a proposito — no se atrapa, porque
+    # un usuario malformado es un error de programa, no una ausencia de lugar.
+    user = SimpleNamespace(
+        id=uuid4(), subscription_tier="free", birth_lat=None, birth_lon=None
+    )
     service = SimpleNamespace(
         draw_one=lambda: SimpleNamespace(),
         save_reading=lambda **_kwargs: (_ for _ in ()).throw(SQLAlchemyError("write failed")),
