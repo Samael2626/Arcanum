@@ -61,7 +61,10 @@ ok "Codificacion: limpia."
 if echo "$STAGED" | grep -q '^arcanum-api/.*\.py$'; then
   info "Cambios en backend — corriendo suite completa..."
 
-  DB_URL="${TEST_DATABASE_URL:-postgresql://postgres@127.0.0.1:5433/arcanum_test}"
+  # Puerto 5434, no 5433: el 5433 lo ocupa `botlaw-pg` en esta maquina y el
+  # hook llevaba tiempo apuntando a la base de OTRO proyecto. Fallaba con
+  # "password authentication failed" y parecia un problema de credenciales.
+  DB_URL="${TEST_DATABASE_URL:-postgresql://postgres:postgres@127.0.0.1:5434/arcanum_test}"
 
   if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^arcanum-test-db$'; then
     info "arcanum-test-db no esta arriba — intentando levantarlo..."
