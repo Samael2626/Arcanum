@@ -61,7 +61,7 @@ def draw_spread(
     if reservation.replay:
         return reservation.operation.result
     try:
-        moon, hour = _sky_snapshot(datetime.now(timezone.utc))
+        moon, hour = _sky_snapshot(datetime.now(timezone.utc), current_user)
         reading = tarot.save_reading(
             user_id=current_user.id,
             spread_type=spread_type,
@@ -92,7 +92,7 @@ def draw_one(
     if reservation.replay:
         return reservation.operation.result
     try:
-        moon, hour = _sky_snapshot(datetime.now(timezone.utc))
+        moon, hour = _sky_snapshot(datetime.now(timezone.utc), current_user)
         reading = tarot.save_reading(
             user_id=current_user.id,
             spread_type="one_card",
@@ -110,13 +110,51 @@ def draw_one(
         raise
 
 
-def _sky_snapshot(now: datetime) -> tuple[Optional[str], Optional[str]]:
+def _coords(user: UserEntity) -> Optional[tuple[float, float]]:
+    """Coordenadas confirmadas del usuario, o None.
+
+    Mismo criterio que `oracle_context._coords`, copiado a proposito en vez de
+    reinventado: la decision editorial ya esta tomada y no admite dos versiones.
+    """
+    try:
+        return float(user.birth_lat), float(user.birth_lon)
+    except (TypeError, ValueError):
+        return None
+
+
+def _sky_snapshot(
+    now: datetime, user: UserEntity
+) -> tuple[Optional[str], Optional[str]]:
+    """Fase lunar y hora planetaria del instante, para SELLAR en la tirada.
+
+    La distincion entre las dos no es de estilo. La fase lunar es global: la
+    misma para todo el mundo en el mismo instante, asi que se calcula siempre.
+    La hora planetaria sale del orto y el ocaso LOCALES, asi que depende de
+    donde este la persona.
+
+    Antes se calculaba con 4.71/-74.07 fijos — Bogotá — para todo el mundo, y
+    el resultado se persistia en `divination_session.planetary_hour`, de donde
+    el Grimorio lo sella. Es el peor de los tres escapes de esa coordenada: no
+    mostraba un dato falso, lo escribia. A un mismo instante UTC, alguien en
+    Madrid puede estar en otra hora planetaria y hasta bajo otro regente del
+    dia, y nadie que lea su Grimorio dentro de un ano tendria forma de saberlo.
+
+    Sin coordenadas confirmadas, `planetary_hour` es None: la tirada se guarda
+    sin anotacion en vez de con una falsa. La ausencia se decide ANTES de
+    llamar al motor, no se atrapa como excepcion — unas coordenadas None
+    levantarian TypeError y se colarian por el `except` de abajo.
+    """
     try:
         moon = f"{lc.get_moon_info(now).phase_name}"
     except (AttributeError, ValueError):
         moon = None
+
+    coords = _coords(user)
+    if coords is None:
+        return moon, None
+
     try:
-        hour = ph.get_planetary_hour(now, 4.71, -74.07).planet
-    except (AttributeError, ValueError):
+        hour = ph.get_planetary_hour(now, coords[0], coords[1]).planet
+    except (AttributeError, ValueError, ph.AstralCalculationError):
         hour = None
     return moon, hour
