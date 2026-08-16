@@ -78,14 +78,20 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
 
+      # `python -m pytest` y no `pytest`: el ejecutable no pone el directorio
+      # actual en sys.path, y todo el backend moria con
+      # "ModuleNotFoundError: No module named 'app'" antes de correr un solo
+      # test. En local pasaba desapercibido porque ahi se invoca con `-m`.
+      # El job entero llevaba tiempo en rojo por esto: un gate que no arranca
+      # no es un gate.
       - name: Tests unitarios
-        run: pytest tests_unit -q
+        run: python -m pytest tests_unit -q
 
       - name: Tests de integración
         env:
           TEST_DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/arcanum_test
           SECRET_KEY: ci-only-not-a-real-secret
-        run: pytest tests -q
+        run: python -m pytest tests -q
 
       # tests_pg cubre dinero y concurrencia (58 tests) contra el esquema que
       # produce Alembic 001->006, no contra el de `create_all`. Necesita SU
@@ -110,11 +116,9 @@ jobs:
           SECRET_KEY: ci-only-not-a-real-secret
         run: |
           python scripts/verify_migrations.py
-          # -W error::pytest.PytestUnraisableExceptionWarning no: lo que importa
-          # aqui es que NINGUNO se salte. Un salto significa base mal migrada, y
-          # un verde con los 58 dormidos es justo el estado que este paso viene
-          # a matar.
-          pytest tests_pg -q -rs | tee /tmp/pg.log
+          # Cualquier salto es fallo: significa base mal migrada, y un verde con
+          # los 58 dormidos es justo el estado que este paso viene a matar.
+          python -m pytest tests_pg -q -rs | tee /tmp/pg.log
           if grep -qE '[0-9]+ skipped' /tmp/pg.log; then
             echo "::error::tests_pg se salto tests — la base no esta migrada a 006"
             exit 1
