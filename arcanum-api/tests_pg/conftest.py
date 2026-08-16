@@ -7,10 +7,18 @@ Alembic 001->006, que es lo que corre en produccion.
 La URL sale de MIGRATION_TEST_DATABASE_URL o TEST_DATABASE_URL. Sin ninguna de
 las dos, todo el paquete se salta: ningun test toca Railway ni produccion.
 
-Levantar la BD:
+Levantar la BD (verificado de cero en una maquina sin el contenedor, desde
+`arcanum-api/`; el puerto 55434 es el que asume el hook de pre-commit):
+
     docker run -d --name arcanum-svc-test -e POSTGRES_PASSWORD=test \
         -e POSTGRES_DB=arcanum_migration_test -p 55434:5432 postgres:17-alpine
-    MIGRATION_TEST_DATABASE_URL=... python scripts/verify_migrations.py
+
+    URL=postgresql://postgres:test@127.0.0.1:55434/arcanum_migration_test
+    MIGRATION_TEST_DATABASE_URL=$URL python scripts/verify_migrations.py
+    MIGRATION_TEST_DATABASE_URL=$URL python -m pytest tests_pg -q
+
+La segunda linea es obligatoria y no es opcionalmente saltable: sin ella la
+base existe pero esta vacia, y estos tests exigen el esquema de Alembic 006.
 """
 import os
 import uuid
@@ -33,12 +41,41 @@ def _guard(url: str) -> str:
     return url
 
 
+SIN_MIGRAR = (
+    "la base de pruebas no esta migrada (no existe la tabla alembic_version). "
+    "Levantala y migrala:\n"
+    "  docker run -d --name arcanum-svc-test -e POSTGRES_PASSWORD=test \\\n"
+    "      -e POSTGRES_DB=arcanum_migration_test -p 55434:5432 postgres:17-alpine\n"
+    "  MIGRATION_TEST_DATABASE_URL=postgresql://postgres:test@127.0.0.1:55434"
+    "/arcanum_migration_test python scripts/verify_migrations.py"
+)
+
+
+def _esta_migrada(connection) -> bool:
+    """Existe `alembic_version`, sin levantar si no.
+
+    El guardia de revision de abajo sabia rechazar el valor malo pero no la
+    AUSENCIA: contra una base sin migrar, el SELECT reventaba con UndefinedTable
+    antes de llegar al `if`, y apuntar mal la URL daba 58 tracebacks de 25
+    segundos en vez de 58 saltos con motivo. Quien los veia concluia que los
+    tests estaban rotos, cuando solo estaban mal invocados.
+
+    `to_regclass` devuelve NULL en vez de lanzar: se pregunta, no se tantea con
+    un except.
+    """
+    return connection.execute(
+        text("SELECT to_regclass('public.alembic_version')")
+    ).scalar() is not None
+
+
 @pytest.fixture(scope="session")
 def engine():
     if RAW_URL is None:
         pytest.skip("sin base PostgreSQL de pruebas")
     eng = create_engine(_guard(RAW_URL), pool_pre_ping=True)
     with eng.connect() as c:
+        if not _esta_migrada(c):
+            pytest.skip(SIN_MIGRAR)
         revision = c.execute(text("SELECT version_num FROM alembic_version")).scalar()
         if revision != "006":
             pytest.skip(f"la base de pruebas esta en {revision}, se requiere 006")
