@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/arcanum_api.dart';
+import '../../core/astro/user_place.dart';
 import '../../core/crypto/grimoire_crypto.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
@@ -52,10 +53,17 @@ class _GrimorioEditorState extends ConsumerState<GrimorioEditor> {
       // Captura el contexto astral del momento (best-effort).
       String? moonPhase, planetaryHour, dayPlanet;
       try {
-        final today = await api.today();
-        moonPhase = today['moon']?['phase_name'] as String?;
-        planetaryHour = today['planetary_hour']?['planet'] as String?;
-        dayPlanet = today['day_ruler'] as String?;
+        final place = ref.read(userPlaceProvider);
+        if (place == null) {
+          // Sin lugar confirmado la luna sigue siendo cierta; la hora y el
+          // regente no. Quedan ausentes en la entrada, no inventados.
+          moonPhase = (await api.moon())['phase_name'] as String?;
+        } else {
+          final today = await api.today(lat: place.lat, lon: place.lon);
+          moonPhase = today['moon']?['phase_name'] as String?;
+          planetaryHour = today['planetary_hour']?['planet'] as String?;
+          dayPlanet = today['day_ruler'] as String?;
+        }
       } catch (error) {
         // Best-effort de verdad: la entrada se guarda igual, solo pierde la
         // anotación astral. Pero deja rastro: si /astral/today se rompiera,

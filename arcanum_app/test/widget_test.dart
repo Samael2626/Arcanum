@@ -12,13 +12,17 @@ import 'package:arcanum_app/main.dart';
 class _SilentArcanumApi extends ArcanumApi {
   _SilentArcanumApi() : super(Dio());
 
-  final _today = Completer<Map<String, dynamic>>();
+  final _sky = Completer<Map<String, dynamic>>();
 
   @override
   Future<Map<String, dynamic>> today({
-    double lat = 4.71,
-    double lon = -74.07,
-  }) => _today.future;
+    required double lat,
+    required double lon,
+  }) => _sky.future;
+
+  /// Sin sesión no hay lugar confirmado, así que Hoy pide la luna y no /today.
+  @override
+  Future<Map<String, dynamic>> moon() => _sky.future;
 }
 
 /// El avatar de la barra superior lee `authProvider` al arrancar, que sin

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api/arcanum_api.dart';
+import '../../core/astro/user_place.dart';
 import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
@@ -27,10 +28,34 @@ class HoyScreen extends ConsumerStatefulWidget {
 
 class _HoyScreenState extends ConsumerState<HoyScreen> {
   late final ArcanumApi _api = ref.read(arcanumApiProvider);
-  late Future<Map<String, dynamic>> _future = _api.today();
+  UserPlace? _place;
+  late Future<Map<String, dynamic>> _future = _load();
+
+  /// El cielo de hoy de ESTA persona, o solo la luna si no ha confirmado lugar.
+  ///
+  /// La respuesta tiene la misma forma en los dos casos; lo que falta cuando no
+  /// hay lugar falta de verdad (`day_ruler` y `planetary_hour` ausentes), y la
+  /// pantalla lo declara en vez de rellenarlo.
+  Future<Map<String, dynamic>> _load() {
+    final place = _place = ref.read(userPlaceProvider);
+    if (place == null) {
+      return _api.moon().then((m) => <String, dynamic>{'moon': m});
+    }
+    return _api.today(lat: place.lat, lon: place.lon);
+  }
+
+  void _reload() => setState(() => _future = _load());
 
   @override
   Widget build(BuildContext context) {
+    // El perfil llega despues del arranque (el bootstrap de auth es asincrono)
+    // y tambien cambia al terminar el onboarding o al entrar con otra cuenta.
+    // Sin esto, quien SI tiene lugar se quedaria con el cielo del que no lo
+    // tiene hasta reiniciar la app.
+    ref.listen<UserPlace?>(userPlaceProvider, (previous, next) {
+      if (next?.lat != _place?.lat || next?.lon != _place?.lon) _reload();
+    });
+
     return FutureBuilder<Map<String, dynamic>>(
       future: _future,
       builder: (context, snap) {
@@ -50,7 +75,7 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
                 child: RefreshIndicator(
                   color: ArcanumColors.gold,
                   backgroundColor: ArcanumColors.surface,
-                  onRefresh: () async => setState(() => _future = _api.today()),
+                  onRefresh: () async => _reload(),
                   child: ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(22, 36, 22, 28),
@@ -100,7 +125,7 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         ),
         const SizedBox(height: 18),
         OutlinedButton(
-          onPressed: () => setState(() => _future = _api.today()),
+          onPressed: _reload,
           style: OutlinedButton.styleFrom(
             side: BorderSide(color: ArcanumColors.gold.withValues(alpha: 0.6)),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -120,16 +145,20 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
   // ── Contenido ──────────────────────────────────────────────────────────
 
   Widget _content(Map<String, dynamic> data) {
-    final hour = data['planetary_hour'] as Map<String, dynamic>;
+    // Sin lugar confirmado la luna sigue estando: es global. El regente y la
+    // hora no, y llegan ausentes.
     final moon = data['moon'] as Map<String, dynamic>;
-    final ruler = data['day_ruler'] as String;
+    final hour = data['planetary_hour'] as Map<String, dynamic>?;
+    final ruler = data['day_ruler'] as String?;
     // "Tu siguiente paso": lo conduce la HORA planetaria (cambia cada ~60 min,
     // mantiene Hoy vivo), no el día. Si el planeta no es de los siete clásicos
     // no hay paso y la tarjeta no aparece.
-    final step = nextStepFor(
-      hourPlanet: hour['planet'] as String,
-      hourNumber: (hour['hour_number'] as num?)?.toInt() ?? 1,
-    );
+    final step = hour == null
+        ? null
+        : nextStepFor(
+            hourPlanet: hour['planet'] as String,
+            hourNumber: (hour['hour_number'] as num?)?.toInt() ?? 1,
+          );
     // Entrada en cascada suave: cada panel emerge del velo con su propio retardo.
     return Column(
       children: [
@@ -142,9 +171,12 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         // que si falla no se lleva por delante al regente, la hora ni la luna.
         const SkyTodayCard(),
         const SizedBox(height: 18),
-        _rulerHero(ruler),
-        const SizedBox(height: 18),
-        _planetaryHourCard(hour),
+        if (ruler != null && hour != null) ...[
+          _rulerHero(ruler),
+          const SizedBox(height: 18),
+          _planetaryHourCard(hour),
+        ] else
+          _PlaceMissingCard(onConfirm: () => context.push('/perfil')),
         const SizedBox(height: 18),
         _moonCard(moon),
       ],
@@ -498,6 +530,74 @@ class _NextStepCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Ausencia declarada del lugar: ocupa el sitio del regente y de la hora
+/// planetaria cuando no hay coordenadas confirmadas.
+///
+/// No es un error ni un panel de carga: es la respuesta honesta. Ambos datos
+/// dependen del orto y el ocaso de un sitio concreto, asi que sin lugar no
+/// existen, y una ciudad por omision los haria indistinguibles de los ciertos.
+class _PlaceMissingCard extends StatelessWidget {
+  final VoidCallback onConfirm;
+  const _PlaceMissingCard({required this.onConfirm});
+
+  @override
+  Widget build(BuildContext context) {
+    return TodayCard(
+      mood: ArcanumMood.neutral,
+      radius: 20,
+      intensity: 0.5,
+      child: Column(
+        children: [
+          const SectionLabel('REGENTE Y HORA'),
+          const SizedBox(height: 16),
+          Text(
+            '✧',
+            style: TextStyle(
+              fontSize: 40,
+              color: ArcanumColors.gold.withValues(alpha: 0.75),
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'No disponible sin tu lugar',
+            textAlign: TextAlign.center,
+            style: ArcanumText.heading(23),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'El regente del día y la hora planetaria se miden desde el amanecer '
+            'y el ocaso de un sitio concreto. Mientras no confirmes el tuyo, '
+            'ARCANUM prefiere callar antes que darte el cielo de otra ciudad.',
+            textAlign: TextAlign.center,
+            style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
+          ),
+          const SizedBox(height: 18),
+          OutlinedButton(
+            onPressed: onConfirm,
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(
+                color: ArcanumColors.gold.withValues(alpha: 0.6),
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 22,
+                vertical: 12,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              'Confirmar mi lugar',
+              style: ArcanumText.body(15, color: ArcanumColors.gold),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -40,13 +40,29 @@ class ArcanumApi {
   Options _idempotentOptions(String? key) =>
       Options(headers: {'Idempotency-Key': key ?? IdempotencyKey.create()});
 
+  /// Cielo de hoy en un lugar concreto: hora planetaria + regente + luna.
+  ///
+  /// Sin valores por omision a proposito. La hora planetaria se deriva del orto
+  /// y el ocaso del sitio, asi que un default convertiria el olvido de quien
+  /// llame en la ciudad de otra persona, en silencio. Quien no tenga lugar
+  /// confirmado pide [moon], que es global y siempre cierta.
   Future<Map<String, dynamic>> today({
-    double lat = 4.71,
-    double lon = -74.07,
+    required double lat,
+    required double lon,
   }) async {
     final res = await _dio.get(
       '/astral/today',
       queryParameters: {'lat': lat, 'lon': lon},
+      options: Options(extra: const {'noAuth': true}),
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Fase lunar: la misma en todo el planeta, no depende del lugar ni de la
+  /// sesion. Es lo unico del cielo de hoy que puede afirmarse sin coordenadas.
+  Future<Map<String, dynamic>> moon() async {
+    final res = await _dio.get(
+      '/astral/moon',
       options: Options(extra: const {'noAuth': true}),
     );
     return res.data as Map<String, dynamic>;

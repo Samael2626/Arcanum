@@ -1,4 +1,5 @@
 import 'package:arcanum_app/core/api/arcanum_api.dart';
+import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/features/hoy/hoy_screen.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_frame.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_motion.dart';
@@ -7,6 +8,17 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+/// Hoy solo pide el cielo del lugar cuando hay lugar confirmado: sin esto la
+/// pantalla se quedaría en la luna y no habría nada que medir.
+class _AuthWithPlace extends AuthNotifier {
+  @override
+  AuthState build() => const AuthState(AuthStatus.authenticated, {
+    'id': 'user-a',
+    'birth_lat': '4.710000',
+    'birth_lon': '-74.070000',
+  });
+}
 
 class _TodayApi extends ArcanumApi {
   _TodayApi() : super(Dio());
@@ -35,8 +47,8 @@ class _TodayApi extends ArcanumApi {
 
   @override
   Future<Map<String, dynamic>> today({
-    double lat = 4.71,
-    double lon = -74.07,
+    required double lat,
+    required double lon,
   }) async {
     calls++;
     return {
@@ -64,7 +76,10 @@ void main() {
     final api = _TodayApi();
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [arcanumApiProvider.overrideWithValue(api)],
+        overrides: [
+          arcanumApiProvider.overrideWithValue(api),
+          authProvider.overrideWith(_AuthWithPlace.new),
+        ],
         child: const MaterialApp(home: Scaffold(body: HoyScreen())),
       ),
     );
