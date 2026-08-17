@@ -20,9 +20,20 @@ from app.models import credit_ledger, usage_operation  # noqa: F401
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Migraciones automáticas al arrancar (idempotente)
+    # Migraciones automáticas al arrancar (idempotente).
+    #
+    # Criterio, escrito porque antes no lo estaba: si alguien enciende
+    # RUN_STARTUP_MIGRATIONS, las migraciones son CRITICAS. Servir trafico
+    # contra un esquema que no se pudo migrar es peor que no levantar: el fallo
+    # se convierte en errores dispersos y dificiles de atribuir, horas despues.
+    # Antes se descartaba el valor de retorno y el arranque no se enteraba de
+    # nada. Fallar ruidoso, nunca silencioso.
     if settings.RUN_STARTUP_MIGRATIONS:
-        run_migrations(engine)
+        resultado = run_migrations(engine)
+        if resultado.get("status") != "success":
+            raise RuntimeError(
+                f"migraciones de arranque fallidas: {resultado.get('message')}"
+            )
     # Siembra datos de referencia (materia, tarot) al arrancar. Idempotente.
     if settings.RUN_STARTUP_SEEDS:
         run_seeds()
