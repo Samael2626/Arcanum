@@ -24,17 +24,49 @@ class HasBirthPlace(Protocol):
     birth_lon: object
 
 
+def _pair(lat: object, lon: object) -> Optional[tuple[float, float]]:
+    """Un par de coordenadas utilizable, o None si falta o no es numerico."""
+    try:
+        return float(lat), float(lon)
+    except (TypeError, ValueError):
+        return None
+
+
 def coords(user: HasBirthPlace) -> Optional[tuple[float, float]]:
-    """Coordenadas confirmadas del usuario, o None si no las declaro.
+    """DONDE ESTA la persona ahora: residencia si la declaro, si no nacimiento.
+
+    La hora planetaria parte en doce la luz entre el amanecer y el ocaso
+    LOCALES, asi que se mide desde el horizonte de hoy. El de nacimiento no
+    interviene: para quien se mudo da un planeta distinto casi siempre.
+
+    La residencia vacia significa "vivo donde naci", que es cierto para la
+    mayoria y evita obligar a nadie a teclear lo mismo dos veces.
+
+    NO usar para la carta natal: esa se calcula con `birth_*` y no cambia nunca
+    (ver `_birth_data` en `app/routers/astral.py`). Meter la residencia ahi
+    romperia el Ascendente de todo el que se haya mudado.
 
     Un usuario SIN el atributo `birth_lat` levanta `AttributeError` a
     proposito: eso es un error de programa, no una ausencia de lugar, y
     silenciarlo aqui esconderia el fallo real.
     """
-    try:
-        return float(user.birth_lat), float(user.birth_lon)
-    except (TypeError, ValueError):
-        return None
+    residencia = _pair(getattr(user, "current_lat", None),
+                       getattr(user, "current_lon", None))
+    if residencia is not None:
+        return residencia
+    return _pair(user.birth_lat, user.birth_lon)
+
+
+def timezone_name(user: HasBirthPlace) -> Optional[str]:
+    """Zona horaria de la persona: la de su residencia, si no la de nacimiento.
+
+    Misma regla que `coords` y por el mismo motivo: el dia de alguien empieza
+    donde vive. La usa el horoscopo para saber cuando le cambia la fecha.
+    """
+    actual = getattr(user, "current_timezone", None)
+    if actual:
+        return actual
+    return getattr(user, "birth_timezone", None)
 
 
 def _hour(user: HasBirthPlace, now: datetime) -> Optional[ph.PlanetaryHour]:

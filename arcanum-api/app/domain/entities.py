@@ -18,6 +18,11 @@ class UserEntity:
     birth_lon: str | None = None
     birth_city: str | None = None
     birth_timezone: str | None = None
+    # Residencia. Vacia = vive donde nacio; ver app/services/user_sky.py.
+    current_lat: str | None = None
+    current_lon: str | None = None
+    current_city: str | None = None
+    current_timezone: str | None = None
     subscription_tier: str = "free"
     subscription_expires_at: datetime | None = None
     revenuecat_customer_id: str | None = None

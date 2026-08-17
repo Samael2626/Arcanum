@@ -18,13 +18,9 @@ def local_date(timezone_name: str | None, now: datetime) -> date:
     """Fecha del calendario de ESA persona, no la de UTC.
 
     Un horoscopo diario que rota a medianoche UTC cambia a las 19:00 en Bogota:
-    un valor global puesto donde va un dato personal. La zona sale de
-    `user.birth_timezone`, que onboarding resuelve con timezonefinder.
-
-    Limitacion declarada: es la zona de NACIMIENTO, no la de residencia. Quien
-    nacio en Bogota y vive en Madrid recibe el corte de dia bogotano. Es la
-    mejor senal que el servidor tiene sin preguntarle al cliente, y preferimos
-    un dato nuestro imperfecto a uno del cliente que pueda rotarse a voluntad.
+    un valor global puesto donde va un dato personal. La zona la decide
+    `user_sky.timezone_name`: la de residencia si la declaro, si no la de
+    nacimiento. El dia de alguien empieza donde vive.
     """
     try:
         tz = ZoneInfo(timezone_name) if timezone_name else ZoneInfo("UTC")

@@ -18,6 +18,13 @@ class User(Base):
     birth_lon = Column(String(20), nullable=True)
     birth_city = Column(String(100), nullable=True)
     birth_timezone = Column(String(50), nullable=True)
+
+    # Donde vive AHORA. Vacio significa "vivo donde naci": la carta natal usa
+    # siempre birth_*, pero la hora planetaria sale del amanecer local de aqui.
+    current_lat = Column(String(20), nullable=True)
+    current_lon = Column(String(20), nullable=True)
+    current_city = Column(String(100), nullable=True)
+    current_timezone = Column(String(50), nullable=True)
     subscription_tier = Column(String(20), nullable=False, server_default=text("'free'"))
     subscription_expires_at = Column(DateTime(timezone=True), nullable=True)
     revenuecat_customer_id = Column(String(100), nullable=True)

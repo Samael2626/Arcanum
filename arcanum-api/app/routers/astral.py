@@ -176,7 +176,7 @@ def horoscope(
         )
 
     now = datetime.now(timezone.utc)
-    dia = hs.local_date(current_user.birth_timezone, now)
+    dia = hs.local_date(us.timezone_name(current_user), now)
     reservation = UsageService().reserve(
         db, current_user.id, "horoscope", f"horoscope-{dia.isoformat()}",
         {"date": dia.isoformat()}, settings.HOROSCOPE_DAILY,

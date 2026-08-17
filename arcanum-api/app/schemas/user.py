@@ -12,6 +12,10 @@ class UserBase(BaseModel):
     birth_lon: Optional[str] = None
     birth_city: Optional[str] = None
     birth_timezone: Optional[str] = None
+    current_lat: Optional[str] = None
+    current_lon: Optional[str] = None
+    current_city: Optional[str] = None
+    current_timezone: Optional[str] = None
     subscription_tier: Optional[str] = None
     subscription_expires_at: Optional[datetime] = None
     revenuecat_customer_id: Optional[str] = None
@@ -34,6 +38,10 @@ class UserUpdate(BaseModel):
     birth_lon: Optional[str] = None
     birth_city: Optional[str] = None
     birth_timezone: Optional[str] = None
+    current_lat: Optional[str] = None
+    current_lon: Optional[str] = None
+    current_city: Optional[str] = None
+    current_timezone: Optional[str] = None
     preferred_tradition: Optional[str] = None
     preferred_house_system: Optional[str] = None
     onboarding_completed: Optional[bool] = None
