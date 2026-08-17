@@ -16,13 +16,27 @@ class UserPlace {
 /// meridiano ajeno no es una aproximacion, es un dato falso con la misma
 /// apariencia que uno verdadero.
 ///
+/// Prefiere la RESIDENCIA y cae al NACIMIENTO. La hora planetaria parte en doce
+/// la luz entre el amanecer y el ocaso locales, asi que se mide desde el
+/// horizonte de hoy; el de nacimiento no interviene. Residencia vacia significa
+/// "vivo donde naci", cierto para la mayoria.
+///
+/// NO sirve para la carta natal: esa se calcula con el lugar de nacimiento y no
+/// cambia nunca. La calcula el servidor, que tiene su propia regla.
+///
 /// `/users/me` serializa las coordenadas como texto (`Optional[str]` en el
 /// esquema), pero el perfil cacheado puede volver como numero segun quien lo
 /// escribiera: se aceptan las dos formas y se rechaza cualquier otra. Devuelve
 /// null cuando no hay lugar confirmado; NUNCA uno inventado.
 UserPlace? userPlaceOf(Map<String, dynamic>? user) {
-  final lat = _coord(user?['birth_lat']);
-  final lon = _coord(user?['birth_lon']);
+  return _placeFrom(user?['current_lat'], user?['current_lon']) ??
+      _placeFrom(user?['birth_lat'], user?['birth_lon']);
+}
+
+/// Un par de coordenadas utilizable, o null si falta o no es un lugar valido.
+UserPlace? _placeFrom(Object? rawLat, Object? rawLon) {
+  final lat = _coord(rawLat);
+  final lon = _coord(rawLon);
   if (lat == null || lon == null) return null;
   // Fuera de rango o no finito es dato corrupto, no un lugar: se descarta en
   // vez de mandarlo al servidor para que lo rechace con un 422.

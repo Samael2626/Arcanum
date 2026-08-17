@@ -7,6 +7,7 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
+import 'residence_card.dart';
 
 /// "Perfil": la casa del "quién soy".
 ///
@@ -36,6 +37,8 @@ class PerfilScreen extends ConsumerWidget {
             children: [
               if (auth.isAuthenticated) ...[
                 _Identity(name: name, email: email),
+                const SizedBox(height: 20),
+                const ResidenceCard(),
                 const SizedBox(height: 20),
                 const _CaminoCard(),
                 const SizedBox(height: 20),
