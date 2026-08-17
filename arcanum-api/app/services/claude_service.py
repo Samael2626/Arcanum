@@ -15,6 +15,7 @@ from typing import Optional
 from groq import Groq
 
 from app.core.config import settings
+from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT
 from app.services.oracle_prompt import ORACLE_SYSTEM_PROMPT
 
 logger = logging.getLogger("arcanum.oracle")
@@ -93,13 +94,14 @@ def _norm(s: str) -> str:
     return s.lower()
 
 
-def _card_key(name: str) -> str:
-    """Fragmento ES buscable de un nombre de carta.
+def _term_key(name: str) -> str:
+    """Fragmento ES buscable de un término que el modelo debe nombrar.
 
-    Los nombres del catálogo son bilingües y a veces traen descriptor
-    ("Knight of Pentacles / Caballero de Oros — Fuego de Tierra"). El oráculo
-    escribe la forma española corta, así que nos quedamos con la parte tras "/"
-    y antes del guion largo del descriptor.
+    El caso que lo motiva son las cartas: los nombres del catálogo son bilingües
+    y a veces traen descriptor ("Knight of Pentacles / Caballero de Oros — Fuego
+    de Tierra"). El oráculo escribe la forma española corta, así que nos
+    quedamos con la parte tras "/" y antes del guion largo del descriptor. Un
+    término simple (un nombre de planeta) pasa intacto.
     """
     s = name.split("/")[-1] if "/" in name else name
     for sep in ("—", "–"):
@@ -108,19 +110,23 @@ def _card_key(name: str) -> str:
     return s.strip()
 
 
-def _missing_cards(expected_cards: list[str], text: str) -> list[str]:
-    """Nombres (originales) cuya forma ES no aparece en el texto normalizado."""
+def _missing_terms(expected_terms: list[str], text: str) -> list[str]:
+    """Términos (originales) cuya forma ES no aparece en el texto normalizado."""
     t = _norm(text)
-    return [name for name in expected_cards if _norm(_card_key(name)) not in t]
+    return [name for name in expected_terms if _norm(_term_key(name)) not in t]
 
 
-def _complete(client: Groq, user_content: str, max_tokens: int,
-              temperature: float) -> tuple[str, str, int]:
-    """Una llamada al modelo. Devuelve (texto, finish_reason, completion_tokens)."""
+def _complete(client: Groq, system_prompt: str, user_content: str,
+              max_tokens: int, temperature: float) -> tuple[str, str, int]:
+    """Una llamada al modelo. Devuelve (texto, finish_reason, completion_tokens).
+
+    El prompt de sistema entra por parámetro: es lo único que distingue la voz
+    del Oráculo de la del horóscopo, y ambas usan este mismo camino a Groq.
+    """
     resp = client.chat.completions.create(
         model=_GROQ_MODEL,
         messages=[
-            {"role": "system", "content": ORACLE_SYSTEM_PROMPT},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_content},
         ],
         max_tokens=max_tokens,
@@ -129,6 +135,60 @@ def _complete(client: Groq, user_content: str, max_tokens: int,
     choice = resp.choices[0]
     return (choice.message.content or "", choice.finish_reason,
             resp.usage.completion_tokens if resp.usage else 0)
+
+
+def _generate_with_coverage(client: Groq, system_prompt: str, base_user: str,
+                            max_tokens: int, temperature: float,
+                            expected_terms: list[str],
+                            build_notice) -> tuple[str, dict]:
+    """Genera y GARANTIZA que el texto nombre lo que tenía que nombrar (guard D).
+
+    Tras generar, verifica que cada término esperado aparezca. Si falta ≥1, hace
+    UN solo retry que regenera el texto ENTERO nombrando los omitidos. Si tras el
+    retry aún falta ≥1: FAIL LOUD (log.warning) y devuelve el intento con MÁS
+    cobertura. Nunca hace más de 1 retry ni omite en silencio.
+
+    `build_notice` recibe la lista de términos omitidos y devuelve la
+    instrucción del reintento: es lo único que cambia entre una tirada y un
+    horóscopo.
+    """
+    diag: dict = {"available": True, "retried": False,
+                  "missing_first": [], "missing_final": [],
+                  "max_tokens": max_tokens, "temperature": temperature}
+
+    content, finish, ctok = _complete(
+        client, system_prompt, base_user, max_tokens, temperature)
+    diag.update(finish_reason=finish, completion_tokens=ctok)
+
+    if not expected_terms:
+        return content, diag
+
+    missing = _missing_terms(expected_terms, content)
+    diag["missing_first"] = [_term_key(c) for c in missing]
+    if not missing:
+        return content, diag
+
+    diag["retried"] = True
+    r_content, r_finish, r_ctok = _complete(
+        client, system_prompt, f"{base_user}\n\n{build_notice(missing)}",
+        max_tokens, temperature)
+    r_missing = _missing_terms(expected_terms, r_content)
+    diag["missing_final"] = [_term_key(c) for c in r_missing]
+
+    if not r_missing:
+        diag.update(finish_reason=r_finish, completion_tokens=r_ctok)
+        return r_content, diag
+
+    # Fail loud: tras el retry aún faltan términos. Devolvemos el de más cobertura.
+    logger.warning(
+        "El modelo omitió %d/%d términos exigidos tras retry: %s",
+        len(r_missing), len(expected_terms), diag["missing_final"],
+    )
+    if len(r_missing) <= len(missing):
+        diag.update(finish_reason=r_finish, completion_tokens=r_ctok)
+        return r_content, diag
+    diag["returned"] = "primer_intento_mas_cobertura"
+    return content, diag
 
 
 def generate_reading(context: str, question: Optional[str] = None,
@@ -144,54 +204,68 @@ def generate_reading(context: str, question: Optional[str] = None,
     Returns:
         (texto, diag) — diag lleva métricas para observabilidad/harness.
     """
-    diag: dict = {"available": False, "retried": False,
-                  "missing_first": [], "missing_final": []}
     client = _get_client()
     if client is None:
-        return _FALLBACK, diag
+        return _FALLBACK, {"available": False, "retried": False,
+                           "missing_first": [], "missing_final": []}
 
-    max_tokens = _max_tokens_for(card_count)
-    temperature = _temperature_for(card_count)
-    base_user = _build_user_message(context, question, tarot)
+    expected = expected_cards or []
 
-    content, finish, ctok = _complete(client, base_user, max_tokens, temperature)
-    diag.update(available=True, max_tokens=max_tokens, temperature=temperature,
-                finish_reason=finish, completion_tokens=ctok)
+    def notice(missing: list[str]) -> str:
+        return (
+            f"Tu versión anterior omitió: {'; '.join(_term_key(c) for c in missing)}. "
+            f"Produce una lectura COMPLETA e INTEGRADA que cubra las "
+            f"{len(expected)} posiciones en orden, sin omitir ninguna."
+        )
 
-    if not expected_cards:
-        return content, diag
-
-    missing = _missing_cards(expected_cards, content)
-    diag["missing_first"] = [_card_key(c) for c in missing]
-    if not missing:
-        return content, diag
-
-    # Guard D: un único retry regenerando la lectura completa.
-    diag["retried"] = True
-    notice = (
-        f"Tu versión anterior omitió: {'; '.join(_card_key(c) for c in missing)}. "
-        f"Produce una lectura COMPLETA e INTEGRADA que cubra las "
-        f"{len(expected_cards)} posiciones en orden, sin omitir ninguna."
+    return _generate_with_coverage(
+        client, ORACLE_SYSTEM_PROMPT,
+        _build_user_message(context, question, tarot),
+        _max_tokens_for(card_count), _temperature_for(card_count),
+        expected, notice,
     )
-    r_content, r_finish, r_ctok = _complete(
-        client, f"{base_user}\n\n{notice}", max_tokens, temperature)
-    r_missing = _missing_cards(expected_cards, r_content)
-    diag["missing_final"] = [_card_key(c) for c in r_missing]
 
-    if not r_missing:
-        diag.update(finish_reason=r_finish, completion_tokens=r_ctok)
-        return r_content, diag
 
-    # Fail loud: tras el retry aún faltan cartas. Devolvemos el de mayor cobertura.
-    logger.warning(
-        "Oráculo omitió %d/%d posiciones tras retry: %s",
-        len(r_missing), len(expected_cards), diag["missing_final"],
+# El horóscopo no tiene cartas, así que no puede escalar con `card_count`: son
+# dos párrafos disciplinados, no una lectura que crece con la tirada. Techo bajo
+# para que no divague y temperatura baja para que no se despegue de sus datos.
+_HOROSCOPE_MAX_TOKENS = 700
+_HOROSCOPE_TEMPERATURE = 0.5
+
+
+def generate_horoscope(sky: str, expected_terms: list[str]) -> tuple[str, dict]:
+    """Escribe el horóscopo del día a partir del cielo ya seleccionado.
+
+    Args:
+        sky: el tránsito principal, sus corrientes de apoyo y el cielo común,
+            ya calculados y ordenados por `app.services.horoscope`.
+        expected_terms: nombres en español que el texto DEBE contener —los dos
+            cuerpos del tránsito principal—. Un horóscopo que no nombra su
+            propio tránsito es el horóscopo de revista que esto no quiere ser,
+            así que activa el retry de cobertura.
+
+    Returns:
+        (texto, diag). Con `diag["available"] is False` NO hay horóscopo: el
+        llamador no debe persistir el texto de relleno como si fuera la lectura
+        del día.
+    """
+    client = _get_client()
+    if client is None:
+        return _FALLBACK, {"available": False, "retried": False,
+                           "missing_first": [], "missing_final": []}
+
+    def notice(missing: list[str]) -> str:
+        return (
+            f"Tu versión anterior no nombró: {'; '.join(_term_key(t) for t in missing)}. "
+            "Reescribe el texto ENTERO nombrando explícitamente los dos cuerpos "
+            "del tránsito principal. Sin ellos el texto valdría para cualquiera."
+        )
+
+    return _generate_with_coverage(
+        client, HOROSCOPE_SYSTEM_PROMPT, sky,
+        _HOROSCOPE_MAX_TOKENS, _HOROSCOPE_TEMPERATURE,
+        expected_terms, notice,
     )
-    if len(r_missing) <= len(missing):
-        diag.update(finish_reason=r_finish, completion_tokens=r_ctok)
-        return r_content, diag
-    diag["returned"] = "primer_intento_mas_cobertura"
-    return content, diag
 
 
 def get_claude_response(context: str, question: Optional[str] = None,

@@ -17,7 +17,9 @@ class IdempotencyKey {
     final bytes = List<int>.generate(16, (_) => _random.nextInt(256));
     bytes[6] = (bytes[6] & 0x0f) | 0x40;
     bytes[8] = (bytes[8] & 0x3f) | 0x80;
-    final hex = bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
+    final hex = bytes
+        .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+        .join();
     return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}'
         '-${hex.substring(16, 20)}-${hex.substring(20)}';
   }
@@ -106,6 +108,15 @@ class ArcanumApi {
     return res.data as Map<String, dynamic>;
   }
 
+  /// El cielo de hoy leído por la IA. Requiere auth y carta natal.
+  ///
+  /// El servidor lo genera una vez por día y sirve el mismo texto el resto de
+  /// la jornada, así que llamar de más no cuesta ni cambia la lectura.
+  Future<Map<String, dynamic>> horoscope() async {
+    final res = await _dio.get('/astral/horoscope');
+    return res.data as Map<String, dynamic>;
+  }
+
   /// Materia Arcana: catálogo (resumen). Filtros opcionales.
   Future<List<Map<String, dynamic>>> materiaList({
     String? itemType,
@@ -166,7 +177,10 @@ class ArcanumApi {
 
   /// Tira de tarot. spread: 'three_card' | 'celtic_cross'. Requiere auth.
   /// Devuelve la sesión guardada (cartas en data['cards_drawn']['cards']).
-  Future<Map<String, dynamic>> tarotDraw(String spread, {String? idempotencyKey}) async {
+  Future<Map<String, dynamic>> tarotDraw(
+    String spread, {
+    String? idempotencyKey,
+  }) async {
     final res = await _dio.post(
       '/oracle/tarot/draw',
       queryParameters: {'spread_type': spread},

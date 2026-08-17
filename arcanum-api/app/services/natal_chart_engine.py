@@ -7,7 +7,7 @@ y aspectos mayores.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import swisseph as swe
 
@@ -15,6 +15,22 @@ SIGNS = ["aries", "taurus", "gemini", "cancer", "leo", "virgo",
          "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"]
 SIGNS_ES = ["Aries", "Tauro", "Géminis", "Cáncer", "Leo", "Virgo",
             "Libra", "Escorpio", "Sagitario", "Capricornio", "Acuario", "Piscis"]
+
+# Nombres que ve la persona. Deben coincidir con `planetEs`/`aspectEs` de
+# `arcanum_app/lib/shared/astro_symbols.dart`: el texto que escribe el modelo se
+# lee en la misma pantalla que las etiquetas del cliente.
+POINTS_ES = {
+    "sun": "Sol", "moon": "Luna", "mercury": "Mercurio", "venus": "Venus",
+    "mars": "Marte", "jupiter": "Júpiter", "saturn": "Saturno",
+    "uranus": "Urano", "neptune": "Neptuno", "pluto": "Plutón",
+    "north_node": "Nodo Norte",
+    "ascendant": "Ascendente", "midheaven": "Medio Cielo",
+}
+
+ASPECTS_ES = {
+    "conjunction": "conjunción", "sextile": "sextil", "square": "cuadratura",
+    "trine": "trígono", "opposition": "oposición",
+}
 
 PLANETS = [
     ("sun", swe.SUN), ("moon", swe.MOON), ("mercury", swe.MERCURY),
@@ -157,7 +173,12 @@ TRANSIT_ASPECTS = [
 
 
 def current_positions(dt_utc: datetime) -> dict[str, dict]:
-    """Posiciones eclípticas de los planetas en `dt_utc` (cielo actual)."""
+    """Posiciones eclípticas de los planetas en `dt_utc` (cielo actual).
+
+    Conserva `speed` (grados/día, negativa si retrógrado) además de la bandera
+    `retrograde`: sin la velocidad no se puede saber si un aspecto se está
+    formando o deshaciendo, que es lo que decide si un tránsito importa hoy.
+    """
     dt = dt_utc.replace(tzinfo=timezone.utc) if dt_utc.tzinfo is None else dt_utc.astimezone(timezone.utc)
     jd = swe.julday(dt.year, dt.month, dt.day,
                     dt.hour + dt.minute / 60 + dt.second / 3600)
@@ -168,13 +189,77 @@ def current_positions(dt_utc: datetime) -> dict[str, dict]:
         except swe.Error:
             continue
         lon, speed = xx[0] % 360, xx[3]
-        out[name] = {**_sign_block(lon), "name": name, "retrograde": speed < 0}
+        out[name] = {**_sign_block(lon), "name": name,
+                     "retrograde": speed < 0, "speed": round(speed, 6)}
     return out
 
 
+# Un "exact_at" se estima con la velocidad instantanea del planeta, que es
+# constante solo a corto plazo. Mas alla de este horizonte la cifra seria
+# ficcion (Pluton a 0.003 grados/dia tardaria anios en recorrer su orbe), asi
+# que se devuelve None en vez de inventar una fecha.
+_EXACT_HORIZON_DAYS = 30.0
+
+
+def _signed_delta_to_aspect(t_lon: float, n_lon: float, angle: float) -> float:
+    """Grados que debe avanzar el planeta en transito hasta la exactitud.
+
+    Positivo si debe adelantar, negativo si debe retroceder. Su valor absoluto
+    es el orbe. Un aspecto tiene dos exactitudes posibles (el planeta puede
+    estar delante o detras del punto natal); se devuelve la mas cercana.
+    """
+    d = (t_lon - n_lon) % 360
+    mejor = 360.0
+    for target in (angle % 360, (-angle) % 360):
+        s = ((target - d + 180) % 360) - 180
+        if abs(s) < abs(mejor):
+            mejor = s
+    return mejor
+
+
+def _applying_and_exact(t_lon: float, n_lon: float, angle: float,
+                        speed: float, dt_utc: datetime) -> tuple[bool, str | None]:
+    """(se esta formando?, cuando perfecciona) para un aspecto en curso.
+
+    El punto natal es fijo, asi que la separacion cambia al ritmo del planeta en
+    transito. Si el signo de la velocidad coincide con la direccion que hay que
+    recorrer, el aspecto se aplica; si no, ya paso. Una velocidad negativa
+    (retrogrado) invierte la direccion, y por eso se compara por signo y no por
+    valor absoluto.
+    """
+    if not speed:  # planeta estacionario: ni se forma ni se deshace
+        return False, None
+    s = _signed_delta_to_aspect(t_lon, n_lon, angle)
+    applying = (s > 0) == (speed > 0)
+    dias = s / speed
+    if not applying or dias > _EXACT_HORIZON_DAYS:
+        return applying, None
+    return True, (dt_utc + timedelta(days=dias)).isoformat()
+
+
+def natal_targets(chart_data: dict) -> list[dict]:
+    """Puntos natales que reciben transitos: planetas mas Ascendente y MC.
+
+    Los angulos no son planetas y no viven en `chart_data["planets"]`, pero un
+    transito al Ascendente esta entre los mas notables que hay. Se les da la
+    misma forma (`name` + `longitude`) para que el resto del motor no distinga.
+    """
+    puntos = list(chart_data.get("planets") or [])
+    for clave, nombre in (("ascendant", "ascendant"), ("midheaven", "midheaven")):
+        bloque = chart_data.get(clave)
+        if isinstance(bloque, dict) and "longitude" in bloque:
+            puntos.append({**bloque, "name": nombre})
+    return puntos
+
+
 def compute_transits(natal_planets: list[dict], dt_utc: datetime) -> dict:
-    """Posiciones actuales + aspectos de los planetas en tránsito a los natales."""
-    transiting = current_positions(dt_utc)
+    """Posiciones actuales + aspectos de los planetas en tránsito a los natales.
+
+    `natal_planets` acepta cualquier punto con `name` y `longitude`: pasando el
+    resultado de `natal_targets()` entran también Ascendente y Medio Cielo.
+    """
+    dt = dt_utc if dt_utc.tzinfo else dt_utc.replace(tzinfo=timezone.utc)
+    transiting = current_positions(dt)
     natal_lon = {p["name"]: p["longitude"] for p in natal_planets}
 
     aspects: list[dict] = []
@@ -184,13 +269,16 @@ def compute_transits(natal_planets: list[dict], dt_utc: datetime) -> dict:
             for aname, angle, orb in TRANSIT_ASPECTS:
                 delta = abs(sep - angle)
                 if delta <= orb:
+                    applying, exact_at = _applying_and_exact(
+                        tdata["longitude"], nlon, angle, tdata.get("speed") or 0.0, dt)
                     aspects.append({
                         "transit": tname, "natal": nname,
                         "aspect": aname, "angle": angle, "orb": round(delta, 2),
+                        "max_orb": orb, "applying": applying, "exact_at": exact_at,
                     })
                     break
     return {
-        "datetime": (dt_utc if dt_utc.tzinfo else dt_utc.replace(tzinfo=timezone.utc)).isoformat(),
+        "datetime": dt.isoformat(),
         "transiting": list(transiting.values()),
         "aspects_to_natal": aspects,
     }

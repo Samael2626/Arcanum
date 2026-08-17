@@ -37,8 +37,8 @@ def coords(user: HasBirthPlace) -> Optional[tuple[float, float]]:
         return None
 
 
-def planetary_hour(user: HasBirthPlace, now: datetime) -> Optional[str]:
-    """Hora planetaria del usuario en `now`, o None si no puede afirmarse.
+def _hour(user: HasBirthPlace, now: datetime) -> Optional[ph.PlanetaryHour]:
+    """Hora planetaria vigente del usuario, o None si no puede afirmarse.
 
     La ausencia se decide ANTES de llamar al motor, con un return explicito:
     unas coordenadas None levantarian TypeError, que no es lo que el `except`
@@ -52,6 +52,26 @@ def planetary_hour(user: HasBirthPlace, now: datetime) -> Optional[str]:
     if place is None:
         return None
     try:
-        return ph.get_planetary_hour(now, place[0], place[1]).planet
+        return ph.get_planetary_hour(now, place[0], place[1])
     except (AttributeError, ValueError, ph.AstralCalculationError):
         return None
+
+
+def planetary_hour(user: HasBirthPlace, now: datetime) -> Optional[str]:
+    """Planeta que rige la hora del usuario en `now`, o None."""
+    hora = _hour(user, now)
+    return hora.planet if hora is not None else None
+
+
+def day_ruler(user: HasBirthPlace, now: datetime) -> Optional[str]:
+    """Regente del dia PLANETARIO del usuario, o None.
+
+    El dia planetario empieza al orto, no a medianoche, asi que se deriva de la
+    hora vigente y no del calendario: antes del amanecer sigue rigiendo el
+    planeta del dia anterior. Por eso depende del lugar igual que la hora, y
+    sigue la misma regla: sin coordenadas confirmadas, no se afirma.
+    """
+    hora = _hour(user, now)
+    if hora is None:
+        return None
+    return ph.CHALDEAN[(ph.CHALDEAN.index(hora.planet) - hora.hour_number) % 7]

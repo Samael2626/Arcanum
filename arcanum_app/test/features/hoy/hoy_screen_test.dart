@@ -12,6 +12,26 @@ class _TodayApi extends ArcanumApi {
   _TodayApi() : super(Dio());
 
   var calls = 0;
+  var horoscopeCalls = 0;
+
+  @override
+  Future<Map<String, dynamic>> horoscope() async {
+    horoscopeCalls++;
+    return {
+      'date': '2026-08-16',
+      'text': 'Saturno aprieta sobre tu Sol natal.',
+      'primary': {
+        'transit': 'saturn',
+        'natal': 'sun',
+        'aspect': 'square',
+        'orb': 0.2,
+        'applying': true,
+        'exact_at': '2026-08-20T00:00:00+00:00',
+      },
+      'supporting': const [],
+      'total_aspects': 1,
+    };
+  }
 
   @override
   Future<Map<String, dynamic>> today({

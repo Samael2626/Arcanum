@@ -7,16 +7,23 @@ from typing import Optional
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from sqlalchemy.orm import Session
 
 from app.api.deps import get_natal_chart_repo
 from app.adapters.repositories import NatalChartRepository
+from app.application.services.usage_service import UsageService
+from app.core.config import settings
 from app.core.security import get_current_user
+from app.db.session import get_db
 from app.domain.entities import NatalChartEntity, UserEntity
 from app.schemas.natal_chart import NatalChartResponse
+from app.services import horoscope as hs
 from app.services import lunar_calendar as lc
 from app.services import natal_chart_engine as nce
 from app.services import planetary_hours as ph
 from app.services import ritual_calendar as rc
+from app.services import user_sky as us
+from app.services.claude_service import generate_horoscope
 
 router = APIRouter()
 
@@ -146,6 +153,70 @@ def transits(
         )
     dt = at or datetime.now(timezone.utc)
     return nce.compute_transits(entity.chart_data["planets"], dt)
+
+
+@router.get("/horoscope")
+def horoscope(
+    current_user: UserEntity = Depends(get_current_user),
+    repo: NatalChartRepository = Depends(get_natal_chart_repo),
+    db: Session = Depends(get_db),
+):
+    """El cielo de hoy de esta persona, leído por la IA.
+
+    Se genera UNA vez por persona y día y se sirve idéntico el resto de la
+    jornada: la clave de idempotencia lleva su fecha local, así que la segunda
+    llamada es un replay sin coste. Un horóscopo que cambia al refrescar no es
+    un horóscopo.
+    """
+    entity = repo.get_by_user_id(current_user.id)
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Calcula primero tu carta natal con POST /astral/natal-chart.",
+        )
+
+    now = datetime.now(timezone.utc)
+    dia = hs.local_date(current_user.birth_timezone, now)
+    reservation = UsageService().reserve(
+        db, current_user.id, "horoscope", f"horoscope-{dia.isoformat()}",
+        {"date": dia.isoformat()}, settings.HOROSCOPE_DAILY,
+    )
+    if reservation.replay:
+        return reservation.operation.result
+
+    try:
+        sky = hs.build_sky(entity.chart_data or {}, now)
+        texto, diag = generate_horoscope(
+            hs.describe(sky, now,
+                        day_ruler=us.day_ruler(current_user, now),
+                        planetary_hour=us.planetary_hour(current_user, now)),
+            hs.expected_terms(sky["primary"]),
+        )
+        if not diag.get("available"):
+            # Sin modelo NO hay horóscopo. Capturarlo dejaria el texto de
+            # relleno como la lectura de esta persona durante todo el dia: un
+            # fallo disfrazado de resultado. Se libera y el cliente cae a su
+            # lectura local, que es real.
+            UsageService().reverse(db, reservation.operation)
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="El cielo no se puede leer ahora mismo. Inténtalo más tarde.",
+            )
+        result = {
+            "date": dia.isoformat(),
+            "datetime": sky["datetime"],
+            "text": texto,
+            "primary": sky["primary"],
+            "supporting": sky["supporting"],
+            "total_aspects": sky["total_aspects"],
+        }
+        UsageService().capture(db, reservation.operation, result)
+        return result
+    except HTTPException:
+        raise
+    except Exception:
+        UsageService().reverse(db, reservation.operation)
+        raise
 
 
 @router.get("/overview")

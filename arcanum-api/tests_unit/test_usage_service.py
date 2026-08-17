@@ -164,14 +164,28 @@ def test_utc_midnight_is_used_for_daily_quota(monkeypatch):
 
 
 def test_all_paid_routes_delegate_to_usage_service():
-    from app.routers import oracle, tarot
+    # `astral` entra desde el horoscopo: es la tercera ruta que gasta una
+    # llamada al modelo, y quedaba fuera de esta red por vivir en otro modulo.
+    from app.routers import astral, oracle, tarot
 
     oracle_source = __import__("inspect").getsource(oracle)
     tarot_source = __import__("inspect").getsource(tarot)
+    astral_source = __import__("inspect").getsource(astral)
     assert "UsageService().reserve" in oracle_source
     assert "UsageService().reserve" in tarot_source
+    assert "UsageService().reserve" in astral_source
     assert "enforce_user_quota" not in oracle_source
     assert "_apply_quota" not in oracle_source
+
+
+def test_horoscope_reverses_its_reservation_when_it_cannot_deliver():
+    # Una reserva sin resultado no puede quedarse colgada: bloquearia el
+    # horoscopo de esa persona el resto del dia por una caida momentanea.
+    from app.routers import astral
+
+    source = __import__("inspect").getsource(astral.horoscope)
+    assert "UsageService().reverse" in source
+    assert "capture(db, reservation.operation" in source
 
 
 def test_oracle_provider_failures_reverse_reservation_policy_is_declared():

@@ -16,6 +16,8 @@ import '../../shared/widgets/moon_disc.dart';
 import 'hoy_guidance.dart';
 import 'hoy_lore.dart';
 import 'presentation/widgets/planetary_hour_dial.dart';
+import 'presentation/widgets/sky_today_card.dart';
+import 'presentation/widgets/today_card.dart';
 
 class HoyScreen extends ConsumerStatefulWidget {
   const HoyScreen({super.key});
@@ -135,6 +137,11 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
           _NextStepCard(step: step, onTap: () => _runStep(step)),
           const SizedBox(height: 18),
         ],
+        // Lo unico personal de esta pantalla: el resto del cielo de Hoy es el
+        // mismo para cualquiera que comparta lugar. Carga por su cuenta, asi
+        // que si falla no se lleva por delante al regente, la hora ni la luna.
+        const SkyTodayCard(),
+        const SizedBox(height: 18),
         _rulerHero(ruler),
         const SizedBox(height: 18),
         _planetaryHourCard(hour),
@@ -181,7 +188,7 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
       borderRadius: 20,
       onTap: () => showPlanetLoreSheet(context, ruler),
       // Atmósfera más profunda: menos bloom para que el violeta sea regio.
-      child: _TodayCard(
+      child: TodayCard(
         mood: mood,
         radius: 20,
         intensity: 0.6,
@@ -271,7 +278,7 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         isDay: isDay,
         minutesRemaining: mins,
       ),
-      child: _TodayCard(
+      child: TodayCard(
         mood: mood,
         radius: 18,
         // Ámbar hundido a bronce: brasa en la penumbra, no panel amarillo.
@@ -390,7 +397,7 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         waxing: waxing,
         ageDays: age,
       ),
-      child: _TodayCard(
+      child: TodayCard(
         mood: ArcanumMood.moon,
         radius: 18,
         intensity: 0.72,
@@ -427,53 +434,6 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
 
 // ── Cielo vivo: atmósfera de fondo que respira y transiciona al regente ────
 
-class _TodayCard extends StatelessWidget {
-  const _TodayCard({
-    required this.mood,
-    required this.child,
-    this.padding = const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
-    this.radius = 18,
-    this.intensity = 0.55,
-  });
-
-  final ArcanumMood mood;
-  final Widget child;
-  final EdgeInsets padding;
-  final double radius;
-  final double intensity;
-
-  @override
-  Widget build(BuildContext context) {
-    final br = BorderRadius.circular(radius);
-    return RepaintBoundary(
-      child: Container(
-        width: double.infinity,
-        padding: padding,
-        decoration: BoxDecoration(
-          borderRadius: br,
-          border: Border.all(color: mood.accent.withValues(alpha: 0.34)),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color.lerp(mood.edge, mood.core, intensity * 0.45)!,
-              mood.edge,
-            ],
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x4A000000),
-              blurRadius: 6,
-              offset: Offset(0, 3),
-            ),
-          ],
-        ),
-        child: child,
-      ),
-    );
-  }
-}
-
 /// "Tu siguiente paso": el titular de Hoy. Toma la atmósfera del planeta de la
 /// hora y ofrece UNA acción concreta. Toda la tarjeta es tocable; el botón
 /// repite la acción como afford explícito.
@@ -488,7 +448,7 @@ class _NextStepCard extends StatelessWidget {
     return _Tappable(
       borderRadius: 18,
       onTap: onTap,
-      child: _TodayCard(
+      child: TodayCard(
         mood: mood,
         radius: 18,
         intensity: 0.55,
@@ -499,11 +459,7 @@ class _NextStepCard extends StatelessWidget {
               children: [
                 Text(
                   '✶',
-                  style: TextStyle(
-                    color: mood.accent,
-                    fontSize: 15,
-                    height: 1,
-                  ),
+                  style: TextStyle(color: mood.accent, fontSize: 15, height: 1),
                 ),
                 const SizedBox(width: 8),
                 Expanded(child: Text(step.eyebrow, style: ArcanumText.label())),
