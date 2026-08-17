@@ -1,9 +1,13 @@
-"""Servicio del Oráculo IA de ARCANUM — Groq (groq SDK).
+"""Servicio de IA de ARCANUM — Groq (groq SDK).
 
-Modelo: mixtral-8x7b-32768 (free, sin cuota diaria estricta, baja latencia).
+Modelo: el de `_GROQ_MODEL`, ahora mismo llama-3.3-70b-versatile. No se repite
+aquí el nombre: este docstring decía `mixtral-8x7b-32768` mucho después de que
+la constante cambiara, y una documentación que miente es peor que ninguna.
+
 El parámetro `model` que llega del router se ignora internamente; la selección
-free/premium existe en config para futura migración. El system prompt estático
-se pasa como role 'system' en el array de mensajes (Groq soporta OpenAI-style).
+free/premium existe en config para futura migración. El prompt de sistema entra
+por parámetro —hay dos voces, la del Oráculo y la del horóscopo— y se pasa como
+role 'system' en el array de mensajes (Groq soporta OpenAI-style).
 Si falta GROQ_API_KEY, se mantiene el fallback de modo desarrollo.
 """
 from __future__ import annotations
