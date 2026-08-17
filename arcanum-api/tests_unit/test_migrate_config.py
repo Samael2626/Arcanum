@@ -19,19 +19,16 @@ def test_la_url_es_opcional():
 
 
 def test_sin_url_usa_la_del_entorno(monkeypatch):
-    import app.db.session as session
-
-    monkeypatch.setattr(session, "SQLALCHEMY_DATABASE_URL", FAKE_URL, raising=False)
+    # Se parchea DATABASE_URL, no un atributo del modulo: parchear el atributo
+    # con raising=False lo fabricaba y tapaba el ImportError durante meses.
+    monkeypatch.setenv("DATABASE_URL", FAKE_URL)
     config = migrate.get_alembic_config()
     assert config.get_main_option("sqlalchemy.url") == FAKE_URL
 
 
 def test_con_url_explicita_manda_esa(monkeypatch):
     """La URL pasada gana sobre el entorno: es el aislamiento del verificador."""
-    import app.db.session as session
-
-    monkeypatch.setattr(session, "SQLALCHEMY_DATABASE_URL",
-                        "postgresql://u:p@localhost:5432/no-usar", raising=False)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@localhost:5432/no-usar")
     config = migrate.get_alembic_config(FAKE_URL)
     assert config.get_main_option("sqlalchemy.url") == FAKE_URL
 

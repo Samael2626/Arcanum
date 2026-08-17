@@ -1,14 +1,14 @@
 """
 Admin endpoints (protegidos).
-- GET /admin/migrate/status â€” verifica estado de migraciones
-- POST /admin/migrate â€” ejecuta migraciones pendientes
-- POST /admin/migrate-direct â€” ejecuta migraciones con BD custom (parÃ¡metro URL)
+- GET /admin/migrate/status — verifica estado de migraciones
+- POST /admin/migrate — ejecuta migraciones pendientes
+- POST /admin/migrate-direct — ejecuta migraciones con BD custom (parámetro URL)
 """
 
 from fastapi import APIRouter, HTTPException, status, Header, Query
 from sqlalchemy import create_engine
 from app.core.config import settings
-from app.db.session import engine, get_pool_class
+from app.db.session import get_engine, get_pool_class
 from app.db.migrate import run_migrations, check_migration_status
 from app.api.deps import verify_admin_token
 
@@ -22,7 +22,7 @@ def get_migration_status(x_admin_token: str = Header(None)):
     Header: X-Admin-Token: <token>
     """
     verify_admin_token(x_admin_token)
-    result = check_migration_status(engine)
+    result = check_migration_status(get_engine())
     return result
 
 
@@ -37,7 +37,7 @@ def execute_migrations(x_admin_token: str = Header(None)):
     verify_admin_token(x_admin_token)
 
     # Primero, verifica estado actual
-    status_before = check_migration_status(engine)
+    status_before = check_migration_status(get_engine())
     if status_before.get("status") == "error":
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -45,7 +45,7 @@ def execute_migrations(x_admin_token: str = Header(None)):
         )
 
     # Ejecuta migraciones
-    result = run_migrations(engine)
+    result = run_migrations(get_engine())
 
     if result.get("status") == "error":
         raise HTTPException(
@@ -53,8 +53,8 @@ def execute_migrations(x_admin_token: str = Header(None)):
             detail=result.get("message"),
         )
 
-    # Verifica estado despuÃ©s
-    status_after = check_migration_status(engine)
+    # Verifica estado después
+    status_after = check_migration_status(get_engine())
 
     return {
         "status": "success",
@@ -70,22 +70,22 @@ def execute_migrations_direct(
     database_url: str = Query(None)
 ):
     """
-    Ejecuta migraciones contra BD custom (parÃ¡metro URL).
+    Ejecuta migraciones contra BD custom (parámetro URL).
     Query: database_url=postgresql://...
     Header: X-Admin-Token: <token>
 
-    Ãštil cuando Render env vars estÃ¡n cacheadas. Acepta cualquier connection string.
+    Útil cuando Render env vars están cacheadas. Acepta cualquier connection string.
     """
     verify_admin_token(x_admin_token)
 
     if not database_url:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="ParÃ¡metro requerido: database_url",
+            detail="Parámetro requerido: database_url",
         )
 
     try:
-        # Detecta poolclass (pgbouncer transaction mode â†’ NullPool)
+        # Detecta poolclass (pgbouncer transaction mode → NullPool)
         pool_class = get_pool_class(database_url)
         custom_engine = create_engine(
             database_url,
@@ -112,7 +112,7 @@ def execute_migrations_direct(
                 detail=result.get("message"),
             )
 
-        # Verifica despuÃ©s
+        # Verifica después
         custom_engine = create_engine(database_url, poolclass=pool_class, echo=False)
         status_after = check_migration_status(custom_engine)
         custom_engine.dispose()
@@ -125,6 +125,10 @@ def execute_migrations_direct(
             "database_url": database_url.split("@")[1] if "@" in database_url else "***",
         }
 
+    except HTTPException:
+        # Los 500 con detalle propio de arriba se estaban re-envolviendo aqui y
+        # perdian su mensaje. Pasan tal cual.
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -3,13 +3,30 @@ Ejecuta migraciones Alembic programáticamente (sin CLI).
 Útil para deploys donde network isolation impide alembic upgrade en startup.
 """
 
-import os
-import sys
 from pathlib import Path
-from sqlalchemy import text
+
 from alembic.config import Config
 from alembic.runtime.migration import MigrationContext
 from alembic.operations import Operations
+from alembic.script.revision import RevisionError
+from alembic.util.exc import CommandError
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
+
+# Criterio de excepciones de este modulo: solo lo que puede fallar por causas
+# de infraestructura se convierte en {"status": "error"}, porque es un resultado
+# esperable que el llamador debe poder leer y reportar.
+#
+#   SQLAlchemyError -> base caida, credenciales malas, timeout, choque de DDL
+#   CommandError    -> alembic no puede ejecutar (multiples heads, revision ausente)
+#   RevisionError   -> el arbol de revisiones esta roto o incompleto
+#   OSError         -> migrations/ o alembic.ini no accesibles en el deploy
+#
+# Todo lo demas (ImportError, AttributeError, TypeError, NameError, RuntimeError
+# por DATABASE_URL ausente) es un bug de programa o de configuracion y sube sin
+# tocar: envolverlo en un dict con HTTP 200 fue lo que mantuvo vivo meses un
+# ImportError en get_alembic_config.
+MIGRATION_FAILURES = (SQLAlchemyError, CommandError, RevisionError, OSError)
 
 
 def get_migrations_path() -> Path:
@@ -28,9 +45,9 @@ def get_alembic_config(database_url: str | None = None) -> Config:
     tocar la de produccion por herencia del entorno.
     """
     if database_url is None:
-        from app.db.session import SQLALCHEMY_DATABASE_URL
+        from app.db.session import get_database_url
 
-        database_url = SQLALCHEMY_DATABASE_URL
+        database_url = get_database_url()
 
     config = Config(str(get_migrations_path().parent / "alembic.ini"))
     config.set_main_option("sqlalchemy.url", database_url)
@@ -60,10 +77,10 @@ def run_migrations(engine) -> dict:
             "status": "success",
             "message": "Migraciones ejecutadas correctamente",
         }
-    except Exception as e:
+    except MIGRATION_FAILURES as e:
         return {
             "status": "error",
-            "message": f"Error en migraciones: {str(e)}",
+            "message": f"Error en migraciones: {e}",
         }
 
 
@@ -106,8 +123,8 @@ def check_migration_status(engine) -> dict:
                 "oracle_conversations",
             ],
         }
-    except Exception as e:
+    except MIGRATION_FAILURES as e:
         return {
             "status": "error",
-            "message": f"Error verificando migraciones: {str(e)}",
+            "message": f"Error verificando migraciones: {e}",
         }

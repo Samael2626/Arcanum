@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,7 +8,7 @@ from app.core.middleware import ProcessTimeMiddleware
 from app.core.exceptions import http_exception_handler, generic_exception_handler
 from app.db.seed import run_seeds
 from app.db.migrate import run_migrations
-from app.db.session import engine
+from app.db.session import get_engine
 from app.routers import auth, users, astral, materia, grimoire, oracle, tarot, admin, geo, library, reading, revenuecat, credits
 
 # Importar todos los modelos para que Alembic los detecte
@@ -18,11 +19,20 @@ from app.models import library as library_models  # noqa: F401  (colisiona con e
 from app.models import credit_ledger, usage_operation  # noqa: F401
 
 
+logger = logging.getLogger("arcanum.startup")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Migraciones automáticas al arrancar (idempotente)
     if settings.RUN_STARTUP_MIGRATIONS:
-        run_migrations(engine)
+        # No aborta el arranque (igual que los seeds), pero deja rastro: antes se
+        # descartaba el dict y una migracion fallida no aparecia en ningun log.
+        result = run_migrations(get_engine())
+        if result.get("status") == "success":
+            logger.info("migraciones al arranque OK")
+        else:
+            logger.error("migraciones al arranque fallaron: %s", result.get("message"))
     # Siembra datos de referencia (materia, tarot) al arrancar. Idempotente.
     if settings.RUN_STARTUP_SEEDS:
         run_seeds()
