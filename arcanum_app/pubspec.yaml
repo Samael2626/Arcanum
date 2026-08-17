@@ -76,6 +76,8 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
+    - assets/data/cities.txt
+    - assets/data/cities.bin
     - assets/models/
     - assets/engravings/manifest.json
     - assets/engravings/hierbas/

@@ -1,0 +1,5 @@
+# El catalogo de ciudades se lee posicion a posicion: si git le mete CRLF al
+# sacarlo del repo, cada nombre acaba con un \r pegado y el indice binario deja
+# de casar con el texto. Se guarda y se saca tal cual.
+arcanum_app/assets/data/cities.txt -text
+arcanum_app/assets/data/cities.bin binary
