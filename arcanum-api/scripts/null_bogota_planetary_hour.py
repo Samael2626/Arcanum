@@ -33,9 +33,16 @@
 #
 # ANTES DE CORRERLO CON --apply
 #
-# Verifica que el arreglo ESTA DESPLEGADO. Railway despliega desde
-# `feat/onboarding-5-pasos`. Si el fix no esta en esa rama, produccion sigue
-# escribiendo filas falsas y limpiar hacia atras es perseguir un blanco movil.
+# Verifica que el arreglo ESTA DESPLEGADO, y no que este commiteado.
+#
+# Railway despliega desde `release/p0a-beta`, con AUTO DEPLOY APAGADO: un push
+# a esa rama no despliega nada. (Este comentario decia `feat/onboarding-5-pasos`
+# y era falso; el error se propago a varios checkpoints antes de comprobarse
+# contra el panel.)
+#
+# Consecuencia practica: el instante del despliegue se ELIGE y se anota, no se
+# estima a posteriori. Si el fix no esta sirviendo, produccion sigue escribiendo
+# filas falsas y limpiar hacia atras es perseguir un blanco movil.
 
 from __future__ import annotations
 

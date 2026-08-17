@@ -40,3 +40,9 @@ arcanum-api/scripts/library_data/*
 # Reportes del arnes de calibracion de nombres: se versiona la herramienta,
 # no su salida.
 tools/names/out/
+
+# Salida de los scripts de mantenimiento: reportes de calibracion y, sobre
+# todo, el respaldo que escribe `null_bogota_planetary_hour.py` antes de anular
+# filas. Ese respaldo es la UNICA marcha atras de un borrado irreversible sobre
+# datos de produccion, y lleva ids reales: se guarda en disco, no en el repo.
+arcanum-api/scripts/out/
