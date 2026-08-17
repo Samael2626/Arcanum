@@ -152,9 +152,23 @@ este esquema; **respétalo**, no introduzcas `NUMERIC` para dos columnas nuevas)
 > Es la decisión de producto que evita romper a nadie y evita que la mayoría
 > teclee lo mismo dos veces. Nadie tiene que rellenar nada para seguir igual.
 
-**La migración `007_add_reading_library.py` existe pero no está en la rama de
-despliegue.** Comprueba contra qué revisión encadenas antes de escribir la tuya,
-o crearás dos cabezas de Alembic. Con dos cabezas, el arranque de Railway falla.
+**Encadena desde `007`.** Verificado con Alembic sobre esta rama:
+
+```
+cabezas: ['007']   una sola, cadena lineal 001 -> 002 -> ... -> 007
+```
+
+```python
+revision = "008"
+down_revision = "007"
+```
+
+> [!warning] Corrección de una versión anterior de este documento
+> Aquí decía que `007_add_reading_library.py` "no está en la rama de despliegue".
+> **Es falso**: está desde antes del 12 de agosto (entró en `379b546`, presente ya
+> en `84ad664`). El dato salió de leer mal una tabla del vault que comparaba dos
+> ramas. Se conserva la corrección porque el aviso mandaba a resolver un conflicto
+> de cabezas inexistente.
 
 ## El criterio único
 
