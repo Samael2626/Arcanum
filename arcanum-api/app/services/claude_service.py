@@ -1,14 +1,16 @@
 """Servicio de IA de ARCANUM — Groq (groq SDK).
 
-Modelo: el de `_GROQ_MODEL`, ahora mismo llama-3.3-70b-versatile. No se repite
-aquí el nombre: este docstring decía `mixtral-8x7b-32768` mucho después de que
-la constante cambiara, y una documentación que miente es peor que ninguna.
+Modelo: NO se escribe aquí. Sale de `settings.ORACLE_MODEL_FREE` /
+`settings.ORACLE_MODEL_PREMIUM` y entra por parámetro hasta la llamada. La
+constante hardcodeada anterior (`llama-3.3-70b-versatile`) se retiró del
+catálogo de Groq y tumbó producción con 404: un nombre de modelo fijo en el
+código es una bomba con fecha, y este docstring ya mintió una vez diciendo
+`mixtral-8x7b-32768` mucho después de que la constante cambiara.
 
-El parámetro `model` que llega del router se ignora internamente; la selección
-free/premium existe en config para futura migración. El prompt de sistema entra
-por parámetro —hay dos voces, la del Oráculo y la del horóscopo— y se pasa como
-role 'system' en el array de mensajes (Groq soporta OpenAI-style).
-Si falta GROQ_API_KEY, se mantiene el fallback de modo desarrollo.
+El prompt de sistema también entra por parámetro —hay dos voces, la del Oráculo
+y la del horóscopo— y se pasa como role 'system' en el array de mensajes (Groq
+soporta OpenAI-style). Si falta GROQ_API_KEY, se mantiene el fallback de modo
+desarrollo.
 """
 from __future__ import annotations
 
@@ -16,7 +18,8 @@ import logging
 import unicodedata
 from typing import Optional
 
-from groq import Groq
+from fastapi import HTTPException, status
+from groq import Groq, RateLimitError
 
 from app.core.config import settings
 from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT
@@ -27,7 +30,16 @@ logger = logging.getLogger("arcanum.oracle")
 _FALLBACK = "[Modo desarrollo] Respuesta del oráculo no disponible. Configure GROQ_API_KEY."
 _SILENCE = "[El oráculo guardó silencio. Intenta formular tu pregunta de nuevo.]"
 
-_GROQ_MODEL = "llama-3.3-70b-versatile"
+# Motivos de `diag["unavailable_reason"]`. Se distinguen a proposito: "sin
+# clave" es una instalacion incompleta (el cliente cae a su lectura local y ya),
+# mientras que truncado o vacio es una respuesta REAL del modelo que salio mal y
+# que hay que ver en los logs.
+UNAVAILABLE_NO_API_KEY = "no_api_key"
+UNAVAILABLE_TRUNCATED = "truncated"
+UNAVAILABLE_EMPTY = "empty"
+
+# Motivos que significan "el modelo respondio, pero lo que devolvio no sirve".
+INVALID_OUTPUT_REASONS = (UNAVAILABLE_TRUNCATED, UNAVAILABLE_EMPTY)
 
 # Cliente lazy: se crea una sola vez si hay API key.
 _client: Optional[Groq] = None
@@ -41,6 +53,12 @@ def _get_client() -> Optional[Groq]:
         return None
     _client = Groq(api_key=settings.GROQ_API_KEY)
     return _client
+
+
+def _unavailable(reason: str) -> dict:
+    """Diag de 'no hay lectura', con el motivo siempre presente."""
+    return {"available": False, "unavailable_reason": reason, "retried": False,
+            "missing_first": [], "missing_final": []}
 
 
 def _build_user_message(context: str, question: Optional[str],
@@ -64,23 +82,34 @@ def _build_user_message(context: str, question: Optional[str],
     return "\n\n".join(partes)
 
 
-# Umbral de "tirada grande": a partir de aquí el techo de tokens sube y la
-# temperatura baja para que el oráculo recorra TODAS las posiciones sin comprimir
-# ni divagar (Cruz Celta = 10).
+# Techos de salida.
+#
+# El modelo de razonamiento (gpt-oss-120b) gasta los tokens de RAZONAMIENTO
+# DENTRO de `max_tokens`: el techo no cubre solo el texto visible. Y ese coste
+# de razonamiento es casi FIJO — no escala con el numero de cartas —, asi que
+# una tirada de 3 gasta casi lo mismo que una Cruz Celta de 10. Por eso el suelo
+# de las tiradas chicas es generoso y la distancia con la Cruz Celta es corta:
+# lo unico que crece con las cartas es la parte visible del texto.
+#
+# Medido contra la API real de Groq, con el razonamiento por defecto:
+#   tarot chico   1024 -> truncaba 2 de 2, gasto real 2000+  -> suelo 3000
+#   cruz celta    2000 -> rozaba 1971,     gasto real 2594   -> suelo 3500
+#   horoscopo      700 -> truncaba 3 de 5, gasto real 1117   -> suelo 2000
+#
+# El suelo manda sobre `settings.CLAUDE_MAX_TOKENS`: ese valor se puede quedar
+# corto en el entorno y volver a truncar en silencio, que es justo lo que se
+# esta arreglando. El ajuste de entorno solo puede subir el techo, nunca bajarlo.
 _LARGE_SPREAD_MIN_CARDS = 7
-_LARGE_SPREAD_MAX_TOKENS = 2000
+_SMALL_SPREAD_MAX_TOKENS = 3000
+_LARGE_SPREAD_MAX_TOKENS = 3500
 _LARGE_SPREAD_TEMPERATURE = 0.4
 
 
 def _max_tokens_for(card_count: int) -> int:
-    """Colchón de salida proporcional al tamaño de la tirada.
-
-    Tiradas de <7 cartas (astral, 1-3 cartas) caben de sobra en el límite base.
-    Cruz Celta (10) necesita más para interpretar las 10 posiciones sin truncar.
-    """
-    if card_count >= _LARGE_SPREAD_MIN_CARDS:
-        return max(_LARGE_SPREAD_MAX_TOKENS, settings.CLAUDE_MAX_TOKENS)
-    return settings.CLAUDE_MAX_TOKENS
+    """Techo de salida segun el tamaño de la tirada, nunca por debajo del suelo."""
+    floor = (_LARGE_SPREAD_MAX_TOKENS if card_count >= _LARGE_SPREAD_MIN_CARDS
+             else _SMALL_SPREAD_MAX_TOKENS)
+    return max(floor, settings.CLAUDE_MAX_TOKENS)
 
 
 def _temperature_for(card_count: int) -> float:
@@ -120,29 +149,68 @@ def _missing_terms(expected_terms: list[str], text: str) -> list[str]:
     return [name for name in expected_terms if _norm(_term_key(name)) not in t]
 
 
-def _complete(client: Groq, system_prompt: str, user_content: str,
+def _complete(client: Groq, model: str, system_prompt: str, user_content: str,
               max_tokens: int, temperature: float) -> tuple[str, str, int]:
     """Una llamada al modelo. Devuelve (texto, finish_reason, completion_tokens).
 
-    El prompt de sistema entra por parámetro: es lo único que distingue la voz
-    del Oráculo de la del horóscopo, y ambas usan este mismo camino a Groq.
+    El modelo y el prompt de sistema entran AMBOS por parámetro: el primero
+    porque vive en config y no puede volver a quedarse fosilizado aquí, el
+    segundo porque es lo único que distingue la voz del Oráculo de la del
+    horóscopo, y ambas usan este mismo camino a Groq.
     """
-    resp = client.chat.completions.create(
-        model=_GROQ_MODEL,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_content},
-        ],
-        max_tokens=max_tokens,
-        temperature=temperature,
-    )
+    try:
+        resp = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content},
+            ],
+            max_tokens=max_tokens,
+            temperature=temperature,
+        )
+    except RateLimitError as exc:
+        # La cuenta tiene un techo de tokens por minuto muy bajo, asi que esto
+        # se toca de verdad. Se loguea el retry-after para poder dimensionarlo y
+        # se traduce a 429: un 500 haria que el cliente reintentase en bucle.
+        response = getattr(exc, "response", None)
+        headers = dict(response.headers) if response is not None else {}
+        logger.warning("Groq rate limit: retry_after=%s headers=%s",
+                       headers.get("retry-after"), headers)
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="El oráculo está saturado. Intenta de nuevo en unos minutos.",
+        ) from exc
     choice = resp.choices[0]
     return (choice.message.content or "", choice.finish_reason,
             resp.usage.completion_tokens if resp.usage else 0)
 
 
-def _generate_with_coverage(client: Groq, system_prompt: str, base_user: str,
-                            max_tokens: int, temperature: float,
+def _stamp_validity(diag: dict, content: str, finish_reason: str) -> None:
+    """Guarda de truncado: un texto cortado por el techo o vacío NO es resultado.
+
+    La guarda de cobertura de términos NO detecta esto y por eso hace falta esta
+    aparte: un texto puede haber nombrado ya todas las cartas y aun así acabar a
+    media frase cuando `finish_reason == "length"`. Se marca `available=False`
+    con un motivo propio —distinto del "sin clave"— para que el llamador NO lo
+    persista, y se loguea ruidoso porque significa que el techo se quedó corto.
+    """
+    if finish_reason == "length":
+        reason = UNAVAILABLE_TRUNCATED
+    elif not content.strip():
+        reason = UNAVAILABLE_EMPTY
+    else:
+        return
+    diag.update(available=False, unavailable_reason=reason)
+    logger.warning(
+        "Respuesta invalida del modelo (%s): finish_reason=%s max_tokens=%s "
+        "completion_tokens=%s",
+        reason, finish_reason, diag.get("max_tokens"),
+        diag.get("completion_tokens"),
+    )
+
+
+def _generate_with_coverage(client: Groq, model: str, system_prompt: str,
+                            base_user: str, max_tokens: int, temperature: float,
                             expected_terms: list[str],
                             build_notice) -> tuple[str, dict]:
     """Genera y GARANTIZA que el texto nombre lo que tenía que nombrar (guard D).
@@ -155,47 +223,47 @@ def _generate_with_coverage(client: Groq, system_prompt: str, base_user: str,
     `build_notice` recibe la lista de términos omitidos y devuelve la
     instrucción del reintento: es lo único que cambia entre una tirada y un
     horóscopo.
+
+    Al final, y para los DOS caminos (oráculo y horóscopo), pasa la guarda de
+    truncado: si el texto elegido salió cortado o vacío, `diag["available"]`
+    queda en False y el llamador no debe persistirlo.
     """
     diag: dict = {"available": True, "retried": False,
                   "missing_first": [], "missing_final": [],
                   "max_tokens": max_tokens, "temperature": temperature}
 
     content, finish, ctok = _complete(
-        client, system_prompt, base_user, max_tokens, temperature)
+        client, model, system_prompt, base_user, max_tokens, temperature)
     diag.update(finish_reason=finish, completion_tokens=ctok)
 
-    if not expected_terms:
-        return content, diag
+    if expected_terms:
+        missing = _missing_terms(expected_terms, content)
+        diag["missing_first"] = [_term_key(c) for c in missing]
+        if missing:
+            diag["retried"] = True
+            r_content, r_finish, r_ctok = _complete(
+                client, model, system_prompt,
+                f"{base_user}\n\n{build_notice(missing)}",
+                max_tokens, temperature)
+            r_missing = _missing_terms(expected_terms, r_content)
+            diag["missing_final"] = [_term_key(c) for c in r_missing]
+            if r_missing:
+                # Fail loud: tras el retry aun faltan terminos exigidos.
+                logger.warning(
+                    "El modelo omitió %d/%d términos exigidos tras retry: %s",
+                    len(r_missing), len(expected_terms), diag["missing_final"],
+                )
+            if len(r_missing) <= len(missing):
+                content, finish, ctok = r_content, r_finish, r_ctok
+                diag.update(finish_reason=finish, completion_tokens=ctok)
+            else:
+                diag["returned"] = "primer_intento_mas_cobertura"
 
-    missing = _missing_terms(expected_terms, content)
-    diag["missing_first"] = [_term_key(c) for c in missing]
-    if not missing:
-        return content, diag
-
-    diag["retried"] = True
-    r_content, r_finish, r_ctok = _complete(
-        client, system_prompt, f"{base_user}\n\n{build_notice(missing)}",
-        max_tokens, temperature)
-    r_missing = _missing_terms(expected_terms, r_content)
-    diag["missing_final"] = [_term_key(c) for c in r_missing]
-
-    if not r_missing:
-        diag.update(finish_reason=r_finish, completion_tokens=r_ctok)
-        return r_content, diag
-
-    # Fail loud: tras el retry aún faltan términos. Devolvemos el de más cobertura.
-    logger.warning(
-        "El modelo omitió %d/%d términos exigidos tras retry: %s",
-        len(r_missing), len(expected_terms), diag["missing_final"],
-    )
-    if len(r_missing) <= len(missing):
-        diag.update(finish_reason=r_finish, completion_tokens=r_ctok)
-        return r_content, diag
-    diag["returned"] = "primer_intento_mas_cobertura"
+    _stamp_validity(diag, content, finish)
     return content, diag
 
 
-def generate_reading(context: str, question: Optional[str] = None,
+def generate_reading(context: str, model: str, question: Optional[str] = None,
                      tarot: Optional[str] = None, card_count: int = 0,
                      expected_cards: Optional[list[str]] = None) -> tuple[str, dict]:
     """Genera la lectura y GARANTIZA cobertura de todas las posiciones (guard D).
@@ -205,13 +273,16 @@ def generate_reading(context: str, question: Optional[str] = None,
     retry aún falta ≥1: FAIL LOUD (log.warning) y devuelve el intento con MÁS
     cobertura. Nunca hace más de 1 retry ni omite en silencio.
 
+    Args:
+        model: el id de Groq a usar; sale de settings, no de una constante.
+
     Returns:
-        (texto, diag) — diag lleva métricas para observabilidad/harness.
+        (texto, diag) — diag lleva métricas para observabilidad/harness. Con
+        `diag["available"] is False` NO hay lectura válida.
     """
     client = _get_client()
     if client is None:
-        return _FALLBACK, {"available": False, "retried": False,
-                           "missing_first": [], "missing_final": []}
+        return _FALLBACK, _unavailable(UNAVAILABLE_NO_API_KEY)
 
     expected = expected_cards or []
 
@@ -223,7 +294,7 @@ def generate_reading(context: str, question: Optional[str] = None,
         )
 
     return _generate_with_coverage(
-        client, ORACLE_SYSTEM_PROMPT,
+        client, model, ORACLE_SYSTEM_PROMPT,
         _build_user_message(context, question, tarot),
         _max_tokens_for(card_count), _temperature_for(card_count),
         expected, notice,
@@ -231,9 +302,12 @@ def generate_reading(context: str, question: Optional[str] = None,
 
 
 # El horóscopo no tiene cartas, así que no puede escalar con `card_count`: son
-# dos párrafos disciplinados, no una lectura que crece con la tirada. Techo bajo
-# para que no divague y temperatura baja para que no se despegue de sus datos.
-_HOROSCOPE_MAX_TOKENS = 700
+# dos párrafos disciplinados, no una lectura que crece con la tirada. La
+# temperatura sigue baja para que no se despegue de sus datos; el techo, en
+# cambio, NO puede ser bajo, porque el razonamiento del modelo se come el
+# presupuesto antes de que empiece el texto (ver el bloque de techos de arriba:
+# 700 truncaba 3 de cada 5).
+_HOROSCOPE_MAX_TOKENS = 2000
 _HOROSCOPE_TEMPERATURE = 0.5
 
 
@@ -251,12 +325,11 @@ def generate_horoscope(sky: str, expected_terms: list[str]) -> tuple[str, dict]:
     Returns:
         (texto, diag). Con `diag["available"] is False` NO hay horóscopo: el
         llamador no debe persistir el texto de relleno como si fuera la lectura
-        del día.
+        del día. `diag["unavailable_reason"]` dice por qué.
     """
     client = _get_client()
     if client is None:
-        return _FALLBACK, {"available": False, "retried": False,
-                           "missing_first": [], "missing_final": []}
+        return _FALLBACK, _unavailable(UNAVAILABLE_NO_API_KEY)
 
     def notice(missing: list[str]) -> str:
         return (
@@ -265,15 +338,17 @@ def generate_horoscope(sky: str, expected_terms: list[str]) -> tuple[str, dict]:
             "del tránsito principal. Sin ellos el texto valdría para cualquiera."
         )
 
+    # El horoscopo es gratuito para todo el mundo: no hay tramo premium que
+    # elegir, asi que va siempre con el modelo FREE.
     return _generate_with_coverage(
-        client, HOROSCOPE_SYSTEM_PROMPT, sky,
+        client, settings.ORACLE_MODEL_FREE, HOROSCOPE_SYSTEM_PROMPT, sky,
         _HOROSCOPE_MAX_TOKENS, _HOROSCOPE_TEMPERATURE,
         expected_terms, notice,
     )
 
 
 def get_claude_response(context: str, question: Optional[str] = None,
-                        tarot: Optional[str] = None, model: str = "",  # noqa: ARG001
+                        tarot: Optional[str] = None, model: str = "",
                         card_count: int = 0,
                         expected_cards: Optional[list[str]] = None) -> str:
     """Consulta al oráculo Groq con contexto astral, tirada y pregunta opcionales.
@@ -282,17 +357,33 @@ def get_claude_response(context: str, question: Optional[str] = None,
         context: resumen astral server-side (build_oracle_context).
         question: pregunta en claro del consultante, o None (modo solo-tirada).
         tarot: bloque de la tirada (build_tarot_context), o None (modo solo-astral).
-        model: ignorado — mantenido por compatibilidad con el router.
+        model: id del modelo de Groq; el router lo saca de settings.
         card_count: nº de cartas de la tirada (0 si no hay). Escala max_tokens/temp.
         expected_cards: nombres de las cartas de la tirada; activan el guard de
             cobertura (garantiza que ninguna posición quede sin interpretar).
 
     Returns:
-        Texto de la respuesta del oráculo, o un mensaje de fallback/error amable.
+        Texto de la respuesta del oráculo, o el fallback de modo desarrollo.
+
+    Raises:
+        HTTPException: 429 si Groq limita la cuenta, 503 si el modelo respondió
+            algo inválido (truncado o vacío). En ambos casos la conversación NO
+            se persiste y el router libera la reserva.
     """
     try:
-        content, _diag = generate_reading(
-            context, question, tarot, card_count, expected_cards)
-        return content or _SILENCE
+        content, diag = generate_reading(
+            context, model or settings.ORACLE_MODEL_FREE, question, tarot,
+            card_count, expected_cards)
+    except HTTPException:
+        raise
     except Exception as e:  # noqa: BLE001
         return f"[El oráculo no pudo responder en este momento: {str(e)}]"
+
+    if diag.get("unavailable_reason") in INVALID_OUTPUT_REASONS:
+        # Truncado o vacio NO se persiste: quedaria como la lectura de esta
+        # persona, con su credito gastado y el texto cortado a media frase.
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="El oráculo no pudo completar la lectura. Inténtalo de nuevo.",
+        )
+    return content or _SILENCE

@@ -193,11 +193,12 @@ def horoscope(
             hs.expected_terms(sky["primary"]),
         )
         if not diag.get("available"):
-            # Sin modelo NO hay horóscopo. Capturarlo dejaria el texto de
-            # relleno como la lectura de esta persona durante todo el dia: un
-            # fallo disfrazado de resultado. Se libera y el cliente cae a su
-            # lectura local, que es real.
-            UsageService().reverse(db, reservation.operation)
+            # Sin modelo, o con una respuesta truncada o vacia, NO hay
+            # horóscopo. Capturarlo dejaria el texto de relleno (o uno cortado a
+            # media frase) como la lectura de esta persona durante todo el dia:
+            # un fallo disfrazado de resultado. El cliente cae a su lectura
+            # local, que es real. Liberar la reserva es cosa del `except` de
+            # abajo, que ya cubre TODA salida por excepcion.
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="El cielo no se puede leer ahora mismo. Inténtalo más tarde.",
@@ -212,9 +213,15 @@ def horoscope(
         }
         UsageService().capture(db, reservation.operation, result)
         return result
-    except HTTPException:
-        raise
     except Exception:
+        # CUALQUIER salida por excepcion libera la reserva, HTTPException
+        # incluida. Antes habia un `except HTTPException: raise` que la dejaba
+        # en estado "reserved" para siempre: `UsageService.reserve` responde 409
+        # "sigue en curso" mientras siga asi, y como la clave de idempotencia
+        # lleva la fecha local, esa persona se quedaba sin horoscopo hasta el dia
+        # siguiente. Con el 429 de Groq eso pasaria a ser frecuente.
+        # Un solo punto de liberacion: si cada raise liberase por su cuenta,
+        # volveria a haber caminos que se olvidan de hacerlo.
         UsageService().reverse(db, reservation.operation)
         raise
 
