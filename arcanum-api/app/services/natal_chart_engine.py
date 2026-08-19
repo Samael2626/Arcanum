@@ -237,6 +237,32 @@ def _applying_and_exact(t_lon: float, n_lon: float, angle: float,
     return True, (dt_utc + timedelta(days=dias)).isoformat()
 
 
+DAY = "day"
+NIGHT = "night"
+
+
+def sect_of(chart_data: dict) -> str | None:
+    """Secta de la carta: nacida de dia o de noche. None si no se puede saber.
+
+    Es el Sol sobre el horizonte o bajo el: casas 7 a 12 arriba, 1 a 6 abajo.
+    Ptolomeo la coloca en el capitulo VII del Libro I, ANTES de las casas y de
+    los aspectos, y de ella dependen que luminaria manda y cuanto aprieta cada
+    malefico. No se recalcula nada: la casa del Sol ya viene en `chart_data`.
+
+    Devuelve None en vez de suponer un valor. Una carta sin casa del Sol es una
+    carta de la que no sabemos la secta, y afirmarla al azar invertiria
+    justamente lo que se quiere afinar.
+    """
+    for punto in (chart_data or {}).get("planets") or []:
+        if punto.get("name") != "sun":
+            continue
+        casa = punto.get("house")
+        if not isinstance(casa, int) or not 1 <= casa <= 12:
+            return None
+        return DAY if casa >= 7 else NIGHT
+    return None
+
+
 def natal_targets(chart_data: dict) -> list[dict]:
     """Puntos natales que reciben transitos: planetas mas Ascendente y MC.
 

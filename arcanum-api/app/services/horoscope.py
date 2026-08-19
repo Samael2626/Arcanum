@@ -45,12 +45,14 @@ def build_sky(chart_data: dict, now: datetime) -> dict:
     """Transitos del momento contra la carta, ya ordenados y seleccionados."""
     objetivos = nce.natal_targets(chart_data or {})
     transitos = nce.compute_transits(objetivos, now)
-    seleccion = tw.select(transitos["aspects_to_natal"])
+    sect = nce.sect_of(chart_data or {})
+    seleccion = tw.select(transitos["aspects_to_natal"], sect=sect)
     return {
         "datetime": transitos["datetime"],
         "primary": seleccion["primary"],
         "supporting": seleccion["supporting"],
         "total_aspects": len(transitos["aspects_to_natal"]),
+        "sect": sect,
     }
 
 
@@ -80,6 +82,17 @@ def describe(sky: dict, now: datetime, day_ruler: str | None = None,
     y no se repiten aqui.
     """
     lineas = ["CIELO DE HOY PARA ESTA PERSONA"]
+
+    # La secta condiciona que luminaria manda y cuanto aprieta cada malefico, y
+    # ya ha pesado en la SELECCION de arriba. Se le dice al modelo para que el
+    # texto no contradiga el criterio con el que se eligio el transito.
+    sect = sky.get("sect")
+    if sect == nce.DAY:
+        lineas.append("SECTA: carta diurna (nacio con el Sol sobre el "
+                      "horizonte). Manda el Sol; Marte esta fuera de su secta.")
+    elif sect == nce.NIGHT:
+        lineas.append("SECTA: carta nocturna (nacio con el Sol bajo el "
+                      "horizonte). Manda la Luna; Saturno esta fuera de su secta.")
 
     principal = sky.get("primary")
     if principal:

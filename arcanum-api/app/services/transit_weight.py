@@ -8,8 +8,50 @@ vez de repartidos por el codigo.
 
 Todo es determinista: la misma entrada da la misma salida, para poder testearlo
 y para que el horoscopo de una persona no cambie a mitad del dia.
+
+DE DONDE VIENE ESTE MODELO, para que nadie lo lea como tradicion
+---------------------------------------------------------------
+Puntuar transitos y multiplicar coeficientes NO es practica tradicional. Su
+linaje es la astrologia de transitos del siglo XX -- Robert Hand, `Planets in
+Transit` (1976) y descendientes --, y los numeros de abajo son NUESTROS: no
+salen de ninguna fuente, son una traduccion a codigo de criterios cualitativos.
+Ptolomeo (Tetrabiblos I.27) describe la fuerza de un planeta por orientalidad,
+velocidad, directo o retrogrado y angularidad, sin una sola cifra. Lo unico
+numerico de la tradicion son las dignidades accidentales de Lilly, que puntuan
+la CONDICION de un planeta en una carta, no la importancia de un transito.
+
+Lo que si es antiguo es la pregunta: Brennan documenta que las profecciones
+sirven para "rank which transits are more important". La tradicion ordena, pero
+por ACTIVACION TEMPORAL (senor del ano, signo profectado); nosotros ordenamos
+por identidad del planeta. No es lo mismo.
+
+Huecos declarados, por si algun dia se cierran (orden de impacto estimado):
+  1. Profecciones y senor del ano: el mismo transito es evento un ano y ruido
+     otro, y quien lo decide no es el planeta que transita.
+  2. Transitos por CASA, no solo por aspecto: un planeta que entra en una casa
+     sin aspectar nada es invisible para este modulo.
+  3. Estaciones retrogradas sobre un punto natal (ya tenemos `speed`).
+  4. Orbes por planeta (moieties de Lilly), no por aspecto: hoy el Sol y
+     Pluton tienen el mismo alcance, cosa que no sostiene ninguna escuela.
+  5. Parte de la Fortuna: es el cuarto prorrogador de Ptolomeo y ni se calcula.
+  6. Condicion del planeta en ESA carta (dignidad), no solo su identidad.
+  7. Lunaciones y eclipses; en natal el punto ptolemaico es la sicigia prenatal.
+  8. Retorno lunar.
+  9. Los lotes.
+ 10. `_SEPARATING_FACTOR` no tiene ancestro: Lilly no debilita el separativo,
+     lo cambia de tiempo verbal (el asunto ya paso, y los grados que faltan
+     miden cuanto tarda en cerrarse). La horaria tradicional lo trata casi como
+     un "no"; la psicologica moderna sostiene que el efecto se vive DESPUES de
+     la exactitud y no es debil en absoluto. Nuestro 0.45 es una tercera cosa.
+
+La secta (abajo) es el primer paso para corregir el defecto de raiz que tenia
+este modulo: la tabla era identica para toda persona, cuando helenistica,
+medieval y moderna seria coinciden en que la fuerza de un transito es propiedad
+de ESA carta.
 """
 from __future__ import annotations
+
+from app.services.natal_chart_engine import DAY, NIGHT
 
 # Tempo de un planeta en transito. Gobierna cuanto dura lo que trae:
 #   slow -> capitulos de vida, se mueven en meses
@@ -61,6 +103,42 @@ _DEFAULT_WEIGHT = 0.5
 
 _DEFAULT_MAX_ORB = 3.0
 
+# ── Secta ─────────────────────────────────────────────────────────────────────
+#
+# Ptolomeo (Tetrabiblos III, sobre los prorrogadores): "de dia se prefiere el
+# Sol... si no, la Luna". Antes de esto las dos luminarias pesaban 1.00 para
+# todo el mundo, que es decir que da igual haber nacido de dia o de noche.
+#
+# Y la secta reparte los planetas en dos bandos: diurno (Sol, Jupiter, Saturno)
+# y nocturno (Luna, Venus, Marte). Un malefico EN su secta se comporta mejor;
+# fuera de ella aprieta. De ahi que Saturno sea mas duro de noche y Marte de
+# dia -- justo cuando cada uno esta fuera de bando.
+#
+# Los dos factores son NUESTROS, no de Ptolomeo: el da la direccion, no la
+# magnitud. Se eligen por debajo de 1.0 a proposito, para que la correccion
+# ATENUE lo que no toca y nunca amplifique por encima del techo: asi `weight_of`
+# sigue devolviendo un valor entre 0 y 1 y los pesos de las tablas se leen como
+# lo que son, un maximo.
+_SECT_MALEFICS = {"saturn": DAY, "mars": NIGHT}
+_IN_SECT_MALEFIC = 0.85       # el malefico esta en su bando: aprieta menos
+_LUMINARY_OFF_SECT = 0.85     # la luminaria que NO manda en esta carta
+_LUMINARY_BY_SECT = {DAY: "sun", NIGHT: "moon"}
+
+
+def _transit_factor(transit: str, sect: str | None) -> float:
+    """Correccion de secta sobre el planeta que transita."""
+    bando = _SECT_MALEFICS.get(transit)
+    if sect is None or bando is None:
+        return 1.0
+    return _IN_SECT_MALEFIC if bando == sect else 1.0
+
+
+def _natal_factor(natal: str, sect: str | None) -> float:
+    """Correccion de secta sobre la luminaria natal que recibe el transito."""
+    if sect is None or natal not in ("sun", "moon"):
+        return 1.0
+    return 1.0 if _LUMINARY_BY_SECT[sect] == natal else _LUMINARY_OFF_SECT
+
 
 def tempo_of(transit: str) -> str:
     """Tempo del planeta que transita. Lo desconocido se trata como rapido:
@@ -69,25 +147,34 @@ def tempo_of(transit: str) -> str:
     return entrada[1] if entrada else FAST
 
 
-def weight_of(aspect: dict) -> float:
+def weight_of(aspect: dict, sect: str | None = None) -> float:
     """Fuerza de un transito, entre 0 y 1.
 
-    Producto de cuatro cosas: lo cerca que esta de la exactitud, si se esta
-    formando o ya paso, el peso del planeta que transita y el del punto natal
-    que recibe.
+    Producto de lo cerca que esta de la exactitud, de si se esta formando o ya
+    paso, del peso del planeta que transita y del punto natal que recibe, y de
+    la correccion de secta.
+
+    `sect` puede faltar: sin ella el resultado es el de antes de que existiera,
+    que es lo que deben ver las cartas de las que no sabemos si son de dia o de
+    noche. Es un afinado sobre datos conocidos, nunca una suposicion.
     """
     max_orb = aspect.get("max_orb") or _DEFAULT_MAX_ORB
     orbe = min(abs(aspect.get("orb") or 0.0), max_orb)
     cercania = 1.0 - (orbe / max_orb) if max_orb else 0.0
 
-    w_transit = _TRANSIT_WEIGHT.get(aspect.get("transit", ""), (_DEFAULT_WEIGHT, FAST))[0]
-    w_natal = _NATAL_WEIGHT.get(aspect.get("natal", ""), _DEFAULT_WEIGHT)
+    transit = aspect.get("transit", "")
+    natal = aspect.get("natal", "")
+    w_transit = _TRANSIT_WEIGHT.get(transit, (_DEFAULT_WEIGHT, FAST))[0]
+    w_natal = _NATAL_WEIGHT.get(natal, _DEFAULT_WEIGHT)
     direccion = 1.0 if aspect.get("applying") else _SEPARATING_FACTOR
+
+    w_transit *= _transit_factor(transit, sect)
+    w_natal *= _natal_factor(natal, sect)
 
     return round(cercania * direccion * w_transit * w_natal, 6)
 
 
-def rank(aspects: list[dict]) -> list[dict]:
+def rank(aspects: list[dict], sect: str | None = None) -> list[dict]:
     """Los transitos ordenados de mas a menos fuerte, con su peso y su tempo.
 
     No muta la entrada. El desempate es por nombre para que el orden sea
@@ -95,7 +182,7 @@ def rank(aspects: list[dict]) -> list[dict]:
     llamadas, o el horoscopo cambiaria solo.
     """
     marcados = [
-        {**a, "weight": weight_of(a), "tempo": tempo_of(a.get("transit", ""))}
+        {**a, "weight": weight_of(a, sect), "tempo": tempo_of(a.get("transit", ""))}
         for a in aspects
     ]
     marcados.sort(
@@ -105,7 +192,8 @@ def rank(aspects: list[dict]) -> list[dict]:
     return marcados
 
 
-def select(aspects: list[dict], supporting: int = 2) -> dict:
+def select(aspects: list[dict], supporting: int = 2,
+           sect: str | None = None) -> dict:
     """Elige el titular del dia y las corrientes que lo acompañan.
 
     El titular es el transito mas fuerte. Para el acompañamiento se busca a
@@ -113,7 +201,7 @@ def select(aspects: list[dict], supporting: int = 2) -> dict:
     mismo durante meses sin una voz rapida al lado; y si manda la Luna, el dia
     se queda sin fondo. Si no hay de otro tempo, se sigue por peso.
     """
-    ordenados = rank(aspects)
+    ordenados = rank(aspects, sect)
     if not ordenados:
         return {"primary": None, "supporting": [], "rest": [], "all": []}
 
