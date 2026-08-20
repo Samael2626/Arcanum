@@ -190,7 +190,7 @@ def horoscope(
             hs.describe(sky, now,
                         day_ruler=us.day_ruler(current_user, now),
                         planetary_hour=us.planetary_hour(current_user, now)),
-            hs.expected_terms(sky["primary"]),
+            hs.expected_terms(sky),
         )
         if not diag.get("available"):
             # Sin modelo, o con una respuesta truncada o vacia, NO hay

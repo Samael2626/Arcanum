@@ -38,12 +38,15 @@ def test_sin_zona_o_con_zona_invalida_se_cae_a_utc_sin_reventar():
 
 
 def test_los_terminos_exigidos_son_los_dos_cuerpos_en_espanol():
-    primary = {"transit": "saturn", "natal": "ascendant", "aspect": "square"}
-    assert hs.expected_terms(primary) == ["Saturno", "Ascendente"]
+    # `expected_terms` pasa a recibir el cielo entero y no un transito suelto:
+    # ahora elige el carril del DIA, que es lo que hace diario a un horoscopo.
+    sky = {"today": {"transit": "saturn", "natal": "ascendant", "aspect": "square"},
+           "chapter": None}
+    assert hs.expected_terms(sky) == ["Saturno", "Ascendente"]
 
 
-def test_sin_transito_principal_no_se_exige_nada():
-    assert hs.expected_terms(None) == []
+def test_sin_ningun_transito_no_se_exige_nada():
+    assert hs.expected_terms({"today": None, "chapter": None}) == []
 
 
 def test_sin_transitos_se_le_prohibe_inventar_uno():

@@ -203,7 +203,29 @@ def select(aspects: list[dict], supporting: int = 2,
     """
     ordenados = rank(aspects, sect)
     if not ordenados:
-        return {"primary": None, "supporting": [], "rest": [], "all": []}
+        return {"primary": None, "supporting": [], "rest": [], "all": [],
+                "chapter": None, "today": None}
+
+    # Dos papeles con nombre, ademas del orden por fuerza.
+    #
+    # Medido sobre cuatro cartas reales y 180 dias: el mas fuerte es un planeta
+    # LENTO el 97% de los dias, Neptuno y Pluton solos se llevan el 78%, y una
+    # carta repitio el mismo primero 70 dias seguidos. La Luna no fue primera ni
+    # una vez en 720 dias-carta. Eso no es un error de la ponderacion -- un
+    # transito lento dura lo que dura --, pero convierte un texto diario en uno
+    # trimestral que se reescribe cada manana con otras palabras.
+    #
+    # La senal diaria SI existe y ya se calculaba: el conjunto de acompanantes
+    # cambia el 71% de los dias y los cinco rapidos aparecen. Estaba en la silla
+    # de atras, nada mas. Por eso se nombran los dos papeles en vez de dejar que
+    # "el mas fuerte" haga de titular:
+    #   chapter -> el lento mas fuerte. El fondo. CONTINUA, no llega.
+    #   today   -> el rapido mas fuerte. Lo que cambio hoy.
+    # Ninguno de los dos es "el importante": cual manda de verdad lo decidiria la
+    # activacion temporal (profecciones), que es el hueco 1 de la lista de
+    # arriba y no esta hecho. Esto es honestidad de estructura, no astrologia.
+    capitulo = next((a for a in ordenados if a["tempo"] == SLOW), None)
+    hoy = next((a for a in ordenados if a["tempo"] == FAST), None)
 
     principal, resto = ordenados[0], ordenados[1:]
     otro_tempo = [a for a in resto if a["tempo"] != principal["tempo"]]
@@ -213,8 +235,12 @@ def select(aspects: list[dict], supporting: int = 2,
     elegidos = {id(a) for a in acompanan}
 
     return {
+        # `primary` y `supporting` se mantienen tal cual: son parte del contrato
+        # que ya viaja al cliente y romperlos no aporta nada aqui.
         "primary": principal,
         "supporting": acompanan,
         "rest": [a for a in resto if id(a) not in elegidos],
         "all": ordenados,
+        "chapter": capitulo,
+        "today": hoy,
     }

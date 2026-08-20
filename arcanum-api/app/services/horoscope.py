@@ -29,15 +29,24 @@ def local_date(timezone_name: str | None, now: datetime) -> date:
     return now.astimezone(tz).date()
 
 
-def expected_terms(primary: dict | None) -> list[str]:
-    """Nombres en espanol que el texto DEBE contener: los dos cuerpos del
-    transito principal. Es lo que separa este horoscopo de uno de revista, y por
-    eso es lo que verifica el retry de cobertura."""
-    if not primary:
+def expected_terms(sky: dict) -> list[str]:
+    """Nombres en espanol que el texto DEBE contener, y por que esos.
+
+    Se exigen los dos cuerpos del transito de HOY, no los del capitulo. El
+    capitulo se repite semanas -- medido: hasta 70 dias seguidos --, asi que
+    exigirlo garantizaria que el texto nombre justo lo que no ha cambiado. Lo
+    que hace diario a un horoscopo es que nombre lo del dia.
+
+    Sin transito rapido se cae al capitulo: mejor exigir algo cierto que no
+    exigir nada, porque un texto que no nombra ningun cuerpo es exactamente el
+    horoscopo de revista que esto no quiere ser.
+    """
+    elegido = sky.get("today") or sky.get("chapter")
+    if not elegido:
         return []
     return [
-        nce.POINTS_ES.get(primary.get("transit", ""), primary.get("transit", "")),
-        nce.POINTS_ES.get(primary.get("natal", ""), primary.get("natal", "")),
+        nce.POINTS_ES.get(elegido.get("transit", ""), elegido.get("transit", "")),
+        nce.POINTS_ES.get(elegido.get("natal", ""), elegido.get("natal", "")),
     ]
 
 
@@ -51,6 +60,8 @@ def build_sky(chart_data: dict, now: datetime) -> dict:
         "datetime": transitos["datetime"],
         "primary": seleccion["primary"],
         "supporting": seleccion["supporting"],
+        "chapter": seleccion["chapter"],
+        "today": seleccion["today"],
         "total_aspects": len(transitos["aspects_to_natal"]),
         "sect": sect,
     }
@@ -94,23 +105,31 @@ def describe(sky: dict, now: datetime, day_ruler: str | None = None,
         lineas.append("SECTA: carta nocturna (nacio con el Sol bajo el "
                       "horizonte). Manda la Luna; Saturno esta fuera de su secta.")
 
-    principal = sky.get("primary")
-    if principal:
-        lineas.append("TRANSITO PRINCIPAL: " + _describe_aspect(principal))
+    # Dos carriles con el papel dicho, en vez de un "principal" que se lo lleva
+    # siempre el planeta lento y deja el texto igual durante semanas.
+    capitulo = sky.get("chapter")
+    hoy = sky.get("today")
+
+    if hoy:
+        lineas.append("LO DE HOY: " + _describe_aspect(hoy))
     else:
         lineas.append(
-            "TRANSITO PRINCIPAL: ninguno. No hay aspectos exactos a esta carta "
-            "hoy. Di que el cielo esta en calma sobre su carta y apoyate solo en "
-            "la luna y el regente del dia. NO inventes un transito."
+            "LO DE HOY: nada rapido toca su carta hoy. NO lo disimules: di que "
+            "la jornada esta tranquila sobre su carta y apoyate en la luna y el "
+            "regente del dia. NO inventes un transito."
         )
 
-    apoyos = sky.get("supporting") or []
-    if apoyos:
-        for a in apoyos:
-            lineas.append("CORRIENTE DE APOYO: " + _describe_aspect(a))
-    elif principal:
-        lineas.append("CORRIENTES DE APOYO: ninguna. No inventes una: cierra "
-                      "con la luna y el regente del dia.")
+    if capitulo:
+        lineas.append(
+            "CAPITULO ABIERTO (CONTINUA, NO EMPIEZA HOY): "
+            + _describe_aspect(capitulo)
+        )
+    else:
+        lineas.append("CAPITULO ABIERTO: ninguno. No inventes uno.")
+
+    if not hoy and not capitulo:
+        lineas.append("NO HAY NINGUN TRANSITO. No nombres ningun planeta en "
+                      "aspecto: no lo hay. Cielo en calma sobre su carta.")
 
     try:
         luna = lc.get_moon_info(now)
