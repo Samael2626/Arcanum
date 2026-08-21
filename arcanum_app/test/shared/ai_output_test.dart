@@ -223,4 +223,36 @@ void main() {
       expect(texto, contains('autorizaste'));
     });
   });
+
+  group('el aviso de práctica', () {
+    testWidgets('aparece cuando el texto nombra una planta', (tester) async {
+      await tester.pumpWidget(_wrap(
+        const AiOutput(
+          text: 'Unge la vela con aceite de romero antes de encenderla.',
+          surface: 'oraculo',
+        ),
+      ));
+      expect(find.textContaining('no las ingieras'), findsOneWidget);
+    });
+
+    testWidgets('NO aparece cuando no hay ninguna', (tester) async {
+      await tester.pumpWidget(_wrap(
+        const AiOutput(
+          text: 'Saturno cuadra tu Sol y pide límite.',
+          surface: 'horoscopo',
+        ),
+      ));
+      // Un aviso permanente que no viene a cuento se vuelve ruido de fondo y
+      // deja de leerse justo cuando importa.
+      expect(find.textContaining('no las ingieras'), findsNothing);
+    });
+
+    test('las plantas que de verdad envenenan están en la lista', () {
+      // El riesgo aqui no es una multa: es una intoxicacion.
+      for (final t in ['acónito', 'beleño', 'mandrágora', 'belladona']) {
+        expect(mentionsBotanical('Coloca $t sobre el altar.'), isTrue,
+            reason: '$t debería disparar el aviso');
+      }
+    });
+  });
 }

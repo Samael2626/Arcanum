@@ -35,6 +35,37 @@ const String kAiDisclosure =
     'simbólico y cultural: no sustituye orientación médica, psicológica, legal '
     'ni financiera.';
 
+/// Aviso de practica. Aparece SOLO cuando el texto nombra una planta o
+/// sustancia, para que no se vuelva ruido de fondo que nadie lee.
+///
+/// Existe porque ARCANUM decide a proposito NO amputar el lenguaje ritual —
+/// ungir, ahumar, banar, ofrendar son la practica misma, y un guardarrail que
+/// los bloquease ahogaria el producto. La contrapartida es este aviso.
+///
+/// Y no es papeleo: la tradicion que ARCANUM cita nombra aconito, beleno,
+/// mandragora y digital, que son venenos reales. El riesgo aqui no es una
+/// multa, es una intoxicacion.
+const String kPracticeNotice =
+    'Las plantas y sustancias que se nombran son correspondencias simbólicas de '
+    'la tradición, no remedios. Varias son tóxicas: no las ingieras ni las '
+    'apliques sobre la piel.';
+
+/// Plantas de la tradicion cuya sola mencion dispara el aviso. La lista prioriza
+/// las que de verdad envenenan; las inocuas (romero, laurel) entran porque el
+/// aviso tampoco estorba cuando aparecen en un rito de bano o infusion.
+const List<String> kBotanicals = [
+  'acónito', 'aconito', 'beleño', 'beleno', 'mandrágora', 'mandragora',
+  'digital', 'belladona', 'cicuta', 'estramonio', 'ruda', 'artemisa',
+  'ajenjo', 'poleo', 'tejo', 'adelfa', 'muérdago', 'muerdago',
+  'romero', 'laurel', 'manzanilla', 'salvia', 'valeriana', 'lavanda',
+  'canela', 'hierba', 'infusión', 'infusion', 'tintura', 'ungüento', 'unguento',
+];
+
+bool mentionsBotanical(String text) {
+  final t = text.toLowerCase();
+  return kBotanicals.any((b) => t.contains(b));
+}
+
 /// Motivos de reporte. Cerrados a proposito: texto libre sin acotar seria otro
 /// campo que moderar, y la persona que reporta quiere terminar rapido.
 const Map<String, String> kReportReasons = {
@@ -76,9 +107,25 @@ class AiOutput extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: Text(
-                kAiDisclosure,
-                style: ArcanumText.body(11, color: ArcanumColors.ivoryMuted),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    kAiDisclosure,
+                    style: ArcanumText.body(11, color: ArcanumColors.ivoryMuted),
+                  ),
+                  if (mentionsBotanical(text)) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      kPracticeNotice,
+                      style: ArcanumText.body(
+                        11,
+                        color: ArcanumColors.burgundyLight,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
             const SizedBox(width: 8),
