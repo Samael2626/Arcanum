@@ -9,7 +9,7 @@ from app.core.exceptions import http_exception_handler, generic_exception_handle
 from app.db.seed import run_seeds
 from app.db.migrate import run_migrations
 from app.db.session import get_engine
-from app.routers import auth, users, astral, materia, grimoire, oracle, tarot, admin, geo, library, reading, revenuecat, credits
+from app.routers import auth, users, astral, materia, grimoire, oracle, tarot, admin, geo, library, reading, reports, revenuecat, credits
 
 # Importar todos los modelos para que Alembic los detecte
 from app.models import user, refresh_token, natal_chart, grimoire_entry  # noqa: F401
@@ -79,6 +79,7 @@ app.include_router(library.router, prefix="/library", tags=["library"])
 # Separado de /library a proposito: alli vive la obra publica, aqui la relacion
 # privada del usuario con lo que lee. Todo /reading exige autenticacion.
 app.include_router(reading.router, prefix="/reading", tags=["reading"])
+app.include_router(reports.router, prefix="/reports", tags=["reports"])
 app.include_router(revenuecat.router, prefix="/webhooks", tags=["webhooks"])
 
 

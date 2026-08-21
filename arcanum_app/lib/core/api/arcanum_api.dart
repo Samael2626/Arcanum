@@ -191,6 +191,26 @@ class ArcanumApi {
     await _dio.delete('/grimoire/$id');
   }
 
+  /// Reporta una salida de IA como ofensiva o peligrosa.
+  ///
+  /// Google Play exige que se pueda reportar SIN salir de la app, asi que esto
+  /// no puede ser un enlace de correo. Se manda un fragmento acotado y nunca
+  /// el texto entero: un reporte no es excusa para volcar la lectura de
+  /// alguien en un sitio que no esta pensado para guardarla.
+  Future<void> reportContent({
+    required String surface,
+    required String reason,
+    String? excerpt,
+    String? note,
+  }) async {
+    await _dio.post('/reports/content', data: {
+      'surface': surface,
+      'reason': reason,
+      if (excerpt != null) 'excerpt': excerpt.substring(0, excerpt.length.clamp(0, 400)),
+      if (note != null && note.isNotEmpty) 'note': note,
+    });
+  }
+
   /// Tira de tarot. spread: 'three_card' | 'celtic_cross'. Requiere auth.
   /// Devuelve la sesión guardada (cartas en data['cards_drawn']['cards']).
   Future<Map<String, dynamic>> tarotDraw(

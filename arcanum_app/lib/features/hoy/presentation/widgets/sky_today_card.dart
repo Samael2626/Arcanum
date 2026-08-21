@@ -14,6 +14,7 @@ import '../../../../shared/widgets/info_dot.dart';
 import '../../hoy_lore.dart';
 import '../../sky_today_state.dart';
 import 'today_card.dart';
+import '../../../../shared/widgets/ai_output.dart';
 
 /// "Tu cielo de hoy": el transito dominante de esta persona, leido por la IA.
 ///
@@ -111,7 +112,11 @@ class _Reading extends StatelessWidget {
           _TransitHeadline(primary),
           const SizedBox(height: 14),
         ],
-        Text(text, style: ArcanumText.body(15)),
+        AiOutput(
+          text: text,
+          surface: 'horoscopo',
+          child: Text(text, style: ArcanumText.body(15)),
+        ),
       ],
     );
   }

@@ -13,6 +13,8 @@ import '../../shared/widgets/gold_button.dart';
 import '../../shared/widgets/login_prompt.dart';
 import 'tarot_learn.dart';
 import 'widgets/tarot_card.dart';
+import '../../shared/widgets/ai_output.dart';
+import '../../core/consent/ai_consent.dart';
 
 const _spreads = <(String, String)>[
   ('three_card', 'Tres cartas'),
@@ -281,6 +283,11 @@ class _OracleViewState extends ConsumerState<_OracleView> {
   Future<void> _askIa() async {
     final sessionId = _sessionId;
     if (sessionId == null) return;
+    // El permiso se pide ANTES de mandar nada. Si no lo da, no se consulta:
+    // pedir permiso despues de enviar es avisar, no consentir.
+    if (!await ensureAiConsent(context)) return;
+    if (!mounted) return;
+
     final key = _oracleIdempotencyKey ??= IdempotencyKey.create();
     final question = _question.text.trim();
     setState(() {
@@ -452,7 +459,11 @@ class _OracleViewState extends ConsumerState<_OracleView> {
                 constraints: const BoxConstraints(maxHeight: 420),
                 child: Scrollbar(
                   child: SingleChildScrollView(
+                    child: AiOutput(
+                    text: _iaReply!,
+                    surface: 'oraculo',
                     child: Text(_iaReply!, style: ArcanumText.body(16)),
+                  ),
                   ),
                 ),
               ),
