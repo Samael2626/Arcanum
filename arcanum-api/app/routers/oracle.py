@@ -1,4 +1,5 @@
 """Endpoints del Oráculo: tiradas de tarot y consulta ritual con IA Groq."""
+import logging
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -27,8 +28,11 @@ from app.db.session import get_db
 from app.domain.entities import UserEntity
 from app.schemas.divination_session import DivinationSessionCreate, DivinationSessionResponse
 from app.schemas.oracle_conversation import OracleConversationResponse
+from app.services import safety
 from app.services.claude_service import get_claude_response
 from app.services.oracle_context import build_oracle_context, build_tarot_context
+
+logger = logging.getLogger("arcanum.oracle")
 
 router = APIRouter(tags=["oracle"])
 
@@ -94,6 +98,17 @@ def ritual_ia(
 ):
     if not body.question and body.divination_session_id is None:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Envía una pregunta, un divination_session_id, o ambos.")
+
+    # Guardarrail de entrada, ANTES de reservar cuota: una pregunta que no se va
+    # a responder no puede costarle una consulta a nadie. Y antes de llamar al
+    # modelo, que es lo que la AUP de Anthropic exige para los dominios que
+    # requieren revision por un profesional cualificado. La crisis manda sobre
+    # todo lo demas: ahi no hay lectura simbolica que valga, hay derivacion.
+    motivo = safety.screen_question(body.question)
+    if motivo is not None:
+        logger.warning("Consulta rechazada por guardarrail de entrada: %s", motivo)
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY, safety.message_for(motivo))
 
     natal_chart = natal_repo.get_by_user_id(current_user.id)
     if natal_chart is None:

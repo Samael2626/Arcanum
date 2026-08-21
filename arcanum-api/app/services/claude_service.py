@@ -22,6 +22,7 @@ from fastapi import HTTPException, status
 from groq import Groq, RateLimitError
 
 from app.core.config import settings
+from app.services import safety
 from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT
 from app.services.oracle_prompt import ORACLE_SYSTEM_PROMPT
 
@@ -37,6 +38,9 @@ _SILENCE = "[El oráculo guardó silencio. Intenta formular tu pregunta de nuevo
 UNAVAILABLE_NO_API_KEY = "no_api_key"
 UNAVAILABLE_TRUNCATED = "truncated"
 UNAVAILABLE_EMPTY = "empty"
+# El modelo respondio y lo que dijo cruza un dominio que ARCANUM no puede
+# atender: salud, legal, finanzas o crisis. No es un fallo tecnico.
+UNAVAILABLE_UNSAFE = "unsafe"
 
 # Motivos que significan "el modelo respondio, pero lo que devolvio no sirve".
 INVALID_OUTPUT_REASONS = (UNAVAILABLE_TRUNCATED, UNAVAILABLE_EMPTY)
@@ -185,6 +189,22 @@ def _complete(client: Groq, model: str, system_prompt: str, user_content: str,
             resp.usage.completion_tokens if resp.usage else 0)
 
 
+def _stamp_safety(diag: dict, content: str) -> None:
+    """Guardarrail de salida: el modelo pudo obedecer el prompt y aun asi cruzar.
+
+    Se marca como NO disponible, igual que un texto truncado, para que el
+    llamador no lo persista: un consejo de salud guardado como la lectura del
+    dia queda ahi hasta que cambie la fecha. Se loguea el motivo porque un
+    bloqueo silencioso impide saber si el prompt se esta degradando.
+    """
+    motivo = safety.screen_output(content)
+    if motivo is None:
+        return
+    diag.update(available=False, unavailable_reason=UNAVAILABLE_UNSAFE,
+                unsafe_reason=motivo)
+    logger.warning("Salida bloqueada por guardarrail: dominio=%s", motivo)
+
+
 def _stamp_validity(diag: dict, content: str, finish_reason: str) -> None:
     """Guarda de truncado: un texto cortado por el techo o vacío NO es resultado.
 
@@ -260,6 +280,8 @@ def _generate_with_coverage(client: Groq, model: str, system_prompt: str,
                 diag["returned"] = "primer_intento_mas_cobertura"
 
     _stamp_validity(diag, content, finish)
+    if diag.get("available"):
+        _stamp_safety(diag, content)
     return content, diag
 
 
@@ -379,6 +401,14 @@ def get_claude_response(context: str, question: Optional[str] = None,
     except Exception as e:  # noqa: BLE001
         return f"[El oráculo no pudo responder en este momento: {str(e)}]"
 
+    if diag.get("unavailable_reason") == UNAVAILABLE_UNSAFE:
+        # Cruzo un dominio que ARCANUM no puede atender. NO es un fallo tecnico,
+        # asi que no se ofrece reintentar: reintentar lo mismo daria lo mismo.
+        # Tampoco se persiste, y el router libera la reserva por el `except`.
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=safety.message_for(diag.get("unsafe_reason") or safety.HEALTH),
+        )
     if diag.get("unavailable_reason") in INVALID_OUTPUT_REASONS:
         # Truncado o vacio NO se persiste: quedaria como la lectura de esta
         # persona, con su credito gastado y el texto cortado a media frase.
