@@ -39,6 +39,40 @@ def test_el_simbolismo_legitimo_no_se_bloquea(texto):
     assert safety.screen_output(texto) is None
 
 
+# El rito es el corazon del producto: el prompt del Oraculo PIDE cerrar con una
+# orientacion ritual concreta. La primera version de este filtro bloqueaba
+# "aplica unas gotas de aceite sobre la vela", que es exactamente eso.
+RITUALES = [
+    "Aplica unas gotas de aceite de romero sobre la vela antes de encenderla.",
+    "Unge la vela con 3 gotas de aceite de oliva.",
+    "Aplica el incienso en el pebetero y deja que el humo cubra el papel.",
+    "Bebe una infusión de manzanilla mientras contemplas la llama.",
+    "Toma un puñado de sal y trázala en el umbral.",
+    "Toma el sigilo entre las manos y respira hondo.",
+    "Aplica ceniza en la frente como cierre del rito.",
+    "Enciende una vela roja al anochecer y quema el papel.",
+]
+
+
+@pytest.mark.parametrize("texto", RITUALES)
+def test_el_lenguaje_ritual_no_se_confunde_con_posologia(texto):
+    """Aplicar algo a un OBJETO es rito; aplicárselo al CUERPO es posología."""
+    assert safety.screen_output(texto) is None
+
+
+@pytest.mark.parametrize("texto", [
+    "Toma tres gotas en ayunas cada mañana.",
+    "Bebe 15 ml de la tintura antes de dormir.",
+    "Tómate dos cápsulas al día.",
+    "Aplícate la pomada en la zona afectada.",
+    "Úntate el aceite en la herida.",
+    "Inhala el vapor para despejar las vías.",
+    "Toma 500 mg de valeriana.",
+])
+def test_la_posologia_de_verdad_si_se_bloquea(texto):
+    assert safety.screen_output(texto) == safety.HEALTH
+
+
 @pytest.mark.parametrize("pregunta", [
     "¿Qué me dice el cielo sobre mi trabajo?",
     "Estoy en un duelo, ¿qué puedo mirar?",

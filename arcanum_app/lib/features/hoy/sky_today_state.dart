@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../core/consent/ai_consent.dart';
 
 /// Por que no hay horoscopo, y que se puede hacer al respecto.
 ///
@@ -22,10 +23,15 @@ enum SkyTodayFailure {
 
   /// No se llego al servidor. Tambien aqui la lectura local sirve.
   sinRed,
+
+  /// La persona no autorizo mandar sus datos al proveedor de IA. No es un
+  /// fallo: es una decision suya, y se respeta sin insistir.
+  sinConsentimiento,
 }
 
 /// Clasifica el fallo mirando el codigo, no el texto del mensaje.
 SkyTodayFailure classifySkyFailure(Object error) {
+  if (error is ConsentDeclined) return SkyTodayFailure.sinConsentimiento;
   if (error is DioException) {
     final status = error.response?.statusCode;
     final rawDetail = error.response?.data is Map
@@ -68,6 +74,9 @@ String skyFailureMessage(SkyTodayFailure failure) {
       return 'La lectura del cielo no está disponible ahora mismo.';
     case SkyTodayFailure.sinRed:
       return 'Sin conexión: esto es lo que dice tu cielo sin ella.';
+    case SkyTodayFailure.sinConsentimiento:
+      return 'No autorizaste enviar tus datos para la lectura interpretada. '
+          'Esto es lo que dice tu cielo sin ella.';
   }
 }
 
@@ -76,9 +85,13 @@ String skyFailureMessage(SkyTodayFailure failure) {
 ///
 /// Cuando falta la carta, faltan los datos o caduco la sesion no hay transitos
 /// que leer, y ofrecer una lectura seria inventarla.
+/// Sin consentimiento tambien: los transitos se calculan en el dispositivo y no
+/// salen de el, asi que la lectura local es exactamente lo que esa persona
+/// autorizo. Negarsela ademas seria castigar la decision.
 bool allowsLocalReading(SkyTodayFailure failure) =>
     failure == SkyTodayFailure.cieloNoLegible ||
-    failure == SkyTodayFailure.sinRed;
+    failure == SkyTodayFailure.sinRed ||
+    failure == SkyTodayFailure.sinConsentimiento;
 
 /// A donde lleva el boton de arreglar esto, o null si no hay nada que la
 /// persona pueda hacer salvo reintentar.
@@ -92,6 +105,7 @@ String? skyFailureRoute(SkyTodayFailure failure) {
       return '/login';
     case SkyTodayFailure.cieloNoLegible:
     case SkyTodayFailure.sinRed:
+    case SkyTodayFailure.sinConsentimiento:
       return null;
   }
 }

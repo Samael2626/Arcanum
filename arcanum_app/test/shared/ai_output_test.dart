@@ -4,6 +4,7 @@
 /// que se pueda reportar sin salir de la app, y que el consentimiento no se
 /// pueda dar por omision. Eso ultimo es lo que separa consentir de no negarse.
 import 'package:arcanum_app/core/consent/ai_consent.dart';
+import 'package:arcanum_app/features/hoy/sky_today_state.dart';
 import 'package:arcanum_app/shared/widgets/ai_output.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -194,6 +195,32 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(resultado, isFalse);
+    });
+  });
+
+  group('la puerta del consentimiento', () {
+    setUp(() => SharedPreferences.setMockInitialValues({}));
+
+    test('sin permiso, el horóscopo es lectura local y no un error de red',
+        () {
+      // El horoscopo manda fecha, hora y lugar de nacimiento fuera. Antes se
+      // llamaba en el inicializador del campo: los datos salian del telefono
+      // antes de que nadie preguntase. Se detecto revisando, no en pruebas.
+      const declinado = ConsentDeclined();
+      final fallo = classifySkyFailure(declinado);
+
+      expect(fallo, SkyTodayFailure.sinConsentimiento);
+      // Los transitos se calculan en el dispositivo: la lectura local es
+      // exactamente lo que esa persona SI autorizo.
+      expect(allowsLocalReading(fallo), isTrue);
+      // Y no se le manda a ninguna pantalla a "arreglarlo": no hay nada roto.
+      expect(skyFailureRoute(fallo), isNull);
+    });
+
+    test('el mensaje no culpa a la conexión', () {
+      final texto = skyFailureMessage(SkyTodayFailure.sinConsentimiento);
+      expect(texto.toLowerCase(), isNot(contains('conexión')));
+      expect(texto, contains('autorizaste'));
     });
   });
 }

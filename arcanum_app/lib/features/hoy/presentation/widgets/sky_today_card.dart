@@ -15,6 +15,7 @@ import '../../hoy_lore.dart';
 import '../../sky_today_state.dart';
 import 'today_card.dart';
 import '../../../../shared/widgets/ai_output.dart';
+import '../../../../core/consent/ai_consent.dart';
 
 /// "Tu cielo de hoy": el transito dominante de esta persona, leido por la IA.
 ///
@@ -31,9 +32,22 @@ class SkyTodayCard extends ConsumerStatefulWidget {
 
 class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
   late final ArcanumApi _api = ref.read(arcanumApiProvider);
-  late Future<Map<String, dynamic>> _future = _api.horoscope();
+  late Future<Map<String, dynamic>> _future = _cargar();
 
-  void _retry() => setState(() => _future = _api.horoscope());
+  /// Pide permiso ANTES de llamar. El horoscopo manda fecha, hora y lugar de
+  /// nacimiento a un proveedor de IA de terceros, asi que cae de lleno en
+  /// Apple 5.1.2(i): divulgar y obtener permiso explicito ANTES de compartir.
+  ///
+  /// Antes esto llamaba a `_api.horoscope()` directamente en el inicializador
+  /// del campo, o sea que los datos salian del telefono antes de que nadie
+  /// preguntase nada. Se detecto revisando, no en pruebas.
+  Future<Map<String, dynamic>> _cargar() async {
+    if (!mounted) throw const ConsentDeclined();
+    if (!await ensureAiConsent(context)) throw const ConsentDeclined();
+    return _api.horoscope();
+  }
+
+  void _retry() => setState(() => _future = _cargar());
 
   @override
   Widget build(BuildContext context) {
@@ -292,6 +306,10 @@ class _FailureState extends ConsumerState<_Failure> {
       case SkyTodayFailure.cieloNoLegible:
       case SkyTodayFailure.sinRed:
         return 'Reintentar';
+      case SkyTodayFailure.sinConsentimiento:
+        // No dice "reintentar": lo que hay que rehacer es la decision, y
+        // llamarlo reintento la disfrazaria de fallo tecnico.
+        return 'Revisar el permiso';
     }
   }
 }

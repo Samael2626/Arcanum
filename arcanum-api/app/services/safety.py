@@ -119,10 +119,22 @@ _OUT_FORBIDDEN = [
     (r"\b(cura|curara|sana|sanara|elimina|previene)\s+(el|la|los|las|tu|su)\s+"
      r"(cancer|diabetes|depresion|ansiedad|enfermedad|dolor|infeccion|tumor)\b", HEALTH),
     (r"\bte\s+(curara|sanara|aliviara)\b", HEALTH),
-    # posologia
-    (r"\b(toma|tomate|bebe|ingiere|aplica|aplicate)\s+.{0,30}\b"
-     r"(gotas|mg|gramos|cucharadas|veces\s+al\s+dia|en\s+ayunas)\b", HEALTH),
-    (r"\b\d+\s*(mg|ml|gotas|gramos)\b", HEALTH),
+    # Posologia. El corte es INGESTA o CUERPO, no la cantidad a secas: un rito
+    # que unge una vela con tres gotas de aceite es contenido central de
+    # ARCANUM, y la primera version de este filtro lo bloqueaba. "Aplica" sobre
+    # un objeto (vela, incienso, papel, sigilo) es ritual; sobre una persona es
+    # posologia. Por eso el reflexivo (`aplicate`, `untate`) va aparte del
+    # transitivo, y `gotas` o `gramos` solos ya no bastan.
+    (r"\b(toma|tomate|bebe|bebete|ingiere|traga)\s+.{0,30}\b"
+     r"(gotas|mg|ml|gramos|cucharad\w*|pastillas?|capsulas?|comprimidos?|"
+     r"veces\s+al\s+dia|"
+     r"en\s+ayunas|antes\s+de\s+dormir)\b", HEALTH),
+    (r"\b(aplicate|untate|frotate|inhala|inyecta)\b", HEALTH),
+    (r"\b(en|sobre)\s+(la\s+herida|la\s+piel|la\s+llaga|el\s+ojo)\b", HEALTH),
+    # mg y ml son unidades clinicas: no aparecen en un rito.
+    (r"\b\d+\s*(mg|ml|mililitros|miligramos)\b", HEALTH),
+    (r"\b(dos|tres|cuatro)?\s*veces\s+al\s+dia\s+.{0,20}\b(toma|bebe|ingiere)\b",
+     HEALTH),
     # sustituir tratamiento — prohibicion absoluta, sin excepcion
     (r"\ben\s+(lugar|vez)\s+de\s+(tu|su|el|la)\s+"
      r"(medicamento|medicacion|tratamiento|medico)\b", HEALTH),

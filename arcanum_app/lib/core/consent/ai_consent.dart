@@ -81,6 +81,15 @@ class AiConsent {
   }
 }
 
+/// La persona no dio (o retiro) el permiso. No es un error tecnico: es una
+/// respuesta valida, y la pantalla debe tratarla como tal en vez de enseniar
+/// "no se pudo conectar", que seria mentir sobre lo que paso.
+class ConsentDeclined implements Exception {
+  const ConsentDeclined();
+  @override
+  String toString() => 'ConsentDeclined';
+}
+
 /// Pide el consentimiento si hace falta. Devuelve true si se puede continuar.
 ///
 /// Se llama ANTES de la primera consulta que manda datos fuera. Si la persona
