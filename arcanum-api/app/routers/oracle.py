@@ -100,10 +100,9 @@ def ritual_ia(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Envía una pregunta, un divination_session_id, o ambos.")
 
     # Guardarrail de entrada, ANTES de reservar cuota: una pregunta que no se va
-    # a responder no puede costarle una consulta a nadie. Y antes de llamar al
-    # modelo, que es lo que la AUP de Anthropic exige para los dominios que
-    # requieren revision por un profesional cualificado. La crisis manda sobre
-    # todo lo demas: ahi no hay lectura simbolica que valga, hay derivacion.
+    # a responder no puede costarle una consulta a nadie, y ademas no llega al
+    # modelo. La crisis manda sobre todo lo demas: ahi no hay lectura simbolica
+    # que valga, hay derivacion. El porque de cada dominio vive en `safety`.
     motivo = safety.screen_question(body.question)
     if motivo is not None:
         logger.warning("Consulta rechazada por guardarrail de entrada: %s", motivo)

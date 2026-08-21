@@ -3,9 +3,15 @@
 Constante versionada (NO en BD). Destilado de fuentes clásicas del vault:
 Agrippa (*De Occulta Philosophia*), Culpeper (*Complete Herbal*), la teoría
 humoral de los cuatro elementos y las correspondencias planetarias
-(sympatheia / synthemata). El texto es deliberadamente extenso para que el
-bloque estático supere el mínimo cacheable (~1024 tokens) de Anthropic y se
-beneficie del prompt caching efímero.
+(sympatheia / synthemata). El texto es deliberadamente extenso: hace falta esa
+densidad para sostener la voz sin que el modelo derive al registro genérico.
+
+Corrección del 21-ago-2026: aquí se justificaba la extensión por el mínimo
+cacheable (~1024 tokens) de Anthropic. Ese motivo ya no aplica — ARCANUM sirve
+con Groq, y su caché no funciona con ese umbral. La extensión se mantiene por la
+razón editorial de arriba, que es la que de verdad la sostenía. NO COMPROBADO:
+cómo cachea Groq exactamente este prompt; si algún día importa el coste, se mide
+antes de recortar.
 """
 
 ORACLE_SYSTEM_PROMPT = """\

@@ -4,23 +4,32 @@ Los prompts de sistema ya lo piden. Esto lo IMPONE. La diferencia importa
 porque un prompt es una peticion al modelo y esto es una comprobacion sobre el
 texto real, antes y despues de generar.
 
-Por que existe, en orden de dureza:
+Por que existe, en orden de dureza. Todo lo de abajo es LEY o politica de
+tienda, no contrato con el proveedor del modelo (ver la nota al final):
 
-1. La Usage Policy de Anthropic clasifica Healthcare, Legal y Finance como
-   high-risk y exige para ellos revision por un profesional cualificado antes
-   de publicar la salida. ARCANUM no tiene medico ni abogado revisando, asi que
-   no puede cumplirlo: la unica postura sostenible es NEGARSE a esos dominios.
-   Incumplir la AUP corta la API, y sin API no hay producto.
-   La misma AUP excluye el *wellness* (sueno, estres, alimentacion, ejercicio)
-   de ese regimen, asi que hablar de habito y descanso NO se bloquea.
-2. Autolesion y suicidio: la AUP prohibe facilitar, promover o glamorizar
-   cualquier forma. Aqui no basta con no hablar del tema: hay que salir del
-   registro simbolico y derivar a ayuda humana.
-3. La Directiva 2005/29/CE, Anexo I, punto 17 hace practica desleal EN
+1. La Directiva 2005/29/CE, Anexo I, punto 17 hace practica desleal EN
    CUALQUIER CIRCUNSTANCIA proclamar que algo cura enfermedades, sin necesidad
    de probar dano y sin defensa de "era entretenimiento". Y la 2001/83/CE art.
    1(2)(a) convierte en medicamento lo que se PRESENTA como curativo, mire lo
-   que mire dentro.
+   que mire dentro. Ninguna de las dos admite matices.
+2. Google Play, Health Content and Services: prohibe funcionalidades de salud
+   enganosas y las declaraciones de salud falsas, y obliga a recordar que se
+   consulte a un profesional. En Colombia, el Decreto 3249/2006 prohibe
+   presentar indicaciones preventivas o terapeuticas en publicidad.
+3. Autolesion y suicidio. Aqui no hay norma que lo obligue con este detalle:
+   es criterio propio. No basta con no hablar del tema — hay que salir del
+   registro simbolico y derivar a ayuda humana, porque una tirada de tarot
+   respondiendo a "no quiero vivir" es exactamente el peor uso posible de esto.
+
+NOTA SOBRE EL PROVEEDOR, y es una correccion a lo que decia este archivo:
+ARCANUM usa GROQ, no Anthropic — el nombre `claude_service.py` es herencia. La
+AUP de Groq (console.groq.com/docs/legal/ai-policy, consultada el 21-ago-2026)
+NO exige avisar de que se habla con una IA, NO menciona autolesion, y sobre
+dominios de alto riesgo solo pide supervision humana para DECISIONES
+AUTOMATIZADAS con impacto material en derechos individuales. Es mucho menos
+exigente que la de Anthropic, que fue la que se cito por error aqui. Nada de
+esto rebaja los guardarrailes: la razon de que existan es la de arriba, y esa
+no depende de quien sirva el modelo.
 
 Lo que esto NO es: una garantia. Es un suelo. Un filtro por patrones deja pasar
 lo que no se le ocurrio a quien lo escribio, y por eso el prompt sigue siendo
@@ -199,15 +208,22 @@ def message_for(reason: str) -> str:
 
 # ── Divulgacion de IA ────────────────────────────────────────────────────────
 #
-# Obligacion doble y de origen distinto:
-#   - AUP de Anthropic: "must disclose to users that they are interacting with
-#     AI rather than a human [...] at a minimum at the beginning of each chat
-#     session". Es contractual: incumplirla corta la API.
-#   - AI Act (UE) art. 50(1), aplicable desde el 2 de agosto de 2026, y 50(5):
-#     la informacion se da "at the latest at the time of the first interaction".
-# Por eso viaja en la RESPUESTA y no solo en los Terminos: un aviso que la
-# persona acepto una vez al instalar no acompana a la lectura de dentro de seis
-# meses.
+# Obligacion LEGAL, y de una sola fuente: AI Act (UE) art. 50(1), aplicable
+# desde el 2 de agosto de 2026 — "natural persons concerned are informed that
+# they are interacting with an AI system" — con el plazo del 50(5): "at the
+# latest at the time of the first interaction or exposure".
+#
+# Correccion del 21-ago-2026: aqui se citaba tambien la AUP de Anthropic como
+# obligacion contractual. NO aplica — ARCANUM usa Groq, y la AUP de Groq no
+# exige esta divulgacion. La obligacion sobrevive entera de todas formas, porque
+# el art. 50(1) no depende del proveedor sino de quien pone el sistema en el
+# mercado, y la beta sale sin geo-restriccion.
+#
+# Viaja en la RESPUESTA y no solo en los Terminos: un aviso que la persona
+# acepto una vez al instalar no acompana a la lectura de dentro de seis meses.
+GROQ_PROVIDER = "Groq, Inc."
+GROQ_COUNTRY = "Estados Unidos"
+
 AI_DISCLOSURE = (
     "Este texto lo redacta una inteligencia artificial a partir de tu carta y "
     "del cielo real. Es contenido simbólico y cultural: no sustituye "
