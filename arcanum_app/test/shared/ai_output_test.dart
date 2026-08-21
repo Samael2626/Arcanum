@@ -16,6 +16,8 @@ Widget _wrap(Widget child) => ProviderScope(
     );
 
 void main() {
+  setUp(resetDisclosureForTest);
+
   group('el aviso de IA', () {
     testWidgets('acompaña al texto, no vive solo en los Términos',
         (tester) async {
@@ -26,18 +28,25 @@ void main() {
       expect(find.text('Saturno cuadra tu Sol.'), findsOneWidget);
       // El art. 50(5) del AI Act pide la informacion "at the latest at the time
       // of the first interaction": pegada, no en otra pantalla.
-      expect(find.textContaining('generado con IA'), findsOneWidget);
+      expect(find.textContaining('inteligencia artificial'), findsOneWidget);
     });
 
-    testWidgets('dice que no sustituye orientación profesional',
+    testWidgets('la segunda vez se reduce a una linea',
         (tester) async {
+      // Primera exposicion: aviso largo. El art. 50(5) pide "at the latest at
+      // the time of the first interaction", no bajo cada parrafo.
       await tester.pumpWidget(_wrap(
-        const AiOutput(text: 'x', surface: 'horoscopo'),
+        const AiOutput(text: 'uno', surface: 'oraculo'),
       ));
-      final aviso = tester.widget<Text>(find.textContaining('generado con IA'));
-      for (final dominio in ['médica', 'legal', 'financiera']) {
-        expect(aviso.data, contains(dominio));
-      }
+      expect(find.textContaining('inteligencia artificial'), findsOneWidget);
+
+      // Segunda: solo la linea de pie.
+      await tester.pumpWidget(_wrap(
+        const AiOutput(text: 'dos', surface: 'oraculo'),
+      ));
+      expect(find.textContaining('inteligencia artificial'), findsNothing);
+      expect(find.text('Generado con IA'), findsOneWidget);
+      expect(find.text('Reportar'), findsOneWidget);
     });
 
     testWidgets('respeta la presentación de cada pantalla', (tester) async {
@@ -49,7 +58,8 @@ void main() {
         ),
       ));
       expect(find.byKey(const Key('propio')), findsOneWidget);
-      expect(find.textContaining('generado con IA'), findsOneWidget);
+      // Primera exposicion de la sesion: aviso largo.
+      expect(find.textContaining('inteligencia artificial'), findsOneWidget);
     });
   });
 
@@ -60,8 +70,8 @@ void main() {
         const AiOutput(text: 'texto reportable', surface: 'oraculo'),
       ));
 
-      expect(find.byIcon(Icons.flag_outlined), findsOneWidget);
-      await tester.tap(find.byIcon(Icons.flag_outlined));
+      expect(find.text('Reportar'), findsOneWidget);
+      await tester.tap(find.text('Reportar'));
       await tester.pumpAndSettle();
 
       // Requisito literal de Google Play: "without needing to exit the app".
@@ -72,7 +82,7 @@ void main() {
       await tester.pumpWidget(_wrap(
         const AiOutput(text: 'texto', surface: 'oraculo'),
       ));
-      await tester.tap(find.byIcon(Icons.flag_outlined));
+      await tester.tap(find.text('Reportar'));
       await tester.pumpAndSettle();
 
       final boton = tester.widget<FilledButton>(
@@ -85,7 +95,7 @@ void main() {
       await tester.pumpWidget(_wrap(
         const AiOutput(text: 'texto', surface: 'horoscopo'),
       ));
-      await tester.tap(find.byIcon(Icons.flag_outlined));
+      await tester.tap(find.text('Reportar'));
       await tester.pumpAndSettle();
       expect(find.text('Da consejo médico o de salud'), findsOneWidget);
     });
@@ -224,61 +234,43 @@ void main() {
     });
   });
 
-  group('el aviso de práctica', () {
-    test('una infusión corriente avisa, pero no prohíbe beberla', () {
-      // Samuel: "no venderlo como cura milagrosa, sino como una ayuda que no
-      // reemplaza la medicina formal". Eso es exactamente este nivel.
-      final aviso = practiceNoticeFor('Bebe una infusión de manzanilla.');
-      expect(aviso, kCulinaryNotice);
-      expect(aviso, isNot(contains('no las ingieras')));
-      // Y trae el recordatorio que Google Play exige literalmente.
-      expect(aviso, contains('consulta a un profesional'));
+  group('los avisos de plantas, ya adelgazados', () {
+    setUp(resetDisclosureForTest);
+
+    test('una infusion corriente NO trae parrafo propio', () {
+      // Samuel: "esta demasiado extenso y con muchas alertas". Un parrafo
+      // entero para una manzanilla era ruido, y el ruido se deja de leer justo
+      // cuando aparece el aviso que si importa.
+      expect(toxicNoticeFor('Bebe una infusión de manzanilla.'), isNull);
+      expect(mentionsCulinary('Bebe una infusión de manzanilla.'), isTrue);
     });
 
-    test('una planta tóxica sí prohíbe, y manda sobre la otra', () {
-      expect(practiceNoticeFor('Coloca beleño sobre el altar.'), kToxicNotice);
-      // Con las dos presentes gana el aviso duro: el riesgo no se promedia.
-      expect(
-        practiceNoticeFor('Manzanilla y acónito sobre el altar.'),
-        kToxicNotice,
-      );
-    });
-
-    test('sin plantas no hay aviso', () {
-      expect(practiceNoticeFor('Saturno cuadra tu Sol.'), isNull);
-    });
-
-    test('las que de verdad envenenan están todas', () {
-      // El riesgo aqui no es una multa: es una intoxicacion.
+    test('un veneno real si trae aviso duro, y ese no se acorta', () {
+      // Aqui el riesgo no es una multa: es una intoxicacion.
       for (final t in ['acónito', 'beleño', 'mandrágora', 'belladona',
                        'cicuta', 'estramonio', 'digital']) {
-        expect(practiceNoticeFor('Usa $t en el rito.'), kToxicNotice,
+        expect(toxicNoticeFor('Usa $t en el rito.'), kToxicNotice,
             reason: '$t debería disparar el aviso duro');
       }
     });
 
-    testWidgets('el aviso correcto llega a la pantalla', (tester) async {
+    testWidgets('con planta corriente, el recordatorio de salud va al pie',
+        (tester) async {
+      // Google Play: "Apps must also remind users to consult a healthcare
+      // professional". Cabe en el pie, no hace falta un bloque.
       await tester.pumpWidget(_wrap(
-        const AiOutput(
-          text: 'Bebe una infusión de tilo mientras contemplas la llama.',
-          surface: 'oraculo',
-        ),
+        const AiOutput(text: 'Bebe una infusión de tilo.', surface: 'oraculo'),
       ));
-      expect(find.textContaining('No sustituye la atención médica'),
-          findsOneWidget);
-      expect(find.textContaining('no las ingieras'), findsNothing);
+      expect(find.text(kHealthReminder), findsOneWidget);
+      expect(find.text(kToxicNotice), findsNothing);
     });
 
-    testWidgets('NO aparece cuando no viene a cuento', (tester) async {
+    testWidgets('sin plantas, el pie es solo IA y Reportar', (tester) async {
       await tester.pumpWidget(_wrap(
-        const AiOutput(
-          text: 'Saturno cuadra tu Sol y pide límite.',
-          surface: 'horoscopo',
-        ),
+        const AiOutput(text: 'Saturno cuadra tu Sol.', surface: 'horoscopo'),
       ));
-      // Un aviso permanente que no viene a cuento se vuelve ruido de fondo y
-      // deja de leerse justo cuando importa.
-      expect(find.textContaining('No sustituye'), findsNothing);
+      expect(find.text(kHealthReminder), findsNothing);
+      expect(find.text('Reportar'), findsOneWidget);
     });
   });
 }

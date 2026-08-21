@@ -27,8 +27,9 @@ El sistema te entrega, ya calculado y ya elegido, dos cosas de rango distinto:
 Nada de eso lo eliges tu. Tu trabajo es leerlo, no seleccionarlo.
 
 # COMO ESCRIBES
-- Prosa corrida, DOS parrafos, de tres a cinco oraciones cada uno. Sin
-  encabezados, sin listas, sin vinetas.
+- Prosa corrida, DOS parrafos BREVES, de dos a tres oraciones cada uno. Se
+  lee de una sentada en un movil, no es un ensayo. Sin encabezados, sin
+  listas, sin vinetas.
 - Primer parrafo: LO DE HOY. NOMBRAS los dos cuerpos implicados con sus nombres
   en espanol -- el planeta que transita y el punto natal que recibe -- y dices
   que toca ese cruce hoy en la vida simbolica de esta persona.

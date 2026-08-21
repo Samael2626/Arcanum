@@ -30,10 +30,26 @@ import '../../core/theme/arcanum_theme.dart';
 
 /// Texto del aviso. Igual que la constante del backend (`safety.AI_DISCLOSURE`)
 /// a proposito: la persona debe leer lo mismo venga por donde venga.
+/// Version larga: se muestra UNA vez por sesion, la primera vez que la persona
+/// ve texto generado. El art. 50(5) del AI Act pide la informacion "at the
+/// latest at the time of the first interaction or exposure" — o sea la primera,
+/// no todas. Repetirla bajo cada parrafo no cumple mas y se deja de leer.
 const String kAiDisclosure =
-    'Texto generado con IA a partir de tu carta y del cielo real. Contenido '
-    'simbólico y cultural: no sustituye orientación médica, psicológica, legal '
-    'ni financiera.';
+    'Los textos de ARCANUM los redacta una inteligencia artificial a partir de '
+    'tu carta y del cielo real. Son contenido simbólico y cultural.';
+
+/// Version corta: la que acompana a cada texto a partir de la segunda vez.
+const String kAiDisclosureShort = 'Generado con IA';
+
+/// Recordatorio de salud de Google Play: "Apps must also remind users to
+/// consult a healthcare professional". Solo cuando se nombra una planta.
+const String kHealthReminder = 'No sustituye atención médica';
+
+/// Ya se enseno el aviso largo en esta sesion?
+bool _disclosureShown = false;
+
+/// Solo para los tests: devuelve la sesion a su estado inicial.
+void resetDisclosureForTest() => _disclosureShown = false;
 
 /// Aviso de practica, en DOS niveles. Aparece solo cuando el texto nombra una
 /// planta, para que no se vuelva ruido de fondo que nadie lee.
@@ -61,9 +77,10 @@ const String kToxicNotice =
     'como correspondencias simbólicas: no las ingieras ni las apliques sobre '
     'la piel.';
 
-const String kCulinaryNotice =
-    'Acompañamiento simbólico, no tratamiento. No sustituye la atención '
-    'médica: ante un problema de salud, consulta a un profesional.';
+// El aviso culinario largo se retiro: su contenido util —el recordatorio de
+// consultar a un profesional, que Google Play exige— cabe en el pie como
+// `kHealthReminder`. Un parrafo entero para una manzanilla era ruido, y el
+// ruido se deja de leer justo cuando aparece el aviso que si importa.
 
 /// Las que de verdad envenenan. La lista es corta a proposito: cada nombre de
 /// aqui es una planta que puede matar, no una que "conviene vigilar".
@@ -81,12 +98,17 @@ const List<String> kCulinaryBotanicals = [
   'anis', 'valeriana', 'té', 'infusión', 'infusion', 'tisana', 'hierba',
 ];
 
-/// Aviso que corresponde a este texto, o null si no nombra ninguna planta.
-String? practiceNoticeFor(String text) {
+/// Aviso duro si el texto nombra un veneno real, o null. Este NO se acorta.
+String? toxicNoticeFor(String text) {
   final t = text.toLowerCase();
-  if (kToxicBotanicals.any(t.contains)) return kToxicNotice;
-  if (kCulinaryBotanicals.any(t.contains)) return kCulinaryNotice;
-  return null;
+  return kToxicBotanicals.any(t.contains) ? kToxicNotice : null;
+}
+
+/// El texto nombra una planta corriente (manzanilla, tilo, romero)? Con eso
+/// basta para anadir el recordatorio de salud al pie, sin un parrafo aparte.
+bool mentionsCulinary(String text) {
+  final t = text.toLowerCase();
+  return kCulinaryBotanicals.any(t.contains);
 }
 
 /// Motivos de reporte. Cerrados a proposito: texto libre sin acotar seria otro
@@ -120,68 +142,91 @@ class AiOutput extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // El aviso largo solo la primera vez que se ve texto generado en esta
+    // sesion; despues, una linea gris. Cumple el 50(5) igual y deja de ser un
+    // muro que nadie lee.
+    final primeraVez = !_disclosureShown;
+    if (primeraVez) _disclosureShown = true;
+
+    final toxico = toxicNoticeFor(text);
+    final nombraPlanta = toxico != null || mentionsCulinary(text);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
         child ?? Text(text, style: ArcanumText.body(16)),
-        const SizedBox(height: 12),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    kAiDisclosure,
-                    style: ArcanumText.body(11, color: ArcanumColors.ivoryMuted),
-                  ),
-                  if (practiceNoticeFor(text) case final aviso?) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      aviso,
-                      style: ArcanumText.body(
-                        11,
-                        color: ArcanumColors.burgundyLight,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            _ReportButton(text: text, surface: surface),
-          ],
+        const SizedBox(height: 10),
+        if (primeraVez) ...[
+          Text(
+            kAiDisclosure,
+            style: ArcanumText.body(11, color: ArcanumColors.ivoryMuted),
+          ),
+          const SizedBox(height: 6),
+        ],
+        // El aviso duro NO se acorta ni se esconde: aqui el riesgo no es una
+        // multa, es una intoxicacion.
+        if (toxico != null) ...[
+          Text(
+            toxico,
+            style: ArcanumText.body(11, color: ArcanumColors.burgundyLight),
+          ),
+          const SizedBox(height: 6),
+        ],
+        _PiePie(
+          text: text,
+          surface: surface,
+          conPlanta: nombraPlanta && toxico == null,
         ),
       ],
     );
   }
 }
 
-class _ReportButton extends ConsumerWidget {
-  const _ReportButton({required this.text, required this.surface});
+/// La linea de pie: lo obligatorio en una sola linea gris.
+///
+/// "Generado con IA" cubre el art. 50(1) a partir de la segunda vez.
+/// "Reportar" cubre el requisito de Google Play, que exige que la funcion
+/// EXISTA sin salir de la app, no que haya un icono bajo cada parrafo.
+/// El recordatorio de salud solo aparece cuando el texto nombra una planta.
+class _PiePie extends ConsumerWidget {
+  const _PiePie({
+    required this.text,
+    required this.surface,
+    required this.conPlanta,
+  });
 
   final String text;
   final String surface;
+  final bool conPlanta;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Semantics(
-      button: true,
-      label: 'Reportar este texto',
-      child: IconButton(
-        icon: const Icon(Icons.flag_outlined, size: 18),
-        color: ArcanumColors.ivoryMuted,
-        tooltip: 'Reportar este texto',
-        onPressed: () => showReportSheet(
-          context: context,
-          ref: ref,
-          text: text,
-          surface: surface,
+    final estilo = ArcanumText.body(11, color: ArcanumColors.ivoryMuted);
+    return Wrap(
+      spacing: 6,
+      runSpacing: 2,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text(kAiDisclosureShort, style: estilo),
+        if (conPlanta) ...[
+          Text('·', style: estilo),
+          Text(kHealthReminder, style: estilo),
+        ],
+        Text('·', style: estilo),
+        InkWell(
+          onTap: () => showReportSheet(
+            context: context,
+            ref: ref,
+            text: text,
+            surface: surface,
+          ),
+          child: Text(
+            'Reportar',
+            style: ArcanumText.body(11, color: ArcanumColors.goldMuted),
+          ),
         ),
-      ),
+      ],
     );
   }
 }
