@@ -26,7 +26,7 @@ if (releaseRequested && !hasReleaseSigning) {
 
 android {
     namespace = "com.arcanum.magick"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -45,7 +45,7 @@ android {
     defaultConfig {
         applicationId = "com.arcanum.magick"
         minSdkVersion = flutter.minSdkVersion
-        targetSdkVersion = flutter.targetSdkVersion
+        targetSdkVersion = 36
         versionCode = flutter.versionCode.toInteger()
         versionName = flutter.versionName
     }
