@@ -273,4 +273,44 @@ void main() {
       expect(find.text('Reportar'), findsOneWidget);
     });
   });
+
+  group('falsos positivos de plantas, vistos en el telefono', () {
+    setUp(resetDisclosureForTest);
+
+    test('una palabra que CONTIENE el nombre de una planta no cuenta', () {
+      // Vistos en la captura del OnePlus y alrededores: "estetica" contiene
+      // "te", "alimenta" y "mentalidad" contienen "menta", "estilo" contiene
+      // "tilo". El horoscopo real hablaba de "proyeccion estetica" y salia con
+      // recordatorio de atencion medica al pie.
+      for (final frase in [
+        'una proyección armoniosa y estética en el entorno laboral',
+        'la mentalidad con la que alimenta su rutina',
+        'un estilo propio, sutil y sostenido',
+        'también conviene observar el resultado',
+      ]) {
+        expect(mentionsCulinary(frase), isFalse, reason: frase);
+        expect(toxicNoticeFor(frase), isNull, reason: frase);
+      }
+    });
+
+    test('la planta nombrada de verdad si cuenta', () {
+      expect(mentionsCulinary('Bebe una infusión de tilo al anochecer.'), isTrue);
+      expect(mentionsCulinary('Un té sereno antes del rito.'), isTrue);
+      expect(mentionsCulinary('Menta fresca sobre el altar.'), isTrue);
+      expect(toxicNoticeFor('Coloca beleño sobre el altar.'), kToxicNotice);
+    });
+
+    testWidgets('un texto sin plantas no trae recordatorio de salud',
+        (tester) async {
+      await tester.pumpWidget(_wrap(
+        const AiOutput(
+          text: 'El regente del día, Venus, invita a una proyección estética.',
+          surface: 'horoscopo',
+        ),
+      ));
+      // Un aviso que salta cuando no toca ensena a ignorarlo, y entonces
+      // tampoco se lee el dia que la planta es beleno de verdad.
+      expect(find.text(kHealthReminder), findsNothing);
+    });
+  });
 }

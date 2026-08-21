@@ -98,18 +98,35 @@ const List<String> kCulinaryBotanicals = [
   'anis', 'valeriana', 'té', 'infusión', 'infusion', 'tisana', 'hierba',
 ];
 
-/// Aviso duro si el texto nombra un veneno real, o null. Este NO se acorta.
-String? toxicNoticeFor(String text) {
-  final t = text.toLowerCase();
-  return kToxicBotanicals.any(t.contains) ? kToxicNotice : null;
+/// Busca la planta como PALABRA ENTERA, no como subcadena.
+///
+/// Comparar subcadenas producia falsos positivos absurdos que se vieron en el
+/// telefono: "te" casa dentro de "estetica", "menta" dentro de "alimenta" y
+/// "mentalidad", "tilo" dentro de "estilo". Un horoscopo que hablaba de una
+/// "proyeccion estetica" acababa con un recordatorio de atencion medica al pie.
+///
+/// Y eso no es un detalle cosmetico: un aviso que salta cuando no toca ensena a
+/// la persona a ignorarlo, y entonces tampoco lo lee el dia que la planta es
+/// beleno de verdad.
+bool _nombra(String texto, List<String> plantas) {
+  final t = texto.toLowerCase();
+  for (final planta in plantas) {
+    //  no funciona con acentos en Dart, asi que el limite se expresa como
+    // "no hay letra pegada", incluyendo las acentuadas del espanol.
+    const letra = r'[a-záéíóúüñ]';
+    final re = RegExp('(?<!$letra)${RegExp.escape(planta)}(?!$letra)');
+    if (re.hasMatch(t)) return true;
+  }
+  return false;
 }
+
+/// Aviso duro si el texto nombra un veneno real, o null. Este NO se acorta.
+String? toxicNoticeFor(String text) =>
+    _nombra(text, kToxicBotanicals) ? kToxicNotice : null;
 
 /// El texto nombra una planta corriente (manzanilla, tilo, romero)? Con eso
 /// basta para anadir el recordatorio de salud al pie, sin un parrafo aparte.
-bool mentionsCulinary(String text) {
-  final t = text.toLowerCase();
-  return kCulinaryBotanicals.any(t.contains);
-}
+bool mentionsCulinary(String text) => _nombra(text, kCulinaryBotanicals);
 
 /// Motivos de reporte. Cerrados a proposito: texto libre sin acotar seria otro
 /// campo que moderar, y la persona que reporta quiere terminar rapido.

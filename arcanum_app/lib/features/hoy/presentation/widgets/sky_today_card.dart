@@ -116,8 +116,17 @@ class _Reading extends StatelessWidget {
       );
     }
 
-    final primary = data!['primary'] as Map<String, dynamic>?;
-    final text = (data!['text'] as String?)?.trim() ?? '';
+    // El titular visual es lo de HOY, no el mas fuerte: el texto ya lidera con
+    // eso y una cabecera que anuncia otra cosa se contradice con lo que se lee
+    // debajo. Se vio en el telefono — arriba Neptuno, primera frase la Luna.
+    // Sin transito rapido se cae al capitulo, que es lo unico que hay.
+    // `data` es un campo, asi que el `!` no se propaga: se fija una vez aqui.
+    final d = data!;
+    final today = d['today'] as Map<String, dynamic>?;
+    final chapter = d['chapter'] as Map<String, dynamic>?;
+    final primary =
+        today ?? chapter ?? (d['primary'] as Map<String, dynamic>?);
+    final text = (d['text'] as String?)?.trim() ?? '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
