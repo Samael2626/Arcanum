@@ -143,3 +143,49 @@ def test_el_carril_de_hoy_cambia_mucho_mas_que_el_capitulo(dias):
     cambios = lambda s: sum(1 for i in range(1, len(s)) if s[i] != s[i - 1])
     assert cambios(hoy) > cambios(cap)
     assert len(set(hoy)) > len(set(cap))
+
+
+# ── El contrato que sale al cliente ──────────────────────────────────────────
+
+def test_la_respuesta_lleva_los_dos_carriles_y_la_secta(monkeypatch):
+    """El servidor los calcula y los usa para escribir; si no los manda, la
+    pantalla no puede separar lo que cambio hoy del capitulo que sigue.
+
+    Se comprueba sobre lo que se PERSISTE de verdad, no sobre el codigo fuente:
+    lo que se captura es exactamente lo que el cliente recibira, hoy y en cada
+    replay del resto del dia.
+    """
+    from types import SimpleNamespace
+    from uuid import uuid4
+
+    from app.application.services.usage_service import UsageService
+    from app.routers import astral
+
+    capturadas: list = []
+    monkeypatch.setattr(UsageService, "reserve",
+                        lambda *_a, **_k: SimpleNamespace(
+                            operation=SimpleNamespace(result=None), replay=False))
+    monkeypatch.setattr(UsageService, "capture",
+                        lambda _self, _db, _op, res: capturadas.append(res))
+    # Se parchea en `astral` y no en `claude_service`: el router lo importo con
+    # `from ... import generate_horoscope`, asi que su referencia ya esta ligada
+    # y tocar el modulo de origen no la cambia.
+    monkeypatch.setattr(astral, "generate_horoscope",
+                        lambda _sky, _terms: ("Un texto entero.", {"available": True}))
+
+    usuario = SimpleNamespace(id=uuid4(), birth_timezone="America/Bogota",
+                              birth_lat=None, birth_lon=None)
+    carta = SimpleNamespace(chart_data={
+        "planets": [{"name": "sun", "longitude": 10.0, "house": 10}]})
+
+    astral.horoscope(current_user=usuario,
+                     repo=SimpleNamespace(get_by_user_id=lambda _i: carta),
+                     db=None)
+
+    assert len(capturadas) == 1
+    result = capturadas[0]
+    for clave in ("today", "chapter", "sect", "primary", "supporting",
+                  "date", "datetime", "text", "total_aspects"):
+        assert clave in result, f"la respuesta del horoscopo no incluye {clave}"
+    # El Sol en casa 10 esta sobre el horizonte: la secta viaja resuelta.
+    assert result["sect"] == "day"

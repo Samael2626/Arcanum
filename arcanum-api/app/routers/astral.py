@@ -207,8 +207,15 @@ def horoscope(
             "date": dia.isoformat(),
             "datetime": sky["datetime"],
             "text": texto,
+            # `primary` y `supporting` siguen porque el cliente ya los lee.
             "primary": sky["primary"],
             "supporting": sky["supporting"],
+            # Los dos carriles y la secta viajan tambien: el servidor los usa
+            # para escribir el texto, y sin ellos la pantalla no puede separar
+            # lo que cambio hoy del capitulo que sigue.
+            "today": sky["today"],
+            "chapter": sky["chapter"],
+            "sect": sky["sect"],
             "total_aspects": sky["total_aspects"],
         }
         UsageService().capture(db, reservation.operation, result)
