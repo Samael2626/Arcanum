@@ -55,5 +55,12 @@ void main() {
       expect(rootGradle, contains('mavenCentral()'));
       expect(properties, contains('org.gradle.jvmargs=-Xmx2G'));
     });
+
+    test('targets Android 16 for Google Play submissions', () {
+      final gradle = File('android/app/build.gradle').readAsStringSync();
+
+      expect(gradle, contains('compileSdk = 36'));
+      expect(gradle, contains('targetSdkVersion = 36'));
+    });
   });
 }

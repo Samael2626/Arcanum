@@ -32,8 +32,13 @@ from app.models.library import (  # noqa: E402
     LibraryParagraph,
     LibraryWork,
 )
+from translation_pipeline import filter_publishable_chapters  # noqa: E402
 
 DATA_DIR = Path(__file__).parent / "library_data"
+
+# Estado de una traducción que aún no ha revisado nadie. Lo que NO está así
+# lleva mano humana encima y este script no lo toca.
+MACHINE = "machine"
 
 # Culpeper afirma curar la peste, la ictericia y la hidropesía. Google Play
 # prohíbe las afirmaciones de salud engañosas: presentar esto como consejo
@@ -60,16 +65,29 @@ def main() -> None:
     data = json.loads(source.read_text(encoding="utf-8"))
 
     translations = {}
+    excluded: dict[str, str] = {}
     translated_path = DATA_DIR / f"{args.work}.es.json"
     if translated_path.exists():
-        translations = json.loads(translated_path.read_text(encoding="utf-8"))["chapters"]
+        stored = json.loads(translated_path.read_text(encoding="utf-8"))["chapters"]
+        translations, excluded = filter_publishable_chapters(stored)
 
     print(f"{data['title']} — {data['author']}")
     print(f"  capítulos       : {len(data['chapters'])}")
-    print(f"  con traducción  : {len(translations)}")
+    print(f"  publicables     : {len(translations)}")
+    print(f"  excluidos       : {len(excluded)}")
+    if excluded:
+        by_status: dict[str, int] = {}
+        for status in excluded.values():
+            by_status[status] = by_status.get(status, 0) + 1
+        print(f"  por estado      : {by_status}")
     if args.dry_run:
         print("\n--dry-run: no se escribe nada.")
         return
+    if excluded:
+        raise SystemExit(
+            "Carga bloqueada: hay traducciones legacy_machine o blocked. "
+            "Ejecuta analyze_translation.py y correct_translation.py antes de sembrar."
+        )
 
     db = SessionLocal()
     try:
@@ -88,7 +106,7 @@ def main() -> None:
 
         existing = {c.slug: c for c in work.chapters}
         seen: set[str] = set()
-        created = updated = 0
+        created = updated = preserved = 0
 
         for position, chapter_data in enumerate(data["chapters"]):
             slug = chapter_data["slug"]
@@ -117,13 +135,23 @@ def main() -> None:
                 paragraph.anchor = paragraph_data["anchor"]
                 paragraph.text_original = paragraph_data["text"]
                 if index < len(spanish):
-                    paragraph.text_es = spanish[index]
-                    # "machine" hasta que alguien la revise. Se muestra al
-                    # usuario: una traducción automática debe declararse.
-                    paragraph.translation_status = paragraph.translation_status or "machine"
+                    # Una corrección a mano NO se pisa con texto de máquina.
+                    # Antes se sobrescribía el texto pero se conservaba el
+                    # estado: el párrafo acababa declarando "human" con la
+                    # traducción automática dentro. Perder la corrección ya es
+                    # malo; perderla y seguir diciendo que está revisada, peor.
+                    if paragraph.translation_status in (None, MACHINE):
+                        paragraph.text_es = spanish[index]
+                        # "machine" hasta que alguien la revise. Se muestra al
+                        # usuario: una traducción automática debe declararse.
+                        paragraph.translation_status = MACHINE
+                    else:
+                        preserved += 1
 
             # Párrafos que ya no existen tras una reingesta.
-            for position_gone in set(by_position) - set(range(len(chapter_data["paragraphs"]))):
+            for position_gone in set(by_position) - set(
+                range(len(chapter_data["paragraphs"]))
+            ):
                 db.delete(by_position[position_gone])
 
             # Commit por capítulo, no uno solo al final. Sembrar 423 capítulos
@@ -140,6 +168,8 @@ def main() -> None:
         print(f"\n  capítulos nuevos    : {created}")
         print(f"  capítulos actualizados: {updated}")
         print(f"  eliminados          : {len(set(existing) - seen)}")
+        if preserved:
+            print(f"  correcciones a mano respetadas: {preserved}")
     finally:
         db.close()
 

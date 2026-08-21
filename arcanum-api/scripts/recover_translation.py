@@ -39,7 +39,12 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
-from translate_library import DATA_DIR, DEFAULT_MODEL, suspicious_terms  # noqa: E402
+from translate_library import DATA_DIR, suspicious_terms  # noqa: E402
+from translation_pipeline import (
+    LEGACY_MACHINE,
+    source_hash,
+    write_json_atomic,
+)  # noqa: E402
 
 # Solo se rescata texto de maquina. Si algun dia hay parrafos revisados a mano,
 # volcarlos a un JSON que luego se re-siembra podria deshacer esa correccion:
@@ -90,7 +95,7 @@ def main() -> None:
     done = (
         json.loads(target.read_text(encoding="utf-8"))
         if target.exists()
-        else {"work": args.work, "model": DEFAULT_MODEL, "chapters": {}}
+        else {"work": args.work, "model": "unknown-legacy", "chapters": {}}
     )
     before = len(done["chapters"])
 
@@ -105,6 +110,7 @@ def main() -> None:
         for row in rows:
             if row.revisados:
                 reviewed_found.append(f"{row.slug} ({row.revisados})")
+                continue
             if row.slug in done["chapters"]:
                 skipped_present += 1
                 continue
@@ -123,13 +129,17 @@ def main() -> None:
                 "title": row.title,
                 "paragraphs": spanish,
                 "review": review or None,
+                "status": LEGACY_MACHINE,
+                "source_hash": source_hash(source),
             }
             recovered += 1
             mark = f"  ⚠ revisar: {', '.join(review)}" if review else ""
             print(f"  ✓ {row.slug:<40} {len(spanish):>3} parr{mark}")
 
     if reviewed_found:
-        print(f"\n⚠ Hay parrafos NO marcados como '{MACHINE}': {', '.join(reviewed_found)}")
+        print(
+            f"\n⚠ Hay parrafos NO marcados como '{MACHINE}': {', '.join(reviewed_found)}"
+        )
         print("  Pueden ser correcciones a mano. Revisalos antes de re-sembrar.")
 
     print(f"\n{recovered} capitulos recuperados de la BD")
@@ -141,7 +151,7 @@ def main() -> None:
         print("\n--dry-run: no se ha escrito nada.")
         return
     if recovered:
-        target.write_text(json.dumps(done, ensure_ascii=False, indent=1), encoding="utf-8")
+        write_json_atomic(target, done)
         print(f"\nEscrito {target}")
 
 
