@@ -225,17 +225,51 @@ void main() {
   });
 
   group('el aviso de práctica', () {
-    testWidgets('aparece cuando el texto nombra una planta', (tester) async {
+    test('una infusión corriente avisa, pero no prohíbe beberla', () {
+      // Samuel: "no venderlo como cura milagrosa, sino como una ayuda que no
+      // reemplaza la medicina formal". Eso es exactamente este nivel.
+      final aviso = practiceNoticeFor('Bebe una infusión de manzanilla.');
+      expect(aviso, kCulinaryNotice);
+      expect(aviso, isNot(contains('no las ingieras')));
+      // Y trae el recordatorio que Google Play exige literalmente.
+      expect(aviso, contains('consulta a un profesional'));
+    });
+
+    test('una planta tóxica sí prohíbe, y manda sobre la otra', () {
+      expect(practiceNoticeFor('Coloca beleño sobre el altar.'), kToxicNotice);
+      // Con las dos presentes gana el aviso duro: el riesgo no se promedia.
+      expect(
+        practiceNoticeFor('Manzanilla y acónito sobre el altar.'),
+        kToxicNotice,
+      );
+    });
+
+    test('sin plantas no hay aviso', () {
+      expect(practiceNoticeFor('Saturno cuadra tu Sol.'), isNull);
+    });
+
+    test('las que de verdad envenenan están todas', () {
+      // El riesgo aqui no es una multa: es una intoxicacion.
+      for (final t in ['acónito', 'beleño', 'mandrágora', 'belladona',
+                       'cicuta', 'estramonio', 'digital']) {
+        expect(practiceNoticeFor('Usa $t en el rito.'), kToxicNotice,
+            reason: '$t debería disparar el aviso duro');
+      }
+    });
+
+    testWidgets('el aviso correcto llega a la pantalla', (tester) async {
       await tester.pumpWidget(_wrap(
         const AiOutput(
-          text: 'Unge la vela con aceite de romero antes de encenderla.',
+          text: 'Bebe una infusión de tilo mientras contemplas la llama.',
           surface: 'oraculo',
         ),
       ));
-      expect(find.textContaining('no las ingieras'), findsOneWidget);
+      expect(find.textContaining('No sustituye la atención médica'),
+          findsOneWidget);
+      expect(find.textContaining('no las ingieras'), findsNothing);
     });
 
-    testWidgets('NO aparece cuando no hay ninguna', (tester) async {
+    testWidgets('NO aparece cuando no viene a cuento', (tester) async {
       await tester.pumpWidget(_wrap(
         const AiOutput(
           text: 'Saturno cuadra tu Sol y pide límite.',
@@ -244,15 +278,7 @@ void main() {
       ));
       // Un aviso permanente que no viene a cuento se vuelve ruido de fondo y
       // deja de leerse justo cuando importa.
-      expect(find.textContaining('no las ingieras'), findsNothing);
-    });
-
-    test('las plantas que de verdad envenenan están en la lista', () {
-      // El riesgo aqui no es una multa: es una intoxicacion.
-      for (final t in ['acónito', 'beleño', 'mandrágora', 'belladona']) {
-        expect(mentionsBotanical('Coloca $t sobre el altar.'), isTrue,
-            reason: '$t debería disparar el aviso');
-      }
+      expect(find.textContaining('No sustituye'), findsNothing);
     });
   });
 }

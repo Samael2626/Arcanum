@@ -35,35 +35,58 @@ const String kAiDisclosure =
     'simbólico y cultural: no sustituye orientación médica, psicológica, legal '
     'ni financiera.';
 
-/// Aviso de practica. Aparece SOLO cuando el texto nombra una planta o
-/// sustancia, para que no se vuelva ruido de fondo que nadie lee.
+/// Aviso de practica, en DOS niveles. Aparece solo cuando el texto nombra una
+/// planta, para que no se vuelva ruido de fondo que nadie lee.
 ///
-/// Existe porque ARCANUM decide a proposito NO amputar el lenguaje ritual —
-/// ungir, ahumar, banar, ofrendar son la practica misma, y un guardarrail que
-/// los bloquease ahogaria el producto. La contrapartida es este aviso.
+/// ARCANUM decide a proposito NO amputar el lenguaje ritual ni el de las
+/// infusiones corrientes: ungir, ahumar, banar, ofrendar y tomarse un te de
+/// manzanilla son la practica misma, y un guardarrail que los bloquease
+/// vaciaria el producto. La contrapartida es avisar bien, y "bien" significa
+/// distinto segun la planta.
 ///
-/// Y no es papeleo: la tradicion que ARCANUM cita nombra aconito, beleno,
-/// mandragora y digital, que son venenos reales. El riesgo aqui no es una
-/// multa, es una intoxicacion.
-const String kPracticeNotice =
-    'Las plantas y sustancias que se nombran son correspondencias simbólicas de '
-    'la tradición, no remedios. Varias son tóxicas: no las ingieras ni las '
-    'apliques sobre la piel.';
+/// El corte NO es "hierba si / hierba no". Es toxicidad:
+///
+///  - Manzanilla, tilo, menta o jengibre son alimentos. Se venden en cualquier
+///    supermercado y beberlos no es un riesgo. Lo unico que hay que decir es
+///    que acompanan, no tratan, y que no sustituyen a un profesional — que es
+///    ademas lo que exige literalmente Google Play ("Apps must also remind
+///    users to consult a healthcare professional").
+///  - Aconito, beleno, mandragora, belladona, digital, cicuta y estramonio son
+///    venenos reales que la tradicion nombra sin avisar. Aqui el riesgo no es
+///    una multa: es una intoxicacion, y el aviso tiene que ser tajante.
+///
+/// Si el texto nombra de los dos tipos, manda el tajante.
+const String kToxicNotice =
+    'Varias de las plantas que nombra la tradición son tóxicas. Aquí se citan '
+    'como correspondencias simbólicas: no las ingieras ni las apliques sobre '
+    'la piel.';
 
-/// Plantas de la tradicion cuya sola mencion dispara el aviso. La lista prioriza
-/// las que de verdad envenenan; las inocuas (romero, laurel) entran porque el
-/// aviso tampoco estorba cuando aparecen en un rito de bano o infusion.
-const List<String> kBotanicals = [
+const String kCulinaryNotice =
+    'Acompañamiento simbólico, no tratamiento. No sustituye la atención '
+    'médica: ante un problema de salud, consulta a un profesional.';
+
+/// Las que de verdad envenenan. La lista es corta a proposito: cada nombre de
+/// aqui es una planta que puede matar, no una que "conviene vigilar".
+const List<String> kToxicBotanicals = [
   'acónito', 'aconito', 'beleño', 'beleno', 'mandrágora', 'mandragora',
-  'digital', 'belladona', 'cicuta', 'estramonio', 'ruda', 'artemisa',
-  'ajenjo', 'poleo', 'tejo', 'adelfa', 'muérdago', 'muerdago',
-  'romero', 'laurel', 'manzanilla', 'salvia', 'valeriana', 'lavanda',
-  'canela', 'hierba', 'infusión', 'infusion', 'tintura', 'ungüento', 'unguento',
+  'belladona', 'cicuta', 'estramonio', 'digital', 'dedalera',
+  'tejo', 'adelfa', 'ruda', 'ajenjo', 'poleo', 'muérdago', 'muerdago',
 ];
 
-bool mentionsBotanical(String text) {
+/// Alimentos. Nombrarlas o beberlas no es un riesgo; el aviso solo recuerda
+/// que acompanan y no tratan.
+const List<String> kCulinaryBotanicals = [
+  'manzanilla', 'tilo', 'menta', 'hierbabuena', 'jengibre', 'romero',
+  'laurel', 'salvia', 'lavanda', 'canela', 'tomillo', 'melisa', 'anís',
+  'anis', 'valeriana', 'té', 'infusión', 'infusion', 'tisana', 'hierba',
+];
+
+/// Aviso que corresponde a este texto, o null si no nombra ninguna planta.
+String? practiceNoticeFor(String text) {
   final t = text.toLowerCase();
-  return kBotanicals.any((b) => t.contains(b));
+  if (kToxicBotanicals.any(t.contains)) return kToxicNotice;
+  if (kCulinaryBotanicals.any(t.contains)) return kCulinaryNotice;
+  return null;
 }
 
 /// Motivos de reporte. Cerrados a proposito: texto libre sin acotar seria otro
@@ -115,10 +138,10 @@ class AiOutput extends ConsumerWidget {
                     kAiDisclosure,
                     style: ArcanumText.body(11, color: ArcanumColors.ivoryMuted),
                   ),
-                  if (mentionsBotanical(text)) ...[
+                  if (practiceNoticeFor(text) case final aviso?) ...[
                     const SizedBox(height: 6),
                     Text(
-                      kPracticeNotice,
+                      aviso,
                       style: ArcanumText.body(
                         11,
                         color: ArcanumColors.burgundyLight,
