@@ -629,8 +629,76 @@ Widget _body(Map<String, dynamic> d, ArcanumMood mood) {
           ),
         ),
       ],
+      const SizedBox(height: 18),
+      _PieDeFicha(toxicidad: toxicidad),
     ],
   );
+}
+
+/// Pie de una ficha de Materia Magica.
+///
+/// Google Play, politica Health Content and Services: "Apps must also remind
+/// users to consult a healthcare professional for medical advice, diagnosis, or
+/// treatment". Una ficha que muestra un campo TOXICIDAD y cita a Culpeper es
+/// informacion relacionada con salud, asi que el recordatorio aplica.
+///
+/// Va como UNA linea gris, con el mismo criterio que el pie de las lecturas de
+/// IA: un parrafo aqui seria ruido, y el ruido se deja de leer justo cuando
+/// aparece el aviso que si importa. Lo que NO se acorta es la parte de
+/// toxicidad, porque ahi el riesgo no es una multa sino una intoxicacion.
+class _PieDeFicha extends StatelessWidget {
+  const _PieDeFicha({this.toxicidad});
+
+  final String? toxicidad;
+
+  /// Solo se llama toxica a la que la ficha declara como tal. Si el dato no
+  /// consta, no se supone: se dice lo generico y ya.
+  ///
+  /// Se comparan los acentos quitados a proposito: el dato real escribe
+  /// "no toxica" con tilde, y sin normalizar una planta inocua salia marcada
+  /// como veneno — que es el error mas caro de los dos, porque gasta la
+  /// atencion de la persona en avisos falsos y luego no la tiene cuando el
+  /// aviso es de verdad.
+  bool get _esToxica {
+    final t = _sinTildes((toxicidad ?? '').toLowerCase());
+    if (t.isEmpty) return false;
+    for (final inocua in ['no toxic', 'inocua', 'atoxic', 'comestible']) {
+      if (t.contains(inocua)) return false;
+    }
+    return true;
+  }
+
+  static String _sinTildes(String s) {
+    const con = 'áéíóúüàèìòùâêîôûäëïöñç';
+    const sin = 'aeiouuaeiouaeiouaeinc';
+    final b = StringBuffer();
+    for (final c in s.split('')) {
+      final i = con.indexOf(c);
+      b.write(i >= 0 ? sin[i] : c);
+    }
+    return b.toString();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_esToxica) ...[
+          Text(
+            'Planta tóxica. Aquí se cita como correspondencia simbólica: no la '
+            'ingieras ni la apliques sobre la piel.',
+            style: ArcanumText.body(11, color: ArcanumColors.burgundyLight),
+          ),
+          const SizedBox(height: 6),
+        ],
+        Text(
+          'Información histórica y cultural · No sustituye atención médica',
+          style: ArcanumText.body(11, color: ArcanumColors.ivoryMuted),
+        ),
+      ],
+    );
+  }
 }
 
 String _cap(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
