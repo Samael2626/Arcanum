@@ -16,6 +16,7 @@ import '../../sky_today_state.dart';
 import 'today_card.dart';
 import '../../../../shared/widgets/ai_output.dart';
 import '../../../../core/consent/ai_consent.dart';
+import 'sello_del_cielo.dart';
 
 /// "Tu cielo de hoy": el transito dominante de esta persona, leido por la IA.
 ///
@@ -32,44 +33,141 @@ class SkyTodayCard extends ConsumerStatefulWidget {
 
 class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
   late final ArcanumApi _api = ref.read(arcanumApiProvider);
-  late Future<Map<String, dynamic>> _future = _cargar();
 
-  /// Pide permiso ANTES de llamar. El horoscopo manda fecha, hora y lugar de
-  /// nacimiento a un proveedor de IA de terceros, asi que cae de lleno en
-  /// Apple 5.1.2(i): divulgar y obtener permiso explicito ANTES de compartir.
+  /// Fase 1: el cielo SIN interpretar. Gratis, sin cupo y sin terceros, asi que
+  /// se pide al construirse sin pedir permiso a nadie.
+  late Future<Map<String, dynamic>> _cielo = _api.skyToday();
+
+  /// Fase 2: la lectura. Null mientras el sello siga cerrado — y esa es toda la
+  /// diferencia. Antes esto se disparaba al construirse la tarjeta, o sea al
+  /// ABRIR LA APP: se generaba el horoscopo de todo el mundo, lo leyeran o no,
+  /// se quemaba su cupo del dia (que la idempotencia congela) y el primer
+  /// contacto con ARCANUM era un dialogo legal.
+  Future<Map<String, dynamic>>? _lectura;
+  bool _abriendo = false;
+
+  void _reintentarCielo() => setState(() {
+        _cielo = _api.skyToday();
+        _lectura = null;
+      });
+
+  /// Romper el lacre: aqui es donde por fin se pide permiso y se genera.
   ///
-  /// Antes esto llamaba a `_api.horoscope()` directamente en el inicializador
-  /// del campo, o sea que los datos salian del telefono antes de que nadie
-  /// preguntase nada. Se detecto revisando, no en pruebas.
-  Future<Map<String, dynamic>> _cargar() async {
-    if (!mounted) throw const ConsentDeclined();
-    if (!await ensureAiConsent(context)) throw const ConsentDeclined();
-    return _api.horoscope();
+  /// El permiso va justo antes del envio y no al arrancar la app, que es lo que
+  /// pide Apple 5.1.2(i) —divulgar y obtener permiso ANTES de compartir— y lo
+  /// que hace que la pregunta se entienda: se pregunta cuando hay algo que
+  /// autorizar.
+  Future<void> _romperLacre() async {
+    if (_lectura != null || _abriendo) return;
+    setState(() => _abriendo = true);
+    try {
+      if (!mounted) return;
+      if (!await ensureAiConsent(context)) {
+        if (mounted) setState(() => _abriendo = false);
+        return;
+      }
+      if (!mounted) return;
+      setState(() {
+        _lectura = _api.horoscope();
+        _abriendo = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _abriendo = false);
+    }
   }
-
-  void _retry() => setState(() => _future = _cargar());
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, dynamic>>(
-      future: _future,
-      builder: (context, snap) {
-        if (snap.connectionState == ConnectionState.waiting) {
-          return const _Shell(child: _Reading.loading());
+      future: _cielo,
+      builder: (context, cielo) {
+        if (cielo.connectionState == ConnectionState.waiting) {
+          return const _Shell(child: _Cargando());
         }
-        if (snap.hasError) {
+        if (cielo.hasError) {
           return _Shell(
-            child: _Failure(error: snap.error!, onRetry: _retry),
+            child: _Failure(error: cielo.error!, onRetry: _reintentarCielo),
           );
         }
-        return _Shell(child: _Reading(data: snap.data!));
+        final d = cielo.data!;
+        final aspecto = (d['today'] ?? d['chapter']) as Map<String, dynamic>?;
+
+        return _Shell(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SelloDelCielo(
+                aspecto: aspecto,
+                regente: d['day_ruler'] as String?,
+                abierto: _lectura != null,
+                cargando: _abriendo,
+                onAbrir: _romperLacre,
+              ),
+              if (_lectura != null)
+                FutureBuilder<Map<String, dynamic>>(
+                  future: _lectura,
+                  builder: (context, lec) {
+                    if (lec.connectionState == ConnectionState.waiting) {
+                      return const _Cargando();
+                    }
+                    if (lec.hasError) {
+                      return _Failure(
+                        error: lec.error!,
+                        onRetry: () => setState(() => _lectura = null),
+                      );
+                    }
+                    final texto =
+                        (lec.data!['text'] as String?)?.trim() ?? '';
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // El sello nombra el transito, pero como texto plano.
+                          // `_TransitHeadline` es lo que hace TOCABLES esos
+                          // terminos para abrir su lore, y es la unica salida
+                          // que tiene la jerga en esta pantalla. Se recupera al
+                          // abrir en vez de perderse con el rediseno.
+                          if (aspecto != null) ...[
+                            _TransitHeadline(aspecto),
+                            const SizedBox(height: 14),
+                          ],
+                          AiOutput(
+                            text: texto,
+                            surface: 'horoscopo',
+                            child: Text(texto, style: ArcanumText.body(15)),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ),
+        );
       },
     );
   }
 }
 
-/// El marco comun: mismo panel en los tres estados, para que la tarjeta no
-/// salte de tamano ni de color mientras carga o falla.
+class _Cargando extends StatelessWidget {
+  const _Cargando();
+
+  @override
+  Widget build(BuildContext context) => const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 18),
+          child: SizedBox.square(
+            dimension: 22,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.6,
+              color: ArcanumColors.goldMuted,
+            ),
+          ),
+        ),
+      );
+}
+
 class _Shell extends StatelessWidget {
   final Widget child;
   const _Shell({required this.child});
@@ -92,59 +190,6 @@ class _Shell extends StatelessWidget {
 }
 
 /// El horoscopo: el titular del dia y su lectura.
-class _Reading extends StatelessWidget {
-  final Map<String, dynamic>? data;
-  final bool isLoading;
-
-  const _Reading({required Map<String, dynamic> this.data}) : isLoading = false;
-  const _Reading.loading() : data = null, isLoading = true;
-
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 18),
-          child: SizedBox.square(
-            dimension: 22,
-            child: CircularProgressIndicator(
-              strokeWidth: 1.6,
-              color: ArcanumColors.goldMuted,
-            ),
-          ),
-        ),
-      );
-    }
-
-    // El titular visual es lo de HOY, no el mas fuerte: el texto ya lidera con
-    // eso y una cabecera que anuncia otra cosa se contradice con lo que se lee
-    // debajo. Se vio en el telefono — arriba Neptuno, primera frase la Luna.
-    // Sin transito rapido se cae al capitulo, que es lo unico que hay.
-    // `data` es un campo, asi que el `!` no se propaga: se fija una vez aqui.
-    final d = data!;
-    final today = d['today'] as Map<String, dynamic>?;
-    final chapter = d['chapter'] as Map<String, dynamic>?;
-    final primary =
-        today ?? chapter ?? (d['primary'] as Map<String, dynamic>?);
-    final text = (d['text'] as String?)?.trim() ?? '';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (primary != null) ...[
-          _TransitHeadline(primary),
-          const SizedBox(height: 14),
-        ],
-        AiOutput(
-          text: text,
-          surface: 'horoscopo',
-          child: Text(text, style: ArcanumText.body(15)),
-        ),
-      ],
-    );
-  }
-}
-
 /// El titular en su forma corta y simbolica, con los terminos tocables: los
 /// mismos gestos que en Cielos, para que la jerga tenga salida tambien aqui.
 class _TransitHeadline extends StatelessWidget {

@@ -128,6 +128,18 @@ class ArcanumApi {
   ///
   /// El servidor lo genera una vez por día y sirve el mismo texto el resto de
   /// la jornada, así que llamar de más no cuesta ni cambia la lectura.
+  /// El cielo de hoy SIN interpretar: que transito manda y a que separacion
+  /// real. Gratis — no reserva cupo, no llama al modelo y no manda nada a un
+  /// tercero, asi que tampoco necesita consentimiento.
+  ///
+  /// Es lo que pinta el sello antes de abrirse. Sin este endpoint, ENSENAR el
+  /// sello costaria lo mismo que ABRIRLO, porque el unico sitio que sabia el
+  /// transito del dia era el que genera el texto.
+  Future<Map<String, dynamic>> skyToday() async {
+    final res = await _dio.get('/astral/sky-today');
+    return res.data as Map<String, dynamic>;
+  }
+
   Future<Map<String, dynamic>> horoscope() async {
     final res = await _dio.get('/astral/horoscope');
     return res.data as Map<String, dynamic>;

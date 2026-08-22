@@ -25,6 +25,32 @@ class _TodayApi extends ArcanumApi {
 
   var calls = 0;
   var horoscopeCalls = 0;
+  var skyCalls = 0;
+
+  /// El cielo sin interpretar: gratis y sin terceros. La tarjeta lo pide al
+  /// construirse, asi que el falso API tiene que responderlo o queda un
+  /// temporizador colgando cuando la llamada se va a la implementacion real.
+  @override
+  Future<Map<String, dynamic>> skyToday() async {
+    skyCalls++;
+    return {
+      'date': '2026-08-16',
+      'day_ruler': 'sun',
+      'today': {
+        'transit': 'moon',
+        'natal': 'midheaven',
+        'aspect': 'trine',
+        'angle': 120,
+        'orb': 0.66,
+        'separation': 119.34,
+        'applying': true,
+        'tempo': 'fast',
+      },
+      'chapter': null,
+      'sect': 'day',
+      'total_aspects': 1,
+    };
+  }
 
   @override
   Future<Map<String, dynamic>> horoscope() async {
@@ -94,5 +120,49 @@ void main() {
     expect(find.byType(ArcanumFrame), findsNothing);
     expect(find.byType(ArcanumSurface), findsOneWidget);
     expect(find.byType(TweenAnimationBuilder<double>), findsNothing);
+  });
+
+  testWidgets('abrir la app NO genera el horoscopo', (tester) async {
+    // El motivo de toda la pieza del sello. Antes, montar la tarjeta llamaba a
+    // `/horoscope`: se generaba el texto de todo el mundo lo leyera o no, se
+    // quemaba su cupo del dia —que la idempotencia congela— y el primer
+    // contacto con ARCANUM era un dialogo de consentimiento.
+    final api = _TodayApi();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          arcanumApiProvider.overrideWithValue(api),
+          authProvider.overrideWith(_AuthWithPlace.new),
+        ],
+        child: const MaterialApp(home: Scaffold(body: HoyScreen())),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(api.skyCalls, 1, reason: 'el cielo gratis si se pide');
+    expect(api.horoscopeCalls, 0, reason: 'la interpretacion NO se pide sola');
+  });
+
+  testWidgets('el sello muestra el transito sin haber generado nada',
+      (tester) async {
+    final api = _TodayApi();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          arcanumApiProvider.overrideWithValue(api),
+          authProvider.overrideWith(_AuthWithPlace.new),
+        ],
+        child: const MaterialApp(home: Scaffold(body: HoyScreen())),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    // Lo que se ve antes de tocar: el transito real y la invitacion.
+    expect(find.text('Luna trígono Medio Cielo'), findsOneWidget);
+    expect(find.textContaining('119,3'), findsOneWidget);
+    expect(find.text('ROMPER EL LACRE'), findsOneWidget);
+    expect(api.horoscopeCalls, 0);
   });
 }
