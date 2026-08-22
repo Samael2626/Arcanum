@@ -300,6 +300,16 @@ def compute_transits(natal_planets: list[dict], dt_utc: datetime) -> dict:
                     aspects.append({
                         "transit": tname, "natal": nname,
                         "aspect": aname, "angle": angle, "orb": round(delta, 2),
+                        # La separacion REAL, no la nominal del aspecto. `orb`
+                        # es `abs(sep - angle)` y pierde el signo, asi que con
+                        # el solo no se puede saber si el trigono esta a 119.3
+                        # o a 120.7 grados. Se conserva `sep` para que la rueda
+                        # pueda colocar los dos cuerpos donde de verdad estan
+                        # en vez de dibujar un triangulo perfecto que miente.
+                        #
+                        # Mismo descuido que tuvo `speed` en su dia: calculado y
+                        # descartado en la misma linea.
+                        "separation": round(sep, 2),
                         "max_orb": orb, "applying": applying, "exact_at": exact_at,
                     })
                     break

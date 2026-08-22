@@ -155,6 +155,44 @@ def transits(
     return nce.compute_transits(entity.chart_data["planets"], dt)
 
 
+@router.get("/sky-today")
+def sky_today(
+    current_user: UserEntity = Depends(get_current_user),
+    repo: NatalChartRepository = Depends(get_natal_chart_repo),
+):
+    """El cielo de hoy SIN interpretar: la mitad gratis del horoscopo.
+
+    Devuelve exactamente lo que el sello necesita para pintarse —que transito
+    manda hoy, a que separacion real, y que capitulo sigue abierto— y nada mas.
+
+    Por que existe: hasta ahora la unica forma de saber el transito del dia era
+    pedir `/horoscope`, que llama al modelo y quema el cupo. Con eso, ensenar el
+    sello costaba lo mismo que abrirlo, y la carga perezosa no ahorraba nada.
+
+    NO reserva cuota, NO llama al modelo y NO pide creditos: esto es calculo
+    astronomico puro, que ya se hacia y no cuesta. La interpretacion es lo que
+    cuesta, y esa sigue viviendo en `/horoscope`.
+    """
+    entity = repo.get_by_user_id(current_user.id)
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Calcula primero tu carta natal con POST /astral/natal-chart.",
+        )
+
+    now = datetime.now(timezone.utc)
+    sky = hs.build_sky(entity.chart_data or {}, now)
+    return {
+        "date": hs.local_date(us.timezone_name(current_user), now).isoformat(),
+        "datetime": sky["datetime"],
+        "today": sky["today"],
+        "chapter": sky["chapter"],
+        "sect": sky["sect"],
+        "total_aspects": sky["total_aspects"],
+        "day_ruler": us.day_ruler(current_user, now),
+    }
+
+
 @router.get("/horoscope")
 def horoscope(
     current_user: UserEntity = Depends(get_current_user),
