@@ -11,6 +11,7 @@ import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
 import '../../shared/widgets/info_dot.dart';
 import '../../shared/widgets/login_prompt.dart';
+import '../../shared/titulo_book_t.dart';
 
 /// Glifos de la baraja (4 palos + arcanos mayores).
 const _suitGlyphs = <String, String>{
@@ -220,7 +221,7 @@ class _TarotViewState extends ConsumerState<_TarotView> {
     final position = (c['position'] as String?) ?? '';
     final name = (c['name'] as String?) ?? (c['slug'] as String? ?? '');
     final meaning = (c['meaning'] as String?) ?? '';
-    final titleBookT = (c['title_book_t'] as String?) ?? '';
+    final titleBookT = tituloEnEspanol(c['title_book_t'] as String?);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),

@@ -17,6 +17,7 @@ import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_surface.dart';
 import 'widgets/tarot_card.dart';
+import '../../shared/titulo_book_t.dart';
 
 /// Conectores que van en minúscula dentro del nombre (salvo si abren).
 const _connectors = {'de', 'del', 'la', 'el', 'los', 'las', 'y', 'e'};
@@ -159,7 +160,7 @@ Widget _attributions(Map<String, dynamic> card) {
     if ((card['sephirah'] as String?)?.trim().isNotEmpty ?? false)
       ('SÉFIRA', (card['sephirah'] as String).trim()),
     if ((card['title_book_t'] as String?)?.trim().isNotEmpty ?? false)
-      ('TÍTULO', (card['title_book_t'] as String).trim()),
+      ('TÍTULO', tituloEnEspanol(card['title_book_t'] as String?)),
   ];
   if (rows.isEmpty) return const SizedBox.shrink();
   return Column(
