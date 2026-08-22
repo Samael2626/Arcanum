@@ -3,6 +3,8 @@
 /// No se testea "el widget existe": se testea que el aviso acompane al texto,
 /// que se pueda reportar sin salir de la app, y que el consentimiento no se
 /// pueda dar por omision. Eso ultimo es lo que separa consentir de no negarse.
+library;
+
 import 'package:arcanum_app/core/consent/ai_consent.dart';
 import 'package:arcanum_app/features/hoy/sky_today_state.dart';
 import 'package:arcanum_app/shared/widgets/ai_output.dart';

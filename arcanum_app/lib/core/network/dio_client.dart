@@ -36,7 +36,12 @@ final String kBaseUrl = resolveBaseUrl();
 /// Dio con interceptor que: adjunta el Bearer, y ante 401 refresca el token
 /// (rotación en `/auth/refresh`) y reintenta una vez. Si el refresh falla,
 /// limpia la sesión y propaga el error.
-Dio buildDio(TokenStorage storage) {
+/// [refreshDio] existe como costura de prueba. El interceptor necesita un Dio
+/// SIN interceptor para refrescar —si no, el refresco entraria en su propia
+/// cola y se bloquearia—, y hasta ahora lo creaba dentro y en privado. Eso hacia
+/// el camino del refresco imposible de probar: un adaptador de mentira nunca lo
+/// veia y las peticiones se iban a la red real.
+Dio buildDio(TokenStorage storage, {Dio? refreshDio}) {
   final dio = Dio(
     BaseOptions(
       baseUrl: kBaseUrl,
@@ -44,15 +49,16 @@ Dio buildDio(TokenStorage storage) {
       receiveTimeout: const Duration(seconds: 12),
     ),
   );
-  dio.interceptors.add(_AuthInterceptor(storage));
+  dio.interceptors.add(_AuthInterceptor(storage, refreshDio));
   return dio;
 }
 
 class _AuthInterceptor extends QueuedInterceptor {
-  _AuthInterceptor(this._storage);
+  _AuthInterceptor(this._storage, [Dio? refreshDio])
+      : _bare = refreshDio ?? Dio(BaseOptions(baseUrl: kBaseUrl));
   final TokenStorage _storage;
   // Dio "desnudo" para el refresh: no pasa por este interceptor (evita recursión).
-  final Dio _bare = Dio(BaseOptions(baseUrl: kBaseUrl));
+  final Dio _bare;
 
   @override
   Future<void> onRequest(

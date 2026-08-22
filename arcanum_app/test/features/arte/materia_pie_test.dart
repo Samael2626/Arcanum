@@ -7,6 +7,8 @@
 /// Estas fichas fueron el rojo numero 1 del semaforo legal durante toda la
 /// investigacion y no tenian ni una linea de aviso: mostraban el dato de
 /// toxicidad crudo y nada mas.
+library;
+
 import 'package:arcanum_app/features/arte/materia_lore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

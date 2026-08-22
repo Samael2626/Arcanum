@@ -3,6 +3,8 @@
 /// Lo que se fija: que NO genere nada hasta que se rompe el lacre, que el lacre
 /// lleve el glifo del regente del dia, que se muestre la separacion REAL, y que
 /// un cielo sin transitos lo diga en vez de inventarse una figura.
+library;
+
 import 'package:arcanum_app/features/hoy/presentation/widgets/sello_del_cielo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

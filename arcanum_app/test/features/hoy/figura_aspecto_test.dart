@@ -4,6 +4,8 @@
 /// grados, el segundo cuerpo va a 119,3 y no a 120. Dibujar un triangulo
 /// perfecto sobre un angulo que no lo es seria fingir una precision que la app
 /// no tiene, y este proyecto lleva meses quitando justo esa clase de mentira.
+library;
+
 import 'dart:math' as math;
 
 import 'package:arcanum_app/features/hoy/domain/figura_aspecto.dart';

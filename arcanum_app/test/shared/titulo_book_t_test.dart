@@ -2,6 +2,8 @@
 ///
 /// El catalogo guarda los titulos del Book T bilingues, separados por barra, y
 /// las pantallas los pintaban ENTEROS. Se vio con la app en el telefono.
+library;
+
 import 'package:arcanum_app/shared/titulo_book_t.dart';
 import 'package:flutter_test/flutter_test.dart';
 
