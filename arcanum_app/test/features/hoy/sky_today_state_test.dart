@@ -14,7 +14,9 @@ DioException _dio(int status, {Object? detail}) => DioException(
 void main() {
   group('cada fallo se dice por lo que es', () {
     test('sin carta natal se ofrece calcularla, no revisar la conexión', () {
-      final failure = classifySkyFailure(_dio(404));
+      final failure = classifySkyFailure(
+        _dio(404, detail: 'Calcula primero tu carta natal con POST /astral/natal-chart.'),
+      );
 
       expect(failure, SkyTodayFailure.sinCartaNatal);
       expect(skyFailureMessage(failure), contains('carta natal'));
@@ -100,6 +102,27 @@ void main() {
         expect(m, isNot(contains('DioException')));
         expect(m, isNot(contains('/astral')));
       }
+    });
+  });
+
+  group('un 404 de ruta no es un 404 de dominio', () {
+    test('la ruta que no existe NO manda a calcular la carta', () {
+      // Paso de verdad, y se vio en el telefono: la app pedia
+      // `/astral/sky-today` contra una produccion anterior a ese endpoint, y la
+      // pantalla decia "calcula tu carta natal" a alguien que la tenia desde
+      // hacia meses. Mandar a arreglar algo que no esta roto es peor que no
+      // decir nada.
+      final failure = classifySkyFailure(_dio(404, detail: 'Not Found'));
+
+      expect(failure, isNot(SkyTodayFailure.sinCartaNatal));
+      expect(failure, SkyTodayFailure.cieloNoLegible);
+      expect(skyFailureRoute(failure), isNull);
+      // Y como los transitos no dependen del servidor, la lectura local sigue.
+      expect(allowsLocalReading(failure), isTrue);
+    });
+
+    test('un 404 sin cuerpo tampoco lo asume', () {
+      expect(classifySkyFailure(_dio(404)), SkyTodayFailure.cieloNoLegible);
     });
   });
 }

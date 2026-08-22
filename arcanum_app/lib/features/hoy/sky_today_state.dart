@@ -43,7 +43,20 @@ SkyTodayFailure classifySkyFailure(Object error) {
       case 401:
         return SkyTodayFailure.sesionExpirada;
       case 404:
-        return SkyTodayFailure.sinCartaNatal;
+        // Un 404 de DOMINIO dice que falta la carta natal. Un 404 de RUTA dice
+        // que el servidor no conoce ese endpoint — porque va por detras del
+        // cliente, por ejemplo. Son cosas distintas y confundirlas manda a la
+        // persona a calcular una carta que ya tiene.
+        //
+        // Paso de verdad: la app pedia `/astral/sky-today` contra una
+        // produccion anterior a ese endpoint, y la pantalla decia "calcula tu
+        // carta natal" a alguien que la tenia desde hacia meses.
+        //
+        // FastAPI responde "Not Found" a secas cuando no conoce la ruta; el
+        // 404 de dominio trae el mensaje que escribimos nosotros.
+        return detail.contains('carta natal')
+            ? SkyTodayFailure.sinCartaNatal
+            : SkyTodayFailure.cieloNoLegible;
       case 422:
         // El 422 de dominio dice que faltan datos de nacimiento; el de
         // validacion de FastAPI trae una lista y no dice eso. Solo el primero
