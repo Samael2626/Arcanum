@@ -21,6 +21,28 @@ void main() {
       }
     });
 
+    test('el vocabulario del sello del cielo tiene explicación', () {
+      // El sello enseña estos términos en pantalla y la app apuesta por
+      // "toca y te explica" en vez de escribirlo todo en la tarjeta. Si falta
+      // una entrada, el gesto abre un hueco y nadie se entera: por eso está
+      // aquí y no en la cabeza de quien lo escribió.
+      for (final key in const [
+        'orbe', // "le faltan 0,8°" y la figura torcida
+        'aplicativo', // "se va cerrando" contra "ya pasó"
+        'transitos',
+        'natal_vs_transito',
+        'retrogrado', // el ℞ junto al planeta en tránsito
+      ]) {
+        expect(
+          glossary[key],
+          isNotNull,
+          reason: 'falta la entrada de glosario "$key"',
+        );
+        expect(glossary[key]!.what.trim(), isNotEmpty);
+        expect(glossary[key]!.howTo.trim(), isNotEmpty);
+      }
+    });
+
     test('una casa fuera de rango cae al genérico, que existe', () {
       expect(houseGlossaryKey(0), 'casa');
       expect(houseGlossaryKey(13), 'casa');

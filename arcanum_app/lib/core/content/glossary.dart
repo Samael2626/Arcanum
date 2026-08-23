@@ -115,6 +115,28 @@ const Map<String, GlossaryEntry> glossary = {
   ),
 
   // ── Lectura de la carta ────────────────────────────────────────────────────
+  'orbe': GlossaryEntry(
+    'Orbe',
+    'Un aspecto casi nunca es exacto. El orbe son los grados que le faltan (o le sobran) para serlo: '
+        'un trígono de 118,6° tiene 1,4° de orbe. Dentro de ese margen el aspecto cuenta; fuera, no '
+        'existe.\n\n'
+        'Por eso las figuras del sello salen torcidas: los dos cuerpos se dibujan donde están de '
+        'verdad, no donde el aspecto sería perfecto.',
+    'Cuanto más cerrado el orbe, más apretado el símbolo — y más fácil situar el día en que '
+        'perfecciona. Un orbe ancho es un asunto que aún no ha llegado del todo. ARCANUM usa 3° para '
+        'conjunción, cuadratura, trígono y oposición, y 2° para el sextil; cada escuela usa los '
+        'suyos, y algunas los miden por planeta en vez de por aspecto.',
+  ),
+  'aplicativo': GlossaryEntry(
+    'Aplicativo y separativo',
+    'Un aspecto APLICATIVO todavía se está formando: el planeta se acerca a la exactitud. Uno '
+        'SEPARATIVO ya pasó por ella y se aleja.\n\n'
+        'La misma figura y el mismo orbe significan cosas distintas según la dirección: uno es algo '
+        'que llega, el otro algo que se va.',
+    'Lo aplicativo se lee como asunto entrando, y tiene fecha: se puede decir cuándo cierra. Lo '
+        'separativo se lee como algo que se suelta, y esa fecha ya pasó. Ojo con los retrógrados: al '
+        'moverse hacia atrás invierten la dirección, y un aspecto que parecía irse vuelve.',
+  ),
   'natal_vs_transito': GlossaryEntry(
     'Natal vs. tránsito',
     'Tu carta NATAL es fija: el cielo del instante en que naciste, y no cambia jamás. Un TRÁNSITO es '
