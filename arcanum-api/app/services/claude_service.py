@@ -185,8 +185,28 @@ def _complete(client: Groq, model: str, system_prompt: str, user_content: str,
             detail="El oráculo está saturado. Intenta de nuevo en unos minutos.",
         ) from exc
     choice = resp.choices[0]
-    return (choice.message.content or "", choice.finish_reason,
+    return (_limpia_espacios(choice.message.content or ""), choice.finish_reason,
             resp.usage.completion_tokens if resp.usage else 0)
+
+
+# Espacios que el modelo mete y que no son el espacio normal. El fino (U+202F)
+# salio de verdad en una respuesta ("81 %"), y en Flutter un espacio que no
+# rompe linea puede empujar una palabra fuera de la caja o pintarse como tofu
+# segun la fuente. No se ve en el codigo, asi que se quita en el borde.
+_ESPACIOS_RAROS = str.maketrans({
+    " ": " ",  # no-break space
+    " ": " ",  # narrow no-break space
+    " ": " ",  # thin space
+    " ": " ",  # hair space
+    " ": " ",  # figure space
+    "​": "",   # zero width space
+    "﻿": "",   # BOM suelto
+})
+
+
+def _limpia_espacios(texto: str) -> str:
+    """Normaliza los espacios exoticos del modelo al espacio de toda la vida."""
+    return texto.translate(_ESPACIOS_RAROS)
 
 
 def _stamp_safety(diag: dict, content: str) -> None:
