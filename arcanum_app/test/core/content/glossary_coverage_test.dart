@@ -32,6 +32,12 @@ void main() {
         'transitos',
         'natal_vs_transito',
         'retrogrado', // el ℞ junto al planeta en tránsito
+        // Estas tres son NUESTRAS: no existen en ninguna tradición y nadie
+        // puede buscarlas fuera de la app. Sin entrada, la leyenda del sello
+        // ("hoy" / "capítulo") sería una etiqueta sin significado.
+        'capitulo',
+        'sigilo',
+        'sello',
       ]) {
         expect(
           glossary[key],

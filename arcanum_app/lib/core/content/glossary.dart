@@ -115,6 +115,36 @@ const Map<String, GlossaryEntry> glossary = {
   ),
 
   // ── Lectura de la carta ────────────────────────────────────────────────────
+  // "Capitulo" y "sigilo" NO son palabras de la tradicion: las pusimos
+  // nosotros. `transit_weight.select()` llama `chapter` al transito lento y la
+  // figura la dibuja `figura_aspecto.dart`. Si inventamos el vocabulario,
+  // tenemos que definirlo — nadie puede buscarlo en otro sitio.
+  'capitulo': GlossaryEntry(
+    'El capítulo',
+    'El tránsito LENTO más fuerte sobre tu carta. Lo traen Júpiter, Saturno o el Nodo, que se mueven '
+        'tan despacio que su asunto dura semanas o meses: Saturno tarda 23 días en recorrer un grado, '
+        'y la Luna dos horas.\n\n'
+        'En el sello va por fuera y punteado, envolviendo al del día.',
+    'No es la noticia de hoy: ya estaba ayer y seguirá mañana. Se lee como el fondo sobre el que cae '
+        'la jornada, no como algo que llega. Si el capítulo cambia, es que ha cambiado algo largo — y '
+        'eso pasa pocas veces al año.',
+  ),
+  'sigilo': GlossaryEntry(
+    'El sigilo',
+    'La figura que forman dos cuerpos sobre la rueda. No es un dibujo del aspecto: ES el aspecto. El '
+        'ángulo decide la forma —120° caben tres veces en la vuelta y sale un triángulo, 90° cuatro y '
+        'sale un cuadrado, 60° seis y sale un hexágono— así que nadie la dibuja: se deduce.\n\n'
+        'La conjunción no tiene figura: son dos cuerpos en el mismo punto.',
+    'Míralo torcido y sabrás que el aspecto aún no es exacto; cuanto más regular, más cerca está de '
+        'perfeccionar. Cambia solo cada día porque el cielo se mueve.',
+  ),
+  'sello': GlossaryEntry(
+    'El sello del cielo',
+    'La lectura de tu día: los dos tránsitos que más pesan sobre tu carta, dibujados y luego '
+        'interpretados. Se abre una vez al día y queda abierto hasta tu medianoche.',
+    'El dibujo, los grados y la lectura llana son cálculo y no cuestan nada: están siempre, incluso '
+        'sin conexión. Lo que se pide al abrirlo es la interpretación.',
+  ),
   'orbe': GlossaryEntry(
     'Orbe',
     'Un aspecto casi nunca es exacto. El orbe son los grados que le faltan (o le sobran) para serlo: '
