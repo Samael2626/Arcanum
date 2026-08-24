@@ -6,7 +6,7 @@ Ningún item se salta. Cada uno se marca con evidencia (archivo:línea, captura 
 
 - [ ] Reporte in-app de contenido generado por IA, en cada respuesta del oráculo y las lecturas. `Play AI-Generated Content`
 - [ ] Aviso de IA visible en la primera interacción del chat. `AI Act art. 50`
-- [ ] Modal de consentimiento nombrando Anthropic y Groq antes del primer envío, con opción de rechazar. `Apple 5.1.2(i)`
+- [ ] Modal de consentimiento nombrando al proveedor de IA (Groq) antes del primer envío, con opción de rechazar. `Apple 5.1.2(i)`
 - [ ] UMP/CMP integrado: `requestConsentInfoUpdate` → `loadAndShowConsentFormIfRequired` → `canRequestAds` antes de inicializar ads. `AdMob EEE/UK`
 - [ ] Punto de entrada permanente a Opciones de privacidad en Ajustes cuando sea requerido.
 - [ ] Borrado de cuenta in-app + URL web pública, y el borrado propaga a RevenueCat y Firebase. `Play`, `Apple 5.1.1(v)`

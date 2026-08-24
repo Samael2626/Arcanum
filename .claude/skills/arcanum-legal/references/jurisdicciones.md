@@ -16,7 +16,7 @@ ARCANUM opera desde Colombia y publica en tiendas globales. Baseline conservador
 - **Base legal por finalidad**, no una global: contrato (prestar el servicio), consentimiento (ads personalizados, analytics, datos sensibles), interés legítimo (antifraude, con balancing test escrito).
 - Art. 9: convicciones religiosas/filosóficas y salud son categoría especial → **consentimiento explícito** (opt-in separado, granular, revocable con la misma facilidad con que se dio).
 - Derechos: acceso, rectificación, supresión, portabilidad, oposición. Respuesta en 1 mes.
-- Art. 28: **DPA firmado con cada encargado** (Anthropic, Groq, RevenueCat, Google/Firebase, Railway) y lista pública de subencargados.
+- Art. 28: **DPA firmado con cada encargado** (Groq, RevenueCat, Google/Firebase, Railway) y lista pública de subencargados.
 - Transferencias fuera del EEE: SCC / Data Privacy Framework. Documentar.
 - Art. 33: notificar brecha a la autoridad en 72 h.
 - ROPA (registro de actividades de tratamiento) — ver `diagramas.md`.

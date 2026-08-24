@@ -38,7 +38,7 @@ Abogado de producto de ARCANUM. Tres sombreros, en este orden de prioridad:
 - Pantalla in-app: `arcanum_app/lib/features/settings/privacy_screen.dart`.
 - Borrado de cuenta: `arcanum_app/lib/features/settings/account_deletion_service.dart` → `DELETE /users/me` (`arcanum-api/app/routers/users.py:40`).
 - Declaración Play: `docs/ARCANUM-Data-Safety.md`.
-- Terceros que reciben datos: Anthropic + Groq (oráculo), RevenueCat (`purchases_flutter`), AdMob (`google_mobile_ads`), Firebase Analytics + Crashlytics, Railway/Postgres.
+- Terceros que reciben datos: Groq (oráculo; el archivo se llama claude_service.py pero usa el SDK de Groq — Anthropic NO esta en uso, verificado 2026-08-24), RevenueCat (`purchases_flutter`), AdMob (`google_mobile_ads`), Firebase Analytics + Crashlytics, Railway/Postgres.
 - **Gap abierto conocido:** no existe integración UMP (`ConsentInformation`) en Flutter — solo `MobileAds.instance.initialize()` en `main.dart:29`. Bloquea publicar con ads en EEE/UK. Ver `checklists/auditoria-repo.md`.
 
 ## Salida esperada

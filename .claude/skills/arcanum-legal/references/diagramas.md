@@ -18,7 +18,7 @@ flowchart LR
   U --> CU6[Ver anuncio por creditos]
   U --> CU7[Ejercer derechos / borrar cuenta]
   A((Admin)) --> CU8[Gestionar creditos]
-  CU3 -.datos a tercero.-> LLM[[Anthropic / Groq]]
+  CU3 -.datos a tercero.-> LLM[[Groq]]
   CU5 -.-> RC[[RevenueCat]]
   CU6 -.-> AD[[AdMob]]
   CU1 -.-> FB[[Firebase]]
@@ -35,10 +35,10 @@ sequenceDiagram
   participant App as Flutter
   participant API as FastAPI (Railway)
   participant DB as Postgres
-  participant LLM as Anthropic/Groq
+  participant LLM as Groq
   App->>API: POST /oracle {consulta, contexto natal} TLS
   API->>DB: lee perfil (minimo necesario)
-  API->>LLM: prompt sin identificadores
+  API->>LLM: prompt con nombre visible + resumen natal, sin email ni user_id
   LLM-->>API: respuesta
   API->>DB: persiste lectura (user_id, retencion: hasta borrado)
   API-->>App: respuesta

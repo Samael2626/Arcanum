@@ -40,7 +40,7 @@ No existe política de Play que prohíba tarot/astrología como categoría (veri
 Citas verbatim de https://developer.apple.com/app-store/review/guidelines/ (2026-08-24):
 
 - **5.1.2(i)** — "You must clearly disclose where personal data will be shared with third parties, including with third-party AI, and obtain explicit permission before doing so."
-  Implicación ARCANUM: **modal de consentimiento explícito que nombre a Anthropic y Groq y diga qué se les envía, antes del primer envío.** Un párrafo enterrado en la política no basta. Es el gap más caro de la versión iOS.
+  Implicación ARCANUM: **modal de consentimiento explícito que nombre a Groq y diga qué se les envía, antes del primer envío.** Un párrafo enterrado en la política no basta. Es el gap más caro de la versión iOS.
 - **5.1.1(v)** — si hay creación de cuenta, debe haber borrado de cuenta dentro de la app. No pedir datos personales que no sean centrales a la función.
 - **5.1.1(i)** — enlace a la política de privacidad en metadata de App Store Connect **y** dentro de la app, accesible.
 - **1.2 (UGC)** — filtrado de material objetable, mecanismo de reporte con respuesta oportuna, bloqueo de usuarios abusivos, contacto publicado. El output del LLM se revisa en la práctica con esta vara.

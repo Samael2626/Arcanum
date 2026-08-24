@@ -30,7 +30,7 @@ Reglas de estilo para todo documento legal de ARCANUM:
 2. Cuenta: edad mínima, veracidad, responsabilidad sobre credenciales.
 3. Uso aceptable y causales de suspensión.
 4. Contenido del usuario: es suyo; licencia limitada solo para prestar el servicio; el grimorio no se lee.
-5. IA: qué modelos, que el output puede ser inexacto, que no es consejo profesional, y la advertencia contractual que exige Anthropic sobre verificar afirmaciones fácticas.
+5. IA: qué modelos, que el output puede ser inexacto, que no es consejo profesional, y la advertencia de verificar las afirmaciones fácticas del output.
 6. Suscripciones y créditos: precio, periodicidad, renovación automática, cómo cancelar, qué pasa con los créditos no usados, reembolsos vía tienda, derecho de desistimiento en la UE.
 7. Publicidad y recompensas por ver anuncios.
 8. Propiedad intelectual del contenido de la app y de las fuentes de dominio público.
@@ -41,7 +41,7 @@ Reglas de estilo para todo documento legal de ARCANUM:
 ## Textos de UI (con acentos, breves)
 
 **Consentimiento IA — antes del primer envío al modelo** (Apple 5.1.2(i)):
-> Tus consultas se procesan con modelos de IA de Anthropic y Groq para generar la lectura. Se envía el texto de tu consulta y los datos de tu carta que la lectura necesita. No se envía tu correo ni el contenido de tu grimorio. [Acepto] [Ahora no]
+> Tus consultas se procesan con modelos de IA de Groq para generar la lectura. Se envía el texto de tu consulta y los datos de tu carta que la lectura necesita. No se envía tu correo ni el contenido de tu grimorio. [Acepto] [Ahora no]
 
 **Aviso de IA — primera pantalla del chat** (AI Act art. 50):
 > Estás hablando con un modelo de IA. Sus respuestas son simbólicas y pueden contener errores.

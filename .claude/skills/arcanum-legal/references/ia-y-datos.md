@@ -2,28 +2,29 @@
 
 ## Qué sale del dispositivo hacia un LLM
 
-El oráculo, el tarot y el astral envían contexto del usuario a Anthropic y/o Groq. Ese contexto puede incluir carta natal (fecha/hora/lugar de nacimiento = dato personal preciso), la consulta escrita (que suele contener salud, relaciones, dinero: categorías especiales) y fragmentos de práctica.
+El oráculo, el tarot y el astral envían contexto del usuario a Groq. Ese contexto puede incluir carta natal (fecha/hora/lugar de nacimiento = dato personal preciso), la consulta escrita (que suele contener salud, relaciones, dinero: categorías especiales) y fragmentos de práctica.
 
 Reglas para cualquier feature que llame a un LLM:
 
 1. **Minimizar el prompt.** No mandar identificadores de usuario, email, ni el grimorio completo. Mandar solo lo que la respuesta necesita. Si el contexto puede reconstruirse desde IDs internos, mandar el símbolo, no el dato crudo.
-2. **Consentimiento explícito antes del primer envío**, nombrando al proveedor. Exigido por Apple 5.1.2(i) y por GDPR art. 9 cuando el contenido es sensible.
+2. **Consentimiento explícito antes del primer envío**, nombrando al proveedor (hoy: Groq). Exigido por Apple 5.1.2(i) y por GDPR art. 9 cuando el contenido es sensible.
 3. **Aviso de IA en la primera interacción** del chat (AI Act art. 50).
 4. **Nunca loggear el prompt ni la respuesta con el user_id al lado.** Si hay que depurar, log agregado o hasheado, con retención declarada. Verificado 2026-08-24: `claude_service.py` no loggea prompts — mantenerlo así.
-5. **El output no es consejo.** Ver `disclaimers.md`. Los términos comerciales de Anthropic (sección D.3) obligan a avisar al usuario final de que las afirmaciones fácticas del output pueden ser falsas o incompletas y no deben usarse sin verificar. Esa obligación es contractual, no opcional.
+5. **El output no es consejo.** Ver `disclaimers.md`. Avisar al usuario final de que las afirmaciones fácticas del output pueden ser falsas o incompletas y no deben usarse sin verificar.
 
 ## Subencargados a documentar
 
 | Tercero | Para qué | Qué recibe | Pendiente |
 |---|---|---|---|
-| Anthropic | oráculo, tarot, interpretación | prompt + contexto de la consulta | DPA firmado; confirmar retención vigente |
-| Groq | inferencia alternativa/rápida | ídem | DPA; verificar si hay ZDR en el plan contratado |
+| Groq | oráculo, tarot, interpretación (único proveedor de IA en uso) | prompt: contexto natal resumido, nombre visible, cartas y consulta | firmar DPA; activar ZDR en Data Controls |
 | RevenueCat | suscripciones | app user id, eventos de compra | DPA; borrado en cascada al eliminar cuenta |
 | Google AdMob | anuncios | identificadores de publicidad, señales de dispositivo | UMP/consentimiento — **gap abierto** |
 | Firebase Analytics + Crashlytics | métricas y errores | instance id, eventos, stack traces | consentimiento en EEE; desactivar recolección hasta que se dé |
 | Railway / Postgres | hosting y base de datos | todo lo persistido | ubicación de la región y SCC |
 
-Anthropic — commercial terms (verificado 2026-08-24, https://www.anthropic.com/legal/commercial-terms): "Anthropic may not train models on Customer Content from Services". Los periodos concretos de retención de logs y la disponibilidad de zero-data-retention vienen de fuentes secundarias: **NO COMPROBADO**, verificar en el Trust Center o en el contrato antes de escribirlo en la política de ARCANUM.
+Groq (verificado 2026-08-24, https://console.groq.com/docs/your-data y Services Agreement): no retiene inferencias por defecto; no puede usar inputs ni outputs para entrenar salvo permiso expreso del cliente; puede loggear temporalmente inputs/outputs para fiabilidad y abuso, hasta 30 días; **ZDR activable por cualquier cliente en Data Controls**. Activarlo y decirlo en la política.
+
+Si algún día vuelve a entrar Anthropic (hoy NO está en uso, pese al nombre `claude_service.py`): sus commercial terms dicen "Anthropic may not train models on Customer Content from Services", y la sección D.3 obliga contractualmente a avisar al usuario final de que las afirmaciones fácticas del output pueden ser falsas. Los plazos de retención concretos: **NO COMPROBADO**.
 
 ## Gap abierto: consentimiento de ads (UMP)
 
