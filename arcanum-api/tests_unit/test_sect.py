@@ -53,7 +53,7 @@ def _aspecto(transit, natal, orb=0.5, applying=True):
 
 
 @pytest.mark.parametrize("transit,natal", [
-    ("saturn", "sun"), ("mars", "moon"), ("pluto", "venus"), ("moon", "sun"),
+    ("saturn", "sun"), ("mars", "moon"), ("jupiter", "venus"), ("moon", "sun"),
 ])
 def test_sin_secta_el_peso_es_el_de_siempre(transit, natal):
     a = _aspecto(transit, natal)
@@ -95,7 +95,7 @@ def test_marte_aprieta_mas_de_dia_que_de_noche():
 
 
 def test_un_planeta_sin_bando_no_lo_toca_la_secta():
-    a = _aspecto("neptune", "mercury")
+    a = _aspecto("jupiter", "mercury")
     assert tw.weight_of(a, nce.DAY) == tw.weight_of(a, nce.NIGHT) == tw.weight_of(a, None)
 
 

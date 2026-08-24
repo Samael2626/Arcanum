@@ -31,8 +31,9 @@ Huecos declarados, por si algun dia se cierran (orden de impacto estimado):
   2. Transitos por CASA, no solo por aspecto: un planeta que entra en una casa
      sin aspectar nada es invisible para este modulo.
   3. Estaciones retrogradas sobre un punto natal (ya tenemos `speed`).
-  4. Orbes por planeta (moieties de Lilly), no por aspecto: hoy el Sol y
-     Pluton tienen el mismo alcance, cosa que no sostiene ninguna escuela.
+  4. Orbes por planeta (moieties de Lilly), no por aspecto: hoy el Sol y la
+     Luna tienen el mismo alcance que Mercurio, cosa que no sostiene ninguna
+     escuela.
   5. Parte de la Fortuna: es el cuarto prorrogador de Ptolomeo y ni se calcula.
   6. Condicion del planeta en ESA carta (dignidad), no solo su identidad.
   7. Lunaciones y eclipses; en natal el punto ptolemaico es la sicigia prenatal.
@@ -51,7 +52,11 @@ de ESA carta.
 """
 from __future__ import annotations
 
-from app.services.natal_chart_engine import DAY, NIGHT
+import logging
+
+from app.services.natal_chart_engine import CLASSICAL_POINTS, DAY, NIGHT
+
+logger = logging.getLogger(__name__)
 
 # Tempo de un planeta en transito. Gobierna cuanto dura lo que trae:
 #   slow -> capitulos de vida, se mueven en meses
@@ -61,22 +66,37 @@ FAST = "fast"
 
 # (peso, tempo) del planeta que transita. Los lentos pesan mas porque lo que
 # traen cuesta mas y dura mas; los rapidos dan el color del dia.
+#
+# RECALIBRADA al quitar los modernos. La tabla anterior tenia a Pluton en 1.00
+# como techo y a Saturno en 0.90, asi que el planeta mas pesado de la practica
+# vivia por debajo de tres cuerpos que la practica no usa. Con Pluton, Neptuno
+# y Urano fuera (ver `CLASSICAL_POINTS`), los valores se reescalan dividiendo
+# por 0.90 para que Saturno ocupe el techo.
+#
+# Es un reescalado LINEAL a proposito: conserva el orden y las proporciones que
+# ya estaban, y no aprovecha el cambio para colar criterios nuevos sin medir.
+# Lo unico que se corrige es el techo.
+#
+# Medido sobre cuatro cartas y 180 dias, ya sin modernos: el capitulo es Jupiter
+# el 45,2% de los dias, Saturno el 34,5% y el Nodo el 20,3%. Jupiter gana mas
+# veces pese a pesar menos, porque se mueve mas y hace mas aspectos -- el peso
+# ordena, la frecuencia tambien cuenta.
 _TRANSIT_WEIGHT: dict[str, tuple[float, str]] = {
-    "pluto": (1.00, SLOW),
-    "neptune": (0.95, SLOW),
-    "uranus": (0.95, SLOW),
-    "saturn": (0.90, SLOW),
-    "jupiter": (0.75, SLOW),
-    "north_node": (0.55, SLOW),
-    "mars": (0.60, FAST),
-    "sun": (0.55, FAST),
-    "venus": (0.45, FAST),
-    "mercury": (0.45, FAST),
-    "moon": (0.35, FAST),
+    "saturn": (1.00, SLOW),
+    "jupiter": (0.83, SLOW),
+    "north_node": (0.61, SLOW),
+    "mars": (0.67, FAST),
+    "sun": (0.61, FAST),
+    "venus": (0.50, FAST),
+    "mercury": (0.50, FAST),
+    "moon": (0.39, FAST),
 }
 
 # Peso del punto natal que recibe el transito. Sol, Luna y los angulos son los
-# ejes de la carta: lo que los toca se nota. Un transito a Neptuno natal, no.
+# ejes de la carta: lo que los toca se nota.
+#
+# Los modernos tampoco estan aqui: no reciben transitos. Antes tenian 0.40, que
+# era decir "cuenta poco"; ahora la respuesta es que no cuenta.
 _NATAL_WEIGHT: dict[str, float] = {
     "sun": 1.00,
     "moon": 1.00,
@@ -88,9 +108,6 @@ _NATAL_WEIGHT: dict[str, float] = {
     "jupiter": 0.60,
     "saturn": 0.60,
     "north_node": 0.50,
-    "uranus": 0.40,
-    "neptune": 0.40,
-    "pluto": 0.40,
 }
 
 # Un aspecto que ya paso su exactitud sigue contando, pero mucho menos: su
@@ -174,6 +191,29 @@ def weight_of(aspect: dict, sect: str | None = None) -> float:
     return round(cercania * direccion * w_transit * w_natal, 6)
 
 
+def _clasicos(aspects: list[dict]) -> list[dict]:
+    """Descarta los aspectos donde entre un cuerpo que no trabajamos.
+
+    `compute_transits` ya no los produce, asi que esto es una segunda linea, y
+    hace falta: hay aspectos guardados de antes del filtro -- la cache del cielo
+    del dia, un `chart_data` viejo -- que siguen trayendo a Pluton. Sin esto,
+    ese material antiguo se colaria en el sello de alguien.
+
+    Avisa al descartar. Si esto aparece en los registros pasado un dia, es que
+    algo sigue generandolos y el filtro de arriba no esta puesto donde deberia.
+    """
+    limpios, fuera = [], []
+    for a in aspects:
+        if a.get("transit") in CLASSICAL_POINTS and a.get("natal") in CLASSICAL_POINTS:
+            limpios.append(a)
+        else:
+            fuera.append("%s-%s" % (a.get("transit"), a.get("natal")))
+    if fuera:
+        logger.warning("transitos con cuerpos no clasicos descartados: %s",
+                       ", ".join(fuera))
+    return limpios
+
+
 def rank(aspects: list[dict], sect: str | None = None) -> list[dict]:
     """Los transitos ordenados de mas a menos fuerte, con su peso y su tempo.
 
@@ -181,6 +221,7 @@ def rank(aspects: list[dict], sect: str | None = None) -> list[dict]:
     estable: dos aspectos con el mismo peso no pueden intercambiarse entre dos
     llamadas, o el horoscopo cambiaria solo.
     """
+    aspects = _clasicos(aspects)
     marcados = [
         {**a, "weight": weight_of(a, sect), "tempo": tempo_of(a.get("transit", ""))}
         for a in aspects
@@ -209,11 +250,16 @@ def select(aspects: list[dict], supporting: int = 2,
     # Dos papeles con nombre, ademas del orden por fuerza.
     #
     # Medido sobre cuatro cartas reales y 180 dias: el mas fuerte es un planeta
-    # LENTO el 97% de los dias, Neptuno y Pluton solos se llevan el 78%, y una
-    # carta repitio el mismo primero 70 dias seguidos. La Luna no fue primera ni
-    # una vez en 720 dias-carta. Eso no es un error de la ponderacion -- un
-    # transito lento dura lo que dura --, pero convierte un texto diario en uno
-    # trimestral que se reescribe cada manana con otras palabras.
+    # LENTO el 97% de los dias, y una carta repitio el mismo primero 70 dias
+    # seguidos. La Luna no fue primera ni una vez en 720 dias-carta. Eso no es un
+    # error de la ponderacion -- un transito lento dura lo que dura --, pero
+    # convierte un texto diario en uno trimestral que se reescribe cada manana
+    # con otras palabras.
+    #
+    # Esa medicion es de cuando Neptuno y Pluton entraban, y ellos dos solos se
+    # llevaban el 78% de los primeros puestos. Ya no entran, y el reparto quedo
+    # en Jupiter 45,2% - Saturno 34,5% - Nodo 20,3%. El problema de fondo no
+    # cambia: el capitulo sigue durando semanas.
     #
     # La senal diaria SI existe y ya se calculaba: el conjunto de acompanantes
     # cambia el 71% de los dias y los cinco rapidos aparecen. Estaba en la silla

@@ -7,8 +7,13 @@ hay un test que lo protege.
 NO son modernos: el Nodo Norte (Valens, Caput Draconis, Lilly) ni los Angulos.
 Carecen de metal por no ser planetas, no por ser recientes.
 
+YA NO ES HIPOTETICO: desde `CLASSICAL_POINTS`, el motor filtra por defecto y
+el escenario C es lo que corre en produccion. Esta sonda se conserva para poder
+volver a medir el coste de la decision, y por eso pide los aspectos con
+`classical_only=False`.
+
 Se miden tres escenarios sobre las mismas cartas y dias:
-  A. todo, como hoy
+  A. todo, como era antes del filtro
   B. sin los tres modernos EN TRANSITO (siguen como puntos natales)
   C. sin los tres modernos en ninguno de los dos lados
 
@@ -61,7 +66,11 @@ for nombre, dt, lat, lon in CARTAS:
     sect = nce.sect_of(chart)
     for d in range(DIAS):
         ahora = inicio + timedelta(days=d)
-        todos = nce.compute_transits(objetivos, ahora)["aspects_to_natal"]
+        # classical_only=False a proposito: el filtro ya vive en el motor, y
+        # sin esto los tres escenarios medirian lo mismo y la sonda diria que
+        # quitar los modernos no cambia nada.
+        todos = nce.compute_transits(
+            objetivos, ahora, classical_only=False)["aspects_to_natal"]
         for etiqueta, qt, qn in (("A", False, False), ("B", True, False), ("C", True, True)):
             lista = escenario(todos, qt, qn)
             s = tw.select(lista, sect=sect)
@@ -81,7 +90,7 @@ for nombre, dt, lat, lon in CARTAS:
 n = tot["dias"]
 print(f"Sobre {n} dias-carta ({len(CARTAS)} cartas x {DIAS} dias)\n")
 print(f"{'escenario':34} {'aspectos/dia':>13} {'sin capitulo':>14} {'sin hoy':>10}")
-for etiqueta, desc in (("A", "A. todo, como ahora"),
+for etiqueta, desc in (("A", "A. todo, como antes"),
                        ("B", "B. sin modernos en transito"),
                        ("C", "C. sin modernos en ningun lado")):
     media = tot["n_" + etiqueta] / n

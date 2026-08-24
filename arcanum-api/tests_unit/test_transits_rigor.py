@@ -117,7 +117,7 @@ def _asp(transit, natal, aspect="square", orb=1.0, max_orb=3, applying=True):
 def test_saturno_aplicativo_al_sol_gana_a_la_luna_separativa_mas_exacta():
     # El caso que justifica toda la ponderacion: el orbe por si solo mentiria.
     saturno = _asp("saturn", "sun", orb=0.2, applying=True)
-    luna = _asp("moon", "neptune", aspect="trine", orb=0.1, applying=False)
+    luna = _asp("moon", "jupiter", aspect="trine", orb=0.1, applying=False)
     assert tw.weight_of(saturno) > tw.weight_of(luna)
 
 
@@ -133,7 +133,7 @@ def test_mas_cerca_de_la_exactitud_pesa_mas():
 
 def test_un_transito_a_un_eje_pesa_mas_que_a_un_planeta_lejano():
     assert tw.weight_of(_asp("saturn", "ascendant")) > \
-           tw.weight_of(_asp("saturn", "neptune"))
+           tw.weight_of(_asp("saturn", "jupiter"))
 
 
 def test_un_cuerpo_desconocido_ni_se_ignora_ni_se_dispara():
@@ -167,7 +167,7 @@ def test_sin_aspectos_no_hay_titular():
 
 def test_el_titular_es_el_mas_fuerte():
     fuerte = _asp("saturn", "sun", orb=0.1)
-    debil = _asp("moon", "pluto", orb=2.9, applying=False)
+    debil = _asp("moon", "saturn", orb=2.9, applying=False)
     assert tw.select([debil, fuerte])["primary"]["transit"] == "saturn"
 
 
@@ -176,7 +176,7 @@ def test_el_acompanamiento_busca_el_otro_tempo():
     # diria lo mismo durante meses.
     aspectos = [
         _asp("saturn", "sun", orb=0.1),
-        _asp("pluto", "moon", orb=2.5),
+        _asp("north_node", "moon", orb=2.5),
         _asp("venus", "mercury", orb=1.0),
     ]
     elegido = tw.select(aspectos, supporting=1)
@@ -187,16 +187,16 @@ def test_el_acompanamiento_busca_el_otro_tempo():
 def test_si_no_hay_otro_tempo_se_sigue_por_peso():
     aspectos = [
         _asp("saturn", "sun", orb=0.1),
-        _asp("pluto", "moon", orb=2.5),
+        _asp("north_node", "moon", orb=2.5),
         _asp("jupiter", "venus", orb=2.9),
     ]
     elegido = tw.select(aspectos, supporting=1)
-    assert elegido["supporting"][0]["transit"] == "pluto"
+    assert elegido["supporting"][0]["transit"] == "north_node"
 
 
 def test_nadie_se_pierde_ni_se_repite():
     aspectos = [_asp("saturn", "sun"), _asp("moon", "venus"),
-                _asp("mars", "mercury"), _asp("pluto", "midheaven")]
+                _asp("mars", "mercury"), _asp("north_node", "midheaven")]
     elegido = tw.select(aspectos, supporting=2)
     reunidos = [elegido["primary"]] + elegido["supporting"] + elegido["rest"]
     assert len(reunidos) == len(aspectos)

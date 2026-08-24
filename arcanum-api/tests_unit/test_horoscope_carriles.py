@@ -28,20 +28,20 @@ def _a(transit, natal, orb=0.5, applying=True):
 # ── Los dos papeles ──────────────────────────────────────────────────────────
 
 def test_el_capitulo_es_el_lento_y_hoy_es_el_rapido():
-    s = tw.select([_a("neptune", "sun", orb=0.1), _a("mercury", "venus", orb=2.0)])
-    assert s["chapter"]["transit"] == "neptune"
+    s = tw.select([_a("saturn", "sun", orb=0.1), _a("mercury", "venus", orb=2.0)])
+    assert s["chapter"]["transit"] == "saturn"
     assert s["today"]["transit"] == "mercury"
 
 
 def test_el_capitulo_no_le_roba_el_sitio_a_hoy_por_ser_mas_fuerte():
-    """Es el caso real: Neptuno gana por peso y aun asi hoy tiene su carril."""
-    s = tw.select([_a("neptune", "sun", orb=0.1), _a("moon", "mars", orb=2.9)])
-    assert s["primary"]["transit"] == "neptune"     # sigue siendo el mas fuerte
+    """Es el caso real: Saturno gana por peso y aun asi hoy tiene su carril."""
+    s = tw.select([_a("saturn", "sun", orb=0.1), _a("moon", "mars", orb=2.9)])
+    assert s["primary"]["transit"] == "saturn"      # sigue siendo el mas fuerte
     assert s["today"]["transit"] == "moon"          # y hoy no desaparece
 
 
 def test_sin_rapidos_no_hay_carril_de_hoy():
-    s = tw.select([_a("pluto", "sun"), _a("saturn", "moon")])
+    s = tw.select([_a("jupiter", "sun"), _a("saturn", "moon")])
     assert s["chapter"] is not None
     assert s["today"] is None
 
@@ -58,9 +58,9 @@ def test_sin_aspectos_no_hay_ninguno_de_los_dos():
 
 
 def test_cada_carril_elige_el_mas_fuerte_de_su_tempo():
-    s = tw.select([_a("saturn", "mercury", orb=2.5), _a("pluto", "sun", orb=0.1),
+    s = tw.select([_a("jupiter", "mercury", orb=2.5), _a("saturn", "sun", orb=0.1),
                    _a("moon", "jupiter", orb=2.5), _a("mars", "sun", orb=0.1)])
-    assert s["chapter"]["transit"] == "pluto"
+    assert s["chapter"]["transit"] == "saturn"
     assert s["today"]["transit"] == "mars"
 
 

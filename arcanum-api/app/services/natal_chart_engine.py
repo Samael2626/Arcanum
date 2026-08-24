@@ -39,6 +39,30 @@ PLANETS = [
     ("pluto", swe.PLUTO), ("north_node", swe.MEAN_NODE),
 ]
 
+# Los cuerpos con los que ARCANUM trabaja de verdad.
+#
+# Son los siete clasicos -- los visibles a ojo desnudo, los unicos que tienen
+# regencia, dia de la semana, hora planetaria y metal --, mas el Nodo Norte y
+# los dos angulos.
+#
+# Urano, Neptuno y Pluton se calculan igual y se siguen VIENDO: estan en la
+# carta natal y en el cielo de Cielos, porque estan ahi de verdad y ocultarlos
+# seria otra clase de mentira. Lo que no hacen es generar transitos, y por eso
+# el filtro vive en `compute_transits` y no en `current_positions`.
+#
+# El motivo no es historico sino de producto: la app ensena a practicar, y toda
+# la practica -- el sello, la hora, el regente, el metal, el sigilo -- cuelga de
+# los siete. Un capitulo de vida regido por Pluton no lleva a ninguna parte
+# dentro de esta app: no hay hora de Pluton ni metal de Pluton que consagrar.
+#
+# El Nodo Norte se queda porque SI es tradicional -- Cabeza del Dragon, usada
+# desde la astrologia helenistica -- y porque no es un planeta moderno: es un
+# punto calculado, como los angulos.
+CLASSICAL_POINTS = frozenset({
+    "sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn",
+    "north_node", "ascendant", "midheaven",
+})
+
 HOUSE_SYSTEMS = {
     "placidus": b"P", "koch": b"K", "whole_sign": b"W", "equal": b"A",
     "porphyry": b"O", "regiomontanus": b"R", "campanus": b"C",
@@ -278,18 +302,36 @@ def natal_targets(chart_data: dict) -> list[dict]:
     return puntos
 
 
-def compute_transits(natal_planets: list[dict], dt_utc: datetime) -> dict:
+def compute_transits(natal_planets: list[dict], dt_utc: datetime,
+                     classical_only: bool = True) -> dict:
     """Posiciones actuales + aspectos de los planetas en tránsito a los natales.
 
     `natal_planets` acepta cualquier punto con `name` y `longitude`: pasando el
     resultado de `natal_targets()` entran también Ascendente y Medio Cielo.
+
+    Por defecto **solo los cuerpos clásicos generan aspectos**, y el filtro cae
+    sobre los dos extremos: ni Plutón transitando tu Sol, ni Saturno transitando
+    tu Plutón natal. Ver `CLASSICAL_POINTS` para el porqué.
+
+    `transiting` sigue devolviendo el cielo entero, modernos incluidos: son las
+    posiciones reales y la rueda de Cielos las pinta. Lo que se filtra son los
+    ASPECTOS, que es donde empieza la interpretación.
+
+    `classical_only=False` existe para poder medir la diferencia —así se midió
+    que sin ellos se pasa de 17,3 a 9,7 aspectos al día y sigue habiendo
+    capítulo el 100% de los días— y para no romper a quien pidiera la carta
+    completa. No lo uses para el horóscopo.
     """
     dt = dt_utc if dt_utc.tzinfo else dt_utc.replace(tzinfo=timezone.utc)
     transiting = current_positions(dt)
     natal_lon = {p["name"]: p["longitude"] for p in natal_planets}
+    if classical_only:
+        natal_lon = {n: v for n, v in natal_lon.items() if n in CLASSICAL_POINTS}
 
     aspects: list[dict] = []
     for tname, tdata in transiting.items():
+        if classical_only and tname not in CLASSICAL_POINTS:
+            continue
         for nname, nlon in natal_lon.items():
             sep = _angular_diff(tdata["longitude"], nlon)
             for aname, angle, orb in TRANSIT_ASPECTS:
