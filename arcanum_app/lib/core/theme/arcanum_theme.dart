@@ -10,11 +10,21 @@ import 'arcanum_colors.dart';
 /// dispositivo elige por su cuenta qué fuente los pinta, y en algunos Android
 /// eso significa emoji de colores dentro de la rueda natal.
 ///
-/// Noto Sans Symbols (OFL) cubre los doce signos, los aspectos y todos los
-/// planetas salvo el Sol (U+2609), que se dibuja aparte por ser un círculo con
-/// un punto. Va como FALLBACK, no como familia principal: solo entra cuando el
-/// glifo no existe en la fuente elegida, así que no toca ni una letra del texto.
-const List<String> kGlyphFallback = ['Noto Sans Symbols'];
+/// El respaldo son cuatro familias, y **el orden es el diseño**: Libertinus
+/// Serif pone los 24 glifos que tiene —es la única serif del grupo, la que
+/// acompaña a Cormorant— y las Noto solo rellenan los 15 que a ella le faltan.
+/// Entre las cuatro cubren los 39, medidos sobre `lib/`.
+///
+/// Van como FALLBACK, no como familia principal: solo entran cuando el glifo no
+/// existe en la fuente elegida, así que no tocan ni una letra del texto. Y van
+/// recortadas a esos 39 glifos: completas pesarían 2,2 MB, aquí pesan 11 KB.
+/// Las genera `tool/generar_fuente_glifos.py`.
+const List<String> kGlyphFallback = [
+  'ArcanumGlifos',
+  'ArcanumGlifosB',
+  'ArcanumGlifosC',
+  'ArcanumGlifosD',
+];
 
 class ArcanumText {
   static TextStyle wordmark({double size = 44}) => TextStyle(

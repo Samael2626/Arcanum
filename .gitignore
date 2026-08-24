@@ -36,3 +36,7 @@ Brain/
 arcanum-api/scripts/library_data/*
 # Excepción: el puente Materia<->Culpeper es contenido curado a mano.
 !arcanum-api/scripts/library_data/culpeper_materia_bridge.json
+
+# Fuentes de origen del generador de glifos: 2,2 MB para producir 11 KB.
+# Las baja tool/generar_fuente_glifos.py cuando hacen falta.
+arcanum_app/.fuentes-origen/
