@@ -4,7 +4,7 @@
 - Flutter + Riverpod (mobile), Firebase (frontend)
 - FastAPI + PostgreSQL (backend en Railway)
 - RevenueCat (pagos)
-- Claude API / Groq (oracle IA)
+- Groq (oracle IA; `claude_service.py` usa el SDK de Groq, el nombre es herencia. Anthropic NO esta en uso)
 - AES-256 (grimorio cifrado)
 - Supabase (base de datos)
 
@@ -19,6 +19,7 @@ Monorepo con `arcanum_app/` (Flutter) y `arcanum-api/` (FastAPI).
 - arcanum-kabbalist: gematria y Arbol de la Vida
 - arcanum-tarot: tiradas e interpretacion (78 arcanos)
 - arcanum-translator: traduccion historica EN-ES, glosario, critica y control MQM
+- arcanum-legal: compliance de tiendas, privacidad (Ley 1581/GDPR/AI Act/CCPA), disclaimers por modulo, redaccion legal, auditoria del repo y documentacion legal-tecnica. Copia compatible en `.agents/skills/arcanum-legal/`
 
 ## Convenciones
 - Riverpod con @riverpod annotation + code generation
