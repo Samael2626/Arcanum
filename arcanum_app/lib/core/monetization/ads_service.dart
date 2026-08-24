@@ -4,25 +4,44 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-/// IDs de ad units — reemplazar con los reales de AdMob.
+/// Las unidades de anuncio de AdMob.
+///
+/// Estaban cableadas a las de PRUEBA de Google, sin aviso de ninguna clase. El
+/// App ID sí tenía guarda —el build de release se para si falta— pero la unidad
+/// no, así que un release firmado y subido habría pedido anuncios a la unidad
+/// de test: cero ingresos, y tráfico que a Google no le gusta ver en una cuenta
+/// de producción. Un fallo silencioso al lado de uno ruidoso.
+///
+/// Ahora la unidad real entra por `--dart-define` y las de prueba solo sirven
+/// en debug. En release sin definirla, [esDePrueba] lo dice y `AdsService` se
+/// niega a cargar en vez de fingir que funciona.
 class AdUnitIds {
-  // Android (test IDs para desarrollo)
-  static const rewardedAndroid = 'ca-app-pub-3940256099942544/5224354917';
-  static const interstitialAndroid = 'ca-app-pub-3940256099942544/1033173712';
+  /// El prefijo de todas las unidades de demostración de Google.
+  static const _prefijoDePrueba = 'ca-app-pub-3940256099942544';
 
-  // iOS (test IDs para desarrollo)
-  static const rewardedIos = 'ca-app-pub-3940256099942544/1712485313';
-  static const interstitialIos = 'ca-app-pub-3940256099942544/4411468910';
+  static const _pruebaRewardedAndroid = '$_prefijoDePrueba/5224354917';
+  static const _pruebaRewardedIos = '$_prefijoDePrueba/1712485313';
 
-  static String get rewarded =>
-      defaultTargetPlatform == TargetPlatform.iOS
-          ? rewardedIos
-          : rewardedAndroid;
+  /// La unidad real, si se pasó al compilar:
+  ///
+  ///     flutter build appbundle --release \
+  ///       --dart-define=ADMOB_REWARDED_ANDROID=ca-app-pub-XXXX/YYYY
+  static const _rewardedAndroid =
+      String.fromEnvironment('ADMOB_REWARDED_ANDROID');
+  static const _rewardedIos = String.fromEnvironment('ADMOB_REWARDED_IOS');
 
-  static String get interstitial =>
-      defaultTargetPlatform == TargetPlatform.iOS
-          ? interstitialIos
-          : interstitialAndroid;
+  static String get rewarded {
+    final esIos = defaultTargetPlatform == TargetPlatform.iOS;
+    final real = esIos ? _rewardedIos : _rewardedAndroid;
+    if (real.isNotEmpty) return real;
+    return esIos ? _pruebaRewardedIos : _pruebaRewardedAndroid;
+  }
+
+  /// Si la unidad que se va a usar es una de demostración.
+  ///
+  /// En debug es lo correcto y no pasa nada. En release significa que alguien
+  /// compiló sin pasar la unidad real, y eso hay que decirlo.
+  static bool get esDePrueba => rewarded.startsWith(_prefijoDePrueba);
 }
 
 class AdsService {
@@ -35,6 +54,17 @@ class AdsService {
   /// Precargar un rewarded ad.
   void preloadRewarded() {
     if (_isLoading || _rewardedAd != null) return;
+    // Ruidoso y sin cargar nada: pedir anuncios a una unidad de demostración
+    // desde una app publicada no da ingresos y ensucia la cuenta de AdMob.
+    // Mejor que la vía de créditos por anuncio no exista a que exista falsa.
+    if (kReleaseMode && AdUnitIds.esDePrueba) {
+      debugPrint(
+        'AdMob: unidad de PRUEBA en un build de release. Compila con '
+        '--dart-define=ADMOB_REWARDED_ANDROID=<tu unidad real>.',
+      );
+      _controller.add(const AdEvent.failedToLoad());
+      return;
+    }
     _isLoading = true;
 
     RewardedAd.load(
