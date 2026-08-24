@@ -354,6 +354,30 @@ class _OracleViewState extends ConsumerState<_OracleView> {
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
       children: [
         const SizedBox(height: 8),
+        Semantics(
+          label: 'Aviso de inteligencia artificial',
+          child: ArcanumCard(
+            intensity: 0.35,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.auto_awesome_outlined,
+                  color: ArcanumColors.gold,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Estás hablando con un modelo de IA. Sus respuestas son simbólicas y pueden contener errores.',
+                    style: ArcanumText.body(14),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 18),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: _spreads.map((s) {
