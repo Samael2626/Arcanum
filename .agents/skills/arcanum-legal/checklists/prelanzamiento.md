@@ -4,13 +4,13 @@ Ningún item se salta. Cada uno se marca con evidencia (archivo:línea, captura 
 
 ## Bloqueantes (sin esto no se publica)
 
-- [ ] Reporte in-app de contenido generado por IA, en cada respuesta del oráculo y las lecturas. `Play AI-Generated Content`
-- [ ] Aviso de IA visible en la primera interacción del chat. `AI Act art. 50`
-- [ ] Modal de consentimiento nombrando al proveedor de IA (Groq) antes del primer envío, con opción de rechazar. `Apple 5.1.2(i)`
-- [ ] UMP/CMP integrado: `requestConsentInfoUpdate` → `loadAndShowConsentFormIfRequired` → `canRequestAds` antes de inicializar ads. `AdMob EEE/UK`
+- [x] Reporte in-app de contenido generado por IA, en cada respuesta del oráculo y las lecturas. `Play AI-Generated Content`. Evidencia: `arcanum-api/app/routers/reports.py:13`, `arcanum_app/lib/features/oraculo/oraculo_screen.dart:517`, `arcanum_app/lib/features/tarot/tarot_screen.dart:322`.
+- [x] Aviso de IA visible en la primera interacción del chat. `AI Act art. 50`. Evidencia: `arcanum_app/lib/features/oraculo/oraculo_screen.dart:380`.
+- [x] Modal de consentimiento nombrando al proveedor de IA (Groq) antes del primer envío, con opción de rechazar. `Apple 5.1.2(i)`. Evidencia: `arcanum_app/lib/core/privacy/ai_consent_service.dart:61`, `arcanum_app/lib/core/privacy/ai_consent_service.dart:63`, `arcanum_app/lib/core/privacy/ai_consent_service.dart:70`, `arcanum_app/lib/core/privacy/ai_consent_service.dart:76`.
+- [ ] UMP/CMP integrado: `requestConsentInfoUpdate` → `loadAndShowConsentFormIfRequired` → `canRequestAds` antes de inicializar ads. `AdMob EEE/UK`. **Abierto:** anuncios desactivados por defecto mediante `ADS_ENABLED`; no activar hasta implementar el TODO UMP. Evidencia: `arcanum_app/lib/main.dart:29`, `arcanum_app/lib/main.dart:31`, `arcanum_app/lib/main.dart:34`.
 - [ ] Punto de entrada permanente a Opciones de privacidad en Ajustes cuando sea requerido.
 - [ ] Borrado de cuenta in-app + URL web pública, y el borrado propaga a RevenueCat y Firebase. `Play`, `Apple 5.1.1(v)`
-- [ ] Consentimiento de datos sensibles (natal, práctica) explícito, separado y revocable, con versión y timestamp persistidos. `Ley 1581 art. 5`, `GDPR art. 9`
+- [x] Consentimiento de datos sensibles (natal, práctica) explícito, separado y revocable, con versión y timestamp persistidos. `Ley 1581 art. 5`, `GDPR art. 9`. Evidencia: `arcanum_app/lib/features/onboarding/presentation/steps/sensitive_data_consent_step.dart:54`, `arcanum_app/lib/features/onboarding/presentation/steps/sensitive_data_consent_step.dart:71`, `arcanum_app/lib/features/settings/sensitive_data_consent_settings_card.dart:42`, `arcanum-api/migrations/versions/008_add_user_consents.py:16`, `arcanum-api/migrations/versions/008_add_user_consents.py:18`, `arcanum-api/migrations/versions/008_add_user_consents.py:19`, `arcanum-api/app/routers/consents.py:30`.
 - [ ] Enlace a la política de privacidad dentro de la app y en la metadata de la ficha.
 - [ ] Política, `legal-site/`, `docs/` y `privacy_screen.dart` dicen lo mismo, y coinciden con el código auditado.
 - [ ] Data safety de Play relleno campo por campo contra el inventario real, incluidas las preguntas de eliminación.

@@ -12,6 +12,7 @@ from app.models.credit_ledger import CreditLedger
 from app.models.usage_operation import UsageOperation
 from app.models.revenuecat_event import RevenueCatEvent
 from app.models.content_report import ContentReport
+from app.models.user_consent import UserConsent
 
 __all__ = [
     "User",
@@ -31,4 +32,5 @@ __all__ = [
     "UsageOperation",
     "RevenueCatEvent",
     "ContentReport",
+    "UserConsent",
 ]

@@ -288,6 +288,24 @@ class ArcanumApi {
       },
     );
   }
+
+  Future<List<Map<String, dynamic>>> userConsents() async =>
+      (await _dio.get('/consents')).data.cast<Map<String, dynamic>>();
+
+  Future<Map<String, dynamic>> recordConsent({
+    required String kind,
+    required String policyVersion,
+    required bool granted,
+  }) async =>
+      (await _dio.post(
+            '/consents',
+            data: {
+              'kind': kind,
+              'policy_version': policyVersion,
+              'granted': granted,
+            },
+          )).data
+          as Map<String, dynamic>;
 }
 
 final arcanumApiProvider = Provider((ref) => ArcanumApi(ref.read(dioProvider)));

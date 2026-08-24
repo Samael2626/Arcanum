@@ -69,6 +69,19 @@ void main() {
     expect(back, findsNothing);
   });
 
+  testWidgets('pide autorizacion sensible separada antes de datos natales', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap());
+    await tester.tap(find.text('Comenzar'));
+    await tester.pump();
+
+    expect(find.text('Tus datos sensibles'), findsOneWidget);
+    expect(find.textContaining('Entregarlos es voluntario'), findsOneWidget);
+    expect(find.text('Acepto compartirlos'), findsOneWidget);
+    expect(find.text('Continuar sin datos sensibles'), findsOneWidget);
+  });
+
   testWidgets('next advances step and back retreats it', (tester) async {
     final container = makeContainer();
     addTearDown(container.dispose);
@@ -108,10 +121,45 @@ void main() {
       final container = makeContainer();
       addTearDown(container.dispose);
       final notifier = container.read(onboardingProvider.notifier);
+      notifier.setSensitiveDataConsent(true);
 
       expect(() => notifier.finish(), throwsA(isA<StateError>()));
     },
   );
+
+  testWidgets('finish no persiste datos sensibles sin autorizacion', (
+    tester,
+  ) async {
+    final container = makeContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(onboardingProvider.notifier);
+    notifier.setResolvedLocation(
+      displayName: 'Bogotá, Colombia',
+      lat: '4.710000',
+      lon: '-74.070000',
+      timezone: 'America/Bogota',
+    );
+
+    expect(() => notifier.finish(), throwsA(isA<StateError>()));
+  });
+
+  testWidgets('rechazo completa onboarding sin datos sensibles', (
+    tester,
+  ) async {
+    final online = _RecordingAuthRepository();
+    final container = ProviderContainer(
+      overrides: [authRepositoryProvider.overrideWithValue(online)],
+    );
+    addTearDown(container.dispose);
+
+    await container
+        .read(onboardingProvider.notifier)
+        .finishWithoutSensitiveData();
+
+    expect(online.sent, [
+      {'onboarding_completed': true},
+    ]);
+  });
 
   testWidgets(
     'finish flips onboarding_completed to true tras confirmar lugar',
@@ -119,6 +167,7 @@ void main() {
       final container = makeContainer();
       addTearDown(container.dispose);
       final notifier = container.read(onboardingProvider.notifier);
+      notifier.setSensitiveDataConsent(true);
 
       notifier.setResolvedLocation(
         displayName: 'Bogotá, Colombia',
@@ -137,6 +186,7 @@ void main() {
     final container = makeContainer();
     addTearDown(container.dispose);
     final notifier = container.read(onboardingProvider.notifier);
+    notifier.setSensitiveDataConsent(true);
 
     notifier.setResolvedLocation(
       displayName: 'Bogotá, Colombia',
@@ -161,12 +211,15 @@ void main() {
   group('perfil pendiente de reintento', () {
     const kPending = 'onboarding_pending_profile';
 
-    void confirmPlace(OnboardingNotifier n) => n.setResolvedLocation(
-      displayName: 'Bogotá, Colombia',
-      lat: '4.710000',
-      lon: '-74.070000',
-      timezone: 'America/Bogota',
-    );
+    void confirmPlace(OnboardingNotifier n) {
+      n.setSensitiveDataConsent(true);
+      n.setResolvedLocation(
+        displayName: 'Bogotá, Colombia',
+        lat: '4.710000',
+        lon: '-74.070000',
+        timezone: 'America/Bogota',
+      );
+    }
 
     testWidgets('un fallo de red encola el perfil en vez de perderlo', (
       tester,
@@ -296,7 +349,7 @@ void main() {
     });
   });
 
-  testWidgets('isLast is true on step 4', (tester) async {
+  testWidgets('isLast is true on step 5', (tester) async {
     final container = makeContainer();
     addTearDown(container.dispose);
     final n = container.read(onboardingProvider.notifier);
@@ -304,7 +357,8 @@ void main() {
     n.next();
     n.next();
     n.next();
-    expect(container.read(onboardingProvider).step, 4);
+    n.next();
+    expect(container.read(onboardingProvider).step, 5);
     expect(container.read(onboardingProvider).isLast, isTrue);
     expect(container.read(onboardingProvider).isFirst, isFalse);
   });

@@ -96,6 +96,7 @@ def check_migration_status(engine) -> dict:
                 "divination_sessions",
                 "oracle_conversations",
                 "content_reports",
+                "user_consents",
             ],
         }
     except Exception as e:
