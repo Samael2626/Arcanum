@@ -227,7 +227,7 @@ void main() {
     // Lo que se ve antes de tocar: el transito real y la invitacion.
     expect(find.text('Luna trígono Medio Cielo'), findsOneWidget);
     expect(find.textContaining('119,3'), findsOneWidget);
-    expect(find.text('ROMPER EL LACRE DEL SOL'), findsOneWidget);
+    expect(find.text('Abrir el sello del Sol'), findsOneWidget);
     expect(api.horoscopeCalls, 0);
   });
 
@@ -247,14 +247,14 @@ void main() {
     await tester.pump();
     await tester.drag(find.byType(ListView), const Offset(0, -900));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('ROMPER EL LACRE DEL SOL'));
+    await tester.ensureVisible(find.text('Abrir el sello del Sol'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('ROMPER EL LACRE DEL SOL'));
+    await tester.tap(find.text('Abrir el sello del Sol'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Ahora no'));
     await tester.pumpAndSettle();
 
-    expect(find.text('ROMPER EL LACRE DEL SOL'), findsOneWidget);
+    expect(find.text('Abrir el sello del Sol'), findsOneWidget);
     expect(api.horoscopeCalls, 0);
     expect(api.celestialOverviewCalls, 0);
   });
@@ -273,9 +273,9 @@ void main() {
     await tester.pump();
     await tester.drag(find.byType(ListView), const Offset(0, -900));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('ROMPER EL LACRE DEL SOL'));
+    await tester.ensureVisible(find.text('Abrir el sello del Sol'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('ROMPER EL LACRE DEL SOL'));
+    await tester.tap(find.text('Abrir el sello del Sol'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byIcon(Icons.check_box_outline_blank).first);
@@ -293,7 +293,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1));
     await tester.pump();
 
-    expect(find.text('ROMPER EL LACRE DEL SOL'), findsNothing);
+    expect(find.text('Abrir el sello del Sol'), findsNothing);
     expect(find.text('Saturno aprieta sobre tu Sol natal.'), findsOneWidget);
     final routeTarget = find.ancestor(
       of: find.text('trígono'),

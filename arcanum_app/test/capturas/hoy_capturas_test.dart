@@ -237,9 +237,9 @@ void main() {
     await tester.pumpAndSettle();
     // El boton puede quedar fuera del alto del telefono de referencia: sin
     // esto el toque cae en el vacio y la captura no llega a existir.
-    await tester.ensureVisible(find.text('ROMPER EL LACRE DEL SOL'));
+    await tester.ensureVisible(find.text('Abrir el sello del Sol'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('ROMPER EL LACRE DEL SOL'));
+    await tester.tap(find.text('Abrir el sello del Sol'));
     await tester.pumpAndSettle();
     await _retratar(tester, '03-consentimiento', conOverlay: true);
   });
@@ -250,9 +250,9 @@ void main() {
     await tester.pumpAndSettle();
     // El boton puede quedar fuera del alto del telefono de referencia: sin
     // esto el toque cae en el vacio y la captura no llega a existir.
-    await tester.ensureVisible(find.text('ROMPER EL LACRE DEL SOL'));
+    await tester.ensureVisible(find.text('Abrir el sello del Sol'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('ROMPER EL LACRE DEL SOL'));
+    await tester.tap(find.text('Abrir el sello del Sol'));
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.check_box_outline_blank).first);
     await tester.pump();
@@ -264,13 +264,34 @@ void main() {
     await _retratar(tester, '04-sello-abierto');
   });
 
+  testWidgets('04b el pliegue, a media apertura', (tester) async {
+    // El gesto no se ve en un estado final: hay que parar la animacion a la
+    // mitad. Con pumpAndSettle se salta entera y el pliegue seria invisible,
+    // que es justo por lo que se dio por ausente la primera vez.
+    await _montar(tester);
+    await tester.drag(find.byType(ListView), const Offset(0, -900));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Abrir el sello del Sol'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Abrir el sello del Sol'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.check_box_outline_blank).first);
+    await tester.pump();
+    await tester.tap(find.byIcon(Icons.check_box_outline_blank).first);
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Acepto'));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 260));
+    await _retratar(tester, '04b-pliegue');
+  });
+
   testWidgets('05 el texto, ya abierto', (tester) async {
     await _montar(tester);
     await tester.drag(find.byType(ListView), const Offset(0, -900));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('ROMPER EL LACRE DEL SOL'));
+    await tester.ensureVisible(find.text('Abrir el sello del Sol'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('ROMPER EL LACRE DEL SOL'));
+    await tester.tap(find.text('Abrir el sello del Sol'));
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.check_box_outline_blank).first);
     await tester.pump();

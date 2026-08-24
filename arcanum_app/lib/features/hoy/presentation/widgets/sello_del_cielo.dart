@@ -104,13 +104,9 @@ class _SelloDelCieloState extends State<SelloDelCielo>
     final angulo = (a['angle'] as num?)?.toInt() ?? 0;
     final separacion = (a['separation'] as num?)?.toDouble();
     final nombre = _nombreDelAspecto(a);
-    final chapterName = widget.today == null || widget.chapter == null
-        ? null
-        : _nombreDelAspecto(widget.chapter!);
-    final rulerName = pointEs(widget.regente).toUpperCase();
     final action = widget.regente == null
-        ? 'ROMPER EL LACRE'
-        : 'ROMPER EL LACRE DEL $rulerName';
+        ? 'Abrir el sello'
+        : 'Abrir el sello ${_delRegente(widget.regente!)}';
 
     return Semantics(
       button: !widget.abierto,
@@ -155,27 +151,40 @@ class _SelloDelCieloState extends State<SelloDelCielo>
                   ),
                 ),
                 const SizedBox(height: 12),
+                // Los dos papeles, con su cuerpo dentro. El nombre va AQUI y no
+                // grabado en el aro: medido, sextil, cuadratura y oposicion
+                // ponen un vertice justo donde caeria un rotulo abajo.
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 14,
+                  runSpacing: 4,
+                  children: [
+                    if (widget.today != null)
+                      _ChipDePapel(
+                        papel: 'hoy',
+                        cuerpo: pointEs(widget.today!['transit'] as String?),
+                        punteado: false,
+                      ),
+                    if (widget.chapter != null)
+                      _ChipDePapel(
+                        papel: 'capítulo',
+                        cuerpo: pointEs(widget.chapter!['transit'] as String?),
+                        punteado: true,
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
                 Text(nombre, style: ArcanumText.body(15)),
                 const SizedBox(height: 3),
                 Text(
-                  _pieDeSeparacion(separacion),
+                  _pieDeSeparacion(separacion, a['exact_at'] as String?),
+                  textAlign: TextAlign.center,
                   style: ArcanumText.body(
                     12,
                     color: ArcanumColors.ivoryMuted,
                     italic: true,
                   ),
                 ),
-                if (chapterName != null) ...[
-                  const SizedBox(height: 7),
-                  Text(
-                    'Capítulo: $chapterName',
-                    textAlign: TextAlign.center,
-                    style: ArcanumText.body(
-                      12,
-                      color: ArcanumColors.ivoryMuted,
-                    ),
-                  ),
-                ],
                 if (!widget.abierto) ...[
                   const SizedBox(height: 8),
                   SizedBox(
@@ -210,11 +219,121 @@ String _nombreDelAspecto(Map<String, dynamic> a) {
   return '$t $asp $n';
 }
 
-/// El grado real, que es la razón de ser de toda la pieza.
-String _pieDeSeparacion(double? separacion) {
-  if (separacion == null) return 'Separación no disponible.';
+/// El grado real, que es la razón de ser de toda la pieza, y cuándo se cierra.
+///
+/// La fecha importa más que el grado para quien no lee grados: dice si esto
+/// aprieta hoy o si aún queda semana. El motor la calcula con la velocidad
+/// instantánea del planeta y devuelve `null` cuando la cifra sería ficción
+/// —Saturno a 0,0018°/día tardaría años en recorrer su orbe—, y entonces aquí
+/// no se dice nada en vez de inventar un día.
+String _pieDeSeparacion(double? separacion, String? exactoEn) {
+  final cierre = _cuandoCierra(exactoEn);
+  if (separacion == null) {
+    return cierre == null ? 'Separación no disponible.' : 'Cierra $cierre.';
+  }
   final s = separacion.toStringAsFixed(1).replaceAll('.', ',');
-  return 'Separación real: $s°';
+  return cierre == null
+      ? 'Separación real: $s°'
+      : 'Separación real: $s° · cierra $cierre';
+}
+
+const _meses = [
+  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto',
+  'septiembre', 'octubre', 'noviembre', 'diciembre',
+];
+
+/// «hoy», «mañana» o «el 28 de agosto».
+///
+/// En días, no en horas: la hora exacta de una perfección sugeriría una
+/// precisión que una velocidad instantánea no tiene.
+String? _cuandoCierra(String? exactoEn) {
+  if (exactoEn == null) return null;
+  final cuando = DateTime.tryParse(exactoEn)?.toLocal();
+  if (cuando == null) return null;
+  final ahora = DateTime.now();
+  final hoy = DateTime(ahora.year, ahora.month, ahora.day);
+  final dia = DateTime(cuando.year, cuando.month, cuando.day);
+  final faltan = dia.difference(hoy).inDays;
+  if (faltan < 0) return null;
+  if (faltan == 0) return 'hoy';
+  if (faltan == 1) return 'mañana';
+  return 'el ${cuando.day} de ${_meses[cuando.month - 1]}';
+}
+
+/// «del Sol», «de la Luna», «de Venus».
+///
+/// El artículo no es adorno: «Abrir el sello de Sol» está mal escrito, y esto
+/// lo lee una persona. Solo las dos luminarias lo llevan.
+String _delRegente(String clave) {
+  const conArticulo = {'sun': 'del Sol', 'moon': 'de la Luna'};
+  return conArticulo[clave] ?? 'de ${pointEs(clave)}';
+}
+
+/// El chip de un papel: su trazo, el papel y el cuerpo que lo ocupa.
+///
+/// El trazo se DIBUJA, no se escribe con un carácter. El guion largo y la línea
+/// punteada existen en Unicode, pero dependerían de que la fuente los traiga, y
+/// esta pantalla ya tuvo un cuadrado vacío por confiar en eso.
+class _ChipDePapel extends StatelessWidget {
+  const _ChipDePapel({
+    required this.papel,
+    required this.cuerpo,
+    required this.punteado,
+  });
+
+  final String papel;
+  final String cuerpo;
+
+  /// Punteado para el capítulo, continuo para hoy: lo que viene de lejos y
+  /// sigue se dibuja entrecortado; lo que pasa hoy va entero.
+  final bool punteado;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = punteado ? ArcanumColors.ivoryMuted : ArcanumColors.gold;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        CustomPaint(
+          size: const Size(16, 2),
+          painter: _PintorTrazo(color: color, punteado: punteado),
+        ),
+        const SizedBox(width: 7),
+        Text('$papel · $cuerpo', style: ArcanumText.body(12, color: color)),
+      ],
+    );
+  }
+}
+
+class _PintorTrazo extends CustomPainter {
+  const _PintorTrazo({required this.color, required this.punteado});
+
+  final Color color;
+  final bool punteado;
+
+  @override
+  void paint(Canvas lienzo, Size tam) {
+    final pincel = Paint()
+      ..color = color
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round;
+    final y = tam.height / 2;
+    if (!punteado) {
+      lienzo.drawLine(Offset(0, y), Offset(tam.width, y), pincel);
+      return;
+    }
+    for (var x = 0.0; x < tam.width; x += 4) {
+      lienzo.drawLine(
+        Offset(x, y),
+        Offset(math.min(x + 2, tam.width), y),
+        pincel,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_PintorTrazo viejo) =>
+      viejo.color != color || viejo.punteado != punteado;
 }
 
 class _Lacre extends StatelessWidget {
@@ -306,11 +425,36 @@ class _PintorRueda extends CustomPainter {
       centro: PuntoRueda(centro.dx, centro.dy),
     );
 
-    // El trazo se DIBUJA en vez de aparecer: se recorta el camino segun el
-    // progreso, que es lo que convierte un dibujo en un gesto.
-    final camino = Path()..moveTo(f.vertices.first.x, f.vertices.first.y);
-    for (final v in f.vertices.skip(1)) {
-      camino.lineTo(v.x, v.y);
+    // EL PLIEGUE.
+    //
+    // Con el sello cerrado se ve el PUENTE: la cuerda entre los dos cuerpos,
+    // que es el aspecto reducido a lo minimo -- estos dos se miran. Al abrir,
+    // los vertices que completan la figura se despliegan DESDE esa cuerda, y
+    // el puente se convierte en el sigilo.
+    //
+    // Una oposicion no se pliega, y esta bien: su figura ya ES el puente. No
+    // hay nada que desplegar porque dos puntos enfrentados no forman poligono.
+    final vs = f.vertices;
+    final desde = Offset(vs.first.x, vs.first.y);
+    final hasta = Offset(vs[1].x, vs[1].y);
+    final puntos = <Offset>[];
+    for (var i = 0; i < vs.length; i++) {
+      final destino = Offset(vs[i].x, vs[i].y);
+      if (i <= 1) {
+        // Los dos cuerpos no se mueven: estan en su grado real desde el
+        // principio y ahi se quedan.
+        puntos.add(destino);
+        continue;
+      }
+      // Los demas nacen repartidos sobre la cuerda y viajan a su sitio.
+      final reparto = (i - 1) / (vs.length - 1);
+      final origen = Offset.lerp(hasta, desde, reparto)!;
+      puntos.add(Offset.lerp(origen, destino, progreso)!);
+    }
+
+    final camino = Path()..moveTo(puntos.first.dx, puntos.first.dy);
+    for (final punto in puntos.skip(1)) {
+      camino.lineTo(punto.dx, punto.dy);
     }
     if (f.cerrada) camino.close();
 
@@ -318,16 +462,14 @@ class _PintorRueda extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.3
       ..strokeCap = StrokeCap.round
-      ..color = ArcanumColors.gold.withValues(alpha: .85);
+      ..strokeJoin = StrokeJoin.round
+      ..color = ArcanumColors.gold.withValues(alpha: .55 + .30 * progreso);
+    lienzo.drawPath(camino, trazo);
 
-    for (final metrica in camino.computeMetrics()) {
-      lienzo.drawPath(metrica.extractPath(0, metrica.length * progreso), trazo);
-    }
-
-    // Los dos cuerpos: presentes desde el principio, pero apagados hasta que la
-    // figura los une. Antes de trazar no son un aspecto, son dos puntos.
+    // Los dos cuerpos, ya unidos por el puente desde el principio. Se realzan
+    // al abrir, pero no nacen apagados: el aspecto existe antes de leerlo.
     final astro = Paint()
-      ..color = ArcanumColors.gold.withValues(alpha: .45 + .55 * progreso);
+      ..color = ArcanumColors.gold.withValues(alpha: .70 + .30 * progreso);
     lienzo.drawCircle(Offset(f.transito.x, f.transito.y), 4.5, astro);
     lienzo.drawCircle(Offset(f.natal.x, f.natal.y), 4.5, astro);
   }

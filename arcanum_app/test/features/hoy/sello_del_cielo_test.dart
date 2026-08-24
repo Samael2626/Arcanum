@@ -45,7 +45,7 @@ Future<void> _montar(
 void main() {
   testWidgets('cerrado, invita a romper el lacre', (tester) async {
     await _montar(tester);
-    expect(find.text('ROMPER EL LACRE DEL SOL'), findsOneWidget);
+    expect(find.text('Abrir el sello del Sol'), findsOneWidget);
   });
 
   testWidgets('NO genera nada hasta que se toca', (tester) async {
@@ -67,7 +67,7 @@ void main() {
     await tester.pump();
     // La sorpresa se gasta una vez al dia, y eso es lo que la hace valer.
     expect(llamadas, 0);
-    expect(find.textContaining('ROMPER EL LACRE'), findsNothing);
+    expect(find.textContaining('Abrir el sello'), findsNothing);
   });
 
   testWidgets('el lacre lleva el glifo del regente del día', (tester) async {
@@ -78,7 +78,7 @@ void main() {
   testWidgets('sin regente, el lacre no se queda vacío', (tester) async {
     await _montar(tester, regente: null);
     expect(find.text('✦'), findsOneWidget);
-    expect(find.text('ROMPER EL LACRE'), findsOneWidget);
+    expect(find.text('Abrir el sello'), findsOneWidget);
   });
 
   testWidgets('nombra el tránsito en español, ángulos incluidos', (
@@ -117,7 +117,7 @@ void main() {
   ) async {
     await _montar(tester, today: null);
     expect(find.textContaining('en calma'), findsOneWidget);
-    expect(find.textContaining('ROMPER EL LACRE'), findsNothing);
+    expect(find.textContaining('Abrir el sello'), findsNothing);
   });
 
   testWidgets('en reposo no hay animación corriendo', (tester) async {
@@ -125,7 +125,7 @@ void main() {
     // se cuelga si algo anima para siempre.
     await _montar(tester);
     await tester.pumpAndSettle();
-    expect(find.text('ROMPER EL LACRE DEL SOL'), findsOneWidget);
+    expect(find.text('Abrir el sello del Sol'), findsOneWidget);
   });
 
   testWidgets('recibe hoy y capítulo sin colapsarlos en el constructor', (
@@ -141,8 +141,11 @@ void main() {
         'separation': 89.4,
       },
     );
+    // Los dos papeles llegan y cada uno ocupa su chip. El nombre del cuerpo va
+    // ahi y no grabado en el aro, asi que el capitulo se reconoce por su chip.
     expect(find.text('Luna trígono Medio Cielo'), findsOneWidget);
-    expect(find.text('Capítulo: Saturno cuadratura Sol'), findsOneWidget);
+    expect(find.text('hoy · Luna'), findsOneWidget);
+    expect(find.text('capítulo · Saturno'), findsOneWidget);
   });
 
   testWidgets('la acción y sus semánticas conservan 48 dp', (tester) async {
