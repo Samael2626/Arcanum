@@ -119,6 +119,14 @@ const Map<String, GlossaryEntry> glossary = {
   // nosotros. `transit_weight.select()` llama `chapter` al transito lento y la
   // figura la dibuja `figura_aspecto.dart`. Si inventamos el vocabulario,
   // tenemos que definirlo — nadie puede buscarlo en otro sitio.
+  'hoy_transito': GlossaryEntry(
+    'Lo de hoy',
+    'El tránsito RÁPIDO más fuerte sobre tu carta: lo trae la Luna, Mercurio, Venus, Marte o el Sol. '
+        'Es lo único que cambió respecto a ayer, y en pocos días habrá pasado.\n\n'
+        'En el sello va por dentro y con el trazo continuo.',
+    'Léelo como el color de la jornada, no como un giro de vida. Si te dan la fecha en que cierra, ahí '
+        'es cuando aprieta el símbolo — y después se deshace.',
+  ),
   'capitulo': GlossaryEntry(
     'El capítulo',
     'El tránsito LENTO más fuerte sobre tu carta. Lo traen Júpiter, Saturno o el Nodo, que se mueven '

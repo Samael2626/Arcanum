@@ -36,6 +36,7 @@ void main() {
         // puede buscarlas fuera de la app. Sin entrada, la leyenda del sello
         // ("hoy" / "capítulo") sería una etiqueta sin significado.
         'capitulo',
+        'hoy_transito', // el otro chip de la leyenda; sin esto abriría un hueco
         'sigilo',
         'sello',
       ]) {
