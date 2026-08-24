@@ -1,0 +1,8 @@
+# El capturador de pantallas (test/capturas) no es un test: no afirma nada,
+# reescribe imagenes y depende de fuentes que viven en la cache del SDK, asi
+# que en otra maquina compararia contra otro render. Se salta por defecto.
+#
+#   flutter test test/capturas --update-goldens --run-skipped
+tags:
+  capturas:
+    skip: "capturador manual: flutter test test/capturas --update-goldens --run-skipped"

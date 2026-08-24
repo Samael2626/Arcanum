@@ -40,3 +40,7 @@ arcanum-api/scripts/library_data/*
 # Fuentes de origen del generador de glifos: 2,2 MB para producir 11 KB.
 # Las baja tool/generar_fuente_glifos.py cuando hacen falta.
 arcanum_app/.fuentes-origen/
+
+# Las capturas de la pantalla son regenerables con
+# flutter test test/capturas --update-goldens --run-skipped
+arcanum_app/test/capturas/salida/

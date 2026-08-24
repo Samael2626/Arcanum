@@ -336,7 +336,14 @@ void _paintText(
       style: TextStyle(
         color: color,
         fontSize: size,
-        fontFamilyFallback: const ['ArcanumGlifos'],
+        // ArcanumGlifos como familia PRINCIPAL, no como respaldo. Un
+        // `TextPainter` no hereda el tema, y sin `fontFamily` la familia
+        // principal es la que traiga el sistema: en un Android que resuelva
+        // los signos a Noto Color Emoji, ese emoji gana antes de que el
+        // respaldo llegue a entrar -- que es justo el fallo que esta fuente
+        // vino a arreglar en el resto de la app.
+        fontFamily: 'ArcanumGlifos',
+        fontFamilyFallback: const ['Crimson Pro'],
       ),
     ),
     textDirection: TextDirection.ltr,

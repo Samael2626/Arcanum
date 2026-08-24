@@ -268,7 +268,7 @@ class _TransitHeadline extends StatelessWidget {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               _Term(
-                '${planetGlyph[t] ?? ''} ${planetEs[t] ?? t}',
+                '${planetGlyph[t] ?? ''} ${pointEs(t)}',
                 onTap: () => showPlanetLoreSheet(context, t),
               ),
               _Term(
@@ -277,7 +277,7 @@ class _TransitHeadline extends StatelessWidget {
                 onTap: () => showGlossarySheet(context, aspectGlossaryKey(asp)),
               ),
               _Term(
-                '${planetGlyph[n] ?? ''} ${planetEs[n] ?? n}',
+                '${planetGlyph[n] ?? ''} ${pointEs(n)}',
                 onTap: () => showPlanetLoreSheet(context, n),
               ),
               _Term(

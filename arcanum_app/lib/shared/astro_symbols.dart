@@ -80,3 +80,23 @@ const planetFavors = {
   'pluto': 'transformación profunda, trabajo de sombra',
   'north_node': 'propósito, dirección vital, salir de lo cómodo',
 };
+
+/// Los ángulos no son planetas, así que no están en `planetEs` ni tienen glifo.
+/// Vivían dentro de `sello_del_cielo.dart` como mapa privado, y por eso otra
+/// pantalla que también los muestra —la tarjeta del cielo de hoy— pintaba
+/// `midheaven` en crudo. Una sola tabla, al lado de las demás.
+const angleEs = {
+  'ascendant': 'Ascendente',
+  'midheaven': 'Medio Cielo',
+  'descendant': 'Descendente',
+  'imum_coeli': 'Fondo del Cielo',
+};
+
+/// El nombre en español de cualquier punto: planeta o ángulo.
+///
+/// Si no está en ninguna tabla devuelve la clave cruda. Es peor que el español,
+/// y mucho mejor que un hueco silencioso.
+String pointEs(String? clave) {
+  if (clave == null || clave.isEmpty) return '';
+  return planetEs[clave] ?? angleEs[clave] ?? clave;
+}

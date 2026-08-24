@@ -107,7 +107,7 @@ class _SelloDelCieloState extends State<SelloDelCielo>
     final chapterName = widget.today == null || widget.chapter == null
         ? null
         : _nombreDelAspecto(widget.chapter!);
-    final rulerName = _es(widget.regente).toUpperCase();
+    final rulerName = pointEs(widget.regente).toUpperCase();
     final action = widget.regente == null
         ? 'ROMPER EL LACRE'
         : 'ROMPER EL LACRE DEL $rulerName';
@@ -202,25 +202,9 @@ class _SelloDelCieloState extends State<SelloDelCielo>
 
 /// «Luna trígono Medio Cielo», con los nombres en español.
 ///
-/// Los mapas del catálogo no cubren los ángulos —`ascendant`, `midheaven`—
-/// porque no son planetas, así que se traducen aparte. Si algo no está en
-/// ninguno de los dos se muestra su clave cruda: peor que en español, pero
-/// mucho mejor que un hueco silencioso.
-const _angulosEs = {
-  'ascendant': 'Ascendente',
-  'midheaven': 'Medio Cielo',
-  'descendant': 'Descendente',
-  'imum_coeli': 'Fondo del Cielo',
-};
-
-String _es(String? clave) {
-  if (clave == null || clave.isEmpty) return '';
-  return planetEs[clave] ?? _angulosEs[clave] ?? clave;
-}
-
 String _nombreDelAspecto(Map<String, dynamic> a) {
-  final t = _es(a['transit'] as String?);
-  final n = _es(a['natal'] as String?);
+  final t = pointEs(a['transit'] as String?);
+  final n = pointEs(a['natal'] as String?);
   final asp =
       aspectEs[a['aspect'] as String?] ?? (a['aspect'] as String? ?? '');
   return '$t $asp $n';
