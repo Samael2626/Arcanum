@@ -102,5 +102,13 @@ flutter:
           weight: 500
         - asset: assets/fonts/CrimsonPro-600.ttf
           weight: 600
+    # Los signos del zodiaco y los glifos planetarios NO estan en Cormorant ni
+    # en Crimson: comprobado leyendo su tabla cmap, 0 de 12 en las dos. Sin esta
+    # fuente la app se los pide al sistema, y ahi cada Android decide -- en
+    # algunos salen como emoji de colores. Licencia OFL (ver el .txt al lado).
+    # Cubre 12/12 signos y los aspectos; el unico que le falta es el Sol.
+    - family: Noto Sans Symbols
+      fonts:
+        - asset: assets/fonts/NotoSansSymbols-Regular.ttf
   # shaders:
   #   - shaders/nebula.frag
