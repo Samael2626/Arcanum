@@ -116,10 +116,20 @@ void main() {
     expect(find.text('Día de Sol'), findsOneWidget);
     expect(find.text('Venus'), findsOneWidget);
     expect(find.text('Gibosa creciente'), findsOneWidget);
+    expect(find.text('INSTRUMENTO DEL DÍA'), findsOneWidget);
     expect(find.byType(ArcanumTilt), findsNothing);
     expect(find.byType(ArcanumFrame), findsNothing);
     expect(find.byType(ArcanumSurface), findsOneWidget);
     expect(find.byType(TweenAnimationBuilder<double>), findsNothing);
+
+    final chip = find.ancestor(
+      of: find.text('Plantas de Venus'),
+      matching: find.byType(InkWell),
+    );
+    expect(tester.getSize(chip).height, greaterThanOrEqualTo(48));
+
+    final hourTarget = find.byKey(const Key('hoy-hour-target'));
+    expect(tester.getSize(hourTarget).shortestSide, greaterThanOrEqualTo(48));
   });
 
   testWidgets('abrir la app NO genera el horoscopo', (tester) async {
@@ -144,8 +154,9 @@ void main() {
     expect(api.horoscopeCalls, 0, reason: 'la interpretacion NO se pide sola');
   });
 
-  testWidgets('el sello muestra el transito sin haber generado nada',
-      (tester) async {
+  testWidgets('el sello muestra el transito sin haber generado nada', (
+    tester,
+  ) async {
     final api = _TodayApi();
     await tester.pumpWidget(
       ProviderScope(
