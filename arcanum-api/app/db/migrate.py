@@ -95,6 +95,7 @@ def check_migration_status(engine) -> dict:
                 "materia_items",
                 "divination_sessions",
                 "oracle_conversations",
+                "content_reports",
             ],
         }
     except Exception as e:

@@ -36,3 +36,4 @@ class User(Base):
     oracle_conversations = relationship("OracleConversation", back_populates="user", cascade="all, delete-orphan")
     tarot_readings = relationship("TarotReading", back_populates="user", cascade="all, delete-orphan")
     credit_ledger = relationship("CreditLedger", back_populates="user", cascade="all, delete-orphan")
+    content_reports = relationship("ContentReport", back_populates="user", cascade="all, delete-orphan")

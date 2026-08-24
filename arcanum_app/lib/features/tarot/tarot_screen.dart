@@ -11,6 +11,7 @@ import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
 import '../../shared/widgets/info_dot.dart';
 import '../../shared/widgets/login_prompt.dart';
+import '../../shared/widgets/content_report_sheet.dart';
 
 /// Glifos de la baraja (4 palos + arcanos mayores).
 const _suitGlyphs = <String, String>{
@@ -66,6 +67,7 @@ class _TarotViewState extends ConsumerState<_TarotView> {
   bool _busy = false;
   String? _error;
   List<Map<String, dynamic>>? _resolved;
+  String? _readingId;
   String? _idempotencyKey;
 
   @override
@@ -81,19 +83,32 @@ class _TarotViewState extends ConsumerState<_TarotView> {
       _error = null;
     });
     try {
-      final question = _question.text.trim().isEmpty ? null : _question.text.trim();
+      final question = _question.text.trim().isEmpty
+          ? null
+          : _question.text.trim();
       final data = _spread == 'one_card'
           ? await _api.tarotDrawOne(question: question, idempotencyKey: key)
-          : await _api.tarotSpread(spreadType: _spread, question: question, idempotencyKey: key);
+          : await _api.tarotSpread(
+              spreadType: _spread,
+              question: question,
+              idempotencyKey: key,
+            );
       if (!mounted) return;
       _idempotencyKey = null;
-      setState(() => _resolved = ((data['resolved'] as List?) ?? const []).cast<Map<String, dynamic>>());
+      setState(() {
+        _resolved = ((data['resolved'] as List?) ?? const [])
+            .cast<Map<String, dynamic>>();
+        _readingId = data['id'] as String?;
+      });
     } catch (error) {
       if (isCreditsRequired(error)) await _openCreditsPaywall();
       if (mounted) {
         setState(() {
           _resolved = null;
-          _error = isCreditsRequired(error) ? 'Saldo insuficiente. Puedes comprar créditos.' : oracleErrorMessage(error);
+          _readingId = null;
+          _error = isCreditsRequired(error)
+              ? 'Saldo insuficiente. Puedes comprar créditos.'
+              : oracleErrorMessage(error);
         });
       }
     } finally {
@@ -105,12 +120,21 @@ class _TarotViewState extends ConsumerState<_TarotView> {
     try {
       final balance = await _api.creditsBalance();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saldo actual: ${balance['balance'] ?? 0} créditos.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Saldo actual: ${balance['balance'] ?? 0} créditos.'),
+        ),
+      );
       context.push('/paywall');
     } catch (error) {
-      if (mounted) setState(() => _error = 'No se pudo actualizar tu saldo. Inténtalo de nuevo.');
+      if (mounted) {
+        setState(
+          () => _error = 'No se pudo actualizar tu saldo. Inténtalo de nuevo.',
+        );
+      }
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -188,7 +212,14 @@ class _TarotViewState extends ConsumerState<_TarotView> {
               onPressed: _draw,
             ),
             const SizedBox(height: 8),
-            Text('Los límites y créditos se actualizan desde el servidor.', textAlign: TextAlign.center, style: ArcanumText.body(12, color: ArcanumColors.ivoryMuted.withValues(alpha: 0.7))),
+            Text(
+              'Los límites y créditos se actualizan desde el servidor.',
+              textAlign: TextAlign.center,
+              style: ArcanumText.body(
+                12,
+                color: ArcanumColors.ivoryMuted.withValues(alpha: 0.7),
+              ),
+            ),
             if (_error != null) ...[
               const SizedBox(height: 14),
               Text(
@@ -287,6 +318,12 @@ class _TarotViewState extends ConsumerState<_TarotView> {
               ],
             ),
           ),
+          if (_readingId != null)
+            ContentReportButton(
+              api: _api,
+              source: 'tarot',
+              contentRef: '$_readingId:${c['slug'] ?? 'reading'}',
+            ),
         ],
       ),
     );

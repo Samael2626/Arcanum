@@ -11,6 +11,7 @@ import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
 import '../../shared/widgets/login_prompt.dart';
+import '../../shared/widgets/content_report_sheet.dart';
 import 'tarot_learn.dart';
 import 'widgets/tarot_card.dart';
 
@@ -113,14 +114,11 @@ class _ModeToggle extends StatelessWidget {
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: ArcanumColors.goldMuted.withValues(alpha: 0.4)),
+        border: Border.all(
+          color: ArcanumColors.goldMuted.withValues(alpha: 0.4),
+        ),
       ),
-      child: Row(
-        children: [
-          _seg('Consultar', 0),
-          _seg('Aprender', 1),
-        ],
-      ),
+      child: Row(children: [_seg('Consultar', 0), _seg('Aprender', 1)]),
     );
   }
 
@@ -173,6 +171,7 @@ class _OracleViewState extends ConsumerState<_OracleView> {
   bool _iaLoading = false;
   String? _iaError;
   String? _iaReply;
+  String? _iaContentRef;
   String? _drawIdempotencyKey;
   String? _oracleIdempotencyKey;
 
@@ -250,10 +249,12 @@ class _OracleViewState extends ConsumerState<_OracleView> {
       _drawError = null;
       _iaError = null;
       _iaReply = null;
+      _iaContentRef = null;
     });
     try {
       final data = await _api.tarotDraw(_spread, idempotencyKey: key);
-      final cards = ((data['cards_drawn'] as Map)['cards'] as List).cast<Map<String, dynamic>>();
+      final cards = ((data['cards_drawn'] as Map)['cards'] as List)
+          .cast<Map<String, dynamic>>();
       if (!mounted) return;
       _drawIdempotencyKey = null;
       setState(() {
@@ -270,7 +271,9 @@ class _OracleViewState extends ConsumerState<_OracleView> {
         setState(() {
           _cards = null;
           _sessionId = null;
-          _drawError = isCreditsRequired(error) ? 'Saldo insuficiente. Puedes comprar créditos.' : oracleErrorMessage(error);
+          _drawError = isCreditsRequired(error)
+              ? 'Saldo insuficiente. Puedes comprar créditos.'
+              : oracleErrorMessage(error);
         });
       }
     } finally {
@@ -287,6 +290,7 @@ class _OracleViewState extends ConsumerState<_OracleView> {
       _iaLoading = true;
       _iaError = null;
       _iaReply = null;
+      _iaContentRef = null;
     });
     try {
       final response = await _api.oracleIa(
@@ -296,10 +300,19 @@ class _OracleViewState extends ConsumerState<_OracleView> {
       );
       if (!mounted) return;
       _oracleIdempotencyKey = null;
-      setState(() => _iaReply = assistantReply(response));
+      setState(() {
+        _iaReply = assistantReply(response);
+        _iaContentRef = response['id'] as String?;
+      });
     } catch (error) {
       if (isCreditsRequired(error)) await _openCreditsPaywall();
-      if (mounted) setState(() => _iaError = isCreditsRequired(error) ? 'Saldo insuficiente. Puedes comprar créditos.' : oracleErrorMessage(error));
+      if (mounted) {
+        setState(
+          () => _iaError = isCreditsRequired(error)
+              ? 'Saldo insuficiente. Puedes comprar créditos.'
+              : oracleErrorMessage(error),
+        );
+      }
     } finally {
       if (mounted) setState(() => _iaLoading = false);
     }
@@ -310,11 +323,18 @@ class _OracleViewState extends ConsumerState<_OracleView> {
       final balance = await _api.creditsBalance();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Saldo actual: ${balance['balance'] ?? 0} créditos.')),
+        SnackBar(
+          content: Text('Saldo actual: ${balance['balance'] ?? 0} créditos.'),
+        ),
       );
       context.push('/paywall');
     } catch (error) {
-      if (mounted) setState(() => _iaError = 'No se pudo actualizar tu saldo. Inténtalo de nuevo.');
+      if (mounted) {
+        setState(
+          () =>
+              _iaError = 'No se pudo actualizar tu saldo. Inténtalo de nuevo.',
+        );
+      }
     }
   }
 
@@ -398,7 +418,10 @@ class _OracleViewState extends ConsumerState<_OracleView> {
         Text(
           'Los límites y créditos se actualizan desde el servidor.',
           textAlign: TextAlign.center,
-          style: ArcanumText.body(12, color: ArcanumColors.ivoryMuted.withValues(alpha: 0.7)),
+          style: ArcanumText.body(
+            12,
+            color: ArcanumColors.ivoryMuted.withValues(alpha: 0.7),
+          ),
         ),
         if (_drawError != null) ...[
           const SizedBox(height: 14),
@@ -457,6 +480,14 @@ class _OracleViewState extends ConsumerState<_OracleView> {
                 ),
               ),
             ),
+            if (_iaContentRef != null)
+              Center(
+                child: ContentReportButton(
+                  api: _api,
+                  source: 'oracle',
+                  contentRef: _iaContentRef!,
+                ),
+              ),
           ],
         ],
       ],

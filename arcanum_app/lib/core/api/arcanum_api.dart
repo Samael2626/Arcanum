@@ -270,6 +270,24 @@ class ArcanumApi {
     );
     return res.data as Map<String, dynamic>;
   }
+
+  Future<void> createContentReport({
+    required String source,
+    required String contentRef,
+    required String reason,
+    String? note,
+  }) async {
+    final trimmedNote = note?.trim();
+    await _dio.post(
+      '/reports',
+      data: {
+        'source': source,
+        'content_ref': contentRef,
+        'reason': reason,
+        if (trimmedNote != null && trimmedNote.isNotEmpty) 'note': trimmedNote,
+      },
+    );
+  }
 }
 
 final arcanumApiProvider = Provider((ref) => ArcanumApi(ref.read(dioProvider)));
