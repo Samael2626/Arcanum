@@ -23,7 +23,25 @@ class PuntoRueda {
   final double y;
 
   @override
-  String toString() => 'PuntoRueda(${x.toStringAsFixed(1)}, ${y.toStringAsFixed(1)})';
+  String toString() =>
+      'PuntoRueda(${x.toStringAsFixed(1)}, ${y.toStringAsFixed(1)})';
+}
+
+/// Posicion zodiacal con Aries (0°) fijo arriba y avance horario.
+///
+/// A diferencia de [figuraDe], no fija el primer cuerpo en un origen visual:
+/// conserva la longitud ecliptica real para comparar ruedas entre aspectos.
+PuntoRueda puntoZodiacal(
+  double longitud, {
+  double radio = 1,
+  PuntoRueda centro = const PuntoRueda(0, 0),
+}) {
+  final normalizada = ((longitud % 360) + 360) % 360;
+  final radianes = (normalizada - 90) * math.pi / 180;
+  return PuntoRueda(
+    centro.x + radio * math.cos(radianes),
+    centro.y + radio * math.sin(radianes),
+  );
 }
 
 /// La figura lista para pintar: donde va cada cuerpo y como se cierra.

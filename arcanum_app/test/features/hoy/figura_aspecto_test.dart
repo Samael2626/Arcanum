@@ -60,8 +60,11 @@ void main() {
       final lado1 = _separacionEntre(f.vertices[0], f.vertices[1]);
       final lado2 = _separacionEntre(f.vertices[1], f.vertices[2]);
       expect(lado1, closeTo(117, 0.01));
-      expect((lado1 - lado2).abs() > 1, isTrue,
-          reason: 'la figura debería verse irregular con orbe de 3°');
+      expect(
+        (lado1 - lado2).abs() > 1,
+        isTrue,
+        reason: 'la figura debería verse irregular con orbe de 3°',
+      );
     });
 
     test('la oposición es una recta entre dos puntos', () {
@@ -79,12 +82,31 @@ void main() {
   });
 
   group('la rueda', () {
+    test(
+      'Aries queda fijo arriba y las longitudes avanzan en sentido horario',
+      () {
+        final aries = puntoZodiacal(0, radio: 30);
+        final cancer = puntoZodiacal(90, radio: 30);
+        final libra = puntoZodiacal(180, radio: 30);
+
+        expect(aries.x, closeTo(0, 0.01));
+        expect(aries.y, closeTo(-30, 0.01));
+        expect(cancer.x, closeTo(30, 0.01));
+        expect(cancer.y, closeTo(0, 0.01));
+        expect(libra.x, closeTo(0, 0.01));
+        expect(libra.y, closeTo(30, 0.01));
+      },
+    );
+
     test('todos los vértices caen sobre el círculo', () {
       for (final ang in [60, 90, 120, 180]) {
         final f = figuraDe(anguloNominal: ang, radio: 50);
         for (final v in f.vertices) {
-          expect(math.sqrt(v.x * v.x + v.y * v.y), closeTo(50, 0.01),
-              reason: 'vértice fuera del círculo en $ang°');
+          expect(
+            math.sqrt(v.x * v.x + v.y * v.y),
+            closeTo(50, 0.01),
+            reason: 'vértice fuera del círculo en $ang°',
+          );
         }
       }
     });

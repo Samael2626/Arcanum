@@ -30,6 +30,7 @@ import '../../../../core/theme/arcanum_colors.dart';
 import '../../../../core/theme/arcanum_theme.dart';
 import '../../../../shared/astro_symbols.dart';
 import '../../domain/figura_aspecto.dart';
+import 'level_three_aspects.dart';
 
 /// Duracion de la apertura. Corta a proposito: lo bastante para que se lea el
 /// gesto, no tanto como para estorbar al segundo dia.
@@ -188,11 +189,8 @@ class _SelloDelCieloState extends State<SelloDelCielo>
                     ),
                   ),
                 ],
-                if (widget.overview != null)
-                  FutureBuilder<Map<String, dynamic>>(
-                    future: widget.overview,
-                    builder: (_, _) => const SizedBox.shrink(),
-                  ),
+                if (widget.abierto && widget.overview != null)
+                  LevelThreeAspects(overview: widget.overview!),
               ],
             );
           },

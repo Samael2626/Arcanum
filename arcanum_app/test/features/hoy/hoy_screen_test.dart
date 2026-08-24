@@ -2,6 +2,7 @@ import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/core/consent/ai_consent.dart';
 import 'package:arcanum_app/features/hoy/hoy_screen.dart';
+import 'package:arcanum_app/features/hoy/presentation/widgets/level_three_aspects.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_frame.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_motion.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_surface.dart';
@@ -77,7 +78,49 @@ class _TodayApi extends ArcanumApi {
   @override
   Future<Map<String, dynamic>> celestialOverview() async {
     celestialOverviewCalls++;
-    return {'aspects_to_natal': <Map<String, dynamic>>[]};
+    return {
+      'natal_chart': {
+        'chart_data': {
+          'planets': [
+            {'name': 'moon', 'longitude': 162.0},
+            {'name': 'sun', 'longitude': 85.0},
+            {'name': 'venus', 'longitude': 121.0},
+          ],
+          'ascendant': {'longitude': 0.0},
+          'midheaven': {'longitude': 90.0},
+        },
+      },
+      'transits': {
+        'transiting': [
+          {'name': 'uranus', 'longitude': 42.0},
+          {'name': 'neptune', 'longitude': 355.0},
+          {'name': 'pluto', 'longitude': 301.0},
+        ],
+        'aspects_to_natal': [
+          {
+            'transit': 'uranus',
+            'natal': 'moon',
+            'aspect': 'trine',
+            'angle': 120,
+            'separation': 120.0,
+          },
+          {
+            'transit': 'neptune',
+            'natal': 'sun',
+            'aspect': 'square',
+            'angle': 90,
+            'separation': 90.0,
+          },
+          {
+            'transit': 'pluto',
+            'natal': 'venus',
+            'aspect': 'opposition',
+            'angle': 180,
+            'separation': 180.0,
+          },
+        ],
+      },
+    };
   }
 
   @override
@@ -260,5 +303,23 @@ void main() {
     expect(api.horoscopeCalls, 1);
     expect(api.celestialOverviewCalls, 1);
     expect(await AiConsent.isPending(), isFalse);
+    expect(find.text('Urano trígono Luna'), findsOneWidget);
+    expect(find.text('Neptuno cuadratura Sol'), findsOneWidget);
+    expect(find.text('Plutón oposición Venus'), findsOneWidget);
+    expect(find.byType(AspectWheel), findsNWidgets(3));
+    expect(aspectBodyHaloScale, 1.5);
+
+    final firstTarget = find.byKey(const Key('hoy-aspect-target-0'));
+    expect(tester.getSize(firstTarget).shortestSide, greaterThanOrEqualTo(48));
+    expect(
+      tester.getCenter(find.byKey(const Key('hoy-aspect-wheel-0'))),
+      tester.getCenter(find.byKey(const Key('hoy-aspect-glyph-0'))),
+    );
+
+    await tester.ensureVisible(firstTarget);
+    await tester.pumpAndSettle();
+    await tester.tap(firstTarget);
+    await tester.pumpAndSettle();
+    expect(find.text('Tránsito 42,0° · natal 162,0°'), findsOneWidget);
   });
 }
