@@ -1,43 +1,43 @@
 # Generado por tool/generar_fuente_glifos.py -- no editar a mano.
-# Cada linea: el codepoint y la fuente empaquetada que lo trae.
+# Cada linea: el codepoint, de que fuente salio y a que escala entro.
 # El test glifos_fallback_test.dart compara esto contra lo que usa
 # lib/, y se pone rojo si el codigo estrena un glifo sin cubrir.
-U+2600 ArcanumGlifosC
-U+2609 ArcanumGlifos
-U+260A ArcanumGlifosB
-U+2630 ArcanumGlifosC
-U+263D ArcanumGlifos
-U+263E ArcanumGlifos
-U+263F ArcanumGlifos
-U+2640 ArcanumGlifos
-U+2642 ArcanumGlifos
-U+2643 ArcanumGlifos
-U+2644 ArcanumGlifos
-U+2645 ArcanumGlifos
-U+2646 ArcanumGlifos
-U+2647 ArcanumGlifos
-U+2648 ArcanumGlifos
-U+2649 ArcanumGlifos
-U+264A ArcanumGlifos
-U+264B ArcanumGlifos
-U+264C ArcanumGlifos
-U+264D ArcanumGlifos
-U+264E ArcanumGlifos
-U+264F ArcanumGlifos
-U+2650 ArcanumGlifos
-U+2651 ArcanumGlifos
-U+2652 ArcanumGlifos
-U+2653 ArcanumGlifos
-U+2694 ArcanumGlifosB
-U+2697 ArcanumGlifosB
-U+26E4 ArcanumGlifosB
-U+26E7 ArcanumGlifosB
-U+26E8 ArcanumGlifosB
-U+2726 ArcanumGlifosC
-U+2727 ArcanumGlifosC
-U+2735 ArcanumGlifosC
-U+2736 ArcanumGlifosC
-U+2766 ArcanumGlifosC
-U+2767 ArcanumGlifos
-U+27E0 ArcanumGlifosD
-U+27E1 ArcanumGlifosD
+U+2609 Libertinus-Serif 1.000
+U+263D Libertinus-Serif 1.000
+U+263E Libertinus-Serif 1.000
+U+263F Libertinus-Serif 1.000
+U+2640 Libertinus-Serif 1.000
+U+2642 Libertinus-Serif 1.000
+U+2643 Libertinus-Serif 1.000
+U+2644 Libertinus-Serif 1.000
+U+2645 Libertinus-Serif 1.000
+U+2646 Libertinus-Serif 1.000
+U+2647 Libertinus-Serif 1.000
+U+2648 Libertinus-Serif 1.000
+U+2649 Libertinus-Serif 1.000
+U+264A Libertinus-Serif 1.000
+U+264B Libertinus-Serif 1.000
+U+264C Libertinus-Serif 1.000
+U+264D Libertinus-Serif 1.000
+U+264E Libertinus-Serif 1.000
+U+264F Libertinus-Serif 1.000
+U+2650 Libertinus-Serif 1.000
+U+2651 Libertinus-Serif 1.000
+U+2652 Libertinus-Serif 1.000
+U+2653 Libertinus-Serif 1.000
+U+2767 Libertinus-Serif 1.000
+U+260A NotoSansSymbols 0.907
+U+2694 NotoSansSymbols 0.907
+U+2697 NotoSansSymbols 0.907
+U+26E4 NotoSansSymbols 0.907
+U+26E7 NotoSansSymbols 0.907
+U+26E8 NotoSansSymbols 0.907
+U+2600 NotoSansSymbols2 0.903
+U+2630 NotoSansSymbols2 0.903
+U+2726 NotoSansSymbols2 0.903
+U+2727 NotoSansSymbols2 0.903
+U+2735 NotoSansSymbols2 0.903
+U+2736 NotoSansSymbols2 0.903
+U+2766 NotoSansSymbols2 0.903
+U+27E0 NotoSansMath 0.966
+U+27E1 NotoSansMath 0.966

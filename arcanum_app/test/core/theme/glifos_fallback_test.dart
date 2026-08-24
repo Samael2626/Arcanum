@@ -18,16 +18,11 @@ import 'package:flutter_test/flutter_test.dart';
 /// estrenar uno nuevo lo deja fuera del paquete — y sin este test, en silencio.
 void main() {
   group('respaldo de glifos', () {
-    test('el fallback nombra las cuatro familias, en orden', () {
-      // El orden es el diseño: Libertinus primero porque es la única serif del
-      // grupo. Si alguien la mueve, los signos pasan a verse geométricos y
-      // fríos junto a Cormorant sin que nadie sepa por qué.
-      expect(kGlyphFallback, [
-        'ArcanumGlifos',
-        'ArcanumGlifosB',
-        'ArcanumGlifosC',
-        'ArcanumGlifosD',
-      ]);
+    test('el fallback es una sola familia', () {
+      // Una, no una cadena: los 39 glifos viven en la misma cara, injertados y
+      // escalados. Si vuelven a ser varias, vuelven los saltos de tamaño entre
+      // familias que fue justo lo que se arregló al fusionarlas.
+      expect(kGlyphFallback, ['ArcanumGlifos']);
     });
 
     test('todos los estilos del sistema lo declaran', () {
@@ -53,37 +48,29 @@ void main() {
       expect(tema.textTheme.bodyMedium?.fontFamilyFallback, kGlyphFallback);
     });
 
-    test('cada familia está declarada en pubspec y su fichero existe', () {
-      // Declararlas en el tema sin empaquetarlas deja el fallback en nada:
-      // Flutter no avisa, simplemente no las encuentra.
+    test('la familia está declarada en pubspec y su fichero existe', () {
+      // Declararla en el tema sin empaquetarla deja el fallback en nada:
+      // Flutter no avisa, simplemente no la encuentra.
       final pubspec = File('pubspec.yaml').readAsStringSync();
-      for (final familia in kGlyphFallback) {
-        expect(
-          pubspec,
-          contains('family: $familia'),
-          reason: '$familia no está declarada en pubspec.yaml',
-        );
-      }
-      final ficheros = Directory('assets/fonts')
-          .listSync()
-          .map((e) => e.path.split(Platform.pathSeparator).last)
-          .toList();
-      for (final familia in kGlyphFallback) {
-        expect(
-          ficheros.any((f) => f.startsWith('$familia-Regular.')),
-          isTrue,
-          reason: 'falta el fichero de $familia',
-        );
-      }
+      expect(
+        pubspec,
+        contains('family: ArcanumGlifos'),
+        reason: 'ArcanumGlifos no está declarada en pubspec.yaml',
+      );
+      expect(
+        File('assets/fonts/ArcanumGlifos-Regular.ttf').existsSync(),
+        isTrue,
+        reason: 'falta el fichero de la fuente',
+      );
       // La OFL obliga a distribuir el texto de la licencia junto a la fuente.
-      // Son dos proyectos distintos: Libertinus y Noto.
+      // Son dos proyectos distintos, y los dos están dentro de esta cara.
       expect(File('assets/fonts/OFL-Libertinus.txt').existsSync(), isTrue);
       expect(File('assets/fonts/OFL-Noto.txt').existsSync(), isTrue);
     });
 
     test('ningún glifo de lib/ se quedó fuera del paquete', () {
-      // Esta es la guarda de verdad. Las fuentes están recortadas: traen SOLO
-      // los glifos que el código usaba el día que se generaron. Estrenar uno
+      // Esta es la guarda de verdad. La fuente está recortada: trae SOLO los
+      // glifos que el código usaba el día que se generó. Estrenar uno
       // nuevo no rompe nada visible aquí — se ve mal en el teléfono de otro.
       //
       // Si se pone rojo: correr `python tool/generar_fuente_glifos.py`.
@@ -116,7 +103,7 @@ void main() {
       expect(
         fuera,
         isEmpty,
-        reason: 'glifos sin fuente empaquetada — correr '
+        reason: 'glifos que ArcanumGlifos no trae — correr '
             'tool/generar_fuente_glifos.py: '
             '${fuera.map((p) => 'U+${p.toRadixString(16).toUpperCase()} '
                 '${String.fromCharCode(p)} (${usados[p]})').join(', ')}',

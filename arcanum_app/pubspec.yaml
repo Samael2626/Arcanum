@@ -102,29 +102,22 @@ flutter:
           weight: 500
         - asset: assets/fonts/CrimsonPro-600.ttf
           weight: 600
-    # Glifos: signos, planetas, nodos y aspectos. Ni Cormorant ni Crimson traen
-    # uno solo -- comprobado leyendo su tabla cmap: 1 de los 39 que usa lib/.
-    # Sin esto la app se los pide al sistema y cada Android decide; en varios
-    # salen como emoji de colores dentro de la rueda natal.
+    # Glifos: signos, planetas, nodos, aspectos y adornos. Ni Cormorant ni
+    # Crimson traen uno solo -- comprobado leyendo su tabla cmap: 1 de los 39
+    # que usa lib/. Sin esto la app se los pide al sistema y cada Android
+    # decide; en varios salen como emoji de colores dentro de la rueda natal.
     #
-    # Son cuatro familias y ese orden ES el diseno: Libertinus Serif pone los
-    # 24 que tiene, por ser la unica serif del grupo y la que acompana a
-    # Cormorant; las Noto solo rellenan lo que a ella le falta. Todas OFL.
+    # Es UNA familia, no una cadena de fuentes. Ninguna fuente libre trae los
+    # 39: la base es Libertinus Serif -- la unica serif del grupo, suya es la
+    # rueda del zodiaco -- y los 15 que le faltan van injertados dentro, ya
+    # escalados a su tamano. Medido: los cuatro origenes acaban con el mismo
+    # alto medio, 689.
     #
-    # Van recortadas a los glifos que se usan: completas suman 2,2 MB, aqui
-    # pesan 11 KB. Las genera tool/generar_fuente_glifos.py -- correrlo al
-    # estrenar un glifo nuevo; el test avisa cuando toca.
+    # La genera tool/generar_fuente_glifos.py, que ademas escribe el manifiesto
+    # que vigila el test. Correrlo al estrenar un glifo nuevo; el test avisa.
+    # SIL OFL 1.1: ver OFL-Libertinus.txt y OFL-Noto.txt al lado.
     - family: ArcanumGlifos
       fonts:
-        - asset: assets/fonts/ArcanumGlifos-Regular.otf
-    - family: ArcanumGlifosB
-      fonts:
-        - asset: assets/fonts/ArcanumGlifosB-Regular.ttf
-    - family: ArcanumGlifosC
-      fonts:
-        - asset: assets/fonts/ArcanumGlifosC-Regular.ttf
-    - family: ArcanumGlifosD
-      fonts:
-        - asset: assets/fonts/ArcanumGlifosD-Regular.ttf
+        - asset: assets/fonts/ArcanumGlifos-Regular.ttf
   # shaders:
   #   - shaders/nebula.frag

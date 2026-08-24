@@ -10,21 +10,18 @@ import 'arcanum_colors.dart';
 /// dispositivo elige por su cuenta qué fuente los pinta, y en algunos Android
 /// eso significa emoji de colores dentro de la rueda natal.
 ///
-/// El respaldo son cuatro familias, y **el orden es el diseño**: Libertinus
-/// Serif pone los 24 glifos que tiene —es la única serif del grupo, la que
-/// acompaña a Cormorant— y las Noto solo rellenan los 15 que a ella le faltan.
-/// Entre las cuatro cubren los 39, medidos sobre `lib/`.
+/// El respaldo es **una sola familia**, `ArcanumGlifos`. Ninguna fuente libre
+/// trae los 39 glifos que usa la app, así que se construye: la base es
+/// Libertinus Serif —la única serif del grupo, la que acompaña a Cormorant, y
+/// de ella salen la rueda del zodíaco y los planetas— y los 15 que le faltan
+/// van injertados dentro desde las Noto, escalados a su tamaño. Medido: los
+/// cuatro orígenes acaban con el mismo alto medio, 689.
 ///
-/// Van como FALLBACK, no como familia principal: solo entran cuando el glifo no
-/// existe en la fuente elegida, así que no tocan ni una letra del texto. Y van
-/// recortadas a esos 39 glifos: completas pesarían 2,2 MB, aquí pesan 11 KB.
-/// Las genera `tool/generar_fuente_glifos.py`.
-const List<String> kGlyphFallback = [
-  'ArcanumGlifos',
-  'ArcanumGlifosB',
-  'ArcanumGlifosC',
-  'ArcanumGlifosD',
-];
+/// Va como FALLBACK, no como familia principal: solo entra cuando el glifo no
+/// existe en la fuente elegida, así que no toca ni una letra del texto. Y va
+/// recortada a esos 39: la fuente entera pesaría 560 KB, aquí pesa 8,7 KB.
+/// La genera `tool/generar_fuente_glifos.py`.
+const List<String> kGlyphFallback = ['ArcanumGlifos'];
 
 class ArcanumText {
   static TextStyle wordmark({double size = 44}) => TextStyle(
