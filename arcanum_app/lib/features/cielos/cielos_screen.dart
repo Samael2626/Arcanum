@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/api/arcanum_api.dart';
 import '../../core/api/oracle_error.dart';
 import '../../core/auth/auth_controller.dart';
+import '../../core/privacy/ai_consent_service.dart';
 import '../../core/content/glossary.dart';
 import '../../core/content/transit_reading.dart';
 import '../../core/state/flow_providers.dart';
@@ -476,6 +477,13 @@ class _AspectRowState extends ConsumerState<_AspectRow> {
   /// Pide al oráculo la lectura personalizada de ESTE tránsito.
   /// El servidor ya inyecta la carta natal: solo hay que nombrar el tránsito.
   Future<void> _askOracle() async {
+    final userId = ref.read(authProvider).user?['id'] as String?;
+    if (userId == null ||
+        !await ref
+            .read(aiConsentServiceProvider)
+            .ensureGranted(context, userId: userId)) {
+      return;
+    }
     final key = _idempotencyKey ??= IdempotencyKey.create();
     final aspect = widget.aspect;
     setState(() {

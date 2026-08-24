@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _AuthenticatedAuthNotifier extends AuthNotifier {
   @override
@@ -25,6 +26,8 @@ class _FakeDeletionService implements AccountDeletionService {
 }
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   testWidgets('el borrado exige confirmación escrita y ejecuta una vez', (
     tester,
   ) async {
@@ -52,7 +55,11 @@ void main() {
     );
 
     final deleteButton = find.text('Eliminar cuenta y datos');
-    await tester.ensureVisible(deleteButton);
+    await tester.scrollUntilVisible(
+      deleteButton,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.pumpAndSettle();
     await tester.tap(deleteButton);
     await tester.pumpAndSettle();

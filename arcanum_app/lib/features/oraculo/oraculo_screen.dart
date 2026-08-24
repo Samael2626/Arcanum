@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/api/arcanum_api.dart';
 import '../../core/api/oracle_error.dart';
 import '../../core/auth/auth_controller.dart';
+import '../../core/privacy/ai_consent_service.dart';
 import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
@@ -284,6 +285,13 @@ class _OracleViewState extends ConsumerState<_OracleView> {
   Future<void> _askIa() async {
     final sessionId = _sessionId;
     if (sessionId == null) return;
+    final userId = ref.read(authProvider).user?['id'] as String?;
+    if (userId == null ||
+        !await ref
+            .read(aiConsentServiceProvider)
+            .ensureGranted(context, userId: userId)) {
+      return;
+    }
     final key = _oracleIdempotencyKey ??= IdempotencyKey.create();
     final question = _question.text.trim();
     setState(() {

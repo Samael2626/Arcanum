@@ -25,7 +25,13 @@ void main() async {
     return true;
   };
 
-  await MobileAds.instance.initialize();
+  const adsEnabled = bool.fromEnvironment('ADS_ENABLED');
+  if (adsEnabled) {
+    // TODO(compliance): Implementar UMP antes de activar ADS_ENABLED. Ver el
+    // bloque "Gap abierto: consentimiento de ads (UMP)" en
+    // .agents/skills/arcanum-legal/references/ia-y-datos.md.
+    await MobileAds.instance.initialize();
+  }
   await MonetizationService.initialize('PLACEHOLDER_RC_API_KEY');
 
   // En desarrollo, log a consola en vez de Crashlytics

@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/api/oracle_error.dart';
 import '../../../core/api/arcanum_api.dart';
+import '../../../core/auth/auth_controller.dart';
+import '../../../core/privacy/ai_consent_service.dart';
 import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
 import '../../arte/materia_lore.dart';
@@ -416,6 +418,13 @@ class _PassageState extends ConsumerState<_Passage> {
   String? _idempotencyKey;
 
   Future<void> _explain() async {
+    final userId = ref.read(authProvider).user?['id'] as String?;
+    if (userId == null ||
+        !await ref
+            .read(aiConsentServiceProvider)
+            .ensureGranted(context, userId: userId)) {
+      return;
+    }
     final key = _idempotencyKey ??= IdempotencyKey.create();
     setState(() {
       _asking = true;

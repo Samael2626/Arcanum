@@ -8,6 +8,7 @@ import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
 import 'account_deletion_service.dart';
+import 'ai_consent_settings_card.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -152,6 +153,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
               ),
               if (auth.isAuthenticated) ...[
+                const SizedBox(height: 20),
+                const AiConsentSettingsCard(),
                 const SizedBox(height: 20),
                 ArcanumCard(
                   intensity: 0.35,
