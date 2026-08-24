@@ -20,27 +20,32 @@ const _trigono = {
 
 Future<void> _montar(
   WidgetTester tester, {
-  Map<String, dynamic>? aspecto = _trigono,
-  String? regente = 'venus',
+  Map<String, dynamic>? today = _trigono,
+  Map<String, dynamic>? chapter,
+  String? regente = 'sun',
   bool abierto = false,
   VoidCallback? onAbrir,
 }) async {
-  await tester.pumpWidget(MaterialApp(
-    home: Scaffold(
-      body: SelloDelCielo(
-        aspecto: aspecto,
-        regente: regente,
-        abierto: abierto,
-        onAbrir: onAbrir ?? () {},
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Scaffold(
+        body: SelloDelCielo(
+          today: today,
+          chapter: chapter,
+          overview: null,
+          regente: regente,
+          abierto: abierto,
+          onAbrir: onAbrir ?? () {},
+        ),
       ),
     ),
-  ));
+  );
 }
 
 void main() {
   testWidgets('cerrado, invita a romper el lacre', (tester) async {
     await _montar(tester);
-    expect(find.text('ROMPER EL LACRE'), findsOneWidget);
+    expect(find.text('ROMPER EL LACRE DEL SOL'), findsOneWidget);
   });
 
   testWidgets('NO genera nada hasta que se toca', (tester) async {
@@ -62,7 +67,7 @@ void main() {
     await tester.pump();
     // La sorpresa se gasta una vez al dia, y eso es lo que la hace valer.
     expect(llamadas, 0);
-    expect(find.text('ROMPER EL LACRE'), findsNothing);
+    expect(find.textContaining('ROMPER EL LACRE'), findsNothing);
   });
 
   testWidgets('el lacre lleva el glifo del regente del día', (tester) async {
@@ -73,18 +78,21 @@ void main() {
   testWidgets('sin regente, el lacre no se queda vacío', (tester) async {
     await _montar(tester, regente: null);
     expect(find.text('✦'), findsOneWidget);
+    expect(find.text('ROMPER EL LACRE'), findsOneWidget);
   });
 
-  testWidgets('nombra el tránsito en español, ángulos incluidos',
-      (tester) async {
+  testWidgets('nombra el tránsito en español, ángulos incluidos', (
+    tester,
+  ) async {
     await _montar(tester);
     // `midheaven` no esta en el mapa de planetas: si no se tradujera aparte,
     // saldria la clave cruda en una app en espanol.
     expect(find.text('Luna trígono Medio Cielo'), findsOneWidget);
   });
 
-  testWidgets('muestra la separación REAL, no el ángulo nominal',
-      (tester) async {
+  testWidgets('muestra la separación REAL, no el ángulo nominal', (
+    tester,
+  ) async {
     await _montar(tester);
     // 119,3 y no 120: es la razon de ser de toda la pieza.
     expect(find.textContaining('119,3'), findsOneWidget);
@@ -92,17 +100,24 @@ void main() {
   });
 
   testWidgets('sin separación lo declara en vez de inventarla', (tester) async {
-    await _montar(tester, aspecto: {
-      'transit': 'moon', 'natal': 'sun', 'aspect': 'square', 'angle': 90,
-    });
+    await _montar(
+      tester,
+      today: {
+        'transit': 'moon',
+        'natal': 'sun',
+        'aspect': 'square',
+        'angle': 90,
+      },
+    );
     expect(find.textContaining('no disponible'), findsOneWidget);
   });
 
-  testWidgets('un cielo sin tránsitos lo dice y no dibuja nada',
-      (tester) async {
-    await _montar(tester, aspecto: null);
+  testWidgets('un cielo sin tránsitos lo dice y no dibuja nada', (
+    tester,
+  ) async {
+    await _montar(tester, today: null);
     expect(find.textContaining('en calma'), findsOneWidget);
-    expect(find.text('ROMPER EL LACRE'), findsNothing);
+    expect(find.textContaining('ROMPER EL LACRE'), findsNothing);
   });
 
   testWidgets('en reposo no hay animación corriendo', (tester) async {
@@ -110,6 +125,36 @@ void main() {
     // se cuelga si algo anima para siempre.
     await _montar(tester);
     await tester.pumpAndSettle();
-    expect(find.text('ROMPER EL LACRE'), findsOneWidget);
+    expect(find.text('ROMPER EL LACRE DEL SOL'), findsOneWidget);
+  });
+
+  testWidgets('recibe hoy y capítulo sin colapsarlos en el constructor', (
+    tester,
+  ) async {
+    await _montar(
+      tester,
+      chapter: {
+        'transit': 'saturn',
+        'natal': 'sun',
+        'aspect': 'square',
+        'angle': 90,
+        'separation': 89.4,
+      },
+    );
+    expect(find.text('Luna trígono Medio Cielo'), findsOneWidget);
+    expect(find.text('Capítulo: Saturno cuadratura Sol'), findsOneWidget);
+  });
+
+  testWidgets('la acción y sus semánticas conservan 48 dp', (tester) async {
+    await _montar(tester);
+    expect(tester.getSize(find.byKey(const Key('hoy-seal-action'))).height, 48);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Semantics &&
+            widget.properties.label == 'Romper el lacre y leer tu cielo',
+      ),
+      findsOneWidget,
+    );
   });
 }

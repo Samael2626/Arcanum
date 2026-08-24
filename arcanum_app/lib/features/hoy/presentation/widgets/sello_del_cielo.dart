@@ -38,16 +38,20 @@ const _apertura = Duration(milliseconds: 900);
 class SelloDelCielo extends StatefulWidget {
   const SelloDelCielo({
     super.key,
-    required this.aspecto,
+    required this.today,
+    required this.chapter,
+    required this.overview,
     required this.regente,
     required this.onAbrir,
     this.abierto = false,
     this.cargando = false,
   });
 
-  /// El transito del dia, tal cual viene del servidor: `transit`, `natal`,
-  /// `aspect`, `angle`, `orb` y `separation`.
-  final Map<String, dynamic>? aspecto;
+  /// El transito rapido del dia y el lento que sostiene el capitulo.
+  /// Ambos llegan del servidor; el sello no inventa ni filtra cuerpos.
+  final Map<String, dynamic>? today;
+  final Map<String, dynamic>? chapter;
+  final Future<Map<String, dynamic>>? overview;
 
   /// Planeta regente del dia, para el lacre. Cambia solo cada jornada.
   final String? regente;
@@ -91,7 +95,7 @@ class _SelloDelCieloState extends State<SelloDelCielo>
 
   @override
   Widget build(BuildContext context) {
-    final a = widget.aspecto;
+    final a = widget.today ?? widget.chapter;
     // Sin transito no hay figura que sellar, y no se inventa una: el cielo
     // puede estar en calma sobre una carta y decirlo es la respuesta correcta.
     if (a == null) return const _CieloEnCalma();
@@ -99,10 +103,19 @@ class _SelloDelCieloState extends State<SelloDelCielo>
     final angulo = (a['angle'] as num?)?.toInt() ?? 0;
     final separacion = (a['separation'] as num?)?.toDouble();
     final nombre = _nombreDelAspecto(a);
+    final chapterName = widget.today == null || widget.chapter == null
+        ? null
+        : _nombreDelAspecto(widget.chapter!);
+    final rulerName = _es(widget.regente).toUpperCase();
+    final action = widget.regente == null
+        ? 'ROMPER EL LACRE'
+        : 'ROMPER EL LACRE DEL $rulerName';
 
     return Semantics(
       button: !widget.abierto,
-      label: widget.abierto ? 'Cielo abierto' : 'Romper el lacre y leer tu cielo',
+      label: widget.abierto
+          ? 'Cielo abierto'
+          : 'Romper el lacre y leer tu cielo',
       child: GestureDetector(
         onTap: widget.abierto || widget.cargando ? null : widget.onAbrir,
         child: AnimatedBuilder(
@@ -145,16 +158,41 @@ class _SelloDelCieloState extends State<SelloDelCielo>
                 const SizedBox(height: 3),
                 Text(
                   _pieDeSeparacion(separacion),
-                  style: ArcanumText.body(12, color: ArcanumColors.ivoryMuted,
-                      italic: true),
+                  style: ArcanumText.body(
+                    12,
+                    color: ArcanumColors.ivoryMuted,
+                    italic: true,
+                  ),
                 ),
-                if (!widget.abierto) ...[
-                  const SizedBox(height: 14),
+                if (chapterName != null) ...[
+                  const SizedBox(height: 7),
                   Text(
-                    widget.cargando ? 'ABRIENDO…' : 'ROMPER EL LACRE',
-                    style: ArcanumText.body(11, color: ArcanumColors.gold),
+                    'Capítulo: $chapterName',
+                    textAlign: TextAlign.center,
+                    style: ArcanumText.body(
+                      12,
+                      color: ArcanumColors.ivoryMuted,
+                    ),
                   ),
                 ],
+                if (!widget.abierto) ...[
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    key: const Key('hoy-seal-action'),
+                    height: 48,
+                    child: Center(
+                      child: Text(
+                        widget.cargando ? 'ABRIENDO…' : action,
+                        style: ArcanumText.body(11, color: ArcanumColors.gold),
+                      ),
+                    ),
+                  ),
+                ],
+                if (widget.overview != null)
+                  FutureBuilder<Map<String, dynamic>>(
+                    future: widget.overview,
+                    builder: (_, _) => const SizedBox.shrink(),
+                  ),
               ],
             );
           },
@@ -185,7 +223,8 @@ String _es(String? clave) {
 String _nombreDelAspecto(Map<String, dynamic> a) {
   final t = _es(a['transit'] as String?);
   final n = _es(a['natal'] as String?);
-  final asp = aspectEs[a['aspect'] as String?] ?? (a['aspect'] as String? ?? '');
+  final asp =
+      aspectEs[a['aspect'] as String?] ?? (a['aspect'] as String? ?? '');
   return '$t $asp $n';
 }
 
@@ -211,9 +250,15 @@ class _Lacre extends StatelessWidget {
           center: Alignment(-.35, -.4),
           colors: [Color(0xFF7D2033), ArcanumColors.burgundy],
         ),
-        border: Border.all(color: ArcanumColors.burgundyLight.withValues(alpha: .45)),
+        border: Border.all(
+          color: ArcanumColors.burgundyLight.withValues(alpha: .45),
+        ),
         boxShadow: const [
-          BoxShadow(color: Color(0x8C000000), blurRadius: 12, offset: Offset(0, 5)),
+          BoxShadow(
+            color: Color(0x8C000000),
+            blurRadius: 12,
+            offset: Offset(0, 5),
+          ),
         ],
       ),
       alignment: Alignment.center,
@@ -266,8 +311,11 @@ class _PintorRueda extends CustomPainter {
       ..strokeWidth = 1
       ..color = ArcanumColors.gold.withValues(alpha: .16);
     lienzo.drawCircle(centro, radio, rueda);
-    lienzo.drawCircle(centro, radio - 9, rueda..color =
-        ArcanumColors.gold.withValues(alpha: .07));
+    lienzo.drawCircle(
+      centro,
+      radio - 9,
+      rueda..color = ArcanumColors.gold.withValues(alpha: .07),
+    );
 
     final f = figuraDe(
       anguloNominal: anguloNominal,
@@ -291,10 +339,7 @@ class _PintorRueda extends CustomPainter {
       ..color = ArcanumColors.gold.withValues(alpha: .85);
 
     for (final metrica in camino.computeMetrics()) {
-      lienzo.drawPath(
-        metrica.extractPath(0, metrica.length * progreso),
-        trazo,
-      );
+      lienzo.drawPath(metrica.extractPath(0, metrica.length * progreso), trazo);
     }
 
     // Los dos cuerpos: presentes desde el principio, pero apagados hasta que la

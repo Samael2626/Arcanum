@@ -1,5 +1,6 @@
 import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
+import 'package:arcanum_app/core/consent/ai_consent.dart';
 import 'package:arcanum_app/features/hoy/hoy_screen.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_frame.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_motion.dart';
@@ -8,6 +9,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Hoy solo pide el cielo del lugar cuando hay lugar confirmado: sin esto la
 /// pantalla se quedaría en la luna y no habría nada que medir.
@@ -26,6 +28,7 @@ class _TodayApi extends ArcanumApi {
   var calls = 0;
   var horoscopeCalls = 0;
   var skyCalls = 0;
+  var celestialOverviewCalls = 0;
 
   /// El cielo sin interpretar: gratis y sin terceros. La tarjeta lo pide al
   /// construirse, asi que el falso API tiene que responderlo o queda un
@@ -72,6 +75,12 @@ class _TodayApi extends ArcanumApi {
   }
 
   @override
+  Future<Map<String, dynamic>> celestialOverview() async {
+    celestialOverviewCalls++;
+    return {'aspects_to_natal': <Map<String, dynamic>>[]};
+  }
+
+  @override
   Future<Map<String, dynamic>> today({
     required double lat,
     required double lon,
@@ -96,6 +105,8 @@ class _TodayApi extends ArcanumApi {
 }
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   testWidgets('Hoy evita animaciones y marcos costosos permanentes', (
     tester,
   ) async {
@@ -173,7 +184,81 @@ void main() {
     // Lo que se ve antes de tocar: el transito real y la invitacion.
     expect(find.text('Luna trígono Medio Cielo'), findsOneWidget);
     expect(find.textContaining('119,3'), findsOneWidget);
-    expect(find.text('ROMPER EL LACRE'), findsOneWidget);
+    expect(find.text('ROMPER EL LACRE DEL SOL'), findsOneWidget);
     expect(api.horoscopeCalls, 0);
+  });
+
+  testWidgets('rechazar consentimiento mantiene el sello cerrado', (
+    tester,
+  ) async {
+    final api = _TodayApi();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          arcanumApiProvider.overrideWithValue(api),
+          authProvider.overrideWith(_AuthWithPlace.new),
+        ],
+        child: const MaterialApp(home: Scaffold(body: HoyScreen())),
+      ),
+    );
+    await tester.pump();
+    await tester.drag(find.byType(ListView), const Offset(0, -900));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('ROMPER EL LACRE DEL SOL'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ROMPER EL LACRE DEL SOL'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ahora no'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ROMPER EL LACRE DEL SOL'), findsOneWidget);
+    expect(api.horoscopeCalls, 0);
+    expect(api.celestialOverviewCalls, 0);
+  });
+
+  testWidgets('aceptar abre una vez y retrasa el texto 400 ms', (tester) async {
+    final api = _TodayApi();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          arcanumApiProvider.overrideWithValue(api),
+          authProvider.overrideWith(_AuthWithPlace.new),
+        ],
+        child: const MaterialApp(home: Scaffold(body: HoyScreen())),
+      ),
+    );
+    await tester.pump();
+    await tester.drag(find.byType(ListView), const Offset(0, -900));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('ROMPER EL LACRE DEL SOL'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ROMPER EL LACRE DEL SOL'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.check_box_outline_blank).first);
+    await tester.pump();
+    await tester.tap(find.byIcon(Icons.check_box_outline_blank).first);
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Acepto'));
+    await tester.pump();
+
+    expect(api.horoscopeCalls, 1);
+    expect(find.text('Saturno aprieta sobre tu Sol natal.'), findsNothing);
+
+    await tester.pump(const Duration(milliseconds: 399));
+    expect(find.text('Saturno aprieta sobre tu Sol natal.'), findsNothing);
+    await tester.pump(const Duration(milliseconds: 1));
+    await tester.pump();
+
+    expect(find.text('ROMPER EL LACRE DEL SOL'), findsNothing);
+    expect(find.text('Saturno aprieta sobre tu Sol natal.'), findsOneWidget);
+    final routeTarget = find.ancestor(
+      of: find.text('trígono'),
+      matching: find.byType(InkWell),
+    );
+    expect(tester.getSize(routeTarget).height, greaterThanOrEqualTo(48));
+    expect(api.horoscopeCalls, 1);
+    expect(api.celestialOverviewCalls, 1);
+    expect(await AiConsent.isPending(), isFalse);
   });
 }

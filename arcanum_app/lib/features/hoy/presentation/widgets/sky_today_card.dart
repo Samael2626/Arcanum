@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -44,12 +46,23 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
   /// se quemaba su cupo del dia (que la idempotencia congela) y el primer
   /// contacto con ARCANUM era un dialogo legal.
   Future<Map<String, dynamic>>? _lectura;
+  Future<Map<String, dynamic>>? _overview;
   bool _abriendo = false;
+  bool _mostrarLectura = false;
+  Timer? _lecturaTimer;
 
   void _reintentarCielo() => setState(() {
-        _cielo = _api.skyToday();
-        _lectura = null;
-      });
+    _cielo = _api.skyToday();
+    _lectura = null;
+    _overview = null;
+    _mostrarLectura = false;
+  });
+
+  @override
+  void dispose() {
+    _lecturaTimer?.cancel();
+    super.dispose();
+  }
 
   /// Romper el lacre: aqui es donde por fin se pide permiso y se genera.
   ///
@@ -67,13 +80,35 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
         return;
       }
       if (!mounted) return;
+      final lectura = _api.horoscope();
       setState(() {
-        _lectura = _api.horoscope();
+        _lectura = lectura;
+        _overview = null;
+        _mostrarLectura = false;
         _abriendo = false;
+      });
+      unawaited(_cargarOverviewDespuesDe(lectura));
+      _lecturaTimer?.cancel();
+      _lecturaTimer = Timer(const Duration(milliseconds: 400), () {
+        if (mounted) setState(() => _mostrarLectura = true);
       });
     } catch (_) {
       if (mounted) setState(() => _abriendo = false);
     }
+  }
+
+  Future<void> _cargarOverviewDespuesDe(
+    Future<Map<String, dynamic>> lectura,
+  ) async {
+    try {
+      await lectura;
+    } catch (_) {
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _overview = _api.celestialOverview();
+    });
   }
 
   @override
@@ -90,20 +125,24 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
           );
         }
         final d = cielo.data!;
-        final aspecto = (d['today'] ?? d['chapter']) as Map<String, dynamic>?;
+        final today = d['today'] as Map<String, dynamic>?;
+        final chapter = d['chapter'] as Map<String, dynamic>?;
+        final aspecto = today ?? chapter;
 
         return _Shell(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SelloDelCielo(
-                aspecto: aspecto,
+                today: today,
+                chapter: chapter,
+                overview: _overview,
                 regente: d['day_ruler'] as String?,
                 abierto: _lectura != null,
                 cargando: _abriendo,
                 onAbrir: _romperLacre,
               ),
-              if (_lectura != null)
+              if (_lectura != null && _mostrarLectura)
                 FutureBuilder<Map<String, dynamic>>(
                   future: _lectura,
                   builder: (context, lec) {
@@ -113,11 +152,14 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
                     if (lec.hasError) {
                       return _Failure(
                         error: lec.error!,
-                        onRetry: () => setState(() => _lectura = null),
+                        onRetry: () => setState(() {
+                          _lectura = null;
+                          _overview = null;
+                          _mostrarLectura = false;
+                        }),
                       );
                     }
-                    final texto =
-                        (lec.data!['text'] as String?)?.trim() ?? '';
+                    final texto = (lec.data!['text'] as String?)?.trim() ?? '';
                     return Padding(
                       padding: const EdgeInsets.only(top: 18),
                       child: Column(
@@ -155,17 +197,17 @@ class _Cargando extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 18),
-          child: SizedBox.square(
-            dimension: 22,
-            child: CircularProgressIndicator(
-              strokeWidth: 1.6,
-              color: ArcanumColors.goldMuted,
-            ),
-          ),
+    child: Padding(
+      padding: EdgeInsets.symmetric(vertical: 18),
+      child: SizedBox.square(
+        dimension: 22,
+        child: CircularProgressIndicator(
+          strokeWidth: 1.6,
+          color: ArcanumColors.goldMuted,
         ),
-      );
+      ),
+    ),
+  );
 }
 
 class _Shell extends StatelessWidget {
@@ -278,9 +320,15 @@ class _Term extends StatelessWidget {
   Widget build(BuildContext context) => InkWell(
     onTap: onTap,
     borderRadius: BorderRadius.circular(6),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      child: Text(text, style: ArcanumText.body(15, color: color)),
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+        child: Center(
+          widthFactor: 1,
+          child: Text(text, style: ArcanumText.body(15, color: color)),
+        ),
+      ),
     ),
   );
 }
