@@ -38,6 +38,13 @@ class _AstralAdapter implements HttpClientAdapter {
         });
       case '/astral/moon':
         return _json(_moon);
+      case '/astral/sky-today':
+        return _json({
+          'date': '2026-08-24',
+          'day_ruler': 'sun',
+          'today': null,
+          'chapter': null,
+        });
       default:
         // El horoscopo de SkyTodayCard no es lo que se mide aqui: falla y la
         // tarjeta muestra su propio estado de error, como en produccion.

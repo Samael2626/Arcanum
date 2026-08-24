@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -775,17 +776,19 @@ class _CascadeState extends State<_Cascade>
     vsync: this,
     duration: const Duration(milliseconds: 620),
   );
+  Timer? _startTimer;
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(milliseconds: widget.delayMs), () {
+    _startTimer = Timer(Duration(milliseconds: widget.delayMs), () {
       if (mounted) _c.forward();
     });
   }
 
   @override
   void dispose() {
+    _startTimer?.cancel();
     _c.dispose();
     super.dispose();
   }
