@@ -4,7 +4,7 @@ Todo lo que hay que rellenar en Play Console, con la respuesta ya decidida y el
 porque. Lo que dice "VERIFICAR" es lo unico que queda por decidir.
 
 - **Paquete:** `com.arcanum.magick`
-- **Bundle:** `.tmp/arcanum-1.0.0+4.aab` (versionCode 4)
+- **Bundle:** `.tmp/arcanum-1.0.0+5.aab` (versionCode 5)
 - **Cuenta:** personal creada despues del 13/11/2023 -> **sujeta a prueba
   cerrada con 12 testers durante 14 dias continuos**
 
@@ -136,7 +136,6 @@ Sacado de los modelos de `arcanum-api`, no de memoria.
 | Datos financieros | Historial de compras | Sí | Sí (RevenueCat) | No | Gestionar la suscripción |
 | Mensajes | Otros en la app | Sí | Sí (Groq) | No | Generar las lecturas |
 | Archivos y documentos | — | No | No | — | — |
-| Actividad en la app | Interacciones | Sí | Sí (Firebase Analytics) | No | **VERIFICAR — ver aviso abajo** |
 | Rendimiento | Registros de fallos | Sí | Sí (Crashlytics) | No | Diagnosticar cierres |
 | Rendimiento | Diagnósticos | Sí | Sí (Crashlytics) | No | Diagnosticar cierres |
 | ID de dispositivo | ID de dispositivo o de otro tipo | Sí | Sí (AdMob) | No | Anuncios bonificados |
@@ -150,20 +149,40 @@ Sacado de los modelos de `arcanum-api`, no de memoria.
 > AES-256 en el dispositivo; el servidor almacena texto cifrado y no tiene la
 > clave. Verificado en `app/routers/grimoire.py` y en los esquemas.
 
-### AVISO: Firebase Analytics
+### Firebase Analytics: quitado
 
-`firebase_analytics` está en `pubspec.yaml` pero **no se importa en ningún
-fichero de `lib/`**, y no hay ninguna llamada a
-`setAnalyticsCollectionEnabled(false)`. En Android el SDK de Analytics recoge
-por su cuenta con solo estar en el classpath y Firebase inicializado.
+Estaba en `pubspec.yaml` sin que ningún fichero de `lib/` lo importara, y sin
+`setAnalyticsCollectionEnabled(false)`. En Android el SDK recoge por su cuenta
+con solo estar en el classpath: `GeneratedPluginRegistrant` lo registraba.
 
-Hay dos salidas honestas, y hay que elegir una:
+**Se eliminó la dependencia** (25/08). Por eso *Actividad en la app* no aparece
+en la tabla: ya no se recoge. Si algún día se vuelve a añadir, hay que declararla
+otra vez — es una fila del formulario, no un detalle técnico.
 
-1. **Quitar la dependencia.** No la usa nadie. Elimina una categoría entera del
-   formulario y reduce la superficie de datos. Es lo que recomiendo.
-2. **Dejarla y declararla**, que es como está escrita la tabla de arriba.
+Crashlytics se queda: sus fallos sí se miran, y va declarado.
 
-Lo que no vale es dejarla y no declararla.
+**Comprobado en el AAB, no supuesto.** Las clases
+`com/google/android/gms/measurement` **siguen apareciendo en el dex**: las
+arrastran transitivamente AdMob y Firebase Sessions. Eso asusta al verlo, pero no
+significa que se recoja nada. Lo que decide es qué componentes declara el
+manifiesto fusionado:
+
+```
+CrashlyticsRegistrar            presente   esperado
+FirebaseSessionsRegistrar       presente   sesiones, las usa Crashlytics
+FirebaseInstallationsRegistrar  presente
+AnalyticsRegistrar              AUSENTE
+AppMeasurement* / ContentProvider  AUSENTE
+```
+
+Sin registrar ni proveedor declarado, el SDK **nunca se inicializa**. Es peso
+muerto en el binario, no codigo que corra. Si alguna vez hay que rebatir esto,
+la comprobacion es leer los nombres de componente del manifiesto del AAB — no
+buscar cadenas en el dex, que da un falso positivo.
+
+Aparecen ademas dos cosas legitimas: el permiso
+`com.google.android.gms.permission.AD_ID` (AdMob, ya declarado) y
+`SessionLifecycleService` (Crashlytics agrupando fallos por sesion).
 
 ---
 
