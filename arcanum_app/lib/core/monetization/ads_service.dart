@@ -51,6 +51,13 @@ class AdsService {
 
   Stream<AdEvent> get events => _controller.stream;
 
+  /// Si hay un anuncio cargado y listo para mostrarse AHORA.
+  ///
+  /// Se consulta antes de ofrecerlo: un botón que dice «ve un anuncio» y no
+  /// tiene anuncio que enseñar es peor que no ofrecer nada, porque la persona
+  /// ya contaba con lo que iba a ganar.
+  bool get listo => _rewardedAd != null;
+
   /// Precargar un rewarded ad.
   void preloadRewarded() {
     if (_isLoading || _rewardedAd != null) return;
@@ -96,16 +103,9 @@ class AdsService {
 
     final completer = Completer<bool>();
 
-    ad.show(
-      onUserEarnedReward: (ad, reward) {
-        _controller.add(AdEvent.earnedReward(
-          reward.type,
-          reward.amount.toDouble(),
-        ));
-        if (!completer.isCompleted) completer.complete(true);
-      },
-    );
-
+    // Los callbacks van ANTES de `show`: asignarlos después es una carrera con
+    // un anuncio que se cierre rápido, y perder el aviso de cierre deja el
+    // completer colgado para siempre.
     ad.fullScreenContentCallback = FullScreenContentCallback(
       onAdDismissedFullScreenContent: (ad) {
         ad.dispose();
@@ -118,6 +118,16 @@ class AdsService {
         _rewardedAd = null;
         preloadRewarded();
         if (!completer.isCompleted) completer.complete(false);
+      },
+    );
+
+    ad.show(
+      onUserEarnedReward: (ad, reward) {
+        _controller.add(AdEvent.earnedReward(
+          reward.type,
+          reward.amount.toDouble(),
+        ));
+        if (!completer.isCompleted) completer.complete(true);
       },
     );
 

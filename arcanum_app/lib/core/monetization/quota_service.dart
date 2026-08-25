@@ -81,6 +81,30 @@ class QuotaService {
     return _prefs!.getInt('$_prefix${type}_${_todayKey()}') ?? 0;
   }
 
+  /// Cupos extra ganados hoy, por ver un anuncio.
+  ///
+  /// Se guardan con la fecha en la clave, igual que los contadores, así que
+  /// caducan solos: `_resetIfNeeded` borra todo lo que no sea de hoy. Un bonus
+  /// que sobreviviera a la noche sería un límite diario que deja de serlo.
+  Future<int> _getBonus(String type) async {
+    await _resetIfNeeded();
+    return _prefs!.getInt('$_prefix${type}_bonus_${_todayKey()}') ?? 0;
+  }
+
+  /// Concede un uso extra de [action] para hoy.
+  ///
+  /// SUMA AL LÍMITE en vez de restar al contador. Parece lo mismo y no lo es:
+  /// restando se perdería cuántas veces se usó de verdad, que es justo el dato
+  /// que dice si esto le sirve a alguien.
+  ///
+  /// Quien llama debe haber comprobado que el anuncio se completó. Aquí no se
+  /// pregunta: este objeto no sabe de anuncios.
+  Future<void> grantBonus(String action) async {
+    await _resetIfNeeded();
+    final key = '$_prefix${action}_bonus_${_todayKey()}';
+    await _prefs!.setInt(key, (_prefs!.getInt(key) ?? 0) + 1);
+  }
+
   Future<void> _increment(String type) async {
     await _resetIfNeeded();
     final key = '$_prefix${type}_${_todayKey()}';
@@ -104,16 +128,17 @@ class QuotaService {
     final limits = tier == SubscriptionTier.premium
         ? DailyLimits.premium
         : DailyLimits.free;
+    final bonus = await _getBonus(action);
 
     switch (action) {
       case 'tarot':
-        return usage.tarotDraws < limits.tarotDraws;
+        return usage.tarotDraws < limits.tarotDraws + bonus;
       case 'oracle':
-        return usage.oracleReads < limits.oracleReads;
+        return usage.oracleReads < limits.oracleReads + bonus;
       case 'materia':
-        return usage.materiaRecipes < limits.materiaRecipes;
+        return usage.materiaRecipes < limits.materiaRecipes + bonus;
       case 'cielos':
-        return usage.cielosInvestigations < limits.cielosInvestigations;
+        return usage.cielosInvestigations < limits.cielosInvestigations + bonus;
       default:
         return true;
     }
@@ -140,6 +165,7 @@ class QuotaService {
         ? DailyLimits.premium
         : DailyLimits.free;
 
+    final bonus = await _getBonus(action);
     int used;
     int limit;
     switch (action) {
@@ -158,6 +184,7 @@ class QuotaService {
       default:
         return 999;
     }
+    limit += bonus;
     return (limit - used).clamp(0, limit);
   }
 }
