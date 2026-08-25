@@ -10,13 +10,34 @@ porque. Lo que dice "VERIFICAR" es lo unico que queda por decidir.
 
 ---
 
-## 0. El orden correcto
+## 0. Las URLs legales, ya publicadas
+
+No hizo falta montar hosting: **GitHub Pages ya estaba sirviendo** desde la rama
+`gh-pages`, con HTTPS y repo publico.
+
+```
+Privacidad  https://samael2626.github.io/Arcanum/privacy-policy.html
+Terminos    https://samael2626.github.io/Arcanum/terms-of-service.html
+Borrado     https://samael2626.github.io/Arcanum/account-deletion.html
+Indice      https://samael2626.github.io/Arcanum/
+```
+
+Se editan en la rama `gh-pages`, NO en `arcanum_app/web/`. Hubo un borrador
+duplicado ahi y se quito: dos copias de una politica legal es una que miente.
+
+> `app-ads.txt` sigue siendo aparte. Tiene que estar en la RAIZ del dominio que
+> se declare como sitio web del desarrollador. Si se declara este, el fichero
+> tiene que ir a `gh-pages`, no al build de Flutter.
+
+---
+
+## 0 bis. El orden correcto
 
 El reloj de los 14 dias es lo unico que no se puede acelerar. Todo lo demas cabe
 dentro de esa ventana, asi que **primero se arranca el reloj**:
 
 ```
-1. Desplegar hosting          -> hacen falta las URLs legales
+1. ~~Desplegar hosting~~      HECHO: GitHub Pages ya servia
 2. Crear la app en Play Console
 3. Declaraciones de contenido -> privacidad, Data Safety, clasificacion, anuncios
 4. Ficha (textos + graficos)
@@ -100,7 +121,7 @@ Sacado de los modelos de `arcanum-api`, no de memoria.
 | ¿Recoge o comparte datos de usuario? | **Sí** |
 | ¿Se cifran en tránsito? | **Sí** — todo va por HTTPS |
 | ¿Se puede pedir el borrado? | **Sí** — en la app y por web |
-| URL de borrado | `https://<dominio>/legal/eliminar-cuenta.html` |
+| URL de borrado | `https://samael2626.github.io/Arcanum/account-deletion.html` |
 | ¿Cumple la política de familias? | No aplica: publico objetivo 18+ |
 
 ### Tipos de datos
@@ -262,8 +283,7 @@ Es gratis y no tiene letra pequeña. Si encuentras algo roto, mejor: para eso es
 
 ## 6. Lo que sigue bloqueado
 
-- **URLs legales sin servir.** `web/legal/` está escrito y viaja en el build,
-  pero el hosting no se ha desplegado. Sin eso no hay ficha.
+- ~~URLs legales sin servir~~ — resuelto: ya estaban en GitHub Pages.
 - **AdMob.** No se puede vincular hasta que la app exista en Play. Y
   `app-ads.txt` no verifica hasta que haya sitio web declarado en la ficha.
 - **Clave pública de RevenueCat.**
