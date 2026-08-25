@@ -4,7 +4,7 @@ Ningún item se salta. Cada uno se marca con evidencia (archivo:línea, captura 
 
 ## Bloqueantes (sin esto no se publica)
 
-- [x] Reporte in-app de contenido generado por IA, en cada respuesta del oráculo y las lecturas. `Play AI-Generated Content`. Evidencia: `arcanum-api/app/routers/reports.py:13`, `arcanum_app/lib/features/oraculo/oraculo_screen.dart:517`, `arcanum_app/lib/features/tarot/tarot_screen.dart:322`.
+- [ ] Reporte in-app de contenido generado por IA, en cada respuesta del oráculo y las lecturas. `Play AI-Generated Content`. Hecho en oráculo (`oraculo_screen.dart:517`) y tarot (`tarot_screen.dart:322`), backend en `reports.py:13`. **FALTA Lecturas**: `lector_screen.dart:435` llama a `oracleIa()` y pinta `_reply` sin ningún reporte; el modelo ya admite `source='lectura'`.
 - [x] Aviso de IA visible en la primera interacción del chat. `AI Act art. 50`. Evidencia: `arcanum_app/lib/features/oraculo/oraculo_screen.dart:380`.
 - [x] Modal de consentimiento nombrando al proveedor de IA (Groq) antes del primer envío, con opción de rechazar. `Apple 5.1.2(i)`. Evidencia: `arcanum_app/lib/core/privacy/ai_consent_service.dart:61`, `arcanum_app/lib/core/privacy/ai_consent_service.dart:63`, `arcanum_app/lib/core/privacy/ai_consent_service.dart:70`, `arcanum_app/lib/core/privacy/ai_consent_service.dart:76`.
 - [ ] UMP/CMP integrado: `requestConsentInfoUpdate` → `loadAndShowConsentFormIfRequired` → `canRequestAds` antes de inicializar ads. `AdMob EEE/UK`. **Abierto:** anuncios desactivados por defecto mediante `ADS_ENABLED`; no activar hasta implementar el TODO UMP. Evidencia: `arcanum_app/lib/main.dart:29`, `arcanum_app/lib/main.dart:31`, `arcanum_app/lib/main.dart:34`.
