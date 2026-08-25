@@ -57,14 +57,14 @@ app/
   core/config.py             (MODIFIED) - Added ADMIN_TOKEN
   main.py                    (MODIFIED) - Registered admin router
 .env                         (MODIFIED) - Added ADMIN_TOKEN
-test_migration_endpoint.py   (NEW) - Local test script
+scripts/comprobar_endpoint_migracion.py - Script de mano (NO es un test)
 ```
 
 ## Local Testing
 
 ```bash
-python test_migration_endpoint.py --check   # Check status (no DB required)
-python test_migration_endpoint.py --run     # Run migrations (needs live DB)
+python scripts/comprobar_endpoint_migracion.py --check   # Consulta el estado
+python scripts/comprobar_endpoint_migracion.py --run     # MIGRA de verdad la base de DATABASE_URL
 ```
 
 ## Render Environment

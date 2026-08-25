@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """
-Test del endpoint POST /admin/migrate
-Verifica que pueda ejecutar migraciones correctamente.
+Comprobacion de mano del endpoint POST /admin/migrate.
+
+NO es un test: ejecuta migraciones de verdad contra lo que diga DATABASE_URL.
+Por eso no se llama test_*.py ni vive en la raiz -- con ese nombre pytest lo
+recogia y una corrida de la suite podia migrar la base apuntada.
 
 Uso:
-    python test_migration_endpoint.py --check
-    python test_migration_endpoint.py --run
+    python scripts/comprobar_endpoint_migracion.py --check
+    python scripts/comprobar_endpoint_migracion.py --run
 """
 
 import sys
@@ -13,13 +16,13 @@ import os
 from pathlib import Path
 
 # Add to path for imports
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.db.session import engine
 from app.db.migrate import check_migration_status, run_migrations
 
 
-def test_check_status():
+def comprobar_estado():
     """Test: GET /admin/migrate/status"""
     print("\n1. Verificando estado de migraciones...")
     result = check_migration_status(engine)
@@ -38,7 +41,7 @@ def test_check_status():
     return result
 
 
-def test_run_migrations():
+def ejecutar_migraciones():
     """Test: POST /admin/migrate"""
     print("\n2. Ejecutando migraciones...")
     result = run_migrations(engine)
@@ -61,21 +64,21 @@ def test_run_migrations():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("Test Endpoint /admin/migrate")
+    print("Comprobacion del endpoint /admin/migrate")
     print("=" * 60)
 
     action = sys.argv[1] if len(sys.argv) > 1 else "--check"
 
     if action == "--check":
-        test_check_status()
+        comprobar_estado()
     elif action == "--run":
-        status_before = test_check_status()
-        test_run_migrations()
+        status_before = comprobar_estado()
+        ejecutar_migraciones()
     else:
         print(f"Accion desconocida: {action}")
-        print("Uso: python test_migration_endpoint.py [--check|--run]")
+        print("Uso: python scripts/comprobar_endpoint_migracion.py [--check|--run]")
         sys.exit(1)
 
     print("\n" + "=" * 60)
-    print("Test completado")
+    print("Comprobacion completada")
     print("=" * 60)
