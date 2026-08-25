@@ -1,0 +1,32 @@
+/* Estilo comun de las paginas legales. Sobrio y legible: esto se lee, no se
+   contempla. Mismo fondo que la PWA para que no parezca otro sitio. */
+:root{
+  --tinta:#e8e3d9; --tinta-suave:#a9a496; --fondo:#0a0a0f; --panel:#12121a;
+  --borde:#26263a; --oro:#c9a227; --aviso:#3a2a12;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; padding:2.5rem 1.25rem 5rem; background:var(--fondo); color:var(--tinta);
+  font:16px/1.7 Georgia,"Times New Roman",serif;
+}
+main{max-width:44rem; margin:0 auto}
+h1{font-size:1.9rem; line-height:1.25; margin:0 0 .35rem; text-wrap:balance}
+h2{font-size:1.15rem; margin:2.5rem 0 .6rem; color:var(--oro);
+   letter-spacing:.02em; border-bottom:1px solid var(--borde); padding-bottom:.35rem}
+.fecha{color:var(--tinta-suave); font-size:.85rem; margin:0 0 2rem;
+       font-family:system-ui,sans-serif; letter-spacing:.06em; text-transform:uppercase}
+p,li{color:var(--tinta)}
+li{margin:.3rem 0}
+a{color:var(--oro)}
+code{background:var(--panel); border:1px solid var(--borde); border-radius:3px;
+     padding:.1rem .35rem; font-size:.9em}
+table{width:100%; border-collapse:collapse; margin:1rem 0; font-size:.94rem}
+th,td{text-align:left; padding:.55rem .6rem; border-bottom:1px solid var(--borde);
+      vertical-align:top}
+th{color:var(--tinta-suave); font-family:system-ui,sans-serif; font-size:.78rem;
+   letter-spacing:.06em; text-transform:uppercase; font-weight:600}
+.borrador{background:var(--aviso); border:1px solid var(--oro); border-radius:4px;
+          padding:.9rem 1rem; margin:0 0 2rem; font-family:system-ui,sans-serif;
+          font-size:.9rem; line-height:1.5}
+footer{margin-top:3.5rem; padding-top:1.2rem; border-top:1px solid var(--borde);
+       color:var(--tinta-suave); font-size:.85rem}

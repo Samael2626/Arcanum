@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Política de privacidad — ARCANUM</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<main>
+
+<div class="borrador">
+  <strong>BORRADOR — sin revisar.</strong> Redactado a partir del inventario real
+  de datos del código (modelos de <code>arcanum-api</code>), no de una plantilla.
+  Antes de publicar hay que rellenar el responsable y el correo de contacto, y
+  revisarlo alguien con criterio legal. Los huecos van marcados como
+  <code>[PENDIENTE]</code>.
+</div>
+
+<h1>Política de privacidad de ARCANUM</h1>
+<p class="fecha">Última actualización: 25 de agosto de 2026</p>
+
+<p>ARCANUM es una aplicación de práctica mágica: tarot, astrología, materia
+arcana y un grimorio personal. Esta página explica qué datos recoge, para qué,
+con quién se comparten y cómo se borran.</p>
+
+<h2>Quién es responsable</h2>
+<p>Responsable del tratamiento: <code>[PENDIENTE: nombre o razón social]</code>.<br>
+Contacto: <code>[PENDIENTE: correo de contacto]</code>.</p>
+
+<h2>Qué datos se recogen</h2>
+<table>
+<tr><th>Dato</th><th>Para qué</th><th>Obligatorio</th></tr>
+<tr><td>Correo electrónico y contraseña</td><td>Crear y proteger la cuenta. La contraseña se guarda como <em>hash</em>, nunca en claro.</td><td>Sí</td></tr>
+<tr><td>Nombre para mostrar</td><td>Dirigirse a la persona dentro de la app.</td><td>No</td></tr>
+<tr><td>Fecha, hora y lugar de nacimiento (ciudad, coordenadas, huso)</td><td>Calcular la carta natal y los tránsitos. Sin esto, la parte astrológica no puede funcionar: son los parámetros del cálculo.</td><td>No, pero condiciona funciones</td></tr>
+<tr><td>Ubicación actual (ciudad, coordenadas, huso)</td><td>Calcular la hora planetaria, el regente del día y la fecha local. <strong>Se introduce a mano</strong>: la app no pide ni tiene permiso de localización — el único permiso que declara es el de acceso a internet.</td><td>No, pero condiciona funciones</td></tr>
+<tr><td>Entradas del grimorio</td><td>Guardar las notas personales. Se almacenan <strong>cifradas con AES-256</strong>.</td><td>No</td></tr>
+<tr><td>Conversaciones con el oráculo y tiradas de tarot</td><td>Generar e historizar las lecturas.</td><td>No</td></tr>
+<tr><td>Progreso de lectura, marcadores y pasajes guardados</td><td>Recordar por dónde iba en la biblioteca.</td><td>No</td></tr>
+<tr><td>Estado de suscripción e identificador de RevenueCat</td><td>Saber qué funciones están disponibles.</td><td>Sí, si se suscribe</td></tr>
+<tr><td>Contador de uso diario</td><td>Aplicar los límites del plan gratuito.</td><td>Sí</td></tr>
+<tr><td>Identificador de publicidad</td><td>Mostrar anuncios opcionales que conceden cupo extra.</td><td>No</td></tr>
+</table>
+
+<h2>Con quién se comparten</h2>
+<p>ARCANUM no vende datos a nadie. Se comparten con los proveedores mínimos que
+hacen falta para que funcione:</p>
+<ul>
+<li><strong>Groq</strong> — el texto de la consulta y el contexto astrológico
+necesarios para generar la lectura. Es un proveedor de modelos de lenguaje.
+<strong>Las entradas del grimorio no llegan a Groq</strong>. Se cifran en el
+propio teléfono antes de salir, y ni el servidor de ARCANUM ni ningún proveedor
+reciben la clave: lo que se almacena es texto cifrado que aquí no se puede
+descifrar.</li>
+<li><strong>RevenueCat</strong> — gestión de suscripciones. Recibe un
+identificador de cliente y el estado de compra, no el contenido de la app.</li>
+<li><strong>Google AdMob</strong> — anuncios opcionales. Recibe el identificador
+de publicidad del dispositivo.</li>
+<li><strong>Railway</strong> — donde se aloja el servidor y la base de datos.</li>
+</ul>
+
+<h2>Cuánto tiempo se conservan</h2>
+<p>Mientras la cuenta exista. Al borrarla se eliminan los datos asociados, según
+lo descrito en <a href="eliminar-cuenta.html">eliminar la cuenta</a>.</p>
+
+<h2>Qué derechos hay y cómo se ejercen</h2>
+<ul>
+<li><strong>Acceso y rectificación</strong> — los datos de perfil y nacimiento se
+editan desde los ajustes de la app.</li>
+<li><strong>Supresión</strong> — desde <em>Ajustes → Eliminar cuenta</em> dentro
+de la app, o por la vía web descrita en
+<a href="eliminar-cuenta.html">esta página</a>.</li>
+<li><strong>Oposición y reclamación</strong> — escribiendo al correo de contacto.</li>
+</ul>
+
+<h2>Menores</h2>
+<p>ARCANUM no está dirigida a menores de <code>[PENDIENTE: edad mínima]</code>
+años y no recoge datos de menores a sabiendas.</p>
+
+<h2>Cambios en esta política</h2>
+<p>Si cambia, se actualiza la fecha de arriba. Los cambios relevantes se avisan
+dentro de la app.</p>
+
+<footer>
+ARCANUM · <a href="eliminar-cuenta.html">Eliminar la cuenta</a>
+</footer>
+
+</main>
+</body>
+</html>

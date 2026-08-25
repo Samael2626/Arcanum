@@ -19,7 +19,7 @@ void main() {
     cupo = QuotaService();
   });
 
-  String _hoy() {
+  String hoy() {
     final n = DateTime.now();
     return '${n.year}-${n.month.toString().padLeft(2, '0')}-'
         '${n.day.toString().padLeft(2, '0')}';
@@ -70,7 +70,7 @@ void main() {
       // el teléfono de quien vio un anuncio anoche.
       SharedPreferences.setMockInitialValues({
         'quota_materia_bonus_2020-01-01': 5,
-        'quota_materia_${_hoy()}': 1,
+        'quota_materia_${hoy()}': 1,
       });
       cupo = QuotaService();
       expect(await cupo.canPerform('materia', SubscriptionTier.free), isFalse);
