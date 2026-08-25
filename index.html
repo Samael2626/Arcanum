@@ -1,373 +1,76 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARCANUM — Legal</title>
-    <style>
-        :root {
-            --bg: #0a0a0f;
-            --surface: #12121a;
-            --border: #1e1e2e;
-            --text: #e8e6e3;
-            --muted: #9ca3af;
-            --accent: #8b5cf6;
-            --accent-dim: #7c3aed;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Georgia', serif;
-            line-height: 1.8;
-            padding: 0;
-        }
-        .hero {
-            text-align: center;
-            padding: 80px 20px 40px;
-            border-bottom: 1px solid var(--border);
-        }
-        .hero h1 {
-            font-size: 2.5rem;
-            font-weight: 300;
-            letter-spacing: 0.3em;
-            color: var(--accent);
-            margin-bottom: 10px;
-        }
-        .hero p {
-            color: var(--muted);
-            font-size: 0.9rem;
-        }
-        .nav {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
-        }
-        .nav a {
-            color: var(--muted);
-            text-decoration: none;
-            font-size: 0.85rem;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            transition: color 0.3s;
-        }
-        .nav a:hover, .nav a.active {
-            color: var(--accent);
-        }
-        .content {
-            max-width: 720px;
-            margin: 0 auto;
-            padding: 60px 30px 100px;
-        }
-        .section {
-            display: none;
-        }
-        .section.active {
-            display: block;
-        }
-        .section h2 {
-            font-size: 1.4rem;
-            font-weight: 400;
-            color: var(--accent);
-            margin: 40px 0 15px;
-            letter-spacing: 0.1em;
-        }
-        .section h3 {
-            font-size: 1.1rem;
-            font-weight: 400;
-            margin: 25px 0 10px;
-            color: var(--text);
-        }
-        .section p, .section li {
-            color: var(--muted);
-            font-size: 0.95rem;
-            margin-bottom: 12px;
-        }
-        .section ul, .section ol {
-            padding-left: 24px;
-        }
-        .section table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-        .section th, .section td {
-            text-align: left;
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.85rem;
-        }
-        .section th {
-            color: var(--accent);
-            font-weight: 400;
-            letter-spacing: 0.05em;
-        }
-        .section td {
-            color: var(--muted);
-        }
-        .footer {
-            text-align: center;
-            padding: 40px;
-            border-top: 1px solid var(--border);
-            color: var(--muted);
-            font-size: 0.8rem;
-        }
-        strong { color: var(--text); }
-        a { color: var(--accent); }
-        hr {
-            border: none;
-            border-top: 1px solid var(--border);
-            margin: 30px 0;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARCANUM — Documentos legales</title>
+<meta name="description" content="Política de privacidad, términos de servicio y eliminación de cuenta de ARCANUM.">
+<style>
+  /* Paleta tomada de lib/core/theme/arcanum_colors.dart, para que esto no
+     parezca otro producto distinto al abrirlo desde la ficha de Play. */
+  :root{
+    --fondo:#0a0a0f; --panel:#12121a; --borde:#26263a;
+    --tinta:#e8e3d9; --tinta-suave:#a9a496; --oro:#c9a84c; --oro-apagado:#8a6e32;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--fondo); color:var(--tinta);
+    font:16px/1.7 Georgia,"Times New Roman",serif;
+  }
+  .portada{
+    text-align:center; padding:5rem 1.25rem 3rem;
+    border-bottom:1px solid var(--borde);
+  }
+  .portada h1{
+    margin:0 0 .6rem; font-size:2.6rem; font-weight:400;
+    letter-spacing:.32em; color:var(--oro); text-indent:.32em;
+  }
+  .portada p{margin:0; color:var(--tinta-suave); font-size:.9rem;
+    font-family:system-ui,sans-serif; letter-spacing:.08em; text-transform:uppercase}
+  main{max-width:40rem; margin:0 auto; padding:2.5rem 1.25rem 5rem}
+  .doc{
+    display:block; text-decoration:none; color:inherit;
+    background:var(--panel); border:1px solid var(--borde); border-radius:6px;
+    padding:1.25rem 1.4rem; margin:0 0 1rem;
+  }
+  .doc:hover,.doc:focus{border-color:var(--oro-apagado); outline:none}
+  .doc h2{margin:0 0 .3rem; font-size:1.15rem; color:var(--oro); font-weight:400}
+  .doc p{margin:0; color:var(--tinta-suave); font-size:.94rem}
+  footer{
+    max-width:40rem; margin:0 auto; padding:0 1.25rem 4rem;
+    color:var(--tinta-suave); font-size:.85rem; font-family:system-ui,sans-serif;
+  }
+  footer a{color:var(--oro-apagado)}
+</style>
 </head>
 <body>
-    <div class="hero">
-        <h1>ARCANUM</h1>
-        <p>Documentos Legales</p>
-    </div>
 
-    <div class="nav">
-        <a href="#" onclick="show('privacy')" id="nav-privacy">Privacidad</a>
-        <a href="#" onclick="show('terms')" id="nav-terms">Términos</a>
-    </div>
+<div class="portada">
+  <h1>ARCANUM</h1>
+  <p>Documentos legales</p>
+</div>
 
-    <div class="content">
-        <!-- PRIVACY POLICY -->
-        <div class="section" id="privacy">
-            <h2>Política de Privacidad</h2>
-            <p><em>Última actualización: 3 de agosto de 2026</em></p>
+<main>
+  <a class="doc" href="privacy-policy.html">
+    <h2>Política de privacidad</h2>
+    <p>Qué datos recoge la App, para qué, con quién se comparten y qué está cifrado.</p>
+  </a>
 
-            <p>ARCANUM ("la App") es una aplicación móvil de práctica mágica, astrología y esoterismo. Esta Política de Privacidad describe cómo recopilamos, usamos, almacenamos y protegemos tu información personal.</p>
+  <a class="doc" href="terms-of-service.html">
+    <h2>Términos de servicio</h2>
+    <p>Condiciones de uso, suscripciones y límites del plan gratuito.</p>
+  </a>
 
-            <p>Al usar ARCANUM, aceptas las prácticas descritas en esta política.</p>
+  <a class="doc" href="account-deletion.html">
+    <h2>Eliminar tu cuenta</h2>
+    <p>Cómo borrarla desde la App o sin tenerla instalada, y qué se borra exactamente.</p>
+  </a>
+</main>
 
-            <hr>
+<footer>
+  Cada documento tiene su propia dirección, para poder enlazarlo directamente.
+  Contacto: <a href="mailto:arcanum.magick.app@gmail.com">arcanum.magick.app@gmail.com</a>
+</footer>
 
-            <h2>1. Datos que recopilamos</h2>
-
-            <h3>1.1 Datos de cuenta</h3>
-            <ul>
-                <li><strong>Correo electrónico</strong> — requerido para registro y autenticación</li>
-                <li><strong>Contraseña</strong> — almacenada de forma hasheada (irreversible)</li>
-                <li><strong>Nombre de usuario</strong> — opcional</li>
-            </ul>
-
-            <h3>1.2 Datos de nacimiento</h3>
-            <p>Para cálculos astrológicos:</p>
-            <ul>
-                <li>Fecha de nacimiento</li>
-                <li>Hora de nacimiento</li>
-                <li>Lugar de nacimiento (ciudad, coordenadas, zona horaria)</li>
-            </ul>
-
-            <h3>1.3 Preferencias</h3>
-            <ul>
-                <li>Tradición preferida (occidental, cabalística, etc.)</li>
-                <li>Sistema de casas astrológicas</li>
-            </ul>
-
-            <h3>1.4 Datos de uso</h3>
-            <ul>
-                <li>Sesiones de adivinación</li>
-                <li>Entradas del grimorio (notas personales cifradas)</li>
-                <li>Conversaciones con el oráculo IA</li>
-                <li>Lecturas de tarot guardadas</li>
-            </ul>
-
-            <h3>1.5 Datos de suscripción</h3>
-            <ul>
-                <li>Tier de suscripción (gratis/mensual/anual)</li>
-                <li>ID de cliente de RevenueCat</li>
-                <li>Fecha de expiración</li>
-            </ul>
-
-            <h3>1.6 Datos técnicos</h3>
-            <ul>
-                <li>Tipo de dispositivo y versión del sistema operativo</li>
-                <li>Logs de errores (Firebase Crashlytics)</li>
-            </ul>
-
-            <hr>
-
-            <h2>2. Cómo usamos tus datos</h2>
-            <ul>
-                <li><strong>Proporcionar el servicio</strong> — cartas natales, interpretaciones, oráculo IA</li>
-                <li><strong>Personalizar</strong> — contenido según tu tradición y configuración</li>
-                <li><strong>Gestionar suscripciones</strong> — verificar estado, procesar compras</li>
-                <li><strong>Mejorar la App</strong> — análisis de uso, detección de errores</li>
-                <li><strong>Prevenir fraude</strong> — autenticación, rate limiting</li>
-            </ul>
-
-            <hr>
-
-            <h2>3. Servicios de terceros</h2>
-            <table>
-                <tr><th>Servicio</th><th>Propósito</th></tr>
-                <tr><td>RevenueCat</td><td>Gestión de suscripciones y pagos</td></tr>
-                <tr><td>Google AdMob</td><td>Anuncios recompensados</td></tr>
-                <tr><td>Firebase Analytics</td><td>Análisis de uso</td></tr>
-                <tr><td>Firebase Crashlytics</td><td>Reporte de errores</td></tr>
-                <tr><td>Groq</td><td>Oráculo IA</td></tr>
-                <tr><td>Supabase</td><td>Base de datos</td></tr>
-            </table>
-
-            <hr>
-
-            <h2>4. Almacenamiento y seguridad</h2>
-            <ul>
-                <li>Contraseñas hasheadas con bcrypt, irreversibles</li>
-                <li>Datos de nacimiento encriptados en base de datos</li>
-                <li>Grimorio cifrado con AES-256, solo accesible por ti</li>
-                <li>Todas las conexiones usan HTTPS/TLS</li>
-            </ul>
-
-            <hr>
-
-            <h2>5. Tus derechos</h2>
-            <p>De acuerdo con la Ley 1581 de 2012 de Colombia:</p>
-            <ul>
-                <li><strong>Acceder</strong> a tus datos personales</li>
-                <li><strong>Rectificar</strong> datos inexactos</li>
-                <li><strong>Solicitar eliminación</strong> de tus datos</li>
-                <li><strong>Oponerte</strong> al procesamiento</li>
-                <li><strong>Portabilidad</strong> de tus datos</li>
-            </ul>
-
-            <hr>
-
-            <h2>6. Eliminación de cuenta</h2>
-            <p>Puedes eliminar tu cuenta desde Perfil. Se eliminan todos tus datos personales, tu acceso premium, y tu cliente en RevenueCat en un plazo máximo de 30 días.</p>
-
-            <hr>
-
-            <h2>7. Menores</h2>
-            <p>ARCANUM no está dirigido a menores de 13 años. No recopilamos intencionadamente datos de menores.</p>
-
-            <hr>
-
-            <h2>8. Cambios</h2>
-            <p>Podemos actualizar esta política. Te notificaremos de cambios significativos a través de la App.</p>
-
-            <hr>
-
-            <h2>Contacto</h2>
-            <p><strong>Correo:</strong> soporte@arcanum-app.com<br>
-            <strong>Desarrollador:</strong> Samuel Escobar<br>
-            <strong>País:</strong> Colombia</p>
-        </div>
-
-        <!-- TERMS OF SERVICE -->
-        <div class="section" id="terms">
-            <h2>Términos de Servicio</h2>
-            <p><em>Última actualización: 3 de agosto de 2026</em></p>
-
-            <p>Bienvenido a ARCANUM. Estos Términos rigen tu uso de la aplicación. Al usar la App, aceptas estos Términos en su totalidad.</p>
-
-            <hr>
-
-            <h2>1. Descripción del servicio</h2>
-            <p>ARCANUM es una aplicación de práctica mágica que ofrece:</p>
-            <ul>
-                <li>Carta natal y cálculos astrológicos</li>
-                <li>Oracle IA con interpretaciones esotéricas</li>
-                <li>Tarot (78 arcanos)</li>
-                <li>Grimorio personal cifrado</li>
-                <li>Calendario astral</li>
-                <li>Contenido educativo sobre tradiciones esotéricas</li>
-            </ul>
-
-            <hr>
-
-            <h2>2. Cuenta</h2>
-            <ul>
-                <li>Debes tener al menos 13 años</li>
-                <li>Una cuenta por persona</li>
-                <li>Eres responsable de tu contraseña</li>
-            </ul>
-
-            <hr>
-
-            <h2>3. Suscripciones</h2>
-
-            <h3>Gratuito</h3>
-            <p>Funcionalidades básicas con límites diarios de uso.</p>
-
-            <h3>Premium (Místico)</h3>
-            <ul>
-                <li><strong>Mensual:</strong> $7.99 USD/mes</li>
-                <li><strong>Anual:</strong> $59.99 USD/año</li>
-                <li>Trial gratuito de 7 días</li>
-            </ul>
-
-            <h3>Consumibles</h3>
-            <ul>
-                <li>10 créditos — $1.99 USD</li>
-                <li>50 créditos — $7.99 USD</li>
-                <li>Bundle — $4.99 USD</li>
-            </ul>
-
-            <h3>Cancelación</h3>
-            <p>Cancela en cualquier momento desde Google Play Store. El acceso continúa hasta el final del período facturado.</p>
-
-            <hr>
-
-            <h2>4. Uso aceptable</h2>
-            <p><strong>Puedes:</strong> usar la App personalmente, compartir capturas, exportar datos.</p>
-            <p><strong>No puedes:</strong></p>
-            <ul>
-                <li>Usar la App para fines ilegales</li>
-                <li>Redistribuir contenido</li>
-                <li>Evadir límites de uso</li>
-                <li>Usar bots o automatizaciones</li>
-                <li>Hacer ingeniería inversa</li>
-                <li>Transferir tu cuenta</li>
-            </ul>
-
-            <hr>
-
-            <h2>5. Propiedad intelectual</h2>
-            <p>ARCANUM y su contenido original son propiedad del desarrollador. El contenido que creas es tuyo.</p>
-
-            <hr>
-
-            <h2>6. Descargo de responsabilidad</h2>
-            <p>ARCANUM es <strong>entretenimiento y autoconocimiento</strong>. NO sustituye consejo médico, psicológico, financiero o legal. Las respuestas del oráculo IA son orientativas, no profesionales.</p>
-
-            <hr>
-
-            <h2>7. Limitación</h2>
-            <p>La App se proporciona "tal cual". No somos responsables por decisiones tomadas basadas en su contenido. La responsabilidad total no excederá lo pagado en los últimos 12 meses.</p>
-
-            <hr>
-
-            <h2>8. Ley aplicable</h2>
-            <p>Regido por las leyes de Colombia. Disputas ante tribunales competentes en Colombia.</p>
-
-            <hr>
-
-            <h2>Contacto</h2>
-            <p><strong>Correo:</strong> soporte@arcanum-app.com<br>
-            <strong>Desarrollador:</strong> Samuel Escobar</p>
-        </div>
-    </div>
-
-    <div class="footer">
-        <p>© 2026 ARCANUM — Samuel Escobar</p>
-    </div>
-
-    <script>
-        function show(section) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
-            document.getElementById(section).classList.add('active');
-            document.getElementById('nav-' + section).classList.add('active');
-            window.scrollTo(0, 0);
-        }
-        // Default to privacy
-        show('privacy');
-    </script>
 </body>
 </html>

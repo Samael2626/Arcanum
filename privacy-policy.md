@@ -1,10 +1,13 @@
 # Política de Privacidad — ARCANUM
 
-**Última actualización:** 3 de agosto de 2026
+**Última actualización:** 25 de agosto de 2026
 
 ARCANUM ("la App") es una aplicación móvil de práctica mágica, astrología y esoterismo. Esta Política de Privacidad describe cómo recopilamos, usamos, almacenamos y protegemos tu información personal.
 
 Al usar ARCANUM, aceptas las prácticas descritas en esta política.
+
+**Responsable del tratamiento:** Samuel Andrés Escobar Saldarriaga (Colombia).
+**Contacto:** arcanum.magick.app@gmail.com
 
 ---
 
@@ -12,93 +15,117 @@ Al usar ARCANUM, aceptas las prácticas descritas en esta política.
 
 ### 1.1 Datos de cuenta
 - **Correo electrónico** — requerido para registro y autenticación
-- **Contraseña** — almacenada de forma hasheada (irreversible)
-- **Nombre de usuario** — opcional
+- **Contraseña** — almacenada como hash bcrypt, irreversible
+- **Nombre para mostrar** — opcional
 
 ### 1.2 Datos de nacimiento (para cálculos astrológicos)
 - **Fecha de nacimiento**
 - **Hora de nacimiento**
 - **Lugar de nacimiento** (ciudad, coordenadas lat/lon, zona horaria)
 
-Estos datos son necesarios para generar tu carta natal y cálculos astrológicos. Son opcionales pero requeridos para funcionalidades específicas.
+Son necesarios para generar tu carta natal: son los parámetros del cálculo, no un dato de perfil. Puedes usar la App sin ellos, pero la parte astrológica no podrá funcionar.
 
-### 1.3 Preferencias
+### 1.3 Ubicación actual
+- **Ciudad, coordenadas y zona horaria de residencia**
+
+Se usan para la hora planetaria, el regente del día y tu fecha local. **La App no lee el GPS de tu dispositivo**: la ubicación la introduces tú al elegir una ciudad. El único permiso que la App declara en Android es el de acceso a internet.
+
+### 1.4 Preferencias
 - **Tradición preferida** (ej: occidental, cabalística)
 - **Sistema de casas** (ej: Placidus, Regiomontanus)
 
-### 1.4 Datos de uso
+### 1.5 Datos de uso
 - **Sesiones de adivinación** (tiradas de tarot, consultas al oráculo)
-- **Entradas del grimorio** (notas personales cifradas)
+- **Entradas del grimorio** (notas personales, cifradas — ver 4.1)
 - **Conversaciones con el oráculo IA**
 - **Lecturas de tarot guardadas**
+- **Progreso de lectura, marcadores y pasajes guardados** de la biblioteca
+- **Contadores de uso diario**, para aplicar los límites del plan gratuito
 
-### 1.5 Datos de suscripción
-- **Tier de suscripción** (gratis/mensual/anual)
+### 1.6 Datos de suscripción
+- **Nivel de suscripción** (gratis/mensual/anual)
 - **ID de cliente de RevenueCat**
-- **Fecha de expiración de suscripción**
+- **Fecha de expiración de la suscripción**
 
-### 1.6 Datos técnicos
-- **Device ID** (para prevención de fraude)
+### 1.7 Datos técnicos y publicidad
+- **Identificador de publicidad**, para los anuncios opcionales que conceden uso extra
 - **Tipo de dispositivo y versión del sistema operativo**
-- **Logs de errores** (a través de Firebase Crashlytics)
+- **Registros de errores** (Firebase Crashlytics)
+- **Datos de uso agregados** (Firebase Analytics)
 
 ---
 
 ## 2. Cómo usamos tus datos
 
-Usamos tus datos para:
+- **Proporcionar el servicio** — cartas natales, tránsitos, interpretaciones y respuestas del oráculo
+- **Personalizar tu experiencia** — contenido según tu tradición y configuración
+- **Gestionar suscripciones** — verificar el estado premium y procesar compras
+- **Mostrar anuncios opcionales** — nunca obligatorios, y solo para conceder uso extra
+- **Mejorar la App** — detectar errores y fallos de rendimiento
+- **Prevenir abuso** — autenticación, límites de frecuencia y detección de uso anómalo
 
-- **Proporcionar el servicio** — generar cartas natales, interpretaciones astrológicas, respuestas del oráculo IA
-- **Personalizar tu experiencia** — contenido basado en tu tradición y configuración
-- **Gestionar suscripciones** — verificar estado de premium, procesar compras
-- **Mejorar la App** — analizar uso, detectar errores, optimizar rendimiento
-- **Prevenir fraude** — autenticación, rate limiting, detección de abuso
+**Nunca vendemos tus datos**, ni los usamos para publicidad segmentada basada en tu carta natal, tus lecturas o tus notas.
 
 ---
 
 ## 3. Servicios de terceros
 
-ARCANUM utiliza los siguientes servicios de terceros:
-
 | Servicio | Propósito | Proveedor |
 |----------|-----------|-----------|
 | **RevenueCat** | Gestión de suscripciones y pagos | RevenueCat, Inc. |
-| **Google AdMob** | Publicidad (anuncios recompensados) | Google LLC |
+| **Google AdMob** | Publicidad (anuncios bonificados) | Google LLC |
 | **Firebase Analytics** | Análisis de uso | Google LLC |
 | **Firebase Crashlytics** | Reporte de errores | Google LLC |
 | **Groq** | Oráculo IA (procesamiento de lenguaje natural) | Groq, Inc. |
 | **Supabase** | Base de datos | Supabase, Inc. |
-| **Railway** | Hosting del backend | Railway App, Inc. |
+| **Railway** | Alojamiento del servidor | Railway App, Inc. |
 
-Cada servicio tiene su propia política de privacidad. Te recomendamos revisarlas:
+Qué recibe cada uno, en concreto:
+
+- **Groq** recibe el texto de tu consulta y el contexto astrológico necesario para responder. **No recibe las entradas de tu grimorio**, que viajan cifradas y no se descifran en ningún punto del servidor.
+- **RevenueCat** recibe un identificador de cliente y el estado de compra. No recibe el contenido de la App.
+- **AdMob** recibe el identificador de publicidad de tu dispositivo.
+
+Cada servicio tiene su propia política de privacidad:
 - [RevenueCat Privacy Policy](https://www.revenuecat.com/privacy)
 - [Google Privacy Policy](https://policies.google.com/privacy)
+- [Groq Privacy Policy](https://groq.com/privacy-policy/)
 - [Supabase Privacy Policy](https://supabase.com/privacy)
 
 ---
 
 ## 4. Almacenamiento y seguridad
 
-- **Contraseñas** — hasheadas con bcrypt, irreversibles
-- **Datos de nacimiento** — almacenados encriptados en base de datos
-- **Grimorio** — contenido cifrado con AES-256, solo accesible por ti
+### 4.1 Qué está cifrado, y qué no
+
+Con precisión, porque la diferencia importa:
+
+- **Grimorio y notas personales** — cifrados con **AES-256 en tu propio dispositivo**, antes de salir de él. El servidor almacena texto cifrado y no dispone de la clave: no podemos leer tus notas aunque quisiéramos.
+- **Contraseña** — hash bcrypt, irreversible. No se almacena en claro en ningún momento.
+- **El resto de tus datos** (correo, nombre, datos de nacimiento, ubicación, preferencias, historial de lecturas) se almacenan **sin cifrado adicional a nivel de campo**, protegidos por el cifrado en reposo del proveedor de base de datos y por el control de acceso a la infraestructura.
+
+> Una versión anterior de esta política afirmaba que los datos de nacimiento se almacenaban cifrados en la base de datos. **Era inexacto** y se ha corregido: el cifrado extremo a extremo se aplica al grimorio, no a los datos de perfil.
+
+### 4.2 Transporte y acceso
+
 - **Comunicación** — todas las conexiones usan HTTPS/TLS
-- **Acceso** — solo el personal autorizado puede acceder a la infraestructura
+- **Acceso** — solo personal autorizado accede a la infraestructura
 
 ---
 
 ## 5. Retención de datos
 
-- **Datos de cuenta** — se mantienen mientras tu cuenta esté activa
-- **Datos de grimorio** — se eliminan cuando eliminas tu cuenta
-- **Logs de errores** — se mantienen por 90 días
-- **Datos de analytics** — se mantienen por 26 meses (configuración de Firebase)
+- **Datos de cuenta** — mientras tu cuenta esté activa
+- **Datos del grimorio** — se eliminan al eliminar tu cuenta
+- **Registros de errores** — 90 días
+- **Datos de analítica** — 26 meses (configuración de Firebase)
+- **Registros de compra y facturación** — el tiempo que exija la normativa contable y fiscal, aunque la cuenta se elimine
 
 ---
 
 ## 6. Tus derechos
 
-De acuerdo con la Ley 1581 de 2012 de Colombia y regulaciones aplicables, tienes derecho a:
+De acuerdo con la Ley 1581 de 2012 de Colombia y las regulaciones aplicables, tienes derecho a:
 
 - **Acceder** a tus datos personales
 - **Rectificar** datos inexactos
@@ -106,39 +133,34 @@ De acuerdo con la Ley 1581 de 2012 de Colombia y regulaciones aplicables, tienes
 - **Oponerte** al procesamiento de tus datos
 - **Portabilidad** de tus datos
 
-Para ejercer estos derechos, contáctanos a través de los medios indicados al final de esta política.
+Para ejercerlos, escribe a **arcanum.magick.app@gmail.com**.
 
 ---
 
 ## 7. Eliminación de cuenta
 
-Puedes eliminar tu cuenta en cualquier momento desde la sección de Perfil de la App. Al eliminar tu cuenta:
+Puedes eliminarla desde **Ajustes → Eliminar cuenta** dentro de la App, o sin tenerla instalada siguiendo las instrucciones de **[Eliminar tu cuenta](account-deletion.html)**.
 
-- Se eliminan todos tus datos personales de nuestros servidores
-- Se elimina tu acceso a contenido premium
-- Se elimina tu cliente en RevenueCat
-- Los datos se eliminan permanentemente en un plazo máximo de 30 días
+Al eliminar tu cuenta se borran tus datos personales de nuestros servidores y se elimina tu cliente en RevenueCat. El detalle de qué se borra y qué no está en esa página.
 
 ---
 
 ## 8. Privacidad de menores
 
-ARCANUM no está dirigido a menores de 13 años (o la edad mínima aplicable en tu jurisdicción). No recopilamos intencionadamente datos de menores. Si descubrimos que un menor ha proporcionado datos personales, los eliminaremos de inmediato.
+ARCANUM está dirigida a personas mayores de **18 años**. No recopilamos intencionadamente datos de menores. Si descubrimos que un menor ha proporcionado datos personales, los eliminaremos de inmediato.
 
 ---
 
 ## 9. Cambios en esta política
 
-Nos reservamos el derecho de actualizar esta política. Te notificaremos de cambios significativos a través de la App o por correo electrónico. El uso continuado de la App después de los cambios constituye aceptación de la política actualizada.
+Nos reservamos el derecho de actualizarla. Te notificaremos de cambios significativos a través de la App o por correo electrónico. El uso continuado tras los cambios constituye aceptación de la política actualizada.
 
 ---
 
 ## 10. Contacto
 
-Si tienes preguntas sobre esta Política de Privacidad o deseas ejercer tus derechos, contáctanos:
-
-- **Correo electrónico:** soporte@arcanum-app.com
-- **Desarrollador:** Samuel Escobar
+- **Responsable:** Samuel Andrés Escobar Saldarriaga
+- **Correo electrónico:** arcanum.magick.app@gmail.com
 - **País:** Colombia
 
 ---

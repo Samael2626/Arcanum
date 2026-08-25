@@ -1,6 +1,6 @@
 # Términos de Servicio — ARCANUM
 
-**Última actualización:** 3 de agosto de 2026
+**Última actualización:** 25 de agosto de 2026
 
 Bienvenido a ARCANUM. Estos Términos de Servicio ("Términos") rigen tu uso de la aplicación móvil ARCANUM y todos sus servicios relacionados. Al usar la App, aceptas estos Términos en su totalidad.
 
@@ -15,8 +15,8 @@ ARCANUM es una aplicación móvil de práctica mágica que ofrece:
 - **Tarot** — tiradas e interpretaciones de los 78 arcanos
 - **Grimorio personal** — espacio cifrado para tus notas y práctica
 - **Calendario astral** — efemerides y aspectos planetarios
-- **Saber** — contenido educativo sobre tradiciones esotéricas
-- **Sigilos** — generador de sigilos personales
+- **Saber** — biblioteca de fuentes históricas y contenido educativo
+- **Materia Arcana** — correspondencias de plantas, piedras, metales y perfumes
 
 La App opera bajo un modelo freemium con funcionalidades gratuitas y premium.
 
@@ -25,7 +25,7 @@ La App opera bajo un modelo freemium con funcionalidades gratuitas y premium.
 ## 2. Cuenta de usuario
 
 ### 2.1 Registro
-- Debes tener al menos 13 años para crear una cuenta
+- Debes tener al menos 18 años para crear una cuenta
 - Proporciona información precisa y completa durante el registro
 - Eres responsable de mantener la confidencialidad de tu contraseña
 - Una cuenta por persona; no se permiten cuentas duplicadas
