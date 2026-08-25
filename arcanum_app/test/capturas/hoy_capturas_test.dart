@@ -174,12 +174,18 @@ class _ApiDeMuestra extends ArcanumApi {
 
 /// Un telefono de referencia, no la ventana del que corre el test: si el ancho
 /// cambia entre capturas, comparar dos retratos no dice nada.
-const _telefono = Size(390, 844);
+///
+/// 360x640 a x3 da 1080x1920 clavado, y eso NO es casualidad. Play exige que el
+/// lado mayor de una captura no pase del DOBLE del menor, y el formato de movil
+/// moderno (390x844) lo incumple: 844 pasa de 780. Ademas 1080x1920 es el minimo
+/// para entrar en las secciones destacadas de la ficha.
+const _telefono = Size(360, 640);
+const _escala = 3.0;
 
 Future<void> _montar(WidgetTester tester) async {
   tester.view
-    ..physicalSize = _telefono * 3.0
-    ..devicePixelRatio = 3.0;
+    ..physicalSize = _telefono * _escala
+    ..devicePixelRatio = _escala;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
     ProviderScope(
@@ -188,6 +194,9 @@ Future<void> _montar(WidgetTester tester) async {
         authProvider.overrideWith(_AuthConLugar.new),
       ],
       child: MaterialApp(
+        // Al retratar la RAIZ, el banner de DEBUG entra en la imagen. Retratando
+        // solo la pantalla quedaba fuera del recorte y no se veia.
+        debugShowCheckedModeBanner: false,
         theme: buildArcanumTheme(),
         home: const Scaffold(body: HoyScreen()),
       ),
@@ -197,13 +206,14 @@ Future<void> _montar(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-Future<void> _retratar(WidgetTester tester, String nombre,
-    {bool conOverlay = false}) async {
-  // Un dialogo no vive dentro de la pantalla: se monta en el overlay de la app.
-  // Retratando solo `HoyScreen` sale la pantalla de detras y el dialogo no
-  // aparece por ningun lado, que es justo lo que paso la primera vez.
+Future<void> _retratar(WidgetTester tester, String nombre) async {
+  // SIEMPRE la raiz, por dos razones. Un dialogo no vive dentro de la pantalla:
+  // se monta en el overlay de la app, asi que retratando solo `HoyScreen` sale
+  // la de detras y el dialogo no aparece -- que es lo que paso la primera vez.
+  // Y ademas el golden de un hijo se captura en pixeles LOGICOS, ignorando el
+  // devicePixelRatio: salian 360x640 en vez de 1080x1920, inservibles para Play.
   await expectLater(
-    find.byType(conOverlay ? MaterialApp : HoyScreen),
+    find.byType(MaterialApp),
     matchesGoldenFile('salida/$nombre.png'),
   );
 }
@@ -241,7 +251,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Abrir el sello del Sol'));
     await tester.pumpAndSettle();
-    await _retratar(tester, '03-consentimiento', conOverlay: true);
+    await _retratar(tester, '03-consentimiento');
   });
 
   testWidgets('04 el sello abierto', (tester) async {
