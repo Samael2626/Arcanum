@@ -51,7 +51,6 @@ Se usan para la hora planetaria, el regente del día y tu fecha local. **La App 
 - **Identificador de publicidad**, para los anuncios opcionales que conceden uso extra
 - **Tipo de dispositivo y versión del sistema operativo**
 - **Registros de errores** (Firebase Crashlytics)
-- **Datos de uso agregados** (Firebase Analytics)
 
 ---
 
@@ -62,6 +61,8 @@ Se usan para la hora planetaria, el regente del día y tu fecha local. **La App 
 - **Gestionar suscripciones** — verificar el estado premium y procesar compras
 - **Mostrar anuncios opcionales** — nunca obligatorios, y solo para conceder uso extra
 - **Mejorar la App** — detectar errores y fallos de rendimiento
+
+**No usamos analítica de uso.** La App no lleva Firebase Analytics ni ningún otro sistema que registre qué pantallas visitas o cómo la usas.
 - **Prevenir abuso** — autenticación, límites de frecuencia y detección de uso anómalo
 
 **Nunca vendemos tus datos**, ni los usamos para publicidad segmentada basada en tu carta natal, tus lecturas o tus notas.
@@ -74,7 +75,6 @@ Se usan para la hora planetaria, el regente del día y tu fecha local. **La App 
 |----------|-----------|-----------|
 | **RevenueCat** | Gestión de suscripciones y pagos | RevenueCat, Inc. |
 | **Google AdMob** | Publicidad (anuncios bonificados) | Google LLC |
-| **Firebase Analytics** | Análisis de uso | Google LLC |
 | **Firebase Crashlytics** | Reporte de errores | Google LLC |
 | **Groq** | Oráculo IA (procesamiento de lenguaje natural) | Groq, Inc. |
 | **Supabase** | Base de datos | Supabase, Inc. |
@@ -118,7 +118,6 @@ Con precisión, porque la diferencia importa:
 - **Datos de cuenta** — mientras tu cuenta esté activa
 - **Datos del grimorio** — se eliminan al eliminar tu cuenta
 - **Registros de errores** — 90 días
-- **Datos de analítica** — 26 meses (configuración de Firebase)
 - **Registros de compra y facturación** — el tiempo que exija la normativa contable y fiscal, aunque la cuenta se elimine
 
 ---
