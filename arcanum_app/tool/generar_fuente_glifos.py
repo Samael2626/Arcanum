@@ -196,7 +196,18 @@ def renombrar(fuente):
         nombres.setName(valor, id_, 1, 0, 0)
 
 
+# fontTools estampa la fecha de generacion en head.modified, asi que la misma
+# entrada producia un fichero con hash distinto cada vez. Resultado: correr el
+# generador ensuciaba el repo con un diff falso, y entonces ya no se podia
+# distinguir "la fuente cambio" de "la volvi a generar". Con SOURCE_DATE_EPOCH
+# fijo la salida es reproducible byte a byte. La fecha es la del dia en que se
+# construyo la fuente; su valor da igual mientras no se mueva.
+EPOCA_FIJA = "1756000000"
+
+
 def main():
+    os.environ["SOURCE_DATE_EPOCH"] = EPOCA_FIJA
+
     usados = glifos_usados()
     print("glifos que usa lib/: %d" % len(usados))
 
