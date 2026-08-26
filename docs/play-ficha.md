@@ -60,7 +60,9 @@ El reloj de los 14 dias es lo unico que no se puede acelerar. Todo lo demas cabe
 dentro de esa ventana, asi que **primero se arranca el reloj**:
 
 ```
-1. ~~Desplegar hosting~~      HECHO: GitHub Pages ya servia
+1. ~~Desplegar hosting~~      HECHO 26/08: legales en GitHub Pages, y
+                              Firebase Hosting desplegado en vivo
+                              (app-ads.txt ya sale text/plain)
 2. Crear la app en Play Console
 3. Declaraciones de contenido -> privacidad, Data Safety, clasificacion, anuncios
 4. Ficha (textos + graficos)
