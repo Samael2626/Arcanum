@@ -241,12 +241,34 @@ distintivo "Contiene anuncios".
 Todo generado y validado contra los requisitos de Play:
 
 ```
-build/ficha/icono-512.png                    512x512   RGBA (32-bit, con alfa)
-build/ficha/grafico-destacado-1024x500.png  1024x500   RGB  (24-bit, sin alfa)
-build/ficha/capturas/*.png                 1080x1920   RGB  x6
+.tmp/ficha/icono-512.png                    512x512   RGBA (32-bit, con alfa)
+.tmp/ficha/grafico-destacado-1024x500.png  1024x500   RGB  (24-bit, sin alfa)
+.tmp/ficha/capturas/*.png                 1080x1920   RGB  x6
 ```
 
 Se regenera con `python tool/generar_material_ficha.py`.
+
+> **Donde estan de verdad:** `D:\Proyectos\Arcanum\.tmpicha\` (el worktree
+> principal, no el de release). `.tmp/` esta fuera de git a proposito.
+
+**Verificado el 26/08 leyendo las cabeceras PNG, no el nombre del archivo:**
+
+```
+icono-512.png                 512x512   RGBA 32-bit con alfa       OK
+grafico-destacado             1024x500  RGB  24-bit sin alfa       OK
+capturas x6                   1080x1920 RGB  24-bit sin alfa       OK
+                                        lado mayor <= 2x el menor  OK
+```
+
+**Y la firma del AAB, que es lo que Play rechaza sin decir por que:**
+
+```
+Propietario   CN=Arcanum, O=Arcanum, C=CO   no es la clave de debug
+Algoritmo     SHA256withRSA
+Valida hasta  2054-01-06                    Play exige >= 2033-10-22
+Alias         UPLOAD
+debuggable    ausente del manifiesto
+```
 
 > **Por qué 1080x1920 y no el formato del móvil.** Play exige que el lado mayor
 > de una captura no pase del **doble** del menor. El formato moderno (390x844,
