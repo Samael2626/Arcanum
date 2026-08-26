@@ -29,22 +29,55 @@ docs/            play-ficha.md y demas
 AGENTS.md        despliegue, tests y convenciones -- leelo
 ```
 
-### 3. Backend
+### 3. Servicios locales
+
+Desarrollo — Postgres en 5432 y Redis, que hace falta para el rate limiting:
+
+```bash
+cd arcanum-api
+docker compose up -d
+```
+
+Y las **dos** bases de test, que no estan en el compose y hay que crear una vez:
+
+```bash
+docker run -d --name arcanum-test-db \
+  -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=arcanum_test \
+  -p 5434:5432 postgres:16-alpine
+
+docker run -d --name arcanum-svc-test \
+  -e POSTGRES_PASSWORD=test -e POSTGRES_DB=arcanum_migration_test \
+  -p 55434:5432 postgres:17-alpine
+```
+
+Las contrasenas **no son la misma** a proposito: cruzarlas da un error de
+autenticacion que no dice cual de las dos esta mal.
+
+### 4. Backend
 
 ```bash
 cd arcanum-api
 python -m pip install -r requirements.txt      # Python 3.12
-cp .env.example .env                           # rellenar las claves
+cp .env.example .env                           # pide DATABASE_URL, SECRET_KEY,
+                                               # ADMIN_TOKEN, GROQ_API_KEY, REDIS_*
 uvicorn app.main:app --reload
 ```
 
-### 4. App
+### 5. App
+
+Necesita Dart SDK **^3.12.2**.
 
 ```bash
 cd arcanum_app
 flutter pub get
 flutter run
 ```
+
+Para compilar en Android hace falta `android/app/google-services.json`, que **no
+esta en el repositorio**: pidelo. `key.properties` NO hace falta para trabajar:
+solo lo exige un build de `release`, y hay una guarda que lo comprueba y para el
+build con un mensaje claro. En debug el App ID de AdMob cae al de prueba de
+Google, que no genera impresiones facturables.
 
 En release la app apunta **siempre** a produccion: el override `API_BASE_URL`
 solo se respeta en debug, a proposito. Una compilacion de tienda que apunte a
@@ -97,6 +130,27 @@ flutter test test/capturas --update-goldens --run-skipped
 ```
 
 **Nunca `ARCANUM_SKIP_HOOKS=1`.** Si el hook bloquea, el bloqueo es el dato.
+
+Si la base de migraciones trae un `alembic_version` sin tablas — resto de un
+`downgrade` a medias — se resetea y se vuelve a migrar:
+
+```bash
+docker exec arcanum-svc-test psql -U postgres -d arcanum_migration_test \
+  -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+python scripts/verify_migrations.py
+```
+
+---
+
+## El dia a dia
+
+```bash
+git checkout main && git pull
+git checkout -b fix/lo-que-sea        # espanol, sin acentos
+# ... trabajar, y dejar los dos gates en verde ...
+git push -u origin fix/lo-que-sea
+gh pr create --base main
+```
 
 ---
 
