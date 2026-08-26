@@ -131,6 +131,16 @@ flutter test test/capturas --update-goldens --run-skipped
 
 **Nunca `ARCANUM_SKIP_HOOKS=1`.** Si el hook bloquea, el bloqueo es el dato.
 
+### El hook no corre toda la suite
+
+El `pre-commit` ejecuta `tests/` y `tests_unit/`, y ademas comprueba el numero de
+saltados para que no cuele una corrida sin `TEST_DATABASE_URL`. Pero **deja fuera
+`tests_pg/`**: son 68 tests que necesitan la segunda base, y son precisamente los
+de integridad de migraciones y del ledger de creditos.
+
+Traduccion: un commit verde NO garantiza que las migraciones esten sanas. Antes de
+abrir un PR, corre la suite entera a mano con las dos variables puestas.
+
 Si la base de migraciones trae un `alembic_version` sin tablas — resto de un
 `downgrade` a medias — se resetea y se vuelve a migrar:
 
