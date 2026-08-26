@@ -25,9 +25,32 @@ Indice      https://samael2626.github.io/Arcanum/
 Se editan en la rama `gh-pages`, NO en `arcanum_app/web/`. Hubo un borrador
 duplicado ahi y se quito: dos copias de una politica legal es una que miente.
 
-> `app-ads.txt` sigue siendo aparte. Tiene que estar en la RAIZ del dominio que
-> se declare como sitio web del desarrollador. Si se declara este, el fichero
-> tiene que ir a `gh-pages`, no al build de Flutter.
+### El sitio web del desarrollador NO puede ser GitHub Pages
+
+Verificado en la ayuda de AdMob: el rastreador busca en
+`https://<hostname>/app-ads.txt` y **solo mira el directorio raiz**. Una pagina
+de PROYECTO de GitHub Pages vive en `samael2626.github.io/Arcanum/`, que es un
+subdirectorio: no vale. Google nombra Firebase Hosting como la salida, y sus
+subdominios `.web.app` si son raiz.
+
+```
+Sitio del desarrollador  https://arcanum-app-magick.web.app
+app-ads.txt              https://arcanum-app-magick.web.app/app-ads.txt
+```
+
+Los documentos legales se quedan en GitHub Pages: son campos distintos de la
+ficha y no tienen que compartir dominio.
+
+> **El sitio ya estaba desplegado con una PWA vieja, y `/app-ads.txt` devolvia
+> HTTP 200 con `text/html`** — el HTML de la app, servido por el rewrite
+> `** -> /index.html`. Un 200 que parece correcto y no lo es: AdMob habria
+> fallado la verificacion mientras cualquier comprobacion ingenua decia que todo
+> bien. El rewrite se quito y `firebase.json` apunta ahora a `arcanum_app/sitio/`,
+> una pagina de soporte pequena, en vez de al build de Flutter.
+>
+> Comprobado en un canal de vista previa antes de tocar nada:
+> `app-ads.txt` sale `text/plain`, la raiz sirve la pagina, y una ruta inventada
+> da 404 en vez de tragarsela el rewrite.
 
 ---
 

@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "build/web",
+    "public": "sitio",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -15,12 +15,6 @@
             "value": "text/plain; charset=utf-8"
           }
         ]
-      }
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
       }
     ]
   }

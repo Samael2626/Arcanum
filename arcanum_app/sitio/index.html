@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARCANUM</title>
+<meta name="description" content="Tarot, carta natal y grimorio cifrado. Un instrumento de práctica, no un oráculo que predice.">
+<style>
+  /* Paleta de lib/core/theme/arcanum_colors.dart. Esta pagina es lo que ve
+     alguien que llega desde la ficha de Play buscando soporte, asi que tiene que
+     parecer el mismo producto. */
+  :root{
+    --fondo:#0a0a0f; --panel:#12121a; --borde:#26263a;
+    --tinta:#e8e3d9; --tinta-suave:#a9a496; --oro:#c9a84c; --oro-apagado:#8a6e32;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--fondo); color:var(--tinta);
+    font:16px/1.75 Georgia,"Times New Roman",serif;
+  }
+  .portada{
+    text-align:center; padding:6rem 1.25rem 3.5rem;
+    border-bottom:1px solid var(--borde);
+  }
+  .portada h1{
+    margin:0 0 .9rem; font-size:2.9rem; font-weight:400;
+    letter-spacing:.34em; color:var(--oro); text-indent:.34em;
+  }
+  .portada .lema{
+    margin:0 auto; max-width:30rem; color:var(--tinta-suave); font-size:1.05rem;
+  }
+  main{max-width:42rem; margin:0 auto; padding:3rem 1.25rem 2rem}
+  h2{
+    font-size:.82rem; margin:2.75rem 0 1rem; color:var(--oro-apagado);
+    font-family:system-ui,sans-serif; letter-spacing:.18em; text-transform:uppercase;
+  }
+  main > p:first-of-type{margin-top:0}
+  ul{padding-left:1.1rem; margin:0}
+  li{margin:.45rem 0}
+  li b{color:var(--tinta); font-weight:400}
+  a{color:var(--oro)}
+  .enlaces{display:flex; flex-wrap:wrap; gap:.7rem; margin-top:1rem}
+  .enlaces a{
+    text-decoration:none; background:var(--panel); border:1px solid var(--borde);
+    border-radius:5px; padding:.6rem 1rem; font-size:.94rem; color:var(--tinta);
+  }
+  .enlaces a:hover,.enlaces a:focus{border-color:var(--oro-apagado); outline:none}
+  .soporte{
+    background:var(--panel); border:1px solid var(--borde); border-radius:6px;
+    padding:1.3rem 1.5rem; margin-top:1rem;
+  }
+  .soporte p{margin:0}
+  footer{
+    max-width:42rem; margin:0 auto; padding:3rem 1.25rem 5rem;
+    border-top:1px solid var(--borde); margin-top:3rem;
+    color:var(--tinta-suave); font-size:.85rem; font-family:system-ui,sans-serif;
+  }
+</style>
+</head>
+<body>
+
+<div class="portada">
+  <h1>ARCANUM</h1>
+  <p class="lema">Un instrumento de práctica mágica. No predice: muestra el cielo
+  que tienes encima y enseña a leerlo.</p>
+</div>
+
+<main>
+
+  <h2>Qué es</h2>
+  <p>ARCANUM calcula tu carta natal con efemérides reales y te muestra qué
+  tránsitos la tocan hoy, ordenados por peso: cuál es el capítulo lento de fondo
+  y cuál el clima del día. Alrededor hay tarot, correspondencias de materia
+  arcana tomadas de fuentes históricas, y un grimorio que se cifra en tu propio
+  teléfono.</p>
+
+  <p>No dice lo que va a pasar. Si un texto sirviera para cualquier otra persona,
+  está mal escrito.</p>
+
+  <h2>Soporte</h2>
+  <div class="soporte">
+    <p>Cualquier duda, fallo o petición sobre tus datos:
+    <a href="mailto:arcanum.magick.app@gmail.com">arcanum.magick.app@gmail.com</a></p>
+  </div>
+
+  <h2>Documentos</h2>
+  <div class="enlaces">
+    <a href="https://samael2626.github.io/Arcanum/privacy-policy.html">Política de privacidad</a>
+    <a href="https://samael2626.github.io/Arcanum/terms-of-service.html">Términos de servicio</a>
+    <a href="https://samael2626.github.io/Arcanum/account-deletion.html">Eliminar tu cuenta</a>
+  </div>
+
+</main>
+
+<footer>
+  ARCANUM · Samuel Andrés Escobar Saldarriaga · Colombia
+</footer>
+
+</body>
+</html>

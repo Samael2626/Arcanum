@@ -1,0 +1,19 @@
+# app-ads.txt de ARCANUM
+#
+# TIENE que estar en la RAIZ del dominio declarado como sitio web del
+# desarrollador en la ficha de Play. El rastreador de AdMob busca en
+# https://<hostname>/app-ads.txt y no mira subdirectorios: por eso una pagina de
+# proyecto de GitHub Pages (samael2626.github.io/Arcanum/) NO sirve, y si un
+# subdominio .web.app de Firebase, que es raiz.
+#
+# CUIDADO con el rewrite de firebase.json. Con "** -> /index.html" esta ruta
+# devolvia HTTP 200 con el HTML de la PWA: un 200 que parece correcto y no lo es.
+# Comprobado en vivo el 25/08/2026. El rewrite se quito.
+#
+# ID de editor sacado del App ID de AdMob:
+# ca-app-pub-5111199335180018~3542193092 -> pub-5111199335180018
+#
+# CONTRASTAR con el fragmento personalizado de la consola (Aplicaciones >
+# app-ads.txt), que es la fuente autoritativa: si ahi aparece un cuarto campo con
+# el ID de la autoridad de certificacion, hay que anadirlo aqui.
+google.com, pub-5111199335180018, DIRECT
