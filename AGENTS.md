@@ -49,18 +49,32 @@ Monorepo con `arcanum_app/` (Flutter) y `arcanum-api/` (FastAPI).
 ### Backend (Railway)
 
 ```
-git push origin <rama>:release/p0a-beta
+git push origin main        # esto YA despliega
+```
+
+**Desde el 26/08/2026 la rama de produccion es `main` y el auto-deploy esta
+ACTIVO.** Es decir:
+
+> **Todo push a `main` se despliega solo a produccion.** Sin paso manual y sin
+> confirmacion. Un PR mezclado sale a produccion en cuanto entra.
+
+Antes era `release/p0a-beta` con despliegue manual. El cambio se hizo con
+`railway service source connect --repo Samael2626/Arcanum --branch main
+--service Arcanum-Code`, y ese comando **dispara un despliegue por si mismo**
+ademas de dejar el auto-deploy encendido.
+
+Consecuencia: `main` deja de ser "lo ultimo estable" y pasa a ser "lo que esta
+corriendo". Los dos gates en verde ANTES de mezclar, no despues.
+
+Para desplegar a mano, por ejemplo tras cambiar variables y sin commit nuevo:
+
+```
 railway redeploy --service Arcanum-Code --from-source --yes
 ```
 
-Dos trampas, las dos comprobadas el 24/08/2026:
-
-- **El push NO despliega solo.** El servicio esta conectado al repo pero no
-  auto-despliega. Hay que lanzar el `redeploy` a mano o el commit se queda en
-  GitHub sin llegar a produccion.
-- **`railway redeploy` a secas rebota el despliegue EXISTENTE**, es decir el
-  commit viejo. El flag que trae el commit nuevo es `--from-source`. Sin el, todo
-  parece ir bien y se redespliega lo mismo que ya habia.
+**`railway redeploy` a secas rebota el despliegue EXISTENTE**, o sea el commit
+viejo. El flag que trae el nuevo es `--from-source`. Sin el, todo parece ir bien
+y se redespliega lo mismo que ya habia.
 
 Comprobar cual es el commit vivo, que es lo unico que prueba que aterrizo:
 

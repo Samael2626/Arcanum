@@ -90,8 +90,8 @@ publicar contra el servidor equivocado.
 
 | Rama | Que es |
 |---|---|
-| `main` | Rama por defecto. Lo ultimo estable y verde. Se parte de aqui |
-| `release/p0a-beta` | **Produccion.** Lo que corre en Railway ahora mismo |
+| `main` | Rama por defecto **y PRODUCCION**: todo push aqui se despliega solo |
+| `release/p0a-beta` | Historico. Ya no despliega nada |
 | `gh-pages` | Paginas legales publicadas. Se editan **aqui**, no en `arcanum_app/web/` |
 | `feat/*`, `fix/*` | Trabajo sin integrar. Entran a `main` por Pull Request |
 
@@ -161,6 +161,10 @@ git checkout -b fix/lo-que-sea        # espanol, sin acentos
 git push -u origin fix/lo-que-sea
 gh pr create --base main
 ```
+
+> **Nunca commitear directo a `main`.** Es la rama de produccion y tiene
+> auto-deploy: lo que entre ahi sale a produccion sin preguntar a nadie.
+> Siempre rama aparte y PR, y con los dos gates en verde antes de mezclar.
 
 ---
 
