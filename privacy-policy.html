@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Política de privacidad — ARCANUM</title>
+<meta name="description" content="Qué datos recoge ARCANUM, para qué, con quién se comparten y qué está cifrado.">
+<style>
+  :root{
+    --fondo:#0a0a0f; --panel:#12121a; --borde:#26263a;
+    --tinta:#e8e3d9; --tinta-suave:#a9a496; --oro:#c9a84c; --oro-apagado:#8a6e32;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--fondo); color:var(--tinta);
+    font:16px/1.75 Georgia,"Times New Roman",serif;
+  }
+  .barra{
+    border-bottom:1px solid var(--borde); padding:1.1rem 1.25rem;
+    font-family:system-ui,sans-serif; font-size:.82rem; letter-spacing:.2em;
+    text-transform:uppercase;
+  }
+  .barra a{color:var(--oro); text-decoration:none}
+  .barra a:hover,.barra a:focus{text-decoration:underline; outline:none}
+  main{max-width:42rem; margin:0 auto; padding:2.5rem 1.25rem 4rem}
+  h1{
+    font-size:2rem; font-weight:400; color:var(--oro); margin:0 0 1.5rem;
+    line-height:1.25; text-wrap:balance;
+  }
+  h2{
+    font-size:1.25rem; font-weight:400; color:var(--oro); margin:2.6rem 0 .9rem;
+    padding-top:1.4rem; border-top:1px solid var(--borde); text-wrap:balance;
+  }
+  h3{font-size:1.02rem; font-weight:400; color:var(--tinta); margin:1.8rem 0 .6rem}
+  p{margin:0 0 1rem}
+  ul,ol{padding-left:1.3rem; margin:0 0 1rem}
+  li{margin:.4rem 0}
+  strong{color:#fff; font-weight:400}
+  a{color:var(--oro)}
+  hr{border:0; border-top:1px solid var(--borde); margin:2.2rem 0}
+  blockquote{
+    margin:1.4rem 0; padding:.9rem 1.2rem; background:var(--panel);
+    border-left:2px solid var(--oro-apagado); color:var(--tinta-suave);
+  }
+  blockquote p:last-child{margin:0}
+  /* Las tablas se desbordan en movil si no se les da su propio scroll. El
+     cuerpo de la pagina no debe moverse en horizontal nunca. */
+  .tabla{overflow-x:auto; margin:0 0 1.4rem}
+  table{border-collapse:collapse; width:100%; font-size:.94rem}
+  th,td{
+    border:1px solid var(--borde); padding:.55rem .8rem; text-align:left;
+    vertical-align:top;
+  }
+  th{background:var(--panel); color:var(--oro-apagado); font-weight:400}
+  code{
+    background:var(--panel); border:1px solid var(--borde); border-radius:3px;
+    padding:.1rem .35rem; font-size:.9em;
+  }
+  footer{
+    max-width:42rem; margin:0 auto; padding:0 1.25rem 4rem;
+    border-top:1px solid var(--borde); padding-top:1.5rem;
+    color:var(--tinta-suave); font-size:.85rem; font-family:system-ui,sans-serif;
+  }
+  footer a{color:var(--oro-apagado)}
+</style>
+</head>
+<body>
+
+<div class="barra"><a href="./">&#8592; ARCANUM &#183; Documentos legales</a></div>
+
+<main>
+<h1>Política de Privacidad — ARCANUM</h1>
+<p><strong>Última actualización:</strong> 25 de agosto de 2026</p>
+<p>ARCANUM ("la App") es una aplicación móvil de práctica mágica, astrología y esoterismo. Esta Política de Privacidad describe cómo recopilamos, usamos, almacenamos y protegemos tu información personal.</p>
+<p>Al usar ARCANUM, aceptas las prácticas descritas en esta política.</p>
+<p><strong>Responsable del tratamiento:</strong> Samuel Andrés Escobar Saldarriaga (Colombia).
+<strong>Contacto:</strong> arcanum.magick.app@gmail.com</p>
+<hr>
+<h2>1. Datos que recopilamos</h2>
+<h3>1.1 Datos de cuenta</h3>
+<ul>
+<li><strong>Correo electrónico</strong> — requerido para registro y autenticación</li>
+<li><strong>Contraseña</strong> — almacenada como hash bcrypt, irreversible</li>
+<li><strong>Nombre para mostrar</strong> — opcional</li>
+</ul>
+<h3>1.2 Datos de nacimiento (para cálculos astrológicos)</h3>
+<ul>
+<li><strong>Fecha de nacimiento</strong></li>
+<li><strong>Hora de nacimiento</strong></li>
+<li><strong>Lugar de nacimiento</strong> (ciudad, coordenadas lat/lon, zona horaria)</li>
+</ul>
+<p>Son necesarios para generar tu carta natal: son los parámetros del cálculo, no un dato de perfil. Puedes usar la App sin ellos, pero la parte astrológica no podrá funcionar.</p>
+<h3>1.3 Ubicación actual</h3>
+<ul>
+<li><strong>Ciudad, coordenadas y zona horaria de residencia</strong></li>
+</ul>
+<p>Se usan para la hora planetaria, el regente del día y tu fecha local. <strong>La App no lee el GPS de tu dispositivo</strong>: la ubicación la introduces tú al elegir una ciudad. El único permiso que la App declara en Android es el de acceso a internet.</p>
+<h3>1.4 Preferencias</h3>
+<ul>
+<li><strong>Tradición preferida</strong> (ej: occidental, cabalística)</li>
+<li><strong>Sistema de casas</strong> (ej: Placidus, Regiomontanus)</li>
+</ul>
+<h3>1.5 Datos de uso</h3>
+<ul>
+<li><strong>Sesiones de adivinación</strong> (tiradas de tarot, consultas al oráculo)</li>
+<li><strong>Entradas del grimorio</strong> (notas personales, cifradas — ver 4.1)</li>
+<li><strong>Conversaciones con el oráculo IA</strong></li>
+<li><strong>Lecturas de tarot guardadas</strong></li>
+<li><strong>Progreso de lectura, marcadores y pasajes guardados</strong> de la biblioteca</li>
+<li><strong>Contadores de uso diario</strong>, para aplicar los límites del plan gratuito</li>
+</ul>
+<h3>1.6 Datos de suscripción</h3>
+<ul>
+<li><strong>Nivel de suscripción</strong> (gratis/mensual/anual)</li>
+<li><strong>ID de cliente de RevenueCat</strong></li>
+<li><strong>Fecha de expiración de la suscripción</strong></li>
+</ul>
+<h3>1.7 Datos técnicos y publicidad</h3>
+<ul>
+<li><strong>Identificador de publicidad</strong>, para los anuncios opcionales que conceden uso extra</li>
+<li><strong>Tipo de dispositivo y versión del sistema operativo</strong></li>
+<li><strong>Registros de errores</strong> (Firebase Crashlytics)</li>
+</ul>
+<hr>
+<h2>2. Cómo usamos tus datos</h2>
+<ul>
+<li><strong>Proporcionar el servicio</strong> — cartas natales, tránsitos, interpretaciones y respuestas del oráculo</li>
+<li><strong>Personalizar tu experiencia</strong> — contenido según tu tradición y configuración</li>
+<li><strong>Gestionar suscripciones</strong> — verificar el estado premium y procesar compras</li>
+<li><strong>Mostrar anuncios opcionales</strong> — nunca obligatorios, y solo para conceder uso extra</li>
+<li><strong>Mejorar la App</strong> — detectar errores y fallos de rendimiento</li>
+</ul>
+<p><strong>No usamos analítica de uso.</strong> La App no lleva Firebase Analytics ni ningún otro sistema que registre qué pantallas visitas o cómo la usas.
+- <strong>Prevenir abuso</strong> — autenticación, límites de frecuencia y detección de uso anómalo</p>
+<p><strong>Nunca vendemos tus datos</strong>, ni los usamos para publicidad segmentada basada en tu carta natal, tus lecturas o tus notas.</p>
+<hr>
+<h2>3. Servicios de terceros</h2>
+<div class="tabla"><table>
+<thead>
+<tr>
+<th>Servicio</th>
+<th>Propósito</th>
+<th>Proveedor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>RevenueCat</strong></td>
+<td>Gestión de suscripciones y pagos</td>
+<td>RevenueCat, Inc.</td>
+</tr>
+<tr>
+<td><strong>Google AdMob</strong></td>
+<td>Publicidad (anuncios bonificados)</td>
+<td>Google LLC</td>
+</tr>
+<tr>
+<td><strong>Firebase Crashlytics</strong></td>
+<td>Reporte de errores</td>
+<td>Google LLC</td>
+</tr>
+<tr>
+<td><strong>Groq</strong></td>
+<td>Oráculo IA (procesamiento de lenguaje natural)</td>
+<td>Groq, Inc.</td>
+</tr>
+<tr>
+<td><strong>Supabase</strong></td>
+<td>Base de datos</td>
+<td>Supabase, Inc.</td>
+</tr>
+<tr>
+<td><strong>Railway</strong></td>
+<td>Alojamiento del servidor</td>
+<td>Railway App, Inc.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Qué recibe cada uno, en concreto:</p>
+<ul>
+<li><strong>Groq</strong> recibe el texto de tu consulta y el contexto astrológico necesario para responder. <strong>No recibe las entradas de tu grimorio</strong>, que viajan cifradas y no se descifran en ningún punto del servidor.</li>
+<li><strong>RevenueCat</strong> recibe un identificador de cliente y el estado de compra. No recibe el contenido de la App.</li>
+<li><strong>AdMob</strong> recibe el identificador de publicidad de tu dispositivo.</li>
+</ul>
+<p>Cada servicio tiene su propia política de privacidad:
+- <a href="https://www.revenuecat.com/privacy">RevenueCat Privacy Policy</a>
+- <a href="https://policies.google.com/privacy">Google Privacy Policy</a>
+- <a href="https://groq.com/privacy-policy/">Groq Privacy Policy</a>
+- <a href="https://supabase.com/privacy">Supabase Privacy Policy</a></p>
+<hr>
+<h2>4. Almacenamiento y seguridad</h2>
+<h3>4.1 Qué está cifrado, y qué no</h3>
+<p>Con precisión, porque la diferencia importa:</p>
+<ul>
+<li><strong>Grimorio y notas personales</strong> — cifrados con <strong>AES-256 en tu propio dispositivo</strong>, antes de salir de él. El servidor almacena texto cifrado y no dispone de la clave: no podemos leer tus notas aunque quisiéramos.</li>
+<li><strong>Contraseña</strong> — hash bcrypt, irreversible. No se almacena en claro en ningún momento.</li>
+<li><strong>El resto de tus datos</strong> (correo, nombre, datos de nacimiento, ubicación, preferencias, historial de lecturas) se almacenan <strong>sin cifrado adicional a nivel de campo</strong>, protegidos por el cifrado en reposo del proveedor de base de datos y por el control de acceso a la infraestructura.</li>
+</ul>
+<blockquote>
+<p>Una versión anterior de esta política afirmaba que los datos de nacimiento se almacenaban cifrados en la base de datos. <strong>Era inexacto</strong> y se ha corregido: el cifrado extremo a extremo se aplica al grimorio, no a los datos de perfil.</p>
+</blockquote>
+<h3>4.2 Transporte y acceso</h3>
+<ul>
+<li><strong>Comunicación</strong> — todas las conexiones usan HTTPS/TLS</li>
+<li><strong>Acceso</strong> — solo personal autorizado accede a la infraestructura</li>
+</ul>
+<hr>
+<h2>5. Retención de datos</h2>
+<ul>
+<li><strong>Datos de cuenta</strong> — mientras tu cuenta esté activa</li>
+<li><strong>Datos del grimorio</strong> — se eliminan al eliminar tu cuenta</li>
+<li><strong>Registros de errores</strong> — 90 días</li>
+<li><strong>Registros de compra y facturación</strong> — el tiempo que exija la normativa contable y fiscal, aunque la cuenta se elimine</li>
+</ul>
+<hr>
+<h2>6. Tus derechos</h2>
+<p>De acuerdo con la Ley 1581 de 2012 de Colombia y las regulaciones aplicables, tienes derecho a:</p>
+<ul>
+<li><strong>Acceder</strong> a tus datos personales</li>
+<li><strong>Rectificar</strong> datos inexactos</li>
+<li><strong>Solicitar la eliminación</strong> de tus datos</li>
+<li><strong>Oponerte</strong> al procesamiento de tus datos</li>
+<li><strong>Portabilidad</strong> de tus datos</li>
+</ul>
+<p>Para ejercerlos, escribe a <strong>arcanum.magick.app@gmail.com</strong>.</p>
+<hr>
+<h2>7. Eliminación de cuenta</h2>
+<p>Puedes eliminarla desde <strong>Ajustes → Eliminar cuenta</strong> dentro de la App, o sin tenerla instalada siguiendo las instrucciones de <strong><a href="account-deletion.html">Eliminar tu cuenta</a></strong>.</p>
+<p>Al eliminar tu cuenta se borran tus datos personales de nuestros servidores y se elimina tu cliente en RevenueCat. El detalle de qué se borra y qué no está en esa página.</p>
+<hr>
+<h2>8. Privacidad de menores</h2>
+<p>ARCANUM está dirigida a personas mayores de <strong>18 años</strong>. No recopilamos intencionadamente datos de menores. Si descubrimos que un menor ha proporcionado datos personales, los eliminaremos de inmediato.</p>
+<hr>
+<h2>9. Cambios en esta política</h2>
+<p>Nos reservamos el derecho de actualizarla. Te notificaremos de cambios significativos a través de la App o por correo electrónico. El uso continuado tras los cambios constituye aceptación de la política actualizada.</p>
+<hr>
+<h2>10. Contacto</h2>
+<ul>
+<li><strong>Responsable:</strong> Samuel Andrés Escobar Saldarriaga</li>
+<li><strong>Correo electrónico:</strong> arcanum.magick.app@gmail.com</li>
+<li><strong>País:</strong> Colombia</li>
+</ul>
+<hr>
+<p><em>Esta política se rige por las leyes de la República de Colombia.</em></p>
+</main>
+
+<footer>
+  ARCANUM &#183; Samuel Andr&eacute;s Escobar Saldarriaga &#183; Colombia<br>
+  Contacto: <a href="mailto:arcanum.magick.app@gmail.com">arcanum.magick.app@gmail.com</a>
+</footer>
+
+</body>
+</html>
