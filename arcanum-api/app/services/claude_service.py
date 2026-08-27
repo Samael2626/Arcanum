@@ -1,8 +1,6 @@
 """Servicio del Oráculo IA de ARCANUM — Groq (groq SDK).
 
-Modelo: mixtral-8x7b-32768 (free, sin cuota diaria estricta, baja latencia).
-El parámetro `model` que llega del router se ignora internamente; la selección
-free/premium existe en config para futura migración. El system prompt estático
+Modelo resuelto desde ORACLE_MODEL_FREE y ORACLE_MODEL_PREMIUM en configuración. El system prompt estático
 se pasa como role 'system' en el array de mensajes (Groq soporta OpenAI-style).
 Si falta GROQ_API_KEY, se mantiene el fallback de modo desarrollo.
 """
@@ -12,27 +10,32 @@ import logging
 import unicodedata
 from typing import Optional
 
-from groq import Groq
+from fastapi import HTTPException, status
+from groq import APIConnectionError, APIStatusError, APITimeoutError, Groq, RateLimitError
 
 from app.core.config import settings
-from app.services.oracle_prompt import ORACLE_SYSTEM_PROMPT
+from app.services.oracle_prompt import get_oracle_system_prompt
 
 logger = logging.getLogger("arcanum.oracle")
 
 _FALLBACK = "[Modo desarrollo] Respuesta del oráculo no disponible. Configure GROQ_API_KEY."
 _SILENCE = "[El oráculo guardó silencio. Intenta formular tu pregunta de nuevo.]"
 
-_GROQ_MODEL = "llama-3.3-70b-versatile"
 
 # Cliente lazy: se crea una sola vez si hay API key.
 _client: Optional[Groq] = None
 
+
+def _is_production() -> bool:
+    return settings.ENVIRONMENT == 'production'
 
 def _get_client() -> Optional[Groq]:
     global _client
     if _client is not None:
         return _client
     if not settings.GROQ_API_KEY:
+        if _is_production():
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, 'El oráculo no está disponible.')
         return None
     _client = Groq(api_key=settings.GROQ_API_KEY)
     return _client
@@ -43,7 +46,7 @@ def _build_user_message(context: str, question: Optional[str],
     """Ensambla el mensaje 'user' con DATOS y un marcador mínimo de modo.
 
     El CÓMO (integrar por posición, no inventar pregunta, un solo cierre ritual)
-    vive en ORACLE_SYSTEM_PROMPT — aquí NO se repite para no duplicar la regla.
+    vive en el system prompt — aquí NO se repite para no duplicar la regla.
 
     - solo pregunta      → astral + pregunta.
     - pregunta + tirada  → astral + tirada + pregunta.
@@ -114,24 +117,43 @@ def _missing_cards(expected_cards: list[str], text: str) -> list[str]:
     return [name for name in expected_cards if _norm(_card_key(name)) not in t]
 
 
-def _complete(client: Groq, user_content: str, max_tokens: int,
-              temperature: float) -> tuple[str, str, int]:
-    """Una llamada al modelo. Devuelve (texto, finish_reason, completion_tokens)."""
-    resp = client.chat.completions.create(
-        model=_GROQ_MODEL,
-        messages=[
-            {"role": "system", "content": ORACLE_SYSTEM_PROMPT},
-            {"role": "user", "content": user_content},
-        ],
-        max_tokens=max_tokens,
-        temperature=temperature,
-    )
+def _complete(
+    client: Groq,
+    model: str,
+    user_content: str,
+    max_tokens: int,
+    temperature: float,
+) -> tuple[str, str, int]:
+    """Una llamada al modelo. Devuelve texto, finish_reason y completion_tokens."""
+    try:
+        resp = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": get_oracle_system_prompt()},
+                {"role": "user", "content": user_content},
+            ],
+            max_tokens=max_tokens,
+            temperature=temperature,
+        )
+    except RateLimitError as exc:
+        headers = dict(exc.response.headers) if exc.response else {}
+        logger.warning(
+            "Groq rate limit: retry_after=%s headers=%s",
+            headers.get("retry-after"),
+            headers,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="El oráculo está saturado. Intenta de nuevo en unos minutos.",
+        ) from exc
     choice = resp.choices[0]
-    return (choice.message.content or "", choice.finish_reason,
-            resp.usage.completion_tokens if resp.usage else 0)
+    return (
+        choice.message.content or "",
+        choice.finish_reason,
+        resp.usage.completion_tokens if resp.usage else 0,
+    )
 
-
-def generate_reading(context: str, question: Optional[str] = None,
+def generate_reading(context: str, model: str, question: Optional[str] = None,
                      tarot: Optional[str] = None, card_count: int = 0,
                      expected_cards: Optional[list[str]] = None) -> tuple[str, dict]:
     """Genera la lectura y GARANTIZA cobertura de todas las posiciones (guard D).
@@ -154,7 +176,7 @@ def generate_reading(context: str, question: Optional[str] = None,
     temperature = _temperature_for(card_count)
     base_user = _build_user_message(context, question, tarot)
 
-    content, finish, ctok = _complete(client, base_user, max_tokens, temperature)
+    content, finish, ctok = _complete(client, model, base_user, max_tokens, temperature)
     diag.update(available=True, max_tokens=max_tokens, temperature=temperature,
                 finish_reason=finish, completion_tokens=ctok)
 
@@ -174,7 +196,7 @@ def generate_reading(context: str, question: Optional[str] = None,
         f"{len(expected_cards)} posiciones en orden, sin omitir ninguna."
     )
     r_content, r_finish, r_ctok = _complete(
-        client, f"{base_user}\n\n{notice}", max_tokens, temperature)
+        client, model, f"{base_user}\n\n{notice}", max_tokens, temperature)
     r_missing = _missing_cards(expected_cards, r_content)
     diag["missing_final"] = [_card_key(c) for c in r_missing]
 
@@ -195,7 +217,7 @@ def generate_reading(context: str, question: Optional[str] = None,
 
 
 def get_claude_response(context: str, question: Optional[str] = None,
-                        tarot: Optional[str] = None, model: str = "",  # noqa: ARG001
+                        tarot: Optional[str] = None, model: str = "",
                         card_count: int = 0,
                         expected_cards: Optional[list[str]] = None) -> str:
     """Consulta al oráculo Groq con contexto astral, tirada y pregunta opcionales.
@@ -204,7 +226,7 @@ def get_claude_response(context: str, question: Optional[str] = None,
         context: resumen astral server-side (build_oracle_context).
         question: pregunta en claro del consultante, o None (modo solo-tirada).
         tarot: bloque de la tirada (build_tarot_context), o None (modo solo-astral).
-        model: ignorado — mantenido por compatibilidad con el router.
+        model: modelo de Groq seleccionado por tier desde config.
         card_count: nº de cartas de la tirada (0 si no hay). Escala max_tokens/temp.
         expected_cards: nombres de las cartas de la tirada; activan el guard de
             cobertura (garantiza que ninguna posición quede sin interpretar).
@@ -214,7 +236,10 @@ def get_claude_response(context: str, question: Optional[str] = None,
     """
     try:
         content, _diag = generate_reading(
-            context, question, tarot, card_count, expected_cards)
+            context, model, question, tarot, card_count, expected_cards)
         return content or _SILENCE
-    except Exception as e:  # noqa: BLE001
-        return f"[El oráculo no pudo responder en este momento: {str(e)}]"
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Fallo no recuperable del proveedor Groq")
+        raise
