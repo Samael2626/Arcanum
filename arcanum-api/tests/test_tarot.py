@@ -17,7 +17,7 @@ import pytest
 
 # El seeder vive en scripts/ y necesita estar en sys.path.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from scripts.seed_tarot import MAJOR_ARCANA, MINOR_ARCANA, _enrich_majors  # noqa: E402
+from scripts.seed_tarot import _enrich_majors  # noqa: E402
 from app.models.tarot import TarotCard  # noqa: E402
 
 
@@ -33,9 +33,38 @@ _REGISTER = {
 }
 
 
+# Fixture propia: estos tests ejercitan los ENDPOINTS (conteos, filtros, tiradas),
+# no el catálogo editorial. Ese catálogo vive fuera del repo (ver app/core/content.py)
+# y no debe hacer falta para correr la suite.
+_SUITS = ("wands", "cups", "swords", "pentacles")
+_RANKS = ("as", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve",
+          "diez", "sota", "caballero", "reina", "rey")
+
+
+def _fake_majors() -> list[dict]:
+    """22 mayores sintéticos con la forma que espera el seeder."""
+    return [
+        {"slug": f"mayor-{n}", "arcana": "major", "number": n,
+         "element": None, "sephirah": "Kether", "title_book_t": f"Mayor {n}"}
+        for n in range(22)
+    ]
+
+
+def _fake_minors() -> list[dict]:
+    """56 menores sintéticos: 4 palos x 14 rangos."""
+    return [
+        {"slug": f"{rango}-de-{palo}", "arcana": "minor", "suit": palo,
+         "number": i + 1, "element": None,
+         "meaning_upright": "Significado de prueba.",
+         "meaning_reversed": "Significado invertido de prueba."}
+        for palo in _SUITS
+        for i, rango in enumerate(_RANKS)
+    ]
+
+
 def _build_78_cards() -> list[dict]:
-    """Genera 78 cartas dummy reutilizando la curaduría del seeder."""
-    rows = _enrich_majors() + MINOR_ARCANA
+    """78 cartas de prueba: 22 mayores enriquecidos por el seeder + 56 menores."""
+    rows = _enrich_majors(_fake_majors()) + _fake_minors()
     out = []
     for data in rows:
         d = dict(data)
