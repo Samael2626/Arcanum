@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'core/auth/auth_controller.dart';
+import 'core/config/release_config.dart';
 import 'core/monetization/monetization_service.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/arcanum_theme.dart';
@@ -25,25 +26,30 @@ void main() async {
     return true;
   };
 
-  const adsEnabled = bool.fromEnvironment('ADS_ENABLED');
-  if (adsEnabled) {
+  if (ReleaseConfig.adsEnabled) {
     // TODO(compliance): Implementar UMP antes de activar ADS_ENABLED. Ver el
     // bloque "Gap abierto: consentimiento de ads (UMP)" en
     // .agents/skills/arcanum-legal/references/ia-y-datos.md.
     await MobileAds.instance.initialize();
   }
-  await MonetizationService.initialize('PLACEHOLDER_RC_API_KEY');
+  ReleaseConfig.validateForStartup();
+  if (ReleaseConfig.revenueCatEnabled) {
+    await MonetizationService.initialize(ReleaseConfig.revenueCatApiKey);
+  }
 
   // En desarrollo, log a consola en vez de Crashlytics
   if (kDebugMode) {
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
   }
 
-  runZonedGuarded(() {
-    runApp(const ProviderScope(child: ArcanumApp()));
-  }, (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-  });
+  runZonedGuarded(
+    () {
+      runApp(const ProviderScope(child: ArcanumApp()));
+    },
+    (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    },
+  );
 }
 
 class ArcanumApp extends ConsumerWidget {
