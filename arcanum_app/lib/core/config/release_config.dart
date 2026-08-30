@@ -12,6 +12,12 @@ abstract final class ReleaseConfig {
       'https://samael2626.github.io/Arcanum/privacy/';
   static const accountDeletionUrl =
       'https://samael2626.github.io/Arcanum/account-deletion/';
+  static const termsUrl = 'https://samael2626.github.io/Arcanum/terms/';
+
+  /// Version de la politica publicada. Debe coincidir con el pie de
+  /// `legal-site/privacy/index.html`: es lo que se guarda junto a cada
+  /// consentimiento y lo que decide si hay que volver a pedirlo.
+  static const policyVersion = '2026-08-30';
 
   static bool get revenueCatEnabled => revenueCatApiKey.trim().isNotEmpty;
 

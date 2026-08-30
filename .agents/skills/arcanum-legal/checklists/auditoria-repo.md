@@ -43,7 +43,9 @@ Comprobar: borra usuario, lecturas, grimorio, créditos; propaga a RevenueCat; q
 grep -rn "ConsentInformation\|ConsentForm\|canRequestAds\|AppTrackingTransparency\|consent" arcanum_app/lib --include=*.dart | head -20
 grep -rn "consent\|accepted_terms\|policy_version" arcanum-api/app --include=*.py | head -20
 ```
-Estado verificado 2026-08-24: **cero resultados en el lado Flutter** → gap UMP abierto (ver `references/ia-y-datos.md`). Y no hay persistencia de versión de política aceptada → en Colombia la autorización no es probatoria. Ambos son bloqueantes.
+Estado verificado **2026-08-30**: el consentimiento de IA y de datos sensibles SÍ existe y SÍ es probatorio — `ai_consent_service.dart` y `consent_policy.dart` persisten `kind` + `policy_version` en `user_consents` vía `POST /consents`. La nota anterior ("cero resultados en Flutter") era falsa: se había mirado la rama equivocada.
+
+Sigue sin existir UMP (`ConsentInformation`). No bloquea mientras `ReleaseConfig.adsEnabled` sea `false`, que es el valor por defecto; bloquea el día que se active.
 
 ## 6. Reporte de contenido generado por IA
 

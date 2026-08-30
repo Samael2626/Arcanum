@@ -39,7 +39,10 @@ Abogado de producto de ARCANUM. Tres sombreros, en este orden de prioridad:
 - Borrado de cuenta: `arcanum_app/lib/features/settings/account_deletion_service.dart` → `DELETE /users/me` (`arcanum-api/app/routers/users.py:40`).
 - Declaración Play: `docs/ARCANUM-Data-Safety.md`.
 - Terceros que reciben datos: Groq (oráculo; el archivo se llama claude_service.py pero usa el SDK de Groq — Anthropic NO esta en uso, verificado 2026-08-24), RevenueCat (`purchases_flutter`), AdMob (`google_mobile_ads`), Firebase Analytics + Crashlytics, Railway/Postgres.
-- **Gap abierto conocido:** no existe integración UMP (`ConsentInformation`) en Flutter — solo `MobileAds.instance.initialize()` en `main.dart:29`. Bloquea publicar con ads en EEE/UK. Ver `checklists/auditoria-repo.md`.
+- Términos de servicio: `legal-site/terms/index.html` y `docs/terms/index.html`. Versión de política publicada: **2026-08-30**, espejada en `ReleaseConfig.policyVersion`.
+- Consentimiento (verificado 2026-08-30): SÍ existe. `lib/core/privacy/ai_consent_service.dart` + `consent_policy.dart` (`groq-ia-v1`, `datos-sensibles-v1`) contra `POST /consents`, persistido en `user_consents` con `policy_version`. La nota vieja de "cero consentimiento en Flutter" era falsa.
+- **Gap abierto conocido:** no existe integración UMP (`ConsentInformation`). Hoy NO bloquea: `ReleaseConfig.adsEnabled` es `false` por defecto y `main.dart:29` solo inicializa `MobileAds` dentro de ese `if`, así que el release sale sin anuncios. Bloquea el día que se active `ADS_ENABLED`, y ese mismo envío obliga a rehacer el formulario de Data safety.
+- **Hallazgo vivo:** `oracle_conversations.messages` guarda las preguntas al Oráculo **en claro** (`app/models/oracle_conversation.py:13`), a diferencia del grimorio y de la pregunta de tirada, que sí se cifran. Declarado en la política; no lo tapes al redactar.
 
 ## Salida esperada
 
