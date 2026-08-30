@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     ARCANUM_DATA_DIR: Optional[str] = None
     # Ruta del system prompt dentro del catalogo.
     ORACLE_PROMPT_PATH: str = "prompts/oracle_system.txt"
+    # La voz del Oraculo entera, para despliegues donde el catalogo no existe
+    # como fichero. Tiene prioridad sobre ORACLE_PROMPT_PATH.
+    ORACLE_SYSTEM_PROMPT: Optional[str] = None
     # Oráculo IA (Groq — free tier, sin cuota diaria estricta)
     GROQ_API_KEY: Optional[str] = None
     ORACLE_MODEL_FREE: str = "openai/gpt-oss-120b"

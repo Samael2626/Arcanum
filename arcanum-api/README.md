@@ -54,4 +54,30 @@ El hook `pre-commit` corre la suite completa cuando cambia algo de `arcanum-api/
 
 ## Despliegue
 
-Railway, desde la rama `release/p0a-beta`. **`ARCANUM_DATA_DIR` y el catálogo deben existir en el entorno de despliegue antes de mezclar**, o el oráculo cae con 503 en cuanto arranque.
+Railway despliega **desde `main`**, con auto-deploy: todo push a `main` sale a producción sin paso manual. (Antes era `release/p0a-beta`; esta línea decía eso y estaba desactualizada — comprobado con `railway status --json`, que devuelve `branch = main`.)
+
+La base de datos **no está en Railway**: es Supabase (`aws-1-us-east-1.pooler.supabase.com`). Railway aloja la API.
+
+### El catálogo en producción
+
+`ARCANUM_DATA_DIR` **no sirve en Railway**. El catálogo vive en el repositorio privado `Arcanum-datos`, y Railway construye desde este repositorio: en el contenedor no existe ese fichero, en ninguna ruta.
+
+En runtime solo hace falta **un** fichero del catálogo, `prompts/oracle_system.txt`. Se pasa por variable de entorno:
+
+```
+ORACLE_SYSTEM_PROMPT = <contenido de prompts/oracle_system.txt>
+```
+
+Tiene prioridad sobre el fichero. En local se sigue usando `ARCANUM_DATA_DIR`, que es más cómodo para editar la voz. Si no hay ninguna de las dos, el oráculo devuelve **503** en producción y no una voz degradada.
+
+Los demás ficheros del catálogo (materia, tarot, puente) solo los usan los scripts de siembra, que se corren a mano.
+
+### Migraciones
+
+`RUN_STARTUP_MIGRATIONS` y `RUN_STARTUP_SEEDS` son `False` por defecto y **no están definidas en Railway**: las migraciones **NO corren solas al desplegar**. Hay que aplicarlas a mano contra la base de producción:
+
+```bash
+DATABASE_URL="$(railway variables --service Arcanum-Code --kv | grep '^DATABASE_URL=' | cut -d= -f2-)"   .venv/Scripts/python.exe -m alembic upgrade head
+```
+
+La base de Supabase es accesible por su pooler público, así que esto funciona desde la máquina de desarrollo.
