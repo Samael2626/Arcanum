@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/api/arcanum_api.dart';
 import '../../core/api/oracle_error.dart';
 import '../../core/auth/auth_controller.dart';
+import '../../core/privacy/ai_consent_service.dart';
 import '../../core/content/glossary.dart';
 import '../../core/content/transit_reading.dart';
 import '../../core/state/flow_providers.dart';
@@ -14,6 +15,7 @@ import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
+import '../../shared/widgets/content_report_sheet.dart';
 import '../../shared/widgets/info_dot.dart';
 import '../hoy/hoy_guidance.dart';
 import '../hoy/hoy_lore.dart';
@@ -462,6 +464,7 @@ class _AspectRowState extends ConsumerState<_AspectRow> {
   bool _open = false;
   bool _asking = false;
   String? _oracleReply;
+  String? _oracleContentRef;
   String? _oracleError;
   String? _idempotencyKey;
 
@@ -476,12 +479,20 @@ class _AspectRowState extends ConsumerState<_AspectRow> {
   /// Pide al oráculo la lectura personalizada de ESTE tránsito.
   /// El servidor ya inyecta la carta natal: solo hay que nombrar el tránsito.
   Future<void> _askOracle() async {
+    final userId = ref.read(authProvider).user?['id'] as String?;
+    if (userId == null ||
+        !await ref
+            .read(aiConsentServiceProvider)
+            .ensureGranted(context, userId: userId)) {
+      return;
+    }
     final key = _idempotencyKey ??= IdempotencyKey.create();
     final aspect = widget.aspect;
     setState(() {
       _asking = true;
       _oracleError = null;
       _oracleReply = null;
+      _oracleContentRef = null;
     });
     try {
       final response = await ref.read(arcanumApiProvider).oracleIa(
@@ -494,7 +505,10 @@ class _AspectRowState extends ConsumerState<_AspectRow> {
       );
       if (!mounted) return;
       _idempotencyKey = null;
-      setState(() => _oracleReply = assistantReply(response));
+      setState(() {
+        _oracleReply = assistantReply(response);
+        _oracleContentRef = response['id'] as String?;
+      });
     } catch (error) {
       if (isCreditsRequired(error)) await _openCreditsPaywall();
       if (!mounted) return;
@@ -585,6 +599,8 @@ class _AspectRowState extends ConsumerState<_AspectRow> {
               accent: _toneColor[aspectToneOf(asp)] ?? ArcanumColors.goldMuted,
               asking: _asking,
               oracleReply: _oracleReply,
+              oracleContentRef: _oracleContentRef,
+              api: ref.read(arcanumApiProvider),
               oracleError: _oracleError,
               onAskOracle: _askOracle,
               tarotPlanet: planetTarot.containsKey(t) ? t : null,
@@ -606,6 +622,8 @@ class _Reading extends StatelessWidget {
   final Color accent;
   final bool asking;
   final String? oracleReply;
+  final String? oracleContentRef;
+  final ArcanumApi api;
   final String? oracleError;
   final VoidCallback onAskOracle;
 
@@ -619,6 +637,8 @@ class _Reading extends StatelessWidget {
     required this.accent,
     required this.asking,
     required this.oracleReply,
+    required this.oracleContentRef,
+    required this.api,
     required this.oracleError,
     required this.onAskOracle,
     this.tarotPlanet,
@@ -710,6 +730,15 @@ class _Reading extends StatelessWidget {
                   : oracleReply!,
               style: ArcanumText.body(15),
             ),
+            // Play exige poder denunciar contenido de IA donde se muestre.
+            if (oracleContentRef != null)
+              Center(
+                child: ContentReportButton(
+                  api: api,
+                  source: 'oracle',
+                  contentRef: oracleContentRef!,
+                ),
+              ),
           ],
         ],
       ),

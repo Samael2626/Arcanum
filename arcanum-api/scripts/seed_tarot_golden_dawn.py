@@ -55,22 +55,29 @@ if hasattr(sys.stdout, "reconfigure"):
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--env-file", default=".env.staging",
-                     help="Archivo .env a cargar antes de importar la sesión de DB (default: .env.staging)")
-args = parser.parse_args()
-
-env_path = REPO_ROOT / args.env_file
-if not env_path.exists():
-    raise SystemExit(f"No existe {env_path}. Pasa --env-file explícito.")
-
-from dotenv import load_dotenv  # noqa: E402
-load_dotenv(env_path, override=True)  # DEBE cargarse antes de importar app.db.session
-
 sys.path.insert(0, str(REPO_ROOT))
 
-from app.db.session import SessionLocal  # noqa: E402
-from app.models.tarot import TarotCard  # noqa: E402
+from app.core.content import load_dataset  # noqa: E402
+
+
+def _cargar_entorno() -> None:
+    """Lee --env-file y carga el .env ANTES de tocar la sesion de DB.
+
+    Vive dentro de una funcion, no al importar: el modulo debe poder importarse
+    desde tests y desde otros scripts sin exigir un .env ni parsear argv.
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--env-file", default=".env.staging",
+                        help="Archivo .env a cargar antes de importar la sesión de DB "
+                             "(default: .env.staging)")
+    args = parser.parse_args()
+
+    env_path = REPO_ROOT / args.env_file
+    if not env_path.exists():
+        raise SystemExit(f"No existe {env_path}. Pasa --env-file explícito.")
+
+    from dotenv import load_dotenv
+    load_dotenv(env_path, override=True)
 
 
 # slug -> dict de columnas a fijar.
@@ -81,132 +88,23 @@ from app.models.tarot import TarotCard  # noqa: E402
 # zodiac:  solo las 12 "simples" (signos) lo llevan; planetas/elementos None.
 # decan:   NO aplica a los Mayores en Book T/GD (los decanatos son de los 40
 #          numerales menores). Se deja intacto (None) — no es un olvido.
-MAJOR_GOLDEN_DAWN: dict[str, dict] = {
-    "el-loco": dict(
-        name_es="El Loco", hebrew_letter="Aleph (א)", gematria_value=1,
-        astro_correspondence="Aire 🜁", element="aire", zodiac=None,
-        path_number=11, path_from="Kether", path_to="Chokmah",
-    ),
-    "el-mago": dict(
-        name_es="El Mago", hebrew_letter="Beth (ב)", gematria_value=2,
-        astro_correspondence="Mercurio ☿", element=None, zodiac=None,
-        path_number=12, path_from="Kether", path_to="Binah",
-    ),
-    "la-sacerdotisa": dict(
-        name_es="La Sacerdotisa", hebrew_letter="Gimel (ג)", gematria_value=3,
-        astro_correspondence="Luna ☽", element=None, zodiac=None,
-        path_number=13, path_from="Kether", path_to="Tiphareth",
-    ),
-    "la-emperatriz": dict(
-        name_es="La Emperatriz", hebrew_letter="Daleth (ד)", gematria_value=4,
-        astro_correspondence="Venus ♀", element=None, zodiac=None,
-        path_number=14, path_from="Chokmah", path_to="Binah",
-    ),
-    # ── THOTH SWAP (Liber AL I:57) — ver docstring del módulo ──────────────
-    "el-emperador": dict(
-        name_es="El Emperador", hebrew_letter="Tzaddi (צ)", gematria_value=90,
-        astro_correspondence="Aries ♈", element=None, zodiac="Aries ♈",
-        path_number=28, path_from="Netzach", path_to="Yesod",
-    ),
-    "el-hierofante": dict(
-        name_es="El Hierofante", hebrew_letter="Vav (ו)", gematria_value=6,
-        astro_correspondence="Tauro ♉", element=None, zodiac="Tauro ♉",
-        path_number=16, path_from="Chokmah", path_to="Chesed",
-    ),
-    "los-enamorados": dict(
-        name_es="Los Enamorados", hebrew_letter="Zayin (ז)", gematria_value=7,
-        astro_correspondence="Géminis ♊", element=None, zodiac="Géminis ♊",
-        path_number=17, path_from="Binah", path_to="Tiphareth",
-    ),
-    "el-carro": dict(
-        name_es="El Carro", hebrew_letter="Cheth (ח)", gematria_value=8,
-        astro_correspondence="Cáncer ♋", element=None, zodiac="Cáncer ♋",
-        path_number=18, path_from="Binah", path_to="Geburah",
-    ),
-    "la-fuerza": dict(
-        name_es="La Fuerza", hebrew_letter="Teth (ט)", gematria_value=9,
-        astro_correspondence="Leo ♌", element=None, zodiac="Leo ♌",
-        path_number=19, path_from="Chesed", path_to="Geburah",
-    ),
-    "el-ermitano": dict(
-        name_es="El Ermitaño", hebrew_letter="Yod (י)", gematria_value=10,
-        astro_correspondence="Virgo ♍", element=None, zodiac="Virgo ♍",
-        path_number=20, path_from="Chesed", path_to="Tiphareth",
-    ),
-    "la-rueda": dict(
-        name_es="La Rueda de la Fortuna", hebrew_letter="Kaph (כ)", gematria_value=20,
-        astro_correspondence="Júpiter ♃", element=None, zodiac=None,
-        path_number=21, path_from="Chesed", path_to="Netzach",
-    ),
-    "la-justicia": dict(
-        name_es="La Justicia", hebrew_letter="Lamed (ל)", gematria_value=30,
-        astro_correspondence="Libra ♎", element=None, zodiac="Libra ♎",
-        path_number=22, path_from="Geburah", path_to="Tiphareth",
-    ),
-    "el-colgado": dict(
-        name_es="El Colgado", hebrew_letter="Mem (מ)", gematria_value=40,
-        astro_correspondence="Agua 🜄", element="agua", zodiac=None,
-        path_number=23, path_from="Geburah", path_to="Hod",
-    ),
-    "la-muerte": dict(
-        name_es="La Muerte", hebrew_letter="Nun (נ)", gematria_value=50,
-        astro_correspondence="Escorpio ♏", element=None, zodiac="Escorpio ♏",
-        path_number=24, path_from="Tiphareth", path_to="Netzach",
-    ),
-    "la-templanza": dict(
-        name_es="La Templanza", hebrew_letter="Samekh (ס)", gematria_value=60,
-        astro_correspondence="Sagitario ♐", element=None, zodiac="Sagitario ♐",
-        path_number=25, path_from="Tiphareth", path_to="Yesod",
-    ),
-    "el-diablo": dict(
-        name_es="El Diablo", hebrew_letter="Ayin (ע)", gematria_value=70,
-        astro_correspondence="Capricornio ♑", element=None, zodiac="Capricornio ♑",
-        path_number=26, path_from="Tiphareth", path_to="Hod",
-    ),
-    "la-torre": dict(
-        name_es="La Torre", hebrew_letter="Peh (פ)", gematria_value=80,
-        astro_correspondence="Marte ♂", element=None, zodiac=None,
-        path_number=27, path_from="Netzach", path_to="Hod",
-    ),
-    # ── THOTH SWAP (Liber AL I:57) — ver docstring del módulo ──────────────
-    "la-estrella": dict(
-        name_es="La Estrella", hebrew_letter="Heh (ה)", gematria_value=5,
-        astro_correspondence="Acuario ♒", element=None, zodiac="Acuario ♒",
-        path_number=15, path_from="Chokmah", path_to="Tiphareth",
-    ),
-    "la-luna": dict(
-        name_es="La Luna", hebrew_letter="Qoph (ק)", gematria_value=100,
-        astro_correspondence="Piscis ♓", element=None, zodiac="Piscis ♓",
-        path_number=29, path_from="Netzach", path_to="Malkuth",
-    ),
-    "el-sol": dict(
-        name_es="El Sol", hebrew_letter="Resh (ר)", gematria_value=200,
-        astro_correspondence="Sol ☉", element=None, zodiac=None,
-        path_number=30, path_from="Hod", path_to="Yesod",
-    ),
-    "el-juicio": dict(
-        name_es="El Juicio", hebrew_letter="Shin (ש)", gematria_value=300,
-        astro_correspondence="Fuego 🜂", element="fuego", zodiac=None,
-        path_number=31, path_from="Hod", path_to="Malkuth",
-    ),
-    "el-mundo": dict(
-        # Tav es letra "doble" (planeta), no "madre" (elemento): su atribución
-        # estricta Book T/GD es Saturno. La glosa popular "Tierra/Universo"
-        # (síntesis de los 4 elementos completos) es simbólica, no una
-        # atribución de Sepher Yetzirah — por eso element=None aquí, corrigiendo
-        # el "tierra" decorativo que traía el seed original.
-        name_es="El Mundo", hebrew_letter="Tav (ת)", gematria_value=400,
-        astro_correspondence="Saturno ♄", element=None, zodiac=None,
-        path_number=32, path_from="Yesod", path_to="Malkuth",
-    ),
-}
+# Los datos viven en el catalogo externo (tarot/golden_dawn.json). Ver
+# app/core/content.py; ARCANUM_DATA_DIR apunta al repositorio Arcanum-datos.
+
+
+def cargar_golden_dawn() -> dict[str, dict]:
+    return load_dataset("tarot/golden_dawn")
 
 
 def main() -> None:
+    _cargar_entorno()
+    from app.db.session import SessionLocal
+    from app.models.tarot import TarotCard
     db = SessionLocal()
     updated, missing = 0, []
     try:
-        for slug, fields in MAJOR_GOLDEN_DAWN.items():
+        golden_dawn = cargar_golden_dawn()
+        for slug, fields in golden_dawn.items():
             card = db.query(TarotCard).filter(TarotCard.slug == slug).first()
             if not card:
                 missing.append(slug)
@@ -215,7 +113,7 @@ def main() -> None:
                 setattr(card, col, value)
             updated += 1
         db.commit()
-        print(f"Actualizados {updated}/{len(MAJOR_GOLDEN_DAWN)} Arcanos Mayores.")
+        print(f"Actualizados {updated}/{len(golden_dawn)} Arcanos Mayores.")
         if missing:
             print(f"AVISO: slugs no encontrados en tarot_cards: {missing}")
 

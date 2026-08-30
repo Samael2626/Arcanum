@@ -8,6 +8,8 @@ import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
 import 'account_deletion_service.dart';
+import 'ai_consent_settings_card.dart';
+import 'sensitive_data_consent_settings_card.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -151,7 +153,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ],
                       ),
               ),
+
               if (auth.isAuthenticated) ...[
+                const SizedBox(height: 20),
+                const AiConsentSettingsCard(),
+                const SizedBox(height: 20),
+                const SensitiveDataConsentSettingsCard(),
                 const SizedBox(height: 20),
                 ArcanumCard(
                   intensity: 0.35,
@@ -192,6 +199,40 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ),
               ],
+              const SizedBox(height: 20),
+              ArcanumCard(
+                intensity: 0.35,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SectionLabel('PRIVACIDAD'),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Consulta cómo tratamos tus datos y cómo cerrar el umbral.',
+                      style: ArcanumText.body(16),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: () => context.push('/privacy'),
+                      icon: const Icon(Icons.privacy_tip_outlined),
+                      label: const Text('Privacidad y datos'),
+                    ),
+                    // La SIL Open Font License exige distribuir su texto con el
+                    // software, y CC BY 4.0 pide atribuir GeoNames. Sin una
+                    // pantalla donde leerlo, ARCANUM incumple las dos.
+                    TextButton.icon(
+                      onPressed: () => showLicensePage(
+                        context: context,
+                        applicationName: 'ARCANUM',
+                        applicationLegalese:
+                            '© ${DateTime.now().year} Samuel Escobar',
+                      ),
+                      icon: const Icon(Icons.description_outlined),
+                      label: const Text('Licencias de terceros'),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

@@ -1,6 +1,6 @@
 import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
-import 'package:arcanum_app/core/consent/ai_consent.dart';
+import 'package:arcanum_app/core/privacy/ai_consent_service.dart';
 import 'package:arcanum_app/features/hoy/hoy_screen.dart';
 import 'package:arcanum_app/features/hoy/presentation/widgets/level_three_aspects.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_frame.dart';
@@ -28,6 +28,24 @@ class _TodayApi extends ArcanumApi {
 
   var calls = 0;
   var horoscopeCalls = 0;
+  final consentimientos = <bool>[];
+
+  /// El consentimiento se persiste en el SERVIDOR, no solo en el dispositivo.
+  ///
+  /// Sin este doble, la llamada saldria por el Dio real, fallaria, y
+  /// `ensureGranted` devolveria false aun habiendo pulsado "Acepto": el
+  /// servicio FALLA CERRADO a proposito — si no se puede dejar constancia de la
+  /// autorizacion, no se manda nada al proveedor de IA. Es lo correcto, y sin
+  /// este override el test parecia decir que aceptar no abre el sello.
+  @override
+  Future<Map<String, dynamic>> recordConsent({
+    required String kind,
+    required String policyVersion,
+    required bool granted,
+  }) async {
+    consentimientos.add(granted);
+    return {'kind': kind, 'policy_version': policyVersion, 'granted': granted};
+  }
   var skyCalls = 0;
   var celestialOverviewCalls = 0;
 
@@ -278,13 +296,18 @@ void main() {
     await tester.tap(find.text('Abrir el sello del Sol'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.check_box_outline_blank).first);
-    await tester.pump();
-    await tester.tap(find.byIcon(Icons.check_box_outline_blank).first);
-    await tester.pump();
+    // Ya no hay dos casillas en este dialogo: el consentimiento de datos
+    // sensibles se pide en su propio paso del onboarding
+    // (features/onboarding/.../sensitive_data_consent_step.dart) y con su
+    // propia version de politica. Dos permisos distintos, dos momentos.
     await tester.tap(find.widgetWithText(FilledButton, 'Acepto'));
+    // Aceptar dispara dos asincronias antes de pedir el horoscopo: registrar el
+    // consentimiento en el servidor y guardar la copia local.
+    await tester.pump();
+    await tester.pump();
     await tester.pump();
 
+    expect(api.consentimientos, [true]);
     expect(api.horoscopeCalls, 1);
     expect(find.text('Saturno aprieta sobre tu Sol natal.'), findsNothing);
 
@@ -302,7 +325,8 @@ void main() {
     expect(tester.getSize(routeTarget).height, greaterThanOrEqualTo(48));
     expect(api.horoscopeCalls, 1);
     expect(api.celestialOverviewCalls, 1);
-    expect(await AiConsent.isPending(), isFalse);
+    expect(await AiConsentService().status('user-a'),
+        AiConsentStatus.granted);
     expect(find.text('Urano trígono Luna'), findsOneWidget);
     expect(find.text('Neptuno cuadratura Sol'), findsOneWidget);
     expect(find.text('Plutón oposición Venus'), findsOneWidget);

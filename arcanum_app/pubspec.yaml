@@ -89,6 +89,13 @@ flutter:
     - assets/engravings/inciensos/
     - assets/engravings/aceites/
     - assets/engravings/resinas/
+    # Licencias de las fuentes: la OFL 1.1 obliga a distribuir su texto con el
+    # software. Se empaquetan como asset y se registran en LicenseRegistry para
+    # que aparezcan en showLicensePage().
+    - assets/fonts/OFL-Libertinus.txt
+    - assets/fonts/OFL-Noto.txt
+    - assets/fonts/OFL-CormorantGaramond.txt
+    - assets/fonts/OFL-CrimsonPro.txt
   fonts:
     - family: Cormorant Garamond
       fonts:

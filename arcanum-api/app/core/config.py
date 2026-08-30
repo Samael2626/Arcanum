@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     RUN_STARTUP_MIGRATIONS: bool = False
     RUN_STARTUP_SEEDS: bool = False
 
+    # Catalogo editorial (Materia, tarot, prompts). Vive FUERA de este repo:
+    # arcanum-api esta destinado a publicarse bajo AGPL y los datos no se ceden.
+    ARCANUM_DATA_DIR: Optional[str] = None
+    # Ruta del system prompt dentro del catalogo.
+    ORACLE_PROMPT_PATH: str = "prompts/oracle_system.txt"
     # Oráculo IA (Groq — free tier, sin cuota diaria estricta)
     GROQ_API_KEY: Optional[str] = None
     ORACLE_MODEL_FREE: str = "openai/gpt-oss-120b"
@@ -63,7 +68,7 @@ class Settings(BaseSettings):
 
     # Geocoding (Nominatim + timezonefinder) — resuelve lugar de nacimiento
     # real en el onboarding, reemplaza el default hardcodeado a Bogotá.
-    NOMINATIM_USER_AGENT: str = "ARCANUM-app/1.0 (contacto: soporte@arcanum-app.com)"
+    NOMINATIM_USER_AGENT: str = "ARCANUM-app/1.0 (contacto: arcanum.magick.app@gmail.com)"
     GEOCODING_MIN_INTERVAL_SECONDS: float = 1.0
 
     # RevenueCat webhook

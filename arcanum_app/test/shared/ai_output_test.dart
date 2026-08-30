@@ -5,7 +5,8 @@
 /// pueda dar por omision. Eso ultimo es lo que separa consentir de no negarse.
 library;
 
-import 'package:arcanum_app/core/consent/ai_consent.dart';
+import 'package:arcanum_app/core/privacy/ai_consent_service.dart';
+import 'package:arcanum_app/core/privacy/consent_policy.dart';
 import 'package:arcanum_app/features/hoy/sky_today_state.dart';
 import 'package:arcanum_app/shared/widgets/ai_output.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,37 @@ import 'package:shared_preferences/shared_preferences.dart';
 Widget _wrap(Widget child) => ProviderScope(
       child: MaterialApp(home: Scaffold(body: child)),
     );
+
+/// Abre el dialogo de consentimiento y, si se indica, pulsa un boton.
+/// Devuelve lo que `ensureGranted` respondio.
+Future<bool?> _abrirDialogo(WidgetTester tester, {String? pulsar}) async {
+  bool? resultado;
+  await tester.pumpWidget(ProviderScope(
+    overrides: [
+      // Sin API: el dialogo se prueba solo. Con el provider real, construir el
+      // servicio arrastra Dio y el fallo se traga dentro del onPressed async,
+      // dejando un test que dice "no aparece el texto" cuando lo que pasa es
+      // que el dialogo nunca llego a abrirse.
+      aiConsentServiceProvider.overrideWithValue(AiConsentService()),
+    ],
+    child: MaterialApp(home: Scaffold(body:
+    Consumer(builder: (context, ref, _) {
+      return TextButton(
+        onPressed: () async => resultado = await ref
+            .read(aiConsentServiceProvider)
+            .ensureGranted(context, userId: 'usuario-1'),
+        child: const Text('ir'),
+      );
+    }),
+    ))));
+  await tester.tap(find.text('ir'));
+  await tester.pumpAndSettle();
+  if (pulsar != null) {
+    await tester.tap(find.text(pulsar));
+    await tester.pumpAndSettle();
+  }
+  return resultado;
+}
 
 void main() {
   setUp(resetDisclosureForTest);
@@ -104,108 +136,86 @@ void main() {
   });
 
   group('el consentimiento', () {
+    // Se prueba contra AiConsentService, que es la unica implementacion que
+    // queda. Hubo otra que guardaba en SharedPreferences y nada mas; se retiro
+    // el 30-ago-2026 porque una preferencia local no es prueba de la
+    // autorizacion, y en Colombia hay que poder demostrarla.
     setUp(() => SharedPreferences.setMockInitialValues({}));
 
+    const usuario = 'usuario-1';
+
     test('empieza pendiente', () async {
-      expect(await AiConsent.isPending(), isTrue);
+      expect(await AiConsentService().status(usuario), AiConsentStatus.unknown);
     });
 
-    test('deja de estarlo al aceptar, y guarda cuándo', () async {
-      await AiConsent.accept(sensitive: true);
-      expect(await AiConsent.isPending(), isFalse);
-      final estado = await AiConsent.current();
-      expect(estado['version'], kConsentVersion);
-      expect(estado['sensitive'], isTrue);
-      expect(DateTime.tryParse(estado['at']! as String), isNotNull);
-    });
-
-    test('vuelve a preguntar si sube la versión del texto', () async {
+    test('vuelve a preguntar si sube la version del texto', () async {
+      // Un consentimiento vale para lo que la persona leyo, no para siempre:
+      // la clave local lleva la version dentro.
       SharedPreferences.setMockInitialValues({
-        'ai_consent_version': kConsentVersion - 1,
+        'groq_ai_consent_una-version-vieja_$usuario': true,
       });
-      // Un consentimiento vale para lo que la persona leyo, no para siempre.
-      expect(await AiConsent.isPending(), isTrue);
+      expect(await AiConsentService().status(usuario), AiConsentStatus.unknown);
     });
 
-    test('revocar lo devuelve a pendiente', () async {
-      await AiConsent.accept(sensitive: true);
-      await AiConsent.revoke();
-      expect(await AiConsent.isPending(), isTrue);
+    test('una vez concedido, no se vuelve a preguntar', () async {
+      SharedPreferences.setMockInitialValues({
+        'groq_ai_consent_${aiConsentPolicyVersion}_$usuario': true,
+      });
+      expect(await AiConsentService().status(usuario), AiConsentStatus.granted);
     });
 
-    testWidgets('nombra al proveedor REAL y su país', (tester) async {
-      await tester.pumpWidget(_wrap(
-        Builder(builder: (context) {
-          return TextButton(
-            onPressed: () => ensureAiConsent(context),
-            child: const Text('ir'),
-          );
-        }),
-      ));
-      await tester.tap(find.text('ir'));
-      await tester.pumpAndSettle();
+    test('negarse queda registrado como negativa, no como pendiente', () async {
+      SharedPreferences.setMockInitialValues({
+        'groq_ai_consent_${aiConsentPolicyVersion}_$usuario': false,
+      });
+      expect(await AiConsentService().status(usuario), AiConsentStatus.declined);
+    });
+
+    test('cada usuario tiene el suyo', () async {
+      SharedPreferences.setMockInitialValues({
+        'groq_ai_consent_${aiConsentPolicyVersion}_$usuario': true,
+      });
+      expect(await AiConsentService().status('otro'), AiConsentStatus.unknown);
+    });
+
+    testWidgets('nombra al proveedor REAL y su pais', (tester) async {
+      await _abrirDialogo(tester);
 
       // Nombrar a Anthropic aqui seria decirle a la persona que sus datos van
       // a una empresa a la que no van. El proveedor es Groq.
-      expect(find.textContaining('Groq, Inc.'), findsWidgets);
-      expect(find.textContaining('Estados Unidos'), findsWidgets);
+      expect(find.textContaining(kAiProvider), findsWidgets);
+      expect(find.textContaining(kAiProviderCountry), findsWidgets);
       expect(find.textContaining('Anthropic'), findsNothing);
     });
 
-    testWidgets('ninguna casilla viene premarcada', (tester) async {
-      await tester.pumpWidget(_wrap(
-        Builder(builder: (context) {
-          return TextButton(
-            onPressed: () => ensureAiConsent(context),
-            child: const Text('ir'),
-          );
-        }),
-      ));
-      await tester.tap(find.text('ir'));
-      await tester.pumpAndSettle();
+    testWidgets('dice lo que SI sale y lo que NO', (tester) async {
+      await _abrirDialogo(tester);
 
-      // Marcar por defecto no es consentir: es la ausencia de una negativa.
-      expect(find.byIcon(Icons.check_box_outline_blank), findsNWidgets(2));
-      expect(find.byIcon(Icons.check_box), findsNothing);
-
-      final aceptar = tester.widget<FilledButton>(
-        find.widgetWithText(FilledButton, 'Acepto'),
-      );
-      expect(aceptar.onPressed, isNull);
+      // `oracle_context.py:118` manda display_name. Callarlo seria dejar que
+      // alguien escriba su nombre real creyendo que no sale de aqui.
+      expect(find.textContaining('nombre visible'), findsWidgets);
+      expect(find.textContaining('grimorio'), findsWidgets);
     });
 
-    testWidgets('avisa de que no está obligado a dar el dato sensible',
-        (tester) async {
-      await tester.pumpWidget(_wrap(
-        Builder(builder: (context) {
-          return TextButton(
-            onPressed: () => ensureAiConsent(context),
-            child: const Text('ir'),
-          );
-        }),
-      ));
-      await tester.tap(find.text('ir'));
-      await tester.pumpAndSettle();
+    testWidgets('avisa de que no esta obligado', (tester) async {
+      await _abrirDialogo(tester);
 
-      // Deber de informacion del art. 6 de la Ley 1581 de 2012.
+      // Deber de informacion del art. 6 de la Ley 1581 de 2012: hay que
+      // decirle que puede negarse, no solo dejarle negarse.
       expect(find.textContaining('No estás obligado'), findsOneWidget);
     });
 
-    testWidgets('cerrar sin aceptar devuelve false', (tester) async {
-      bool? resultado;
-      await tester.pumpWidget(_wrap(
-        Builder(builder: (context) {
-          return TextButton(
-            onPressed: () async => resultado = await ensureAiConsent(context),
-            child: const Text('ir'),
-          );
-        }),
-      ));
-      await tester.tap(find.text('ir'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Ahora no'));
-      await tester.pumpAndSettle();
+    testWidgets('no se puede aceptar por omision', (tester) async {
+      await _abrirDialogo(tester);
 
+      // Cerrar tocando fuera daria un consentimiento que nadie leyo.
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+      expect(find.text('Acepto'), findsOneWidget);
+    });
+
+    testWidgets('decir "Ahora no" devuelve false', (tester) async {
+      final resultado = await _abrirDialogo(tester, pulsar: 'Ahora no');
       expect(resultado, isFalse);
     });
   });

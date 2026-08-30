@@ -19,6 +19,7 @@ class OnboardingData {
   final String? resolvedLat;
   final String? resolvedLon;
   final String? resolvedTimezone;
+  final bool? sensitiveDataConsent;
   const OnboardingData({
     this.displayName,
     this.birthDate,
@@ -29,6 +30,7 @@ class OnboardingData {
     this.resolvedLat,
     this.resolvedLon,
     this.resolvedTimezone,
+    this.sensitiveDataConsent,
   });
 
   bool get hasResolvedLocation =>
@@ -44,6 +46,7 @@ class OnboardingData {
     String? resolvedLat,
     String? resolvedLon,
     String? resolvedTimezone,
+    bool? sensitiveDataConsent,
   }) => OnboardingData(
     displayName: displayName ?? this.displayName,
     birthDate: birthDate ?? this.birthDate,
@@ -54,6 +57,7 @@ class OnboardingData {
     resolvedLat: resolvedLat ?? this.resolvedLat,
     resolvedLon: resolvedLon ?? this.resolvedLon,
     resolvedTimezone: resolvedTimezone ?? this.resolvedTimezone,
+    sensitiveDataConsent: sensitiveDataConsent ?? this.sensitiveDataConsent,
   );
 }
 
@@ -62,7 +66,7 @@ class OnboardingState {
   final OnboardingData data;
   const OnboardingState({required this.step, required this.data});
   bool get isFirst => step == 0;
-  bool get isLast => step == 4;
+  bool get isLast => step == 5;
 
   static const initial = OnboardingState(step: 0, data: OnboardingData());
 }
@@ -150,8 +154,15 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
     );
   }
 
+  void setSensitiveDataConsent(bool granted) {
+    state = OnboardingState(
+      step: state.step,
+      data: state.data.copyWith(sensitiveDataConsent: granted),
+    );
+  }
+
   void next() {
-    if (state.step < 4) {
+    if (state.step < 5) {
       state = OnboardingState(step: state.step + 1, data: state.data);
     }
   }
@@ -164,6 +175,12 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
 
   Future<void> finish() async {
     final d = state.data;
+
+    if (d.sensitiveDataConsent != true) {
+      throw StateError(
+        'No se pueden persistir datos sensibles sin autorizacion explicita.',
+      );
+    }
 
     // FAIL LOUD: sin lugar resuelto y confirmado, NO se persiste nada de
     // ubicación. Nunca un default silencioso (ese fue el bug de Bogotá
@@ -191,6 +208,14 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
       'birth_timezone': d.resolvedTimezone,
     };
 
+    await _complete(payload);
+  }
+
+  Future<void> finishWithoutSensitiveData() async {
+    await _complete({'onboarding_completed': true});
+  }
+
+  Future<void> _complete(Map<String, dynamic> payload) async {
     // A diferencia del resolve (que debe fallar visible), persistir el perfil
     // tolera fallo de red: el flag local permite continuar y el perfil se
     // reintenta en el próximo arranque autenticado. Los datos que se

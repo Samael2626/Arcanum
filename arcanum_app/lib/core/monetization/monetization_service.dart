@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
@@ -29,10 +31,21 @@ class SubscriptionState {
 class ProductIds {
   static const premiumMonthly = 'arcanum_premium_monthly';
   static const premiumAnnual = 'arcanum_premium_annual';
+
+  /// Consumibles a la venta. La unidad es una Lectura del Umbral = 1 credito.
+  static const credit1 = 'arcanum_credit_1';
+  static const pack3 = 'arcanum_pack_3';
+
+  /// Retirados de la tienda. El backend los sigue honrando para eventos
+  /// tardios y reembolsos de compras viejas, pero no se ofrecen ya.
+  @Deprecated('Retirado: 10 creditos por USD 1,99 devalua la unidad')
   static const credits10 = 'arcanum_credits_10';
+  @Deprecated('Retirado: pack de 50 fuera del catalogo de beta')
   static const credits50 = 'arcanum_credits_50';
-  static const tarot5 = 'arcanum_tarot_5';
+  @Deprecated('Retirado: sustituido por pack3')
   static const bundleCard = 'arcanum_bundle_explora_carta';
+
+  static const enVenta = <String>[credit1, pack3];
 }
 
 /// IDs de entitlements en RevenueCat.
@@ -48,10 +61,8 @@ class MonetizationService {
   /// Inicializar RevenueCat con la API key de RevenueCat.
   /// Llamar en main() antes de runApp().
   static Future<void> initialize(String apiKey) async {
-    await Purchases.setLogLevel(LogLevel.debug);
-    await Purchases.configure(
-      PurchasesConfiguration(apiKey),
-    );
+    await Purchases.setLogLevel(kDebugMode ? LogLevel.debug : LogLevel.warn);
+    await Purchases.configure(PurchasesConfiguration(apiKey));
   }
 
   /// Identificar al usuario en RevenueCat después del login.
@@ -70,7 +81,7 @@ class MonetizationService {
   Future<SubscriptionState> getCurrentSubscription() async {
     try {
       final info = await Purchases.getCustomerInfo();
-      return _parseSubscription(info);
+      return parseSubscription(info);
     } catch (_) {
       return const SubscriptionState();
     }
@@ -79,7 +90,7 @@ class MonetizationService {
   /// Escuchar cambios en la suscripción.
   void startListening() {
     Purchases.addCustomerInfoUpdateListener((info) {
-      _controller.add(_parseSubscription(info));
+      _controller.add(parseSubscription(info));
     });
   }
 
@@ -95,6 +106,23 @@ class MonetizationService {
     } catch (_) {
       return null;
     }
+  }
+
+  /// Precios de tienda por SKU, ya localizados por Play/App Store.
+  ///
+  /// Nunca se escribe un precio a mano en la UI: el que ve el usuario depende
+  /// de su pais, su moneda y los impuestos que aplique la tienda, y un numero
+  /// fijo en el codigo miente en cuanto sale de Estados Unidos. Ambas tiendas
+  /// rechazan por eso.
+  ///
+  /// Devuelve un mapa vacio si las ofertas no cargan; quien lo consuma debe
+  /// tratar la ausencia de precio como "no vendible todavia", no rellenarla.
+  Future<Map<String, String>> storePrices() async {
+    final offerings = await getOfferings();
+    final paquetes = offerings?.current?.availablePackages ?? const <Package>[];
+    return {
+      for (final p in paquetes) p.storeProduct.identifier: p.storeProduct.priceString,
+    };
   }
 
   /// Comprar una suscripción.
@@ -115,10 +143,16 @@ class MonetizationService {
       final all = offerings.current?.availablePackages ?? [];
       final pkg = all.firstWhere(
         (p) => p.storeProduct.identifier == productId,
-        orElse: () => all.first,
+        orElse: () => throw StateError('Product not found: $productId'),
       );
       await Purchases.purchasePackage(pkg);
       return true;
+    } on PlatformException catch (e) {
+      if (PurchasesErrorHelper.getErrorCode(e) ==
+          PurchasesErrorCode.purchaseCancelledError) {
+        return false;
+      }
+      return false;
     } catch (_) {
       return false;
     }
@@ -136,7 +170,13 @@ class MonetizationService {
 
   // --- Private ---
 
-  SubscriptionState _parseSubscription(CustomerInfo info) {
+  /// Traduce lo que devuelve RevenueCat a estado de suscripcion.
+  ///
+  /// Publico a proposito: es donde vive la correccion de `restorePurchases` y
+  /// de la sincronizacion, y es lo unico de esta clase que se puede probar sin
+  /// la tienda delante.
+  @visibleForTesting
+  SubscriptionState parseSubscription(CustomerInfo info) {
     final active = info.entitlements.active;
     final isPremium = active.containsKey(EntitlementIds.premium);
 
@@ -176,8 +216,7 @@ final monetizationServiceProvider = Provider<MonetizationService>((ref) {
   return service;
 });
 
-final subscriptionProvider =
-    StreamProvider<SubscriptionState>((ref) async* {
+final subscriptionProvider = StreamProvider<SubscriptionState>((ref) async* {
   final service = ref.watch(monetizationServiceProvider);
   yield await service.getCurrentSubscription();
   yield* service.subscriptionStream;
@@ -188,3 +227,36 @@ final isPremiumProvider = Provider<bool>((ref) {
   final sub = ref.watch(subscriptionProvider);
   return sub.value?.isPremium ?? false;
 });
+
+/// Precios localizados de la tienda, cacheados por Riverpod.
+final storePricesProvider = FutureProvider<Map<String, String>>((ref) async {
+  return ref.watch(monetizationServiceProvider).storePrices();
+});
+
+/// Ahorro real del plan anual frente a pagar doce meses sueltos.
+///
+/// Se calcula con los importes de la tienda, no con un porcentaje escrito a
+/// mano: el numero fijo era cierto solo en dolares y solo hasta el siguiente
+/// cambio de precio en la consola. Devuelve `null` si falta alguno de los dos
+/// planes o si el anual no sale a cuenta, y en ese caso no se anuncia nada.
+final descuentoAnualProvider = FutureProvider<String?>((ref) async {
+  final offerings = await ref.watch(monetizationServiceProvider).getOfferings();
+  final actual = offerings?.current;
+  final mensual = actual?.monthly?.storeProduct.price;
+  final anual = actual?.annual?.storeProduct.price;
+  if (mensual == null || anual == null) return null;
+
+  return formatAhorroAnual(mensual: mensual, anual: anual);
+});
+
+/// Etiqueta de ahorro del plan anual, o `null` si no hay nada que presumir.
+///
+/// Separada del provider para poder probarla: una promesa de descuento que se
+/// pasa de optimista es publicidad enganosa en las dos tiendas.
+@visibleForTesting
+String? formatAhorroAnual({required double mensual, required double anual}) {
+  if (mensual <= 0 || anual <= 0) return null;
+  final ahorro = (1 - anual / (mensual * 12)) * 100;
+  if (ahorro < 1) return null;
+  return 'AHORRA ${ahorro.round()}%';
+}

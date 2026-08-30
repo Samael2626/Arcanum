@@ -435,6 +435,51 @@ class ArcanumApi {
   }
 
   Future<void> deletePassage(String id) => _dio.delete('/reading/passages/$id');
+
+  // ── Denuncia de contenido generado por IA ───────────────────────────────
+  //
+  // Requisito literal de la politica AI-Generated Content de Play: poder
+  // denunciar sin salir de la app.
+
+  Future<void> createContentReport({
+    required String source,
+    required String contentRef,
+    required String reason,
+    String? note,
+  }) async {
+    await _dio.post(
+      '/reports',
+      data: {
+        'source': source,
+        'content_ref': contentRef,
+        'reason': reason,
+        if (note != null && note.isNotEmpty) 'note': note,
+      },
+    );
+  }
+
+  // ── Consentimientos ─────────────────────────────────────────────────────
+  //
+  // Se persisten en el servidor, no solo en el dispositivo: en Colombia la
+  // autorizacion hay que poder demostrarla. Ver core/privacy/consent_policy.dart.
+
+  Future<List<Map<String, dynamic>>> userConsents() async =>
+      (await _dio.get('/consents')).data.cast<Map<String, dynamic>>();
+
+  Future<Map<String, dynamic>> recordConsent({
+    required String kind,
+    required String policyVersion,
+    required bool granted,
+  }) async =>
+      (await _dio.post(
+            '/consents',
+            data: {
+              'kind': kind,
+              'policy_version': policyVersion,
+              'granted': granted,
+            },
+          )).data
+          as Map<String, dynamic>;
 }
 
 final arcanumApiProvider = Provider((ref) => ArcanumApi(ref.read(dioProvider)));

@@ -37,15 +37,16 @@ if hasattr(sys.stdout, "reconfigure"):
 # Para poder importar `app.*` en el modo --apply, como hace seed_library.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from app.core.content import load_dataset  # noqa: E402
+
+# Obra completa traducida: sigue en local, no esta versionada en ningun repo.
 DATA_DIR = Path(__file__).parent / "library_data"
 DEFAULT_API = "https://arcanum-code-production.up.railway.app"
 
 
 def load_bridge() -> dict[str, str]:
-    data = json.loads(
-        (DATA_DIR / "culpeper_materia_bridge.json").read_text(encoding="utf-8")
-    )
-    return data["map"]
+    # El puente es catalogo editorial: vive en Arcanum-datos, no en este repo.
+    return load_dataset("library/culpeper_materia_bridge")["map"]
 
 
 def load_culpeper_planets() -> dict[str, list[str]]:

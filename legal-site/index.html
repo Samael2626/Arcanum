@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ARCANUM — grimorio cifrado, oráculo y calendario astral. Una herramienta real para práctica mágica.">
+  <title>ARCANUM</title>
+  <link rel="stylesheet" href="assets/legal.css">
+  <link rel="stylesheet" href="assets/home.css">
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">ARCANUM · CUSTODIA DEL UMBRAL</div>
+    <h1>Una herramienta real para la práctica mágica.</h1>
+    <p class="lead">No es un horóscopo. No es un widget estético. Grimorio cifrado, oráculo y calendario astral en un solo lugar.</p>
+    <nav>
+      <a class="button primary" href="#modulos">Ver módulos</a>
+      <a class="button" href="privacy/">Privacidad</a>
+      <a class="button" href="terms/">Términos</a>
+      <a class="button" href="account-deletion/">Eliminar cuenta</a>
+    </nav>
+  </header>
+
+  <section id="modulos">
+    <h2>Módulos</h2>
+    <div class="grid">
+      <article class="card">
+        <span class="tag">P0</span>
+        <h3>Grimorio</h3>
+        <p>Tus anotaciones cifradas en AES-256. La clave nunca sale del dispositivo.</p>
+      </article>
+      <article class="card">
+        <span class="tag">P0</span>
+        <h3>Oracle</h3>
+        <p>Consulta guiada por un oráculo entrenado en Hermetismo, Cábala y Tarot.</p>
+      </article>
+      <article class="card">
+        <span class="tag">P1</span>
+        <h3>Bitácora</h3>
+        <p>Registro de trabajo mágico con fecha, hora y fase lunar.</p>
+      </article>
+      <article class="card">
+        <span class="tag">P1</span>
+        <h3>Calendario astral</h3>
+        <p>Fases lunares y aspectos planetarios calculados con efemérides reales.</p>
+      </article>
+      <article class="card">
+        <span class="tag">P2</span>
+        <h3>Generador de sigilos</h3>
+        <p>Método de Austin Osman Spare: intención, reducción, composición, carga.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="oracle-preview">
+    <h2>Pregúntale al Oracle</h2>
+    <p>Vista previa. En la app responde con contexto simbólico completo, no frases sueltas.</p>
+    <form id="oracleForm" class="oracle-form">
+      <input type="text" id="oracleInput" placeholder="¿Qué necesito ver ahora?" required>
+      <button type="submit" class="button primary">Consultar</button>
+    </form>
+    <p id="oracleResponse" class="oracle-response"></p>
+  </section>
+
+  <section class="notice">
+    <h2>Contacto</h2>
+    <p>Dudas o soporte: <a href="mailto:arcanum.magick.app@gmail.com">arcanum.magick.app@gmail.com</a></p>
+  </section>
+
+  <footer>© 2026 ARCANUM. Práctica mágica premium.</footer>
+</main>
+<script src="assets/home.js"></script>
+</body>
+</html>

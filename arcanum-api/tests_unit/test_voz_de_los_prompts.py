@@ -23,7 +23,7 @@ import re
 
 import pytest
 
-from app.services import horoscope_prompt, oracle_prompt
+from app.services import horoscope_prompt
 
 # Vocabulario que el propio horoscope_prompt declara fuera de registro. No es
 # una lista de palabras feas: es la frontera entre la tradicion y la revista.
@@ -40,8 +40,28 @@ FUERA_DE_REGISTRO = [
     "alineacion cosmica",
 ]
 
+def _voz_del_oraculo():
+    """El texto del Oraculo ya no vive en este repo: esta en el catalogo.
+
+    Y por eso hay que tener cuidado aqui. Sin ARCANUM_DATA_DIR,
+    `get_oracle_system_prompt()` devuelve el respaldo de desarrollo, que son
+    tres lineas y no contiene ninguna de las palabras vigiladas: el test pasaria
+    en verde sin haber mirado el prompt de verdad. Un guardia que aprueba
+    porque no encuentra nada que revisar es peor que no tenerlo.
+    """
+    from app.core.content import ContentError, load_text
+    from app.core.config import settings
+    try:
+        return load_text(settings.ORACLE_PROMPT_PATH)
+    except ContentError as exc:
+        pytest.skip(
+            f"catalogo no montado ({exc}); define ARCANUM_DATA_DIR para vigilar "
+            "la voz del Oraculo"
+        )
+
+
 PROMPTS = {
-    "oracle_prompt.ORACLE_SYSTEM_PROMPT": oracle_prompt.ORACLE_SYSTEM_PROMPT,
+    "catalogo/prompts/oracle_system.txt": _voz_del_oraculo(),
     "horoscope_prompt.HOROSCOPE_SYSTEM_PROMPT":
         horoscope_prompt.HOROSCOPE_SYSTEM_PROMPT,
 }
@@ -98,7 +118,7 @@ def test_el_veto_sigue_escrito_en_el_prompt_del_horoscopo():
 
 def test_sympatheia_no_se_glosa_como_energia():
     """El caso concreto que estaba mal, fijado para que no vuelva."""
-    plano = _sin_acentos(oracle_prompt.ORACLE_SYSTEM_PROMPT)
+    plano = _sin_acentos(PROMPTS["catalogo/prompts/oracle_system.txt"])
     assert "sympatheia" in plano, "el termino sigue siendo parte de la doctrina"
     ventana = plano.split("sympatheia", 1)[1][:120]
     assert "energetic" not in ventana, (
@@ -109,7 +129,7 @@ def test_sympatheia_no_se_glosa_como_energia():
 
 def test_virtud_sigue_siendo_el_termino_de_la_casa():
     """Lo que sustituyo a 'energia' tiene que estar de verdad, no ser un hueco."""
-    plano = _sin_acentos(oracle_prompt.ORACLE_SYSTEM_PROMPT)
+    plano = _sin_acentos(PROMPTS["catalogo/prompts/oracle_system.txt"])
     assert len(re.findall(r"\bvirtud", plano)) >= 3, (
         "si 'energia' se quito sin poner 'virtud' en su lugar, el prompt perdio "
         "el concepto en vez de nombrarlo bien"

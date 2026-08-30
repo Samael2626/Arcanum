@@ -19,7 +19,25 @@ from app.models.user import User
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-_CONSUMABLE_CREDITS = {"arcanum_credits_10": 10, "arcanum_credits_50": 50, "arcanum_bundle_explora_carta": 5}
+# SKUs a la venta. La unidad es una Lectura del Umbral completa = 1 credito,
+# asi que el catalogo es "1 + 3 + Mistico": suficiente para medir primera
+# compra, recompra y migracion a suscripcion sin ensuciar los datos.
+_CONSUMABLE_EN_VENTA = {
+    "arcanum_credit_1": 1,
+    "arcanum_pack_3": 3,
+}
+
+# Retirados de la tienda, NO del mapa. Un evento de estos puede llegar tarde
+# (reintento del webhook, reembolso de una compra vieja) y sin su equivalencia
+# el usuario se queda sin los creditos que pago. Se dejan de vender; se siguen
+# honrando.
+_CONSUMABLE_RETIRADOS = {
+    "arcanum_credits_10": 10,
+    "arcanum_credits_50": 50,
+    "arcanum_bundle_explora_carta": 5,
+}
+
+_CONSUMABLE_CREDITS = {**_CONSUMABLE_EN_VENTA, **_CONSUMABLE_RETIRADOS}
 _SUBSCRIPTION_PRODUCTS = {"arcanum_premium_monthly", "arcanum_premium_annual"}
 _PREMIUM_EVENTS = {"INITIAL_PURCHASE", "RENEWAL", "PRODUCT_CHANGE", "UNCANCELLATION"}
 _REVOKE_EVENTS = {"EXPIRATION"}
