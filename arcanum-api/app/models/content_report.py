@@ -9,9 +9,9 @@ from app.db.session import Base
 class ContentReport(Base):
     __tablename__ = "content_reports"
     __table_args__ = (
-        CheckConstraint("source IN ('oracle', 'tarot', 'lectura')", name="ck_content_reports_source"),
+        CheckConstraint("source IN ('oracle', 'tarot', 'lectura', 'horoscopo')", name="ck_content_reports_source"),
         CheckConstraint(
-            "reason IN ('ofensiva', 'peligrosa', 'sin_sentido')",
+            "reason IN ('ofensiva', 'peligrosa', 'salud', 'incorrecto', 'sin_sentido', 'otro')",
             name="ck_content_reports_reason",
         ),
     )

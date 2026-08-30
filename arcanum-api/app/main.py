@@ -79,8 +79,10 @@ app.include_router(library.router, prefix="/library", tags=["library"])
 # Separado de /library a proposito: alli vive la obra publica, aqui la relacion
 # privada del usuario con lo que lee. Todo /reading exige autenticacion.
 app.include_router(reading.router, prefix="/reading", tags=["reading"])
-app.include_router(reports.router, prefix="/reports", tags=["reports"])
 app.include_router(revenuecat.router, prefix="/webhooks", tags=["webhooks"])
+# reports y consents traen su propio prefix y sus tags en el APIRouter, asi que
+# se montan a secas. Al integrar quedaron montados DOS veces (con prefix aqui y
+# sin el), lo que publicaba las mismas rutas en /reports y en /reports/reports.
 app.include_router(reports.router)
 app.include_router(consents.router)
 

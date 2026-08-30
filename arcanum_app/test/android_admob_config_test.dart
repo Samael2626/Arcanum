@@ -35,12 +35,19 @@ void main() {
       expect(gradle, contains("System.getenv(\"ADMOB_APP_ID\")"));
       expect(gradle, contains(_testAppId),
           reason: 'debug debe usar el App ID de prueba de Google');
-      // Falla cerrado: un release sin ADMOB_APP_ID no debe producir APK.
-      expect(gradle, contains('ADMOB_APP_ID ausente'));
+      // Falla cerrado, pero solo cuando el build LLEVA anuncios.
+      //
+      // Antes abortaba cualquier release sin ADMOB_APP_ID. El binario de
+      // lanzamiento sale sin anuncios (ADS_ENABLED es false por defecto y
+      // main.dart solo inicializa MobileAds dentro de ese if), asi que el
+      // guardia bloqueaba el envio por una credencial que ese APK no lee.
+      expect(gradle, contains('ADMOB_APP_ID ausente con ADS_ENABLED=true'));
+      expect(gradle, contains('System.getenv("ADS_ENABLED")'));
       expect(
-        RegExp(r'releaseRequested\s*&&\s*!admobApplicationId').hasMatch(gradle),
+        RegExp(r'releaseRequested\s*&&\s*adsEnabled\s*&&\s*!admobApplicationId')
+            .hasMatch(gradle),
         isTrue,
-        reason: 'el build release debe abortar si falta ADMOB_APP_ID',
+        reason: 'con anuncios activos, el release sin ADMOB_APP_ID debe abortar',
       );
       // El unico ca-app-pub del repositorio es el de prueba.
       final ids = RegExp(r'ca-app-pub-[0-9]+~[0-9]+')

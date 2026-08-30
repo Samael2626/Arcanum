@@ -209,19 +209,27 @@ class ArcanumApi {
   /// no puede ser un enlace de correo. Se manda un fragmento acotado y nunca
   /// el texto entero: un reporte no es excusa para volcar la lectura de
   /// alguien en un sitio que no esta pensado para guardarla.
+  /// Denuncia de contenido de IA. Ruta unica: `POST /reports`.
+  ///
+  /// Antes iba a `/reports/content`, que solo dejaba una linea en el log de la
+  /// aplicacion. Los logs rotan: eso servia para enterarse, no para llevar el
+  /// historial que la politica AI-Generated Content de Play da por hecho. Ahora
+  /// las dos vias de denuncia escriben en `content_reports`.
+  ///
+  /// No se manda el texto denunciado. El servidor guarda la referencia y la
+  /// pantalla; un reporte no es excusa para persistir en claro la lectura de
+  /// alguien.
   Future<void> reportContent({
     required String surface,
     required String reason,
     String? excerpt,
     String? note,
-  }) async {
-    await _dio.post('/reports/content', data: {
-      'surface': surface,
-      'reason': reason,
-      if (excerpt != null) 'excerpt': excerpt.substring(0, excerpt.length.clamp(0, 400)),
-      if (note != null && note.isNotEmpty) 'note': note,
-    });
-  }
+  }) => createContentReport(
+        source: surface,
+        contentRef: '',
+        reason: reason,
+        note: note,
+      );
 
   /// Tira de tarot. spread: 'three_card' | 'celtic_cross'. Requiere auth.
   /// Devuelve la sesión guardada (cartas en data['cards_drawn']['cards']).
