@@ -21,6 +21,17 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Los precios vienen de Play/App Store ya localizados. Si no cargan, el
+    // SKU no se muestra ni se puede tocar: mejor una via menos que un precio
+    // inventado, que ademas es motivo de rechazo en ambas tiendas.
+    final precios =
+        ref.watch(storePricesProvider).value ?? const <String, String>{};
+    final hayConsumibles = ProductIds.enVenta.any(precios.containsKey);
+    // El ahorro se calcula con los importes reales de la tienda. Escrito a
+    // mano ("AHORRA 42%") era una afirmacion sobre precios en dolares que deja
+    // de ser cierta en cuanto cambia la moneda o el precio en la consola.
+    final ahorroAnual = ref.watch(descuentoAnualProvider).value;
+
     return Scaffold(
       backgroundColor: ArcanumColors.background,
       body: SafeArea(
@@ -58,7 +69,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 // ── Tier 1: Gratis ──
                 _TierCard(
                   title: 'Explorador',
-                  subtitle: 'Siempre免费',
+                  subtitle: 'Siempre gratis',
                   price: '',
                   features: const [
                     'Carta natal y tránsitos',
@@ -78,16 +89,18 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   title: 'Prácticante',
                   subtitle: 'Compra lo que necesites',
                   price: '',
-                  features: const [
+                  features: [
                     'Todo lo del Explorador',
-                    '10 créditos oráculo — \$1.99',
-                    '50 créditos oráculo — \$7.99',
-                    'Pack Tirada Extra — \$4.99',
+                    if (precios[ProductIds.credit1] != null)
+                      'Lectura del Umbral — ${precios[ProductIds.credit1]}',
+                    if (precios[ProductIds.pack3] != null)
+                      'Pack de 3 lecturas — ${precios[ProductIds.pack3]}',
+                    'Ningún crédito expira',
                     'Sin compromiso mensual',
                   ],
                   accent: ArcanumColors.goldMuted,
                   selected: false,
-                  onTap: _showConsumablesSheet,
+                  onTap: hayConsumibles ? _showConsumablesSheet : null,
                 ),
                 const SizedBox(height: 14),
 
@@ -95,9 +108,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 _TierCard(
                   title: 'Místico',
                   subtitle: 'La experiencia completa',
-                  price: '\$59.99/año',
+                  price: precios[ProductIds.premiumAnnual] ?? '',
                   features: const [
-                    'Todo sin límites',
+                    'Más lecturas diarias según tu plan',
                     'Sin anuncios',
                     'Interpretaciones profundas',
                     'Modo Aprender completo',
@@ -105,17 +118,20 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   ],
                   accent: ArcanumColors.gold,
                   selected: true,
-                  onTap: _purchaseAnnual,
-                  badge: 'AHORRA 42%',
+                  onTap: precios[ProductIds.premiumAnnual] == null
+                      ? null
+                      : _purchaseAnnual,
+                  badge: ahorroAnual,
                 ),
                 const SizedBox(height: 10),
 
                 // Monthly option
+                if (precios[ProductIds.premiumMonthly] != null)
                 Center(
                   child: TextButton(
                     onPressed: _loading ? null : _purchaseMonthly,
                     child: Text(
-                      'O \$7.99/mes',
+                      'O ${precios[ProductIds.premiumMonthly]}/mes',
                       style: ArcanumText.body(
                         14,
                         color: ArcanumColors.goldMuted,
@@ -272,7 +288,7 @@ class _TierCard extends StatelessWidget {
   final List<String> features;
   final Color accent;
   final bool selected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final String? badge;
 
   const _TierCard({
@@ -282,7 +298,7 @@ class _TierCard extends StatelessWidget {
     required this.features,
     required this.accent,
     required this.selected,
-    required this.onTap,
+    this.onTap,
     this.badge,
   });
 
@@ -407,33 +423,29 @@ class _TierCard extends StatelessWidget {
 
 // ── Bottom sheet de consumibles ────────────────────────────────────────────
 
-class _ConsumiblesSheet extends StatelessWidget {
+class _ConsumiblesSheet extends ConsumerWidget {
   final BuildContext parentContext;
+
   const _ConsumiblesSheet({required this.parentContext});
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final precios =
+        ref.watch(storePricesProvider).value ?? const <String, String>{};
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(2),
-              color: ArcanumColors.ivoryMuted.withValues(alpha: 0.4),
-            ),
-          ),
-          const SizedBox(height: 20),
           Text(
             'Créditos y packs',
             style: ArcanumText.heading(22),
           ),
           const SizedBox(height: 6),
           Text(
-            'Compra solo lo que necesitas',
+            'Compra solo lo que necesitas. Ningún crédito expira.',
             style: ArcanumText.body(
               14,
               color: ArcanumColors.ivoryMuted,
@@ -441,42 +453,35 @@ class _ConsumiblesSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          _ConsumableTile(
-            title: '10 créditos oráculo',
-            price: '\$1.99',
-            description: 'Para consultas puntuales',
-            onTap: () async {
-              Navigator.of(context).pop();
-              final service = ProviderScope.containerOf(parentContext)
-                  .read(monetizationServiceProvider);
-              await service.purchaseProduct(ProductIds.credits10);
-            },
-          ),
-          _ConsumableTile(
-            title: '50 créditos oráculo',
-            price: '\$7.99',
-            description: 'Igual a 1 mes premium',
-            onTap: () async {
-              Navigator.of(context).pop();
-              final service = ProviderScope.containerOf(parentContext)
-                  .read(monetizationServiceProvider);
-              await service.purchaseProduct(ProductIds.credits50);
-            },
-          ),
-          _ConsumableTile(
-            title: 'Explora tu carta',
-            price: '\$4.99',
-            description: 'Pack: 5 créditos + 3 tiradas extra',
-            onTap: () async {
-              Navigator.of(context).pop();
-              final service = ProviderScope.containerOf(parentContext)
-                  .read(monetizationServiceProvider);
-              await service.purchaseProduct(ProductIds.bundleCard);
-            },
-          ),
+          if (precios[ProductIds.credit1] != null)
+            _ConsumableTile(
+              title: 'Lectura del Umbral',
+              price: precios[ProductIds.credit1]!,
+              description: '1 crédito — una lectura completa',
+              onTap: () => _comprar(context, ProductIds.credit1),
+            ),
+          if (precios[ProductIds.pack3] != null)
+            _ConsumableTile(
+              title: 'Pack de 3 lecturas',
+              price: precios[ProductIds.pack3]!,
+              description: '3 créditos, más barato que sueltos',
+              onTap: () => _comprar(context, ProductIds.pack3),
+            ),
+          if (!ProductIds.enVenta.any(precios.containsKey))
+            Text(
+              'No pudimos consultar la tienda. Inténtalo de nuevo en un momento.',
+              style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
+            ),
         ],
       ),
     );
+  }
+
+  Future<void> _comprar(BuildContext context, String productId) async {
+    Navigator.of(context).pop();
+    final service = ProviderScope.containerOf(parentContext)
+        .read(monetizationServiceProvider);
+    await service.purchaseProduct(productId);
   }
 }
 

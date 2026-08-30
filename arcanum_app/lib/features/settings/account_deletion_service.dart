@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../../core/auth/auth_controller.dart';
 import '../../core/crypto/grimoire_crypto.dart';
@@ -16,6 +17,13 @@ class DefaultAccountDeletionService implements AccountDeletionService {
 
   @override
   Future<void> deleteAccount() async {
+    // Logout de RevenueCat antes de borrar la cuenta para orfanar la identidad RC.
+    try {
+      await Purchases.logOut();
+    } catch (_) {
+      // Best-effort: si falla, el backend borrará el customer vía API.
+    }
+
     await _ref.read(authProvider.notifier).deleteAccount();
     try {
       await Future.wait([

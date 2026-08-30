@@ -13,6 +13,7 @@ import '../../arte/materia_lore.dart';
 import '../library_messages.dart';
 import '../data/library_repository.dart';
 import '../domain/library_models.dart';
+import '../../../shared/widgets/content_report_sheet.dart';
 
 /// El lector: un capítulo de una obra, en español o en su original.
 ///
@@ -414,6 +415,7 @@ class _Passage extends ConsumerStatefulWidget {
 class _PassageState extends ConsumerState<_Passage> {
   bool _asking = false;
   String? _reply;
+  String? _contentRef;
   String? _error;
   String? _idempotencyKey;
 
@@ -430,6 +432,7 @@ class _PassageState extends ConsumerState<_Passage> {
       _asking = true;
       _error = null;
       _reply = null;
+      _contentRef = null;
     });
     try {
       final response = await ref.read(arcanumApiProvider).oracleIa(
@@ -438,7 +441,10 @@ class _PassageState extends ConsumerState<_Passage> {
       );
       if (!mounted) return;
       _idempotencyKey = null;
-      setState(() => _reply = assistantReply(response));
+      setState(() {
+        _reply = assistantReply(response);
+        _contentRef = response['id'] as String?;
+      });
     } catch (error) {
       if (isCreditsRequired(error)) await _openCreditsPaywall();
       if (!mounted) return;
@@ -533,6 +539,16 @@ class _PassageState extends ConsumerState<_Passage> {
                 ),
               ),
             if (_reply != null) _OracleReply(text: _reply!),
+            // Play exige poder denunciar contenido generado por IA alli donde
+            // se muestra. Esta pantalla lo mostraba sin via de reporte.
+            if (_contentRef != null)
+              Center(
+                child: ContentReportButton(
+                  api: ref.read(arcanumApiProvider),
+                  source: 'lectura',
+                  contentRef: _contentRef!,
+                ),
+              ),
             const SizedBox(height: 6),
           ],
         ],

@@ -153,6 +153,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ],
                       ),
               ),
+
               if (auth.isAuthenticated) ...[
                 const SizedBox(height: 20),
                 const AiConsentSettingsCard(),
@@ -198,6 +199,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ),
               ],
+              const SizedBox(height: 20),
+              ArcanumCard(
+                intensity: 0.35,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SectionLabel('PRIVACIDAD'),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Consulta cómo tratamos tus datos y cómo cerrar el umbral.',
+                      style: ArcanumText.body(16),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: () => context.push('/privacy'),
+                      icon: const Icon(Icons.privacy_tip_outlined),
+                      label: const Text('Privacidad y datos'),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

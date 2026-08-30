@@ -6,11 +6,13 @@ import '../../core/theme/arcanum_theme.dart';
 class GoldButton extends StatelessWidget {
   final String label;
   final bool loading;
-  final VoidCallback onPressed;
+  /// Nulo deshabilita el boton: se usa cuando la accion aun no es posible
+  /// (por ejemplo, un precio de tienda que todavia no ha cargado).
+  final VoidCallback? onPressed;
   const GoldButton({
     super.key,
     required this.label,
-    required this.onPressed,
+    this.onPressed,
     this.loading = false,
   });
 

@@ -4,25 +4,32 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-/// IDs de ad units — reemplazar con los reales de AdMob.
+import '../config/release_config.dart';
+
 class AdUnitIds {
-  // Android (test IDs para desarrollo)
-  static const rewardedAndroid = 'ca-app-pub-3940256099942544/5224354917';
-  static const interstitialAndroid = 'ca-app-pub-3940256099942544/1033173712';
+  static const _rewardedAndroidTest = 'ca-app-pub-3940256099942544/5224354917';
+  static const _interstitialAndroidTest =
+      'ca-app-pub-3940256099942544/1033173712';
+  static const _rewardedIosTest = 'ca-app-pub-3940256099942544/1712485313';
+  static const _interstitialIosTest = 'ca-app-pub-3940256099942544/4411468910';
 
-  // iOS (test IDs para desarrollo)
-  static const rewardedIos = 'ca-app-pub-3940256099942544/1712485313';
-  static const interstitialIos = 'ca-app-pub-3940256099942544/4411468910';
+  static String get rewarded {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return _rewardedIosTest;
+    }
+    return kReleaseMode
+        ? ReleaseConfig.admobRewardedAndroid
+        : _rewardedAndroidTest;
+  }
 
-  static String get rewarded =>
-      defaultTargetPlatform == TargetPlatform.iOS
-          ? rewardedIos
-          : rewardedAndroid;
-
-  static String get interstitial =>
-      defaultTargetPlatform == TargetPlatform.iOS
-          ? interstitialIos
-          : interstitialAndroid;
+  static String get interstitial {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return _interstitialIosTest;
+    }
+    return kReleaseMode
+        ? ReleaseConfig.admobInterstitialAndroid
+        : _interstitialAndroidTest;
+  }
 }
 
 class AdsService {
@@ -68,10 +75,9 @@ class AdsService {
 
     ad.show(
       onUserEarnedReward: (ad, reward) {
-        _controller.add(AdEvent.earnedReward(
-          reward.type,
-          reward.amount.toDouble(),
-        ));
+        _controller.add(
+          AdEvent.earnedReward(reward.type, reward.amount.toDouble()),
+        );
         if (!completer.isCompleted) completer.complete(true);
       },
     );

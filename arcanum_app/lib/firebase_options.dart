@@ -1,10 +1,4 @@
-// Archivo auto-generado por FlutterFire CLI.
-// Reemplazar con el real descargado desde Firebase Console
-// después de registrar la app Android (com.arcanum.magick).
-//
-// Para generar: flutterfire configure
-// O manualmente: Firebase Console → Project Settings → Add app → Android
-// → descargar google-services.json + crear firebase_options.dart
+// Generated from the Firebase Android app registered by FlutterFire CLI.
 
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
@@ -15,31 +9,18 @@ class DefaultFirebaseOptions {
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
-      case TargetPlatform.iOS:
-        return ios;
       default:
         throw UnsupportedError(
-          'DefaultFirebaseOptions no soporta esta plataforma',
+          'DefaultFirebaseOptions solo soporta Android en esta versión.',
         );
     }
   }
 
-  // TODO: Reemplazar con valores reales de Firebase Console
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'YOUR_API_KEY',
-    appId: 'YOUR_APP_ID',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
+    apiKey: 'AIzaSyCLPFlUf7uMo1Rg4vse99l41xuHQTANCaw',
+    appId: '1:330365004606:android:6dc30ffbaf05eec72c9a6f',
+    messagingSenderId: '330365004606',
     projectId: 'arcanum-app-magick',
     storageBucket: 'arcanum-app-magick.firebasestorage.app',
-  );
-
-  // TODO: Configurar cuando se agregue iOS
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'YOUR_IOS_API_KEY',
-    appId: 'YOUR_IOS_APP_ID',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-    projectId: 'arcanum-app-magick',
-    storageBucket: 'arcanum-app-magick.firebasestorage.app',
-    iosBundleId: 'com.arcanum.magick',
   );
 }
