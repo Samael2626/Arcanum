@@ -42,19 +42,21 @@ La App opera bajo un modelo freemium con funcionalidades gratuitas y premium.
 ### 3.1 Tier gratuito
 - Funcionalidades básicas sin costo
 - Límites diarios de uso (tarot: 1/día, oráculo: 1/día, etc.)
-- Acceso a anuncios recompensados para obtener créditos adicionales
+- Esta versión **no muestra anuncios**
 
 ### 3.2 Tier Premium (Místico)
-- **Mensual:** $7.99 USD/mes
-- **Anual:** $59.99 USD/año
-- Funcionalidades ilimitadas, sin anuncios
-- Trial gratuito de 7 días (cancela antes de que termine para no ser cobrado)
+- Suscripción mensual o anual, con créditos periódicos incluidos
+- Funcionalidades ampliadas
+- Periodo de prueba gratuito: si no cancelas antes de que termine, se convierte en suscripción de pago
 
 ### 3.3 Consumibles
-- Paquetes de créditos para funciones específicas
-- **10 créditos:** $1.99 USD
-- **50 créditos:** $7.99 USD
-- **Paquete bundle:** $4.99 USD
+- **Lectura del Umbral** — 1 crédito
+- **Pack de 3 lecturas** — más barato que sueltas
+- **Ningún crédito caduca**, ni los comprados ni los concedidos
+
+### 3.3.1 Precios
+
+Los precios que ves dentro de la App son los que fija la tienda para **tu país y tu moneda**, impuestos incluidos según corresponda. No publicamos aquí cifras en dólares porque no serían las tuyas.
 
 ### 3.4 Procesamiento de pagos
 - Los pagos se procesan a través de Google Play Store
@@ -63,9 +65,19 @@ La App opera bajo un modelo freemium con funcionalidades gratuitas y premium.
 - Los precios pueden variar según la región
 
 ### 3.5 Cancelación
-- Cancela en cualquier momento desde Google Play Store
-- El acceso premium continúa hasta el final del período facturado
-- No se realizan reembolsos parciales por períodos no utilizados
+- Cancela en cualquier momento desde los ajustes de suscripciones de tu tienda, al menos 24 horas antes del siguiente cobro
+- El acceso premium continúa hasta el final del período ya pagado
+- No se realizan reembolsos parciales por períodos no utilizados, salvo que la ley de tu país disponga otra cosa
+
+> **Borrar tu cuenta en ARCANUM no cancela la suscripción.** Son sistemas distintos: la baja se hace en la tienda. Si borras la cuenta sin cancelar, el cobro sigue.
+
+### 3.6 Reembolsos y desistimiento
+
+Los reembolsos los gestiona la tienda donde compraste, según su política. Si te devuelven el importe de una compra de créditos, retiraremos de tu saldo los créditos correspondientes.
+
+Si resides en la **Unión Europea o el Reino Unido** tienes catorce (14) días de desistimiento. Al confirmar una lectura aceptas que su ejecución comience de inmediato, con la consiguiente pérdida del derecho de desistimiento sobre el contenido ya consumido.
+
+Un crédito paga la **generación** de una lectura, no un resultado concreto. Si por un fallo técnico la lectura no llega a entregarse, se te devuelve el crédito.
 
 ---
 
@@ -92,6 +104,12 @@ La App opera bajo un modelo freemium con funcionalidades gratuitas y premium.
 - El contenido generado por la App (interpretaciones, cálculos) es tuyo para uso personal
 - Las tradiciones esotéricas, sistemas astrológicos y arquetipos son conocimiento público
 - No adquirimos derechos sobre el contenido que creas en el grimorio
+
+**No entrenamos modelos con lo que escribes.** Tus entradas, preguntas y notas no se usan para entrenar inteligencia artificial, ni propia ni de terceros, ni se ceden a nadie con ese fin.
+
+Nos concedes únicamente la licencia técnica imprescindible para prestarte el servicio: almacenar tu contenido, mostrártelo y transmitir a Groq lo estrictamente necesario para generar la lectura que pidas. Esa licencia termina cuando borras el contenido o la cuenta.
+
+Las obras históricas incluidas en la App están en dominio público, con su procedencia y su nota de licencia indicadas en cada obra.
 
 ---
 
@@ -158,6 +176,10 @@ Acceptas indemnizar y mantener indemne a ARCANUM y su desarrollador por reclamac
 ## 11. Ley aplicable y jurisdicción
 
 Estos Términos se rigen por las leyes de la República de Colombia. Cualquier disputa será sometida a la jurisdicción de los tribunales competentes en Colombia.
+
+**Si eres consumidor y resides fuera de Colombia**, conservas la protección de las normas imperativas de tu lugar de residencia habitual y puedes acudir a sus tribunales.
+
+Nada en estos Términos excluye la responsabilidad que no pueda excluirse legalmente ni los derechos que te correspondan como consumidor —en Colombia por la Ley 1480 de 2011, y en la Unión Europea y el Reino Unido por su normativa de consumo—. **Esos derechos prevalecen sobre estos Términos.**
 
 ---
 

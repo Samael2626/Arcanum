@@ -70,7 +70,8 @@
 
 <main>
 <h1>Política de Privacidad — ARCANUM</h1>
-<p><strong>Última actualización:</strong> 25 de agosto de 2026</p>
+<p><strong>Última actualización:</strong> 30 de agosto de 2026
+<strong>Versión:</strong> 2026-08-30</p>
 <p>ARCANUM ("la App") es una aplicación móvil de práctica mágica, astrología y esoterismo. Esta Política de Privacidad describe cómo recopilamos, usamos, almacenamos y protegemos tu información personal.</p>
 <p>Al usar ARCANUM, aceptas las prácticas descritas en esta política.</p>
 <p><strong>Responsable del tratamiento:</strong> Samuel Andrés Escobar Saldarriaga (Colombia).
@@ -115,12 +116,12 @@
 <li><strong>ID de cliente de RevenueCat</strong></li>
 <li><strong>Fecha de expiración de la suscripción</strong></li>
 </ul>
-<h3>1.7 Datos técnicos y publicidad</h3>
+<h3>1.7 Datos técnicos</h3>
 <ul>
-<li><strong>Identificador de publicidad</strong>, para los anuncios opcionales que conceden uso extra</li>
 <li><strong>Tipo de dispositivo y versión del sistema operativo</strong></li>
 <li><strong>Registros de errores</strong> (Firebase Crashlytics)</li>
 </ul>
+<p><strong>Esta versión de ARCANUM no muestra anuncios y no recoge tu identificador de publicidad.</strong> El código incluye la integración con AdMob desactivada; si algún día se activa, actualizaremos esta política antes y pediremos consentimiento previo donde la ley lo exija.</p>
 <hr>
 <h2>2. Cómo usamos tus datos</h2>
 <ul>
@@ -150,11 +151,6 @@
 <td>RevenueCat, Inc.</td>
 </tr>
 <tr>
-<td><strong>Google AdMob</strong></td>
-<td>Publicidad (anuncios bonificados)</td>
-<td>Google LLC</td>
-</tr>
-<tr>
 <td><strong>Firebase Crashlytics</strong></td>
 <td>Reporte de errores</td>
 <td>Google LLC</td>
@@ -165,14 +161,9 @@
 <td>Groq, Inc.</td>
 </tr>
 <tr>
-<td><strong>Supabase</strong></td>
-<td>Base de datos</td>
-<td>Supabase, Inc.</td>
-</tr>
-<tr>
 <td><strong>Railway</strong></td>
-<td>Alojamiento del servidor</td>
-<td>Railway App, Inc.</td>
+<td>Alojamiento del servidor y base de datos</td>
+<td>Railway Corp.</td>
 </tr>
 </tbody>
 </table></div>
@@ -180,13 +171,69 @@
 <ul>
 <li><strong>Groq</strong> recibe el texto de tu consulta y el contexto astrológico necesario para responder. <strong>No recibe las entradas de tu grimorio</strong>, que viajan cifradas y no se descifran en ningún punto del servidor.</li>
 <li><strong>RevenueCat</strong> recibe un identificador de cliente y el estado de compra. No recibe el contenido de la App.</li>
-<li><strong>AdMob</strong> recibe el identificador de publicidad de tu dispositivo.</li>
+<li><strong>Railway</strong> aloja la API y la base de datos: es el proveedor que custodia el conjunto de los datos operativos. A su vez se apoya en Google Cloud, Cloudflare y Stripe.</li>
+<li><strong>AdMob</strong> no recibe nada hoy: los anuncios están desactivados.</li>
 </ul>
+<p>Una versión anterior de esta política listaba <strong>Supabase</strong> como base de datos. Ya no se usa: la base vive en Railway. También listaba AdMob como servicio activo. Ambas cosas están corregidas.</p>
 <p>Cada servicio tiene su propia política de privacidad:
 - <a href="https://www.revenuecat.com/privacy">RevenueCat Privacy Policy</a>
 - <a href="https://policies.google.com/privacy">Google Privacy Policy</a>
 - <a href="https://groq.com/privacy-policy/">Groq Privacy Policy</a>
-- <a href="https://supabase.com/privacy">Supabase Privacy Policy</a></p>
+- <a href="https://railway.com/legal/privacy">Railway Privacy Policy</a></p>
+<hr>
+<h2>3.1 Dónde se tratan tus datos</h2>
+<p>Los tres proveedores anteriores tratan datos <strong>en Estados Unidos</strong>. Eso significa que tus datos salen de Colombia, del Espacio Económico Europeo y del Reino Unido.</p>
+<p>La transferencia se ampara en las <strong>Cláusulas Contractuales Tipo</strong> de la Comisión Europea, con el addendum del ICO para el Reino Unido, incorporadas a los acuerdos de tratamiento de cada proveedor. Para Colombia se realiza con tu autorización y bajo contrato de transmisión, conforme al artículo 26 de la Ley 1581 de 2012.</p>
+<p>Publicaremos aquí el alta de cualquier proveedor nuevo antes de que empiece a tratar datos.</p>
+<hr>
+<h2>3.2 Inteligencia artificial</h2>
+<p>Las lecturas del Oráculo <strong>las genera un modelo de lenguaje</strong> operado por Groq. Se te avisa dentro de la App antes de la primera consulta y se te pide consentimiento explícito, que puedes retirar cuando quieras desde Ajustes. Si lo retiras, el Oráculo deja de funcionar; el resto de la App sigue disponible.</p>
+<p>Groq declara que no entrena sus modelos con las entradas ni con las salidas. Puede conservar entradas y salidas hasta 30 días por motivos de fiabilidad y prevención de abuso.</p>
+<p>No se toma ninguna decisión automatizada que produzca efectos jurídicos sobre ti ni te afecte de forma similar. El Oráculo no evalúa, puntúa ni clasifica a personas. Su contenido es simbólico: no es consejo médico, jurídico, financiero ni psicológico.</p>
+<p>Puedes denunciar cualquier respuesta generada por IA desde la propia pantalla donde aparece.</p>
+<hr>
+<h2>3.3 Categorías especiales de datos</h2>
+<p>Lo que preguntas al Oráculo puede revelar <strong>creencias religiosas o filosóficas</strong>. En Europa son una categoría especial (artículo 9 del RGPD) y en Colombia un dato sensible (artículo 5 de la Ley 1581 de 2012).</p>
+<p>Por eso se piden <strong>aparte</strong>, con un consentimiento explícito que se registra junto a la versión de esta política, y por eso <strong>puedes usar ARCANUM sin concederlo</strong>. Facilitar datos sensibles es siempre voluntario.</p>
+<hr>
+<h2>3.4 Base legal de cada tratamiento</h2>
+<div class="tabla"><table>
+<thead>
+<tr>
+<th>Qué</th>
+<th>Para qué</th>
+<th>Base legal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cuenta y autenticación</td>
+<td>Prestarte el servicio</td>
+<td>Ejecución del contrato</td>
+</tr>
+<tr>
+<td>Datos de nacimiento y carta natal</td>
+<td>Calcular e interpretar</td>
+<td>Contrato + consentimiento explícito</td>
+</tr>
+<tr>
+<td>Preguntas al Oráculo y grimorio</td>
+<td>Generar y guardar tu práctica</td>
+<td>Contrato + consentimiento explícito cuando revelan convicciones</td>
+</tr>
+<tr>
+<td>Créditos, compras y suscripción</td>
+<td>Cobrar, reembolsar y llevar la contabilidad</td>
+<td>Contrato + obligación legal</td>
+</tr>
+<tr>
+<td>Registros de errores</td>
+<td>Mantener la App estable y segura</td>
+<td>Interés legítimo</td>
+</tr>
+</tbody>
+</table></div>
+<p>Puedes <strong>retirar cualquier consentimiento</strong> en cualquier momento, sin que ello afecte a la licitud del tratamiento anterior.</p>
 <hr>
 <h2>4. Almacenamiento y seguridad</h2>
 <h3>4.1 Qué está cifrado, y qué no</h3>
@@ -194,6 +241,9 @@
 <ul>
 <li><strong>Grimorio y notas personales</strong> — cifrados con <strong>AES-256 en tu propio dispositivo</strong>, antes de salir de él. El servidor almacena texto cifrado y no dispone de la clave: no podemos leer tus notas aunque quisiéramos.</li>
 <li><strong>Contraseña</strong> — hash bcrypt, irreversible. No se almacena en claro en ningún momento.</li>
+<li><strong>La pregunta que acompaña a una tirada</strong> — cifrada, junto a la sesión de adivinación.</li>
+<li><strong>Las conversaciones con el Oráculo</strong> — se guardan <strong>en claro</strong>, para poder mostrarte tu historial y atender denuncias de contenido. Están protegidas por el control de acceso del servidor y el cifrado en reposo del proveedor, pero <strong>no</strong> por cifrado de extremo a extremo. Tenlo en cuenta al escribir.</li>
+<li><strong>El título y las etiquetas</strong> de una entrada del grimorio viajan en claro, aunque su cuerpo vaya cifrado: hacen falta para poder listarla y buscarla.</li>
 <li><strong>El resto de tus datos</strong> (correo, nombre, datos de nacimiento, ubicación, preferencias, historial de lecturas) se almacenan <strong>sin cifrado adicional a nivel de campo</strong>, protegidos por el cifrado en reposo del proveedor de base de datos y por el control de acceso a la infraestructura.</li>
 </ul>
 <blockquote>
@@ -222,7 +272,15 @@
 <li><strong>Oponerte</strong> al procesamiento de tus datos</li>
 <li><strong>Portabilidad</strong> de tus datos</li>
 </ul>
-<p>Para ejercerlos, escribe a <strong>arcanum.magick.app@gmail.com</strong>.</p>
+<p>Para ejercerlos, escribe a <strong>arcanum.magick.app@gmail.com</strong> desde el correo de tu cuenta.</p>
+<p><strong>Plazos de respuesta:</strong></p>
+<ul>
+<li><strong>Colombia</strong> — diez (10) días hábiles para consultas y quince (15) días hábiles para reclamos, prorrogables conforme a los artículos 14 y 15 de la Ley 1581 de 2012.</li>
+<li><strong>Espacio Económico Europeo y Reino Unido</strong> — un mes, prorrogable dos meses más si la solicitud es compleja, avisándote (artículo 12.3 del RGPD).</li>
+</ul>
+<p><strong>Derecho a reclamar.</strong> Si crees que tratamos mal tus datos puedes acudir a la autoridad de control: la <strong>Superintendencia de Industria y Comercio</strong> en Colombia, la autoridad de protección de datos de tu país en el Espacio Económico Europeo, o la <strong>Information Commissioner's Office</strong> en el Reino Unido.</p>
+<p><strong>California.</strong> No vendemos ni compartimos tu información personal en el sentido de la CCPA/CPRA, y ejercer tus derechos nunca dará lugar a un trato discriminatorio.</p>
+<p><strong>Brechas de seguridad.</strong> Si se produce una violación de seguridad que suponga un riesgo para tus derechos, la notificaremos a la autoridad competente dentro de las 72 horas siguientes a tener constancia de ella (artículo 33 del RGPD), y te avisaremos directamente cuando el riesgo sea alto.</p>
 <hr>
 <h2>7. Eliminación de cuenta</h2>
 <p>Puedes eliminarla desde <strong>Ajustes → Eliminar cuenta</strong> dentro de la App, o sin tenerla instalada siguiendo las instrucciones de <strong><a href="account-deletion.html">Eliminar tu cuenta</a></strong>.</p>
