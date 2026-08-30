@@ -151,6 +151,22 @@ def construir(base, titulo, descripcion):
     )
 
 
+# Rutas cortas que apuntan al MISMO .md. Existen porque las fichas de tienda y
+# los enlaces ya repartidos usan nombres distintos para el mismo documento, y
+# una URL legal que devuelve 404 es motivo de rechazo. Se generan como paginas
+# completas, no como redirecciones: los bots de app review no siempre siguen un
+# redirect, y aqui no se puede permitir un "quiza".
+#
+# La fuente sigue siendo una sola: si dos rutas se desincronizan es porque
+# alguien edito el .html a mano, que es justo lo que este script impide.
+SALTO = chr(10)
+
+ALIAS = {
+    "terms": "terms-of-service",
+    "privacy": "privacy-policy",
+}
+
+
 def main():
     comprobar = "--comprobar" in sys.argv
     desfase = []
@@ -169,6 +185,21 @@ def main():
         else:
             io.open(destino, "w", encoding="utf-8", newline="\n").write(html)
             print("{:26} {:6} bytes".format(destino, len(html)))
+
+    for alias, base in sorted(ALIAS.items()):
+        titulo, descripcion = next(
+            (t, d) for b, t, d in DOCUMENTOS if b == base
+        )
+        html = construir(base, titulo, descripcion)
+        destino = alias + ".html"
+        actual = io.open(destino, encoding="utf-8").read() if os.path.exists(destino) else None
+        if comprobar:
+            if actual != html:
+                desfase.append(destino)
+            print("{:26} {}".format(destino, "al dia" if actual == html else "DESFASADO"))
+        else:
+            io.open(destino, "w", encoding="utf-8", newline=SALTO).write(html)
+            print("{:26} {:6} bytes  (alias de {}.md)".format(destino, len(html), base))
 
     if comprobar and desfase:
         print("\nHay .html desfasados respecto a su .md. Corre el script sin "
