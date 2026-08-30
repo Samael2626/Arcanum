@@ -79,7 +79,8 @@ Se usan para la hora planetaria, el regente del día y tu fecha local. **La App 
 | **RevenueCat** | Gestión de suscripciones y pagos | RevenueCat, Inc. |
 | **Firebase Crashlytics** | Reporte de errores | Google LLC |
 | **Groq** | Oráculo IA (procesamiento de lenguaje natural) | Groq, Inc. |
-| **Railway** | Alojamiento del servidor y base de datos | Railway Corp. |
+| **Railway** | Alojamiento del servidor (la API) | Railway Corp. |
+| **Supabase** | Base de datos | Supabase, Inc. |
 
 Qué recibe cada uno, en concreto:
 
@@ -87,16 +88,20 @@ Qué recibe cada uno, en concreto:
 
   Si prefieres que tu nombre real no salga de aquí, cambia el nombre visible en tu perfil por el que quieras: es el único que se envía.
 - **RevenueCat** recibe un identificador de cliente y el estado de compra. No recibe el contenido de la App.
-- **Railway** aloja la API y la base de datos: es el proveedor que custodia el conjunto de los datos operativos. A su vez se apoya en Google Cloud, Cloudflare y Stripe.
+- **Railway** aloja la API. A su vez se apoya en Google Cloud, Cloudflare y Stripe.
+- **Supabase** aloja la base de datos: es quien custodia tu cuenta, tu perfil natal, tu grimorio cifrado y tu historial. Es el proveedor que guarda el conjunto de tus datos.
 - **AdMob** no recibe nada hoy: los anuncios están desactivados.
 
-Una versión anterior de esta política listaba **Supabase** como base de datos. Ya no se usa: la base vive en Railway. También listaba AdMob como servicio activo. Ambas cosas están corregidas.
+Una versión anterior de esta política listaba **AdMob** como servicio activo. No lo está: esta versión no muestra anuncios. Corregido.
+
+El 30 de agosto de 2026 esta política llegó a afirmar, durante unas horas, que Supabase «ya no se usa» y que la base vivía en Railway. **Era falso**, y se comprobó mirando el código en vez de la configuración real del despliegue: la base de datos está en Supabase. La lista de arriba es la correcta.
 
 Cada servicio tiene su propia política de privacidad:
 - [RevenueCat Privacy Policy](https://www.revenuecat.com/privacy)
 - [Google Privacy Policy](https://policies.google.com/privacy)
 - [Groq Privacy Policy](https://groq.com/privacy-policy/)
 - [Railway Privacy Policy](https://railway.com/legal/privacy)
+- [Supabase Privacy Policy](https://supabase.com/privacy)
 
 ---
 
