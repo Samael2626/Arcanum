@@ -8,11 +8,17 @@ abstract final class ReleaseConfig {
   static const admobInterstitialAndroid = String.fromEnvironment(
     'ADMOB_INTERSTITIAL_ANDROID',
   );
+  // Las tres apuntan a lo que GitHub Pages sirve DE VERDAD: la rama
+  // `gh-pages`, en la raiz, con ficheros `.html` generados por Jekyll. Antes
+  // apuntaban a `/privacy/` y `/account-deletion/`, que devuelven 404: la app
+  // llevaba un enlace muerto a su propia politica de privacidad, y Play exige
+  // que la URL de borrado de cuenta funcione.
   static const privacyPolicyUrl =
-      'https://samael2626.github.io/Arcanum/privacy/';
+      'https://samael2626.github.io/Arcanum/privacy-policy.html';
   static const accountDeletionUrl =
-      'https://samael2626.github.io/Arcanum/account-deletion/';
-  static const termsUrl = 'https://samael2626.github.io/Arcanum/terms/';
+      'https://samael2626.github.io/Arcanum/account-deletion.html';
+  static const termsUrl =
+      'https://samael2626.github.io/Arcanum/terms-of-service.html';
 
   /// Version de la politica publicada. Debe coincidir con el pie de
   /// `legal-site/privacy/index.html`: es lo que se guarda junto a cada

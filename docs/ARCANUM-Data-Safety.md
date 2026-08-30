@@ -2,7 +2,8 @@
 
 Fecha de auditoria: **2026-08-30** (sustituye a la de 2026-08-10)
 Paquete Android: `com.arcanum.magick`
-Politica de referencia: `legal-site/privacy/index.html`, version **2026-08-30**
+Politica de referencia: rama `gh-pages`, `privacy-policy.md`, version **2026-08-30**.
+Publicada en https://samael2626.github.io/Arcanum/privacy-policy.html
 
 Borrador tecnico para cargar en Play Console. El formulario lo firma Samuel: la
 responsabilidad de que coincida con el binario es del desarrollador, no de esta
@@ -25,10 +26,10 @@ tabla.
 - La app recopila datos: **Si**.
 - La app comparte datos con terceros: **Si**. Groq, Firebase, RevenueCat y
   Railway actuan como encargados del tratamiento; Play cuenta como
-  "compartido" la transferencia a Groq y a Firebase.
+  "compartido" la transferencia a Groq y a Firebase Crashlytics.
 - Datos cifrados en transito: **Si**, TLS en todos los endpoints.
 - Solicitud de eliminacion: **Si**, en la app (`Ajustes -> Eliminar cuenta y
-  datos`) y en `https://samael2626.github.io/Arcanum/account-deletion/`.
+  datos`) y en `https://samael2626.github.io/Arcanum/account-deletion.html`.
 - Cuenta obligatoria: **Si**.
 
 ## Inventario real
@@ -39,10 +40,10 @@ tabla.
 | Info personal — otra (fecha de nacimiento) | `birth_date`, `birth_time` | `app/models/user.py:15-16` | Si | Groq recibe el contexto astral derivado | Calculo de carta natal | Si |
 | Ubicacion — aproximada | `birth_city`, `birth_lat/lon`, `birth_timezone` del **lugar de nacimiento**, no de la ubicacion actual | `app/models/user.py:17-20` | Si | Groq recibe el contexto derivado | Calculo de carta natal | Si |
 | Info financiera — historial de compras | `credit_ledger`, `revenuecat_events`, `subscription_tier` | `app/models/credit_ledger.py` | Si | RevenueCat, Google Play | Compras, saldo, reembolsos, fraude | Si al comprar |
-| Actividad de la app — interacciones | Cuotas, `usage_operations`, sesiones de adivinacion, eventos de Firebase Analytics | `app/models/usage_operation.py` | Si | Firebase | Funcionalidad y analitica | Parcial |
+| Actividad de la app — interacciones | Cuotas, `usage_operations`, sesiones de adivinacion. **Solo en nuestro servidor**: no salen a Firebase | `app/models/usage_operation.py` | Si | No | Funcionalidad y limites de uso | Parcial |
 | Contenido generado por usuario — otro | Preguntas al Oraculo (`oracle_conversations.messages`, **en claro**), preguntas de tirada (cifradas), grimorio (cuerpo **cifrado en dispositivo**; titulo y etiquetas en claro), denuncias de contenido | `app/models/oracle_conversation.py:13`, `divination_session.py:16`, `grimoire_entry.py:15`, `content_report.py` | Si | Groq recibe la pregunta y las cartas; **no** recibe el grimorio | Generar la lectura, atender denuncias | Si al usar esas funciones |
 | Info y rendimiento — fallos y diagnosticos | Crashlytics, excepciones, rendimiento | `main.dart` (Firebase) | Si | Firebase | Estabilidad | Si en release |
-| Identificadores de dispositivo | Firebase Installation ID | Firebase Core | Si | Firebase | Funcionalidad y analitica | Si |
+| Identificadores de dispositivo | Firebase Installation ID (Core + Crashlytics) | Firebase Core | Si | Firebase | Diagnostico | Si |
 | Info de autenticacion | `hashed_password`, `refresh_tokens` | `app/models/user.py:13`, `refresh_token.py` | Si | No sale a ningun tercero | Seguridad de la cuenta | Si |
 | ~~Ubicacion aproximada por IP para anuncios~~ | — | — | **NO APLICA HOY** | — | — | — |
 | ~~Ad ID / App Set ID~~ | — | — | **NO APLICA HOY** | — | — | — |
@@ -71,7 +72,11 @@ dispositivo. No hay permisos peligrosos en el manifiesto para ninguno de ellos.
   arma el mensaje: sin correo, sin `user_id`, sin grimorio. Declara no entrenar
   con entradas ni salidas; **retiene hasta 30 dias por fiabilidad y abuso
   mientras ZDR no este activo**: https://console.groq.com/docs/your-data
-- **Firebase Analytics y Crashlytics** — https://firebase.google.com/support/privacy/
+- **Firebase Crashlytics** — https://firebase.google.com/support/privacy/
+  **Analytics NO esta en uso.** `firebase_analytics` figura en `pubspec.yaml`
+  pero no se instancia en `lib/` (grep sin resultados, 2026-08-30). No declarar
+  analitica de uso mientras no exista una linea que la recoja; si se quita la
+  dependencia, mejor.
 - **RevenueCat** — https://www.revenuecat.com/docs/platform-resources/google-platform-resources/google-plays-data-safety
 - **Railway** — aloja API y base de datos; trata en Estados Unidos; subencargados
   en https://trust.railway.com/item/subprocessors
@@ -100,7 +105,10 @@ dispositivo. No hay permisos peligrosos en el manifiesto para ninguno de ellos.
 
 Estos tres textos deben decir lo mismo, y se revisan juntos:
 
-- `legal-site/privacy/index.html` = `docs/privacy/index.html`
-- `legal-site/terms/index.html` = `docs/terms/index.html`
+- rama `gh-pages`: `privacy-policy.md`, `terms-of-service.md`, `account-deletion.md` (**la fuente**)
 - `arcanum_app/lib/features/settings/privacy_screen.dart`
+- `ReleaseConfig.policyVersion` y las tres URLs de `release_config.dart`
 - este inventario
+
+No debe existir ninguna otra copia de los textos legales en este repositorio.
+Ver `legal-site/README.md`.
