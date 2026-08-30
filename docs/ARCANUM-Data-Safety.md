@@ -36,7 +36,7 @@ tabla.
 
 | Tipo Play | Datos reales | Evidencia | Recopilado | Compartido | Finalidad | Obligatorio |
 |---|---|---|---:|---:|---|---:|
-| Info personal — correo, nombre, ID de usuario | `users.email`, `display_name`, `revenuecat_customer_id` | `app/models/user.py:12-23` | Si | RevenueCat (solo el ID de cliente) | Gestion de cuenta, compras, fraude | Si |
+| Info personal — correo, nombre, ID de usuario | `users.email`, `display_name`, `revenuecat_customer_id` | `app/models/user.py:12-23` | Si | RevenueCat (solo el ID de cliente); **Groq recibe `display_name`** (`oracle_context.py:118`) | Gestion de cuenta, compras, fraude, generar la lectura | Si |
 | Info personal — otra (fecha de nacimiento) | `birth_date`, `birth_time` | `app/models/user.py:15-16` | Si | Groq recibe el contexto astral derivado | Calculo de carta natal | Si |
 | Ubicacion — aproximada | `birth_city`, `birth_lat/lon`, `birth_timezone` del **lugar de nacimiento**, no de la ubicacion actual | `app/models/user.py:17-20` | Si | Groq recibe el contexto derivado | Calculo de carta natal | Si |
 | Info financiera — historial de compras | `credit_ledger`, `revenuecat_events`, `subscription_tier` | `app/models/credit_ledger.py` | Si | RevenueCat, Google Play | Compras, saldo, reembolsos, fraude | Si al comprar |
@@ -73,10 +73,9 @@ dispositivo. No hay permisos peligrosos en el manifiesto para ninguno de ellos.
   con entradas ni salidas; **retiene hasta 30 dias por fiabilidad y abuso
   mientras ZDR no este activo**: https://console.groq.com/docs/your-data
 - **Firebase Crashlytics** — https://firebase.google.com/support/privacy/
-  **Analytics NO esta en uso.** `firebase_analytics` figura en `pubspec.yaml`
-  pero no se instancia en `lib/` (grep sin resultados, 2026-08-30). No declarar
-  analitica de uso mientras no exista una linea que la recoja; si se quita la
-  dependencia, mejor.
+  **Analytics NO esta en uso ni empaquetado.** La dependencia
+  `firebase_analytics` se retiro de `pubspec.yaml`; no hay ninguna llamada en
+  `lib/`. No declarar analitica de uso.
 - **RevenueCat** — https://www.revenuecat.com/docs/platform-resources/google-platform-resources/google-plays-data-safety
 - **Railway** — aloja API y base de datos; trata en Estados Unidos; subencargados
   en https://trust.railway.com/item/subprocessors
@@ -97,9 +96,13 @@ dispositivo. No hay permisos peligrosos en el manifiesto para ninguno de ellos.
    responsable declarado en la politica.
 7. Documentar el plazo de retencion de los backups de PostgreSQL en Railway. La
    politica promete borrado; un backup que sobrevive meses lo contradice.
-8. **No activar `ADS_ENABLED` sin UMP.** `main.dart:30` lleva el TODO puesto. Si
-   se activa, hay que rehacer las tres filas tachadas de la tabla y volver a
-   enviar el formulario.
+8. **No activar `ADS_ENABLED` sin UMP.** `main.dart` lleva el TODO puesto. Si se
+   activa, hay que rehacer las tres filas tachadas de la tabla y volver a enviar
+   el formulario. Gradle solo exige `ADMOB_APP_ID` cuando `ADS_ENABLED=true`:
+   el build de lanzamiento sale sin anuncios y sin esa credencial.
+9. **`display_name` viaja a Groq** (`oracle_context.py:118`). Declarado en la
+   politica publicada y en el dialogo de consentimiento. Al marcar el formulario,
+   el nombre cuenta como dato personal COMPARTIDO, no solo recogido.
 
 ## Coherencia
 

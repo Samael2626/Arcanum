@@ -29,10 +29,19 @@ if (releaseRequested && !hasReleaseSigning) {
 // impresiones facturables.
 def debugAdmobApplicationId = "ca-app-pub-3940256099942544~3347511713"
 def admobApplicationId = System.getenv("ADMOB_APP_ID")?.trim()
-if (releaseRequested && !admobApplicationId) {
+
+// Solo se exige si el build LLEVA anuncios. `ReleaseConfig.adsEnabled` viene de
+// --dart-define=ADS_ENABLED y vale false por defecto; con anuncios apagados,
+// main.dart no llama a MobileAds.initialize() y el App ID no se lee nunca.
+//
+// Exigirlo igual bloqueaba el build de lanzamiento —que sale SIN anuncios— por
+// una credencial que ese binario no usa. Mismo criterio que ya aplica
+// ReleaseConfig.validateForStartup con las unidades de anuncio.
+def adsEnabled = System.getenv("ADS_ENABLED")?.trim()?.equalsIgnoreCase("true")
+if (releaseRequested && adsEnabled && !admobApplicationId) {
     throw new GradleException(
-        "ADMOB_APP_ID ausente. Exporta el App ID real de AdMob antes del build " +
-        "release: sin el, la app arranca y muere con 'Missing application ID'."
+        "ADMOB_APP_ID ausente con ADS_ENABLED=true. Exporta el App ID real de " +
+        "AdMob: sin el, la app arranca y muere con 'Missing application ID'."
     )
 }
 def resolvedAdmobApplicationId = admobApplicationId ?: debugAdmobApplicationId
