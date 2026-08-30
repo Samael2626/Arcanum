@@ -97,6 +97,57 @@ if echo "$STAGED" | grep -q '^arcanum-api/.*\.py$'; then
     exit 1
   fi
   ok "pytest: verde ($SKIPPED skipped)."
+
+  # ── 2b. Integracion contra el esquema REAL (tests_pg) ──────────────────────
+  #
+  # 58 tests de dinero y concurrencia que hasta ahora no corria NADIE: ni este
+  # hook (miraba solo tests/ y tests_unit/) ni el CI. El guardia de "skipped"
+  # de arriba no los cubria: si no se colectan, no entran en el conteo, y
+  # vigilaba una puerta por la que este paquete no pasaba.
+  #
+  # Base APARTE, no `arcanum-test-db`: aquella la construye
+  # `Base.metadata.create_all` y aqui hace falta el esquema que produce Alembic
+  # 001->006, que es el que corre en produccion.
+  #
+  # Cuestan ~9 segundos medidos (58 passed in 8.47s-10.50s en tres corridas):
+  # barato para lo que cubren, y por eso van al hook y no solo al CI.
+  PG_URL="${MIGRATION_TEST_DATABASE_URL:-postgresql://postgres:test@127.0.0.1:55434/arcanum_migration_test}"
+
+  if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^arcanum-svc-test$'; then
+    info "arcanum-svc-test no esta arriba — intentando levantarlo..."
+    if ! docker start arcanum-svc-test >/dev/null 2>&1; then
+      fail "No se pudo levantar arcanum-svc-test. Commit BLOQUEADO."
+      fail "Sin esa base, los 58 tests de dinero y concurrencia se SALTAN y el"
+      fail "hook daria el mismo verde mentiroso que combate mas arriba."
+      fail "Creala de cero con:"
+      fail "  docker run -d --name arcanum-svc-test -e POSTGRES_PASSWORD=test \\"
+      fail "      -e POSTGRES_DB=arcanum_migration_test -p 55434:5432 postgres:17-alpine"
+      fail "  cd arcanum-api && MIGRATION_TEST_DATABASE_URL=$PG_URL \\"
+      fail "      python scripts/verify_migrations.py"
+      exit 1
+    fi
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+      docker exec arcanum-svc-test pg_isready -q >/dev/null 2>&1 && break
+      sleep 1
+    done
+  fi
+
+  if ! (cd arcanum-api && MIGRATION_TEST_DATABASE_URL="$PG_URL" \
+        "$PY_BIN" -m pytest tests_pg -q --no-header --disable-warnings 2>&1) \
+       | tee /tmp/arcanum_pytest_pg.log | tail -25; then
+    fail "Commit BLOQUEADO: tests_pg en rojo. Log: /tmp/arcanum_pytest_pg.log"
+    exit 1
+  fi
+
+  # Aqui CUALQUIER salto es sospechoso: o la base no esta migrada a 006, o la
+  # URL apunta a otro sitio. El motivo del salto sale en el log, con la receta.
+  PG_SKIPPED="$(grep -oE '[0-9]+ skipped' /tmp/arcanum_pytest_pg.log | tail -1 | grep -oE '[0-9]+' || echo 0)"
+  if [ "${PG_SKIPPED:-0}" -gt 0 ]; then
+    fail "Commit BLOQUEADO: $PG_SKIPPED tests_pg saltados."
+    fail "Corre con -rs para ver el motivo. Log: /tmp/arcanum_pytest_pg.log"
+    exit 1
+  fi
+  ok "tests_pg: verde (esquema Alembic real)."
 fi
 
 # ── 3. Flutter ───────────────────────────────────────────────────────────────
