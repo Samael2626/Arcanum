@@ -165,6 +165,15 @@ class _TodayApi extends ArcanumApi {
   }
 }
 
+/// Trae el widget a la vista y lo pulsa. El selector del instrumento cae por
+/// debajo de los 600 px de la ventana de prueba.
+Future<void> pulsar(WidgetTester tester, Key key) async {
+  await tester.scrollUntilVisible(find.byKey(key), 120);
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(key));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
@@ -185,9 +194,10 @@ void main() {
     await tester.pump();
 
     expect(api.calls, 1);
+    // El instrumento arranca en el regente y enseña UN cuerpo, no los tres
+    // apilados: la hora y la Luna viven detras de su boton del selector.
+    expect(find.text('Regente del día'), findsOneWidget);
     expect(find.text('Día de Sol'), findsOneWidget);
-    expect(find.text('Venus'), findsOneWidget);
-    expect(find.text('Gibosa creciente'), findsOneWidget);
     expect(find.text('INSTRUMENTO DEL DÍA'), findsOneWidget);
     expect(find.byType(ArcanumTilt), findsNothing);
     expect(find.byType(ArcanumFrame), findsNothing);
@@ -195,13 +205,61 @@ void main() {
     expect(find.byType(TweenAnimationBuilder<double>), findsNothing);
 
     final chip = find.ancestor(
-      of: find.text('Plantas de Venus'),
+      of: find.text('Plantas de Sol'),
       matching: find.byType(InkWell),
     );
     expect(tester.getSize(chip).height, greaterThanOrEqualTo(48));
 
     final hourTarget = find.byKey(const Key('hoy-hour-target'));
     expect(tester.getSize(hourTarget).shortestSide, greaterThanOrEqualTo(48));
+
+    // Los tres botones del selector tambien son objetivos de pulgar.
+    for (final k in const ['ruler', 'hour', 'moon']) {
+      final boton = find.byKey(Key('hoy-selector-$k'));
+      expect(boton, findsOneWidget, reason: 'falta el boton de $k');
+      expect(tester.getSize(boton).shortestSide, greaterThanOrEqualTo(48));
+    }
+  });
+
+  testWidgets('el selector cambia el cuerpo, su dato y sus chips', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          arcanumApiProvider.overrideWithValue(_TodayApi()),
+          authProvider.overrideWith(_AuthWithPlace.new),
+        ],
+        child: const MaterialApp(home: Scaffold(body: HoyScreen())),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    // Arranca en el regente.
+    expect(find.text('Día de Sol'), findsOneWidget);
+    expect(find.text('Plantas de Sol'), findsOneWidget);
+
+    // La hora: cambia el nombre Y los chips, que era el fallo de fondo — antes
+    // habia una sola fila de chips y no servia a los tres cuerpos.
+    //
+    // La ventana del test mide 600 px de alto y el selector cae por debajo, asi
+    // que hay que traerlo a la vista antes de pulsarlo.
+    await pulsar(tester, const Key('hoy-selector-hour'));
+    expect(find.text('Hora planetaria'), findsOneWidget);
+    expect(find.text('Hora de Venus'), findsOneWidget);
+    expect(find.text('Plantas de Venus'), findsOneWidget);
+    expect(find.text('Día de Sol'), findsNothing);
+
+    // La Luna.
+    await pulsar(tester, const Key('hoy-selector-moon'));
+    expect(find.text('La Luna'), findsOneWidget);
+    expect(find.text('Gibosa creciente'), findsOneWidget);
+    expect(find.text('Plantas de la Luna'), findsOneWidget);
+
+    // Y se puede volver.
+    await pulsar(tester, const Key('hoy-selector-ruler'));
+    expect(find.text('Día de Sol'), findsOneWidget);
   });
 
   testWidgets('abrir la app NO genera el horoscopo', (tester) async {

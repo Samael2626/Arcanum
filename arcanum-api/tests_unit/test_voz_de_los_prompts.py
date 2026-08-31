@@ -48,23 +48,38 @@ def _voz_del_oraculo():
     tres lineas y no contiene ninguna de las palabras vigiladas: el test pasaria
     en verde sin haber mirado el prompt de verdad. Un guardia que aprueba
     porque no encuentra nada que revisar es peor que no tenerlo.
+    Devuelve None si el catalogo no esta montado. NO se llama aqui a
+    `pytest.skip`: esta funcion se evalua al construir `PROMPTS`, o sea en
+    tiempo de IMPORTACION, y un skip ahi no salta un test — revienta la
+    coleccion del modulo entero y con ella la de todo `tests_unit/`. Eso dejo
+    este archivo sin ejecutarse nunca y el gate de pre-commit en rojo
+    permanente. El skip vive ahora en los tests que de verdad lo necesitan.
     """
     from app.core.content import ContentError, load_text
     from app.core.config import settings
+    # Mismo orden que `get_oracle_system_prompt`: la variable de entorno manda
+    # sobre el fichero. Sin esto el guardia miraba una fuente que producion no
+    # usa —alli la voz entra por ORACLE_SYSTEM_PROMPT— y se saltaba en silencio
+    # justo donde habia algo que vigilar.
+    if settings.ORACLE_SYSTEM_PROMPT:
+        return settings.ORACLE_SYSTEM_PROMPT
     try:
         return load_text(settings.ORACLE_PROMPT_PATH)
-    except ContentError as exc:
-        pytest.skip(
-            f"catalogo no montado ({exc}); define ARCANUM_DATA_DIR para vigilar "
-            "la voz del Oraculo"
-        )
+    except ContentError:
+        return None
 
 
+# El nombre del prompt del Oraculo sigue en la tabla aunque su texto sea None:
+# asi el test aparece SIEMPRE en la lista, y cuando falta el catalogo se ve un
+# skip con su motivo en vez de desaparecer sin dejar rastro.
 PROMPTS = {
     "catalogo/prompts/oracle_system.txt": _voz_del_oraculo(),
     "horoscope_prompt.HOROSCOPE_SYSTEM_PROMPT":
         horoscope_prompt.HOROSCOPE_SYSTEM_PROMPT,
 }
+
+_SIN_CATALOGO = ("catalogo no montado; define ARCANUM_DATA_DIR para vigilar la "
+                 "voz del Oraculo")
 
 
 def _sin_acentos(texto):
@@ -96,6 +111,8 @@ def _cuerpo_util(texto):
 @pytest.mark.parametrize("nombre,texto", sorted(PROMPTS.items()))
 @pytest.mark.parametrize("palabra", FUERA_DE_REGISTRO)
 def test_ningun_prompt_ensena_el_vocabulario_que_rechaza(nombre, texto, palabra):
+    if texto is None:
+        pytest.skip(_SIN_CATALOGO)
     cuerpo = _sin_acentos(_cuerpo_util(texto))
     assert palabra not in cuerpo, (
         f"{nombre} usa '{palabra}'. Es el vocabulario que horoscope_prompt "
@@ -118,7 +135,10 @@ def test_el_veto_sigue_escrito_en_el_prompt_del_horoscopo():
 
 def test_sympatheia_no_se_glosa_como_energia():
     """El caso concreto que estaba mal, fijado para que no vuelva."""
-    plano = _sin_acentos(PROMPTS["catalogo/prompts/oracle_system.txt"])
+    texto = PROMPTS["catalogo/prompts/oracle_system.txt"]
+    if texto is None:
+        pytest.skip(_SIN_CATALOGO)
+    plano = _sin_acentos(texto)
     assert "sympatheia" in plano, "el termino sigue siendo parte de la doctrina"
     ventana = plano.split("sympatheia", 1)[1][:120]
     assert "energetic" not in ventana, (
@@ -129,7 +149,10 @@ def test_sympatheia_no_se_glosa_como_energia():
 
 def test_virtud_sigue_siendo_el_termino_de_la_casa():
     """Lo que sustituyo a 'energia' tiene que estar de verdad, no ser un hueco."""
-    plano = _sin_acentos(PROMPTS["catalogo/prompts/oracle_system.txt"])
+    texto = PROMPTS["catalogo/prompts/oracle_system.txt"]
+    if texto is None:
+        pytest.skip(_SIN_CATALOGO)
+    plano = _sin_acentos(texto)
     assert len(re.findall(r"\bvirtud", plano)) >= 3, (
         "si 'energia' se quito sin poner 'virtud' en su lugar, el prompt perdio "
         "el concepto en vez de nombrarlo bien"

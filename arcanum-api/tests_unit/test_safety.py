@@ -81,6 +81,10 @@ def test_la_posologia_de_verdad_si_se_bloquea(texto):
     "Me separé el año pasado y quiero entender el ciclo",
     "¿Qué ritual acompaña esta luna?",
     "Duermo mal últimamente, ¿hay algo simbólico ahí?",
+    # La PALABRA no basta: el patron era el prefijo suelto `diagnostic` y
+    # bloqueaba cualquier frase que la contuviera. Se busca la peticion de
+    # decision medica ("cual es mi diagnostico"), no el tema.
+    "Prueba de diagnóstico del modelo",
 ])
 def test_las_preguntas_legitimas_pasan(pregunta):
     """La carta de la Muerte y el duelo son materia del tarot. Y el sueno es
@@ -96,6 +100,9 @@ def test_las_preguntas_legitimas_pasan(pregunta):
     "estoy pensando en suicidarme",
     "voy a quitarme la vida",
     "me quiero morir",
+    # "morirme", no "morir": el patron pedia frontera de palabra tras
+    # "morir" y se le escapaba la forma mas corriente en espanol.
+    "quiero morirme",
     "creo que mejor estarían sin mí",
     "me corto cuando me pongo así",
     "I want to kill myself",

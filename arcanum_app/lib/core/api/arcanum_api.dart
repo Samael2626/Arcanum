@@ -35,10 +35,37 @@ class ArcanumApi {
   ArcanumApi(this._dio);
   final Dio _dio;
 
+  /// Cuanto se espera a una ruta que llama al MODELO.
+  ///
+  /// El `receiveTimeout` global son 12 s, dimensionados para rutas de calculo
+  /// que responden en decimas. Una interpretacion no es eso: medido contra
+  /// produccion, una tirada de tres cartas tardo 4,5 s y 10,3 s en dos
+  /// llamadas seguidas, y la Cruz Celta tiene un techo de tokens mayor
+  /// (`_LARGE_SPREAD_MAX_TOKENS`), asi que tarda mas. Con 12 s el margen era
+  /// de segundos y en red movil se agotaba.
+  ///
+  /// Un timeout que salta ANTES de que el servidor termine es el peor de los
+  /// dos mundos: la persona ve "la IA no respondio" —el mensaje de error sin
+  /// respuesta HTTP, no un 5xx— mientras el backend SI genera, cobra el cupo y
+  /// guarda el resultado. La consulta se pago y no se leyo.
+  ///
+  /// No se sube el timeout global: en las rutas rapidas, esperar un minuto a
+  /// algo que murio es peor que rendirse a los 12 s.
+  static const Duration _esperaModelo = Duration(seconds: 90);
+
   /// Cabecera obligatoria en las cuatro rutas que cobran. Si la pantalla no
   /// pasa clave se genera una nueva: nunca se manda la petición sin ella.
-  Options _idempotentOptions(String? key) =>
-      Options(headers: {'Idempotency-Key': key ?? IdempotencyKey.create()});
+  ///
+  /// La espera larga viaja aqui porque toda ruta que llama al modelo pasa por
+  /// esta cabecera: asi no hay forma de mandar una peticion de IA sin ella.
+  /// Las dos que cobran sin llamar al modelo —los sorteos de carta, que son
+  /// calculo puro y responden en poco mas de un segundo— tambien se la llevan.
+  /// No molesta: el techo solo se toca cuando algo va mal, y en ese caso da
+  /// margen de sobra en vez de cortar una respuesta que venia en camino.
+  Options _idempotentOptions(String? key) => Options(
+    headers: {'Idempotency-Key': key ?? IdempotencyKey.create()},
+    receiveTimeout: _esperaModelo,
+  );
 
   /// Cielo de hoy en un lugar concreto: hora planetaria + regente + luna.
   ///
@@ -140,8 +167,16 @@ class ArcanumApi {
     return res.data as Map<String, dynamic>;
   }
 
+  /// El horoscopo del dia, interpretado por el modelo.
+  ///
+  /// No lleva `Idempotency-Key`: la unicidad la pone el servidor con la fecha
+  /// local de la persona. Pero llama al modelo igual que el Oraculo, asi que
+  /// necesita la misma espera; sin esto quedaba con los 12 s globales.
   Future<Map<String, dynamic>> horoscope() async {
-    final res = await _dio.get('/astral/horoscope');
+    final res = await _dio.get(
+      '/astral/horoscope',
+      options: Options(receiveTimeout: _esperaModelo),
+    );
     return res.data as Map<String, dynamic>;
   }
 

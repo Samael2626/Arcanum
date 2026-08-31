@@ -10,7 +10,6 @@ class OnboardingData {
   final String? displayName;
   final DateTime? birthDate;
   final String? birthTime;
-  final String? birthCountry;
   final String? birthCity;
   // Lugar RESUELTO por el backend (Nominatim + timezonefinder) y CONFIRMADO
   // por el usuario. Solo estos valores (nunca un default) se persisten como
@@ -24,7 +23,6 @@ class OnboardingData {
     this.displayName,
     this.birthDate,
     this.birthTime,
-    this.birthCountry,
     this.birthCity,
     this.resolvedDisplayName,
     this.resolvedLat,
@@ -40,7 +38,6 @@ class OnboardingData {
     String? displayName,
     DateTime? birthDate,
     String? birthTime,
-    String? birthCountry,
     String? birthCity,
     String? resolvedDisplayName,
     String? resolvedLat,
@@ -51,7 +48,6 @@ class OnboardingData {
     displayName: displayName ?? this.displayName,
     birthDate: birthDate ?? this.birthDate,
     birthTime: birthTime ?? this.birthTime,
-    birthCountry: birthCountry ?? this.birthCountry,
     birthCity: birthCity ?? this.birthCity,
     resolvedDisplayName: resolvedDisplayName ?? this.resolvedDisplayName,
     resolvedLat: resolvedLat ?? this.resolvedLat,
@@ -77,8 +73,11 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
   static const _kName = 'onboarding_display_name';
   static const _kDate = 'onboarding_birth_date';
   static const _kTime = 'onboarding_birth_time';
-  static const _kCountry = 'onboarding_birth_country';
   static const _kCity = 'onboarding_birth_city';
+  // Heredada. Ya no se escribe: el pais dejo de pedirse por separado
+  // cuando el paso del lugar paso al selector de catalogo. Se sigue
+  // BORRANDO porque las instalaciones anteriores la tienen en disco.
+  static const _kCountryHeredada = 'onboarding_birth_country';
 
   Future<SharedPreferences> get _prefs async => SharedPreferences.getInstance();
 
@@ -113,15 +112,6 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
     state = OnboardingState(
       step: state.step,
       data: state.data.copyWith(birthTime: v),
-    );
-  }
-
-  Future<void> setBirthCountry(String v) async {
-    final p = await _prefs;
-    await p.setString(_kCountry, v);
-    state = OnboardingState(
-      step: state.step,
-      data: state.data.copyWith(birthCountry: v),
     );
   }
 
@@ -279,7 +269,7 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
       p.remove(_kName),
       p.remove(_kDate),
       p.remove(_kTime),
-      p.remove(_kCountry),
+      p.remove(_kCountryHeredada),
       p.remove(_kCity),
       p.remove(_kPendingProfile),
     ]);

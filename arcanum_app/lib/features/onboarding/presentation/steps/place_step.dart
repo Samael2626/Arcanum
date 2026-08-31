@@ -1,18 +1,39 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/api/arcanum_api.dart';
 import '../../../../core/theme/arcanum_colors.dart';
 import '../../../../core/theme/arcanum_theme.dart';
-import '../../../../shared/widgets/arcanum_field.dart';
 import '../../../../shared/widgets/gold_button.dart';
+import '../../../../shared/widgets/place_chooser.dart';
 import '../../application/onboarding_controller.dart';
 
-/// Lugar de nacimiento: país + ciudad separados (desambigua p. ej. Córdoba-ES
-/// vs Córdoba-AR), resueltos por el backend (Nominatim + timezonefinder) y
-/// CONFIRMADOS por el usuario antes de avanzar. Nunca se guarda un lugar sin
-/// confirmar — ver bug de Bogotá hardcodeada documentado 2026-07-01.
+/// Lugar de nacimiento, elegido del catalogo de localidades.
+///
+/// POR QUE YA NO HAY DOS CAJAS DE TEXTO
+/// ------------------------------------
+/// Este paso tenia sus propios campos de pais y ciudad y resolvia contra el
+/// servidor (Nominatim). Lo que se enseñaba en la confirmacion era el
+/// `display_name` crudo, y para Medellin eso es:
+///
+///   "Medellín, Valle de Aburrá, Antioquia, RAP del Agua y la Montaña, 0500,
+///    Colombia"
+///
+/// Ilegible, y es lo primero que ve alguien que acaba de instalar la app. El
+/// catalogo da "Medellín, Antioquia, Colombia".
+///
+/// `showPlaceChooser` ya existia y hacia esto mejor, pero solo lo usaba el
+/// perfil: su propio docstring dice que esta para "que el selector se cambie en
+/// UN sitio y lo hereden a la vez el onboarding y el perfil". El onboarding
+/// nunca se migro. Ahora si.
+///
+/// NO se pierde nada: el selector conserva el texto libre contra el servidor
+/// como RESCATE, para quien nacio en una aldea que no esta en el catalogo. Se
+/// gana que la via normal sea elegir de una lista.
+///
+/// LO QUE NO CAMBIA, y es lo que importa: sigue sin guardarse un lugar sin
+/// CONFIRMAR, y nunca uno por omision. Ese fue el bug de Bogota hardcodeada
+/// (2026-07-01). El selector no devuelve nada si la persona cancela, y esta
+/// pantalla no deja avanzar sin lugar.
 class PlaceStep extends ConsumerStatefulWidget {
   final VoidCallback onNext;
   final VoidCallback onBack;
@@ -23,161 +44,61 @@ class PlaceStep extends ConsumerStatefulWidget {
 }
 
 class _PlaceStepState extends ConsumerState<PlaceStep> {
-  late final TextEditingController _countryCtrl;
-  late final TextEditingController _cityCtrl;
-  bool _resolving = false;
-  String? _error;
+  /// El lugar ya elegido y confirmado, o null mientras no lo haya.
+  ///
+  /// Se rehidrata de lo que el onboarding ya tuviera: quien vuelve atras desde
+  /// el paso siguiente encuentra su eleccion intacta en vez de la pantalla en
+  /// blanco.
+  ChosenPlace? _place;
 
   @override
   void initState() {
     super.initState();
-    final data = ref.read(onboardingProvider).data;
-    _countryCtrl = TextEditingController(text: data.birthCountry ?? '');
-    _cityCtrl = TextEditingController(text: data.birthCity ?? '');
+    final d = ref.read(onboardingProvider).data;
+    if (d.hasResolvedLocation) {
+      _place = ChosenPlace(
+        displayName: d.resolvedDisplayName ?? d.birthCity ?? '',
+        lat: d.resolvedLat!,
+        lon: d.resolvedLon!,
+        timezone: d.resolvedTimezone!,
+      );
+    }
   }
 
-  @override
-  void dispose() {
-    _countryCtrl.dispose();
-    _cityCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _resolveAndConfirm() async {
-    final country = _countryCtrl.text.trim();
-    final city = _cityCtrl.text.trim();
-    if (country.isEmpty || city.isEmpty) {
-      setState(() => _error = 'Completá país y ciudad.');
-      return;
-    }
-
-    setState(() {
-      _resolving = true;
-      _error = null;
-    });
-
-    Map<String, dynamic> resolved;
-    try {
-      resolved = await ref
-          .read(arcanumApiProvider)
-          .geoResolve(country: country, city: city);
-    } catch (e) {
-      setState(() {
-        _resolving = false;
-        _error = _geoErrorMessage(e);
-      });
-      return;
-    }
-
-    setState(() => _resolving = false);
-    if (!mounted) return;
-
-    final confirmed = await _showConfirmDialog(
-      displayName: resolved['display_name'] as String,
+  Future<void> _elegir() async {
+    final d = ref.read(onboardingProvider).data;
+    final elegido = await showPlaceChooser(
+      context,
+      title: 'Lugar de nacimiento',
+      confirmQuestion: '¿Es este tu lugar de nacimiento?',
+      // Sin `initialCountry`: el pais ya no se pide por separado, y pasar algo
+      // que siempre seria null solo aparentaria que se prellena.
+      initialCity: _place?.displayName ?? d.birthCity,
     );
-    if (confirmed != true) return; // "Corregir": el usuario ajusta los campos.
+    // null = la persona cerro la hoja. No se toca lo que ya hubiera elegido.
+    if (elegido == null || !mounted) return;
+    setState(() => _place = elegido);
+  }
 
+  Future<void> _finalizar() async {
+    final place = _place;
+    if (place == null) return;
     final notifier = ref.read(onboardingProvider.notifier);
-    await notifier.setBirthCountry(country);
-    await notifier.setBirthCity(city);
+    // El nombre del catalogo ("Medellín, Antioquia, Colombia") es lo que se
+    // guarda como birth_city y lo que la persona vera despues en su perfil.
+    await notifier.setBirthCity(place.displayName);
     notifier.setResolvedLocation(
-      displayName: resolved['display_name'] as String,
-      lat: resolved['lat'] as String,
-      lon: resolved['lon'] as String,
-      timezone: resolved['timezone'] as String,
+      displayName: place.displayName,
+      lat: place.lat,
+      lon: place.lon,
+      timezone: place.timezone,
     );
-
     widget.onNext();
-  }
-
-  Future<bool?> _showConfirmDialog({required String displayName}) {
-    return showDialog<bool>(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
-      builder: (ctx) => Dialog(
-        backgroundColor: ArcanumColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: ArcanumColors.gold.withValues(alpha: 0.4)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                '¿Es este tu lugar de nacimiento?',
-                textAlign: TextAlign.center,
-                style: ArcanumText.heading(20),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                displayName,
-                textAlign: TextAlign.center,
-                style: ArcanumText.body(17, color: ArcanumColors.gold),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Tu Ascendente, casas y Luna se calculan a partir de estas '
-                'coordenadas exactas. Confirmalo con cuidado.',
-                textAlign: TextAlign.center,
-                style: ArcanumText.body(13, color: ArcanumColors.ivoryMuted),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(ctx).pop(false),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: ArcanumColors.ivoryMuted),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: Text(
-                        'Corregir',
-                        style: ArcanumText.body(
-                          15,
-                          color: ArcanumColors.ivoryMuted,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: GoldButton(
-                      label: 'Confirmar',
-                      onPressed: () => Navigator.of(ctx).pop(true),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Prefiere el `detail` legible que devuelve el backend (422: ambigüedad o
-  /// lugar no encontrado); nunca oculta el fallo tras un mensaje genérico
-  /// que invite a "seguir igual".
-  String _geoErrorMessage(Object e) {
-    if (e is DioException) {
-      final data = e.response?.data;
-      final detail = (data is Map && data['detail'] is String)
-          ? data['detail'] as String
-          : null;
-      if (e.response?.statusCode == 429) {
-        return detail ?? 'Demasiados intentos. Probá de nuevo en un momento.';
-      }
-      return detail ?? 'No se pudo verificar el lugar. Revisá tu conexión.';
-    }
-    return 'No se pudo verificar el lugar. Intentá de nuevo.';
   }
 
   @override
   Widget build(BuildContext context) {
+    final place = _place;
     return Padding(
       padding: const EdgeInsets.all(28),
       child: Column(
@@ -187,27 +108,23 @@ class _PlaceStepState extends ConsumerState<PlaceStep> {
           Text('Lugar de nacimiento', style: ArcanumText.heading(24)),
           const SizedBox(height: 12),
           Text(
-            'País y ciudad exactos. Determinan tu Ascendente, tus casas y tu '
-            'Luna — te mostraremos el lugar resuelto para que lo confirmes.',
+            'Determina tu Ascendente, tus casas y tu Luna. Búscalo y elígelo '
+            'de la lista.',
             style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
           ),
           const SizedBox(height: 28),
-          ArcanumField(controller: _countryCtrl, label: 'País'),
-          const SizedBox(height: 16),
-          ArcanumField(controller: _cityCtrl, label: 'Ciudad'),
-          if (_error != null) ...[
-            const SizedBox(height: 16),
-            Text(
-              _error!,
-              style: ArcanumText.body(14, color: ArcanumColors.error),
-            ),
-          ],
+          _Elegido(place: place, onTap: _elegir),
+          const SizedBox(height: 12),
+          Text(
+            kPlacesAttribution,
+            style: ArcanumText.body(11, color: ArcanumColors.ivoryMuted),
+          ),
           const SizedBox(height: 28),
           Row(
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: _resolving ? null : widget.onBack,
+                  onPressed: widget.onBack,
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: ArcanumColors.ivoryMuted),
                     padding: const EdgeInsets.symmetric(vertical: 18),
@@ -225,13 +142,77 @@ class _PlaceStepState extends ConsumerState<PlaceStep> {
               Expanded(
                 child: GoldButton(
                   label: 'Finalizar',
-                  loading: _resolving,
-                  onPressed: _resolveAndConfirm,
+                  // Sin lugar no se avanza. `finish()` lanzaria igual en su
+                  // ultima barrera, pero un boton que no hace nada es peor que
+                  // uno que se ve apagado.
+                  onPressed: place == null ? null : _finalizar,
                 ),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// La casilla que muestra el lugar elegido, o invita a elegirlo.
+///
+/// Es un solo objetivo tactil grande y no un campo con un boton al lado: aqui
+/// solo hay una accion posible, y partirla en dos invitaria a teclear en algo
+/// que no acepta texto.
+class _Elegido extends StatelessWidget {
+  const _Elegido({required this.place, required this.onTap});
+
+  final ChosenPlace? place;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final elegido = place != null;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          // 48 dp minimos de zona tactil; en la practica es bastante mas.
+          constraints: const BoxConstraints(minHeight: 72),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: elegido
+                  ? ArcanumColors.gold.withValues(alpha: 0.55)
+                  : ArcanumColors.ivoryMuted.withValues(alpha: 0.35),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                elegido ? Icons.place : Icons.search,
+                color: elegido ? ArcanumColors.gold : ArcanumColors.ivoryMuted,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  place?.displayName ?? 'Buscar mi ciudad',
+                  style: ArcanumText.body(
+                    16,
+                    color: elegido
+                        ? ArcanumColors.gold
+                        : ArcanumColors.ivoryMuted,
+                  ),
+                ),
+              ),
+              if (elegido)
+                Text(
+                  'Cambiar',
+                  style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

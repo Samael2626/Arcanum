@@ -104,14 +104,14 @@ void main() {
     final dob = DateTime(1990, 5, 12);
     await notifier.setBirthDate(dob);
     await notifier.setBirthTime('13:42');
-    await notifier.setBirthCountry('Colombia');
+    // El pais ya no se guarda aparte: el paso del lugar pasa por el selector de
+    // catalogo y devuelve un unico nombre ya resuelto ("Bogotá, Colombia").
     await notifier.setBirthCity('Bogotá');
 
     final data = container.read(onboardingProvider).data;
     expect(data.displayName, 'Samael');
     expect(data.birthDate, dob);
     expect(data.birthTime, '13:42');
-    expect(data.birthCountry, 'Colombia');
     expect(data.birthCity, 'Bogotá');
   });
 

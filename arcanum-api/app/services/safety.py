@@ -62,7 +62,9 @@ def _norm(s: str) -> str:
 # haria inutilizable el producto y no protegeria a nadie.
 _CRISIS = [
     r"\bme\s+quiero\s+(morir|matar)\b",
-    r"\bquiero\s+(morir|matarme|suicidarme)\b",
+    # `morir(me)?`: con `morir\b` a secas, "quiero morirme" —la forma mas
+    # corriente— no casaba, porque tras "morir" no hay frontera de palabra.
+    r"\bquiero\s+(morir(me)?|matarme|suicidarme)\b",
     r"\bno\s+quiero\s+(vivir|seguir\s+viviendo)\b",
     r"\bvoy\s+a\s+(matarme|suicidarme|quitarme\s+la\s+vida)\b",
     r"\bquitarme\s+la\s+vida\b",
@@ -89,7 +91,14 @@ _HEALTH_ASK = [
     r"\bes\s+(cancer|un\s+tumor|grave)\b",
     r"\btengo\s+(cancer|vih|sida|un\s+tumor|depresion\s+clinica)\b",
     r"\bme\s+(voy\s+a\s+)?(curar|sanar)\b",
-    r"\bdiagnostic",
+    # Solo el diagnostico PEDIDO o PROPIO. El prefijo suelto casaba con
+    # cualquier uso de la palabra —"prueba de diagnostico del modelo" quedaba
+    # bloqueada— y contradecia la regla de arriba: se busca la peticion de
+    # decision, no el tema.
+    r"\b(me\s+)?diagnosticaron\b",
+    r"\b(mi|el)\s+diagnostic",
+    r"\bque\s+diagnostic",
+    r"\bdiagnostica(me|r)?\s+(me|mi|el|la|esto|esta)\b",
     r"\bdosis\b",
     r"\bcuant[oa]s?\s+(mg|gramos|gotas|pastillas)\b",
 ]
