@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api/arcanum_api.dart';
+import '../../core/astro/birth_data.dart';
 import '../../core/api/oracle_error.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/privacy/ai_consent_service.dart';
@@ -100,6 +101,11 @@ class _NatalViewState extends ConsumerState<_NatalView> {
   late final ArcanumApi _api = ref.read(arcanumApiProvider);
   late Future<(Map<String, dynamic>, Map<String, dynamic>)> _future = _load();
 
+  /// Firma de nacimiento con la que se pidio `_future`. Sirve para no recargar
+  /// cuando el perfil cambia por algo que no afecta a la rueda (el nombre, la
+  /// residencia, la suscripcion).
+  String? _firma;
+
   /// Planeta que Hoy pidió enfocar ("tu Marte natal"). Se lee una vez y se
   /// limpia el canal, para no re-disparar el foco en visitas siguientes.
   String? _focus;
@@ -142,6 +148,7 @@ class _NatalViewState extends ConsumerState<_NatalView> {
   }
 
   Future<(Map<String, dynamic>, Map<String, dynamic>)> _load() async {
+    _firma = ref.read(birthSignatureProvider);
     try {
       final data = await _api.celestialOverview();
       return (
@@ -164,6 +171,21 @@ class _NatalViewState extends ConsumerState<_NatalView> {
 
   @override
   Widget build(BuildContext context) {
+    // El perfil puede llegar DESPUES de esta pantalla: si el PUT del onboarding
+    // fallo, queda encolado y se reenvia en el arranque siguiente
+    // (`tryFlushPendingProfile`), que corre contra esta carga. Sin esto, Cielos
+    // se quedaba en "Aun no hay carta que trazar" con los datos ya en el
+    // servidor, y su boton mandaba a rehacer un onboarding ya hecho.
+    //
+    // Tambien cubre el caso de corregir la hora o el lugar de nacimiento: la
+    // firma cambia y la rueda se recalcula, en vez de seguir mostrando la
+    // anterior.
+    ref.listen<String?>(birthSignatureProvider, (previa, actual) {
+      if (actual != null && actual != _firma) {
+        setState(() => _future = _load());
+      }
+    });
+
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),

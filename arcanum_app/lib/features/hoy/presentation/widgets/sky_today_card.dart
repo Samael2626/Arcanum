@@ -19,6 +19,7 @@ import 'today_card.dart';
 import '../../../../shared/widgets/ai_output.dart';
 import '../../../../core/auth/auth_controller.dart';
 import '../../../../core/privacy/ai_consent_service.dart';
+import '../../../../core/astro/birth_data.dart';
 import 'sello_del_cielo.dart';
 
 /// "Tu cielo de hoy": el transito dominante de esta persona, leido por la IA.
@@ -39,7 +40,17 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
 
   /// Fase 1: el cielo SIN interpretar. Gratis, sin cupo y sin terceros, asi que
   /// se pide al construirse sin pedir permiso a nadie.
-  late Future<Map<String, dynamic>> _cielo = _api.skyToday();
+  late Future<Map<String, dynamic>> _cielo = _pedirCielo();
+
+  /// Firma de nacimiento con la que se pidio `_cielo`. Ver `birth_data.dart`.
+  String? _firma;
+
+  /// `skyToday()` responde 404 sin carta natal, y la carta depende del perfil,
+  /// que puede llegar despues de construirse esta tarjeta.
+  Future<Map<String, dynamic>> _pedirCielo() {
+    _firma = ref.read(birthSignatureProvider);
+    return _api.skyToday();
+  }
 
   /// Fase 2: la lectura. Null mientras el sello siga cerrado — y esa es toda la
   /// diferencia. Antes esto se disparaba al construirse la tarjeta, o sea al
@@ -53,7 +64,7 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
   Timer? _lecturaTimer;
 
   void _reintentarCielo() => setState(() {
-    _cielo = _api.skyToday();
+    _cielo = _pedirCielo();
     _lectura = null;
     _overview = null;
     _mostrarLectura = false;
@@ -118,6 +129,13 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
 
   @override
   Widget build(BuildContext context) {
+    // El perfil puede llegar despues de esta tarjeta (perfil encolado que se
+    // reenvia al arrancar, o correccion de la hora de nacimiento). Sin esto el
+    // sello se quedaba en su estado de fallo con la carta ya calculable.
+    ref.listen<String?>(birthSignatureProvider, (previa, actual) {
+      if (actual != null && actual != _firma) _reintentarCielo();
+    });
+
     return FutureBuilder<Map<String, dynamic>>(
       future: _cielo,
       builder: (context, cielo) {
