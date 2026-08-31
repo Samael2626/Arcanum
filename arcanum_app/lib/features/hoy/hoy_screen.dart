@@ -20,6 +20,32 @@ import 'presentation/widgets/nested_sky_instrument.dart';
 import 'presentation/widgets/sky_today_card.dart';
 import 'presentation/widgets/today_card.dart';
 
+/// El cielo de hoy de ESTA persona, o solo la luna si no ha confirmado lugar.
+///
+/// La respuesta tiene la misma forma en los dos casos; lo que falta cuando no
+/// hay lugar falta de verdad (`day_ruler` y `planetary_hour` ausentes), y la
+/// pantalla lo declara en vez de rellenarlo.
+///
+/// DERIVA del lugar en vez de recargarse a mano. El perfil llega DESPUES del
+/// arranque (el bootstrap de auth es asincrono), y la version anterior guardaba
+/// el future en el State y lo reemplazaba con setState desde un ref.listen. Eso
+/// abria una carrera perdida: si el future viejo (solo luna) resolvia despues
+/// del cambio de lugar, el FutureBuilder seguia suscrito a EL, pintaba su
+/// resultado y ya no volvia a construirse. La pantalla se quedaba clavada en
+/// "No disponible sin tu lugar" para siempre aunque el lugar SI hubiera
+/// llegado. Watch sobre el lugar hace que recalcular sea responsabilidad de
+/// Riverpod y no de un orden de llegada.
+final hoySkyProvider = FutureProvider.autoDispose<Map<String, dynamic>>((
+  ref,
+) async {
+  final place = ref.watch(userPlaceProvider);
+  final api = ref.read(arcanumApiProvider);
+  if (place == null) {
+    return <String, dynamic>{'moon': await api.moon()};
+  }
+  return api.today(lat: place.lat, lon: place.lon);
+});
+
 class HoyScreen extends ConsumerStatefulWidget {
   const HoyScreen({super.key});
   @override
@@ -27,73 +53,45 @@ class HoyScreen extends ConsumerStatefulWidget {
 }
 
 class _HoyScreenState extends ConsumerState<HoyScreen> {
-  late final ArcanumApi _api = ref.read(arcanumApiProvider);
-  UserPlace? _place;
-  late Future<Map<String, dynamic>> _future = _load();
-
-  /// El cielo de hoy de ESTA persona, o solo la luna si no ha confirmado lugar.
-  ///
-  /// La respuesta tiene la misma forma en los dos casos; lo que falta cuando no
-  /// hay lugar falta de verdad (`day_ruler` y `planetary_hour` ausentes), y la
-  /// pantalla lo declara en vez de rellenarlo.
-  Future<Map<String, dynamic>> _load() {
-    final place = _place = ref.read(userPlaceProvider);
-    if (place == null) {
-      return _api.moon().then((m) => <String, dynamic>{'moon': m});
-    }
-    return _api.today(lat: place.lat, lon: place.lon);
-  }
-
-  void _reload() => setState(() => _future = _load());
+  /// Vuelve a pedir el cielo y espera a que llegue: sin el await, el indicador
+  /// de arrastre se cerraria antes de que hubiera nada nuevo que mirar.
+  Future<void> _reload() => ref.refresh(hoySkyProvider.future);
 
   @override
   Widget build(BuildContext context) {
-    // El perfil llega despues del arranque (el bootstrap de auth es asincrono)
-    // y tambien cambia al terminar el onboarding o al entrar con otra cuenta.
-    // Sin esto, quien SI tiene lugar se quedaria con el cielo del que no lo
-    // tiene hasta reiniciar la app.
-    ref.listen<UserPlace?>(userPlaceProvider, (previous, next) {
-      if (next?.lat != _place?.lat || next?.lon != _place?.lon) _reload();
-    });
+    final sky = ref.watch(hoySkyProvider);
+    // La atmósfera del cielo deriva del regente REAL del día; mientras
+    // carga, penumbra neutra.
+    final ruler = sky.value?['day_ruler'] as String?;
+    final mood = ruler != null
+        ? ArcanumMood.forPlanet(ruler)
+        : ArcanumMood.neutral;
 
-    return FutureBuilder<Map<String, dynamic>>(
-      future: _future,
-      builder: (context, snap) {
-        // La atmósfera del cielo deriva del regente REAL del día; mientras
-        // carga, penumbra neutra.
-        final ruler = (snap.data?['day_ruler'] as String?);
-        final mood = ruler != null
-            ? ArcanumMood.forPlanet(ruler)
-            : ArcanumMood.neutral;
-
-        return Stack(
-          children: [
-            Positioned.fill(child: _LivingSky(mood: mood)),
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 460),
-                child: RefreshIndicator(
-                  color: ArcanumColors.gold,
-                  backgroundColor: ArcanumColors.surface,
-                  onRefresh: () async => _reload(),
-                  child: ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(22, 36, 22, 28),
-                    children: [
-                      if (snap.connectionState == ConnectionState.waiting)
-                        const _SkyLoading()
-                      else if (snap.hasError)
-                        _error(snap.error.toString())
-                      else
-                        _content(snap.data!),
-                    ],
-                  ),
-                ),
+    return Stack(
+      children: [
+        Positioned.fill(child: _LivingSky(mood: mood)),
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 460),
+            child: RefreshIndicator(
+              color: ArcanumColors.gold,
+              backgroundColor: ArcanumColors.surface,
+              onRefresh: _reload,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(22, 36, 22, 28),
+                children: [
+                  switch (sky) {
+                    AsyncData(:final value) => _content(value),
+                    AsyncError(:final error) => _error(error.toString()),
+                    _ => const _SkyLoading(),
+                  },
+                ],
               ),
             ),
-          ],
-        );
-      },
+          ),
+        ),
+      ],
     );
   }
 
