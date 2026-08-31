@@ -131,3 +131,30 @@ def client(db_session, mock_redis):
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def sin_modelo_de_verdad(monkeypatch):
+    """Ningun test habla con Groq. Nunca.
+
+    `.env` lleva una GROQ_API_KEY real y nada la aislaba, asi que la suite
+    entera hacia llamadas en vivo y de pago cada vez que corria — incluido el
+    pre-commit. Y no daba rojo de forma limpia: daba rojo A VECES, porque el
+    texto lo escribia un modelo distinto en cada ejecucion y de tanto en tanto
+    cruzaba un guardarrail de salida. Un gate que falla una de cada N veces se
+    acaba ignorando, que es la peor averia que puede tener un gate.
+
+    `test_ia_con_carta_devuelve_conversacion` lo dice en su propio docstring
+    ("sin clave, la respuesta es el fallback de modo dev"): la suposicion
+    estaba escrita, solo que nadie la hacia cumplir.
+
+    Se limpia tambien `_client`, que es un global perezoso: si otro test lo
+    dejo construido, borrar la clave no basta para desconectarlo.
+    """
+    from app.core.config import settings
+    from app.services import claude_service
+
+    monkeypatch.setattr(settings, "GROQ_API_KEY", None, raising=False)
+    monkeypatch.setattr(claude_service, "_client", None, raising=False)
+    yield
+    claude_service._client = None
