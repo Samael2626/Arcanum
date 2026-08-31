@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import '../../core/consent/ai_consent.dart';
+import '../../core/privacy/ai_consent_service.dart';
 
 /// Por que no hay horoscopo, y que se puede hacer al respecto.
 ///

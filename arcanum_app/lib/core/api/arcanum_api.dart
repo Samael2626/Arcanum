@@ -209,19 +209,27 @@ class ArcanumApi {
   /// no puede ser un enlace de correo. Se manda un fragmento acotado y nunca
   /// el texto entero: un reporte no es excusa para volcar la lectura de
   /// alguien en un sitio que no esta pensado para guardarla.
+  /// Denuncia de contenido de IA. Ruta unica: `POST /reports`.
+  ///
+  /// Antes iba a `/reports/content`, que solo dejaba una linea en el log de la
+  /// aplicacion. Los logs rotan: eso servia para enterarse, no para llevar el
+  /// historial que la politica AI-Generated Content de Play da por hecho. Ahora
+  /// las dos vias de denuncia escriben en `content_reports`.
+  ///
+  /// No se manda el texto denunciado. El servidor guarda la referencia y la
+  /// pantalla; un reporte no es excusa para persistir en claro la lectura de
+  /// alguien.
   Future<void> reportContent({
     required String surface,
     required String reason,
     String? excerpt,
     String? note,
-  }) async {
-    await _dio.post('/reports/content', data: {
-      'surface': surface,
-      'reason': reason,
-      if (excerpt != null) 'excerpt': excerpt.substring(0, excerpt.length.clamp(0, 400)),
-      if (note != null && note.isNotEmpty) 'note': note,
-    });
-  }
+  }) => createContentReport(
+        source: surface,
+        contentRef: '',
+        reason: reason,
+        note: note,
+      );
 
   /// Tira de tarot. spread: 'three_card' | 'celtic_cross'. Requiere auth.
   /// Devuelve la sesión guardada (cartas en data['cards_drawn']['cards']).
@@ -435,6 +443,51 @@ class ArcanumApi {
   }
 
   Future<void> deletePassage(String id) => _dio.delete('/reading/passages/$id');
+
+  // ── Denuncia de contenido generado por IA ───────────────────────────────
+  //
+  // Requisito literal de la politica AI-Generated Content de Play: poder
+  // denunciar sin salir de la app.
+
+  Future<void> createContentReport({
+    required String source,
+    required String contentRef,
+    required String reason,
+    String? note,
+  }) async {
+    await _dio.post(
+      '/reports',
+      data: {
+        'source': source,
+        'content_ref': contentRef,
+        'reason': reason,
+        if (note != null && note.isNotEmpty) 'note': note,
+      },
+    );
+  }
+
+  // ── Consentimientos ─────────────────────────────────────────────────────
+  //
+  // Se persisten en el servidor, no solo en el dispositivo: en Colombia la
+  // autorizacion hay que poder demostrarla. Ver core/privacy/consent_policy.dart.
+
+  Future<List<Map<String, dynamic>>> userConsents() async =>
+      (await _dio.get('/consents')).data.cast<Map<String, dynamic>>();
+
+  Future<Map<String, dynamic>> recordConsent({
+    required String kind,
+    required String policyVersion,
+    required bool granted,
+  }) async =>
+      (await _dio.post(
+            '/consents',
+            data: {
+              'kind': kind,
+              'policy_version': policyVersion,
+              'granted': granted,
+            },
+          )).data
+          as Map<String, dynamic>;
 }
 
 final arcanumApiProvider = Provider((ref) => ArcanumApi(ref.read(dioProvider)));

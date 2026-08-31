@@ -17,7 +17,8 @@ import '../../hoy_lore.dart';
 import '../../sky_today_state.dart';
 import 'today_card.dart';
 import '../../../../shared/widgets/ai_output.dart';
-import '../../../../core/consent/ai_consent.dart';
+import '../../../../core/auth/auth_controller.dart';
+import '../../../../core/privacy/ai_consent_service.dart';
 import 'sello_del_cielo.dart';
 
 /// "Tu cielo de hoy": el transito dominante de esta persona, leido por la IA.
@@ -75,7 +76,11 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
     setState(() => _abriendo = true);
     try {
       if (!mounted) return;
-      if (!await ensureAiConsent(context)) {
+      final userId = ref.read(authProvider).user?['id'] as String?;
+      if (userId == null ||
+          !await ref
+              .read(aiConsentServiceProvider)
+              .ensureGranted(context, userId: userId)) {
         if (mounted) setState(() => _abriendo = false);
         return;
       }

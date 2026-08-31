@@ -14,6 +14,7 @@ import '../../features/perfil/perfil_screen.dart';
 import '../../features/grimorio/pasajes_screen.dart';
 import '../../features/lecturas/presentation/indice_screen.dart';
 import '../../features/saber/saber_screen.dart';
+import '../../features/settings/privacy_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/tarot/tarot_screen.dart';
 import 'app_shell.dart';
@@ -25,6 +26,7 @@ final appRouter = GoRouter(
     GoRoute(path: '/register', builder: (c, s) => const RegisterScreen()),
     GoRoute(path: '/onboarding', builder: (c, s) => const OnboardingScreen()),
     GoRoute(path: '/settings', builder: (c, s) => const SettingsScreen()),
+    GoRoute(path: '/privacy', builder: (c, s) => const PrivacyScreen()),
     GoRoute(path: '/perfil', builder: (c, s) => const PerfilScreen()),
     GoRoute(path: '/paywall', builder: (c, s) => const PaywallScreen()),
     StatefulShellRoute.indexedStack(

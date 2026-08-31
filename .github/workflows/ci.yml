@@ -86,3 +86,36 @@ jobs:
           TEST_DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/arcanum_test
           SECRET_KEY: ci-only-not-a-real-secret
         run: pytest tests -q
+
+      # tests_pg cubre dinero y concurrencia (58 tests) contra el esquema que
+      # produce Alembic (hasta la cabeza), no contra el de `create_all`. Necesita SU
+      # PROPIA base: reutilizar arcanum_test mezclaría los dos esquemas, y
+      # apuntar tests_pg a una base sin migrar da 58 errores de UndefinedTable
+      # en vez de tests. Se crea con psycopg2 y no con psql para no depender de
+      # que el runner traiga cliente de PostgreSQL.
+      - name: Base con el esquema real de Alembic
+        env:
+          PGURL: postgresql://postgres:postgrespassword@localhost:5432/postgres
+        run: |
+          python - <<'PY'
+          import os, psycopg2
+          conexion = psycopg2.connect(os.environ["PGURL"])
+          conexion.autocommit = True
+          conexion.cursor().execute("CREATE DATABASE arcanum_migration_test")
+          PY
+
+      - name: Tests contra el esquema real (tests_pg)
+        env:
+          MIGRATION_TEST_DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/arcanum_migration_test
+          SECRET_KEY: ci-only-not-a-real-secret
+        run: |
+          python scripts/verify_migrations.py
+          # -W error::pytest.PytestUnraisableExceptionWarning no: lo que importa
+          # aqui es que NINGUNO se salte. Un salto significa base mal migrada, y
+          # un verde con los 58 dormidos es justo el estado que este paso viene
+          # a matar.
+          pytest tests_pg -q -rs | tee /tmp/pg.log
+          if grep -qE '[0-9]+ skipped' /tmp/pg.log; then
+            echo "::error::tests_pg se salto tests — la base no esta migrada a la cabeza"
+            exit 1
+          fi

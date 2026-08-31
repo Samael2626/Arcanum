@@ -1,4 +1,5 @@
 import 'package:arcanum_app/features/paywall/paywall_screen.dart';
+import 'package:arcanum_app/core/monetization/monetization_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,7 +12,19 @@ Future<void> _pumpPaywall(WidgetTester tester) async {
   addTearDown(tester.view.reset);
 
   await tester.pumpWidget(
-    const ProviderScope(child: MaterialApp(home: PaywallScreen())),
+    ProviderScope(
+      overrides: [
+        // Sin precios de tienda la hoja de packs no se abre, y es a proposito:
+        // no se vende lo que no se sabe cuanto cuesta. Aqui se simula que la
+        // tienda respondio para poder probar el CTA.
+        storePricesProvider.overrideWith((ref) async => const {
+          ProductIds.credit1: 'COP 4.900',
+          ProductIds.pack3: 'COP 11.900',
+          ProductIds.premiumAnnual: 'COP 199.900/año',
+        }),
+      ],
+      child: const MaterialApp(home: PaywallScreen()),
+    ),
   );
   await tester.pumpAndSettle();
 }

@@ -7,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'core/auth/auth_controller.dart';
+import 'core/config/release_config.dart';
+import 'core/licencias/registro_licencias.dart';
 import 'core/firebase/firebase_startup.dart';
 import 'core/monetization/monetization_service.dart';
 import 'core/places/city_catalog.dart';
@@ -17,6 +19,8 @@ import 'features/onboarding/application/onboarding_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // La OFL obliga a distribuir su texto; esto lo hace visible en la app.
+  registrarLicencias();
   // No usar Firebase.initializeApp directamente: en Android el provider nativo
   // ya creo [DEFAULT] y el segundo intento mata el arranque.
   await ensureFirebaseInitialized();
@@ -28,8 +32,16 @@ void main() async {
     return true;
   };
 
-  await MobileAds.instance.initialize();
-  await MonetizationService.initialize('PLACEHOLDER_RC_API_KEY');
+  if (ReleaseConfig.adsEnabled) {
+    // TODO(compliance): Implementar UMP antes de activar ADS_ENABLED. Ver el
+    // bloque "Gap abierto: consentimiento de ads (UMP)" en
+    // .agents/skills/arcanum-legal/references/ia-y-datos.md.
+    await MobileAds.instance.initialize();
+  }
+  ReleaseConfig.validateForStartup();
+  if (ReleaseConfig.revenueCatEnabled) {
+    await MonetizationService.initialize(ReleaseConfig.revenueCatApiKey);
+  }
 
   // En desarrollo, log a consola en vez de Crashlytics
   if (kDebugMode) {

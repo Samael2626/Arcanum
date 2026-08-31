@@ -1,0 +1,61 @@
+/* Extiende assets/legal.css — usa las mismas variables (--ink, --gold, --wine, etc). */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.card {
+  position: relative;
+  padding: 20px;
+  border: 1px solid var(--line);
+  background: rgba(33, 25, 37, 0.6);
+  transition: border-color 0.3s ease;
+}
+
+.card:hover { border-color: var(--gold); }
+
+.card .tag {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font: 700 0.68rem/1 system-ui, sans-serif;
+  color: var(--wine);
+  border: 1px solid var(--wine);
+  padding: 2px 7px;
+  letter-spacing: 0.05em;
+}
+
+.card h3 { margin: 6px 0 8px; color: var(--ivory); font-size: 1.1rem; font-weight: 600; }
+.card p { margin: 0; font-size: 0.92rem; }
+
+.oracle-preview { text-align: left; }
+
+.oracle-form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.oracle-form input {
+  flex: 1;
+  min-width: 220px;
+  padding: 11px 14px;
+  background: var(--ink);
+  border: 1px solid var(--line);
+  color: var(--ivory);
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.oracle-form input:focus { outline: none; border-color: var(--gold); }
+.oracle-form button { border: 1px solid var(--gold); cursor: pointer; }
+
+.oracle-response {
+  margin-top: 18px;
+  min-height: 22px;
+  font-style: italic;
+  color: var(--gold);
+}

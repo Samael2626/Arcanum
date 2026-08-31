@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+5
+version: 1.0.0+7
 
 environment:
   sdk: ^3.12.2
@@ -89,6 +89,13 @@ flutter:
     - assets/engravings/inciensos/
     - assets/engravings/aceites/
     - assets/engravings/resinas/
+    # Licencias de las fuentes: la OFL 1.1 obliga a distribuir su texto con el
+    # software. Se empaquetan como asset y se registran en LicenseRegistry para
+    # que aparezcan en showLicensePage().
+    - assets/fonts/OFL-Libertinus.txt
+    - assets/fonts/OFL-Noto.txt
+    - assets/fonts/OFL-CormorantGaramond.txt
+    - assets/fonts/OFL-CrimsonPro.txt
   fonts:
     - family: Cormorant Garamond
       fonts:

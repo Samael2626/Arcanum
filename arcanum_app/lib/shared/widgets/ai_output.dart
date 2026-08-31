@@ -130,9 +130,13 @@ bool mentionsCulinary(String text) => _nombra(text, kCulinaryBotanicals);
 
 /// Motivos de reporte. Cerrados a proposito: texto libre sin acotar seria otro
 /// campo que moderar, y la persona que reporta quiere terminar rapido.
+/// Las CLAVES son las que acepta `ContentReportReason` en el backend. Iban en
+/// masculino ('ofensivo') contra un enum en femenino ('ofensiva'): cada
+/// denuncia habria vuelto con un 422 y la persona habria visto "no se pudo
+/// enviar" sin que nada estuviera caido.
 const Map<String, String> kReportReasons = {
-  'ofensivo': 'Ofensivo o de mal gusto',
-  'peligroso': 'Peligroso o dañino',
+  'ofensiva': 'Ofensivo o de mal gusto',
+  'peligrosa': 'Peligroso o dañino',
   'salud': 'Da consejo médico o de salud',
   'incorrecto': 'Es incorrecto o no encaja con mi carta',
   'otro': 'Otro motivo',

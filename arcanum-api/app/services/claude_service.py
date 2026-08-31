@@ -24,7 +24,7 @@ from groq import Groq, RateLimitError
 from app.core.config import settings
 from app.services import safety
 from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT
-from app.services.oracle_prompt import ORACLE_SYSTEM_PROMPT
+from app.services.oracle_prompt import get_oracle_system_prompt
 
 logger = logging.getLogger("arcanum.oracle")
 
@@ -70,7 +70,7 @@ def _build_user_message(context: str, question: Optional[str],
     """Ensambla el mensaje 'user' con DATOS y un marcador mínimo de modo.
 
     El CÓMO (integrar por posición, no inventar pregunta, un solo cierre ritual)
-    vive en ORACLE_SYSTEM_PROMPT — aquí NO se repite para no duplicar la regla.
+    vive en el system prompt del catalogo — aquí NO se repite para no duplicar la regla.
 
     - solo pregunta      → astral + pregunta.
     - pregunta + tirada  → astral + tirada + pregunta.
@@ -336,7 +336,7 @@ def generate_reading(context: str, model: str, question: Optional[str] = None,
         )
 
     return _generate_with_coverage(
-        client, model, ORACLE_SYSTEM_PROMPT,
+        client, model, get_oracle_system_prompt(),
         _build_user_message(context, question, tarot),
         _max_tokens_for(card_count), _temperature_for(card_count),
         expected, notice,
