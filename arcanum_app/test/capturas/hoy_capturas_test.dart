@@ -241,6 +241,22 @@ void main() {
     await _retratar(tester, '02-sello-cerrado');
   });
 
+  testWidgets('01b el instrumento y su selector', (tester) async {
+    await _montar(tester);
+    await tester.drag(find.byType(ListView), const Offset(0, -420));
+    await tester.pumpAndSettle();
+    await _retratar(tester, '01b-instrumento-regente');
+
+    // El mismo instrumento con la hora elegida: cambia el panel Y los chips.
+    await tester.tap(find.byKey(const Key('hoy-selector-hour')));
+    await tester.pumpAndSettle();
+    await _retratar(tester, '01c-instrumento-hora');
+
+    await tester.tap(find.byKey(const Key('hoy-selector-moon')));
+    await tester.pumpAndSettle();
+    await _retratar(tester, '01d-instrumento-luna');
+  });
+
   testWidgets('03 el consentimiento, antes de gastar nada', (tester) async {
     await _montar(tester);
     await tester.drag(find.byType(ListView), const Offset(0, -900));

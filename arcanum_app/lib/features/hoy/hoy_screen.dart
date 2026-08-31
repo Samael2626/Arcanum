@@ -209,8 +209,8 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
     required Map<String, dynamic> moon,
   }) {
     final hourPlanet = hour?['planet'] as String?;
-    final planet = hourPlanet ?? 'moon';
-    final mood = ArcanumMood.forPlanet(planet);
+    // Ni `planet` ni `mood` se calculan ya aqui: los decide el selector del
+    // instrumento, que es quien sabe que cuerpo se esta mirando.
     final illumination = (moon['illumination'] as num).toDouble();
     final waxing = moon['is_waxing'] as bool;
     final phase = moon['phase_name'] as String;
@@ -239,24 +239,31 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         ageDays: age,
       ),
       onConfirmPlace: () => context.push('/perfil'),
-      actions: _jumpRow(planet, mood),
+      // Los chips siguen al cuerpo elegido en el selector, no a la hora: los
+      // del Sol no le sirven a la Luna.
+      actionsFor: (elegido) =>
+          _jumpRow(elegido, ArcanumMood.forPlanet(elegido)),
     );
   }
 
   Widget _jumpRow(String planet, ArcanumMood mood) {
     final name = planetEs[planet] ?? planet;
+    // "Plantas de Venus" pero "Plantas de la Luna": de los siete cuerpos, el
+    // unico con articulo es la Luna. Se veia poco porque los chips seguian al
+    // planeta de la hora; con el selector, elegirla es un toque.
+    final deName = planet == 'moon' ? 'de la $name' : 'de $name';
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       alignment: WrapAlignment.center,
       children: [
         _JumpChip(
-          label: 'Lore de $name',
+          label: 'Lore $deName',
           mood: mood,
           onTap: () => showPlanetLoreSheet(context, planet),
         ),
         _JumpChip(
-          label: 'Plantas de $name',
+          label: 'Plantas $deName',
           mood: mood,
           onTap: () => _navigate(NextStepKind.materia, planet, null),
         ),
