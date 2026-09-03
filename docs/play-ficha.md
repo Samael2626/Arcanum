@@ -120,9 +120,8 @@ QUÉ TRAE
 
 CÓMO FUNCIONA EL PLAN GRATUITO
 
-Hay un número de consultas al día. Se puede ampliar viendo un anuncio, o quitar
-el límite con la suscripción. Ni una cosa ni la otra desbloquea contenido
-distinto: es el mismo material.
+Hay un número de consultas al día. La suscripción quita ese límite. No
+desbloquea contenido distinto: es el mismo material.
 
 LO QUE ARCANUM NO HACE
 
