@@ -174,9 +174,9 @@
 </table></div>
 <p>Qué recibe cada uno, en concreto:</p>
 <ul>
-<li><strong>Groq</strong> recibe el texto de tu consulta, el contexto astrológico necesario para responder, las cartas de la tirada y <strong>tu nombre visible</strong> (el que eliges en tu perfil; si no pones ninguno, se envía «Consultante»). <strong>No recibe tu correo electrónico, tu identificador de usuario ni las entradas de tu grimorio</strong>, que viajan cifradas y no se descifran en ningún punto del servidor.</li>
+<li><strong>Groq</strong> recibe el texto de tu consulta, el contexto astrológico necesario para responder y las cartas de la tirada. <strong>No recibe tu nombre, tu correo electrónico, tu identificador de usuario ni las entradas de tu grimorio</strong>, que viajan cifradas y no se descifran en ningún punto del servidor.</li>
 </ul>
-<p>Si prefieres que tu nombre real no salga de aquí, cambia el nombre visible en tu perfil por el que quieras: es el único que se envía.
+<p>Tu nombre visible <strong>ya no se envía</strong>. Antes acompañaba a la consulta y se retiró al comprobar que el modelo no lo necesitaba para responder.
 - <strong>RevenueCat</strong> recibe un identificador de cliente y el estado de compra. No recibe el contenido de la App.
 - <strong>Railway</strong> aloja la API. A su vez se apoya en Google Cloud, Cloudflare y Stripe.
 - <strong>Supabase</strong> aloja la base de datos: es quien custodia tu cuenta, tu perfil natal, tu grimorio cifrado y tu historial. Es el proveedor que guarda el conjunto de tus datos.
@@ -198,6 +198,7 @@
 <h2>3.2 Inteligencia artificial</h2>
 <p>Las lecturas del Oráculo <strong>las genera un modelo de lenguaje</strong> operado por Groq. Se te avisa dentro de la App antes de la primera consulta y se te pide consentimiento explícito, que puedes retirar cuando quieras desde Ajustes. Si lo retiras, el Oráculo deja de funcionar; el resto de la App sigue disponible.</p>
 <p>Groq declara que no entrena sus modelos con las entradas ni con las salidas. Puede conservar entradas y salidas hasta 30 días por motivos de fiabilidad y prevención de abuso.</p>
+<p>Esto tiene una consecuencia que conviene decir claro: <strong>si borras tu cuenta, lo que ya se envió al proveedor de IA puede seguir en sus registros hasta 30 días</strong>, aunque aquí desaparezca de inmediato. No podemos acortar ese plazo por ti.</p>
 <p>No se toma ninguna decisión automatizada que produzca efectos jurídicos sobre ti ni te afecte de forma similar. El Oráculo no evalúa, puntúa ni clasifica a personas. Su contenido es simbólico: no es consejo médico, jurídico, financiero ni psicológico.</p>
 <p>Puedes denunciar cualquier respuesta generada por IA desde la propia pantalla donde aparece.</p>
 <hr>
