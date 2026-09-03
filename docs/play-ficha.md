@@ -144,25 +144,61 @@ Sacado de los modelos de `arcanum-api`, no de memoria.
 |---|---|
 | ¿Recoge o comparte datos de usuario? | **Sí** |
 | ¿Se cifran en tránsito? | **Sí** — todo va por HTTPS |
-| ¿Se puede pedir el borrado? | **Sí** — en la app y por web |
+| ¿Se puede pedir el borrado? | **Sí** — en la app y por web. `DELETE /users/me` (`routers/users.py:40`) borra la fila del usuario y **todo lo colgado en cascada** (`ondelete="CASCADE"` en grimorio, carta natal, tiradas, conversaciones del oráculo, créditos, tokens) y además pide a RevenueCat borrar el customer (`:50`). La única excepción es Groq: ver la nota al pie de la tabla |
 | URL de borrado | `https://samael2626.github.io/Arcanum/account-deletion.html` |
 | ¿Cumple la política de familias? | No aplica: publico objetivo 18+ |
 
 ### Tipos de datos
 
-| Categoría | Tipo | Recogido | Compartido | Obligatorio | Para qué |
-|---|---|---|---|---|---|
-| Info personal | Correo | Sí | No | Sí | Cuenta y autenticación |
-| Info personal | Nombre | Sí | No | No | Personalizar |
-| Info personal | Otros (fecha/hora de nacimiento) | Sí | No | No | Cálculo de la carta natal |
-| Ubicación | Ubicación aproximada | Sí | No | No | Hora planetaria y fecha local |
-| Ubicación | Ubicación precisa | Sí | No | No | Coordenadas de nacimiento y actuales |
-| Datos financieros | Historial de compras | Sí | Sí (RevenueCat) | No | Gestionar la suscripción |
-| Mensajes | Otros en la app | Sí | Sí (Groq) | No | Generar las lecturas |
-| Archivos y documentos | — | No | No | — | — |
-| Rendimiento | Registros de fallos | Sí | Sí (Crashlytics) | No | Diagnosticar cierres |
-| Rendimiento | Diagnósticos | Sí | Sí (Crashlytics) | No | Diagnosticar cierres |
-| ID de dispositivo | ID de dispositivo o de otro tipo | Sí | Sí (AdMob) | No | Anuncios bonificados |
+| # | Categoría de Play | Tipo | Recogido | Compartido con | Finalidad | Cifrado en tránsito | Oblig. | Borrable | Evidencia |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Info personal | Dirección de correo | Sí | No | Cuenta y autenticación | Sí | **Sí** | Sí | `models/user.py:12` |
+| 2 | Info personal | Nombre | Sí | **Sí — Groq** | Funcionalidad (el nombre entra en el prompt) | Sí | No | Sí | `models/user.py:14`; `services/oracle_context.py:118` |
+| 3 | Info personal | Otra info (fecha y hora de nacimiento) | Sí | No en crudo | Cálculo de la carta natal | Sí | No | Sí | `models/user.py:15-16` |
+| 4 | Ubicación | Ubicación aproximada | Sí | No | Hora planetaria y fecha local | Sí | No | Sí | `models/user.py:26-27` |
+| 5 | Ubicación | Ubicación precisa | Sí | No | Coordenadas de nacimiento y actuales | Sí | No | Sí | `models/user.py:17-18, 24-25` |
+| 6 | Info financiera | Historial de compras | Sí | **Sí — RevenueCat, Google Play Billing** | Gestionar la suscripción | Sí | No | Sí | `models/user.py:30`; `monetization_service.dart:65,70` |
+| 7 | Mensajes | Otros mensajes en la app | Sí | **Sí — Groq** | Generar las lecturas | Sí | No | Sí | `models/oracle_conversation.py:13`; `claude_service.py:168-170` |
+| 8 | Actividad en la app | Otro contenido generado por el usuario | Sí | No | Grimorio: **título y etiquetas en claro**, cuerpo cifrado | Sí | No | Sí | `schemas/grimoire_entry.py` (`title`, `tags` fuera del cifrado) |
+| 9 | Info y rendimiento | Registros de fallos | Sí | Sí — Google/Crashlytics | Funcionalidad y diagnóstico | Sí | No | Sí | `main.dart:29,31` |
+| 10 | Info y rendimiento | Diagnósticos | Sí | Sí — Google/Crashlytics | Diagnóstico | Sí | No | Sí | `main.dart:59,73` |
+| 11 | ID de dispositivo | ID de dispositivo o de otro tipo | Sí | Sí — Google (AdMob, Firebase) | Publicidad e identificación de instalación | Sí | No | Parcial | manifiesto del AAB: `MobileAdsInitProvider`, `AD_ID`, `FirebaseInstallationsRegistrar` |
+
+**Filas que NO se declaran, y por qué:**
+
+- **Contraseña.** Play no tiene un tipo de dato para credenciales. No se declara como
+  fila; se guarda con **bcrypt** (`core/security.py:14`), nunca en claro.
+- **Cuerpo del grimorio.** Cifrado con AES-256-GCM en el dispositivo
+  (`grimoire_crypto.dart:34-45`); el servidor recibe `encrypted_content` + `content_iv`
+  y no tiene la clave. **No es contenido compartido.** Lo que sí se declara es la
+  fila 8, por el título y las etiquetas.
+- **Actividad de uso / analítica.** `firebase_analytics` no está en el `pubspec`.
+- **Archivos y documentos, contactos, agenda, fotos, audio, salud, navegación web.**
+  Nada de eso se toca.
+
+> **Ojo con la fila 8.** La decisión previa "sin Actividad en la app" se refería a
+> analítica de uso, y sigue siendo correcta para eso. Pero en la taxonomía de Play
+> *Otro contenido generado por el usuario* **cuelga de "Actividad en la app"**, y el
+> título y las etiquetas del grimorio viajan en claro: `GrimoireEntryCreate` cifra
+> `content`, no `title` ni `tags`, y `GrimoireEntrySummary` lo dice explícitamente
+> ("el título va en claro como índice"). Hay que marcar esa subcasilla.
+
+> **La ubicación es PRECISA aunque no se lea el GPS.** Comprobado: el manifiesto
+> declara **solo `INTERNET`** y no hay `geolocator` ni `permission_handler` en el
+> `pubspec`. Las coordenadas salen del catálogo de ciudades. Pero Play clasifica por
+> el dato, no por cómo se obtuvo.
+
+> **El borrado no alcanza a Groq, y hoy eso es un agujero abierto.** Las filas 2 y 7
+> viajan a Groq. Verificado el 24/08 en su documentación: no retiene inferencias por
+> defecto ni entrena con ellas, pero **puede loggear entradas y salidas hasta 30 días**
+> por fiabilidad y abuso. **ZDR es activable por cualquier cliente en Data Controls y
+> sigue sin activarse** (pendiente en `ARCANUM-Play-Console-Progreso.md`). Mientras no
+> se active, el borrado de cuenta no puede prometer que lo enviado a Groq desaparezca
+> de inmediato: activarlo es lo que cierra el hueco.
+
+> **Anthropic no está en uso**, pese al nombre del archivo `claude_service.py`. El
+> único proveedor de IA es Groq (`_GROQ_MODEL = "llama-3.3-70b-versatile"`). Si algún
+> día vuelve a entrar, es una fila nueva de terceros.
 
 > **La ubicación es PRECISA aunque no se lea el GPS.** El manifiesto declara
 > solo `INTERNET` —comprobado— y las coordenadas se teclean al elegir ciudad.
