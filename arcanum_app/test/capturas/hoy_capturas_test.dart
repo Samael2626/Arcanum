@@ -243,7 +243,9 @@ void main() {
 
   testWidgets('01b el instrumento y su selector', (tester) async {
     await _montar(tester);
-    await tester.drag(find.byType(ListView), const Offset(0, -420));
+    // -300 y no -420: con el instrumento entero en cuadro se ve el anillo, que
+    // es justo lo que hay que revisar.
+    await tester.drag(find.byType(ListView), const Offset(0, -300));
     await tester.pumpAndSettle();
     await _retratar(tester, '01b-instrumento-regente');
 

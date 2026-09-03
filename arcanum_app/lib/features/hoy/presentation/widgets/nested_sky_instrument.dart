@@ -8,6 +8,7 @@ import '../../../../shared/astro_symbols.dart';
 import '../../../../shared/widgets/arcanum_card.dart';
 import '../../../../shared/widgets/arcanum_mood.dart';
 import '../../../../shared/widgets/moon_disc.dart';
+import 'planetary_hour_dial.dart';
 import 'today_card.dart';
 
 /// Cual de los tres cuerpos del instrumento se esta mirando.
@@ -39,9 +40,14 @@ enum SkyBody {
 /// —etiqueta, nombre, dato y acento— junto con sus chips. Es la forma de que
 /// los tres tengan su vista sin ocupar tres veces el sitio.
 ///
-/// Los glifos del aro SIGUEN abriendo su hoja de lore al tocarlos. Son dos
-/// gestos distintos y no redundantes: el selector CAMBIA lo que se lee aqui, el
-/// glifo LLEVA a otra pantalla. Ver la regla "si se toca, abre".
+/// El centro pinta UNA escena, la del cuerpo elegido, no los tres a la vez:
+/// el anillo caldeo para el regente, el dial de 24 marcas para la hora y el
+/// disco lunar para la Luna. Antes los tres se superponian en el mismo aro y no
+/// cabia ninguna capa arcana encima sin chocar con las otras dos.
+///
+/// La escena SIGUE abriendo la hoja de lore de su cuerpo al tocarla. Son dos
+/// gestos distintos y no redundantes: el selector CAMBIA lo que se lee aqui, la
+/// escena LLEVA a otra pantalla. Ver la regla "si se toca, abre".
 ///
 /// SIN LUGAR CONFIRMADO no hay selector: el regente y la hora dependen del orto
 /// y el ocaso locales, asi que no existen, y lo unico que queda es la Luna. Se
@@ -117,73 +123,29 @@ class _NestedSkyInstrumentState extends State<NestedSkyInstrument> {
           const SizedBox(height: 14),
           SizedBox.square(
             dimension: 248,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: _InstrumentPainter(
-                      hourProgress: _hourProgress(
-                        widget.hour,
-                        (widget.hour?['minutes_remaining'] as num?)?.toInt(),
-                      ),
-                      illumination: illumination,
-                      hasPlace: _hasPlace,
-                    ),
-                  ),
+            child: switch (_actual) {
+              SkyBody.ruler => _RulerScene(
+                ruler: widget.ruler!,
+                onTap: widget.onRulerTap!,
+              ),
+              SkyBody.hour => _HourScene(
+                planet: _hourPlanet!,
+                progress: _hourProgress(
+                  widget.hour,
+                  (widget.hour?['minutes_remaining'] as num?)?.toInt(),
                 ),
-                if (widget.ruler != null)
-                  Positioned(
-                    top: 0,
-                    left: 100,
-                    child: _InstrumentTarget(
-                      key: const Key('hoy-ruler-target'),
-                      label:
-                          'Regente del día: '
-                          '${planetEs[widget.ruler] ?? widget.ruler}',
-                      onTap: widget.onRulerTap!,
-                      child: Text(
-                        planetGlyph[widget.ruler] ?? '✦',
-                        style: TextStyle(
-                          fontSize: 27,
-                          height: 1,
-                          color: mood.accent,
-                        ),
-                      ),
-                    ),
-                  ),
-                if (_hourPlanet != null)
-                  _InstrumentTarget(
-                    key: const Key('hoy-hour-target'),
-                    label:
-                        'Hora planetaria: '
-                        '${planetEs[_hourPlanet] ?? _hourPlanet}',
-                    onTap: widget.onHourTap!,
-                    child: Text(
-                      planetGlyph[_hourPlanet] ?? '✦',
-                      style: TextStyle(
-                        fontSize: 42,
-                        height: 1,
-                        color: ArcanumMood.forPlanet(_hourPlanet!).accent,
-                      ),
-                    ),
-                  ),
-                Positioned(
-                  top: 38,
-                  right: 21,
-                  child: _InstrumentTarget(
-                    key: const Key('hoy-moon-target'),
-                    label: 'Luna: $phase',
-                    onTap: widget.onMoonTap,
-                    child: MoonDisc(
-                      illumination: illumination,
-                      waxing: waxing,
-                      size: 36,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+                hourNumber:
+                    (widget.hour?['hour_number'] as num?)?.toInt() ?? 0,
+                isDay: widget.hour?['is_daytime'] == true,
+                onTap: widget.onHourTap!,
+              ),
+              SkyBody.moon => _MoonScene(
+                illumination: illumination,
+                waxing: waxing,
+                phase: phase,
+                onTap: widget.onMoonTap,
+              ),
+            },
           ),
           if (_hasPlace) ...[
             const SizedBox(height: 14),
@@ -487,77 +449,260 @@ class _InstrumentTarget extends StatelessWidget {
   }
 }
 
-class _InstrumentPainter extends CustomPainter {
-  const _InstrumentPainter({
-    required this.hourProgress,
-    required this.illumination,
-    required this.hasPlace,
-  });
+/// Orden caldeo de los siete cuerpos, el mismo que calcula el servidor
+/// (`planetary_hours.py`: `CHALDEAN`). No es decoracion: es la rueda de la que
+/// sale el regente del dia y el de cada hora, asi que ensenarla ensena el
+/// mecanismo.
+const List<String> kChaldeanOrder = [
+  'sun',
+  'venus',
+  'mercury',
+  'moon',
+  'saturn',
+  'jupiter',
+  'mars',
+];
 
-  final double hourProgress;
-  final double illumination;
-  final bool hasPlace;
+/// La escena del regente: el anillo caldeo.
+///
+/// De las cinco capas arcanas que se prototiparon sobre la base de cuatro
+/// rombos, esta es la unica que dice algo verdadero y comprobable del dia: los
+/// siete cuerpos en su orden real, con el de hoy encendido y los otros seis en
+/// penumbra. Las demas (kamea, metal, orbita) anaden un sistema que la pantalla
+/// no usa para nada, y apilar dos sistemas en una imagen es justo lo que la
+/// guia de sigilos prohibe.
+class _RulerScene extends StatelessWidget {
+  const _RulerScene({required this.ruler, required this.onTap});
+
+  final String ruler;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final acento = ArcanumMood.forPlanet(ruler).accent;
+    return CustomPaint(
+      painter: _ChaldeanRingPainter(ruler: ruler, accent: acento),
+      child: Center(
+        child: _InstrumentTarget(
+          key: const Key('hoy-ruler-target'),
+          label: 'Regente del día: ${planetEs[ruler] ?? ruler}',
+          onTap: onTap,
+          child: Text(
+            planetGlyph[ruler] ?? '✦',
+            style: TextStyle(fontSize: 54, height: 1, color: acento),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChaldeanRingPainter extends CustomPainter {
+  const _ChaldeanRingPainter({required this.ruler, required this.accent});
+
+  final String ruler;
+  final Color accent;
+
+  /// Radios en fraccion del lado, calcados del prototipo (viewBox 100): el
+  /// anillo de los siete a 0,38 y el disco del glifo a 0,30.
+  static const _ringFraction = 0.38;
+  static const _discFraction = 0.30;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final outerRadius = size.shortestSide * 0.44;
-    final hourRadius = size.shortestSide * 0.31;
-    final moonRadius = size.shortestSide * 0.20;
-    final faint = Paint()
-      ..color = ArcanumColors.goldMuted.withValues(alpha: 0.24)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
+    final center = size.center(Offset.zero);
+    final side = size.shortestSide;
+    final ring = side * _ringFraction;
+    final disc = side * _discFraction;
 
     canvas
-      ..drawCircle(center, outerRadius, faint)
-      ..drawCircle(center, hourRadius, faint)
-      ..drawCircle(center, moonRadius, faint);
+      ..drawCircle(
+        center,
+        side * 0.48,
+        Paint()
+          ..shader = RadialGradient(
+            colors: [accent.withValues(alpha: 0.20), Colors.transparent],
+          ).createShader(Rect.fromCircle(center: center, radius: side * 0.48)),
+      )
+      ..drawCircle(
+        center,
+        disc,
+        // 0,38 y no el 0,60 del prototipo: alli el fondo de la tarjeta era
+        // neutro, aqui esta tenido del planeta y un disco casi negro se
+        // recortaba como una mancha.
+        Paint()..color = ArcanumColors.background.withValues(alpha: 0.38),
+      )
+      ..drawCircle(
+        center,
+        ring,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..color = ArcanumColors.gold.withValues(alpha: 0.28),
+      );
 
-    for (var i = 0; i < 24; i++) {
-      final angle = i * math.pi / 12 - math.pi / 2;
-      final length = i % 6 == 0 ? 13.0 : 7.0;
-      final start =
-          center + Offset(math.cos(angle), math.sin(angle)) * outerRadius;
-      final end =
-          center +
-          Offset(math.cos(angle), math.sin(angle)) * (outerRadius - length);
-      canvas.drawLine(start, end, faint);
-    }
-
-    if (hasPlace) {
-      final hourPaint = Paint()
-        ..color = ArcanumColors.moonAccent.withValues(alpha: 0.78)
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeWidth = 4;
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: hourRadius),
-        -math.pi / 2,
-        math.pi * 2 * hourProgress,
-        false,
-        hourPaint,
+    for (var i = 0; i < kChaldeanOrder.length; i++) {
+      final planet = kChaldeanOrder[i];
+      final angle = -math.pi / 2 + i * 2 * math.pi / kChaldeanOrder.length;
+      final at = center + Offset(math.cos(angle), math.sin(angle)) * ring;
+      final vivo = planet == ruler;
+      if (vivo) {
+        canvas.drawCircle(
+          at,
+          side * 0.045,
+          Paint()..color = accent.withValues(alpha: 0.12),
+        );
+      }
+      // Los seis apagados en oro a 0,62: a menos se volvian invisibles y el
+      // anillo dejaba de ensenar la rueda para ser adorno.
+      _paintGlyph(
+        canvas,
+        at,
+        planetGlyph[planet] ?? '✦',
+        side * 0.075,
+        vivo
+            ? ArcanumMood.forPlanet(planet).accent
+            : ArcanumColors.gold.withValues(alpha: 0.62),
       );
     }
 
-    final moonPaint = Paint()
-      ..color = ArcanumColors.ivory.withValues(alpha: 0.42)
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 2;
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: moonRadius),
-      -math.pi / 2,
-      math.pi * 2 * illumination,
-      false,
-      moonPaint,
+    _paintDiamonds(canvas, center, disc);
+    canvas.drawCircle(
+      center,
+      disc,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..color = ArcanumColors.gold.withValues(alpha: 0.50),
     );
   }
 
+  /// Los cuatro rombos cardinales: lo unico que sobrevive del medallon viejo.
+  /// Bastan para reconocer la marca; las 24 marcas eran lo que saturaba.
+  void _paintDiamonds(Canvas canvas, Offset center, double radius) {
+    final paint = Paint()
+      ..color = ArcanumColors.goldLight.withValues(alpha: 0.90);
+    final half = radius * 0.075;
+    for (var i = 0; i < 4; i++) {
+      final angle = -math.pi / 2 + i * math.pi / 2;
+      final at = center + Offset(math.cos(angle), math.sin(angle)) * radius;
+      final path = Path()
+        ..moveTo(at.dx, at.dy - half * 1.4)
+        ..lineTo(at.dx + half, at.dy)
+        ..lineTo(at.dx, at.dy + half * 1.4)
+        ..lineTo(at.dx - half, at.dy)
+        ..close();
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  void _paintGlyph(
+    Canvas canvas,
+    Offset at,
+    String glyph,
+    double fontSize,
+    Color color,
+  ) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: glyph,
+        style: TextStyle(
+          fontSize: fontSize,
+          height: 1,
+          color: color,
+          fontFamilyFallback: kGlyphFallback,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    painter.paint(canvas, at - painter.size.center(Offset.zero));
+  }
+
   @override
-  bool shouldRepaint(covariant _InstrumentPainter oldDelegate) {
-    return hourProgress != oldDelegate.hourProgress ||
-        illumination != oldDelegate.illumination ||
-        hasPlace != oldDelegate.hasPlace;
+  bool shouldRepaint(covariant _ChaldeanRingPainter old) =>
+      old.ruler != ruler || old.accent != accent;
+}
+
+/// La escena de la hora: el dial de 24 marcas con el avance de la hora viva.
+/// Reusa [PlanetaryHourDial], que ya existia y era fiel al prototipo — estaba
+/// huerfano desde que el instrumento anidado se comio su sitio.
+class _HourScene extends StatelessWidget {
+  const _HourScene({
+    required this.planet,
+    required this.progress,
+    required this.hourNumber,
+    required this.isDay,
+    required this.onTap,
+  });
+
+  final String planet;
+  final double progress;
+  final int hourNumber;
+  final bool isDay;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Hora planetaria: ${planetEs[planet] ?? planet}',
+      child: Material(
+        color: Colors.transparent,
+        child: InkResponse(
+          key: const Key('hoy-hour-target'),
+          onTap: onTap,
+          radius: 124,
+          child: PlanetaryHourDial(
+            progress: progress,
+            glyph: planetGlyph[planet] ?? '✦',
+            mood: ArcanumMood.forPlanet(planet),
+            // El servidor numera 0..23 de corrido; el dial quiere 1..12 dentro
+            // de su mitad, y la mitad la dice isDay.
+            hourNumber: (hourNumber % 12) + 1,
+            isDay: isDay,
+            size: 248,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// La escena de la Luna. Cerrada en el prototipo y sin cambios: mares difusos,
+/// degradado de limbo y aro de oro, tal como ya la dibuja [MoonDisc].
+class _MoonScene extends StatelessWidget {
+  const _MoonScene({
+    required this.illumination,
+    required this.waxing,
+    required this.phase,
+    required this.onTap,
+  });
+
+  final double illumination;
+  final bool waxing;
+  final String phase;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Semantics(
+        button: true,
+        label: 'Luna: $phase',
+        child: Material(
+          color: Colors.transparent,
+          child: InkResponse(
+            key: const Key('hoy-moon-target'),
+            onTap: onTap,
+            radius: 110,
+            child: MoonDisc(
+              illumination: illumination,
+              waxing: waxing,
+              size: 196,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

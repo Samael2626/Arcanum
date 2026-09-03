@@ -7,6 +7,8 @@ class ArcanumColors {
   static const surfaceHigh = Color(0xFF1C1C28);
   static const gold = Color(0xFFC9A84C);
   static const goldMuted = Color(0xFF8A6E32);
+  /// Oro claro de los rombos y realces finos del instrumento.
+  static const goldLight = Color(0xFFECD79A);
   static const burgundy = Color(0xFF4A0E1A);
   // Vino legible sobre fondos oscuros — estado "invertida" de una carta.
   static const burgundyLight = Color(0xFFB07686);
