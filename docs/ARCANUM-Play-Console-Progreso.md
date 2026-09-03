@@ -116,3 +116,27 @@ se declara y se queda.
 
 Lo que no vale es dejarlo como esta al llegar a produccion: pedir permisos de
 publicidad en una app sin publicidad es de lo que Play pregunta.
+
+## COMO SE COMPILA EL RELEASE (no estaba escrito en ninguna parte)
+
+`flutter build` a secas produce un binario que **arranca en negro**. No es un
+fallo del icono ni del arte: `ReleaseConfig.validateForStartup()`
+(`release_config.dart:34`) lanza `StateError` si falta `REVENUECAT_API_KEY`, y
+se llama en `main.dart:41` **antes de `runApp`**. El error lo traga
+`PlatformDispatcher.onError` hacia Crashlytics (`main.dart:31`), asi que
+**no aparece nada en logcat**: proceso vivo, actividad en primer plano, pantalla
+negra y ni una linea de error. Diagnosticado el 03/09/2026 tras comerse el rato.
+
+El comando correcto es:
+
+```
+flutter build appbundle --release --dart-define=REVENUECAT_API_KEY=<la clave>
+flutter build apk --release      --dart-define=REVENUECAT_API_KEY=<la clave>
+```
+
+Con `ADS_ENABLED=true` haria falta ademas `ADMOB_REWARDED_ANDROID` y
+`ADMOB_INTERSTITIAL_ANDROID`; hoy los anuncios estan apagados y no se piden.
+
+**Comprobacion que no se puede saltar:** instalar el binario y abrirlo. Un
+`flutter analyze` verde, unos tests verdes y una firma correcta **no detectan
+esto**, porque el fallo solo existe en modo release y solo al arrancar.
