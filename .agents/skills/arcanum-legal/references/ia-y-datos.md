@@ -16,13 +16,13 @@ Reglas para cualquier feature que llame a un LLM:
 
 | Tercero | Para qué | Qué recibe | Pendiente |
 |---|---|---|---|
-| Groq | oráculo, tarot, interpretación (único proveedor de IA en uso) | prompt: contexto natal resumido, nombre visible, cartas y consulta | firmar DPA; activar ZDR en Data Controls |
+| Groq | oráculo, tarot, interpretación (único proveedor de IA en uso) | prompt: contexto natal resumido, cartas y consulta (**el nombre visible ya no se envía**, commit `c59e6cc`) | firmar DPA; **ZDR activado el 03/09/2026** |
 | RevenueCat | suscripciones | app user id, eventos de compra | DPA; borrado en cascada al eliminar cuenta |
 | Google AdMob | anuncios | identificadores de publicidad, señales de dispositivo | UMP/consentimiento — **gap abierto** |
 | Firebase Analytics + Crashlytics | métricas y errores | instance id, eventos, stack traces | consentimiento en EEE; desactivar recolección hasta que se dé |
 | Railway / Postgres | hosting y base de datos | todo lo persistido | ubicación de la región y SCC |
 
-Groq (verificado 2026-08-24, https://console.groq.com/docs/your-data y Services Agreement): no retiene inferencias por defecto; no puede usar inputs ni outputs para entrenar salvo permiso expreso del cliente; puede loggear temporalmente inputs/outputs para fiabilidad y abuso, hasta 30 días; **ZDR activable por cualquier cliente en Data Controls**. Activarlo y decirlo en la política.
+Groq (verificado 2026-08-24, https://console.groq.com/docs/your-data y Services Agreement): no retiene inferencias por defecto; no puede usar inputs ni outputs para entrenar salvo permiso expreso del cliente; puede loggear temporalmente inputs/outputs para fiabilidad y abuso, hasta 30 días; **ZDR activable por cualquier cliente en Data Controls**. **Activado el 03/09/2026 para las APIs de inferencia**, así que ese plazo ya no aplica; dicho en la política y en la página de borrado.
 
 Si algún día vuelve a entrar Anthropic (hoy NO está en uso, pese al nombre `claude_service.py`): sus commercial terms dicen "Anthropic may not train models on Customer Content from Services", y la sección D.3 obliga contractualmente a avisar al usuario final de que las afirmaciones fácticas del output pueden ser falsas. Los plazos de retención concretos: **NO COMPROBADO**.
 

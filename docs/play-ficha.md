@@ -188,13 +188,16 @@ Sacado de los modelos de `arcanum-api`, no de memoria.
 > `pubspec`. Las coordenadas salen del catálogo de ciudades. Pero Play clasifica por
 > el dato, no por cómo se obtuvo.
 
-> **El borrado no alcanza a Groq, y hoy eso es un agujero abierto.** La fila 7
-> viaja a Groq. Verificado el 24/08 en su documentación: no retiene inferencias por
-> defecto ni entrena con ellas, pero **puede loggear entradas y salidas hasta 30 días**
-> por fiabilidad y abuso. **ZDR es activable por cualquier cliente en Data Controls y
-> sigue sin activarse** (pendiente en `ARCANUM-Play-Console-Progreso.md`). Mientras no
-> se active, el borrado de cuenta no puede prometer que lo enviado a Groq desaparezca
-> de inmediato: activarlo es lo que cierra el hueco.
+> **El borrado sí alcanza a Groq: ZDR activado (03/09/2026).** La fila 7 viaja a
+> Groq. Su documentación (verificada el 24/08) decía que puede loggear entradas y
+> salidas hasta 30 días por fiabilidad y abuso, **y ese plazo ya no aplica**: la
+> retención cero para las APIs de inferencia está activada en la cuenta, así que la
+> consulta se procesa y no se conserva. El borrado de cuenta no deja copia en el
+> proveedor de IA, y así lo dicen ya la política y la página de borrado.
+>
+> **NO COMPROBADO por esta sesión:** la activación la hizo Samuel en la consola de
+> Groq y aquí no hay forma de leer ese ajuste por API. Si alguna vez se desactiva,
+> hay que volver a estas dos frases y a las de las páginas legales.
 
 > **Anthropic no está en uso**, pese al nombre del archivo `claude_service.py`. El
 > único proveedor de IA es Groq (`_GROQ_MODEL = "llama-3.3-70b-versatile"`). Si algún

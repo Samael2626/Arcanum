@@ -55,7 +55,7 @@ Cuando la sesión de código entregue checklist confirmando:
 ## Pendientes manuales de Samuel (no código)
 
 - Firmar DPA de Railway.
-- Activar ZDR (zero data retention) en Groq.
+- ~~Activar ZDR (zero data retention) en Groq.~~ **HECHO 03/09/2026** — activado para las APIs de inferencia. La política y la página de borrado ya lo dicen; la tabla de Data Safety de `play-ficha.md` también.
 - Correo a RevenueCat.
 - Crear productos `arcanum_credit_1` y `arcanum_pack_3` en Play Console y App Store Connect.
 - Terminar verificación de identidad (documento + constancia de domicilio) si sigue pendiente.
