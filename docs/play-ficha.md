@@ -230,8 +230,24 @@ así que aquí va **el fondo**, no un guion literal.
 **Público objetivo:** 18+. Coherente con la edad mínima de la política de
 privacidad, y evita de raíz la política de familias.
 
-**¿Contiene anuncios?** **Sí.** Hay que marcarlo, y además la ficha muestra el
-distintivo "Contiene anuncios".
+**¿Contiene anuncios?** **No.** Este build no muestra ni un anuncio:
+`MobileAds.instance.initialize()` está detrás de `ReleaseConfig.adsEnabled`
+(`main.dart:35`), que es `bool.fromEnvironment('ADS_ENABLED')` sin valor por
+defecto, y el AAB 1.0.0+7 se compiló sin esa bandera. Marcar "Sí" pondría el
+distintivo "Contiene anuncios" en una ficha cuya app no los tiene.
+
+> **Esto NO contradice la fila de ID de dispositivo de la sección 2.** Son dos
+> preguntas distintas: aquí Play pregunta si la app **muestra** anuncios; allí,
+> si **recoge** el identificador de publicidad. El SDK de AdMob viaja en el
+> binario y su `ContentProvider` de auto-arranque **sí está declarado** en el
+> manifiesto del AAB —comprobado: `com.google.android.gms.ads.MobileAdsInitProvider`,
+> más los permisos `AD_ID` y `ACCESS_ADSERVICES_AD_ID`—, así que la fila del
+> Ad ID se queda declarada. Es el caso contrario al de Analytics, donde el
+> registrador estaba **ausente**: ahí el SDK no arranca y aquí sí puede.
+
+> **Cuando se activen los anuncios hay que volver a esta casilla.** Al compilar
+> con `ADS_ENABLED=true` la respuesta pasa a "Sí", y antes hay que implementar
+> UMP (`TODO(compliance)` en `main.dart:36`).
 
 ---
 
