@@ -119,9 +119,9 @@ Publicaremos aquí el alta de cualquier proveedor nuevo antes de que empiece a t
 
 Las lecturas del Oráculo **las genera un modelo de lenguaje** operado por Groq. Se te avisa dentro de la App antes de la primera consulta y se te pide consentimiento explícito, que puedes retirar cuando quieras desde Ajustes. Si lo retiras, el Oráculo deja de funcionar; el resto de la App sigue disponible.
 
-Groq declara que no entrena sus modelos con las entradas ni con las salidas. Puede conservar entradas y salidas hasta 30 días por motivos de fiabilidad y prevención de abuso.
+Groq declara que no entrena sus modelos con las entradas ni con las salidas.
 
-Esto tiene una consecuencia que conviene decir claro: **si borras tu cuenta, lo que ya se envió al proveedor de IA puede seguir en sus registros hasta 30 días**, aunque aquí desaparezca de inmediato. No podemos acortar ese plazo por ti.
+Además tenemos activada en nuestra cuenta la **retención cero** (*zero data retention*) para las APIs de inferencia: **tu consulta se procesa y no se conserva**. Groq no la guarda una vez generada la respuesta, ni siquiera durante un plazo corto. Por eso, cuando borras tu cuenta, no queda copia de tus consultas al Oráculo en el proveedor de IA.
 
 No se toma ninguna decisión automatizada que produzca efectos jurídicos sobre ti ni te afecte de forma similar. El Oráculo no evalúa, puntúa ni clasifica a personas. Su contenido es simbólico: no es consejo médico, jurídico, financiero ni psicológico.
 

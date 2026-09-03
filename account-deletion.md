@@ -44,7 +44,7 @@ Es la forma de comprobar que la petición es tuya: no eliminamos ninguna cuenta 
 
 **Registros de errores.** Los informes de fallos ya enviados a Firebase Crashlytics se eliminan según su propio ciclo de retención, hasta 90 días.
 
-**Lo que ya se envió al proveedor de IA.** Las consultas al oráculo se procesan en Groq. Tus conversaciones se borran de nuestra base de datos al instante, pero Groq puede conservar hasta **30 días** lo que recibió, por fiabilidad y prevención de abuso. No podemos borrarlo por ti ni acortar ese plazo. Groq no entrena sus modelos con esas consultas, y nunca recibió tu nombre, tu correo ni tu grimorio.
+**Nada queda en el proveedor de IA.** Las consultas al oráculo se procesan en Groq con **retención cero** activada: se procesan y no se conservan. Tus conversaciones se borran de nuestra base de datos al instante y no hay copia que borrar en Groq. Tampoco entrena sus modelos con ellas, y nunca recibió tu nombre, tu correo ni tu grimorio.
 
 ---
 
