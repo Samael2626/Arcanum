@@ -23,7 +23,6 @@ def _context_cache_key(user: User, natal_chart: NatalChart, now: datetime) -> tu
     return (
         str(user.id),
         str(natal_chart.calculated_at),
-        str(user.display_name),
         str(user.birth_lat),
         str(user.birth_lon),
         bucket,
@@ -114,9 +113,11 @@ def build_oracle_context(user: User, natal_chart: NatalChart) -> str:
     natal_planets = chart_data.get("planets") or []
     coords = _coords(user)
 
+    # El nombre del usuario NO entra aqui. No lo usaba ni el system prompt ni
+    # ningun test: era decorativo, y mandarlo convertia a Groq en destinatario
+    # de un dato personal a cambio de nada. Ver la fila 2 de la tabla de Data
+    # Safety en docs/play-ficha.md.
     lineas: list[str] = ["CONTEXTO ASTRAL DEL CONSULTANTE"]
-    nombre = user.display_name or "Consultante"
-    lineas.append(f"Consultante: {nombre}.")
 
     lineas.extend(_resumen_natal(chart_data))
     lineas.append(_resumen_transitos(natal_planets, now))

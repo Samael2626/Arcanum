@@ -35,7 +35,7 @@ Pantallas con `ConsumerWidget`/`ConsumerStatefulWidget`. Ampliar a futuros featu
 ## Pendiente para conectar las pestañas restantes (backend nuevo)
 - **Grimorio:** endpoints CRUD de `grimoire_entries` + cifrado cliente (reto #2).
 - **Arte (Materia Arcana):** endpoints de `materia_items` (hierbas/piedras/metales) + buscador.
-- **Oráculo:** tarot (mazos/spreads) + IA ritual (Claude API con contexto natal/luna/hora).
+- **Oráculo:** tarot (mazos/spreads) + IA ritual (Groq con contexto natal/luna/hora).
 - **Onboarding** (5 pasos) pulido.
 
 ## Operativo

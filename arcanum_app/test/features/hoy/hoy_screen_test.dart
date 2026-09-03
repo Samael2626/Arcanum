@@ -210,8 +210,11 @@ void main() {
     );
     expect(tester.getSize(chip).height, greaterThanOrEqualTo(48));
 
-    final hourTarget = find.byKey(const Key('hoy-hour-target'));
-    expect(tester.getSize(hourTarget).shortestSide, greaterThanOrEqualTo(48));
+    // El instrumento ensena UN cuerpo a la vez, el elegido: con el regente
+    // puesto, el objetivo que existe es el suyo y el de la hora no esta.
+    final rulerTarget = find.byKey(const Key('hoy-ruler-target'));
+    expect(tester.getSize(rulerTarget).shortestSide, greaterThanOrEqualTo(48));
+    expect(find.byKey(const Key('hoy-hour-target')), findsNothing);
 
     // Los tres botones del selector tambien son objetivos de pulgar.
     for (final k in const ['ruler', 'hour', 'moon']) {
@@ -246,6 +249,9 @@ void main() {
     // La ventana del test mide 600 px de alto y el selector cae por debajo, asi
     // que hay que traerlo a la vista antes de pulsarlo.
     await pulsar(tester, const Key('hoy-selector-hour'));
+    // Y con la hora puesta, la escena que se pinta es la suya.
+    expect(find.byKey(const Key('hoy-hour-target')), findsOneWidget);
+    expect(find.byKey(const Key('hoy-ruler-target')), findsNothing);
     expect(find.text('Hora planetaria'), findsOneWidget);
     expect(find.text('Hora de Venus'), findsOneWidget);
     expect(find.text('Plantas de Venus'), findsOneWidget);

@@ -120,9 +120,8 @@ QUÉ TRAE
 
 CÓMO FUNCIONA EL PLAN GRATUITO
 
-Hay un número de consultas al día. Se puede ampliar viendo un anuncio, o quitar
-el límite con la suscripción. Ni una cosa ni la otra desbloquea contenido
-distinto: es el mismo material.
+Hay un número de consultas al día. La suscripción quita ese límite. No
+desbloquea contenido distinto: es el mismo material.
 
 LO QUE ARCANUM NO HACE
 
@@ -145,25 +144,64 @@ Sacado de los modelos de `arcanum-api`, no de memoria.
 |---|---|
 | ¿Recoge o comparte datos de usuario? | **Sí** |
 | ¿Se cifran en tránsito? | **Sí** — todo va por HTTPS |
-| ¿Se puede pedir el borrado? | **Sí** — en la app y por web |
+| ¿Se puede pedir el borrado? | **Sí** — en la app y por web. `DELETE /users/me` (`routers/users.py:40`) borra la fila del usuario y **todo lo colgado en cascada** (`ondelete="CASCADE"` en grimorio, carta natal, tiradas, conversaciones del oráculo, créditos, tokens) y además pide a RevenueCat borrar el customer (`:50`). La única excepción es Groq: ver la nota al pie de la tabla |
 | URL de borrado | `https://samael2626.github.io/Arcanum/account-deletion.html` |
 | ¿Cumple la política de familias? | No aplica: publico objetivo 18+ |
 
 ### Tipos de datos
 
-| Categoría | Tipo | Recogido | Compartido | Obligatorio | Para qué |
-|---|---|---|---|---|---|
-| Info personal | Correo | Sí | No | Sí | Cuenta y autenticación |
-| Info personal | Nombre | Sí | No | No | Personalizar |
-| Info personal | Otros (fecha/hora de nacimiento) | Sí | No | No | Cálculo de la carta natal |
-| Ubicación | Ubicación aproximada | Sí | No | No | Hora planetaria y fecha local |
-| Ubicación | Ubicación precisa | Sí | No | No | Coordenadas de nacimiento y actuales |
-| Datos financieros | Historial de compras | Sí | Sí (RevenueCat) | No | Gestionar la suscripción |
-| Mensajes | Otros en la app | Sí | Sí (Groq) | No | Generar las lecturas |
-| Archivos y documentos | — | No | No | — | — |
-| Rendimiento | Registros de fallos | Sí | Sí (Crashlytics) | No | Diagnosticar cierres |
-| Rendimiento | Diagnósticos | Sí | Sí (Crashlytics) | No | Diagnosticar cierres |
-| ID de dispositivo | ID de dispositivo o de otro tipo | Sí | Sí (AdMob) | No | Anuncios bonificados |
+| # | Categoría de Play | Tipo | Recogido | Compartido con | Finalidad | Cifrado en tránsito | Oblig. | Borrable | Evidencia |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Info personal | Dirección de correo | Sí | No | Cuenta y autenticación | Sí | **Sí** | Sí | `models/user.py:12` |
+| 2 | Info personal | Nombre | Sí | **No** | Personalizar la App | Sí | No | Sí | `models/user.py:14`; ya **no** viaja a Groq: `services/oracle_context.py:116` |
+| 3 | Info personal | Otra info (fecha y hora de nacimiento) | Sí | No en crudo | Cálculo de la carta natal | Sí | No | Sí | `models/user.py:15-16` |
+| 4 | Ubicación | Ubicación aproximada | Sí | No | Hora planetaria y fecha local | Sí | No | Sí | `models/user.py:26-27` |
+| 5 | Ubicación | Ubicación precisa | Sí | No | Coordenadas de nacimiento y actuales | Sí | No | Sí | `models/user.py:17-18, 24-25` |
+| 6 | Info financiera | Historial de compras | Sí | **Sí — RevenueCat, Google Play Billing** | Gestionar la suscripción | Sí | No | Sí | `models/user.py:30`; `monetization_service.dart:65,70` |
+| 7 | Mensajes | Otros mensajes en la app | Sí | **Sí — Groq** | Generar las lecturas | Sí | No | Sí | `models/oracle_conversation.py:13`; `claude_service.py:168-170` |
+| 8 | Actividad en la app | Otro contenido generado por el usuario | Sí | No | Grimorio: **título y etiquetas en claro**, cuerpo cifrado | Sí | No | Sí | `schemas/grimoire_entry.py` (`title`, `tags` fuera del cifrado) |
+| 9 | Info y rendimiento | Registros de fallos | Sí | Sí — Google/Crashlytics | Funcionalidad y diagnóstico | Sí | No | Sí | `main.dart:29,31` |
+| 10 | Info y rendimiento | Diagnósticos | Sí | Sí — Google/Crashlytics | Diagnóstico | Sí | No | Sí | `main.dart:59,73` |
+| 11 | ID de dispositivo | ID de dispositivo o de otro tipo | Sí | Sí — Google (AdMob, Firebase) | Publicidad e identificación de instalación | Sí | No | Parcial | manifiesto del AAB: `MobileAdsInitProvider`, `AD_ID`, `FirebaseInstallationsRegistrar` |
+
+**Filas que NO se declaran, y por qué:**
+
+- **Contraseña.** Play no tiene un tipo de dato para credenciales. No se declara como
+  fila; se guarda con **bcrypt** (`core/security.py:14`), nunca en claro.
+- **Cuerpo del grimorio.** Cifrado con AES-256-GCM en el dispositivo
+  (`grimoire_crypto.dart:34-45`); el servidor recibe `encrypted_content` + `content_iv`
+  y no tiene la clave. **No es contenido compartido.** Lo que sí se declara es la
+  fila 8, por el título y las etiquetas.
+- **Actividad de uso / analítica.** `firebase_analytics` no está en el `pubspec`.
+- **Archivos y documentos, contactos, agenda, fotos, audio, salud, navegación web.**
+  Nada de eso se toca.
+
+> **Ojo con la fila 8.** La decisión previa "sin Actividad en la app" se refería a
+> analítica de uso, y sigue siendo correcta para eso. Pero en la taxonomía de Play
+> *Otro contenido generado por el usuario* **cuelga de "Actividad en la app"**, y el
+> título y las etiquetas del grimorio viajan en claro: `GrimoireEntryCreate` cifra
+> `content`, no `title` ni `tags`, y `GrimoireEntrySummary` lo dice explícitamente
+> ("el título va en claro como índice"). Hay que marcar esa subcasilla.
+
+> **La ubicación es PRECISA aunque no se lea el GPS.** Comprobado: el manifiesto
+> declara **solo `INTERNET`** y no hay `geolocator` ni `permission_handler` en el
+> `pubspec`. Las coordenadas salen del catálogo de ciudades. Pero Play clasifica por
+> el dato, no por cómo se obtuvo.
+
+> **El borrado sí alcanza a Groq: ZDR activado (03/09/2026).** La fila 7 viaja a
+> Groq. Su documentación (verificada el 24/08) decía que puede loggear entradas y
+> salidas hasta 30 días por fiabilidad y abuso, **y ese plazo ya no aplica**: la
+> retención cero para las APIs de inferencia está activada en la cuenta, así que la
+> consulta se procesa y no se conserva. El borrado de cuenta no deja copia en el
+> proveedor de IA, y así lo dicen ya la política y la página de borrado.
+>
+> **NO COMPROBADO por esta sesión:** la activación la hizo Samuel en la consola de
+> Groq y aquí no hay forma de leer ese ajuste por API. Si alguna vez se desactiva,
+> hay que volver a estas dos frases y a las de las páginas legales.
+
+> **Anthropic no está en uso**, pese al nombre del archivo `claude_service.py`. El
+> único proveedor de IA es Groq (`_GROQ_MODEL = "llama-3.3-70b-versatile"`). Si algún
+> día vuelve a entrar, es una fila nueva de terceros.
 
 > **La ubicación es PRECISA aunque no se lea el GPS.** El manifiesto declara
 > solo `INTERNET` —comprobado— y las coordenadas se teclean al elegir ciudad.
@@ -231,8 +269,24 @@ así que aquí va **el fondo**, no un guion literal.
 **Público objetivo:** 18+. Coherente con la edad mínima de la política de
 privacidad, y evita de raíz la política de familias.
 
-**¿Contiene anuncios?** **Sí.** Hay que marcarlo, y además la ficha muestra el
-distintivo "Contiene anuncios".
+**¿Contiene anuncios?** **No.** Este build no muestra ni un anuncio:
+`MobileAds.instance.initialize()` está detrás de `ReleaseConfig.adsEnabled`
+(`main.dart:35`), que es `bool.fromEnvironment('ADS_ENABLED')` sin valor por
+defecto, y el AAB 1.0.0+7 se compiló sin esa bandera. Marcar "Sí" pondría el
+distintivo "Contiene anuncios" en una ficha cuya app no los tiene.
+
+> **Esto NO contradice la fila de ID de dispositivo de la sección 2.** Son dos
+> preguntas distintas: aquí Play pregunta si la app **muestra** anuncios; allí,
+> si **recoge** el identificador de publicidad. El SDK de AdMob viaja en el
+> binario y su `ContentProvider` de auto-arranque **sí está declarado** en el
+> manifiesto del AAB —comprobado: `com.google.android.gms.ads.MobileAdsInitProvider`,
+> más los permisos `AD_ID` y `ACCESS_ADSERVICES_AD_ID`—, así que la fila del
+> Ad ID se queda declarada. Es el caso contrario al de Analytics, donde el
+> registrador estaba **ausente**: ahí el SDK no arranca y aquí sí puede.
+
+> **Cuando se activen los anuncios hay que volver a esta casilla.** Al compilar
+> con `ADS_ENABLED=true` la respuesta pasa a "Sí", y antes hay que implementar
+> UMP (`TODO(compliance)` en `main.dart:36`).
 
 ---
 

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- El mismo negro de las esquinas del icono, para que la placa del
+         lanzador y el arte sean el mismo material. -->
+    <color name="ic_launcher_background">#0C0B0E</color>
+</resources>

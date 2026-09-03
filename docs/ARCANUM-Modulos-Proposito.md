@@ -37,5 +37,5 @@ Ver [[ARCANUM-Estado-Sesion]] · [[MOC-ARCANUM]]
 - Uso: rastrear qué funciona, ver patrones (condiciones que dieron resultado). Cifrado = privado total.
 
 ## ⛤ Oráculo — consejero (qué dice lo invisible) [PENDIENTE]
-- Tarot + IA (Claude) que interpreta EN CONTEXTO de tu carta, luna, hora y últimas entradas del
+- Tarot + IA (Groq) que interpreta EN CONTEXTO de tu carta, luna, hora y últimas entradas del
   grimorio. Lectura personalizada, no genérica.
