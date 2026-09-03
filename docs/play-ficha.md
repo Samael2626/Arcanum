@@ -153,7 +153,7 @@ Sacado de los modelos de `arcanum-api`, no de memoria.
 | # | Categoría de Play | Tipo | Recogido | Compartido con | Finalidad | Cifrado en tránsito | Oblig. | Borrable | Evidencia |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | Info personal | Dirección de correo | Sí | No | Cuenta y autenticación | Sí | **Sí** | Sí | `models/user.py:12` |
-| 2 | Info personal | Nombre | Sí | **Sí — Groq** | Funcionalidad (el nombre entra en el prompt) | Sí | No | Sí | `models/user.py:14`; `services/oracle_context.py:118` |
+| 2 | Info personal | Nombre | Sí | **No** | Personalizar la App | Sí | No | Sí | `models/user.py:14`; ya **no** viaja a Groq: `services/oracle_context.py:116` |
 | 3 | Info personal | Otra info (fecha y hora de nacimiento) | Sí | No en crudo | Cálculo de la carta natal | Sí | No | Sí | `models/user.py:15-16` |
 | 4 | Ubicación | Ubicación aproximada | Sí | No | Hora planetaria y fecha local | Sí | No | Sí | `models/user.py:26-27` |
 | 5 | Ubicación | Ubicación precisa | Sí | No | Coordenadas de nacimiento y actuales | Sí | No | Sí | `models/user.py:17-18, 24-25` |
@@ -188,8 +188,8 @@ Sacado de los modelos de `arcanum-api`, no de memoria.
 > `pubspec`. Las coordenadas salen del catálogo de ciudades. Pero Play clasifica por
 > el dato, no por cómo se obtuvo.
 
-> **El borrado no alcanza a Groq, y hoy eso es un agujero abierto.** Las filas 2 y 7
-> viajan a Groq. Verificado el 24/08 en su documentación: no retiene inferencias por
+> **El borrado no alcanza a Groq, y hoy eso es un agujero abierto.** La fila 7
+> viaja a Groq. Verificado el 24/08 en su documentación: no retiene inferencias por
 > defecto ni entrena con ellas, pero **puede loggear entradas y salidas hasta 30 días**
 > por fiabilidad y abuso. **ZDR es activable por cualquier cliente en Data Controls y
 > sigue sin activarse** (pendiente en `ARCANUM-Play-Console-Progreso.md`). Mientras no

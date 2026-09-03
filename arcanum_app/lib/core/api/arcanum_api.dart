@@ -280,7 +280,7 @@ class ArcanumApi {
     return res.data as Map<String, dynamic>;
   }
 
-  /// Consulta ritual con IA Claude. Requiere auth. El contexto astral lo
+  /// Consulta ritual con IA. Requiere auth. El contexto astral lo
   /// construye el servidor desde la carta natal cacheada. Dos modos:
   /// - `question` + `divinationSessionId` → lectura anclada a la tirada, responde la pregunta.
   /// - solo `divinationSessionId` (question null/vacío) → lectura de la tirada sin pregunta.
