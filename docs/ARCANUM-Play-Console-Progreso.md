@@ -195,3 +195,36 @@ El JSON del paso 3 es una credencial con permiso sobre los pedidos de la cuenta 
 Play: no va al repo, no va a Drive junto a nada mas, y se guarda con el mismo
 criterio que las contrasenas del keystore. Ver
 `ARCANUM-Pendiente-Seguridad-Keystore.md`.
+
+## PENDIENTE ANTES DE PRODUCCION: el paywall se queda mudo si no cargan las ofertas
+
+`paywall_screen.dart:122-124`:
+
+```dart
+onTap: precios[ProductIds.premiumAnnual] == null
+    ? null
+    : _purchaseAnnual,
+```
+
+Cuando RevenueCat no devuelve ofertas, `precios` queda vacio, `onTap` es null y el
+boton principal se desactiva **en silencio**: ni dialogo, ni mensaje, ni una linea
+en logcat. El texto "Oferta no disponible. Intenta de nuevo." ya existe dentro de
+`_purchaseAnnual`, pero nunca se ejecuta porque el boton esta apagado antes de
+poder llamarlo. Por lo mismo la tarjeta sale sin precio y la linea "O $X/mes"
+(linea 130) ni se dibuja.
+
+Visto en el aparato el 04/09/2026 con 1.0.3+10: el paywall abre y se pinta bien,
+pero pulsar "Empezar prueba gratis" no hace nada.
+
+Ahi el motivo era esperable — la app aun no estaba en ningun track, asi que Play
+no tenia productos que servir. El problema es que **en produccion se ve igual**
+ante un fallo de red, una caida de Play o un producto mal configurado: una
+pantalla bonita, sin precios, con el boton principal que no responde ni explica
+por que. El usuario no tiene forma de saber que paso ni que hacer.
+
+Arreglar antes de produccion, de una de estas dos formas:
+1. Dejar el boton activo y que al pulsar muestre el mensaje que ya esta escrito.
+2. Pintar un estado de carga/error visible en la propia tarjeta, en vez de una
+   tarjeta sin precio indistinguible de una lista.
+
+No depende del cambio a Billing 8: ya estaba asi antes.
