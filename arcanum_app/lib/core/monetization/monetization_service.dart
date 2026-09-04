@@ -8,6 +8,13 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 /// Estado de suscripción del usuario.
 enum SubscriptionTier { free, premium }
 
+/// Como acabo un intento de compra.
+///
+/// Cancelar y fallar no son lo mismo y no pueden compartir respuesta: quien
+/// cancela ya sabe lo que hizo y un aviso ahi es ruido, pero a quien le fallo
+/// la tienda hay que decirselo o se queda mirando un boton que no hizo nada.
+enum PurchaseOutcome { comprada, cancelada, fallida }
+
 /// Datos de la suscripción actual.
 class SubscriptionState {
   final SubscriptionTier tier;
@@ -126,19 +133,31 @@ class MonetizationService {
   }
 
   /// Comprar una suscripción.
-  Future<bool> purchasePackage(Package package) async {
+  ///
+  /// Devuelve [PurchaseOutcome] y no un bool: antes, cancelar y que la tienda
+  /// fallara daban el mismo `false`, asi que la pantalla no podia decir nada
+  /// sin arriesgarse a regañar a quien solo cambio de idea. El resultado era
+  /// que no decia nada nunca, ni cuando la compra fallaba de verdad.
+  Future<PurchaseOutcome> purchasePackage(Package package) async {
     try {
       // purchase() ya devuelve el CustomerInfo sincronizado: no hace falta pedirlo aparte
       final result = await Purchases.purchase(PurchaseParams.package(package));
       return result.customerInfo.entitlements.active
-          .containsKey(EntitlementIds.premium);
+              .containsKey(EntitlementIds.premium)
+          ? PurchaseOutcome.comprada
+          : PurchaseOutcome.fallida;
+    } on PlatformException catch (e) {
+      return PurchasesErrorHelper.getErrorCode(e) ==
+              PurchasesErrorCode.purchaseCancelledError
+          ? PurchaseOutcome.cancelada
+          : PurchaseOutcome.fallida;
     } catch (_) {
-      return false;
+      return PurchaseOutcome.fallida;
     }
   }
 
   /// Comprar un consumible (créditos, tiradas).
-  Future<bool> purchaseProduct(String productId) async {
+  Future<PurchaseOutcome> purchaseProduct(String productId) async {
     try {
       final offerings = await Purchases.getOfferings();
       final all = offerings.current?.availablePackages ?? [];
@@ -147,15 +166,14 @@ class MonetizationService {
         orElse: () => throw StateError('Product not found: $productId'),
       );
       await Purchases.purchase(PurchaseParams.package(pkg));
-      return true;
+      return PurchaseOutcome.comprada;
     } on PlatformException catch (e) {
-      if (PurchasesErrorHelper.getErrorCode(e) ==
-          PurchasesErrorCode.purchaseCancelledError) {
-        return false;
-      }
-      return false;
+      return PurchasesErrorHelper.getErrorCode(e) ==
+              PurchasesErrorCode.purchaseCancelledError
+          ? PurchaseOutcome.cancelada
+          : PurchaseOutcome.fallida;
     } catch (_) {
-      return false;
+      return PurchaseOutcome.fallida;
     }
   }
 

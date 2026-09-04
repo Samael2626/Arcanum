@@ -21,9 +21,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Los precios vienen de Play/App Store ya localizados. Si no cargan, el
-    // SKU no se muestra ni se puede tocar: mejor una via menos que un precio
-    // inventado, que ademas es motivo de rechazo en ambas tiendas.
+    // Los precios vienen de Play/App Store ya localizados. Si no cargan no se
+    // ensena ninguna cifra: un precio inventado miente fuera de Estados Unidos
+    // y es motivo de rechazo en ambas tiendas. Pero la tarjeta si dice que no
+    // hay precio, y el boton sigue vivo para poder explicarlo y reintentar.
     // `.value ?? {}` aplastaba los tres estados del provider en uno: cargando,
     // fallido y "la tienda no tiene nada" quedaban igual de mudos. Se conserva
     // el AsyncValue para poder decir cual de los tres es.
@@ -205,12 +206,17 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         });
         return;
       }
-      final success = await service.purchasePackage(annual);
-      if (success && mounted) {
+      final resultado = await service.purchasePackage(annual);
+      if (resultado == PurchaseOutcome.comprada && mounted) {
         Navigator.of(context).pop(true);
       } else {
         setState(() {
           _loading = false;
+          // Cancelar es una decision, no un fallo: ahi no se dice nada. Que la
+          // tienda falle si hay que contarlo.
+          if (resultado == PurchaseOutcome.fallida) {
+            _error = 'No se pudo completar la compra. Inténtalo de nuevo.';
+          }
         });
       }
     } catch (e) {
@@ -254,12 +260,17 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         });
         return;
       }
-      final success = await service.purchasePackage(monthly);
-      if (success && mounted) {
+      final resultado = await service.purchasePackage(monthly);
+      if (resultado == PurchaseOutcome.comprada && mounted) {
         Navigator.of(context).pop(true);
       } else {
         setState(() {
           _loading = false;
+          // Cancelar es una decision, no un fallo: ahi no se dice nada. Que la
+          // tienda falle si hay que contarlo.
+          if (resultado == PurchaseOutcome.fallida) {
+            _error = 'No se pudo completar la compra. Inténtalo de nuevo.';
+          }
         });
       }
     } catch (e) {
@@ -531,7 +542,17 @@ class _ConsumiblesSheet extends ConsumerWidget {
     Navigator.of(context).pop();
     final service = ProviderScope.containerOf(parentContext)
         .read(monetizationServiceProvider);
-    await service.purchaseProduct(productId);
+    final resultado = await service.purchaseProduct(productId);
+    // La hoja ya esta cerrada, asi que el aviso va sobre la pantalla de abajo.
+    // Cancelar no se comenta; fallar sin decir nada dejaba al usuario creyendo
+    // que habia comprado.
+    if (resultado == PurchaseOutcome.fallida && parentContext.mounted) {
+      ScaffoldMessenger.of(parentContext).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo completar la compra. Inténtalo de nuevo.'),
+        ),
+      );
+    }
   }
 }
 
