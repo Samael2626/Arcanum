@@ -172,3 +172,26 @@ que ademas devuelve el `CustomerInfo` ya sincronizado y ahorra una llamada.
 que diga Play: los dex del APK incrustan la cadena
 `com.android.billingclient:billing@@<version>`. En 1.0.3+10 solo aparece `8.3.0`
 y no queda ni un rastro de `7.1.1`.
+
+## PENDIENTE DE PRODUCCION: cuenta de servicio para que RevenueCat valide las compras
+
+Hoy RevenueCat no puede consultar a Play del lado del servidor: le falta la cuenta
+de servicio de Google Cloud. **No bloquea la prueba cerrada**, pero hace falta
+antes de que las compras reales de produccion se validen correctamente — sin esto
+RevenueCat no confirma contra Play si una transaccion es legitima, ni se entera de
+renovaciones, cancelaciones o reembolsos que ocurren fuera de la app.
+
+Pasos, para cuando se retome:
+
+1. Crear una cuenta de servicio en Google Cloud Console con acceso a la
+   **Play Developer API**.
+2. En Play Console → Configuracion → **Acceso a la API**, vincular esa cuenta y
+   darle permisos de **Ver datos financieros** y **Gestionar pedidos y
+   suscripciones**.
+3. Descargar el JSON de credenciales y subirlo en RevenueCat → esa app de Android
+   → **Service account credentials**.
+
+El JSON del paso 3 es una credencial con permiso sobre los pedidos de la cuenta de
+Play: no va al repo, no va a Drive junto a nada mas, y se guarda con el mismo
+criterio que las contrasenas del keystore. Ver
+`ARCANUM-Pendiente-Seguridad-Keystore.md`.
