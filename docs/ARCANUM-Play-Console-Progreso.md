@@ -140,3 +140,35 @@ Con `ADS_ENABLED=true` haria falta ademas `ADMOB_REWARDED_ANDROID` y
 **Comprobacion que no se puede saltar:** instalar el binario y abrirlo. Un
 `flutter analyze` verde, unos tests verdes y una firma correcta **no detectan
 esto**, porque el fallo solo existe en modo release y solo al arrancar.
+
+## PENDIENTE DE PRODUCCION: los avisos del Kotlin Gradle Plugin
+
+El build de 1.0.3+10 saca dos WARNING del Kotlin Gradle Plugin: `purchases_flutter`
+todavia aplica el KGP a la manera antigua, y Flutter va a dejar de compilar los
+plugins que lo hagan asi. Hoy **no rompe nada** y el binario sale correcto.
+
+No se toca ahora porque la correccion no es nuestra: viene en el `build.gradle`
+del propio plugin de RevenueCat. Al subir `purchases_flutter` en el futuro, mirar
+si los avisos siguen; si Flutter llega a convertirlos en error antes de que
+RevenueCat los arregle, la salida es fijar la version del plugin y compilar con
+un Flutter anterior hasta que salga la suya.
+
+## BILLING LIBRARY 8 (04/09/2026)
+
+Play bloqueo la version 9 con "tu app usa la version 7.1.1 de la Biblioteca de
+Facturacion Play y debe actualizarse, al menos, a la version 8.0.0". El origen
+era `purchases_flutter 8.11.0`, que arrastra `purchases-hybrid-common 14.3.0` y
+con el Billing 7.1.1 — confirmado en la cache de Gradle, no solo por el mensaje.
+
+Subir dentro de la rama 8 no sirve: **9.0.0 es la primera con Billing 8**, y la
+10.0.0 ya trae Billing 8.3.0 y sube el minSdk de Android a 23 (estamos en 24, no
+obliga a nada). Se fue a `purchases_flutter 10.11.0` → `hybrid-common 18.33.1`.
+
+`purchasePackage()` quedo deprecada en la 10; los dos sitios de
+`monetization_service.dart` usan ahora `purchase(PurchaseParams.package(pkg))`,
+que ademas devuelve el `CustomerInfo` ya sincronizado y ahorra una llamada.
+
+**Como se verifica que el binario lleva la version correcta**, sin depender de lo
+que diga Play: los dex del APK incrustan la cadena
+`com.android.billingclient:billing@@<version>`. En 1.0.3+10 solo aparece `8.3.0`
+y no queda ni un rastro de `7.1.1`.

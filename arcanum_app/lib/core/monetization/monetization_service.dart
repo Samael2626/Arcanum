@@ -128,9 +128,10 @@ class MonetizationService {
   /// Comprar una suscripción.
   Future<bool> purchasePackage(Package package) async {
     try {
-      await Purchases.purchasePackage(package);
-      final info = await Purchases.getCustomerInfo();
-      return info.entitlements.active.containsKey(EntitlementIds.premium);
+      // purchase() ya devuelve el CustomerInfo sincronizado: no hace falta pedirlo aparte
+      final result = await Purchases.purchase(PurchaseParams.package(package));
+      return result.customerInfo.entitlements.active
+          .containsKey(EntitlementIds.premium);
     } catch (_) {
       return false;
     }
@@ -145,7 +146,7 @@ class MonetizationService {
         (p) => p.storeProduct.identifier == productId,
         orElse: () => throw StateError('Product not found: $productId'),
       );
-      await Purchases.purchasePackage(pkg);
+      await Purchases.purchase(PurchaseParams.package(pkg));
       return true;
     } on PlatformException catch (e) {
       if (PurchasesErrorHelper.getErrorCode(e) ==

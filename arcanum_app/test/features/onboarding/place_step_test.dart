@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:arcanum_app/core/places/city_index.dart';
 import 'package:arcanum_app/core/places/city_index_provider.dart';
-import 'package:arcanum_app/features/onboarding/application/onboarding_controller.dart';
 import 'package:arcanum_app/features/onboarding/presentation/steps/place_step.dart';
 
 // El paso del lugar es la ultima puerta antes de persistir el nacimiento. Lo
