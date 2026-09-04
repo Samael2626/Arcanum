@@ -41,13 +41,37 @@ void main() {
     expect(find.textContaining('/mes'), findsNothing);
   });
 
-  testWidgets('sin precio, la compra no se puede tocar', (tester) async {
+  testWidgets('sin precio, la tarjeta dice por que no hay precio', (
+    tester,
+  ) async {
     await _montar(tester, precios: const {});
 
+    // Una tarjeta sin cifra y sin explicacion no se distingue de una que no
+    // cuesta nada.
+    expect(find.text('Precios no disponibles ahora mismo'), findsWidgets);
+  });
+
+  testWidgets('sin precio, la compra se puede tocar y explica el fallo', (
+    tester,
+  ) async {
+    await _montar(tester, precios: const {});
+
+    // El boton apagado en silencio era el bug: el usuario pulsaba, no pasaba
+    // nada, y no habia forma de saber si era culpa suya.
     final boton = tester.widget<OutlinedButton>(
       find.widgetWithText(OutlinedButton, 'Empezar prueba gratis'),
     );
-    expect(boton.onPressed, isNull);
+    expect(boton.onPressed, isNotNull);
+
+    await tester.tap(
+      find.widgetWithText(OutlinedButton, 'Empezar prueba gratis'),
+    );
+    await tester.pump();
+
+    expect(
+      find.textContaining('Oferta no disponible'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('se muestran los precios que da la tienda, en su moneda', (
