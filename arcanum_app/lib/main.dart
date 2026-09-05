@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -99,6 +100,20 @@ class ArcanumApp extends ConsumerWidget {
       title: 'ARCANUM',
       debugShowCheckedModeBanner: false,
       theme: buildArcanumTheme(),
+      // Sin esto, los widgets de Material caen a INGLÉS: los selectores de
+      // fecha y hora del onboarding decían "Select date", "Sat, Jan 1" y
+      // "Cancel / OK" en una app escrita entera en español, y eso lo veía cada
+      // persona nueva en dos pantallas seguidas.
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      // Solo español. Declarar más idiomas sin traducir NUESTROS textos daría
+      // una app medio traducida: el calendario en francés y el horóscopo en
+      // español. Cuando haya traducción de verdad, se amplía aquí.
+      supportedLocales: const [Locale('es')],
+      locale: const Locale('es'),
       routerConfig: ref.watch(arcanumRouterProvider),
     );
   }

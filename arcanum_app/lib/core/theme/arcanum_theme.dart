@@ -98,5 +98,92 @@ ThemeData buildArcanumTheme() {
         ),
       ),
     ),
+
+    // ── Los dos selectores del onboarding ────────────────────────────────
+    //
+    // Salían con el morado y el vino POR DEFECTO de Material 3, que es el
+    // primer contacto de cada persona nueva con la app: dos pantallas donde
+    // ARCANUM dejaba de parecer ARCANUM. `colorScheme.primary` no basta —
+    // ambos widgets tienen su propio tema y toman de él el relleno del día
+    // elegido, el fondo del reloj y el bloque de la hora.
+    datePickerTheme: DatePickerThemeData(
+      backgroundColor: ArcanumColors.surface,
+      surfaceTintColor: Colors.transparent,
+      headerBackgroundColor: ArcanumColors.surfaceHigh,
+      headerForegroundColor: ArcanumColors.goldLight,
+      dividerColor: ArcanumColors.goldMuted.withValues(alpha: 0.35),
+      // El día elegido en oro con texto oscuro: el contraste va al revés que
+      // en el resto de la app porque aquí el oro es el fondo, no la tinta.
+      todayForegroundColor: WidgetStatePropertyAll(ArcanumColors.gold),
+      todayBorder: BorderSide(color: ArcanumColors.gold),
+      dayForegroundColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? ArcanumColors.background
+            : ArcanumColors.ivory,
+      ),
+      dayBackgroundColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? ArcanumColors.gold
+            : Colors.transparent,
+      ),
+      yearForegroundColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? ArcanumColors.background
+            : ArcanumColors.ivory,
+      ),
+      yearBackgroundColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? ArcanumColors.gold
+            : Colors.transparent,
+      ),
+      confirmButtonStyle: TextButton.styleFrom(
+        foregroundColor: ArcanumColors.gold,
+      ),
+      cancelButtonStyle: TextButton.styleFrom(
+        foregroundColor: ArcanumColors.ivoryMuted,
+      ),
+    ),
+    timePickerTheme: TimePickerThemeData(
+      backgroundColor: ArcanumColors.surface,
+      dialBackgroundColor: ArcanumColors.surfaceHigh,
+      dialHandColor: ArcanumColors.gold,
+      dialTextColor: WidgetStateColor.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? ArcanumColors.background
+            : ArcanumColors.ivory,
+      ),
+      hourMinuteColor: WidgetStateColor.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? ArcanumColors.gold.withValues(alpha: 0.22)
+            : ArcanumColors.surfaceHigh,
+      ),
+      hourMinuteTextColor: WidgetStateColor.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? ArcanumColors.goldLight
+            : ArcanumColors.ivoryMuted,
+      ),
+      // El AM/PM era el bloque VINO de Material. El borgoña de la casa está
+      // reservado a la carta invertida del Tarot, así que aquí va oro tenue.
+      dayPeriodColor: WidgetStateColor.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? ArcanumColors.gold.withValues(alpha: 0.22)
+            : Colors.transparent,
+      ),
+      dayPeriodTextColor: WidgetStateColor.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? ArcanumColors.goldLight
+            : ArcanumColors.ivoryMuted,
+      ),
+      dayPeriodBorderSide: BorderSide(
+        color: ArcanumColors.goldMuted.withValues(alpha: 0.6),
+      ),
+      entryModeIconColor: ArcanumColors.goldMuted,
+      confirmButtonStyle: TextButton.styleFrom(
+        foregroundColor: ArcanumColors.gold,
+      ),
+      cancelButtonStyle: TextButton.styleFrom(
+        foregroundColor: ArcanumColors.ivoryMuted,
+      ),
+    ),
   );
 }
