@@ -122,6 +122,17 @@ class _ApiDeMuestra extends ArcanumApi {
       'applying': true, 'tempo': 'slow',
       'exact_at': '2026-08-28T00:00:00+00:00',
     },
+    'year': {
+      'transit': 'moon', 'natal': 'saturn', 'aspect': 'sextile',
+      'angle': 60, 'orb': 1.1, 'separation': 61.1,
+      'applying': true, 'tempo': 'fast',
+    },
+    // Profeccion anual: sin esto la banda del anio no se pinta, que es
+    // justamente lo que hace la app cuando no hay fecha de nacimiento.
+    'profection': {
+      'age': 35, 'house': 5, 'sign': 'capricorn', 'sign_es': 'Capricornio',
+      'lord': 'saturn', 'points_in_sign': ['saturn'],
+    },
     'sect': 'day',
     'total_aspects': 9,
   };

@@ -20,6 +20,7 @@ import '../../../../shared/widgets/ai_output.dart';
 import '../../../../core/auth/auth_controller.dart';
 import '../../../../core/privacy/ai_consent_service.dart';
 import '../../../../core/astro/birth_data.dart';
+import 'banda_del_anio.dart';
 import 'sello_del_cielo.dart';
 
 /// "Tu cielo de hoy": el transito dominante de esta persona, leido por la IA.
@@ -164,6 +165,14 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
                 abierto: _lectura != null,
                 cargando: _abriendo,
                 onAbrir: _romperLacre,
+              ),
+              // El anio va DEBAJO del sello y fuera de el: el sello dice que
+              // aprieta hoy y se abre; la banda dice de quien es el anio y no
+              // se abre nada. Aqui tambien sobrevive al cielo en calma, que es
+              // justo cuando saber el marco del anio es lo unico que queda.
+              BandaDelAnio(
+                profection: d['profection'] as Map<String, dynamic>?,
+                year: d['year'] as Map<String, dynamic>?,
               ),
               if (_lectura != null && _mostrarLectura)
                 FutureBuilder<Map<String, dynamic>>(
