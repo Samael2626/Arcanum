@@ -53,7 +53,7 @@ class _Api extends ArcanumApi {
   };
 
   @override
-  Future<Map<String, dynamic>> horoscope() async => {
+  Future<Map<String, dynamic>> horoscope({DateTime? day}) async => {
     'date': esAnterior ? '2026-09-04' : '2026-09-05',
     'requested_date': '2026-09-05',
     'is_previous': esAnterior,

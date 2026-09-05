@@ -6,7 +6,7 @@ redacta como datos. El COMO se escribe vive en `horoscope_prompt`.
 """
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from app.services import lunar_calendar as lc
@@ -52,6 +52,23 @@ def clave_del_periodo(dia: date, cada_dias: int) -> date:
     if cada_dias <= 1:
         return dia
     return dia - timedelta(days=dia.toordinal() % cada_dias)
+
+
+def instante_del_dia(timezone_name: str | None, dia: date) -> datetime:
+    """El instante que representa a un dia entero: su MEDIODIA local, en UTC.
+
+    Un dia no es un instante y el cielo cambia dentro de el, asi que recuperar
+    una jornada pasada obliga a elegir uno. Se elige el mediodia porque es el
+    unico punto que no depende de la hora a la que aquella persona hubiera
+    abierto la app, y porque a medianoche la fecha local esta a un minuto de
+    cambiar: un error de zona horaria de una hora daria OTRO dia.
+    """
+    try:
+        tz = ZoneInfo(timezone_name) if timezone_name else ZoneInfo("UTC")
+    except (ZoneInfoNotFoundError, ValueError):
+        tz = ZoneInfo("UTC")
+    return datetime(dia.year, dia.month, dia.day, 12, tzinfo=tz).astimezone(
+        timezone.utc)
 
 
 def expected_terms(sky: dict) -> list[str]:

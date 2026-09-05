@@ -172,9 +172,16 @@ class ArcanumApi {
   /// No lleva `Idempotency-Key`: la unicidad la pone el servidor con la fecha
   /// local de la persona. Pero llama al modelo igual que el Oraculo, asi que
   /// necesita la misma espera; sin esto quedaba con los 12 s globales.
-  Future<Map<String, dynamic>> horoscope() async {
+  ///
+  /// Con [day] se recupera una jornada pasada, y eso CUESTA UN CRÉDITO: el cupo
+  /// de aquel día venció y el de hoy es de hoy. Si esa jornada ya se generó en
+  /// su momento, el servidor la devuelve como replay y no cobra nada.
+  Future<Map<String, dynamic>> horoscope({DateTime? day}) async {
     final res = await _dio.get(
       '/astral/horoscope',
+      queryParameters: day == null
+          ? null
+          : {'day': day.toIso8601String().split('T').first},
       options: Options(receiveTimeout: _esperaModelo),
     );
     return res.data as Map<String, dynamic>;

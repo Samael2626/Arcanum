@@ -14,10 +14,13 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:go_router/go_router.dart';
+
 import '../../../core/api/arcanum_api.dart';
 import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
 import '../../../shared/astro_symbols.dart';
+import '../../hoy/sky_today_state.dart';
 
 class HistorialHoroscopo extends ConsumerStatefulWidget {
   const HistorialHoroscopo({super.key});
@@ -122,6 +125,150 @@ class _HistorialState extends ConsumerState<HistorialHoroscopo> {
           ),
           const SizedBox(height: 4),
           for (final dia in dias) _DiaArchivado(dia),
+          for (final falta in diasSinAbrir(dias))
+            _DiaSinAbrir(fecha: falta, onRecuperado: _cargar),
+        ],
+      ),
+    );
+  }
+}
+
+/// Cuántos días perdidos se ofrecen de una vez. Cinco, y no los treinta que
+/// permite el motor: una lista larga de cosas que comprar deja de leerse como
+/// un archivo y empieza a leerse como una tienda.
+const _maxOfrecidos = 5;
+
+/// Los días que esta persona NO abrió, entre su primera lectura y ayer.
+///
+/// NO se ofrece nada anterior a su primera lectura: antes de esa fecha no había
+/// nada que abrir, y cobrar por "recuperar" un día en el que no era usuaria
+/// sería venderle una ausencia. Tampoco hoy, que es gratis.
+///
+/// Público para poder probarlo sin red ni widgets: es la única lógica de esta
+/// pantalla que puede equivocarse en silencio.
+List<DateTime> diasSinAbrir(
+  List<Map<String, dynamic>> archivadas, {
+  DateTime? hoy,
+}) {
+  final dias = <DateTime>{};
+  for (final d in archivadas) {
+    final f = DateTime.tryParse((d['date'] as String?) ?? '');
+    if (f != null) dias.add(DateTime(f.year, f.month, f.day));
+  }
+  if (dias.isEmpty) return const [];
+
+  final ahora = hoy ?? DateTime.now();
+  final ayer = DateTime(
+    ahora.year,
+    ahora.month,
+    ahora.day,
+  ).subtract(const Duration(days: 1));
+  final primera = dias.reduce((a, b) => a.isBefore(b) ? a : b);
+  // El motor no puede fechar más atrás: `_EXACT_HORIZON_DAYS`, 30 días.
+  final tope = ayer.subtract(const Duration(days: 29));
+  final desde = primera.isAfter(tope) ? primera : tope;
+
+  final faltan = <DateTime>[];
+  for (
+    var d = ayer;
+    !d.isBefore(desde);
+    d = d.subtract(const Duration(days: 1))
+  ) {
+    if (!dias.contains(d)) faltan.add(d);
+    if (faltan.length == _maxOfrecidos) break;
+  }
+  return faltan;
+}
+
+/// Un día que se dejó pasar, con su oferta de recuperarlo.
+class _DiaSinAbrir extends ConsumerStatefulWidget {
+  const _DiaSinAbrir({required this.fecha, required this.onRecuperado});
+
+  final DateTime fecha;
+  final VoidCallback onRecuperado;
+
+  @override
+  ConsumerState<_DiaSinAbrir> createState() => _DiaSinAbrirState();
+}
+
+class _DiaSinAbrirState extends ConsumerState<_DiaSinAbrir> {
+  bool _pidiendo = false;
+  SkyTodayFailure? _fallo;
+
+  Future<void> _recuperar() async {
+    setState(() {
+      _pidiendo = true;
+      _fallo = null;
+    });
+    try {
+      await ref.read(arcanumApiProvider).horoscope(day: widget.fecha);
+      if (!mounted) return;
+      widget.onRecuperado();
+    } catch (e) {
+      if (!mounted) return;
+      // La clasificación es la que ya existe: un 402 aquí significa que no
+      // quedan créditos, y esa pieza no se duplica.
+      setState(() {
+        _fallo = classifySkyFailure(e);
+        _pidiendo = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cuando = _fechaLarga(widget.fecha.toIso8601String().split('T').first);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'El $cuando no lo abriste.',
+            style: ArcanumText.body(13, color: ArcanumColors.ivoryMuted),
+          ),
+          if (_fallo == SkyTodayFailure.sinCupo) ...[
+            const SizedBox(height: 2),
+            Text(
+              'No te quedan créditos para recuperarlo.',
+              style: ArcanumText.body(12, color: ArcanumColors.ivoryMuted),
+            ),
+            TextButton(
+              onPressed: () => context.go('/paywall'),
+              child: Text(
+                'Ver planes y créditos',
+                style: ArcanumText.body(13, color: ArcanumColors.gold),
+              ),
+            ),
+          ] else if (_fallo != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              // Sin interpolar el error: filtraría URL, estado y trazas.
+              'No se pudo recuperar ahora mismo.',
+              style: ArcanumText.body(12, color: ArcanumColors.ivoryMuted),
+            ),
+            TextButton(
+              onPressed: _recuperar,
+              child: Text(
+                'Reintentar',
+                style: ArcanumText.body(13, color: ArcanumColors.gold),
+              ),
+            ),
+          ] else
+            TextButton(
+              onPressed: _pidiendo ? null : _recuperar,
+              child: Text(
+                _pidiendo
+                    ? 'Leyendo aquel cielo…'
+                    : 'Recuperarlo por 1 crédito',
+                style: ArcanumText.body(
+                  13,
+                  color: _pidiendo
+                      ? ArcanumColors.goldMuted
+                      : ArcanumColors.gold,
+                ),
+              ),
+            ),
         ],
       ),
     );

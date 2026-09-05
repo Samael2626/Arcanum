@@ -3,7 +3,7 @@
 Cálculos 100% locales (Swiss Ephemeris vía pyswisseph; sin dependencia externa).
 """
 from datetime import date, datetime, timezone
-from typing import Optional
+from typing import Annotated, Optional
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
@@ -207,6 +207,13 @@ def sky_today(
 
 @router.get("/horoscope")
 def horoscope(
+    # `Annotated` y no `= Query(...)`: con la segunda forma, el valor por
+    # defecto de la funcion es un objeto Query y no None, y quien llame a la
+    # ruta directamente -- los tests -- recibe eso en vez de una fecha.
+    day: Annotated[
+        Optional[date],
+        Query(description="Dia local a recuperar (YYYY-MM-DD). Por defecto, hoy."),
+    ] = None,
     current_user: UserEntity = Depends(get_current_user),
     repo: NatalChartRepository = Depends(get_natal_chart_repo),
     archivo: HoroscopeReadingRepository = Depends(get_horoscope_repo),
@@ -226,6 +233,14 @@ def horoscope(
     Lo que NO cambia por plan es `/sky-today`: el sello es cálculo, es gratis y
     sigue siendo diario para todo el mundo. Se raciona la interpretación, que es
     lo único que cuesta cupo y llama al modelo.
+
+    RECUPERAR UN DÍA QUE NO SE ABRIÓ. Con `day` se pide una jornada pasada. Eso
+    NO entra en el cupo del día —el cupo de aquel día ya venció y el de hoy es
+    para hoy—, así que se reserva con límite 0 y `_charge` cae directo a los
+    créditos: exactamente el mismo camino que el Oráculo, sin una regla nueva.
+
+    Si esa jornada YA se generó en su momento, la clave de idempotencia la
+    encuentra y vuelve como replay: recuperar lo que ya se tenía no cuesta.
     """
     entity = repo.get_by_user_id(current_user.id)
     if entity is None:
@@ -235,20 +250,33 @@ def horoscope(
         )
 
     now = datetime.now(timezone.utc)
-    dia = hs.local_date(us.timezone_name(current_user), now)
-    cada = (settings.HOROSCOPE_PREMIUM_EVERY_DAYS
-            if current_user.subscription_tier == "premium"
-            else settings.HOROSCOPE_FREE_EVERY_DAYS)
-    ventana = hs.clave_del_periodo(dia, cada)
+    zona = us.timezone_name(current_user)
+    hoy = hs.local_date(zona, now)
+    dia = _dia_pedido(day, hoy)
+    recuperando = dia != hoy
+
+    if recuperando:
+        # Sin cupo: el de aquel día venció y el de hoy es de hoy. Con límite 0,
+        # `_charge` va derecho al crédito. La clave es la fecha EXACTA y no la
+        # ventana del plan: se recupera un día concreto, no un periodo.
+        clave, limite = dia, 0
+        momento = hs.instante_del_dia(zona, dia)
+    else:
+        cada = (settings.HOROSCOPE_PREMIUM_EVERY_DAYS
+                if current_user.subscription_tier == "premium"
+                else settings.HOROSCOPE_FREE_EVERY_DAYS)
+        clave, limite = hs.clave_del_periodo(hoy, cada), settings.HOROSCOPE_DAILY
+        momento = now
+
     reservation = UsageService().reserve(
-        db, current_user.id, "horoscope", f"horoscope-{ventana.isoformat()}",
-        {"date": ventana.isoformat()}, settings.HOROSCOPE_DAILY,
+        db, current_user.id, "horoscope", f"horoscope-{clave.isoformat()}",
+        {"date": clave.isoformat()}, limite,
     )
     if reservation.replay:
-        return _con_procedencia(reservation.operation.result, dia)
+        return _con_procedencia(reservation.operation.result, hoy)
 
     try:
-        sky = hs.build_sky(entity.chart_data or {}, now,
+        sky = hs.build_sky(entity.chart_data or {}, momento,
                            birth=current_user.birth_date, local_day=dia)
         texto, diag = generate_horoscope(
             hs.describe(sky, now,
@@ -272,8 +300,8 @@ def horoscope(
             # idempotencia empiece antes: alguien que estrena el segundo día de
             # su ventana recibe el cielo de hoy, no el de ayer.
             "date": dia.isoformat(),
-            "requested_date": dia.isoformat(),
-            "is_previous": False,
+            "requested_date": hoy.isoformat(),
+            "is_previous": dia != hoy,
             "datetime": sky["datetime"],
             "text": texto,
             # `primary` y `supporting` siguen porque el cliente ya los lee.
@@ -312,6 +340,34 @@ def horoscope(
         # volveria a haber caminos que se olvidan de hacerlo.
         UsageService().reverse(db, reservation.operation)
         raise
+
+
+def _dia_pedido(pedido, hoy):
+    """La jornada que se va a leer, validada. Por defecto, hoy.
+
+    Dos límites, y ninguno es de producto:
+
+    - Ni un día futuro. El cielo de mañana se puede calcular, pero una lectura
+      del futuro es un pronóstico, y esto describe lo que hay.
+    - Ni más allá del horizonte real del motor (`_EXACT_HORIZON_DAYS`, 30 días).
+      Es el mismo techo que la agenda: pasado ese punto la fecha de exactitud
+      de un aspecto se estima con una velocidad extrapolada demasiado lejos y el
+      motor devuelve null. Recuperar un día de hace tres meses daría un texto
+      con los huecos rellenos a ojo.
+    """
+    if pedido is None or pedido == hoy:
+        return hoy
+    if pedido > hoy:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="El cielo de un día que no ha llegado no se lee: se espera.",
+        )
+    if (hoy - pedido).days > hag.MAX_DIAS:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Solo se pueden recuperar los últimos {hag.MAX_DIAS} días.",
+        )
+    return pedido
 
 
 def _con_procedencia(guardado: dict, hoy) -> dict:
