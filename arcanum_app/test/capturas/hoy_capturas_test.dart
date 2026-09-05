@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/core/theme/arcanum_theme.dart';
+import 'package:arcanum_app/core/router/app_router.dart';
 import 'package:arcanum_app/features/hoy/hoy_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -217,6 +218,34 @@ Future<void> _montar(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// Monta la APP ENTERA por el router, no una pantalla suelta.
+///
+/// Hace falta para retratar lo que solo existe en el shell: la barra de abajo y
+/// el boton flotante del horoscopo. Montando `HoyScreen` a pelo, el boton no
+/// sale en la foto porque no vive ahi -- vive en la carcasa, que es justo la
+/// decision que hay que poder mirar.
+Future<void> _montarApp(WidgetTester tester) async {
+  tester.view
+    ..physicalSize = _telefono * _escala
+    ..devicePixelRatio = _escala;
+  addTearDown(tester.view.reset);
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        arcanumApiProvider.overrideWithValue(_ApiDeMuestra()),
+        authProvider.overrideWith(_AuthConLugar.new),
+      ],
+      child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
+        theme: buildArcanumTheme(),
+        routerConfig: appRouter,
+      ),
+    ),
+  );
+  await tester.pump();
+  await tester.pumpAndSettle();
+}
+
 Future<void> _retratar(WidgetTester tester, String nombre) async {
   // SIEMPRE la raiz, por dos razones. Un dialogo no vive dentro de la pantalla:
   // se monta en el overlay de la app, asi que retratando solo `HoyScreen` sale
@@ -344,6 +373,20 @@ void main() {
     await tester.drag(find.byType(ListView), const Offset(0, -700));
     await tester.pumpAndSettle();
     await _retratar(tester, '05-texto-abierto');
+  });
+
+  testWidgets('06 el boton del horoscopo, sobre Hoy', (tester) async {
+    await _montarApp(tester);
+    await _retratar(tester, '06-boton-horoscopo');
+  });
+
+  testWidgets('07 la pantalla del horoscopo, con el boton apagado', (
+    tester,
+  ) async {
+    await _montarApp(tester);
+    await tester.tap(find.byTooltip('Horóscopo'));
+    await tester.pumpAndSettle();
+    await _retratar(tester, '07-horoscopo');
   });
 
   testWidgets('99 diagnostico: que hay en pantalla', (tester) async {

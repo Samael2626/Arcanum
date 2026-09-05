@@ -4,6 +4,7 @@ import '../../features/auth/login_screen.dart';
 import '../../features/auth/register_screen.dart';
 import '../../features/cielos/cielos_screen.dart';
 import '../../features/grimorio/grimorio_screen.dart';
+import '../../features/horoscopo/horoscopo_screen.dart';
 import '../../features/hoy/hoy_screen.dart';
 import '../../features/lecturas/presentation/lector_screen.dart';
 import '../../features/lecturas/presentation/obra_screen.dart';
@@ -17,6 +18,7 @@ import '../../features/saber/saber_screen.dart';
 import '../../features/settings/privacy_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/tarot/tarot_screen.dart';
+import '../content/sections.dart';
 import 'app_shell.dart';
 
 final appRouter = GoRouter(
@@ -108,6 +110,18 @@ final appRouter = GoRouter(
               routes: [
                 GoRoute(path: 'tarot', builder: (c, s) => const TarotScreen()),
               ],
+            ),
+          ],
+        ),
+        // Sexta rama SIN destino en la barra inferior: se entra por el boton
+        // flotante del shell. Es una rama y no una ruta de primer nivel para
+        // que conserve su pila y su scroll como cualquier seccion, y para que
+        // la barra de abajo siga visible mientras se lee.
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: rutaHoroscopo,
+              builder: (c, s) => const HoroscopoScreen(),
             ),
           ],
         ),

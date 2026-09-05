@@ -62,6 +62,20 @@ se pueden actualizar, así que envejecen cada vez que se toca esa pantalla.
 Arreglarlo cuando alguien vuelva a `SkyTodayCard` — probablemente el `drag` fijo
 de `-900` px ya no deja el botón donde estaba.
 
+## Deuda: el botón de "tu siguiente paso" se desborda a 360 px ⏳ PENDIENTE (04/09/2026)
+
+`hoy_screen.dart:340` — el `Row` del botón de acción no envuelve ni recorta:
+con una etiqueta larga se desborda **26 px** a la derecha en un ancho lógico de
+360 (el teléfono de referencia del capturador). Apareció al montar la app entera
+por el router en `test/features/navegacion/boton_horoscopo_test.dart`, que
+produce un "siguiente paso" distinto al de las capturas.
+
+No es del botón del horóscopo: el FAB es una capa superpuesta y no participa en
+ese `Row`. Ese test corre a 411 px para no fallar por algo que no prueba.
+
+Arreglo probable: `Flexible` + `softWrap` sobre el `Text`, o `FittedBox`. Cuando
+alguien toque esa tarjeta.
+
 ## Operativo
 - `C:` se llenó (0 GB) → Dart falla al compilar. Lanzar Flutter con `TEMP`/`TMP`/`TMPDIR` = `D:\tmp`,
   o liberar `C:` / fijar TEMP permanente.
