@@ -44,3 +44,6 @@ arcanum_app/.fuentes-origen/
 # Las capturas de la pantalla son regenerables con
 # flutter test test/capturas --update-goldens --run-skipped
 arcanum_app/test/capturas/salida/
+# Y los diffs que escribe el comparador cuando un golden no cuadra: son basura
+# de una ejecucion concreta, no material del proyecto. Se colaron en un commit.
+arcanum_app/test/capturas/failures/
