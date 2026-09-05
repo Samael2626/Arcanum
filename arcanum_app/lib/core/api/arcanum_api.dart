@@ -199,6 +199,19 @@ class ArcanumApi {
         .toList();
   }
 
+  /// La agenda del cielo: lo que le pasa a tu carta en los próximos días.
+  ///
+  /// Cálculo puro, como `skyToday`: ni cupo, ni modelo, ni terceros. El
+  /// servidor acota `days` a su propio techo (30) y devuelve `max_days` para
+  /// que aquí no haya que repetir ese número ni adivinarlo.
+  Future<Map<String, dynamic>> agenda({int days = 7}) async {
+    final res = await _dio.get(
+      '/astral/agenda',
+      queryParameters: {'days': days},
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
   /// Materia Arcana: catálogo (resumen). Filtros opcionales.
   Future<List<Map<String, dynamic>>> materiaList({
     String? itemType,

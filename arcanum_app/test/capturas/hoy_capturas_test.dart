@@ -153,6 +153,24 @@ class _ApiDeMuestra extends ArcanumApi {
   };
 
   @override
+  Future<Map<String, dynamic>> agenda({int days = 7}) async => {
+    'from': '2026-08-24', 'to': '2026-08-31', 'days': days, 'max_days': 30,
+    'background': {
+      'transit': 'jupiter', 'natal': 'north_node', 'aspect': 'opposition',
+    },
+    'events': [
+      {'kind': 'aspect_exact', 'date': '2026-08-25', 'transit': 'mercury',
+       'natal': 'sun', 'aspect': 'square'},
+      {'kind': 'house_ingress', 'date': '2026-08-27', 'transit': 'mars',
+       'from_house': 6, 'to_house': 7},
+      {'kind': 'aspect_exact', 'date': '2026-08-29', 'transit': 'venus',
+       'natal': 'ascendant', 'aspect': 'trine'},
+      {'kind': 'profection_change', 'date': '2026-08-30', 'age': 37,
+       'house': 6, 'lord': 'mercury', 'from_lord': 'venus'},
+    ],
+  };
+
+  @override
   Future<List<Map<String, dynamic>>> horoscopeHistory({int limit = 30}) async => [
     {
       'date': '2026-08-23',
@@ -428,6 +446,19 @@ void main() {
     );
     await tester.pumpAndSettle();
     await _retratar(tester, '08-historial');
+  });
+
+  testWidgets('09 la agenda de la semana', (tester) async {
+    await _montarApp(tester);
+    await tester.tap(find.byTooltip('Horóscopo'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('LO QUE VIENE'),
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.pumpAndSettle();
+    await _retratar(tester, '09-agenda');
   });
 
   testWidgets('99 diagnostico: que hay en pantalla', (tester) async {

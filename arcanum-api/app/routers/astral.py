@@ -21,6 +21,7 @@ from app.db.session import get_db
 from app.domain.entities import NatalChartEntity, UserEntity
 from app.schemas.natal_chart import NatalChartResponse
 from app.services import horoscope as hs
+from app.services import horoscope_agenda as hag
 from app.services import lunar_calendar as lc
 from app.services import natal_chart_engine as nce
 from app.services import planetary_hours as ph
@@ -334,6 +335,41 @@ def horoscope_history(
             for r in archivo.last(current_user.id, tope)
         ]
     }
+
+
+@router.get("/agenda")
+def agenda(
+    days: int = hag.SEMANA,
+    current_user: UserEntity = Depends(get_current_user),
+    repo: NatalChartRepository = Depends(get_natal_chart_repo),
+):
+    """Lo que le pasa a esta carta en los proximos dias, con fecha.
+
+    Calculo puro: ni cupo, ni modelo, ni terceros. Los mismos motivos que
+    `/sky-today`, y ademas es lo que permite ensenar el mes sin que mirar hacia
+    delante cueste una generacion.
+
+    `days` se acota a `MAX_DIAS` (30) DENTRO del servicio, que es donde vive el
+    limite: mas alla, la fecha de exactitud se estima con una velocidad
+    instantanea extrapolada demasiado lejos y el motor devuelve `null` en vez de
+    inventarla. La respuesta declara `days` y `max_days` para que el cliente
+    pueda decir cuanto abarca de verdad en vez de prometer un trimestre.
+    """
+    entity = repo.get_by_user_id(current_user.id)
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Calcula primero tu carta natal con POST /astral/natal-chart.",
+        )
+
+    now = datetime.now(timezone.utc)
+    return hag.agenda(
+        entity.chart_data or {},
+        now,
+        days,
+        birth=current_user.birth_date,
+        local_day=hs.local_date(us.timezone_name(current_user), now),
+    )
 
 
 @router.get("/overview")
