@@ -99,7 +99,7 @@ class ArcanumApp extends ConsumerWidget {
       title: 'ARCANUM',
       debugShowCheckedModeBanner: false,
       theme: buildArcanumTheme(),
-      routerConfig: appRouter,
+      routerConfig: ref.watch(arcanumRouterProvider),
     );
   }
 }
