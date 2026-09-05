@@ -68,6 +68,13 @@ class Settings(BaseSettings):
     # haber estrenado dia UTC. Con 1 ese segundo horoscopo le cobraria creditos.
     HOROSCOPE_DAILY: int = 2
 
+    # Cada cuantos dias puede GENERARSE una lectura interpretada. Premium a
+    # diario; el plan gratuito, cada dos dias -- el segundo dia recibe la
+    # anterior, rotulada como lo que es. El sello y la agenda NO entran aqui:
+    # son calculo, no cuestan y siguen siendo diarios para todo el mundo.
+    HOROSCOPE_FREE_EVERY_DAYS: int = 2
+    HOROSCOPE_PREMIUM_EVERY_DAYS: int = 1
+
 
     # Geocoding (Nominatim + timezonefinder) — resuelve lugar de nacimiento
     # real en el onboarding, reemplaza el default hardcodeado a Bogotá.

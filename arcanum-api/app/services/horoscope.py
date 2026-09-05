@@ -6,7 +6,7 @@ redacta como datos. El COMO se escribe vive en `horoscope_prompt`.
 """
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from app.services import lunar_calendar as lc
@@ -29,6 +29,29 @@ def local_date(timezone_name: str | None, now: datetime) -> date:
     except (ZoneInfoNotFoundError, ValueError):
         tz = ZoneInfo("UTC")
     return now.astimezone(tz).date()
+
+
+def clave_del_periodo(dia: date, cada_dias: int) -> date:
+    """El dia que gobierna la ventana en la que cae `dia`.
+
+    Con `cada_dias = 1` es el dia mismo, que es lo que ve premium. Con 2, dos
+    fechas consecutivas caen en la misma ventana y la segunda llamada es un
+    replay de lo que ya se genero: el plan gratuito lee una interpretacion cada
+    dos dias.
+
+    Las ventanas se anclan al CALENDARIO (por la paridad del dia juliano), no a
+    la primera vez que cada persona uso la app. Anclarlas al uso obligaria a
+    guardar ese primer dia en algun sitio y a decidir que pasa si se salta una
+    ventana entera; con el calendario, la funcion es pura y da lo mismo quien
+    pregunte y cuando.
+
+    Lo que NO se limita es el cielo: `/sky-today` es calculo, es gratis y sigue
+    cambiando cada dia para todo el mundo. Lo que se raciona es la
+    interpretacion escrita, que es lo unico que cuesta.
+    """
+    if cada_dias <= 1:
+        return dia
+    return dia - timedelta(days=dia.toordinal() % cada_dias)
 
 
 def expected_terms(sky: dict) -> list[str]:

@@ -168,8 +168,9 @@ def test_sin_clave_de_groq_no_hay_horoscopo(monkeypatch):
 # ── El endpoint ──────────────────────────────────────────────────────────────
 
 
-def _user(tz="America/Bogota"):
+def _user(tz="America/Bogota", tier="free"):
     return SimpleNamespace(id=uuid4(), birth_timezone=tz,
+                           subscription_tier=tier,
                            birth_date=NACIMIENTO,
                            birth_lat=None, birth_lon=None)
 
@@ -205,7 +206,10 @@ def test_la_segunda_llamada_del_dia_es_un_replay_sin_tocar_el_modelo(monkeypatch
 
     resultado = astral.horoscope(archivo=_ArchivoFalso(), current_user=_user(), repo=_Repo(_chart()), db=None)
 
-    assert resultado == guardado
+    # El texto guardado viaja intacto; lo que se anade es de donde viene, y se
+    # deduce al leer en vez de congelarse dentro de la fila de aquel dia.
+    assert {k: resultado[k] for k in guardado} == guardado
+    assert resultado["is_previous"] is True
     assert llamadas == [], "un replay no puede gastar una llamada al modelo"
 
 

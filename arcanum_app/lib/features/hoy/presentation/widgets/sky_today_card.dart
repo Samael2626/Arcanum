@@ -236,6 +236,15 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
                             _TransitHeadline(aspecto),
                             const SizedBox(height: 14),
                           ],
+                          // Si lo que llega se escribió otro día, se dice ANTES
+                          // del texto y no después: leerlo creyendo que es de
+                          // hoy y enterarse al final es peor que no tenerlo.
+                          if (lec.data!['is_previous'] == true) ...[
+                            _LecturaAnterior(
+                              fecha: lec.data!['date'] as String?,
+                            ),
+                            const SizedBox(height: 10),
+                          ],
                           AiOutput(
                             text: texto,
                             surface: 'horoscopo',
@@ -586,4 +595,73 @@ class _BotonCompartir extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// El aviso de que esta lectura es de otro día.
+///
+/// El plan gratuito genera una interpretación cada dos días, así que el segundo
+/// recibe la anterior. Eso NO se disfraza: se dice qué día se escribió, antes
+/// del texto, y se ofrece la única salida que lo cambia. El sello de arriba
+/// sigue siendo el de hoy — el cálculo nunca se raciona.
+class _LecturaAnterior extends StatelessWidget {
+  const _LecturaAnterior({required this.fecha});
+
+  final String? fecha;
+
+  static const _meses = [
+    'enero',
+    'febrero',
+    'marzo',
+    'abril',
+    'mayo',
+    'junio',
+    'julio',
+    'agosto',
+    'septiembre',
+    'octubre',
+    'noviembre',
+    'diciembre',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final d = fecha == null ? null : DateTime.tryParse(fecha!);
+    final cuando = d == null
+        ? 'de un día anterior'
+        : 'del ${d.day} de ${_meses[d.month - 1]}';
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: ArcanumColors.surfaceHigh.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(10),
+        border: Border(
+          left: BorderSide(color: ArcanumColors.goldMuted, width: 2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Esta es tu lectura $cuando.',
+            style: ArcanumText.body(13, color: ArcanumColors.ivoryMuted),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'El cielo de arriba sí es el de hoy. Con la suscripción, la lectura '
+            'también se escribe cada día.',
+            style: ArcanumText.body(12, color: ArcanumColors.ivoryMuted),
+          ),
+          const SizedBox(height: 4),
+          InkWell(
+            onTap: () => context.go('/paywall'),
+            child: Text(
+              'Ver la suscripción',
+              style: ArcanumText.body(13, color: ArcanumColors.gold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

@@ -198,6 +198,7 @@ def test_la_respuesta_lleva_los_dos_carriles_y_la_secta(monkeypatch):
                         lambda _sky, _terms: ("Un texto entero.", {"available": True}))
 
     usuario = SimpleNamespace(id=uuid4(), birth_timezone="America/Bogota",
+                           subscription_tier="free",
                               birth_date=NACIMIENTO,
                               birth_lat=None, birth_lon=None)
     carta = SimpleNamespace(chart_data={

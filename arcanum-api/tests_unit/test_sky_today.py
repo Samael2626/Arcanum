@@ -23,6 +23,7 @@ NACIMIENTO = datetime(1990, 6, 15, 12, 0, tzinfo=timezone.utc)
 
 def _usuario():
     return SimpleNamespace(id=uuid4(), birth_timezone="America/Bogota",
+                           subscription_tier="free",
                            birth_date=NACIMIENTO,
                            birth_lat="6.24", birth_lon="-75.58",
                            current_lat=None, current_lon=None,

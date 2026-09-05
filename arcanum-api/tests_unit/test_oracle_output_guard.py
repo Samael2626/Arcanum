@@ -269,8 +269,9 @@ def test_no_se_manda_reasoning_effort_por_defecto(monkeypatch):
 # ── El endpoint: nada invalido se persiste y la reserva siempre se libera ────
 
 
-def _user(tz="America/Bogota"):
+def _user(tz="America/Bogota", tier="free"):
     return SimpleNamespace(id=uuid4(), birth_timezone=tz,
+                           subscription_tier=tier,
                            birth_date=NACIMIENTO,
                            birth_lat=None, birth_lon=None)
 

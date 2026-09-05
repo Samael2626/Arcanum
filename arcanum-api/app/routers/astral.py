@@ -214,10 +214,18 @@ def horoscope(
 ):
     """El cielo de hoy de esta persona, leído por la IA.
 
-    Se genera UNA vez por persona y día y se sirve idéntico el resto de la
-    jornada: la clave de idempotencia lleva su fecha local, así que la segunda
-    llamada es un replay sin coste. Un horóscopo que cambia al refrescar no es
-    un horóscopo.
+    Se genera UNA vez por ventana y se sirve idéntico el resto de la jornada: la
+    clave de idempotencia lleva la fecha local, así que la segunda llamada es un
+    replay sin coste. Un horóscopo que cambia al refrescar no es un horóscopo.
+
+    LA VENTANA DEPENDE DEL PLAN. Premium genera cada día; el plan gratuito, cada
+    dos. El segundo día del gratuito NO se inventa nada ni se disfraza: llega la
+    lectura anterior con `is_previous` en true y la fecha con la que se escribió,
+    para que la pantalla pueda decirlo con todas las letras.
+
+    Lo que NO cambia por plan es `/sky-today`: el sello es cálculo, es gratis y
+    sigue siendo diario para todo el mundo. Se raciona la interpretación, que es
+    lo único que cuesta cupo y llama al modelo.
     """
     entity = repo.get_by_user_id(current_user.id)
     if entity is None:
@@ -228,12 +236,16 @@ def horoscope(
 
     now = datetime.now(timezone.utc)
     dia = hs.local_date(us.timezone_name(current_user), now)
+    cada = (settings.HOROSCOPE_PREMIUM_EVERY_DAYS
+            if current_user.subscription_tier == "premium"
+            else settings.HOROSCOPE_FREE_EVERY_DAYS)
+    ventana = hs.clave_del_periodo(dia, cada)
     reservation = UsageService().reserve(
-        db, current_user.id, "horoscope", f"horoscope-{dia.isoformat()}",
-        {"date": dia.isoformat()}, settings.HOROSCOPE_DAILY,
+        db, current_user.id, "horoscope", f"horoscope-{ventana.isoformat()}",
+        {"date": ventana.isoformat()}, settings.HOROSCOPE_DAILY,
     )
     if reservation.replay:
-        return reservation.operation.result
+        return _con_procedencia(reservation.operation.result, dia)
 
     try:
         sky = hs.build_sky(entity.chart_data or {}, now,
@@ -256,7 +268,12 @@ def horoscope(
                 detail="El cielo no se puede leer ahora mismo. Inténtalo más tarde.",
             )
         result = {
+            # La fecha del CIELO que se leyó, que es hoy aunque la ventana de
+            # idempotencia empiece antes: alguien que estrena el segundo día de
+            # su ventana recibe el cielo de hoy, no el de ayer.
             "date": dia.isoformat(),
+            "requested_date": dia.isoformat(),
+            "is_previous": False,
             "datetime": sky["datetime"],
             "text": texto,
             # `primary` y `supporting` siguen porque el cliente ya los lee.
@@ -295,6 +312,18 @@ def horoscope(
         # volveria a haber caminos que se olvidan de hacerlo.
         UsageService().reverse(db, reservation.operation)
         raise
+
+
+def _con_procedencia(guardado: dict, hoy) -> dict:
+    """Marca si lo que se devuelve se escribió otro día.
+
+    No muta lo guardado: la procedencia se deduce al leer. Guardarla dentro
+    congelaría en la fila de ayer una respuesta que depende de qué día es hoy.
+    """
+    resultado = dict(guardado or {})
+    resultado["requested_date"] = hoy.isoformat()
+    resultado["is_previous"] = resultado.get("date") != hoy.isoformat()
+    return resultado
 
 
 def sky_para_archivo(sky: dict) -> dict:
