@@ -121,6 +121,15 @@ void main() {
       expect(find.byType(RegisterScreen), findsOneWidget);
     });
 
+    testWidgets('el login no ofrece cerrarse: no hay nada que cerrar', (
+      tester,
+    ) async {
+      // La X llevaba a /hoy, y la guarda devolvia aqui mismo: un boton que no
+      // hacia nada. Con sesion, esta pantalla ya no se alcanza.
+      await _arrancar(tester);
+      expect(find.byIcon(Icons.close), findsNothing);
+    });
+
     testWidgets('y desde login se llega a crear cuenta', (tester) async {
       await _arrancar(tester);
       await tester.tap(find.text('¿Aún no tienes cuenta? Regístrate'));
