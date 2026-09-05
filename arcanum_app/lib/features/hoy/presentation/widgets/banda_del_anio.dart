@@ -94,6 +94,22 @@ class BandaDelAnio extends StatelessWidget {
                               color: ArcanumColors.ivoryMuted,
                             ),
                           ),
+                          // El toque va DENTRO de la columna, no suelto debajo
+                          // del medallon: es la tercera linea de la misma
+                          // pieza -- quien manda, donde, y si hoy le llega
+                          // algo -- y como nota aparte se leia como un pie de
+                          // pagina de otra cosa.
+                          if (_tocaHoy(senor)) ...[
+                            const SizedBox(height: 5),
+                            Text(
+                              _lineaDelToque(),
+                              style: ArcanumText.body(
+                                12,
+                                color: ArcanumColors.gold,
+                                italic: true,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -101,17 +117,6 @@ class BandaDelAnio extends StatelessWidget {
                 ),
               ),
             ),
-            if (_tocaHoy(senor)) ...[
-              const SizedBox(height: 8),
-              Text(
-                _lineaDelToque(),
-                style: ArcanumText.body(
-                  12,
-                  color: ArcanumColors.gold,
-                  italic: true,
-                ),
-              ),
-            ],
           ],
         ),
       ),
@@ -198,44 +203,68 @@ class _PintorMedallon extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final centro = size.center(Offset.zero);
     final r = size.width / 2;
+    const anchoBanda = 4.0;
+    final rExterior = r - 1.5;
+    final rInterior = rExterior - anchoBanda;
+    final rMedio = (rExterior + rInterior) / 2;
 
+    final aro = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.9
+      ..color = ArcanumColors.goldMuted.withValues(alpha: 0.7);
+    canvas.drawCircle(centro, rExterior, aro);
     canvas.drawCircle(
       centro,
-      r - 1.5,
+      rInterior,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1
-        ..color = ArcanumColors.goldMuted.withValues(alpha: 0.75),
-    );
-    canvas.drawCircle(
-      centro,
-      r - 5.5,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1
-        ..color = ArcanumColors.goldMuted.withValues(alpha: 0.35),
+        ..strokeWidth = 0.9
+        ..color = ArcanumColors.goldMuted.withValues(alpha: 0.32),
     );
 
-    // Las doce casas. La 1 a la izquierda y en sentido antihorario, como en la
-    // rueda natal: en una carta el Ascendente esta a la izquierda.
+    // El sector encendido PRIMERO: un arco de 30 grados relleno dentro de la
+    // banda. Es la casa profectada dibujada como lo que es -- un doceavo del
+    // circulo --, no como una marca mas larga que las otras. Va debajo de los
+    // radios para que estos lo recorten y se vea que ocupa un sector entero.
+    final desde = _inicioDeCasa(casa);
+    canvas.drawArc(
+      Rect.fromCircle(center: centro, radius: rMedio),
+      desde,
+      -_porCasa,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = anchoBanda
+        ..color = ArcanumColors.goldLight.withValues(alpha: 0.9),
+    );
+
+    // Las doce divisiones: radios CRUZANDO la banda, como en una rueda natal.
+    // Antes eran marcas que salian hacia fuera y con doce iguales el aro leia
+    // como un engranaje; una casa es un sector, no un diente.
+    final radio = Paint()
+      ..strokeWidth = 0.7
+      ..strokeCap = StrokeCap.butt
+      ..color = ArcanumColors.goldMuted.withValues(alpha: 0.55);
     for (var i = 0; i < 12; i++) {
-      final encendida = i == casa - 1;
-      final ang = math.pi - i * math.pi / 6;
-      final marca = Paint()
-        ..strokeCap = StrokeCap.round
-        ..strokeWidth = encendida ? 2.4 : 1
-        ..color = encendida
-            ? ArcanumColors.goldLight
-            : ArcanumColors.goldMuted.withValues(alpha: 0.45);
-      final largo = encendida ? 5.0 : 3.0;
-      final dir = Offset(math.cos(ang), -math.sin(ang));
+      final ang = _inicioDeCasa(i + 1);
+      final dir = Offset(math.cos(ang), math.sin(ang));
       canvas.drawLine(
-        centro + dir * (r - 1.5),
-        centro + dir * (r - 1.5 - largo),
-        marca,
+        centro + dir * rInterior,
+        centro + dir * rExterior,
+        radio,
       );
     }
   }
+
+  /// Un doceavo de vuelta, en radianes.
+  static const _porCasa = math.pi / 6;
+
+  /// Angulo donde EMPIEZA una casa, en el sistema de `Canvas` (y hacia abajo,
+  /// asi que un angulo creciente gira en sentido horario en pantalla).
+  ///
+  /// La casa 1 arranca a la izquierda y se avanza en sentido antihorario, que
+  /// es como estan dibujadas las casas en la rueda natal de Cielos.
+  static double _inicioDeCasa(int casa) => math.pi - (casa - 1) * _porCasa;
 
   @override
   bool shouldRepaint(_PintorMedallon viejo) => viejo.casa != casa;

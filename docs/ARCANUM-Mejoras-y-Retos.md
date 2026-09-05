@@ -2,7 +2,7 @@
 tags: [arcanum, roadmap, retos, semana-4]
 tipo: roadmap
 area: arcanum
-actualizado: 2026-06-18
+actualizado: 2026-09-04
 ---
 
 # ARCANUM — Oportunidades de Mejora y Retos Futuros
@@ -37,6 +37,30 @@ Pantallas con `ConsumerWidget`/`ConsumerStatefulWidget`. Ampliar a futuros featu
 - **Arte (Materia Arcana):** endpoints de `materia_items` (hierbas/piedras/metales) + buscador.
 - **Oráculo:** tarot (mazos/spreads) + IA ritual (Groq con contexto natal/luna/hora).
 - **Onboarding** (5 pasos) pulido.
+
+## Deuda: tres goldens de Hoy no se pueden regenerar ⏳ PENDIENTE (04/09/2026)
+
+`flutter test test/capturas --update-goldens --run-skipped` deja **seis** capturas
+al día y falla en tres:
+
+- `04-sello-abierto`
+- `04b-pliegue`
+- `05-texto-abierto`
+
+Las tres mueren en el mismo sitio: `find.text('Abrir el sello del Sol')` no
+encuentra nada después del `drag` sobre el `ListView`, así que el `tap` explota
+con `Bad state: No element` (`test/capturas/hoy_capturas_test.dart:292`). Las
+tres capturas que sí salen son las del sello **cerrado**, que no necesitan ese
+toque.
+
+**No lo causó la banda del año.** Comprobado con `git stash` sobre
+`sky_today_card.dart` y `hoy_capturas_test.dart`: fallaban igual antes del
+cambio. Es deuda anterior.
+
+Consecuencia práctica: las capturas del sello **abierto** que se suben a Play no
+se pueden actualizar, así que envejecen cada vez que se toca esa pantalla.
+Arreglarlo cuando alguien vuelva a `SkyTodayCard` — probablemente el `drag` fijo
+de `-900` px ya no deja el botón donde estaba.
 
 ## Operativo
 - `C:` se llenó (0 GB) → Dart falla al compilar. Lanzar Flutter con `TEMP`/`TMP`/`TMPDIR` = `D:\tmp`,
