@@ -18,6 +18,7 @@ from fastapi import HTTPException
 from groq import RateLimitError
 from sqlalchemy import text
 
+from app.adapters.repositories import HoroscopeReadingRepository
 from app.routers import astral
 from app.services import claude_service as cs
 
@@ -75,6 +76,12 @@ def _reloj_fijo(monkeypatch):
     monkeypatch.setattr(astral, "datetime", SimpleNamespace(now=lambda _tz=None: NOW))
 
 
+def _archivadas(db, user_id):
+    return db.execute(text(
+        "SELECT count(*) FROM horoscope_readings WHERE user_id = :u"
+    ), {"u": user_id}).scalar()
+
+
 def _estado(db, user_id):
     return db.execute(text(
         "SELECT state FROM usage_operations WHERE user_id = :u AND idempotency_key = :k"
@@ -103,20 +110,32 @@ def test_un_fallo_libera_la_reserva_y_la_misma_clave_vuelve_a_generar(
 
     monkeypatch.setattr(cs, "_get_client", lambda: _FakeGroq(*primero))
     with pytest.raises(HTTPException) as error:
-        astral.horoscope(current_user=usuario, repo=repo, db=db)
+        astral.horoscope(current_user=usuario, repo=repo,
+                         archivo=HoroscopeReadingRepository(db), db=db)
     assert error.value.status_code == esperado
 
     assert _estado(db, user_id) == "reversed", (
         "una reserva en 'reserved' bloquea la clave del dia con un 409 permanente"
     )
+    assert _archivadas(db, user_id) == 0, (
+        "el archivo y el cobro van en la misma transaccion: si no se cobro, "
+        "no puede quedar archivado un texto que nadie pago"
+    )
 
     # Y ahora el mismo dia, la misma clave: tiene que generar, no dar 409.
     monkeypatch.setattr(cs, "_get_client", lambda: _FakeGroq((ENTERO, "stop")))
-    resultado = astral.horoscope(current_user=usuario, repo=repo, db=db)
+    resultado = astral.horoscope(current_user=usuario, repo=repo,
+                         archivo=HoroscopeReadingRepository(db), db=db)
 
     assert resultado["text"] == ENTERO
     assert _estado(db, user_id) == "captured"
+    assert _archivadas(db, user_id) == 1
 
     # Y la tercera es replay del texto ya guardado, sin tocar el modelo.
     monkeypatch.setattr(cs, "_get_client", lambda: _FakeGroq())
-    assert astral.horoscope(current_user=usuario, repo=repo, db=db)["text"] == ENTERO
+    assert astral.horoscope(current_user=usuario, repo=repo,
+                         archivo=HoroscopeReadingRepository(db),
+                         db=db)["text"] == ENTERO
+    assert _archivadas(db, user_id) == 1, (
+        "un replay no genera nada, asi que tampoco puede archivar otra fila"
+    )

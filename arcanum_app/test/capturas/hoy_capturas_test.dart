@@ -153,6 +153,24 @@ class _ApiDeMuestra extends ArcanumApi {
   };
 
   @override
+  Future<List<Map<String, dynamic>>> horoscopeHistory({int limit = 30}) async => [
+    {
+      'date': '2026-08-23',
+      'text': 'Marte entró en tu casa 7 y el trato de ayer pide una respuesta.',
+      'sky': {
+        'today': {'transit': 'mars', 'natal': 'venus', 'aspect': 'square'},
+        'profection': {'house': 5, 'lord': 'saturn'},
+      },
+    },
+    // Una de las primeras: su cielo no traia carriles ni profeccion.
+    {
+      'date': '2026-08-01',
+      'text': 'De cuando el motor sabia menos y el texto era mas corto.',
+      'sky': <String, dynamic>{},
+    },
+  ];
+
+  @override
   Future<Map<String, dynamic>> celestialOverview() async => {
     'natal_chart': {
       'chart_data': {
@@ -387,6 +405,29 @@ void main() {
     await tester.tap(find.byTooltip('Horóscopo'));
     await tester.pumpAndSettle();
     await _retratar(tester, '07-horoscopo');
+  });
+
+  testWidgets('08 el historial, desplegado', (tester) async {
+    await _montarApp(tester);
+    await tester.tap(find.byTooltip('Horóscopo'));
+    await tester.pumpAndSettle();
+    // El boton vive al final de la lista y `ListView` no construye lo que no
+    // se ve: hay que bajar hasta el, no basta con `ensureVisible`.
+    await tester.scrollUntilVisible(
+      find.text('Ver días anteriores'),
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ver días anteriores'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('DÍAS ANTERIORES'),
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.pumpAndSettle();
+    await _retratar(tester, '08-historial');
   });
 
   testWidgets('99 diagnostico: que hay en pantalla', (tester) async {

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
 
@@ -190,6 +190,18 @@ class DivinationSessionEntity:
     moon_phase: str | None = None
     planetary_hour: str | None = None
     session_date: datetime | None = None
+
+
+@dataclass
+class HoroscopeReadingEntity:
+    id: UUID
+    user_id: UUID
+    local_date: date
+    text: str
+    generated_at: datetime | None = None
+    # Puede faltar, y puede venir a medias: las lecturas de antes de que el
+    # motor aprendiera la profeccion o los ingresos no los traen.
+    sky: dict | None = None
 
 
 @dataclass

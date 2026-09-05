@@ -180,6 +180,25 @@ class ArcanumApi {
     return res.data as Map<String, dynamic>;
   }
 
+  /// Los horóscopos ya escritos de esta persona, del más reciente al más viejo.
+  ///
+  /// NO genera nada: lee el archivo. Por eso no lleva la espera larga del
+  /// modelo ni pide consentimiento — mirar atrás no manda nada a terceros.
+  ///
+  /// Las lecturas viejas pueden venir sin `year`, `profection` o `ingress`:
+  /// son campos que el motor aprendió después. Quien las pinte tiene que
+  /// tolerarlo.
+  Future<List<Map<String, dynamic>>> horoscopeHistory({int limit = 30}) async {
+    final res = await _dio.get(
+      '/astral/horoscope/history',
+      queryParameters: {'limit': limit},
+    );
+    final data = res.data as Map<String, dynamic>;
+    return (data['readings'] as List? ?? [])
+        .cast<Map<String, dynamic>>()
+        .toList();
+  }
+
   /// Materia Arcana: catálogo (resumen). Filtros opcionales.
   Future<List<Map<String, dynamic>>> materiaList({
     String? itemType,
@@ -260,11 +279,11 @@ class ArcanumApi {
     String? excerpt,
     String? note,
   }) => createContentReport(
-        source: surface,
-        contentRef: '',
-        reason: reason,
-        note: note,
-      );
+    source: surface,
+    contentRef: '',
+    reason: reason,
+    note: note,
+  );
 
   /// Tira de tarot. spread: 'three_card' | 'celtic_cross'. Requiere auth.
   /// Devuelve la sesión guardada (cartas en data['cards_drawn']['cards']).

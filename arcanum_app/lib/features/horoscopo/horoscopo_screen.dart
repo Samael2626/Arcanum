@@ -17,6 +17,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../hoy/presentation/widgets/sky_today_card.dart';
+import 'widgets/historial_horoscopo.dart';
 
 class HoroscopoScreen extends StatelessWidget {
   const HoroscopoScreen({super.key});
@@ -32,6 +33,9 @@ class HoroscopoScreen extends StatelessWidget {
         _Entradilla(),
         SizedBox(height: 14),
         SkyTodayCard(),
+        // El archivo va DEBAJO del de hoy y plegado: se viene a leer el de
+        // hoy, y mirar atras es una segunda intencion.
+        HistorialHoroscopo(),
       ],
     ),
   );

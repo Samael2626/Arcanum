@@ -17,6 +17,24 @@ import pytest
 from app.services import horoscope as ho
 from app.services import transit_weight as tw
 
+
+class _ArchivoFalso:
+    """El archivo de horoscopos. Registra lo que se le manda guardar.
+
+    No commitea: la ruta guarda y captura en un solo commit, y aqui se
+    comprueba justo eso -- que lo archivado y lo cobrado van juntos.
+    """
+
+    def __init__(self):
+        self.guardadas = []
+
+    def add(self, user_id, local_date, text, sky, commit=False):
+        self.guardadas.append((user_id, local_date, text, sky))
+
+    def last(self, user_id, limit=30):
+        return []
+
+
 # Fecha de nacimiento del doble: la profeccion anual la necesita para saber
 # que anio vive esta persona. Sin ella el endpoint sigue funcionando, pero
 # entonces el doble no ejercitaria ese camino.
@@ -185,7 +203,7 @@ def test_la_respuesta_lleva_los_dos_carriles_y_la_secta(monkeypatch):
     carta = SimpleNamespace(chart_data={
         "planets": [{"name": "sun", "longitude": 10.0, "house": 10}]})
 
-    astral.horoscope(current_user=usuario,
+    astral.horoscope(archivo=_ArchivoFalso(), current_user=usuario,
                      repo=SimpleNamespace(get_by_user_id=lambda _i: carta),
                      db=None)
 

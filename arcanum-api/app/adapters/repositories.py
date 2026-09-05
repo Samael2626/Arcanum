@@ -19,6 +19,7 @@ from app.core.config import settings
 from app.core.security import create_access_token, create_refresh_token, get_password_hash, verify_password
 from app.domain.entities import (
     DivinationSessionEntity,
+    HoroscopeReadingEntity,
     GrimoireEntryEntity,
     LibraryChapterEntity,
     LibraryParagraphEntity,
@@ -37,6 +38,7 @@ from app.domain.entities import (
     UserEntity,
 )
 from app.models.divination_session import DivinationSession
+from app.models.horoscope_reading import HoroscopeReading
 from app.models.grimoire_entry import GrimoireEntry
 from app.models.library import LibraryChapter, LibraryParagraph, LibraryWork
 from app.models.materia_item import MateriaItem
@@ -486,6 +488,45 @@ class LibraryWorkRepository:
         if row is None:
             return None
         return self._chapter_with_work(row)
+
+
+# ── Horoscopo ───────────────────────────────────────────────────────────────
+
+
+class HoroscopeReadingRepository:
+    """El archivo de horoscopos de una persona.
+
+    Escribe SIN commit a proposito: la ruta guarda la lectura y captura el
+    consumo en un solo commit, de modo que un fallo posterior revierta las dos.
+    Es el mismo trato que ya tiene `DivinationSessionRepository.create`.
+    """
+
+    def __init__(self, db: Session) -> None:
+        self._db = db
+
+    def add(self, user_id: UUID, local_date, text: str, sky: dict | None,
+            commit: bool = False) -> None:
+        row = HoroscopeReading(user_id=user_id, local_date=local_date,
+                               text=text, sky=sky)
+        self._db.add(row)
+        if commit:
+            self._db.commit()
+
+    def last(self, user_id: UUID, limit: int = 30) -> list[HoroscopeReadingEntity]:
+        """Los ultimos dias, del mas reciente al mas viejo.
+
+        Ordenado por `local_date` y no por `generated_at`: quien mira su
+        historial busca el dia que vivio, no el instante en que se genero el
+        texto -- y los dos se separan en cuanto alguien cruza un huso.
+        """
+        filas = (
+            self._db.query(HoroscopeReading)
+            .filter(HoroscopeReading.user_id == user_id)
+            .order_by(HoroscopeReading.local_date.desc())
+            .limit(limit)
+            .all()
+        )
+        return [_to_entity(HoroscopeReadingEntity, f) for f in filas]
 
 
 # ── Oracle ──────────────────────────────────────────────────────────────────

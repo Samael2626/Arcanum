@@ -28,6 +28,24 @@ from app.core.config import settings
 from app.routers import astral
 from app.services import claude_service as cs
 
+
+class _ArchivoFalso:
+    """El archivo de horoscopos. Registra lo que se le manda guardar.
+
+    No commitea: la ruta guarda y captura en un solo commit, y aqui se
+    comprueba justo eso -- que lo archivado y lo cobrado van juntos.
+    """
+
+    def __init__(self):
+        self.guardadas = []
+
+    def add(self, user_id, local_date, text, sky, commit=False):
+        self.guardadas.append((user_id, local_date, text, sky))
+
+    def last(self, user_id, limit=30):
+        return []
+
+
 # Fecha de nacimiento del doble: la profeccion anual la necesita para saber
 # que anio vive esta persona. Sin ella el endpoint sigue funcionando, pero
 # entonces el doble no ejercitaria ese camino.
@@ -295,7 +313,7 @@ def test_un_horoscopo_invalido_no_se_persiste_y_libera_la_reserva(
     monkeypatch.setattr(cs, "_get_client", lambda: cliente)
 
     with pytest.raises(HTTPException) as error:
-        astral.horoscope(current_user=_user(), repo=_Repo(_chart()), db=None)
+        astral.horoscope(archivo=_ArchivoFalso(), current_user=_user(), repo=_Repo(_chart()), db=None)
 
     assert error.value.status_code == 503
     assert capturadas == [], "un texto cortado no puede quedar como el horoscopo del dia"
@@ -307,7 +325,7 @@ def test_el_429_libera_la_reserva_del_horoscopo(monkeypatch):
     monkeypatch.setattr(cs, "_get_client", lambda: _FakeGroq(_rate_limit_error()))
 
     with pytest.raises(HTTPException) as error:
-        astral.horoscope(current_user=_user(), repo=_Repo(_chart()), db=None)
+        astral.horoscope(archivo=_ArchivoFalso(), current_user=_user(), repo=_Repo(_chart()), db=None)
 
     assert error.value.status_code == 429
     assert capturadas == []
@@ -325,7 +343,7 @@ def test_cualquier_httpexception_del_horoscopo_libera_la_reserva(monkeypatch):
         lambda *_a, **_k: (_ for _ in ()).throw(HTTPException(502, "proveedor caido")))
 
     with pytest.raises(HTTPException) as error:
-        astral.horoscope(current_user=_user(), repo=_Repo(_chart()), db=None)
+        astral.horoscope(archivo=_ArchivoFalso(), current_user=_user(), repo=_Repo(_chart()), db=None)
 
     assert error.value.status_code == 502
     assert liberadas == [operacion]
@@ -339,7 +357,7 @@ def test_un_horoscopo_valido_si_se_captura(monkeypatch):
                         SimpleNamespace(now=lambda _tz=None: datetime(
                             2026, 8, 16, 15, 0, tzinfo=timezone.utc)))
 
-    resultado = astral.horoscope(current_user=_user(), repo=_Repo(_chart()), db=None)
+    resultado = astral.horoscope(archivo=_ArchivoFalso(), current_user=_user(), repo=_Repo(_chart()), db=None)
 
     assert resultado["text"] == entero
     assert capturadas == [resultado]

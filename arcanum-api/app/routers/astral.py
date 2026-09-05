@@ -9,8 +9,11 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_natal_chart_repo
-from app.adapters.repositories import NatalChartRepository
+from app.api.deps import get_horoscope_repo, get_natal_chart_repo
+from app.adapters.repositories import (
+    HoroscopeReadingRepository,
+    NatalChartRepository,
+)
 from app.application.services.usage_service import UsageService
 from app.core.config import settings
 from app.core.security import get_current_user
@@ -205,6 +208,7 @@ def sky_today(
 def horoscope(
     current_user: UserEntity = Depends(get_current_user),
     repo: NatalChartRepository = Depends(get_natal_chart_repo),
+    archivo: HoroscopeReadingRepository = Depends(get_horoscope_repo),
     db: Session = Depends(get_db),
 ):
     """El cielo de hoy de esta persona, leído por la IA.
@@ -268,6 +272,15 @@ def horoscope(
             "profection": sky["profection"],
             "total_aspects": sky["total_aspects"],
         }
+        # El archivo se escribe ANTES del capture y sin commit propio: el
+        # `db.commit()` de `capture` persiste las dos cosas a la vez, y el
+        # `reverse` del `except` hace rollback de las dos. Guardar el texto en
+        # un commit aparte abriria la puerta a un dia con lectura archivada y
+        # sin cobrar, o cobrada y sin archivar.
+        #
+        # No sustituye a `usage_operations.result`: esa escritura es la
+        # contabilidad del cupo y sigue igual. Ver `horoscope_reading.py`.
+        archivo.add(current_user.id, dia, texto, sky_para_archivo(sky))
         UsageService().capture(db, reservation.operation, result)
         return result
     except Exception:
@@ -281,6 +294,46 @@ def horoscope(
         # volveria a haber caminos que se olvidan de hacerlo.
         UsageService().reverse(db, reservation.operation)
         raise
+
+
+def sky_para_archivo(sky: dict) -> dict:
+    """Lo que se guarda del cielo, sin el texto (que va en su columna).
+
+    Se guarda el cielo ENTERO tal como se calculo, no un resumen: el dia que el
+    motor cambie de criterio, el archivo tiene que seguir diciendo con que se
+    escribio aquel texto, no con que se escribiria hoy.
+    """
+    return {k: v for k, v in sky.items() if k != "text"}
+
+
+@router.get("/horoscope/history")
+def horoscope_history(
+    limit: int = 30,
+    current_user: UserEntity = Depends(get_current_user),
+    archivo: HoroscopeReadingRepository = Depends(get_horoscope_repo),
+):
+    """Los ultimos horoscopos de esta persona, del mas reciente al mas viejo.
+
+    NO genera nada, no reserva cupo y no llama al modelo: lee lo que ya se
+    escribio. Un historial que generase seria un cobro por mirar atras.
+
+    Las lecturas viejas pueden no traer `year`, `profection` ni `ingress`: son
+    campos que el motor aprendio despues. Viajan como vengan y el cliente
+    dibuja lo que haya, en vez de rellenarlos aqui con un valor inventado que
+    pareceria calculado.
+    """
+    tope = max(1, min(limit, 90))
+    return {
+        "readings": [
+            {
+                "date": r.local_date.isoformat(),
+                "generated_at": r.generated_at.isoformat() if r.generated_at else None,
+                "text": r.text,
+                "sky": r.sky or {},
+            }
+            for r in archivo.last(current_user.id, tope)
+        ]
+    }
 
 
 @router.get("/overview")

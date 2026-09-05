@@ -13,6 +13,7 @@ from app.models.usage_operation import UsageOperation
 from app.models.revenuecat_event import RevenueCatEvent
 from app.models.reading import ReadingBookmark, ReadingProgress, SavedPassage
 from app.models.content_report import ContentReport
+from app.models.horoscope_reading import HoroscopeReading
 from app.models.user_consent import UserConsent
 
 __all__ = [
@@ -37,4 +38,5 @@ __all__ = [
     "SavedPassage",
     "ContentReport",
     "UserConsent",
+    "HoroscopeReading",
 ]
