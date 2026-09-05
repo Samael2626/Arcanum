@@ -124,5 +124,39 @@ void main() {
     test('un 404 sin cuerpo tampoco lo asume', () {
       expect(classifySkyFailure(_dio(404)), SkyTodayFailure.cieloNoLegible);
     });
+
+    test('quedarse sin cupo NO es quedarse sin conexión', () {
+      // El agujero que tenía esto: el 402 no estaba en el `switch` y caía al
+      // final, en `sinRed`. La app mandaba a mirar el wifi mientras el
+      // servidor decía exactamente qué pasaba.
+      final failure = classifySkyFailure(
+        _dio(402, detail: {
+          'code': 'credits_required',
+          'message': 'Se agotó tu cupo diario. Compra créditos o mejora tu plan.',
+        }),
+      );
+
+      expect(failure, SkyTodayFailure.sinCupo);
+      expect(failure, isNot(SkyTodayFailure.sinRed));
+    });
+
+    test('sin cupo lleva a la tienda, no a reintentar', () {
+      // Reintentar sería chocar contra la misma pared.
+      expect(skyFailureRoute(SkyTodayFailure.sinCupo), '/paywall');
+    });
+
+    test('sin cupo el cielo calculado SIGUE mostrándose', () {
+      // Los tránsitos son cálculo y no cuestan nada: quitárselos además a quien
+      // agotó su cuota sería cobrarle dos veces por lo mismo. Lo que se limita
+      // es la interpretación, no el instrumento.
+      expect(allowsLocalReading(SkyTodayFailure.sinCupo), isTrue);
+    });
+
+    test('el mensaje de sin cupo no habla de conexión ni de fallo', () {
+      final texto = skyFailureMessage(SkyTodayFailure.sinCupo).toLowerCase();
+      expect(texto, isNot(contains('conexión')));
+      expect(texto, isNot(contains('error')));
+      expect(texto, contains('lectura'));
+    });
   });
 }

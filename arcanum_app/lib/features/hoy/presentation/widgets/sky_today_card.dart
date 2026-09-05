@@ -508,6 +508,8 @@ class _FailureState extends ConsumerState<_Failure> {
         // No dice "reintentar": lo que hay que rehacer es la decision, y
         // llamarlo reintento la disfrazaria de fallo tecnico.
         return 'Revisar el permiso';
+      case SkyTodayFailure.sinCupo:
+        return 'Ver planes y créditos';
     }
   }
 }
