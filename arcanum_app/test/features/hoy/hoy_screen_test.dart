@@ -6,6 +6,7 @@ import 'package:arcanum_app/features/hoy/presentation/widgets/level_three_aspect
 import 'package:arcanum_app/shared/widgets/arcanum_frame.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_motion.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_surface.dart';
+import 'package:arcanum_app/shared/widgets/ai_output.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,6 +47,7 @@ class _TodayApi extends ArcanumApi {
     consentimientos.add(granted);
     return {'kind': kind, 'policy_version': policyVersion, 'granted': granted};
   }
+
   var skyCalls = 0;
   var celestialOverviewCalls = 0;
 
@@ -381,7 +383,15 @@ void main() {
     await tester.pump();
 
     expect(find.text('Abrir el sello del Sol'), findsNothing);
-    expect(find.text('Saturno aprieta sobre tu Sol natal.'), findsOneWidget);
+    // Acotado a la lectura VISIBLE: el mismo texto vive tambien en la tarjeta
+    // que se comparte, montada fuera de pantalla para poder capturarla.
+    expect(
+      find.descendant(
+        of: find.byType(AiOutput),
+        matching: find.text('Saturno aprieta sobre tu Sol natal.'),
+      ),
+      findsOneWidget,
+    );
     final routeTarget = find.ancestor(
       of: find.text('trígono'),
       matching: find.byType(InkWell),
@@ -389,8 +399,7 @@ void main() {
     expect(tester.getSize(routeTarget).height, greaterThanOrEqualTo(48));
     expect(api.horoscopeCalls, 1);
     expect(api.celestialOverviewCalls, 1);
-    expect(await AiConsentService().status('user-a'),
-        AiConsentStatus.granted);
+    expect(await AiConsentService().status('user-a'), AiConsentStatus.granted);
     expect(find.text('Urano trígono Luna'), findsOneWidget);
     expect(find.text('Neptuno cuadratura Sol'), findsOneWidget);
     expect(find.text('Plutón oposición Venus'), findsOneWidget);

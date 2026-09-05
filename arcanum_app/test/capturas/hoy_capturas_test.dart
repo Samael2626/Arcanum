@@ -7,6 +7,8 @@ import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/core/theme/arcanum_theme.dart';
 import 'package:arcanum_app/core/router/app_router.dart';
+import 'package:arcanum_app/features/horoscopo/compartir_horoscopo.dart';
+import 'package:arcanum_app/features/horoscopo/widgets/tarjeta_compartir.dart';
 import 'package:arcanum_app/features/hoy/hoy_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -459,6 +461,47 @@ void main() {
     );
     await tester.pumpAndSettle();
     await _retratar(tester, '09-agenda');
+  });
+
+  testWidgets('10 la tarjeta que se comparte, tal cual se manda', (
+    tester,
+  ) async {
+    // No es un golden: se guarda el PNG QUE DE VERDAD SALE de `pintarTarjeta`,
+    // con su densidad y su tamano reales. Un golden del widget se capturaria
+    // en pixeles logicos y ensenaria 360x450, que no es lo que recibe nadie.
+    final clave = GlobalKey();
+    await tester.pumpWidget(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: buildArcanumTheme(),
+        home: Scaffold(
+          backgroundColor: Colors.black,
+          body: Center(
+            child: RepaintBoundary(
+              key: clave,
+              child: const TarjetaCompartir(
+                aspecto: {
+                  'transit': 'moon', 'natal': 'midheaven', 'aspect': 'trine',
+                  'angle': 120, 'separation': 119.34,
+                },
+                profeccion: {
+                  'age': 35, 'house': 5, 'sign_es': 'Capricornio',
+                  'lord': 'saturn',
+                },
+                texto: 'Saturno cierra un cuadrado con tu Sol: figura de '
+                    'tension entre cuerpos que se miran de frente. En la hora '
+                    'del Sol se trabajaba el oro.',
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final png = await tester.runAsync(() => pintarTarjeta(clave));
+    expect(png, isNotNull);
+    File('test/capturas/salida/10-tarjeta-compartir.png')
+        .writeAsBytesSync(png!);
   });
 
   testWidgets('99 diagnostico: que hay en pantalla', (tester) async {

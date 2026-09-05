@@ -22,6 +22,8 @@ import '../../../../core/privacy/ai_consent_service.dart';
 import '../../../../core/astro/birth_data.dart';
 import 'banda_del_anio.dart';
 import 'sello_del_cielo.dart';
+import '../../../horoscopo/compartir_horoscopo.dart';
+import '../../../horoscopo/widgets/tarjeta_compartir.dart';
 
 /// "Tu cielo de hoy": el transito dominante de esta persona, leido por la IA.
 ///
@@ -60,6 +62,11 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
   /// contacto con ARCANUM era un dialogo legal.
   Future<Map<String, dynamic>>? _lectura;
   Future<Map<String, dynamic>>? _overview;
+
+  /// Ancla de la tarjeta que se comparte. Vive aqui y no dentro del boton
+  /// porque el widget que se captura tiene que estar montado ANTES del toque.
+  final GlobalKey _tarjeta = GlobalKey();
+  bool _compartiendo = false;
   bool _abriendo = false;
   bool _mostrarLectura = false;
   Timer? _lecturaTimer;
@@ -126,6 +133,29 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
     setState(() {
       _overview = _api.celestialOverview();
     });
+  }
+
+  /// Comparte la tarjeta del dia. El `origen` sale del boton que lo lanzo:
+  /// en iPad la hoja se despliega desde ahi, y sin eso se cae.
+  Future<void> _compartir({required String texto, String? fecha}) async {
+    if (_compartiendo) return;
+    setState(() => _compartiendo = true);
+    try {
+      final caja = context.findRenderObject() as RenderBox?;
+      await compartirTarjeta(
+        clave: _tarjeta,
+        fecha: fecha ?? DateTime.now().toIso8601String().split('T').first,
+        texto: 'Mi cielo de hoy, en ARCANUM.',
+        origen: caja == null
+            ? null
+            : caja.localToGlobal(Offset.zero) & caja.size,
+      );
+    } catch (_) {
+      // Compartir es opcional: si el sistema no abre la hoja, la lectura sigue
+      // en pantalla y no se interrumpe con un error.
+    } finally {
+      if (mounted) setState(() => _compartiendo = false);
+    }
   }
 
   @override
@@ -210,6 +240,40 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
                             text: texto,
                             surface: 'horoscopo',
                             child: Text(texto, style: ArcanumText.body(15)),
+                          ),
+                          _BotonCompartir(
+                            ocupado: _compartiendo,
+                            onPressed: () => _compartir(
+                              texto: texto,
+                              fecha: lec.data!['date'] as String?,
+                            ),
+                          ),
+                          // La tarjeta se MONTA aqui, fuera de la pantalla.
+                          // No con `Offstage` ni con `Opacity(0)`: los dos se
+                          // saltan el pintado, y sin pintar no hay capa que
+                          // capturar -- `toImage` devolveria un error. Movida
+                          // con `Transform` si se pinta, y nadie la ve.
+                          // Y fuera de la semantica: un lector de pantalla
+                          // leeria dos veces el mismo horoscopo -- el de la
+                          // pantalla y el de la tarjeta escondida --, y en las
+                          // busquedas del arbol aparece duplicado. Lo cazo un
+                          // test de Hoy que ya existia.
+                          Transform.translate(
+                            offset: const Offset(0, -10000),
+                            child: ExcludeSemantics(
+                              child: IgnorePointer(
+                                child: RepaintBoundary(
+                                  key: _tarjeta,
+                                  child: TarjetaCompartir(
+                                    aspecto: aspecto,
+                                    profeccion:
+                                        d['profection']
+                                            as Map<String, dynamic>?,
+                                    texto: texto,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -492,4 +556,32 @@ class _LocalReading extends StatelessWidget {
       },
     );
   }
+}
+
+/// El botón de compartir. Discreto y al final: se comparte lo que ya se leyó.
+class _BotonCompartir extends StatelessWidget {
+  const _BotonCompartir({required this.ocupado, required this.onPressed});
+
+  final bool ocupado;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.centerLeft,
+    child: TextButton.icon(
+      onPressed: ocupado ? null : onPressed,
+      icon: Icon(
+        Icons.ios_share,
+        size: 16,
+        color: ocupado ? ArcanumColors.goldMuted : ArcanumColors.gold,
+      ),
+      label: Text(
+        ocupado ? 'Preparando…' : 'Compartir',
+        style: ArcanumText.body(
+          13,
+          color: ocupado ? ArcanumColors.goldMuted : ArcanumColors.gold,
+        ),
+      ),
+    ),
+  );
 }
