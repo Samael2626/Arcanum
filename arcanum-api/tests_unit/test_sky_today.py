@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 """El cielo de hoy sin interpretar: la mitad gratis.
 
 Existe para que ensenar el sello no cueste lo mismo que abrirlo. Si esto
@@ -13,9 +14,16 @@ from fastapi import HTTPException
 from app.application.services.usage_service import UsageService
 from app.routers import astral
 
+# Fecha de nacimiento del doble: la profeccion anual la necesita para saber
+# que anio vive esta persona. Sin ella el endpoint sigue funcionando, pero
+# entonces el doble no ejercitaria ese camino.
+NACIMIENTO = datetime(1990, 6, 15, 12, 0, tzinfo=timezone.utc)
+
+
 
 def _usuario():
     return SimpleNamespace(id=uuid4(), birth_timezone="America/Bogota",
+                           birth_date=NACIMIENTO,
                            birth_lat="6.24", birth_lon="-75.58",
                            current_lat=None, current_lon=None,
                            current_timezone=None)

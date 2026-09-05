@@ -181,13 +181,20 @@ def sky_today(
         )
 
     now = datetime.now(timezone.utc)
-    sky = hs.build_sky(entity.chart_data or {}, now)
+    dia = hs.local_date(us.timezone_name(current_user), now)
+    # La misma profeccion que usa /horoscope. Si el sello ordenara sin ella,
+    # el transito que ensena gratis podria no ser el que luego interpreta el
+    # texto de pago: dos respuestas distintas al mismo dia.
+    sky = hs.build_sky(entity.chart_data or {}, now,
+                       birth=current_user.birth_date, local_day=dia)
     return {
-        "date": hs.local_date(us.timezone_name(current_user), now).isoformat(),
+        "date": dia.isoformat(),
         "datetime": sky["datetime"],
         "today": sky["today"],
         "chapter": sky["chapter"],
+        "year": sky["year"],
         "sect": sky["sect"],
+        "profection": sky["profection"],
         "total_aspects": sky["total_aspects"],
         "day_ruler": us.day_ruler(current_user, now),
     }
@@ -223,7 +230,8 @@ def horoscope(
         return reservation.operation.result
 
     try:
-        sky = hs.build_sky(entity.chart_data or {}, now)
+        sky = hs.build_sky(entity.chart_data or {}, now,
+                           birth=current_user.birth_date, local_day=dia)
         texto, diag = generate_horoscope(
             hs.describe(sky, now,
                         day_ruler=us.day_ruler(current_user, now),
@@ -253,7 +261,9 @@ def horoscope(
             # lo que cambio hoy del capitulo que sigue.
             "today": sky["today"],
             "chapter": sky["chapter"],
+            "year": sky["year"],
             "sect": sky["sect"],
+            "profection": sky["profection"],
             "total_aspects": sky["total_aspects"],
         }
         UsageService().capture(db, reservation.operation, result)

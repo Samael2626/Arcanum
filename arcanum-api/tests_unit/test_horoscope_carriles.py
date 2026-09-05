@@ -17,6 +17,12 @@ import pytest
 from app.services import horoscope as ho
 from app.services import transit_weight as tw
 
+# Fecha de nacimiento del doble: la profeccion anual la necesita para saber
+# que anio vive esta persona. Sin ella el endpoint sigue funcionando, pero
+# entonces el doble no ejercitaria ese camino.
+NACIMIENTO = datetime(1990, 6, 15, 12, 0, tzinfo=timezone.utc)
+
+
 AHORA = datetime(2026, 8, 18, 12, 0, tzinfo=timezone.utc)
 
 
@@ -174,6 +180,7 @@ def test_la_respuesta_lleva_los_dos_carriles_y_la_secta(monkeypatch):
                         lambda _sky, _terms: ("Un texto entero.", {"available": True}))
 
     usuario = SimpleNamespace(id=uuid4(), birth_timezone="America/Bogota",
+                              birth_date=NACIMIENTO,
                               birth_lat=None, birth_lon=None)
     carta = SimpleNamespace(chart_data={
         "planets": [{"name": "sun", "longitude": 10.0, "house": 10}]})

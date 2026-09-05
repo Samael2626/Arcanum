@@ -11,6 +11,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from app.services import lunar_calendar as lc
 from app.services import natal_chart_engine as nce
+from app.services import profections as pf
 from app.services import transit_weight as tw
 
 
@@ -50,20 +51,32 @@ def expected_terms(sky: dict) -> list[str]:
     ]
 
 
-def build_sky(chart_data: dict, now: datetime) -> dict:
-    """Transitos del momento contra la carta, ya ordenados y seleccionados."""
+def build_sky(chart_data: dict, now: datetime, birth=None,
+              local_day: date | None = None) -> dict:
+    """Transitos del momento contra la carta, ya ordenados y seleccionados.
+
+    `birth` y `local_day` habilitan la profeccion anual: sin ellos el orden es
+    el de antes, que es lo correcto para quien no tiene fecha de nacimiento
+    guardada. La profeccion se cuenta contra el dia LOCAL de la persona por lo
+    mismo que el horoscopo: su cumpleanios no cae en el calendario de UTC.
+    """
     objetivos = nce.natal_targets(chart_data or {})
     transitos = nce.compute_transits(objetivos, now)
     sect = nce.sect_of(chart_data or {})
-    seleccion = tw.select(transitos["aspects_to_natal"], sect=sect)
+    profeccion = pf.profection_of(chart_data or {}, birth,
+                                  local_day or now.date()) if birth else None
+    seleccion = tw.select(transitos["aspects_to_natal"], sect=sect,
+                          profection=profeccion)
     return {
         "datetime": transitos["datetime"],
         "primary": seleccion["primary"],
         "supporting": seleccion["supporting"],
         "chapter": seleccion["chapter"],
         "today": seleccion["today"],
+        "year": seleccion["year"],
         "total_aspects": len(transitos["aspects_to_natal"]),
         "sect": sect,
+        "profection": profeccion,
     }
 
 
@@ -105,6 +118,20 @@ def describe(sky: dict, now: datetime, day_ruler: str | None = None,
         lineas.append("SECTA: carta nocturna (nacio con el Sol bajo el "
                       "horizonte). Manda la Luna; Saturno esta fuera de su secta.")
 
+    # El anio que vive esta persona. Va antes de los carriles porque es lo que
+    # explica POR QUE se eligio ese transito y no otro: el senor del anio pesa
+    # entero y lo que no toca su signo se atenua. Si el texto no puede decir de
+    # quien es el anio, la seleccion queda sin argumento.
+    prof = sky.get("profection")
+    if prof:
+        senor = nce.POINTS_ES.get(prof["lord"], prof["lord"])
+        lineas.append(
+            f"ANIO PROFECTADO: cumplio {prof['age']} anios, asi que gobierna la "
+            f"casa {prof['house']} en {prof['sign_es']}. SENOR DEL ANIO: {senor}. "
+            "Lo que toque a ese planeta o a ese signo es el tema del anio; el "
+            "resto es ruido de fondo. NO le expliques la tecnica: usala."
+        )
+
     # Dos carriles con el papel dicho, en vez de un "principal" que se lo lleva
     # siempre el planeta lento y deja el texto igual durante semanas.
     capitulo = sky.get("chapter")
@@ -118,6 +145,11 @@ def describe(sky: dict, now: datetime, day_ruler: str | None = None,
             "la jornada esta tranquila sobre su carta y apoyate en la luna y el "
             "regente del dia. NO inventes un transito."
         )
+
+    del_anio = sky.get("year")
+    if del_anio and del_anio is not hoy and del_anio is not capitulo:
+        lineas.append("LO DEL ANIO (toca al senor del anio): "
+                      + _describe_aspect(del_anio))
 
     if capitulo:
         lineas.append(

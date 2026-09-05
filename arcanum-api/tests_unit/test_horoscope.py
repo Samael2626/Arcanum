@@ -14,6 +14,12 @@ from app.routers import astral
 from app.services import claude_service as cs
 from app.services import horoscope as hs
 
+# Fecha de nacimiento del doble: la profeccion anual la necesita para saber
+# que anio vive esta persona. Sin ella el endpoint sigue funcionando, pero
+# entonces el doble no ejercitaria ese camino.
+NACIMIENTO = datetime(1990, 6, 15, 12, 0, tzinfo=timezone.utc)
+
+
 NOW = datetime(2026, 8, 16, 15, 0, tzinfo=timezone.utc)
 
 
@@ -146,6 +152,7 @@ def test_sin_clave_de_groq_no_hay_horoscopo(monkeypatch):
 
 def _user(tz="America/Bogota"):
     return SimpleNamespace(id=uuid4(), birth_timezone=tz,
+                           birth_date=NACIMIENTO,
                            birth_lat=None, birth_lon=None)
 
 

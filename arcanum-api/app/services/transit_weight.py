@@ -26,8 +26,8 @@ por ACTIVACION TEMPORAL (senor del ano, signo profectado); nosotros ordenamos
 por identidad del planeta. No es lo mismo.
 
 Huecos declarados, por si algun dia se cierran (orden de impacto estimado):
-  1. Profecciones y senor del ano: el mismo transito es evento un ano y ruido
-     otro, y quien lo decide no es el planeta que transita.
+  1. HECHO. Profecciones y senor del anio: ver `_profection_factor`. El mismo
+     transito ya no pesa igual a los 19 que a los 47.
   2. Transitos por CASA, no solo por aspecto: un planeta que entra en una casa
      sin aspectar nada es invisible para este modulo.
   3. Estaciones retrogradas sobre un punto natal (ya tenemos `speed`).
@@ -45,10 +45,11 @@ Huecos declarados, por si algun dia se cierran (orden de impacto estimado):
      un "no"; la psicologica moderna sostiene que el efecto se vive DESPUES de
      la exactitud y no es debil en absoluto. Nuestro 0.45 es una tercera cosa.
 
-La secta (abajo) es el primer paso para corregir el defecto de raiz que tenia
-este modulo: la tabla era identica para toda persona, cuando helenistica,
-medieval y moderna seria coinciden en que la fuerza de un transito es propiedad
-de ESA carta.
+La secta y la profeccion (abajo) corrigen el defecto de raiz que tenia este
+modulo: la tabla era identica para toda persona, cuando helenistica, medieval y
+moderna seria coinciden en que la fuerza de un transito es propiedad de ESA
+carta. La secta la hace de esa carta; la profeccion, ademas, de ESTE anio suyo.
+Sigue faltando lo demas de la lista.
 """
 from __future__ import annotations
 
@@ -141,6 +142,44 @@ _IN_SECT_MALEFIC = 0.85       # el malefico esta en su bando: aprieta menos
 _LUMINARY_OFF_SECT = 0.85     # la luminaria que NO manda en esta carta
 _LUMINARY_BY_SECT = {DAY: "sun", NIGHT: "moon"}
 
+# ── Profeccion anual ──────────────────────────────────────────────────────────
+#
+# Cierra el hueco 1 de la lista de arriba. Valens (Libro IV) hace avanzar el
+# Ascendente un signo por anio cumplido; el regente de ese signo es el SENOR DEL
+# ANIO, y Brennan documenta esta tecnica justo como criterio para "rank which
+# transits are more important". Es lo unico de aqui que sabe que anio vive esta
+# persona: sin ella, el mismo transito pesa igual a los 19 que a los 47.
+#
+# La correccion ATENUA, nunca amplifica, por la misma razon que la de secta: las
+# tablas de arriba se leen como un maximo y `weight_of` sigue entre 0 y 1. Lo
+# que hace la profeccion no es subir lo activado, es bajar lo que este anio no
+# va con esta persona.
+#
+# Tres niveles, del mas antiguo al mas flojo:
+#   - el senor del anio entra en el aspecto (transitando, o recibiendo)  -> 1.0
+#   - toca un punto natal que vive en el signo profectado                -> 0.92
+#   - ni lo uno ni lo otro                                               -> 0.78
+_PROFECTED_SIGN_FACTOR = 0.92
+_NOT_ACTIVATED_FACTOR = 0.78
+
+
+def _profection_factor(transit: str, natal: str, profection: dict | None) -> float:
+    """Cuanto cuenta este transito en el anio que vive esta persona.
+
+    Sin profeccion devuelve 1.0: el resultado es el de antes de que existiera,
+    que es lo que deben ver las cartas sin fecha de nacimiento. Igual que la
+    secta, es un afinado sobre datos conocidos y jamas una suposicion.
+    """
+    if not profection:
+        return 1.0
+    senor = profection.get("lord")
+    if senor and senor in (transit, natal):
+        return 1.0
+    if natal in (profection.get("points_in_sign") or ()):
+        return _PROFECTED_SIGN_FACTOR
+    return _NOT_ACTIVATED_FACTOR
+
+
 
 def _transit_factor(transit: str, sect: str | None) -> float:
     """Correccion de secta sobre el planeta que transita."""
@@ -164,7 +203,8 @@ def tempo_of(transit: str) -> str:
     return entrada[1] if entrada else FAST
 
 
-def weight_of(aspect: dict, sect: str | None = None) -> float:
+def weight_of(aspect: dict, sect: str | None = None,
+              profection: dict | None = None) -> float:
     """Fuerza de un transito, entre 0 y 1.
 
     Producto de lo cerca que esta de la exactitud, de si se esta formando o ya
@@ -187,8 +227,9 @@ def weight_of(aspect: dict, sect: str | None = None) -> float:
 
     w_transit *= _transit_factor(transit, sect)
     w_natal *= _natal_factor(natal, sect)
+    activacion = _profection_factor(transit, natal, profection)
 
-    return round(cercania * direccion * w_transit * w_natal, 6)
+    return round(cercania * direccion * w_transit * w_natal * activacion, 6)
 
 
 def _clasicos(aspects: list[dict]) -> list[dict]:
@@ -214,7 +255,8 @@ def _clasicos(aspects: list[dict]) -> list[dict]:
     return limpios
 
 
-def rank(aspects: list[dict], sect: str | None = None) -> list[dict]:
+def rank(aspects: list[dict], sect: str | None = None,
+         profection: dict | None = None) -> list[dict]:
     """Los transitos ordenados de mas a menos fuerte, con su peso y su tempo.
 
     No muta la entrada. El desempate es por nombre para que el orden sea
@@ -223,7 +265,8 @@ def rank(aspects: list[dict], sect: str | None = None) -> list[dict]:
     """
     aspects = _clasicos(aspects)
     marcados = [
-        {**a, "weight": weight_of(a, sect), "tempo": tempo_of(a.get("transit", ""))}
+        {**a, "weight": weight_of(a, sect, profection),
+         "tempo": tempo_of(a.get("transit", ""))}
         for a in aspects
     ]
     marcados.sort(
@@ -234,7 +277,7 @@ def rank(aspects: list[dict], sect: str | None = None) -> list[dict]:
 
 
 def select(aspects: list[dict], supporting: int = 2,
-           sect: str | None = None) -> dict:
+           sect: str | None = None, profection: dict | None = None) -> dict:
     """Elige el titular del dia y las corrientes que lo acompañan.
 
     El titular es el transito mas fuerte. Para el acompañamiento se busca a
@@ -242,10 +285,10 @@ def select(aspects: list[dict], supporting: int = 2,
     mismo durante meses sin una voz rapida al lado; y si manda la Luna, el dia
     se queda sin fondo. Si no hay de otro tempo, se sigue por peso.
     """
-    ordenados = rank(aspects, sect)
+    ordenados = rank(aspects, sect, profection)
     if not ordenados:
         return {"primary": None, "supporting": [], "rest": [], "all": [],
-                "chapter": None, "today": None}
+                "chapter": None, "today": None, "year": None}
 
     # Dos papeles con nombre, ademas del orden por fuerza.
     #
@@ -273,6 +316,18 @@ def select(aspects: list[dict], supporting: int = 2,
     capitulo = next((a for a in ordenados if a["tempo"] == SLOW), None)
     hoy = next((a for a in ordenados if a["tempo"] == FAST), None)
 
+    # Tercer carril: lo que toca al senor del anio. Va por nombre y no por peso
+    # porque el peso no puede resolverlo sin mentir. Venus sobre Marte pesa un
+    # tercio que Saturno sobre el Sol; para que la profeccion lo adelantase
+    # habria que atenuar lo no activado por debajo de 0.35, y entonces un
+    # Saturno sobre la luminaria desapareceria del horoscopo el 92% de los
+    # anios. La profeccion NO manda sobre la fuerza de un transito: dice de
+    # quien es el anio. Son dos preguntas distintas y aqui se contestan por
+    # separado -- igual que `chapter` y `today` no compiten entre si.
+    senor = (profection or {}).get("lord")
+    del_anio = next((a for a in ordenados
+                     if senor and senor in (a.get("transit"), a.get("natal"))), None)
+
     principal, resto = ordenados[0], ordenados[1:]
     otro_tempo = [a for a in resto if a["tempo"] != principal["tempo"]]
     mismo_tempo = [a for a in resto if a["tempo"] == principal["tempo"]]
@@ -289,4 +344,5 @@ def select(aspects: list[dict], supporting: int = 2,
         "all": ordenados,
         "chapter": capitulo,
         "today": hoy,
+        "year": del_anio,
     }

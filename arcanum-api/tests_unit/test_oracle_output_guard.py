@@ -28,6 +28,12 @@ from app.core.config import settings
 from app.routers import astral
 from app.services import claude_service as cs
 
+# Fecha de nacimiento del doble: la profeccion anual la necesita para saber
+# que anio vive esta persona. Sin ella el endpoint sigue funcionando, pero
+# entonces el doble no ejercitaria ese camino.
+NACIMIENTO = datetime(1990, 6, 15, 12, 0, tzinfo=timezone.utc)
+
+
 
 class _FakeGroq:
     """Devuelve las respuestas que se le den, en orden, y cuenta invocaciones.
@@ -247,6 +253,7 @@ def test_no_se_manda_reasoning_effort_por_defecto(monkeypatch):
 
 def _user(tz="America/Bogota"):
     return SimpleNamespace(id=uuid4(), birth_timezone=tz,
+                           birth_date=NACIMIENTO,
                            birth_lat=None, birth_lon=None)
 
 

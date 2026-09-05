@@ -62,7 +62,10 @@ class _Repo:
 
 
 def _user(user_id):
+    # La fecha de nacimiento la pide la profeccion anual: sin ella el endpoint
+    # sigue respondiendo, pero el doble no ejercitaria ese camino.
     return SimpleNamespace(id=user_id, birth_timezone="America/Bogota",
+                           birth_date=datetime(1990, 6, 15, 12, tzinfo=timezone.utc),
                            birth_lat=None, birth_lon=None)
 
 
