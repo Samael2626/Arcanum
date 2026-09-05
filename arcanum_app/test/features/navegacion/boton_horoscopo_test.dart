@@ -65,6 +65,9 @@ class _ApiMuda extends ArcanumApi {
 }
 
 Future<void> _montar(WidgetTester tester) async {
+  // Con sesion: sin ella, el redirect central manda todo a /login y no habria
+  // barra ni boton que probar. Ese camino tiene sus propios tests en
+  // `core/router/redirect_sesion_test.dart`.
   // 411x915 logicos, un telefono normal de hoy. NO 360x640 como el capturador:
   // a ese ancho, el boton de "tu siguiente paso" de Hoy se desborda 26 px con
   // una etiqueta larga -- un fallo suyo, anterior a esto, que no toca arreglar
@@ -73,15 +76,20 @@ Future<void> _montar(WidgetTester tester) async {
     ..physicalSize = const Size(1233, 2745)
     ..devicePixelRatio = 3.0;
   addTearDown(tester.view.reset);
+  final contenedor = ProviderContainer(
+    overrides: [
+      arcanumApiProvider.overrideWithValue(_ApiMuda()),
+      authProvider.overrideWith(_AuthDePrueba.new),
+    ],
+  );
+  addTearDown(contenedor.dispose);
+
   await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        arcanumApiProvider.overrideWithValue(_ApiMuda()),
-        authProvider.overrideWith(_AuthDePrueba.new),
-      ],
+    UncontrolledProviderScope(
+      container: contenedor,
       child: MaterialApp.router(
         theme: buildArcanumTheme(),
-        routerConfig: appRouter,
+        routerConfig: contenedor.read(arcanumRouterProvider),
       ),
     ),
   );
@@ -92,13 +100,10 @@ NavigationBar _barra(WidgetTester tester) =>
     tester.widget<NavigationBar>(find.byType(NavigationBar));
 
 void main() {
-  setUp(() {
-    SharedPreferences.setMockInitialValues({});
-    // `appRouter` es un singleton de la app: sin esto, el test que navega al
-    // horoscopo deja al siguiente empezando ya dentro. Lo cazo la suite: solos
-    // pasaban y juntos no.
-    appRouter.go('/hoy');
-  });
+  // Ya no hace falta devolver el router a /hoy entre tests: cada uno construye
+  // el suyo desde su contenedor. Cuando era global, el que navegaba dejaba al
+  // siguiente empezando dentro del horoscopo.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
 
   testWidgets('el boton esta sobre Hoy, sin ser una pestaña', (tester) async {
     await _montar(tester);

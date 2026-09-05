@@ -267,16 +267,20 @@ Future<void> _montarApp(WidgetTester tester) async {
     ..physicalSize = _telefono * _escala
     ..devicePixelRatio = _escala;
   addTearDown(tester.view.reset);
+  final contenedor = ProviderContainer(
+    overrides: [
+      arcanumApiProvider.overrideWithValue(_ApiDeMuestra()),
+      authProvider.overrideWith(_AuthConLugar.new),
+    ],
+  );
+  addTearDown(contenedor.dispose);
   await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        arcanumApiProvider.overrideWithValue(_ApiDeMuestra()),
-        authProvider.overrideWith(_AuthConLugar.new),
-      ],
+    UncontrolledProviderScope(
+      container: contenedor,
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
         theme: buildArcanumTheme(),
-        routerConfig: appRouter,
+        routerConfig: contenedor.read(arcanumRouterProvider),
       ),
     ),
   );
