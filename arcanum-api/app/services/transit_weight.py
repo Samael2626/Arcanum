@@ -28,8 +28,12 @@ por identidad del planeta. No es lo mismo.
 Huecos declarados, por si algun dia se cierran (orden de impacto estimado):
   1. HECHO. Profecciones y senor del anio: ver `_profection_factor`. El mismo
      transito ya no pesa igual a los 19 que a los 47.
-  2. Transitos por CASA, no solo por aspecto: un planeta que entra en una casa
-     sin aspectar nada es invisible para este modulo.
+  2. HECHO a medias, y la mitad que falta era la premisa. Transitos por CASA:
+     ver `house_ingress`. Se hizo para rescatar el dia sin aspectos, pero ese
+     dia es el 0.1% de los medidos y ni asi traia ingreso; lo que aporta de
+     verdad es un suceso fechado el 12.9% de los dias, de acompanante. Viaja en
+     carril propio porque un ingreso no tiene orbe y esta tabla mide cercania a
+     la exactitud.
   3. Estaciones retrogradas sobre un punto natal (ya tenemos `speed`).
   4. Orbes por planeta (moieties de Lilly), no por aspecto: hoy el Sol y la
      Luna tienen el mismo alcance que Mercurio, cosa que no sostiene ninguna
@@ -276,8 +280,31 @@ def rank(aspects: list[dict], sect: str | None = None,
     return marcados
 
 
+# La Luna encabeza tres de cada cuatro ingresos y cambia de casa cada dos dias
+# y medio. Fuera del carril salvo que sea lo unico que ocurre.
+_INGRESO_DE_FONDO = frozenset({"moon"})
+
+
+def _entrada_del_dia(ingresses: list[dict] | None,
+                     hay_transito_rapido: bool) -> dict | None:
+    """El ingreso que se cuenta hoy, o None.
+
+    Los ingresos llegan ya ordenados por su propia tabla. Aqui solo se decide
+    cual merece contarse: el mas fuerte que no sea de fondo y, si no hay
+    ninguno, el de fondo unicamente cuando el dia no tiene transito rapido.
+    """
+    if not ingresses:
+        return None
+    fuerte = next(
+        (i for i in ingresses if i.get("transit") not in _INGRESO_DE_FONDO), None)
+    if fuerte is not None:
+        return fuerte
+    return None if hay_transito_rapido else ingresses[0]
+
+
 def select(aspects: list[dict], supporting: int = 2,
-           sect: str | None = None, profection: dict | None = None) -> dict:
+           sect: str | None = None, profection: dict | None = None,
+           ingresses: list[dict] | None = None) -> dict:
     """Elige el titular del dia y las corrientes que lo acompañan.
 
     El titular es el transito mas fuerte. Para el acompañamiento se busca a
@@ -288,7 +315,8 @@ def select(aspects: list[dict], supporting: int = 2,
     ordenados = rank(aspects, sect, profection)
     if not ordenados:
         return {"primary": None, "supporting": [], "rest": [], "all": [],
-                "chapter": None, "today": None, "year": None}
+                "chapter": None, "today": None, "year": None,
+                "ingress": _entrada_del_dia(ingresses, False)}
 
     # Dos papeles con nombre, ademas del orden por fuerza.
     #
@@ -315,6 +343,29 @@ def select(aspects: list[dict], supporting: int = 2,
     # arriba y no esta hecho. Esto es honestidad de estructura, no astrologia.
     capitulo = next((a for a in ordenados if a["tempo"] == SLOW), None)
     hoy = next((a for a in ordenados if a["tempo"] == FAST), None)
+
+    # Cuarto carril: el ingreso por casa. NO entra en `rank` y no se mezcla con
+    # los aspectos, por un limite que es real y no una comodidad: el peso de un
+    # aspecto es sobre todo su CERCANIA A LA EXACTITUD, y un ingreso no tiene
+    # exactitud a la que acercarse -- ocurre y se acaba. Para meterlo en la
+    # misma lista habria que inventarle un orbe (por ejemplo, tratar las horas
+    # desde el cruce como si fueran grados), y eso seria una cifra falsa
+    # sosteniendo una comparacion falsa. Se ordenan aparte, con su propia tabla
+    # (`house_ingress.weight_of`), y quien redacta decide cual cuenta.
+    #
+    # Mismo criterio que con la profeccion: carril propio antes que falsear el
+    # peso.
+    #
+    # Y hay una segunda razon para no meterlo en el orden, esta MEDIDA sobre las
+    # cuatro cartas de referencia y 365 dias (`scripts/medir_ingresos_por_casa`):
+    # el 50.7% de los dias-carta tiene algun ingreso, pero el 74.6% de esos
+    # ingresos son de la LUNA, que cambia de casa cada dos dias y medio. Anunciar
+    # eso como suceso seria justo la cadencia del horoscopo de revista. Por eso
+    # la Luna no ocupa el carril salvo que no haya nada mas: si hay un transito
+    # rapido, el dia ya tiene voz propia y el paseo de la Luna por otra casa no
+    # es noticia; si no lo hay, es lo unico que ocurre y vale mas que el vacio.
+    entrada = _entrada_del_dia(ingresses, hoy is not None)
+
 
     # Tercer carril: lo que toca al senor del anio. Va por nombre y no por peso
     # porque el peso no puede resolverlo sin mentir. Venus sobre Marte pesa un
@@ -345,4 +396,5 @@ def select(aspects: list[dict], supporting: int = 2,
         "chapter": capitulo,
         "today": hoy,
         "year": del_anio,
+        "ingress": entrada,
     }

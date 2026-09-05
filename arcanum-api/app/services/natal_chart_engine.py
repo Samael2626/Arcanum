@@ -116,6 +116,16 @@ def _house_of(lon: float, cusps: list[float]) -> int:
     return 12
 
 
+def house_of(lon: float, cusps: list[float]) -> int:
+    """En que casa cae una longitud, dadas las doce cuspides.
+
+    Publica a proposito: `house_ingress` necesita ubicar el cielo de HOY en las
+    casas de una carta de hace treinta anios, y hacerlo llamando a un `_privado`
+    de otro modulo seria decir que ese uso no estaba previsto. Lo esta.
+    """
+    return _house_of(lon, cusps)
+
+
 def _angular_diff(a: float, b: float) -> float:
     d = abs(a - b) % 360
     return min(d, 360 - d)

@@ -10,6 +10,7 @@ from datetime import date, datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from app.services import lunar_calendar as lc
+from app.services import house_ingress as hi
 from app.services import natal_chart_engine as nce
 from app.services import profections as pf
 from app.services import transit_weight as tw
@@ -42,6 +43,14 @@ def expected_terms(sky: dict) -> list[str]:
     exigir nada, porque un texto que no nombra ningun cuerpo es exactamente el
     horoscopo de revista que esto no quiere ser.
     """
+    # Si hoy no hay transito rapido pero SI hubo un ingreso, el dia se sostiene
+    # sobre el ingreso y lo que hay que exigir es su planeta. Exigir el capitulo
+    # en ese caso mandaria a nombrar justo lo que no ha cambiado.
+    entrada = sky.get("ingress")
+    if not sky.get("today") and entrada:
+        return [nce.POINTS_ES.get(entrada.get("transit", ""),
+                                  entrada.get("transit", ""))]
+
     elegido = sky.get("today") or sky.get("chapter")
     if not elegido:
         return []
@@ -65,8 +74,9 @@ def build_sky(chart_data: dict, now: datetime, birth=None,
     sect = nce.sect_of(chart_data or {})
     profeccion = pf.profection_of(chart_data or {}, birth,
                                   local_day or now.date()) if birth else None
+    entradas = hi.ingresses(chart_data or {}, now)
     seleccion = tw.select(transitos["aspects_to_natal"], sect=sect,
-                          profection=profeccion)
+                          profection=profeccion, ingresses=entradas)
     return {
         "datetime": transitos["datetime"],
         "primary": seleccion["primary"],
@@ -74,6 +84,7 @@ def build_sky(chart_data: dict, now: datetime, birth=None,
         "chapter": seleccion["chapter"],
         "today": seleccion["today"],
         "year": seleccion["year"],
+        "ingress": seleccion["ingress"],
         "total_aspects": len(transitos["aspects_to_natal"]),
         "sect": sect,
         "profection": profeccion,
@@ -95,6 +106,28 @@ def _describe_aspect(a: dict) -> str:
         partes.append(f"perfecciona el {a['exact_at'][:10]}")
     partes.append("planeta lento: capitulo de meses" if a.get("tempo") == tw.SLOW
                   else "planeta rapido: color del dia")
+    return " | ".join(partes)
+
+
+def _describe_ingress(i: dict) -> str:
+    """Un ingreso en una linea. Es un SUCESO con hora, no un estado.
+
+    Por eso se dice cuando cruzo: "entro anoche" y "esta en" cuentan cosas
+    distintas, y solo la primera es noticia de hoy.
+    """
+    cuerpo = nce.POINTS_ES.get(i["transit"], i["transit"])
+    horas = i.get("hours_ago")
+    cuando = ("hace menos de una hora" if isinstance(horas, (int, float)) and horas < 1
+              else f"hace {horas:.0f} horas" if isinstance(horas, (int, float))
+              else "en las ultimas 24 horas")
+    partes = [
+        f"{cuerpo} paso de su casa {i['from_house']} a su casa {i['to_house']}",
+        cuando,
+    ]
+    if i.get("retrograde"):
+        partes.append("RETROGRADO: vuelve sobre sus pasos, no estrena nada")
+    if i.get("sign_es"):
+        partes.append(f"por {i['sign_es']}")
     return " | ".join(partes)
 
 
@@ -137,14 +170,26 @@ def describe(sky: dict, now: datetime, day_ruler: str | None = None,
     capitulo = sky.get("chapter")
     hoy = sky.get("today")
 
+    entrada = sky.get("ingress")
+
     if hoy:
         lineas.append("LO DE HOY: " + _describe_aspect(hoy))
+    elif entrada:
+        # El dia sin aspectos rapidos ya no es un dia sin nada que decir: para
+        # eso existe `house_ingress`. El ingreso pasa a ser el suceso del dia.
+        lineas.append("LO DE HOY: ningun transito rapido perfecciona, pero SI "
+                      "cambio algo de sitio. " + _describe_ingress(entrada))
     else:
         lineas.append(
             "LO DE HOY: nada rapido toca su carta hoy. NO lo disimules: di que "
             "la jornada esta tranquila sobre su carta y apoyate en la luna y el "
             "regente del dia. NO inventes un transito."
         )
+
+    if entrada and hoy:
+        # Cuando ademas hay aspecto, el ingreso acompana: cambia el decorado en
+        # el que ocurre lo demas.
+        lineas.append("ADEMAS, CAMBIO DE SITIO: " + _describe_ingress(entrada))
 
     del_anio = sky.get("year")
     if del_anio and del_anio is not hoy and del_anio is not capitulo:
@@ -159,7 +204,7 @@ def describe(sky: dict, now: datetime, day_ruler: str | None = None,
     else:
         lineas.append("CAPITULO ABIERTO: ninguno. No inventes uno.")
 
-    if not hoy and not capitulo:
+    if not hoy and not capitulo and not entrada:
         lineas.append("NO HAY NINGUN TRANSITO. No nombres ningun planeta en "
                       "aspecto: no lo hay. Cielo en calma sobre su carta.")
 
