@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from app.services import correspondences as co
 from app.services import lunar_calendar as lc
 from app.services import house_ingress as hi
 from app.services import natal_chart_engine as nce
@@ -138,8 +139,25 @@ def _describe_aspect(a: dict) -> str:
     natal = nce.POINTS_ES.get(a["natal"], a["natal"])
     aspecto = nce.ASPECTS_ES.get(a["aspect"], a["aspect"])
 
-    partes = [f"{transito} en {aspecto} con {natal} natal",
+    # El signo del punto natal va PEGADO al punto, no como dato suelto: es
+    # su direccion completa. Sin el, "tu Sol" es un nombre generico; con el,
+    # es una coordenada que solo tiene esta persona.
+    donde = f" en {a['natal_sign_es']}" if a.get("natal_sign_es") else ""
+    # Por donde va el que transita, y en que dignidad queda ahi. Es lo que
+    # separa "Venus hace un sextil" de "Venus, en su casa, hace un sextil".
+    por = f" (va por {a['transit_sign_es']})" if a.get("transit_sign_es") else ""
+    partes = [f"{transito}{por} en {aspecto} con {natal} natal{donde}",
               f"orbe {a['orb']:.2f} grados"]
+    dig = co.dignity(a.get("transit"), a.get("transit_sign"))
+    if dig:
+        # `DIGNITY_GLOSS[dig]` es un dict desde que se le anadio el porque, y
+        # sin desempaquetarlo se colaba el repr de Python en el prompt.
+        g = co.DIGNITY_GLOSS[dig]
+        partes.append(f"DIGNIDAD del que transita: {dig}, {g['que']}, "
+                      f"y es así porque {g['porque']}")
+    doctrina = co.aspect(a.get("aspect"))
+    if doctrina:
+        partes.append(f"la figura: {doctrina}")
     partes.append("APLICATIVO (se esta formando)" if a.get("applying")
                   else "SEPARATIVO (ya paso su exactitud)")
     if a.get("exact_at"):
@@ -169,6 +187,43 @@ def _describe_ingress(i: dict) -> str:
     if i.get("sign_es"):
         partes.append(f"por {i['sign_es']}")
     return " | ".join(partes)
+
+
+def _dominios(sky: dict) -> list[str]:
+    """De que tratan los cuerpos y casas que HOY estan en juego. Solo esos.
+
+    El modelo no tiene por que recordar las series planetarias, y cuando se lo
+    dejabamos a su memoria cerraba con el oro del Sol en un dia de Luna y
+    Saturno. Aqui se le entrega la ficha de lo que de verdad ha salido, y de
+    nada mas: una enciclopedia entera invitaria a pasearse por ella.
+    """
+    vistos: dict[str, str | None] = {}
+    for bloque in (sky.get("today"), sky.get("chapter"), sky.get("year")):
+        if not bloque:
+            continue
+        for clave in ("transit", "natal"):
+            nombre = bloque.get(clave)
+            if nombre and nombre not in vistos:
+                # El signo solo acompana al que TRANSITA: la dignidad de un
+                # punto natal es carta natal, y esto es el cielo de hoy.
+                vistos[nombre] = (bloque.get("transit_sign")
+                                  if clave == "transit" else None)
+    entrada = sky.get("ingress")
+    if entrada and entrada.get("transit") not in vistos:
+        vistos[entrada["transit"]] = entrada.get("sign")
+
+    prof = sky.get("profection")
+    if prof and prof.get("lord") and prof["lord"] not in vistos:
+        vistos[prof["lord"]] = None
+
+    fuera = [ln for n, sg in vistos.items() if (ln := co.line(n, sg))]
+    casa = co.house((prof or {}).get("house"))
+    if casa:
+        fuera.append(f"Tu casa {prof['house']}, la profectada: trata de {casa}.")
+    if entrada and co.house(entrada.get("to_house")):
+        fuera.append(f"La casa {entrada['to_house']}, a la que se entro: "
+                     f"trata de {co.house(entrada['to_house'])}.")
+    return fuera
 
 
 def describe(sky: dict, now: datetime, day_ruler: str | None = None,
@@ -267,5 +322,15 @@ def describe(sky: dict, now: datetime, day_ruler: str | None = None,
         # de Bogota: ausencia declarada, jamas una ciudad por defecto.
         lineas.append("HORA PLANETARIA: no disponible (esta persona no tiene "
                       "lugar confirmado). No la menciones ni la sustituyas.")
+
+    # Los dominios van al FINAL, despues de los carriles: primero que cielo
+    # hay, y luego de que trata. Al reves invitaria a empezar el texto por
+    # la correspondencia, que es el orden del horoscopo de revista.
+    fichas = _dominios(sky)
+    if fichas:
+        lineas.append(
+            "DE QUE TRATAN LOS QUE HOY ESTAN EN JUEGO (reparto de la "
+            "tradicion, NO una prediccion): " + " | ".join(fichas)
+        )
 
     return "\n".join(lineas)

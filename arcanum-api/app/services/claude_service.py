@@ -23,6 +23,7 @@ from groq import Groq, RateLimitError
 
 from app.core.config import settings
 from app.services import safety
+from app.services import horoscope_guard as hg
 from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT
 from app.services.oracle_prompt import get_oracle_system_prompt
 
@@ -252,7 +253,7 @@ def _stamp_validity(diag: dict, content: str, finish_reason: str) -> None:
 def _generate_with_coverage(client: Groq, model: str, system_prompt: str,
                             base_user: str, max_tokens: int, temperature: float,
                             expected_terms: list[str],
-                            build_notice) -> tuple[str, dict]:
+                            build_notice, extra_checks=None) -> tuple[str, dict]:
     """Genera y GARANTIZA que el texto nombre lo que tenía que nombrar (guard D).
 
     Tras generar, verifica que cada término esperado aparezca. Si falta ≥1, hace
@@ -260,9 +261,16 @@ def _generate_with_coverage(client: Groq, model: str, system_prompt: str,
     retry aún falta ≥1: FAIL LOUD (log.warning) y devuelve el intento con MÁS
     cobertura. Nunca hace más de 1 retry ni omite en silencio.
 
-    `build_notice` recibe la lista de términos omitidos y devuelve la
-    instrucción del reintento: es lo único que cambia entre una tirada y un
-    horóscopo.
+    `build_notice(omitidos, defectos)` devuelve la instrucción del reintento: es
+    lo único que cambia entre una tirada y un horóscopo.
+
+    `extra_checks(texto, base_user) -> list[str]` es opcional y añade defectos
+    DETERMINISTAS a los términos omitidos —vocabulario vetado, frases copiadas
+    del bloque de datos, jerga sin explicar, materia de un cuerpo que no está
+    en juego—. Se comprueban en la MISMA pasada y se corrigen en el MISMO
+    retry: separarlos costaría un viaje por cada clase de fallo, y el tier de
+    Groq da 8.000 tokens por minuto. El techo sigue siendo DOS llamadas, igual
+    que cuando solo se miraba la cobertura.
 
     Al final, y para los DOS caminos (oráculo y horóscopo), pasa la guarda de
     truncado: si el texto elegido salió cortado o vacío, `diag["available"]`
@@ -276,28 +284,39 @@ def _generate_with_coverage(client: Groq, model: str, system_prompt: str,
         client, model, system_prompt, base_user, max_tokens, temperature)
     diag.update(finish_reason=finish, completion_tokens=ctok)
 
-    if expected_terms:
-        missing = _missing_terms(expected_terms, content)
-        diag["missing_first"] = [_term_key(c) for c in missing]
-        if missing:
-            diag["retried"] = True
-            r_content, r_finish, r_ctok = _complete(
-                client, model, system_prompt,
-                f"{base_user}\n\n{build_notice(missing)}",
-                max_tokens, temperature)
-            r_missing = _missing_terms(expected_terms, r_content)
-            diag["missing_final"] = [_term_key(c) for c in r_missing]
-            if r_missing:
-                # Fail loud: tras el retry aun faltan terminos exigidos.
-                logger.warning(
-                    "El modelo omitió %d/%d términos exigidos tras retry: %s",
-                    len(r_missing), len(expected_terms), diag["missing_final"],
-                )
-            if len(r_missing) <= len(missing):
-                content, finish, ctok = r_content, r_finish, r_ctok
-                diag.update(finish_reason=finish, completion_tokens=ctok)
-            else:
-                diag["returned"] = "primer_intento_mas_cobertura"
+    missing = _missing_terms(expected_terms, content) if expected_terms else []
+    flaws = extra_checks(content, base_user) if extra_checks else []
+    diag["missing_first"] = [_term_key(c) for c in missing]
+    diag["flaws_first"] = flaws
+
+    if missing or flaws:
+        diag["retried"] = True
+        r_content, r_finish, r_ctok = _complete(
+            client, model, system_prompt,
+            base_user + chr(10) * 2 + build_notice(missing, flaws),
+            max_tokens, temperature)
+        r_missing = _missing_terms(expected_terms, r_content) if expected_terms else []
+        r_flaws = extra_checks(r_content, base_user) if extra_checks else []
+        diag["missing_final"] = [_term_key(c) for c in r_missing]
+        diag["flaws_final"] = r_flaws
+        if r_missing or r_flaws:
+            # Fail loud: tras el retry aun queda algo. No se calla nunca.
+            logger.warning(
+                "Tras retry siguen %d terminos omitidos y %d defectos: %s | %s",
+                len(r_missing), len(r_flaws), diag["missing_final"], r_flaws,
+            )
+        # Se queda el intento con MENOS problemas contados juntos: un texto con
+        # un termino menos pero tres defectos mas no es una mejora.
+        if len(r_missing) + len(r_flaws) <= len(missing) + len(flaws):
+            content, finish, ctok = r_content, r_finish, r_ctok
+            diag.update(finish_reason=finish, completion_tokens=ctok)
+        else:
+            diag["returned"] = "primer_intento_con_menos_problemas"
+        # Lo que se devuelve no siempre es el reintento, asi que los defectos
+        # del texto ELEGIDO se recuentan aparte. `flaws_final` es del segundo
+        # intento y por si solo daba una foto falsa: decia cero mientras el
+        # texto entregado seguia teniendo uno.
+        diag["flaws_returned"] = extra_checks(content, base_user) if extra_checks else []
 
     _stamp_validity(diag, content, finish)
     if diag.get("available"):
@@ -328,7 +347,7 @@ def generate_reading(context: str, model: str, question: Optional[str] = None,
 
     expected = expected_cards or []
 
-    def notice(missing: list[str]) -> str:
+    def notice(missing: list[str], flaws: list[str]) -> str:
         return (
             f"Tu versión anterior omitió: {'; '.join(_term_key(c) for c in missing)}. "
             f"Produce una lectura COMPLETA e INTEGRADA que cubra las "
@@ -373,19 +392,20 @@ def generate_horoscope(sky: str, expected_terms: list[str]) -> tuple[str, dict]:
     if client is None:
         return _FALLBACK, _unavailable(UNAVAILABLE_NO_API_KEY)
 
-    def notice(missing: list[str]) -> str:
-        return (
-            f"Tu versión anterior no nombró: {'; '.join(_term_key(t) for t in missing)}. "
-            "Reescribe el texto ENTERO nombrando explícitamente los dos cuerpos "
-            "del tránsito principal. Sin ellos el texto valdría para cualquiera."
-        )
+    def notice(missing: list[str], flaws: list[str]) -> str:
+        return hg.aviso([_term_key(t) for t in missing], flaws,
+                        obligatorios=[_term_key(t) for t in expected_terms])
+
+    def checks(texto: str, sky_txt: str) -> list[str]:
+        """Lo que el prompt pide y el modelo incumple, medido y no pedido."""
+        return hg.defectos(texto, sky_txt)
 
     # El horoscopo es gratuito para todo el mundo: no hay tramo premium que
     # elegir, asi que va siempre con el modelo FREE.
     return _generate_with_coverage(
         client, settings.ORACLE_MODEL_FREE, HOROSCOPE_SYSTEM_PROMPT, sky,
         _HOROSCOPE_MAX_TOKENS, _HOROSCOPE_TEMPERATURE,
-        expected_terms, notice,
+        expected_terms, notice, extra_checks=checks,
     )
 
 

@@ -351,6 +351,19 @@ def compute_transits(natal_planets: list[dict], dt_utc: datetime,
                         tdata["longitude"], nlon, angle, tdata.get("speed") or 0.0, dt)
                     aspects.append({
                         "transit": tname, "natal": nname,
+                        # El SIGNO del punto natal. Sale de `nlon` y no cuesta
+                        # nada, pero es lo unico de esta linea que es de ESTA
+                        # carta y de ninguna otra: "tu Medio Cielo" lo tiene
+                        # todo el mundo, "tu Medio Cielo en Tauro" no. Sin el,
+                        # el texto solo puede nombrar el punto y suena prestado.
+                        "natal_sign": SIGNS[int(nlon // 30) % 12],
+                        "natal_sign_es": SIGNS_ES[int(nlon // 30) % 12],
+                        # Y el signo por donde va HOY el que transita, que es
+                        # lo que decide su dignidad esencial. Venus en Libra
+                        # y Venus en Aries hacen la misma figura y no obran
+                        # igual; sin este campo el texto los trata igual.
+                        "transit_sign": SIGNS[int(tdata["longitude"] // 30) % 12],
+                        "transit_sign_es": SIGNS_ES[int(tdata["longitude"] // 30) % 12],
                         "aspect": aname, "angle": angle, "orb": round(delta, 2),
                         # La separacion REAL, no la nominal del aspecto. `orb`
                         # es `abs(sep - angle)` y pierde el signo, asi que con

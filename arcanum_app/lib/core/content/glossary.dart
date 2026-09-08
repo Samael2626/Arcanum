@@ -299,6 +299,26 @@ const Map<String, GlossaryEntry> glossary = {
     'Trabajo onírico, retiro, destierro de lo que te mina sin que lo veas. También la casa de lo que '
         'te sabotea: mírala antes de culpar a fuera.',
   ),
+  'dignidad': GlossaryEntry(
+    'Dignidad esencial',
+    'Un planeta no obra igual en todos los signos: en unos está en su terreno y en otros trabaja '
+        'prestado. Son cuatro situaciones. DOMICILIO: el signo que gobierna, donde tiene todo a mano. '
+        'EXALTACIÓN: donde se le trata como invitado de honor y rinde por encima de lo suyo. EXILIO: '
+        'el signo opuesto a su domicilio, donde no tiene herramientas propias. CAÍDA: el opuesto a su '
+        'exaltación, donde rinde corto. Venus en Libra, su domicilio, y Venus en Aries, su exilio, '
+        'hacen la misma figura y no dan lo mismo.',
+    'No la leas como suerte buena o mala. Dice CUÁNTO alcance tiene el planeta ese día, no si el día '
+        'te irá bien: un Saturno caído sigue siendo Saturno, solo que llega menos lejos.',
+  ),
+  'profeccion': GlossaryEntry(
+    'Profección y señor del año',
+    'Técnica antigua para saber de qué va cada año de tu vida. Cada cumpleaños el turno avanza una '
+        'casa: al nacer manda la 1, al año la 2, y a los doce se vuelve a empezar. La casa que toca '
+        'da el asunto del año, y el planeta que gobierna su signo es el SEÑOR DEL AÑO. Se cuenta por '
+        'signos enteros, así que solo hace falta tu Ascendente: no depende del sistema de casas.',
+    'Sirve para ordenar. De los muchos tránsitos de cualquier día, los que tocan a tu señor del año '
+        'o a su signo son los que la tradición mira primero; el resto es fondo.',
+  ),
 };
 
 /// Clave de glosario para una casa (1-12). Cae al genérico si el número no es válido.

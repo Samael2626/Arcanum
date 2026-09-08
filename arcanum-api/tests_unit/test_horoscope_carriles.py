@@ -215,3 +215,40 @@ def test_la_respuesta_lleva_los_dos_carriles_y_la_secta(monkeypatch):
         assert clave in result, f"la respuesta del horoscopo no incluye {clave}"
     # El Sol en casa 10 esta sobre el horizonte: la secta viaja resuelta.
     assert result["sect"] == "day"
+
+
+# ── La frontera entre eleccion y adivinacion ────────────────────────────────
+# Se puede decir a QUE SE PRESTA el cielo; no se puede decir que le va a pasar
+# a quien lee. La linea es el sujeto, y si alguien la borra estos tests caen.
+
+def test_el_prompt_permite_la_afinidad():
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    assert "# AFINIDAD: A QUE SE PRESTA ESTE CIELO" in P
+    assert "esta del lado de" in P
+
+
+def test_el_prompt_sigue_vetando_la_promesa_de_resultado():
+    """Que la puerta se abra a la eleccion no la abre al pronostico."""
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    for formula in ('"te ira bien en"', '"conseguiras"', '"recibiras"',
+                    '"la suerte"'):
+        assert formula in P, f"falta el veto de {formula}"
+    assert "Prohibidas sin excepcion" in P
+
+
+def test_la_afinidad_no_se_convierte_en_orden():
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    assert "Y NO ES UNA ORDEN" in P
+    assert '"deberias limar"' in P
+
+
+def test_un_cielo_que_no_empuja_se_puede_decir():
+    """Inventar afinidad para no dejar hueco es el vicio a evitar."""
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    assert "CUANDO NO HAY, NO HAY" in P
+
+
+def test_el_prompt_sigue_exigiendo_que_se_entienda():
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    assert "# SE TIENE QUE ENTENDER SIN SABER NADA" in P
+    assert "CADA TERMINO SE PAGA EN EL ACTO" in P
