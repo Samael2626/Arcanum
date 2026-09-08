@@ -255,13 +255,41 @@ def test_el_entorno_solo_puede_subir_el_techo(monkeypatch):
     assert cs._max_tokens_for(3) == 8000
 
 
-def test_no_se_manda_reasoning_effort_por_defecto(monkeypatch):
-    # `reasoning_effort=low` empobrece el texto (se salta el regente del dia y
-    # la hora planetaria). Se queda el razonamiento por defecto del modelo.
+def test_el_horoscopo_va_con_el_razonamiento_bajo(monkeypatch):
+    """Invierte la decision anterior, y por que.
+
+    Antes se dejaba el razonamiento por defecto con la nota de que
+    `reasoning_effort=low` "empobrece el texto (se salta el regente del dia y la
+    hora planetaria)". Esa nota no venia de una medida sistematica y no se
+    reprodujo: en las corridas de 8-sep-2026 los textos con razonamiento bajo
+    nombran el regente y la hora planetaria.
+
+    Lo que SI se midio, cuatro corridas por prompt con el mismo cielo real:
+    con el razonamiento por defecto el horoscopo salia truncado 3 de 4 veces
+    con el prompt anterior y 1 de 4 con el consolidado --y un truncado es un
+    dia SIN horoscopo--, mientras que con `low` salieron completas las 8 de 8,
+    gastando 280-545 tokens de salida en vez de 1.824-2.000. Un texto pobre se
+    puede corregir; uno que no llega, no.
+    """
     cliente = _FakeGroq(("Saturno sobre tu Sol, entero.", "stop"))
     monkeypatch.setattr(cs, "_get_client", lambda: cliente)
 
     cs.generate_horoscope("cielo", ["Saturno", "Sol"])
+
+    assert cliente.kwargs[0].get("reasoning_effort") == "low"
+
+
+def test_el_oraculo_no_manda_reasoning_effort(monkeypatch):
+    """El techo del tarot sigue calibrado para el razonamiento por defecto.
+
+    La tirada tiene que integrar cada carta por su posicion, que es justo el
+    trabajo que el razonamiento hace. El parametro es opcional en `_complete`
+    precisamente para que bajarlo en el horoscopo no lo baje aqui.
+    """
+    cliente = _FakeGroq(("El Loco abre el camino.", "stop"))
+    monkeypatch.setattr(cs, "_get_client", lambda: cliente)
+
+    cs.generate_reading("contexto", "openai/gpt-oss-120b", question="que hago")
 
     assert "reasoning_effort" not in cliente.kwargs[0]
 
