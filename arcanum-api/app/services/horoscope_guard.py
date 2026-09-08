@@ -37,9 +37,9 @@ PALABRAS_VETADAS: tuple[str, ...] = (
     "el universo conspira", "resistencia interna", "trabajo personal",
 )
 
-# Formulas de oficio que no dicen nada a quien no las conoce ya. El prompt las
-# prohibe por su nombre en la seccion de legibilidad, y el modelo las usa
-# igual: son las que mas "suenan a astrologia" y por eso las repite.
+# Formulas de oficio que no dicen nada a quien no las conoce ya. El prompt no
+# las prohibe en seco: pide que se PAGUEN en el acto, en la misma frase. Lo que
+# esta guarda persigue es la formula PELADA (ver `formulas_de_gremio`).
 FORMULAS_DE_GREMIO: tuple[str, ...] = (
     "dispone de lo suyo",
     "tiene todo a mano",
@@ -68,10 +68,73 @@ def palabras_vetadas(texto: str) -> list[str]:
     return [p for p in PALABRAS_VETADAS if p in plano]
 
 
+# Conectores con los que se paga un termino: introducen la razon o la
+# equivalencia en palabras corrientes. La lista es de conectores CAUSALES y de
+# APOSICION, no de cualquier nexo: "y", "pero" o "aunque" siguen sin explicar
+# nada, y meterlos aqui dejaria pasar la formula pelada.
+CONECTORES_QUE_PAGAN: tuple[str, ...] = (
+    "porque", "ya que", "puesto que", "dado que", "debido a", "por estar",
+    "al estar", "es decir", "o sea", "esto es", "que es", "que significa",
+    "quiere decir", "en otras palabras", "dicho de otro modo", "senal de que",
+    "esto se debe", "por hallarse", "por encontrarse",
+)
+
+# Cuanto se mira a cada lado de la formula buscando el conector. Es la ORACION
+# lo que manda -- el prompt dice "en la misma frase" --, y esta ventana solo
+# evita que una oracion muy larga cuele una explicacion que esta en su otro
+# extremo y no tiene nada que ver con la formula.
+VENTANA_EXPLICACION = 120
+
+_FIN_DE_ORACION = ".!?" + chr(10)
+
+
+def _oracion_alrededor(plano: str, ini: int, fin: int) -> str:
+    """La oracion que contiene el tramo [ini, fin), recortada por la ventana.
+
+    Se corta por el final de oracion, no por la coma ni por la raya: en el caso
+    medido la explicacion iba en un inciso -- "cuya dignidad es caida, es decir,
+    obra por debajo de su medida porque esta en el signo opuesto a su honor" --
+    y partir por comas la habria dejado fuera justo en el caso que hay que
+    reconocer.
+    """
+    izq = ini
+    while izq > 0 and plano[izq - 1] not in _FIN_DE_ORACION:
+        izq -= 1
+    der = fin
+    while der < len(plano) and plano[der] not in _FIN_DE_ORACION:
+        der += 1
+    return plano[max(izq, ini - VENTANA_EXPLICACION):
+                 min(der, fin + VENTANA_EXPLICACION)]
+
+
 def formulas_de_gremio(texto: str) -> list[str]:
-    """Jerga que no se paga en el acto: incomprensible para quien no sabe."""
+    """Jerga que NO se paga en el acto: incomprensible para quien no sabe.
+
+    Marcar la formula por su literal era un falso positivo medido. El modelo
+    escribio "cuya dignidad es caida, es decir, obra por debajo de su medida
+    porque esta en el signo opuesto a su honor": la formula EXPLICADA en la
+    misma frase, que es exactamente lo que el prompt pide. Rechazar eso cuesta
+    un reintento entero y castiga al modelo por obedecer.
+
+    Asi que lo que se busca ya no es la formula, sino la formula SOLA: sin
+    ningun conector que la pague cerca, dentro de su propia oracion.
+
+    Se mira la PRIMERA aparicion y ninguna mas, por la misma razon que lo pide
+    el prompt: el termino se explica cuando entra y no se vuelve a explicar. Si
+    la primera vino pagada, las siguientes ya se entienden; si la primera vino
+    pelada, no la salva que se explique tres frases mas abajo, porque a esas
+    alturas quien lee ya se perdio.
+    """
     plano = _plano(texto)
-    return [f for f in FORMULAS_DE_GREMIO if f in plano]
+    fuera = []
+    for f in FORMULAS_DE_GREMIO:
+        pos = plano.find(f)
+        if pos < 0:
+            continue
+        contexto = _oracion_alrededor(plano, pos, pos + len(f))
+        if not any(c in contexto for c in CONECTORES_QUE_PAGAN):
+            fuera.append(f)
+    return fuera
 
 
 def frases_copiadas(texto: str, datos: str) -> list[str]:
@@ -134,8 +197,9 @@ def defectos(texto: str, datos: str) -> list[str]:
     if gremio:
         partes.append(
             "usaste formulas de oficio sin explicarlas (" + ", ".join(gremio)
-            + "). O se pagan en la misma frase, en palabras corrientes, o no "
-              "entran")
+            + "). No basta con cambiarlas de sitio: en la MISMA frase tiene que "
+              "ir su razon, en palabras corrientes -- \"obra por debajo de su "
+              "medida porque esta en el signo opuesto a su honor\"")
 
     copiadas = frases_copiadas(texto, datos)
     if copiadas:

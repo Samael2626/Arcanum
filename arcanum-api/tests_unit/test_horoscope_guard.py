@@ -58,10 +58,70 @@ def test_un_texto_limpio_no_da_falsos_positivos():
 
 
 # ── Formulas de gremio ──────────────────────────────────────────────────────
+#
+# Lo que se persigue NO es la formula, es la formula PELADA. El prompt no la
+# prohibe en seco: manda pagarla en la misma frase, y rechazar una que viene
+# pagada castiga al modelo justo por obedecer, a precio de un reintento.
 
-def test_pilla_la_formula_que_el_prompt_prohibe_por_su_nombre():
-    hallado = hg.formulas_de_gremio(REAL_MALO)
-    assert "dispone de lo suyo" in hallado and "tiene todo a mano" in hallado
+# Texto REAL de `openai/gpt-oss-120b`, 8-sep-2026: la formula con su razon
+# detras, en la misma oracion. Es el caso que hacia falta dejar pasar.
+REAL_PAGADA = (
+    "Marte, que representa el corte y la contienda, transita por Cáncer y "
+    "forma un trígono con Mercurio natal en Piscis, cuya dignidad es caída, "
+    "es decir, obra por debajo de su medida porque está en el signo opuesto "
+    "a su honor."
+)
+
+# Misma corrida, otra manera de pagarla: la equivalencia en cristiano.
+REAL_PAGADA_2 = (
+    "el planeta está en caída, que es la dignidad en que obra por debajo de "
+    "su medida, llega corto, y el aspecto se está formando."
+)
+
+
+def test_la_formula_pelada_se_marca():
+    """Sin nada que la pague, sigue siendo jerga para quien no la conoce."""
+    hallado = hg.formulas_de_gremio(
+        "Marte obra por debajo de su medida. El día se tiñe de rojo.")
+    assert hallado == ["obra por debajo de su medida"]
+
+
+def test_ni_un_nexo_cualquiera_la_paga():
+    """"Y", "pero" o "aunque" enlazan, no explican: no salvan la formula."""
+    assert hg.formulas_de_gremio(
+        "Venus dispone de lo suyo, aunque el día siga abierto.")
+    assert hg.formulas_de_gremio(
+        "Venus dispone de lo suyo y el día va de pactos.")
+
+
+@pytest.mark.parametrize("texto", [REAL_PAGADA, REAL_PAGADA_2])
+def test_la_formula_explicada_en_la_misma_frase_no_se_marca(texto):
+    """Regresion del falso positivo medido el 8-sep-2026.
+
+    La guarda marcaba estos dos textos, que son exactamente lo que la seccion
+    de legibilidad del prompt pide. Cada rechazo costaba un reintento entero y
+    podia devolver un texto peor que el que ya estaba bien.
+    """
+    assert hg.formulas_de_gremio(texto) == []
+
+
+def test_la_explicacion_tiene_que_ir_en_LA_MISMA_oracion():
+    """Tres frases mas abajo ya no sirve: a esas alturas quien lee se perdio."""
+    assert hg.formulas_de_gremio(
+        "Venus va por Libra. Aquí obra por debajo de su medida, y manda. "
+        "Es decir, la explicación llega en otra oración.")
+
+
+def test_solo_cuenta_la_primera_aparicion():
+    """El prompt pide pagar el termino cuando ENTRA y no repetir la glosa.
+
+    Si la primera vino pagada, las siguientes ya se entienden y marcarlas
+    obligaria a explicar lo mismo dos veces, que es lo contrario de lo pedido.
+    """
+    assert hg.formulas_de_gremio(
+        "Mercurio está en caída, es decir, obra por debajo de su medida "
+        "porque le toca el signo opuesto al de su honor. Por eso obra por "
+        "debajo de su medida toda la jornada.") == []
 
 
 def test_la_misma_doctrina_dicha_en_cristiano_pasa():
@@ -105,8 +165,23 @@ def test_una_palabra_que_ya_esta_en_los_datos_nunca_se_marca():
 # ── El conjunto, y el aviso ─────────────────────────────────────────────────
 
 def test_el_texto_real_del_modelo_da_varios_defectos():
+    """Dos defectos, no tres, y el que falta se cayo a proposito.
+
+    `REAL_MALO` escribe "al estar en su domicilio, Mercurio dispone de lo suyo
+    ... pues Virgo es su signo regente": la formula CON una razon detras, asi
+    que desde el 8-sep-2026 no se marca. Siguen marcados "energia" y la frase
+    copiada del bloque de datos, que es lo que de verdad hay que rehacer.
+
+    LIMITE CONOCIDO, escrito para que no se descubra dos veces: esa razon
+    explica jerga con jerga --"domicilio", "signo regente"--, y eso el prompt
+    tampoco lo acepta. Distinguir una explicacion buena de una mala es un
+    juicio de estilo, y esta guarda solo hace comprobaciones deterministas: lo
+    que no se puede mirar con una funcion pura se queda en el prompt.
+    """
     fallos = hg.defectos(REAL_MALO, DATOS_REAL)
-    assert len(fallos) >= 3, fallos
+    assert len(fallos) == 2, fallos
+    assert any("energia" in f for f in fallos)
+    assert any("copiaste literal" in f for f in fallos)
 
 
 def test_el_texto_bueno_no_da_ninguno():
@@ -115,7 +190,9 @@ def test_el_texto_bueno_no_da_ninguno():
 
 def test_el_aviso_junta_cobertura_y_defectos_en_uno_solo():
     """Un solo aviso = un solo reintento = dos llamadas como techo."""
-    aviso = hg.aviso(["Venus"], hg.defectos(REAL_MALO, DATOS_REAL))
+    defectos = hg.defectos(REAL_MALO, DATOS_REAL) + hg.defectos(
+        "Venus dispone de lo suyo y el dia va de pactos.", DATOS_REAL)
+    aviso = hg.aviso(["Venus"], defectos)
     assert "no nombraste: Venus" in aviso
     assert "energia" in aviso and "dispone de lo suyo" in aviso
     assert "Reescribe el texto ENTERO" in aviso
