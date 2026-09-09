@@ -168,7 +168,11 @@ def entrada_manifest(fila: dict, ficha: dict, alto: int) -> dict:
                     "salida_px": [TARJETA[0], alto]},
         "foco": {"que": fila["que"], "acaba_px": fondo},
         "velo": {"delta": d, "franja_limpia_px": VELO_BASE[0] + d,
-                 "topes_px": [t + d for t in VELO_BASE]},
+                 "topes_px": [t + d for t in VELO_BASE],
+                 # Alfa de mas en el bloque de datos, solo donde la plancha
+                 # tiene una zona clara justo detras del texto. Medido sobre la
+                 # captura de la pantalla compilada.
+                 "refuerzo": fila.get("refuerzo", 0.0)},
         "composicion": "fondo a sangre (plantilla bayerG)",
         "status": "final",
     }
@@ -229,9 +233,11 @@ def escribir_dart(manifest: dict) -> None:
             "    delta: {d},\n"
             "    altoLamina: {h},\n"
             "    banda: {b},\n"
+            "    refuerzo: {r},\n"
             "  ),".format(s=fila["slug"], a=e["asset"], d=e["velo"]["delta"],
                           h=e["recorte"]["salida_px"][1],
-                          b="true" if fila["banda"] else "false"))
+                          b="true" if fila["banda"] else "false",
+                          r=e["velo"]["refuerzo"]))
     texto = PLANTILLA_DART.read_text("utf-8")
     texto = texto.replace("__ENUM__", ", ".join(f["slug"] for f in TABLA))
     texto = texto.replace("__FILAS__", "\n".join(filas))

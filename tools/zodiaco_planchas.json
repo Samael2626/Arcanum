@@ -23,7 +23,8 @@
    0.56
   ],
   "que": "cabeza y cuernos",
-  "delta": 64
+  "delta": 64,
+  "refuerzo": 0.0
  },
  {
   "slug": "aries",
@@ -49,7 +50,8 @@
    0.34
   ],
   "que": "cabeza del carnero",
-  "delta": 0
+  "delta": 0,
+  "refuerzo": 0.0
  },
  {
   "slug": "tauro",
@@ -75,7 +77,8 @@
    0.62
   ],
   "que": "cabeza del toro",
-  "delta": 84
+  "delta": 84,
+  "refuerzo": 0.0
  },
  {
   "slug": "geminis",
@@ -101,7 +104,8 @@
    0.6
   ],
   "que": "los dos gemelos enteros",
-  "delta": 83
+  "delta": 83,
+  "refuerzo": 0.03
  },
  {
   "slug": "cancer",
@@ -127,7 +131,8 @@
    0.7
   ],
   "que": "caparazon y pinzas",
-  "delta": 100
+  "delta": 100,
+  "refuerzo": 0.0
  },
  {
   "slug": "leo",
@@ -153,7 +158,8 @@
    0.4
   ],
   "que": "cabeza del leon",
-  "delta": 0
+  "delta": 0,
+  "refuerzo": 0.0
  },
  {
   "slug": "virgo",
@@ -179,7 +185,8 @@
    0.35
   ],
   "que": "cabeza y alas",
-  "delta": 0
+  "delta": 0,
+  "refuerzo": 0.0
  },
  {
   "slug": "libra",
@@ -205,7 +212,8 @@
    0.6
   ],
   "que": "fiel y los dos platos",
-  "delta": 75
+  "delta": 75,
+  "refuerzo": 0.0
  },
  {
   "slug": "escorpio",
@@ -231,7 +239,8 @@
    0.9
   ],
   "que": "cuerpo y pinzas",
-  "delta": 105
+  "delta": 105,
+  "refuerzo": 0.0
  },
  {
   "slug": "sagitario",
@@ -257,7 +266,8 @@
    0.5
   ],
   "que": "cabeza y arco",
-  "delta": 31
+  "delta": 31,
+  "refuerzo": 0.0
  },
  {
   "slug": "acuario",
@@ -283,7 +293,8 @@
    0.28
   ],
   "que": "cabeza del aguador",
-  "delta": 0
+  "delta": 0,
+  "refuerzo": 0.0
  },
  {
   "slug": "piscis",
@@ -309,6 +320,7 @@
    0.5
   ],
   "que": "los dos peces y el cordon",
-  "delta": 0
+  "delta": 0,
+  "refuerzo": 0.0
  }
 ]

@@ -640,7 +640,8 @@
     316,
     368,
     404
-   ]
+   ],
+   "refuerzo": 0.0
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -685,7 +686,8 @@
     252,
     304,
     340
-   ]
+   ],
+   "refuerzo": 0.0
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -731,7 +733,8 @@
     336,
     388,
     424
-   ]
+   ],
+   "refuerzo": 0.0
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -776,7 +779,8 @@
     335,
     387,
     423
-   ]
+   ],
+   "refuerzo": 0.03
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -822,6 +826,7 @@
     404,
     440
    ],
+   "refuerzo": 0.0,
    "nota": "El foco pedia un delta de 132 px pero el contraste solo admite 100: faltan 32. Manda la legibilidad; la parte baja de la figura se funde con el bloque de datos."
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
@@ -867,7 +872,8 @@
     252,
     304,
     340
-   ]
+   ],
+   "refuerzo": 0.0
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -912,7 +918,8 @@
     252,
     304,
     340
-   ]
+   ],
+   "refuerzo": 0.0
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -957,7 +964,8 @@
     327,
     379,
     415
-   ]
+   ],
+   "refuerzo": 0.0
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -1003,6 +1011,7 @@
     409,
     445
    ],
+   "refuerzo": 0.0,
    "nota": "El foco pedia un delta de 282 px pero el contraste solo admite 105: faltan 177. Manda la legibilidad; la parte baja de la figura se funde con el bloque de datos."
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
@@ -1048,7 +1057,8 @@
     283,
     335,
     371
-   ]
+   ],
+   "refuerzo": 0.0
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -1093,7 +1103,8 @@
     252,
     304,
     340
-   ]
+   ],
+   "refuerzo": 0.0
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -1138,7 +1149,8 @@
     252,
     304,
     340
-   ]
+   ],
+   "refuerzo": 0.0
   },
   "composicion": "BANDA apaisada - excepcion a la plantilla bayerG",
   "status": "final",

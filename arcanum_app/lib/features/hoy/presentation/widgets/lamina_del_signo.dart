@@ -104,7 +104,7 @@ class LaminaDelSigno extends StatelessWidget {
                   ),
                   DecoratedBox(
                     decoration: BoxDecoration(
-                      gradient: _velo(lamina.delta, alto),
+                      gradient: _velo(lamina.delta, lamina.refuerzo, alto),
                     ),
                   ),
                 ],
@@ -118,7 +118,7 @@ class LaminaDelSigno extends StatelessWidget {
 
   /// El velo entero en un solo degradado: la banda del rotulo, el bloque de
   /// datos corrido por su delta, y la base tenue por debajo de todo.
-  LinearGradient _velo(int delta, double alto) {
+  LinearGradient _velo(int delta, double refuerzo, double alto) {
     final paradas = <double>[];
     final colores = <Color>[];
 
@@ -133,11 +133,13 @@ class LaminaDelSigno extends StatelessWidget {
     }
     // Franja limpia: solo la base tenue, que baja el brillo sin apagar color.
     punto(_topes[0] + delta, 0.34);
-    // Bloque de datos: de aqui abajo mandan las cifras.
+    // Bloque de datos: de aqui abajo mandan las cifras. El refuerzo solo lo
+    // llevan las planchas con una zona clara detras del texto -- Geminis tiene
+    // ahi el papel sin colorear -- y sube el alfa lo justo para pasar AA.
     for (var i = 1; i < _topes.length; i++) {
-      punto(_topes[i] + delta, _alfas[i]);
+      punto(_topes[i] + delta, (_alfas[i] + refuerzo).clamp(0.0, 1.0));
     }
-    punto(alto, _alfas.last);
+    punto(alto, (_alfas.last + refuerzo).clamp(0.0, 1.0));
 
     // Dos paradas no pueden ir a la misma altura ni desordenadas: en una
     // tarjeta corta el delta empuja los topes fuera del 1.0 y el degradado se

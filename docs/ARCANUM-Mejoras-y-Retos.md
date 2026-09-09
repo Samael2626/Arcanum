@@ -2,7 +2,7 @@
 tags: [arcanum, roadmap, retos, semana-4]
 tipo: roadmap
 area: arcanum
-actualizado: 2026-09-04
+actualizado: 2026-09-08
 ---
 
 # ARCANUM — Oportunidades de Mejora y Retos Futuros
@@ -47,20 +47,55 @@ al día y falla en tres:
 - `04b-pliegue`
 - `05-texto-abierto`
 
-Las tres mueren en el mismo sitio: `find.text('Abrir el sello del Sol')` no
-encuentra nada después del `drag` sobre el `ListView`, así que el `tap` explota
-con `Bad state: No element` (`test/capturas/hoy_capturas_test.dart:292`). Las
-tres capturas que sí salen son las del sello **cerrado**, que no necesitan ese
-toque.
+Las tres mueren con `Bad state: No element`, pero ya **no** donde decía esta
+nota: el `ensureVisible` que se añadió después arregló el `find.text('Abrir el
+sello del Sol')`. Ahora revientan más adelante, en
+`tester.tap(find.byIcon(Icons.check_box_outline_blank).first)`
+(`hoy_capturas_test.dart:367`): las casillas del diálogo de consentimiento no
+aparecen. Las tres capturas que sí salen son las del sello **cerrado**, que no
+pasan por ese diálogo.
 
-**No lo causó la banda del año.** Comprobado con `git stash` sobre
-`sky_today_card.dart` y `hoy_capturas_test.dart`: fallaban igual antes del
-cambio. Es deuda anterior.
+Antes de llegar ahí, el fichero **no compilaba**: `_ApiDeMuestra.horoscope()` se
+quedó sin el `{DateTime? day}` que la API ganó, y como el capturador lleva su
+`@Tags(['capturas'])` la suite normal lo salta y nadie lo volvió a correr en
+semanas. Sincronizada la firma el 08/09/2026; los tres fallos del diálogo siguen.
+
+**No lo causó la banda del año** ni la lámina del zodíaco. Comprobado dos veces
+con `git stash` sobre `lib/`: fallaban igual sin ninguno de los dos cambios. Es
+deuda anterior.
 
 Consecuencia práctica: las capturas del sello **abierto** que se suben a Play no
 se pueden actualizar, así que envejecen cada vez que se toca esa pantalla.
 Arreglarlo cuando alguien vuelva a `SkyTodayCard` — probablemente el `drag` fijo
 de `-900` px ya no deja el botón donde estaba.
+
+## Deuda: el rótulo de sección no puede pasar AA sobre fondo oscuro ⏳ PENDIENTE (08/09/2026)
+
+`SectionLabel` — el rótulo de las tarjetas, «TU CIELO DE HOY» y compañía — va en
+`ArcanumColors.goldMuted`, **`#8A6E32`**. Su luminancia relativa es **0,168**, así
+que su contraste contra **negro puro** topa en:
+
+    (0,168 + 0,05) / 0,05 = **4,36**
+
+AA pide 4,5. O sea que ese color **no puede pasar AA sobre ningún fondo oscuro**,
+por mucho que se oscurezca el fondo: el techo está por debajo del umbral. No es
+un problema de la lámina del zodíaco ni de una pantalla concreta — es de paleta y
+sale en toda la app, en cada tarjeta que usa el rótulo.
+
+Medido sobre las capturas de `test/capturas/salida/zodiaco-*.png`, con la lámina
+detrás el rótulo va de **3,44 a 4,08** según lo clara que sea la plancha (el peor,
+Sagitario, que tiene papel crema arriba). Sin lámina se queda igualmente por
+debajo del 4,36 teórico. La lámina se come parte del margen que quedaba, no lo
+crea.
+
+Arreglo: subir el color del rótulo. `ArcanumColors.gold` (`#C9A84C`) da 0,409 de
+luminancia, o sea techo 9,19 — pasa de sobra. Es un cambio de paleta que toca
+todas las pantallas, así que hay que mirarlo entero de una vez y no por parches.
+
+El resto del texto de la tarjeta sí pasa con la lámina puesta: titular 4,98 a
+17,31, separación 4,56 a 9,18 y acción 7,18 a 8,64, con el mínimo en Escorpio.
+Ese 4,56 va justo, y el método de medida (percentil 75 de la fila, sobre la
+captura) es aproximado: si algún día se afina, empezar por ahí.
 
 ## Deuda: el botón de "tu siguiente paso" se desborda a 360 px ⏳ PENDIENTE (04/09/2026)
 
