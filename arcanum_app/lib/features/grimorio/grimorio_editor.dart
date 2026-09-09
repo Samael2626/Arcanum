@@ -1,3 +1,4 @@
+import 'grimorio_error.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -87,9 +88,13 @@ class _GrimorioEditorState extends ConsumerState<GrimorioEditor> {
       // Guardado OK → estampa el sello y luego cierra.
       if (mounted) setState(() => _sealing = true);
     } catch (e) {
+      // El error de verdad va al log SIEMPRE. Antes se perdia entero: el
+      // usuario veia «revisa tu conexion» y quien tenia que arreglarlo no
+      // veia nada.
+      debugPrint('ARCANUM grimorio: fallo al sellar la entrada ($e).');
       if (mounted) {
         setState(() {
-          _error = 'No se pudo sellar la entrada. Revisa tu conexión.';
+          _error = mensajeAlSellar(e);
           _saving = false;
         });
       }
