@@ -6,6 +6,13 @@ import 'package:dio/dio.dart';
 const String validationFallbackMessage =
     'No se pudo validar la consulta. Actualiza la app e inténtalo de nuevo.';
 
+/// Si el error es una sesion caida. El 401 no es un fallo mas: no se arregla
+/// reintentando, hay que volver a entrar. Quien lo reciba tiene que cerrar la
+/// sesion y dejar que la guarda de la pantalla haga el resto, en vez de dejar
+/// el boton encendido llamando a una puerta cerrada.
+bool esSesionExpirada(Object error) =>
+    error is DioException && error.response?.statusCode == 401;
+
 String oracleErrorMessage(Object error) {
   if (error is DioException) {
     final status = error.response?.statusCode;

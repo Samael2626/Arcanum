@@ -269,6 +269,14 @@ class _OracleViewState extends ConsumerState<_OracleView> {
       });
     } catch (error) {
       if (isCreditsRequired(error)) await _openCreditsPaywall();
+      // Sesion caida: se cierra de verdad. La pantalla ya tiene su guarda
+      // (`auth.isAuthenticated` -> LoginPrompt); sin esto el estado local
+      // seguia diciendo que hay sesion, asi que el boton se quedaba encendido
+      // bajo el aviso de «Sesion expirada» y volvia a fallar igual.
+      if (esSesionExpirada(error)) {
+        await ref.read(authProvider.notifier).logout();
+        return;
+      }
       if (mounted) {
         setState(() {
           _cards = null;
