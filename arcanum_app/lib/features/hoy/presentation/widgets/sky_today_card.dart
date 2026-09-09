@@ -188,6 +188,7 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
 
         return _Shell(
           signo: signo,
+          ingles: d['sun_sign'] as String?,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -320,6 +321,22 @@ class _Cargando extends StatelessWidget {
   );
 }
 
+// EL NOMBRE DEL SIGNO va bajo el rotulo de la tarjeta.
+//
+// Se eligio con las dos ubicaciones retratadas y medidas, no de memoria. Con
+// el oro `#C9A84C`, cuyo techo sobre negro es 9,19:
+//
+//   - bajo el ROTULO -- 8,34 a 8,45. Cae dentro de la banda oscura que la
+//     tarjeta ya tiene arriba, asi que va cerca del techo del color.
+//   - bajo el ARO, como pie -- 2,99 a 8,53. Cae en la franja limpia, que es
+//     donde el grabado se ve a plena luz, y NO pasa AA en las planchas
+//     claras: Aries 2,99 y Capricornio 3,51. Para usarla habria que darle su
+//     propia banda de velo, y eso se come parte de la franja que el encuadre
+//     de cada signo costo ganar.
+//
+// Ademas no roba altura a la lamina y no toca la jerarquia: el rotulo ya era
+// el bloque que identifica la tarjeta.
+
 class _Shell extends StatelessWidget {
   final Widget child;
 
@@ -328,7 +345,10 @@ class _Shell extends StatelessWidget {
   /// la de siempre, sin grabado, y no se rompe nada.
   final Signo? signo;
 
-  const _Shell({required this.child, this.signo});
+  /// El mismo signo, en ingles, para el glifo y el nombre.
+  final String? ingles;
+
+  const _Shell({required this.child, this.signo, this.ingles});
 
   @override
   Widget build(BuildContext context) => TodayCard(
@@ -340,8 +360,23 @@ class _Shell extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Center(
-          child: SectionLabel('TU CIELO DE HOY', infoKey: 'transitos'),
+        Center(
+          child: signo == null
+              ? const SectionLabel('TU CIELO DE HOY', infoKey: 'transitos')
+              : Column(
+                  children: [
+                    const SectionLabel('TU CIELO DE HOY', infoKey: 'transitos'),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${signGlyph[ingles] ?? ''}  ${signEs[ingles] ?? ''}'
+                          .toUpperCase(),
+                      style: ArcanumText.label().copyWith(
+                        color: ArcanumColors.gold,
+                        fontFamilyFallback: kGlyphFallback,
+                      ),
+                    ),
+                  ],
+                ),
         ),
         const SizedBox(height: 16),
         child,

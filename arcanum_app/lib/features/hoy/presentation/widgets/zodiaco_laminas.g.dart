@@ -12,7 +12,6 @@ class LaminaSigno {
     required this.delta,
     required this.altoLamina,
     required this.banda,
-    required this.refuerzo,
   });
 
   /// El recorte, ya a la proporcion de la tarjeta (salvo Piscis).
@@ -27,12 +26,6 @@ class LaminaSigno {
   /// Piscis va en banda y no a sangre: sus dos peces no caben a proporcion de
   /// tarjeta. Es la unica excepcion; el manifest explica el porque.
   final bool banda;
-
-  /// Alfa de mas en el bloque de datos, solo donde hace falta. Casi todas las
-  /// planchas van a 0: lo llevan las que tienen una zona clara justo detras
-  /// del texto, donde el velo comun se queda corto para pasar AA. Medido sobre
-  /// la captura de la pantalla, no sobre el prototipo.
-  final double refuerzo;
 }
 
 enum Signo { capricornio, aries, tauro, geminis, cancer, leo, virgo, libra, escorpio, sagitario, acuario, piscis }
@@ -47,84 +40,72 @@ const Map<Signo, LaminaSigno> laminasDelZodiaco = {
     delta: 64,
     altoLamina: 479,
     banda: false,
-    refuerzo: 0.0,
   ),
   Signo.aries: LaminaSigno(
     asset: 'assets/engravings/zodiaco/aries.jpg',
     delta: 0,
     altoLamina: 479,
     banda: false,
-    refuerzo: 0.0,
   ),
   Signo.tauro: LaminaSigno(
     asset: 'assets/engravings/zodiaco/tauro.jpg',
-    delta: 84,
+    delta: 66,
     altoLamina: 479,
     banda: false,
-    refuerzo: 0.0,
   ),
   Signo.geminis: LaminaSigno(
     asset: 'assets/engravings/zodiaco/geminis.jpg',
-    delta: 83,
+    delta: 43,
     altoLamina: 479,
     banda: false,
-    refuerzo: 0.03,
   ),
   Signo.cancer: LaminaSigno(
     asset: 'assets/engravings/zodiaco/cancer.jpg',
-    delta: 100,
+    delta: 55,
     altoLamina: 479,
     banda: false,
-    refuerzo: 0.0,
   ),
   Signo.leo: LaminaSigno(
     asset: 'assets/engravings/zodiaco/leo.jpg',
     delta: 0,
     altoLamina: 479,
     banda: false,
-    refuerzo: 0.0,
   ),
   Signo.virgo: LaminaSigno(
     asset: 'assets/engravings/zodiaco/virgo.jpg',
     delta: 0,
     altoLamina: 479,
     banda: false,
-    refuerzo: 0.0,
   ),
   Signo.libra: LaminaSigno(
     asset: 'assets/engravings/zodiaco/libra.jpg',
     delta: 75,
     altoLamina: 479,
     banda: false,
-    refuerzo: 0.0,
   ),
   Signo.escorpio: LaminaSigno(
     asset: 'assets/engravings/zodiaco/escorpio.jpg',
-    delta: 105,
+    delta: 71,
     altoLamina: 479,
     banda: false,
-    refuerzo: 0.0,
   ),
   Signo.sagitario: LaminaSigno(
     asset: 'assets/engravings/zodiaco/sagitario.jpg',
     delta: 31,
     altoLamina: 479,
     banda: false,
-    refuerzo: 0.0,
   ),
   Signo.acuario: LaminaSigno(
     asset: 'assets/engravings/zodiaco/acuario.jpg',
     delta: 0,
     altoLamina: 479,
     banda: false,
-    refuerzo: 0.0,
   ),
   Signo.piscis: LaminaSigno(
     asset: 'assets/engravings/zodiaco/piscis.jpg',
     delta: 0,
     altoLamina: 240,
     banda: true,
-    refuerzo: 0.0,
   ),
 };
 

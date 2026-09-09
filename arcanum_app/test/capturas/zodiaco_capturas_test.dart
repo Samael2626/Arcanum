@@ -35,6 +35,9 @@ String? _iconosDeMaterial() {
   return null;
 }
 
+/// Publica para los otros medidores de esta carpeta.
+Future<void> cargarFuentesParaMedir() => _cargarFuentes();
+
 Future<void> _cargarFuentes() async {
   final manifiesto = <String, List<String>>{
     'Cormorant Garamond': ['assets/fonts/CormorantGaramond-600.ttf'],

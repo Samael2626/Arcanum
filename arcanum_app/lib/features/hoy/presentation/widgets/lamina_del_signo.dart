@@ -41,21 +41,31 @@ const _tinta = Color(0xFF0A0A0F);
 
 /// Topes del bloque de datos, en px desde el borde de arriba de la tarjeta.
 ///
-/// El mockup los dejo en 214/252/304/340, pero su tarjeta media 324x479 y la
-/// de verdad mide 320x604 con el contenido mas abajo: medida en la pantalla
-/// compilada, la banda de chips cae en 257..283 y el titular arranca en 289,
-/// contra 226..252 y 258 del mockup. Son 31 px de diferencia y se aplican
-/// aqui. La FORMA de la rampa no cambia -- +38, +52, +36 entre topes -- porque
-/// eso es lo que se valido: oscuro del todo justo antes del titular.
-const _topes = [245.0, 283.0, 335.0, 371.0];
+/// El mockup los dejo en 214/252/304/340, con una tarjeta de 324x479. La de
+/// verdad mide 320x627 y su contenido cae mas abajo: medido en la pantalla
+/// compilada, el titular arranca en 312 contra 258 del mockup. Son 54 px, y se
+/// aplican aqui. La FORMA de la rampa no cambia -- +38, +52, +36 entre topes --
+/// porque eso es lo que se valido: oscuro del todo justo antes del titular.
+///
+/// Los 23 ultimos de esos 54 los trajo el nombre del signo, que anadio una
+/// linea bajo el rotulo y empujo todo hacia abajo. Si alguien vuelve a mover
+/// ese bloque, hay que volver a medir: `zodiaco_geometria_test.dart` imprime
+/// donde cae cada texto, y `zodiaco_fondo_test.dart` retrata la lamina sin
+/// texto ni velo para poder calcular el contraste componiendo, sin adivinar.
+const _topes = [268.0, 306.0, 358.0, 394.0];
 const _alfas = [0.0, 0.72, 0.95, 0.97];
 
-/// La banda del rotulo. 'TU CIELO DE HOY' va de 30 a 47, medido, y el aro
-/// empieza sobre 63: la banda se mantiene opaca hasta pasado el rotulo y se
-/// abre antes de llegar al aro. La primera version caia demasiado pronto y el
-/// rotulo se quedaba en 2,26 de contraste sobre las planchas claras.
-const _bandaRotulo = [0.0, 52.0, 92.0];
-const _alfaRotulo = [0.88, 0.84, 0.34];
+/// La banda del rotulo. Ahi arriba van DOS lineas, medidas en la pantalla:
+/// 'TU CIELO DE HOY' de 30 a 47 y el nombre del signo de 53 a 70. El aro
+/// empieza sobre 86. La banda se mantiene opaca hasta pasado el nombre y se
+/// abre antes de llegar al aro.
+///
+/// Se corrigio dos veces y las dos por medir, no por mirar: la primera version
+/// caia en 34 px y el rotulo se quedaba en 2,26 sobre las planchas claras; la
+/// segunda llegaba a 52 y era el NOMBRE el que se caia, 4,34 en Tauro, que
+/// tiene el papel crema justo ahi.
+const _bandaRotulo = [0.0, 76.0, 116.0];
+const _alfaRotulo = [0.90, 0.86, 0.34];
 
 class LaminaDelSigno extends StatelessWidget {
   const LaminaDelSigno({super.key, required this.signo, required this.radio});
@@ -104,7 +114,7 @@ class LaminaDelSigno extends StatelessWidget {
                   ),
                   DecoratedBox(
                     decoration: BoxDecoration(
-                      gradient: _velo(lamina.delta, lamina.refuerzo, alto),
+                      gradient: _velo(lamina.delta, alto),
                     ),
                   ),
                 ],
@@ -118,7 +128,7 @@ class LaminaDelSigno extends StatelessWidget {
 
   /// El velo entero en un solo degradado: la banda del rotulo, el bloque de
   /// datos corrido por su delta, y la base tenue por debajo de todo.
-  LinearGradient _velo(int delta, double refuerzo, double alto) {
+  LinearGradient _velo(int delta, double alto) {
     final paradas = <double>[];
     final colores = <Color>[];
 
@@ -133,13 +143,11 @@ class LaminaDelSigno extends StatelessWidget {
     }
     // Franja limpia: solo la base tenue, que baja el brillo sin apagar color.
     punto(_topes[0] + delta, 0.34);
-    // Bloque de datos: de aqui abajo mandan las cifras. El refuerzo solo lo
-    // llevan las planchas con una zona clara detras del texto -- Geminis tiene
-    // ahi el papel sin colorear -- y sube el alfa lo justo para pasar AA.
+    // Bloque de datos: de aqui abajo mandan las cifras.
     for (var i = 1; i < _topes.length; i++) {
-      punto(_topes[i] + delta, (_alfas[i] + refuerzo).clamp(0.0, 1.0));
+      punto(_topes[i] + delta, _alfas[i]);
     }
-    punto(alto, (_alfas.last + refuerzo).clamp(0.0, 1.0));
+    punto(alto, _alfas.last);
 
     // Dos paradas no pueden ir a la misma altura ni desordenadas: en una
     // tarjeta corta el delta empuja los topes fuera del 1.0 y el degradado se

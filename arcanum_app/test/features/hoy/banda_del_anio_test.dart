@@ -47,7 +47,10 @@ void main() {
     await _montar(tester, profection: _saturnoEnCasa5);
     expect(find.text('ESTE AÑO MANDA'), findsOneWidget);
     expect(find.text('Saturno'), findsOneWidget);
-    expect(find.text('Casa 5 · Capricornio'), findsOneWidget);
+    // «EN Capricornio», no «Casa 5 · Capricornio»: desde que la tarjeta lleva
+    // la lamina del signo hay DOS signos en pantalla -- el solar arriba y el
+    // de la casa profectada aqui -- y con el punto medio se leian igual.
+    expect(find.text('Casa 5, en Capricornio'), findsOneWidget);
   });
 
   testWidgets('sin signo dice solo la casa, no un vacio', (tester) async {

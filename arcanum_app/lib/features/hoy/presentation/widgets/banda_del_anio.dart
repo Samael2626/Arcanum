@@ -50,7 +50,8 @@ class BandaDelAnio extends StatelessWidget {
     final signo = p['sign_es'] as String?;
 
     return Semantics(
-      label: 'Año profectado: casa $casa, regido por ${pointEs(senor)}',
+      label: 'Año profectado: casa $casa, en ${signo ?? "su signo"}, '
+          'regido por ${pointEs(senor)}',
       child: Padding(
         padding: const EdgeInsets.only(top: 14),
         child: Column(
@@ -123,10 +124,18 @@ class BandaDelAnio extends StatelessWidget {
     );
   }
 
-  /// «Casa 5 · Capricornio». El signo puede faltar en material antiguo
+  /// «Casa 5, en Capricornio». El signo puede faltar en material antiguo
   /// cacheado, y entonces se dice solo la casa en vez de escribir un vacio.
+  ///
+  /// Dice «EN Capricornio», y no «Casa 5 · Capricornio» como antes, porque
+  /// desde que la tarjeta lleva la lamina hay DOS signos en pantalla y no son
+  /// el mismo: arriba, bajo el rotulo, va el signo SOLAR de quien mira; aqui
+  /// va el signo de la casa profectada, que cambia cada cumpleanios. Con el
+  /// punto medio los dos se leian igual y no habia forma de saber cual era
+  /// cual. No se antepone «Senor del ano»: eso ya lo dicen el rotulo ESTE ANO
+  /// MANDA y el nombre del planeta que va encima.
   static String _pie(int casa, String? signo) =>
-      signo == null || signo.isEmpty ? 'Casa $casa' : 'Casa $casa · $signo';
+      signo == null || signo.isEmpty ? 'Casa $casa' : 'Casa $casa, en $signo';
 
   bool _tocaHoy(String senor) {
     final y = year;

@@ -640,8 +640,7 @@
     316,
     368,
     404
-   ],
-   "refuerzo": 0.0
+   ]
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -666,7 +665,7 @@
   ],
   "sha1_source": "adf14401f7da7f54ebd8994c568410b1112fd00d",
   "recorte": {
-   "x0": 0.525,
+   "x0": 0.492,
    "y0": 0.04,
    "ancho": 0.44,
    "salida_px": [
@@ -686,8 +685,7 @@
     252,
     304,
     340
-   ],
-   "refuerzo": 0.0
+   ]
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -726,15 +724,15 @@
    "acaba_px": 298
   },
   "velo": {
-   "delta": 84,
-   "franja_limpia_px": 298,
+   "delta": 66,
+   "franja_limpia_px": 280,
    "topes_px": [
-    298,
-    336,
-    388,
-    424
+    280,
+    318,
+    370,
+    406
    ],
-   "refuerzo": 0.0
+   "nota": "El foco pedia un delta de 84 px pero el contraste solo admite 66: faltan 18. Manda la legibilidad; la parte baja de la figura se funde con el bloque de datos."
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -772,15 +770,15 @@
    "acaba_px": 297
   },
   "velo": {
-   "delta": 83,
-   "franja_limpia_px": 297,
+   "delta": 43,
+   "franja_limpia_px": 257,
    "topes_px": [
-    297,
-    335,
-    387,
-    423
+    257,
+    295,
+    347,
+    383
    ],
-   "refuerzo": 0.03
+   "nota": "El foco pedia un delta de 83 px pero el contraste solo admite 43: faltan 40. Manda la legibilidad; la parte baja de la figura se funde con el bloque de datos."
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -818,16 +816,15 @@
    "acaba_px": 346
   },
   "velo": {
-   "delta": 100,
-   "franja_limpia_px": 314,
+   "delta": 55,
+   "franja_limpia_px": 269,
    "topes_px": [
-    314,
-    352,
-    404,
-    440
+    269,
+    307,
+    359,
+    395
    ],
-   "refuerzo": 0.0,
-   "nota": "El foco pedia un delta de 132 px pero el contraste solo admite 100: faltan 32. Manda la legibilidad; la parte baja de la figura se funde con el bloque de datos."
+   "nota": "El foco pedia un delta de 132 px pero el contraste solo admite 55: faltan 77. Manda la legibilidad; la parte baja de la figura se funde con el bloque de datos."
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -872,8 +869,7 @@
     252,
     304,
     340
-   ],
-   "refuerzo": 0.0
+   ]
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -918,8 +914,7 @@
     252,
     304,
     340
-   ],
-   "refuerzo": 0.0
+   ]
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -964,8 +959,7 @@
     327,
     379,
     415
-   ],
-   "refuerzo": 0.0
+   ]
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -1003,16 +997,15 @@
    "acaba_px": 496
   },
   "velo": {
-   "delta": 105,
-   "franja_limpia_px": 319,
+   "delta": 71,
+   "franja_limpia_px": 285,
    "topes_px": [
-    319,
-    357,
-    409,
-    445
+    285,
+    323,
+    375,
+    411
    ],
-   "refuerzo": 0.0,
-   "nota": "El foco pedia un delta de 282 px pero el contraste solo admite 105: faltan 177. Manda la legibilidad; la parte baja de la figura se funde con el bloque de datos."
+   "nota": "El foco pedia un delta de 282 px pero el contraste solo admite 71: faltan 211. Manda la legibilidad; la parte baja de la figura se funde con el bloque de datos."
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -1057,8 +1050,7 @@
     283,
     335,
     371
-   ],
-   "refuerzo": 0.0
+   ]
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -1103,8 +1095,7 @@
     252,
     304,
     340
-   ],
-   "refuerzo": 0.0
+   ]
   },
   "composicion": "fondo a sangre (plantilla bayerG)",
   "status": "final"
@@ -1149,8 +1140,7 @@
     252,
     304,
     340
-   ],
-   "refuerzo": 0.0
+   ]
   },
   "composicion": "BANDA apaisada - excepcion a la plantilla bayerG",
   "status": "final",
