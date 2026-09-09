@@ -2,7 +2,7 @@
 tags: [arcanum, roadmap, retos, semana-4]
 tipo: roadmap
 area: arcanum
-actualizado: 2026-09-08
+actualizado: 2026-09-09
 ---
 
 # ARCANUM — Oportunidades de Mejora y Retos Futuros
@@ -68,6 +68,64 @@ Consecuencia práctica: las capturas del sello **abierto** que se suben a Play n
 se pueden actualizar, así que envejecen cada vez que se toca esa pantalla.
 Arreglarlo cuando alguien vuelva a `SkyTodayCard` — probablemente el `drag` fijo
 de `-900` px ya no deja el botón donde estaba.
+
+## Deuda: la traducción canónica de Culpeper tiene 2 capítulos, la base 82 ⏳ PENDIENTE (09/09/2026)
+
+`scripts/library_data/culpeper-complete-herbal.es.json` —el fichero del que
+lee `seed_library.py`— contiene **2 capítulos**. Los respaldos de la misma
+carpeta llegan a **82**, y la base de producción los tiene todos. En algún
+momento una corrida del traductor sobrescribió el canónico con su último lote.
+
+No rompe nada mientras nadie reingeste: `seed_library` solo toca los capítulos
+que el fichero trae, y los ausentes conservan su `text_es` en la base. Pero
+**bloquea las correcciones de datos**: la de la versalita partida (ver el
+commit de la reingesta) no puede aplicarse a los 6 capítulos afectados porque
+5 de ellos no están en el canónico.
+
+Procedimiento para esa reingesta, cuando se haga:
+
+```
+cd arcanum-api/scripts/library_data
+cp culpeper-complete-herbal.es.20260811-121513.bak.json    culpeper-complete-herbal.es.json          # el respaldo con los 82
+cd ../.. && python scripts/seed_library.py culpeper-complete-herbal --dry-run
+python scripts/seed_library.py culpeper-complete-herbal
+```
+
+Es seguro: las traducciones revisadas a mano (`translation_status = human`) no
+se pisan, y el resto ya son las mismas que hay en la base. Lo que cambia son
+los 6 párrafos de la versalita.
+
+Lo que hay que arreglar de fondo es el pipeline: que escriba el corpus entero
+o que el canónico no se sobrescriba con un lote parcial.
+
+## Deuda: el ℞ pisando el signo en Cielos ⏳ NO REPRODUCIDO (09/09/2026)
+
+Un tester reportó que en las filas con planeta retrógrado —Neptuno, Plutón,
+Nodo Norte— el badge `℞` se superponía al nombre del signo y lo dejaba
+ilegible («Cáncer» cortado).
+
+**No se ha conseguido reproducir.** Lo investigado, para que nadie lo repita:
+
+- **NO es falta de separación.** La primera hipótesis fue que el `Row` de
+  signo/℞/casa iba sin `spacing`. Es falso: `_Tappable` envuelve cada zona con
+  `EdgeInsets.symmetric(horizontal: 5)`, o sea **10 px** entre el nombre del
+  signo y el badge. Se escribió el arreglo y un test, y el test **pasaba igual
+  sin el arreglo** — que es como se vio el error. Revertido.
+- **Tampoco se encoge el texto.** La segunda hipótesis fue el
+  `FittedBox(fit: BoxFit.scaleDown)` que envuelve el grupo: al no caber, encoge
+  el conjunto entero. Medido en un test a 360 px con las fuentes reales
+  cargadas y Neptuno retrógrado en Cáncer, el signo se pinta a **21,2 px**, que
+  es su alto nominal para 15 px de fuente. **No hay compresión.**
+
+Falta una variable que no teníamos: qué planeta y qué signo salían exactamente,
+o la **escala de fuente del sistema** del móvil del tester (en un teléfono real
+casi nunca es 1, y con 1,3 el grupo sí podría dejar de caber). El `FittedBox`
+sigue siendo la sospecha viva, porque encoge en silencio hasta tamaños
+ilegibles en vez de recortar con elipsis.
+
+Si vuelve a reportarse: pedir captura **con el nombre del planeta visible** y
+el ajuste de tamaño de letra del dispositivo. Con eso el test de
+`cielos_screen_test.dart` se cierra en una tarde.
 
 ## Deuda: el rótulo de sección no puede pasar AA sobre fondo oscuro ⏳ PENDIENTE (08/09/2026)
 
