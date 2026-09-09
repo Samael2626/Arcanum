@@ -107,6 +107,10 @@ class _ApiDeUnSigno extends ArcanumApi {
 const _telefono = Size(360, 640);
 const _escala = 3.0;
 
+/// Publica para que el medidor de geometria monte lo mismo.
+Future<void> montarParaMedir(WidgetTester tester, String s) =>
+    _montar(tester, s);
+
 Future<void> _montar(WidgetTester tester, String signoIngles) async {
   tester.view
     ..physicalSize = _telefono * _escala

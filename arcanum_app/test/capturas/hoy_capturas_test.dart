@@ -141,7 +141,7 @@ class _ApiDeMuestra extends ArcanumApi {
   };
 
   @override
-  Future<Map<String, dynamic>> horoscope() async => {
+  Future<Map<String, dynamic>> horoscope({DateTime? day}) async => {
     'date': '2026-08-24',
     'text': 'Saturno cierra un cuadrado con tu Sol: figura de tension entre '
         'cuerpos que se miran de frente. En la hora del Sol se trabajaba el oro.',
