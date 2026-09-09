@@ -94,6 +94,7 @@ flutter:
     - assets/engravings/inciensos/
     - assets/engravings/aceites/
     - assets/engravings/resinas/
+    - assets/engravings/zodiaco/
     # Licencias de las fuentes: la OFL 1.1 obliga a distribuir su texto con el
     # software. Se empaquetan como asset y se registran en LicenseRegistry para
     # que aparezcan en showLicensePage().

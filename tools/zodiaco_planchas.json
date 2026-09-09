@@ -1,0 +1,314 @@
+[
+ {
+  "slug": "capricornio",
+  "fichero": "File:Johann Bayer - Capricorn.jpg",
+  "sha1": "5d8eea0a5c20b73bee1b36b0891f2ba2dd608d45",
+  "bytes": 1343711,
+  "px": [
+   3253,
+   2496
+  ],
+  "credito": "https://www.raremaps.com/gallery/detail/30808op/capricorn-stars-heightened-in-gold-bayer",
+  "win": [
+   0.504,
+   0.048,
+   0.4577
+  ],
+  "aspecto": null,
+  "banda": false,
+  "foco": [
+   0.74,
+   0.05,
+   0.92,
+   0.56
+  ],
+  "que": "cabeza y cuernos",
+  "delta": 64
+ },
+ {
+  "slug": "aries",
+  "fichero": "File:Johann Bayer - Aries.jpg",
+  "sha1": "adf14401f7da7f54ebd8994c568410b1112fd00d",
+  "bytes": 1220780,
+  "px": [
+   3204,
+   2434
+  ],
+  "credito": "https://www.raremaps.com/gallery/detail/30823op/aries-stars-heightened-in-gold-bayer",
+  "win": [
+   0.525,
+   0.04,
+   0.44
+  ],
+  "aspecto": null,
+  "banda": false,
+  "foco": [
+   0.78,
+   0.16,
+   0.9,
+   0.34
+  ],
+  "que": "cabeza del carnero",
+  "delta": 0
+ },
+ {
+  "slug": "tauro",
+  "fichero": "File:Taurus - Johann Bayer.jpg",
+  "sha1": "9bb42401465d4b20c21f3ba4ae9560db78b73ba5",
+  "bytes": 18241194,
+  "px": [
+   10265,
+   7752
+  ],
+  "credito": "https://www.raremaps.com/gallery/detail/68476/taurus-stars-heightened-in-gold-bayer",
+  "win": [
+   0.442,
+   0.157,
+   0.38
+  ],
+  "aspecto": null,
+  "banda": false,
+  "foco": [
+   0.55,
+   0.28,
+   0.8,
+   0.62
+  ],
+  "que": "cabeza del toro",
+  "delta": 84
+ },
+ {
+  "slug": "geminis",
+  "fichero": "File:Johann Bayer - Gemini.jpg",
+  "sha1": "a7baab7f057567ce8ab73fcae0c6a5bd2dd70290",
+  "bytes": 1249527,
+  "px": [
+   3217,
+   2418
+  ],
+  "credito": "https://www.raremaps.com/gallery/detail/30847op/gemini-stars-heightened-in-gold-bayer",
+  "win": [
+   0.325,
+   0.045,
+   0.455
+  ],
+  "aspecto": null,
+  "banda": false,
+  "foco": [
+   0.34,
+   0.05,
+   0.8,
+   0.6
+  ],
+  "que": "los dos gemelos enteros",
+  "delta": 83
+ },
+ {
+  "slug": "cancer",
+  "fichero": "File:Johann Bayer - Cancer.jpg",
+  "sha1": "4e682cc0b2c4982308f0ce1952da28c604d42f82",
+  "bytes": 1084352,
+  "px": [
+   3218,
+   2422
+  ],
+  "credito": "Raremaps.com",
+  "win": [
+   0.221,
+   0.076,
+   0.44
+  ],
+  "aspecto": null,
+  "banda": false,
+  "foco": [
+   0.24,
+   0.14,
+   0.62,
+   0.7
+  ],
+  "que": "caparazon y pinzas",
+  "delta": 100
+ },
+ {
+  "slug": "leo",
+  "fichero": "File:Johann Bayer - Leo.jpg",
+  "sha1": "dc79e8fce1dc49bbb3d6d373c2cbfcb512d18e52",
+  "bytes": 1179311,
+  "px": [
+   3169,
+   2456
+  ],
+  "credito": "https://www.raremaps.com/gallery/detail/30932op/leo-stars-heightened-in-gold-bayer",
+  "win": [
+   0.437,
+   0.04,
+   0.46
+  ],
+  "aspecto": null,
+  "banda": false,
+  "foco": [
+   0.62,
+   0.2,
+   0.8,
+   0.4
+  ],
+  "que": "cabeza del leon",
+  "delta": 0
+ },
+ {
+  "slug": "virgo",
+  "fichero": "File:Johann Bayer - Virgo.jpg",
+  "sha1": "f53c986596f8dab25e50e90a925695231058da85",
+  "bytes": 1204437,
+  "px": [
+   2379,
+   3201
+  ],
+  "credito": "Raremaps.com",
+  "win": [
+   0.035,
+   0.04,
+   0.7
+  ],
+  "aspecto": null,
+  "banda": false,
+  "foco": [
+   0.3,
+   0.08,
+   0.75,
+   0.35
+  ],
+  "que": "cabeza y alas",
+  "delta": 0
+ },
+ {
+  "slug": "libra",
+  "fichero": "File:Johann Bayer - Libra.jpg",
+  "sha1": "17213edc8b629fa5e26fc558696205faf20aa3ec",
+  "bytes": 1063428,
+  "px": [
+   3222,
+   2449
+  ],
+  "credito": "https://www.raremaps.com/gallery/detail/30991op/libra-stars-heightened-in-gold-bayer",
+  "win": [
+   0.271,
+   0.084,
+   0.44
+  ],
+  "aspecto": null,
+  "banda": false,
+  "foco": [
+   0.28,
+   0.05,
+   0.72,
+   0.6
+  ],
+  "que": "fiel y los dos platos",
+  "delta": 75
+ },
+ {
+  "slug": "escorpio",
+  "fichero": "File:Johann Bayer - Scorpio.jpg",
+  "sha1": "481dfd08bf551ffc77c1c76ec5923cbcc48d9ffb",
+  "bytes": 1218926,
+  "px": [
+   3191,
+   2500
+  ],
+  "credito": "https://www.raremaps.com/gallery/detail/30961op/scorpio-stars-heightened-in-gold-bayer",
+  "win": [
+   0.461,
+   0.04,
+   0.44
+  ],
+  "aspecto": null,
+  "banda": false,
+  "foco": [
+   0.45,
+   0.15,
+   0.95,
+   0.9
+  ],
+  "que": "cuerpo y pinzas",
+  "delta": 105
+ },
+ {
+  "slug": "sagitario",
+  "fichero": "File:Johann Bayer - Sagittarius.jpg",
+  "sha1": "96edffe1e62771ea9f5ab19d4bdd720f668b0c56",
+  "bytes": 1296566,
+  "px": [
+   3217,
+   2489
+  ],
+  "credito": "https://www.raremaps.com/gallery/detail/31011op/sagittarius-stars-heightened-in-gold-bayer",
+  "win": [
+   0.374,
+   0.04,
+   0.471
+  ],
+  "aspecto": null,
+  "banda": false,
+  "foco": [
+   0.55,
+   0.12,
+   0.83,
+   0.5
+  ],
+  "que": "cabeza y arco",
+  "delta": 31
+ },
+ {
+  "slug": "acuario",
+  "fichero": "File:Johann Bayer - Aquarius.jpg",
+  "sha1": "8130cb10466c7fc38f48656a8b2224220156bc35",
+  "bytes": 1161852,
+  "px": [
+   3222,
+   2419
+  ],
+  "credito": "https://www.raremaps.com/gallery/detail/30846op/aquarius-stars-heightened-in-gold-bayer",
+  "win": [
+   0.364,
+   0.04,
+   0.42
+  ],
+  "aspecto": null,
+  "banda": false,
+  "foco": [
+   0.58,
+   0.1,
+   0.72,
+   0.28
+  ],
+  "que": "cabeza del aguador",
+  "delta": 0
+ },
+ {
+  "slug": "piscis",
+  "fichero": "File:Johann Bayer - Pisces.jpg",
+  "sha1": "612036852cdcb979b4eb97ffe2fbb7fb631e688f",
+  "bytes": 1138105,
+  "px": [
+   3215,
+   2416
+  ],
+  "credito": "https://www.raremaps.com/gallery/detail/30802op/pisces-stars-heightened-in-gold-bayer",
+  "win": [
+   0.06,
+   0.03,
+   0.81
+  ],
+  "aspecto": 0.7407,
+  "banda": true,
+  "foco": [
+   0.1,
+   0.03,
+   0.83,
+   0.5
+  ],
+  "que": "los dos peces y el cordon",
+  "delta": 0
+ }
+]
