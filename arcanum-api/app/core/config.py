@@ -91,12 +91,26 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    @property
+    def es_produccion(self) -> bool:
+        """Si esto es produccion de verdad, mire quien lo mire.
+
+        Hay DOS formas de estarlo y hay que aceptar las dos: `ENVIRONMENT`
+        puesto a mano, o el propio Railway diciendolo por su cuenta. Se saco a
+        una propiedad porque estaba escrito solo dentro del validador de
+        secretos, y el resto del codigo comparaba `ENVIRONMENT == "production"`
+        a pelo. Con `ENVIRONMENT` sin definir en Railway, eso daba dos verdades
+        distintas sobre la misma maquina: el validador exigia secretos de
+        produccion y el oraculo se creia en desarrollo.
+        """
+        return (
+            self.ENVIRONMENT == "production"
+            or os.getenv("RAILWAY_ENVIRONMENT_NAME", "").lower() == "production"
+        )
+
     @model_validator(mode="after")
     def reject_insecure_production_defaults(self):
-        railway_production = (
-            os.getenv("RAILWAY_ENVIRONMENT_NAME", "").lower() == "production"
-        )
-        if self.ENVIRONMENT != "production" and not railway_production:
+        if not self.es_produccion:
             return self
 
         problems: list[str] = []

@@ -39,12 +39,17 @@ from app.core.content import ContentError, load_text
 
 logger = logging.getLogger("arcanum.oracle")
 
-# Respaldo SOLO para desarrollo: permite arrancar sin el catalogo montado, y
-# deja claro en la propia respuesta que la voz real no esta cargada.
+# Respaldo SOLO para desarrollo: permite arrancar sin el catalogo montado.
+#
+# NO le cuenta al modelo donde esta corriendo. La version anterior metia
+# «[Modo desarrollo: el system prompt real no esta cargado; configura
+# ARCANUM_DATA_DIR...]» aqui dentro, o sea metadata de infraestructura en el
+# system prompt, y el modelo la leia como contexto: una lectura de un tester
+# salio hablando de «la prueba de la app». Que falte la voz se avisa por el
+# log, que es donde mira quien puede arreglarlo.
 _FALLBACK_DESARROLLO = (
-    "Eres el ORACULO de ARCANUM. [Modo desarrollo: el system prompt real no esta "
-    "cargado; configura ARCANUM_DATA_DIR para usar la voz completa.] Responde en "
-    "espanol, con sobriedad simbolica y sin prometer hechos verificables."
+    "Eres el ORACULO de ARCANUM. Responde en espanol, con sobriedad simbolica "
+    "y sin prometer hechos verificables."
 )
 
 
@@ -62,7 +67,14 @@ def get_oracle_system_prompt() -> str:
     try:
         return load_text(settings.ORACLE_PROMPT_PATH)
     except ContentError as exc:
-        if settings.ENVIRONMENT == "production":
+        # `settings.es_produccion`, no `ENVIRONMENT == "production"`: en
+        # Railway `ENVIRONMENT` puede no estar definido y entonces esto se
+        # creia en desarrollo y servia el respaldo. Ese respaldo mete
+        # «[Modo desarrollo: el system prompt real no esta cargado...]» DENTRO
+        # del system prompt, o sea metadata del entorno delante del modelo, que
+        # es justo lo que aparecio en una lectura hablando de «la prueba de la
+        # app». En produccion se falla ruidoso, que era la intencion.
+        if settings.es_produccion:
             logger.error(
                 "System prompt del oraculo no disponible: %s. Define "
                 "ORACLE_SYSTEM_PROMPT (produccion) o ARCANUM_DATA_DIR (local).",
