@@ -400,6 +400,7 @@ class _NatalViewState extends ConsumerState<_NatalView> {
                     child: Text(
                       planetGlyph[name] ?? '✶',
                       style: const TextStyle(
+                        fontFamilyFallback: kGlyphFallback,  // el glifo, no el emoji
                         fontSize: 22,
                         color: ArcanumColors.gold,
                       ),
@@ -857,6 +858,7 @@ class _SolarSummary extends StatelessWidget {
             Text(
               glyph,
               style: const TextStyle(
+                fontFamilyFallback: kGlyphFallback,  // el glifo, no el emoji
                 fontSize: 22,
                 color: ArcanumColors.goldMuted,
               ),

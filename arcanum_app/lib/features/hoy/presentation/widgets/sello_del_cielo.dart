@@ -376,7 +376,12 @@ class _Lacre extends StatelessWidget {
       alignment: Alignment.center,
       child: Text(
         planetGlyph[regente] ?? '✦',
-        style: const TextStyle(fontSize: 18, color: Color(0xFFF0D7DD)),
+        style: const TextStyle(
+          fontSize: 18,
+          color: Color(0xFFF0D7DD),
+          // El glifo, no el emoji del sistema.
+          fontFamilyFallback: kGlyphFallback,
+        ),
       ),
     );
   }
