@@ -69,6 +69,74 @@ se pueden actualizar, así que envejecen cada vez que se toca esa pantalla.
 Arreglarlo cuando alguien vuelva a `SkyTodayCard` — probablemente el `drag` fijo
 de `-900` px ya no deja el botón donde estaba.
 
+## Deuda: auditoría del 09/09 — tres clases de defecto con casos abiertos ⏳ PENDIENTE (09/09/2026)
+
+Tras el lote de 8 bugs de testers se barrieron las mismas clases de defecto por
+todo el árbol, buscando más instancias de lo ya probado. **La clase «dos
+nociones de entorno» salió limpia**; las otras tres dejan casos abiertos que NO
+entraron en el release por ser cosméticos o de diagnóstico, ninguno funcional.
+
+### Glifos pintados sin `ArcanumGlifos` — 11 sitios
+
+El respaldo `fontFamilyFallback: kGlyphFallback` solo lo llevan los
+constructores de `ArcanumText`. Un `TextStyle(...)` crudo deja que el sistema
+elija la fuente, y en varios Android eso es Noto Color Emoji.
+
+Barrido hecho partiendo del inventario real de la fuente
+(`assets/fonts/glifos_manifest.txt`, 41 glifos): se busca todo literal Dart que
+contenga uno de ellos, más los mapas que los sirven. Son 149 líneas, 82 de
+ellas declaraciones de datos.
+
+  grimorio_atmosphere.dart:478      ⛨ a 52 px
+  grimorio_screen.dart:209, 568     ✦ y ❦ a 52 px
+  grimorio_detail.dart:233, 383     ☽ + planeta del pie astral, ✧
+  hoy_lore.dart:367                 el planeta de la hoja de lore
+  indice_screen.dart:242-245        el mapa de planetas del índice
+  arcanum_card.dart:111             el ✧ del ornamento, COMPARTIDO por la app
+
+Gradiente de riesgo: `☉ ☽ ♀` son los que Android resuelve como emoji a color;
+los ornamentos `✧ ✦ ❦` es menos probable, pero sin la fuente tampoco tienen
+forma garantizada. Ninguno de estos fue reportado por un tester.
+
+### Marcado de Gutenberg que el limpiador no cubre — 13 párrafos
+
+`limpiarNotasEditoriales` exige que la nota vaya entre guiones bajos
+(`_Descript._]`). Barridos los **5.014 párrafos** del inglés, tres formas se le
+escapan y llegan crudas al lector:
+
+  GOVERNMENT AND VIRTUES.]   encabezado en caja alta con ] y SIN cursiva
+                             2 párrafos: lily-of-the-valley, polypody-of-the-oak
+  * * * * *                  separador de sección de Gutenberg
+                             10 párrafos en 5 capítulos
+  [Illustration]             marcador de lámina
+                             1 párrafo
+
+Afecta también a quien lee en español: solo 82 de los 423 capítulos tienen
+traducción y el resto cae al inglés por `textFor`.
+
+Son 13 de 5.014. Tocar la regex arriesga los 1.912 párrafos que hoy limpia
+bien, así que si se hace, con tests sobre los tres patrones antes de cambiar
+nada.
+
+### Catches que le echan la culpa a la conexión — 3 instancias y una parcial
+
+El mismo antipatrón del sellado del grimorio: un `catch` que responde «revisa
+tu conexión» sin mirar qué falló.
+
+  grimorio_screen.dart:431     incondicional; cualquier fallo al abrir
+  paywall_screen.dart:243      incondicional; cualquier fallo de precios.
+                               Es el flujo de COMPRAS
+  lector_screen.dart:185       `snapshot.hasError` -> «no hay conexión»,
+                               también con un 500 o una caché corrupta
+  grimorio_detail.dart:205     parcial: separa el fallo de descifrado y lo
+                               demás lo achaca a la red
+
+El patrón bueno ya existe en el repo y es el que hay que copiar:
+`sky_today_state.dart` distingue cuatro casos, y `grimorio_error.dart` mira el
+`DioExceptionType` en vez de adivinar. Ojo con `place_chooser.dart`, que
+distingue por `contains('socket')` sobre el texto del error: la intención es
+correcta pero el método es frágil.
+
 ## Deuda: la traducción canónica de Culpeper tiene 2 capítulos, la base 82 ⏳ PENDIENTE (09/09/2026)
 
 `scripts/library_data/culpeper-complete-herbal.es.json` —el fichero del que

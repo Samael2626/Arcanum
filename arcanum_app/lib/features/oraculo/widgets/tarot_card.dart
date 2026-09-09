@@ -1292,6 +1292,13 @@ class TarotFacePainter extends CustomPainter {
             color: color,
             height: 1.0,
             letterSpacing: spacing,
+            // El respaldo de glifos, que la rama `style: true` ya tenia por
+            // venir de `ArcanumText`. Por aqui pasan TODOS los glifos de la
+            // carta -- los 22 mayores de `_majorGlyph` son planetas y signos,
+            // y el 6 es el ♊ de Los Enamorados -- asi que sin esto los pinta
+            // la fuente del sistema y en varios Android salen como emoji a
+            // color. Un `TextPainter` no hereda el tema: hay que decirselo.
+            fontFamilyFallback: kGlyphFallback,
           );
     final tp = TextPainter(
       text: TextSpan(text: s, style: ts),
