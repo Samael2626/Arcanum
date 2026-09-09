@@ -199,6 +199,50 @@ def entrada_manifest(fila: dict, ficha: dict, alto: int) -> dict:
     return entrada
 
 
+# El signo llega del servidor en ingles (`sun_sign` de /astral/sky); los assets
+# van en espanol, que es como se nombra todo lo demas del repo.
+INGLES = {
+    "aries": "aries", "taurus": "tauro", "gemini": "geminis", "cancer": "cancer",
+    "leo": "leo", "virgo": "virgo", "libra": "libra", "scorpio": "escorpio",
+    "sagittarius": "sagitario", "capricorn": "capricornio",
+    "aquarius": "acuario", "pisces": "piscis",
+}
+
+PLANTILLA_DART = Path(__file__).parent / "zodiaco_laminas.dart.tmpl"
+DART = (ROOT / "arcanum_app" / "lib" / "features" / "hoy" / "presentation" /
+        "widgets" / "zodiaco_laminas.g.dart")
+
+
+def escribir_dart(manifest: dict) -> None:
+    """Vuelca la tabla al Dart que consume la pantalla.
+
+    Se genera y no se escribe a mano para que el codigo y el manifest no puedan
+    separarse: el delta esta medido, y un numero copiado a mano se queda viejo
+    en cuanto se retoca un recorte.
+    """
+    filas = []
+    for fila in TABLA:
+        e = manifest[fila["slug"]]
+        filas.append(
+            "  Signo.{s}: LaminaSigno(\n"
+            "    asset: 'assets/{a}',\n"
+            "    delta: {d},\n"
+            "    altoLamina: {h},\n"
+            "    banda: {b},\n"
+            "  ),".format(s=fila["slug"], a=e["asset"], d=e["velo"]["delta"],
+                          h=e["recorte"]["salida_px"][1],
+                          b="true" if fila["banda"] else "false"))
+    texto = PLANTILLA_DART.read_text("utf-8")
+    texto = texto.replace("__ENUM__", ", ".join(f["slug"] for f in TABLA))
+    texto = texto.replace("__FILAS__", "\n".join(filas))
+    texto = texto.replace(
+        "__INGLES__",
+        "\n".join("  '{0}': Signo.{1},".format(en, es)
+                  for en, es in INGLES.items()))
+    DART.write_text(texto, "utf-8")
+    print("  dart: {0}".format(DART.relative_to(ROOT)))
+
+
 def main() -> None:
     print("comprobando las planchas contra Commons...")
     fichas = descargar()
@@ -210,6 +254,7 @@ def main() -> None:
               f"324x{alto}  delta={fila['delta']}")
     MANIFEST.write_text(
         json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", "utf-8")
+    escribir_dart(manifest)
     print(f"\nmanifest: {len(manifest)} entradas")
 
 

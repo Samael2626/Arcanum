@@ -202,6 +202,8 @@ def sky_today(
         "profection": sky["profection"],
         "total_aspects": sky["total_aspects"],
         "day_ruler": us.day_ruler(current_user, now),
+        # La lamina del signo solar es fondo de la tarjeta en Hoy.
+        "sun_sign": nce.sun_sign(entity.chart_data or {}),
     }
 
 
@@ -317,6 +319,7 @@ def horoscope(
             "sect": sky["sect"],
             "profection": sky["profection"],
             "total_aspects": sky["total_aspects"],
+            "sun_sign": nce.sun_sign(entity.chart_data or {}),
         }
         # El archivo se escribe ANTES del capture y sin commit propio: el
         # `db.commit()` de `capture` persiste las dos cosas a la vez, y el

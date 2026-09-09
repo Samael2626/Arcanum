@@ -16,6 +16,8 @@ import '../../../../shared/widgets/info_dot.dart';
 import '../../hoy_lore.dart';
 import '../../sky_today_state.dart';
 import 'today_card.dart';
+import 'lamina_del_signo.dart';
+import 'zodiaco_laminas.g.dart';
 import '../../../../shared/widgets/ai_output.dart';
 import '../../../../core/auth/auth_controller.dart';
 import '../../../../core/privacy/ai_consent_service.dart';
@@ -182,8 +184,10 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
         final today = d['today'] as Map<String, dynamic>?;
         final chapter = d['chapter'] as Map<String, dynamic>?;
         final aspecto = today ?? chapter;
+        final signo = signoDesdeIngles[d['sun_sign'] as String? ?? ''];
 
         return _Shell(
+          signo: signo,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -192,6 +196,7 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
                 chapter: chapter,
                 overview: _overview,
                 regente: d['day_ruler'] as String?,
+                signo: signo == null ? null : d['sun_sign'] as String?,
                 abierto: _lectura != null,
                 cargando: _abriendo,
                 onAbrir: _romperLacre,
@@ -317,12 +322,21 @@ class _Cargando extends StatelessWidget {
 
 class _Shell extends StatelessWidget {
   final Widget child;
-  const _Shell({required this.child});
+
+  /// Signo solar de quien mira, para poner su lamina de fondo. Llega null
+  /// mientras el cielo carga o si la carta no trae Sol: entonces la tarjeta es
+  /// la de siempre, sin grabado, y no se rompe nada.
+  final Signo? signo;
+
+  const _Shell({required this.child, this.signo});
 
   @override
   Widget build(BuildContext context) => TodayCard(
     mood: ArcanumMood.neutral,
     intensity: 0.6,
+    fondo: signo == null
+        ? null
+        : LaminaDelSigno(signo: signo!, radio: BorderRadius.circular(18)),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

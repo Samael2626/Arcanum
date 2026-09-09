@@ -297,6 +297,20 @@ def sect_of(chart_data: dict) -> str | None:
     return None
 
 
+def sun_sign(chart_data: dict) -> str | None:
+    """El signo solar de la carta, o None si la carta no lo trae.
+
+    La pantalla de Hoy lo necesita para elegir la lamina del signo, y pedir la
+    carta entera solo para eso seria una segunda llamada en la pantalla mas
+    caliente de la app. Sale de donde ya esta.
+    """
+    for punto in chart_data.get("planets") or []:
+        if punto.get("name") == "sun":
+            signo = punto.get("sign")
+            return signo if signo in SIGNS else None
+    return None
+
+
 def natal_targets(chart_data: dict) -> list[dict]:
     """Puntos natales que reciben transitos: planetas mas Ascendente y MC.
 

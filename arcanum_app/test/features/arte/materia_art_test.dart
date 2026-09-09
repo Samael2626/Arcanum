@@ -262,7 +262,13 @@ void main() {
     test('all 82 historical plates decode as SVG', () async {
       final manifest = EngravingManifest.instance;
       await manifest.ensureLoaded();
-      final plates = manifest.all.where((entry) => entry.isFinal).toList();
+      // El manifest ya no es solo de Materia: desde el zodiaco tambien vive
+      // ahi la procedencia de las laminas de Bayer, que son JPG y no se
+      // dibujan con SvgPicture. Este test es sobre las planchas vectoriales,
+      // asi que filtra por lo que de verdad comprueba.
+      final plates = manifest.all
+          .where((entry) => entry.isFinal && entry.asset!.endsWith('.svg'))
+          .toList();
       expect(plates, hasLength(82));
       expect(
         plates.map((entry) => entry.assetPath).toSet(),

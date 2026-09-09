@@ -23,6 +23,7 @@
 library;
 
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -46,6 +47,7 @@ class SelloDelCielo extends StatefulWidget {
     required this.onAbrir,
     this.abierto = false,
     this.cargando = false,
+    this.signo,
   });
 
   /// El transito rapido del dia y el lento que sostiene el capitulo.
@@ -53,6 +55,13 @@ class SelloDelCielo extends StatefulWidget {
   final Map<String, dynamic>? today;
   final Map<String, dynamic>? chapter;
   final Future<Map<String, dynamic>>? overview;
+
+  /// Signo solar de quien mira, en ingles, tal como lo manda el servidor.
+  /// Cuando llega, el aro esta cayendo sobre la lamina del signo y sube de
+  /// peso: sobre el pardo de una melena, a peso normal el aro se lee como una
+  /// filigrana y no como un instrumento. Ademas se le pone su glifo al centro,
+  /// que es lo que dice DE QUIEN es el cielo que se esta mirando.
+  final String? signo;
 
   /// Planeta regente del dia, para el lacre. Cambia solo cada jornada.
   final String? regente;
@@ -133,6 +142,8 @@ class _SelloDelCieloState extends State<SelloDelCielo>
                           anguloNominal: angulo,
                           separacion: separacion,
                           progreso: t,
+                          sobreLamina: widget.signo != null,
+                          glifo: signGlyph[widget.signo ?? ''],
                         ),
                       ),
                       // El lacre se encoge y gira al romperse. Sale ANTES que
@@ -396,26 +407,61 @@ class _PintorRueda extends CustomPainter {
     required this.anguloNominal,
     required this.separacion,
     required this.progreso,
+    this.sobreLamina = false,
+    this.glifo,
   });
 
   final int anguloNominal;
   final double? separacion;
   final double progreso;
 
+  /// Con la lamina detras, el aro sube de peso. Medido como contraste local de
+  /// cada trazo contra su entorno, el aro exterior pasa de 1,83 a 5,20 y el
+  /// triangulo de 5,49 a 8,32. Sin esto se pierde sobre el pardo del grabado.
+  final bool sobreLamina;
+
+  /// Glifo del signo solar, al centro y sobre un disco oscuro.
+  final String? glifo;
+
   @override
   void paint(Canvas lienzo, Size tam) {
     final centro = Offset(tam.width / 2, tam.height / 2);
     final radio = math.min(tam.width, tam.height) / 2 - 16;
 
+    // La vineta: un disco oscuro CORTO por detras del aro, que se apaga antes
+    // de llegar a su borde. No es un velo -- no tine la lamina -- sino el
+    // blanco que un grabador abre alrededor del trazo para que se lea. Va
+    // pintada aqui y no como widget: un `DecoratedBox` con forma de circulo
+    // seguia dejando su caja visible sobre el grabado.
+    if (sobreLamina) {
+      final r = math.min(tam.width, tam.height) / 2;
+      lienzo.drawCircle(
+        centro,
+        r,
+        Paint()
+          ..shader = ui.Gradient.radial(centro, r, [
+            const Color(0xFF0A0A0F).withValues(alpha: .42),
+            const Color(0xFF0A0A0F).withValues(alpha: .34),
+            const Color(0x000A0A0F),
+          ], [0.0, 0.5, 0.72]),
+      );
+    }
+
     final rueda = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1
-      ..color = ArcanumColors.gold.withValues(alpha: .16);
+      ..strokeWidth = sobreLamina ? 1.2 : 1
+      ..color = ArcanumColors.gold.withValues(
+        alpha: sobreLamina ? .78 : .16,
+      );
     lienzo.drawCircle(centro, radio, rueda);
     lienzo.drawCircle(
       centro,
       radio - 9,
-      rueda..color = ArcanumColors.gold.withValues(alpha: .07),
+      rueda
+        ..strokeWidth = .8
+        ..color = ArcanumColors.gold.withValues(
+          alpha: sobreLamina ? .45 : .07,
+        ),
     );
 
     final f = figuraDe(
@@ -458,25 +504,97 @@ class _PintorRueda extends CustomPainter {
     }
     if (f.cerrada) camino.close();
 
+    // Sobre la lamina, la figura va con su propia sombra POR DEBAJO: es lo
+    // mismo que hace un grabador al abrir un blanco alrededor del trazo. Sin
+    // esto el oro sobre el pardo de una melena desaparece.
+    if (sobreLamina) {
+      lienzo.drawPath(
+        camino,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 4.4
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round
+          ..color = const Color(0xFF0A0A0F).withValues(alpha: .75),
+      );
+    }
+
     final trazo = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.3
+      ..strokeWidth = sobreLamina ? 1.9 : 1.3
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
-      ..color = ArcanumColors.gold.withValues(alpha: .55 + .30 * progreso);
+      ..color = ArcanumColors.gold.withValues(
+        alpha: sobreLamina ? 1 : .55 + .30 * progreso,
+      );
     lienzo.drawPath(camino, trazo);
 
     // Los dos cuerpos, ya unidos por el puente desde el principio. Se realzan
     // al abrir, pero no nacen apagados: el aspecto existe antes de leerlo.
     final astro = Paint()
       ..color = ArcanumColors.gold.withValues(alpha: .70 + .30 * progreso);
-    lienzo.drawCircle(Offset(f.transito.x, f.transito.y), 4.5, astro);
-    lienzo.drawCircle(Offset(f.natal.x, f.natal.y), 4.5, astro);
+    final r = sobreLamina ? 5.2 : 4.5;
+    for (final cuerpo in [
+      Offset(f.transito.x, f.transito.y),
+      Offset(f.natal.x, f.natal.y),
+    ]) {
+      if (sobreLamina) {
+        lienzo.drawCircle(
+          cuerpo,
+          r,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.6
+            ..color = const Color(0xFF0A0A0F).withValues(alpha: .7),
+        );
+      }
+      lienzo.drawCircle(cuerpo, r, astro);
+    }
+
+    // El glifo del signo al centro, sobre un disco oscuro: sin el, el aro dice
+    // que aspecto aprieta pero no de quien es el cielo.
+    if (sobreLamina && glifo != null) {
+      final rc = tam.width * 0.088;
+      lienzo.drawCircle(
+        centro,
+        rc,
+        Paint()..color = const Color(0xFF0A0A0F).withValues(alpha: .82),
+      );
+      lienzo.drawCircle(
+        centro,
+        rc,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..color = ArcanumColors.gold.withValues(alpha: .55),
+      );
+      final texto = TextPainter(
+        text: TextSpan(
+          text: glifo,
+          style: TextStyle(
+            color: ArcanumColors.goldLight,
+            fontSize: tam.width * 0.119,
+            // Familia PRINCIPAL, no respaldo: un TextPainter no hereda el
+            // tema, y sin esto un Android que resuelva los signos a emoji de
+            // color gana antes de que el respaldo entre.
+            fontFamily: 'ArcanumGlifos',
+            fontFamilyFallback: const ['Crimson Pro'],
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      texto.paint(
+        lienzo,
+        centro - Offset(texto.width / 2, texto.height / 2),
+      );
+    }
   }
 
   @override
   bool shouldRepaint(_PintorRueda viejo) =>
       viejo.progreso != progreso ||
       viejo.anguloNominal != anguloNominal ||
-      viejo.separacion != separacion;
+      viejo.separacion != separacion ||
+      viejo.sobreLamina != sobreLamina ||
+      viejo.glifo != glifo;
 }
