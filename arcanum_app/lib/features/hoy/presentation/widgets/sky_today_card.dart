@@ -273,18 +273,34 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
                           // pantalla y el de la tarjeta escondida --, y en las
                           // busquedas del arbol aparece duplicado. Lo cazo un
                           // test de Hoy que ya existia.
-                          Transform.translate(
-                            offset: const Offset(0, -10000),
-                            child: ExcludeSemantics(
-                              child: IgnorePointer(
-                                child: RepaintBoundary(
-                                  key: _tarjeta,
-                                  child: TarjetaCompartir(
-                                    aspecto: aspecto,
-                                    profeccion:
-                                        d['profection']
-                                            as Map<String, dynamic>?,
-                                    texto: texto,
+                          // Y con alto CERO, que es lo que faltaba: `Transform`
+                          // mueve el PINTADO, no el layout. La tarjeta seguia
+                          // ocupando sus 450 px reales dentro de la columna, y
+                          // eso era el pegote de blanco al final de la tarjeta.
+                          // El `OverflowBox` le devuelve el alto que necesita
+                          // para medirse y pintarse entera -- sin el saldria
+                          // recortada a 0 y la captura vendria vacia --,
+                          // mientras la caja de fuera sigue midiendo 0.
+                          SizedBox(
+                            height: 0,
+                            child: OverflowBox(
+                              minHeight: 0,
+                              maxHeight: double.infinity,
+                              alignment: Alignment.topCenter,
+                              child: Transform.translate(
+                                offset: const Offset(0, -10000),
+                                child: ExcludeSemantics(
+                                  child: IgnorePointer(
+                                    child: RepaintBoundary(
+                                      key: _tarjeta,
+                                      child: TarjetaCompartir(
+                                        aspecto: aspecto,
+                                        profeccion:
+                                            d['profection']
+                                                as Map<String, dynamic>?,
+                                        texto: texto,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
