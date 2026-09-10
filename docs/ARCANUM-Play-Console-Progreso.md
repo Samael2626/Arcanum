@@ -1,6 +1,6 @@
 ---
 title: "ARCANUM — Progreso Play Console"
-date: 2026-08-30
+date: 2026-09-10
 tags: [arcanum, release, play-console, checklist]
 cuenta: "Personal — Samael26 · ID 8910253673336308380"
 paquete: "com.arcanum.magick"
@@ -140,6 +140,63 @@ Con `ADS_ENABLED=true` haria falta ademas `ADMOB_REWARDED_ANDROID` y
 **Comprobacion que no se puede saltar:** instalar el binario y abrirlo. Un
 `flutter analyze` verde, unos tests verdes y una firma correcta **no detectan
 esto**, porque el fallo solo existe en modo release y solo al arrancar.
+
+## RELEASE 10/09/2026 — el backend a produccion; la app NO
+
+**Mergeado `integrate/legal-y-tienda` a `main` (`da488dd`) y desplegado.** 42
+commits desde el 3 de septiembre.
+
+⚠️ **Lo que esta en produccion hoy es el BACKEND, no la app.** Conviene no
+confundirlo:
+
+| | estado |
+|---|---|
+| Backend (Railway) | **en produccion desde el 10/09/2026**, commit `da488dd` |
+| App Android en Play | **sin subir**. Lo ultimo visto en aparato es 1.0.3+10 (04/09) |
+| `version:` del pubspec | `1.0.5+13` — el numero esta puesto en el codigo |
+| AAB compilado en disco | del 05/09 a las 12:58, **anterior** al commit del bump
+  (`f798680`, 05/09 15:51), asi que ese binario no es 1.0.5+13 |
+
+**No existe ninguna build con este trabajo dentro.** Despues de `f798680` han
+entrado **11 commits** que tocan `arcanum_app/lib` o `assets`: toda la plantilla
+zodiacal y todos los arreglos del lote de testers. Para llevar 1.0.5+13 a Play
+hay que compilar de nuevo desde `da488dd`.
+
+### Que trajo el merge
+
+- **Horoscopo completo**: pantalla propia, boton flotante, archivo de lecturas
+  en su tabla, agenda del cielo, compartir como tarjeta, racionado por plan. En
+  backend: profeccion anual, ingresos por casa y peso de transitos.
+- **Plantilla zodiacal de 12 signos**: la lamina del signo solar de fondo de la
+  tarjeta de Hoy, desde la Uranometria de Bayer (1603). Licencia verificada por
+  sha1 contra Commons, once con PD-old-70 y Tauro con PD-old-100 sobre PD-Art;
+  las fichas quedan en `docs/licencias-zodiaco/`. El velo se midio signo a
+  signo hasta pasar AA: minimo 4,67. Piscis va en banda y no a sangre, y el
+  manifest explica por que.
+- **RevenueCat 8.2.1 -> 10.11.0**, porque Play rechazaba la build 9 por la
+  Biblioteca de Facturacion 7.1.1.
+- **Lote de 8 bugs de testers**: siete arreglados, uno documentado como no
+  reproducido (el ℞ de Cielos).
+
+### Verificado en produccion el 10/09
+
+- `/health` responde `{"status":"healthy"}`.
+- El OpenAPI pasa de 47 a **49 rutas**, con `/astral/horoscope/history` y
+  `/astral/agenda` vivas: el codigo nuevo esta sirviendo.
+- **Migracion 012 aplicada.** No hizo falta leer logs: el Procfile es
+  `alembic upgrade head && uvicorn ...`, con `&&`. Si la migracion fallara,
+  uvicorn no arrancaria y `/health` no responderia.
+- **Oraculo probado por Samuel en el aparato: responde.** Es la unica via que
+  habia -- los dos endpoints exigen sesion, y el 503 por
+  `ORACLE_SYSTEM_PROMPT` ausente solo puede salir en una llamada ya
+  autenticada, asi que un 401 desde fuera no prueba nada.
+
+### Lo siguiente, para llevar la app a Play
+
+1. Compilar el AAB desde `da488dd` (ver «COMO SE COMPILA EL RELEASE»).
+2. Comprobar en aparato la plantilla zodiacal y los glifos del Tarot, que son
+   lo unico que ningun tester ha visto todavia funcionando.
+3. Subir a un track y probar el paywall con productos servidos de verdad.
 
 ## PENDIENTE DE PRODUCCION: los avisos del Kotlin Gradle Plugin
 
