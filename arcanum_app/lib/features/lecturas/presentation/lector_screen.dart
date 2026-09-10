@@ -9,6 +9,7 @@ import '../../../core/theme/arcanum_theme.dart';
 import '../data/library_repository.dart';
 import '../data/reader_settings.dart';
 import '../data/reading_repository.dart';
+import '../domain/gutenberg_markup.dart';
 import '../domain/library_models.dart';
 import '../domain/pagination.dart';
 import '../domain/reading_position.dart';
@@ -479,8 +480,20 @@ class _PageBody extends StatelessWidget {
               label: 'Pasaje. Mantén pulsado para guardarlo o consultarlo.',
               child: GestureDetector(
                 onLongPress: () => onPassageActions(fragment),
-                child: Text(
-                  fragment.text,
+                // Gutenberg marca la cursiva del impreso con guiones bajos.
+                // Se pinta como cursiva de verdad en vez de enseñar `_asi_`.
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      for (final run in runsDeMarcado(fragment.text))
+                        TextSpan(
+                          text: run.text,
+                          style: run.italic
+                              ? const TextStyle(fontStyle: FontStyle.italic)
+                              : null,
+                        ),
+                    ],
+                  ),
                   textAlign: TextAlign.justify,
                   style: style,
                 ),

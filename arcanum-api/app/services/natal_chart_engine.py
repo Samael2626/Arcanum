@@ -116,6 +116,16 @@ def _house_of(lon: float, cusps: list[float]) -> int:
     return 12
 
 
+def house_of(lon: float, cusps: list[float]) -> int:
+    """En que casa cae una longitud, dadas las doce cuspides.
+
+    Publica a proposito: `house_ingress` necesita ubicar el cielo de HOY en las
+    casas de una carta de hace treinta anios, y hacerlo llamando a un `_privado`
+    de otro modulo seria decir que ese uso no estaba previsto. Lo esta.
+    """
+    return _house_of(lon, cusps)
+
+
 def _angular_diff(a: float, b: float) -> float:
     d = abs(a - b) % 360
     return min(d, 360 - d)
@@ -287,6 +297,20 @@ def sect_of(chart_data: dict) -> str | None:
     return None
 
 
+def sun_sign(chart_data: dict) -> str | None:
+    """El signo solar de la carta, o None si la carta no lo trae.
+
+    La pantalla de Hoy lo necesita para elegir la lamina del signo, y pedir la
+    carta entera solo para eso seria una segunda llamada en la pantalla mas
+    caliente de la app. Sale de donde ya esta.
+    """
+    for punto in chart_data.get("planets") or []:
+        if punto.get("name") == "sun":
+            signo = punto.get("sign")
+            return signo if signo in SIGNS else None
+    return None
+
+
 def natal_targets(chart_data: dict) -> list[dict]:
     """Puntos natales que reciben transitos: planetas mas Ascendente y MC.
 
@@ -341,6 +365,19 @@ def compute_transits(natal_planets: list[dict], dt_utc: datetime,
                         tdata["longitude"], nlon, angle, tdata.get("speed") or 0.0, dt)
                     aspects.append({
                         "transit": tname, "natal": nname,
+                        # El SIGNO del punto natal. Sale de `nlon` y no cuesta
+                        # nada, pero es lo unico de esta linea que es de ESTA
+                        # carta y de ninguna otra: "tu Medio Cielo" lo tiene
+                        # todo el mundo, "tu Medio Cielo en Tauro" no. Sin el,
+                        # el texto solo puede nombrar el punto y suena prestado.
+                        "natal_sign": SIGNS[int(nlon // 30) % 12],
+                        "natal_sign_es": SIGNS_ES[int(nlon // 30) % 12],
+                        # Y el signo por donde va HOY el que transita, que es
+                        # lo que decide su dignidad esencial. Venus en Libra
+                        # y Venus en Aries hacen la misma figura y no obran
+                        # igual; sin este campo el texto los trata igual.
+                        "transit_sign": SIGNS[int(tdata["longitude"] // 30) % 12],
+                        "transit_sign_es": SIGNS_ES[int(tdata["longitude"] // 30) % 12],
                         "aspect": aname, "angle": angle, "orb": round(delta, 2),
                         # La separacion REAL, no la nominal del aspecto. `orb`
                         # es `abs(sep - angle)` y pierde el signo, asi que con

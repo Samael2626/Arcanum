@@ -18,6 +18,7 @@ from app.adapters.repositories import (
     TarotReadingRepository,
     TraditionRepository,
     UserRepository,
+    HoroscopeReadingRepository,
 )
 from app.application.services.auth_service import AuthService
 from app.application.services.tarot_service import TarotService
@@ -50,6 +51,10 @@ def get_materia_repo(db: Session = Depends(get_db)) -> MateriaItemRepository:
 
 def get_natal_chart_repo(db: Session = Depends(get_db)) -> NatalChartRepository:
     return NatalChartRepository(db)
+
+
+def get_horoscope_repo(db: Session = Depends(get_db)) -> HoroscopeReadingRepository:
+    return HoroscopeReadingRepository(db)
 
 
 def get_library_repo(db: Session = Depends(get_db)) -> LibraryWorkRepository:

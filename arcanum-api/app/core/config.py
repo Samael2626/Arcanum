@@ -68,6 +68,13 @@ class Settings(BaseSettings):
     # haber estrenado dia UTC. Con 1 ese segundo horoscopo le cobraria creditos.
     HOROSCOPE_DAILY: int = 2
 
+    # Cada cuantos dias puede GENERARSE una lectura interpretada. Premium a
+    # diario; el plan gratuito, cada dos dias -- el segundo dia recibe la
+    # anterior, rotulada como lo que es. El sello y la agenda NO entran aqui:
+    # son calculo, no cuestan y siguen siendo diarios para todo el mundo.
+    HOROSCOPE_FREE_EVERY_DAYS: int = 2
+    HOROSCOPE_PREMIUM_EVERY_DAYS: int = 1
+
 
     # Geocoding (Nominatim + timezonefinder) — resuelve lugar de nacimiento
     # real en el onboarding, reemplaza el default hardcodeado a Bogotá.
@@ -84,12 +91,26 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    @property
+    def es_produccion(self) -> bool:
+        """Si esto es produccion de verdad, mire quien lo mire.
+
+        Hay DOS formas de estarlo y hay que aceptar las dos: `ENVIRONMENT`
+        puesto a mano, o el propio Railway diciendolo por su cuenta. Se saco a
+        una propiedad porque estaba escrito solo dentro del validador de
+        secretos, y el resto del codigo comparaba `ENVIRONMENT == "production"`
+        a pelo. Con `ENVIRONMENT` sin definir en Railway, eso daba dos verdades
+        distintas sobre la misma maquina: el validador exigia secretos de
+        produccion y el oraculo se creia en desarrollo.
+        """
+        return (
+            self.ENVIRONMENT == "production"
+            or os.getenv("RAILWAY_ENVIRONMENT_NAME", "").lower() == "production"
+        )
+
     @model_validator(mode="after")
     def reject_insecure_production_defaults(self):
-        railway_production = (
-            os.getenv("RAILWAY_ENVIRONMENT_NAME", "").lower() == "production"
-        )
-        if self.ENVIRONMENT != "production" and not railway_production:
+        if not self.es_produccion:
             return self
 
         problems: list[str] = []

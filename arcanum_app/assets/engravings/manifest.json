@@ -373,7 +373,7 @@
   "asset": "engravings/piedras/cornalina.svg",
   "source": "https://www.c82.net/mineralogy/b515",
   "work": "James Sowerby, Red Calcedony or Carnelian (1802-1817)",
- "license": "public-domain-source / CC-BY-SA-restoration",
+  "license": "public-domain-source / CC-BY-SA-restoration",
   "status": "final"
  },
  "oro": {
@@ -422,7 +422,7 @@
   "asset": "engravings/metales/cobre.svg",
   "source": "https://www.c82.net/mineralogy/b376",
   "work": "James Sowerby, Native Copper (1802-1817)",
- "license": "public-domain-source / CC-BY-SA-restoration",
+  "license": "public-domain-source / CC-BY-SA-restoration",
   "status": "final"
  },
  "copal": {
@@ -599,5 +599,559 @@
   "work": "Kohler's Medizinal-Pflanzen (1887), Pistacia lentiscus",
   "license": "public-domain",
   "status": "final"
+ },
+ "capricornio": {
+  "asset": "engravings/zodiaco/capricornio.jpg",
+  "work": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Capricorn.jpg",
+  "image_file": "File:Johann Bayer - Capricorn.jpg",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-expired",
+   "PD-US-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Johann Bayer (1572-1625)",
+  "date": "1603",
+  "scan_credit": "https://www.raremaps.com/gallery/detail/30808op/capricorn-stars-heightened-in-gold-bayer",
+  "source_px": [
+   3253,
+   2496
+  ],
+  "sha1_source": "5d8eea0a5c20b73bee1b36b0891f2ba2dd608d45",
+  "recorte": {
+   "x0": 0.504,
+   "y0": 0.048,
+   "ancho": 0.4577,
+   "salida_px": [
+    324,
+    479
+   ]
+  },
+  "foco": {
+   "que": "cabeza y cuernos",
+   "acaba_px": 278
+  },
+  "velo": {
+   "delta": 64,
+   "franja_limpia_px": 278,
+   "topes_px": [
+    278,
+    316,
+    368,
+    404
+   ]
+  },
+  "composicion": "fondo a sangre (plantilla bayerG)",
+  "status": "final"
+ },
+ "aries": {
+  "asset": "engravings/zodiaco/aries.jpg",
+  "work": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Aries.jpg",
+  "image_file": "File:Johann Bayer - Aries.jpg",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-expired",
+   "PD-US-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Johann Bayer (1572-1625)",
+  "date": "1603",
+  "scan_credit": "https://www.raremaps.com/gallery/detail/30823op/aries-stars-heightened-in-gold-bayer",
+  "source_px": [
+   3204,
+   2434
+  ],
+  "sha1_source": "adf14401f7da7f54ebd8994c568410b1112fd00d",
+  "recorte": {
+   "x0": 0.492,
+   "y0": 0.04,
+   "ancho": 0.44,
+   "salida_px": [
+    324,
+    479
+   ]
+  },
+  "foco": {
+   "que": "cabeza del carnero",
+   "acaba_px": 168
+  },
+  "velo": {
+   "delta": 0,
+   "franja_limpia_px": 214,
+   "topes_px": [
+    214,
+    252,
+    304,
+    340
+   ]
+  },
+  "composicion": "fondo a sangre (plantilla bayerG)",
+  "status": "final"
+ },
+ "tauro": {
+  "asset": "engravings/zodiaco/tauro.jpg",
+  "work": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Taurus_-_Johann_Bayer.jpg",
+  "image_file": "File:Taurus - Johann Bayer.jpg",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-100",
+   "PD-Art",
+   "PD-US-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Johann Bayer (1572-1625)",
+  "date": "1603",
+  "scan_credit": "https://www.raremaps.com/gallery/detail/68476/taurus-stars-heightened-in-gold-bayer",
+  "source_px": [
+   10265,
+   7752
+  ],
+  "sha1_source": "9bb42401465d4b20c21f3ba4ae9560db78b73ba5",
+  "recorte": {
+   "x0": 0.442,
+   "y0": 0.157,
+   "ancho": 0.38,
+   "salida_px": [
+    324,
+    479
+   ]
+  },
+  "foco": {
+   "que": "cabeza del toro",
+   "acaba_px": 298
+  },
+  "velo": {
+   "delta": 66,
+   "franja_limpia_px": 280,
+   "topes_px": [
+    280,
+    318,
+    370,
+    406
+   ],
+   "nota": "El foco pedia un delta de 84 px pero el contraste solo admite 66: faltan 18. Manda la legibilidad; la parte baja de la figura se funde con el bloque de datos."
+  },
+  "composicion": "fondo a sangre (plantilla bayerG)",
+  "status": "final"
+ },
+ "geminis": {
+  "asset": "engravings/zodiaco/geminis.jpg",
+  "work": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Gemini.jpg",
+  "image_file": "File:Johann Bayer - Gemini.jpg",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-expired",
+   "PD-US-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Johann Bayer (1572-1625)",
+  "date": "1603",
+  "scan_credit": "https://www.raremaps.com/gallery/detail/30847op/gemini-stars-heightened-in-gold-bayer",
+  "source_px": [
+   3217,
+   2418
+  ],
+  "sha1_source": "a7baab7f057567ce8ab73fcae0c6a5bd2dd70290",
+  "recorte": {
+   "x0": 0.325,
+   "y0": 0.045,
+   "ancho": 0.455,
+   "salida_px": [
+    324,
+    479
+   ]
+  },
+  "foco": {
+   "que": "los dos gemelos enteros",
+   "acaba_px": 297
+  },
+  "velo": {
+   "delta": 43,
+   "franja_limpia_px": 257,
+   "topes_px": [
+    257,
+    295,
+    347,
+    383
+   ],
+   "nota": "El foco pedia un delta de 83 px pero el contraste solo admite 43: faltan 40. Manda la legibilidad; la parte baja de la figura se funde con el bloque de datos."
+  },
+  "composicion": "fondo a sangre (plantilla bayerG)",
+  "status": "final"
+ },
+ "cancer": {
+  "asset": "engravings/zodiaco/cancer.jpg",
+  "work": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Cancer.jpg",
+  "image_file": "File:Johann Bayer - Cancer.jpg",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-expired",
+   "PD-US-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Johann Bayer (1572-1625)",
+  "date": "1603",
+  "scan_credit": "Raremaps.com",
+  "source_px": [
+   3218,
+   2422
+  ],
+  "sha1_source": "4e682cc0b2c4982308f0ce1952da28c604d42f82",
+  "recorte": {
+   "x0": 0.221,
+   "y0": 0.076,
+   "ancho": 0.44,
+   "salida_px": [
+    324,
+    479
+   ]
+  },
+  "foco": {
+   "que": "caparazon y pinzas",
+   "acaba_px": 346
+  },
+  "velo": {
+   "delta": 55,
+   "franja_limpia_px": 269,
+   "topes_px": [
+    269,
+    307,
+    359,
+    395
+   ],
+   "nota": "El foco pedia un delta de 132 px pero el contraste solo admite 55: faltan 77. Manda la legibilidad; la parte baja de la figura se funde con el bloque de datos."
+  },
+  "composicion": "fondo a sangre (plantilla bayerG)",
+  "status": "final"
+ },
+ "leo": {
+  "asset": "engravings/zodiaco/leo.jpg",
+  "work": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Leo.jpg",
+  "image_file": "File:Johann Bayer - Leo.jpg",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-expired",
+   "PD-US-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Johann Bayer (1572-1625)",
+  "date": "1603",
+  "scan_credit": "https://www.raremaps.com/gallery/detail/30932op/leo-stars-heightened-in-gold-bayer",
+  "source_px": [
+   3169,
+   2456
+  ],
+  "sha1_source": "dc79e8fce1dc49bbb3d6d373c2cbfcb512d18e52",
+  "recorte": {
+   "x0": 0.437,
+   "y0": 0.04,
+   "ancho": 0.46,
+   "salida_px": [
+    324,
+    479
+   ]
+  },
+  "foco": {
+   "que": "cabeza del leon",
+   "acaba_px": 197
+  },
+  "velo": {
+   "delta": 0,
+   "franja_limpia_px": 214,
+   "topes_px": [
+    214,
+    252,
+    304,
+    340
+   ]
+  },
+  "composicion": "fondo a sangre (plantilla bayerG)",
+  "status": "final"
+ },
+ "virgo": {
+  "asset": "engravings/zodiaco/virgo.jpg",
+  "work": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Virgo.jpg",
+  "image_file": "File:Johann Bayer - Virgo.jpg",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-expired",
+   "PD-US-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Johann Bayer (1572-1625)",
+  "date": "1603",
+  "scan_credit": "Raremaps.com",
+  "source_px": [
+   2379,
+   3201
+  ],
+  "sha1_source": "f53c986596f8dab25e50e90a925695231058da85",
+  "recorte": {
+   "x0": 0.035,
+   "y0": 0.04,
+   "ancho": 0.7,
+   "salida_px": [
+    324,
+    479
+   ]
+  },
+  "foco": {
+   "que": "cabeza y alas",
+   "acaba_px": 193
+  },
+  "velo": {
+   "delta": 0,
+   "franja_limpia_px": 214,
+   "topes_px": [
+    214,
+    252,
+    304,
+    340
+   ]
+  },
+  "composicion": "fondo a sangre (plantilla bayerG)",
+  "status": "final"
+ },
+ "libra": {
+  "asset": "engravings/zodiaco/libra.jpg",
+  "work": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Libra.jpg",
+  "image_file": "File:Johann Bayer - Libra.jpg",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-expired",
+   "PD-US-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Johann Bayer (1572-1625)",
+  "date": "1603",
+  "scan_credit": "https://www.raremaps.com/gallery/detail/30991op/libra-stars-heightened-in-gold-bayer",
+  "source_px": [
+   3222,
+   2449
+  ],
+  "sha1_source": "17213edc8b629fa5e26fc558696205faf20aa3ec",
+  "recorte": {
+   "x0": 0.271,
+   "y0": 0.084,
+   "ancho": 0.44,
+   "salida_px": [
+    324,
+    479
+   ]
+  },
+  "foco": {
+   "que": "fiel y los dos platos",
+   "acaba_px": 289
+  },
+  "velo": {
+   "delta": 75,
+   "franja_limpia_px": 289,
+   "topes_px": [
+    289,
+    327,
+    379,
+    415
+   ]
+  },
+  "composicion": "fondo a sangre (plantilla bayerG)",
+  "status": "final"
+ },
+ "escorpio": {
+  "asset": "engravings/zodiaco/escorpio.jpg",
+  "work": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Scorpio.jpg",
+  "image_file": "File:Johann Bayer - Scorpio.jpg",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-expired",
+   "PD-US-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Johann Bayer (1572-1625)",
+  "date": "1603",
+  "scan_credit": "https://www.raremaps.com/gallery/detail/30961op/scorpio-stars-heightened-in-gold-bayer",
+  "source_px": [
+   3191,
+   2500
+  ],
+  "sha1_source": "481dfd08bf551ffc77c1c76ec5923cbcc48d9ffb",
+  "recorte": {
+   "x0": 0.461,
+   "y0": 0.04,
+   "ancho": 0.44,
+   "salida_px": [
+    324,
+    479
+   ]
+  },
+  "foco": {
+   "que": "cuerpo y pinzas",
+   "acaba_px": 496
+  },
+  "velo": {
+   "delta": 71,
+   "franja_limpia_px": 285,
+   "topes_px": [
+    285,
+    323,
+    375,
+    411
+   ],
+   "nota": "El foco pedia un delta de 282 px pero el contraste solo admite 71: faltan 211. Manda la legibilidad; la parte baja de la figura se funde con el bloque de datos."
+  },
+  "composicion": "fondo a sangre (plantilla bayerG)",
+  "status": "final"
+ },
+ "sagitario": {
+  "asset": "engravings/zodiaco/sagitario.jpg",
+  "work": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Sagittarius.jpg",
+  "image_file": "File:Johann Bayer - Sagittarius.jpg",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-expired",
+   "PD-US-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Johann Bayer (1572-1625)",
+  "date": "1603",
+  "scan_credit": "https://www.raremaps.com/gallery/detail/31011op/sagittarius-stars-heightened-in-gold-bayer",
+  "source_px": [
+   3217,
+   2489
+  ],
+  "sha1_source": "96edffe1e62771ea9f5ab19d4bdd720f668b0c56",
+  "recorte": {
+   "x0": 0.374,
+   "y0": 0.04,
+   "ancho": 0.471,
+   "salida_px": [
+    324,
+    479
+   ]
+  },
+  "foco": {
+   "que": "cabeza y arco",
+   "acaba_px": 245
+  },
+  "velo": {
+   "delta": 31,
+   "franja_limpia_px": 245,
+   "topes_px": [
+    245,
+    283,
+    335,
+    371
+   ]
+  },
+  "composicion": "fondo a sangre (plantilla bayerG)",
+  "status": "final"
+ },
+ "acuario": {
+  "asset": "engravings/zodiaco/acuario.jpg",
+  "work": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Aquarius.jpg",
+  "image_file": "File:Johann Bayer - Aquarius.jpg",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-expired",
+   "PD-US-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Johann Bayer (1572-1625)",
+  "date": "1603",
+  "scan_credit": "https://www.raremaps.com/gallery/detail/30846op/aquarius-stars-heightened-in-gold-bayer",
+  "source_px": [
+   3222,
+   2419
+  ],
+  "sha1_source": "8130cb10466c7fc38f48656a8b2224220156bc35",
+  "recorte": {
+   "x0": 0.364,
+   "y0": 0.04,
+   "ancho": 0.42,
+   "salida_px": [
+    324,
+    479
+   ]
+  },
+  "foco": {
+   "que": "cabeza del aguador",
+   "acaba_px": 139
+  },
+  "velo": {
+   "delta": 0,
+   "franja_limpia_px": 214,
+   "topes_px": [
+    214,
+    252,
+    304,
+    340
+   ]
+  },
+  "composicion": "fondo a sangre (plantilla bayerG)",
+  "status": "final"
+ },
+ "piscis": {
+  "asset": "engravings/zodiaco/piscis.jpg",
+  "work": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Pisces.jpg",
+  "image_file": "File:Johann Bayer - Pisces.jpg",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-expired",
+   "PD-US-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Johann Bayer (1572-1625)",
+  "date": "1603",
+  "scan_credit": "https://www.raremaps.com/gallery/detail/30802op/pisces-stars-heightened-in-gold-bayer",
+  "source_px": [
+   3215,
+   2416
+  ],
+  "sha1_source": "612036852cdcb979b4eb97ffe2fbb7fb631e688f",
+  "recorte": {
+   "x0": 0.06,
+   "y0": 0.03,
+   "ancho": 0.81,
+   "salida_px": [
+    324,
+    240
+   ]
+  },
+  "foco": {
+   "que": "los dos peces y el cordon",
+   "acaba_px": 141
+  },
+  "velo": {
+   "delta": 0,
+   "franja_limpia_px": 214,
+   "topes_px": [
+    214,
+    252,
+    304,
+    340
+   ]
+  },
+  "composicion": "BANDA apaisada - excepcion a la plantilla bayerG",
+  "status": "final",
+  "excepcion": {
+   "motivo": "Los dos peces ocupan 2.347 x 1.039 px de la plancha, o sea 2,26:1 apaisado. La tarjeta es 324x479, o sea 0,68:1 vertical. Para que entren los dos hace falta el 73% del ancho de la plancha, y a proporcion de tarjeta eso exige una altura del 138% de la plancha: no existe. El maximo manteniendo la proporcion es el 45,75% del ancho; faltan 27 puntos.",
+   "consecuencia": "Piscis NO va a sangre: la lamina entra como banda de 240 px anclada arriba y por debajo queda el fondo de la tarjeta. Por eso este signo se ve distinto.",
+   "alternativa_descartada": "Quedarse con un solo pez: cabe a proporcion de tarjeta pero pierde el par y el cordon, que es lo que significa Piscis.",
+   "banda_px": [
+    324,
+    240
+   ]
+  }
  }
 }

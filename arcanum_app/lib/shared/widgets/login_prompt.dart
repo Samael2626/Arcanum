@@ -30,6 +30,10 @@ class LoginPrompt extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 60,
                 color: ArcanumColors.goldMuted,
+                // El glifo, no el emoji del sistema. Aqui llega ♃ desde Tarot,
+                // que es un planeta de verdad y el que mas riesgo corre; ⛤ y ❦
+                // van por el mismo sitio. A 60 px no se disimula.
+                fontFamilyFallback: kGlyphFallback,
               ),
             ),
             const SizedBox(height: 20),

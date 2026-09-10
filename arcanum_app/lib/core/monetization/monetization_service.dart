@@ -8,6 +8,13 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 /// Estado de suscripción del usuario.
 enum SubscriptionTier { free, premium }
 
+/// Como acabo un intento de compra.
+///
+/// Cancelar y fallar no son lo mismo y no pueden compartir respuesta: quien
+/// cancela ya sabe lo que hizo y un aviso ahi es ruido, pero a quien le fallo
+/// la tienda hay que decirselo o se queda mirando un boton que no hizo nada.
+enum PurchaseOutcome { comprada, cancelada, fallida }
+
 /// Datos de la suscripción actual.
 class SubscriptionState {
   final SubscriptionTier tier;
@@ -100,6 +107,17 @@ class MonetizationService {
   }
 
   /// Ofrecimientos disponibles (precios, _trial).
+  ///
+  /// OJO: se traga la excepcion y devuelve `null`. Un fallo de red, una tienda
+  /// caida y "la cuenta no tiene productos configurados" son indistinguibles
+  /// desde fuera. Eso hace que [storePricesProvider] y [descuentoAnualProvider]
+  /// NUNCA entren en estado de error: van de `loading` a `data` vacio.
+  ///
+  /// Quien consuma esos providers no puede apoyarse en `hasError` — no se
+  /// dispara nunca. Lo que hay que mirar es `isLoading` y si el resultado viene
+  /// vacio. Si algun dia hace falta distinguir el fallo de "no hay nada que
+  /// vender", el cambio es aqui: propagar la excepcion en vez de devolver null,
+  /// y entonces revisar los consumidores.
   Future<Offerings?> getOfferings() async {
     try {
       return await Purchases.getOfferings();
@@ -126,18 +144,41 @@ class MonetizationService {
   }
 
   /// Comprar una suscripción.
-  Future<bool> purchasePackage(Package package) async {
+  ///
+  /// Devuelve [PurchaseOutcome] y no un bool: antes, cancelar y que la tienda
+  /// fallara daban el mismo `false`, asi que la pantalla no podia decir nada
+  /// sin arriesgarse a regañar a quien solo cambio de idea. El resultado era
+  /// que no decia nada nunca, ni cuando la compra fallaba de verdad.
+  ///
+  /// TODO(pagos): sin test del camino de compra fallida ni del cancelado.
+  /// Para llegar hasta aqui desde el paywall hay que fabricar un `Offerings`
+  /// completo de RevenueCat —`current`, `annual`, `storeProduct`—, porque
+  /// `_purchaseAnnual` pide las ofertas antes de comprar. Lo unico cubierto hoy
+  /// es la rama sin ofertas (`paywall_screen_test.dart`). Si esta distincion se
+  /// rompe, no lo va a avisar ningun test: se ve comprando en un aparato.
+  Future<PurchaseOutcome> purchasePackage(Package package) async {
     try {
-      await Purchases.purchasePackage(package);
-      final info = await Purchases.getCustomerInfo();
-      return info.entitlements.active.containsKey(EntitlementIds.premium);
+      // purchase() ya devuelve el CustomerInfo sincronizado: no hace falta pedirlo aparte
+      final result = await Purchases.purchase(PurchaseParams.package(package));
+      return result.customerInfo.entitlements.active
+              .containsKey(EntitlementIds.premium)
+          ? PurchaseOutcome.comprada
+          : PurchaseOutcome.fallida;
+    } on PlatformException catch (e) {
+      return PurchasesErrorHelper.getErrorCode(e) ==
+              PurchasesErrorCode.purchaseCancelledError
+          ? PurchaseOutcome.cancelada
+          : PurchaseOutcome.fallida;
     } catch (_) {
-      return false;
+      return PurchaseOutcome.fallida;
     }
   }
 
   /// Comprar un consumible (créditos, tiradas).
-  Future<bool> purchaseProduct(String productId) async {
+  ///
+  /// TODO(pagos): mismo hueco que [purchasePackage]. Aqui ademas queda sin
+  /// cubrir el `StateError` de producto no encontrado, que acaba en `fallida`.
+  Future<PurchaseOutcome> purchaseProduct(String productId) async {
     try {
       final offerings = await Purchases.getOfferings();
       final all = offerings.current?.availablePackages ?? [];
@@ -145,16 +186,15 @@ class MonetizationService {
         (p) => p.storeProduct.identifier == productId,
         orElse: () => throw StateError('Product not found: $productId'),
       );
-      await Purchases.purchasePackage(pkg);
-      return true;
+      await Purchases.purchase(PurchaseParams.package(pkg));
+      return PurchaseOutcome.comprada;
     } on PlatformException catch (e) {
-      if (PurchasesErrorHelper.getErrorCode(e) ==
-          PurchasesErrorCode.purchaseCancelledError) {
-        return false;
-      }
-      return false;
+      return PurchasesErrorHelper.getErrorCode(e) ==
+              PurchasesErrorCode.purchaseCancelledError
+          ? PurchaseOutcome.cancelada
+          : PurchaseOutcome.fallida;
     } catch (_) {
-      return false;
+      return PurchaseOutcome.fallida;
     }
   }
 
@@ -229,6 +269,12 @@ final isPremiumProvider = Provider<bool>((ref) {
 });
 
 /// Precios localizados de la tienda, cacheados por Riverpod.
+///
+/// **Este provider no falla nunca.** [MonetizationService.getOfferings] se come
+/// la excepcion, asi que el AsyncValue va de `loading` a `data` con un mapa
+/// vacio y `hasError` no se cumple jamas. No escribas una rama de error aqui
+/// esperando que se dispare: para saber si la tienda no respondio, mira
+/// `isLoading` y si el mapa viene vacio.
 final storePricesProvider = FutureProvider<Map<String, String>>((ref) async {
   return ref.watch(monetizationServiceProvider).storePrices();
 });
@@ -239,6 +285,9 @@ final storePricesProvider = FutureProvider<Map<String, String>>((ref) async {
 /// mano: el numero fijo era cierto solo en dolares y solo hasta el siguiente
 /// cambio de precio en la consola. Devuelve `null` si falta alguno de los dos
 /// planes o si el anual no sale a cuenta, y en ese caso no se anuncia nada.
+///
+/// Hereda lo de [storePricesProvider]: tampoco entra nunca en estado de error,
+/// porque bebe del mismo `getOfferings` que se traga la excepcion.
 final descuentoAnualProvider = FutureProvider<String?>((ref) async {
   final offerings = await ref.watch(monetizationServiceProvider).getOfferings();
   final actual = offerings?.current;

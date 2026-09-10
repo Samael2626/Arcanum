@@ -27,6 +27,16 @@ enum SkyTodayFailure {
   /// La persona no autorizo mandar sus datos al proveedor de IA. No es un
   /// fallo: es una decision suya, y se respeta sin insistir.
   sinConsentimiento,
+
+  /// Se acabo el cupo y no hay creditos. Tampoco es un fallo: es el limite del
+  /// plan, y confundirlo con la red manda a esta persona a mirar su wifi
+  /// mientras el servidor le esta diciendo exactamente que le pasa.
+  ///
+  /// Lo dice el 402 con `credits_required`, el mismo que ya distingue el
+  /// Oraculo (`arcanum_api.dart:31`). Aqui no se podia dar mientras la clave de
+  /// idempotencia cortase la segunda generacion del dia; en cuanto el
+  /// horoscopo tenga cualquier limite por plan, si.
+  sinCupo,
 }
 
 /// Clasifica el fallo mirando el codigo, no el texto del mensaje.
@@ -42,6 +52,8 @@ SkyTodayFailure classifySkyFailure(Object error) {
     switch (status) {
       case 401:
         return SkyTodayFailure.sesionExpirada;
+      case 402:
+        return SkyTodayFailure.sinCupo;
       case 404:
         // Un 404 de DOMINIO dice que falta la carta natal. Un 404 de RUTA dice
         // que el servidor no conoce ese endpoint — porque va por detras del
@@ -90,6 +102,9 @@ String skyFailureMessage(SkyTodayFailure failure) {
     case SkyTodayFailure.sinConsentimiento:
       return 'No autorizaste enviar tus datos para la lectura interpretada. '
           'Esto es lo que dice tu cielo sin ella.';
+    case SkyTodayFailure.sinCupo:
+      return 'Ya usaste tu lectura interpretada. El cielo de abajo sigue '
+          'siendo el tuyo de hoy.';
   }
 }
 
@@ -104,7 +119,11 @@ String skyFailureMessage(SkyTodayFailure failure) {
 bool allowsLocalReading(SkyTodayFailure failure) =>
     failure == SkyTodayFailure.cieloNoLegible ||
     failure == SkyTodayFailure.sinRed ||
-    failure == SkyTodayFailure.sinConsentimiento;
+    failure == SkyTodayFailure.sinConsentimiento ||
+    // Sin cupo tambien: los transitos son calculo y no cuestan nada. Quitarle
+    // ademas el cielo a quien agoto su cuota seria cobrarle dos veces por lo
+    // mismo, y lo que se limita es la interpretacion, no el instrumento.
+    failure == SkyTodayFailure.sinCupo;
 
 /// A donde lleva el boton de arreglar esto, o null si no hay nada que la
 /// persona pueda hacer salvo reintentar.
@@ -116,6 +135,10 @@ String? skyFailureRoute(SkyTodayFailure failure) {
       return '/perfil';
     case SkyTodayFailure.sesionExpirada:
       return '/login';
+    case SkyTodayFailure.sinCupo:
+      // A la tienda, que es lo unico que cambia esta situacion. "Reintentar"
+      // seria mandarla a chocar contra la misma pared.
+      return '/paywall';
     case SkyTodayFailure.cieloNoLegible:
     case SkyTodayFailure.sinRed:
     case SkyTodayFailure.sinConsentimiento:

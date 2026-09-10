@@ -14,6 +14,30 @@ from app.routers import astral
 from app.services import claude_service as cs
 from app.services import horoscope as hs
 
+
+class _ArchivoFalso:
+    """El archivo de horoscopos. Registra lo que se le manda guardar.
+
+    No commitea: la ruta guarda y captura en un solo commit, y aqui se
+    comprueba justo eso -- que lo archivado y lo cobrado van juntos.
+    """
+
+    def __init__(self):
+        self.guardadas = []
+
+    def add(self, user_id, local_date, text, sky, commit=False):
+        self.guardadas.append((user_id, local_date, text, sky))
+
+    def last(self, user_id, limit=30):
+        return []
+
+
+# Fecha de nacimiento del doble: la profeccion anual la necesita para saber
+# que anio vive esta persona. Sin ella el endpoint sigue funcionando, pero
+# entonces el doble no ejercitaria ese camino.
+NACIMIENTO = datetime(1990, 6, 15, 12, 0, tzinfo=timezone.utc)
+
+
 NOW = datetime(2026, 8, 16, 15, 0, tzinfo=timezone.utc)
 
 
@@ -144,8 +168,10 @@ def test_sin_clave_de_groq_no_hay_horoscopo(monkeypatch):
 # ── El endpoint ──────────────────────────────────────────────────────────────
 
 
-def _user(tz="America/Bogota"):
+def _user(tz="America/Bogota", tier="free"):
     return SimpleNamespace(id=uuid4(), birth_timezone=tz,
+                           subscription_tier=tier,
+                           birth_date=NACIMIENTO,
                            birth_lat=None, birth_lon=None)
 
 
@@ -163,7 +189,7 @@ def _chart():
 
 def test_sin_carta_natal_responde_404():
     with pytest.raises(HTTPException) as error:
-        astral.horoscope(current_user=_user(), repo=_Repo(None), db=None)
+        astral.horoscope(archivo=_ArchivoFalso(), current_user=_user(), repo=_Repo(None), db=None)
     assert error.value.status_code == 404
 
 
@@ -178,9 +204,12 @@ def test_la_segunda_llamada_del_dia_es_un_replay_sin_tocar_el_modelo(monkeypatch
     monkeypatch.setattr(astral, "generate_horoscope",
                         lambda *a, **k: llamadas.append(a) or ("nuevo", {"available": True}))
 
-    resultado = astral.horoscope(current_user=_user(), repo=_Repo(_chart()), db=None)
+    resultado = astral.horoscope(archivo=_ArchivoFalso(), current_user=_user(), repo=_Repo(_chart()), db=None)
 
-    assert resultado == guardado
+    # El texto guardado viaja intacto; lo que se anade es de donde viene, y se
+    # deduce al leer en vez de congelarse dentro de la fila de aquel dia.
+    assert {k: resultado[k] for k in guardado} == guardado
+    assert resultado["is_previous"] is True
     assert llamadas == [], "un replay no puede gastar una llamada al modelo"
 
 
@@ -195,7 +224,7 @@ def test_la_clave_de_idempotencia_lleva_la_fecha_local(monkeypatch):
     monkeypatch.setattr(astral, "datetime",
                         SimpleNamespace(now=lambda _tz=None: datetime(2026, 8, 17, 2, 0, tzinfo=timezone.utc)))
 
-    astral.horoscope(current_user=_user("America/Bogota"), repo=_Repo(_chart()), db=None)
+    astral.horoscope(archivo=_ArchivoFalso(), current_user=_user("America/Bogota"), repo=_Repo(_chart()), db=None)
 
     assert claves == [("horoscope", "horoscope-2026-08-16")]
 
@@ -214,7 +243,7 @@ def test_sin_modelo_se_libera_la_reserva_y_no_se_guarda_el_relleno(monkeypatch):
                         lambda *_a, **_k: (cs._FALLBACK, {"available": False}))
 
     with pytest.raises(HTTPException) as error:
-        astral.horoscope(current_user=_user(), repo=_Repo(_chart()), db=None)
+        astral.horoscope(archivo=_ArchivoFalso(), current_user=_user(), repo=_Repo(_chart()), db=None)
 
     assert error.value.status_code == 503
     assert liberadas == [operacion]
@@ -233,7 +262,7 @@ def test_un_fallo_inesperado_libera_la_reserva(monkeypatch):
                         lambda *_a, **_k: (_ for _ in ()).throw(RuntimeError("groq caido")))
 
     with pytest.raises(RuntimeError):
-        astral.horoscope(current_user=_user(), repo=_Repo(_chart()), db=None)
+        astral.horoscope(archivo=_ArchivoFalso(), current_user=_user(), repo=_Repo(_chart()), db=None)
 
     assert liberadas == [operacion], "una reserva sin resultado no puede quedarse colgada"
 
@@ -249,7 +278,7 @@ def test_el_horoscopo_generado_se_captura_con_su_transito(monkeypatch):
     monkeypatch.setattr(astral, "generate_horoscope",
                         lambda *_a, **_k: ("Saturno sobre tu Sol.", {"available": True}))
 
-    resultado = astral.horoscope(current_user=_user(), repo=_Repo(_chart()), db=None)
+    resultado = astral.horoscope(archivo=_ArchivoFalso(), current_user=_user(), repo=_Repo(_chart()), db=None)
 
     assert resultado["text"] == "Saturno sobre tu Sol."
     assert "primary" in resultado and "total_aspects" in resultado

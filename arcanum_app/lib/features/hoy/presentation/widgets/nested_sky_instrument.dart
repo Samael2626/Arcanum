@@ -283,6 +283,7 @@ class _Selector extends StatelessWidget {
           child: Text(
             planetGlyph[ruler] ?? '✦',
             style: TextStyle(
+              fontFamilyFallback: kGlyphFallback,  // el glifo, no el emoji
               fontSize: 20,
               height: 1,
               color: ArcanumMood.forPlanet(ruler).accent,
@@ -300,6 +301,7 @@ class _Selector extends StatelessWidget {
           child: Text(
             planetGlyph[hourPlanet] ?? '✦',
             style: TextStyle(
+              fontFamilyFallback: kGlyphFallback,  // el glifo, no el emoji
               fontSize: 20,
               height: 1,
               color: ArcanumMood.forPlanet(hourPlanet).accent,
@@ -489,7 +491,13 @@ class _RulerScene extends StatelessWidget {
           onTap: onTap,
           child: Text(
             planetGlyph[ruler] ?? '✦',
-            style: TextStyle(fontSize: 54, height: 1, color: acento),
+            style: TextStyle(
+              fontSize: 54,
+              height: 1,
+              color: acento,
+              // El glifo, no el emoji del sistema.
+              fontFamilyFallback: kGlyphFallback,
+            ),
           ),
         ),
       ),

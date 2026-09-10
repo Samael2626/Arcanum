@@ -29,6 +29,30 @@ from app.routers import astral
 from app.services import claude_service as cs
 
 
+class _ArchivoFalso:
+    """El archivo de horoscopos. Registra lo que se le manda guardar.
+
+    No commitea: la ruta guarda y captura en un solo commit, y aqui se
+    comprueba justo eso -- que lo archivado y lo cobrado van juntos.
+    """
+
+    def __init__(self):
+        self.guardadas = []
+
+    def add(self, user_id, local_date, text, sky, commit=False):
+        self.guardadas.append((user_id, local_date, text, sky))
+
+    def last(self, user_id, limit=30):
+        return []
+
+
+# Fecha de nacimiento del doble: la profeccion anual la necesita para saber
+# que anio vive esta persona. Sin ella el endpoint sigue funcionando, pero
+# entonces el doble no ejercitaria ese camino.
+NACIMIENTO = datetime(1990, 6, 15, 12, 0, tzinfo=timezone.utc)
+
+
+
 class _FakeGroq:
     """Devuelve las respuestas que se le den, en orden, y cuenta invocaciones.
 
@@ -231,13 +255,41 @@ def test_el_entorno_solo_puede_subir_el_techo(monkeypatch):
     assert cs._max_tokens_for(3) == 8000
 
 
-def test_no_se_manda_reasoning_effort_por_defecto(monkeypatch):
-    # `reasoning_effort=low` empobrece el texto (se salta el regente del dia y
-    # la hora planetaria). Se queda el razonamiento por defecto del modelo.
+def test_el_horoscopo_va_con_el_razonamiento_bajo(monkeypatch):
+    """Invierte la decision anterior, y por que.
+
+    Antes se dejaba el razonamiento por defecto con la nota de que
+    `reasoning_effort=low` "empobrece el texto (se salta el regente del dia y la
+    hora planetaria)". Esa nota no venia de una medida sistematica y no se
+    reprodujo: en las corridas de 8-sep-2026 los textos con razonamiento bajo
+    nombran el regente y la hora planetaria.
+
+    Lo que SI se midio, cuatro corridas por prompt con el mismo cielo real:
+    con el razonamiento por defecto el horoscopo salia truncado 3 de 4 veces
+    con el prompt anterior y 1 de 4 con el consolidado --y un truncado es un
+    dia SIN horoscopo--, mientras que con `low` salieron completas las 8 de 8,
+    gastando 280-545 tokens de salida en vez de 1.824-2.000. Un texto pobre se
+    puede corregir; uno que no llega, no.
+    """
     cliente = _FakeGroq(("Saturno sobre tu Sol, entero.", "stop"))
     monkeypatch.setattr(cs, "_get_client", lambda: cliente)
 
     cs.generate_horoscope("cielo", ["Saturno", "Sol"])
+
+    assert cliente.kwargs[0].get("reasoning_effort") == "low"
+
+
+def test_el_oraculo_no_manda_reasoning_effort(monkeypatch):
+    """El techo del tarot sigue calibrado para el razonamiento por defecto.
+
+    La tirada tiene que integrar cada carta por su posicion, que es justo el
+    trabajo que el razonamiento hace. El parametro es opcional en `_complete`
+    precisamente para que bajarlo en el horoscopo no lo baje aqui.
+    """
+    cliente = _FakeGroq(("El Loco abre el camino.", "stop"))
+    monkeypatch.setattr(cs, "_get_client", lambda: cliente)
+
+    cs.generate_reading("contexto", "openai/gpt-oss-120b", question="que hago")
 
     assert "reasoning_effort" not in cliente.kwargs[0]
 
@@ -245,8 +297,10 @@ def test_no_se_manda_reasoning_effort_por_defecto(monkeypatch):
 # ── El endpoint: nada invalido se persiste y la reserva siempre se libera ────
 
 
-def _user(tz="America/Bogota"):
+def _user(tz="America/Bogota", tier="free"):
     return SimpleNamespace(id=uuid4(), birth_timezone=tz,
+                           subscription_tier=tier,
+                           birth_date=NACIMIENTO,
                            birth_lat=None, birth_lon=None)
 
 
@@ -288,7 +342,7 @@ def test_un_horoscopo_invalido_no_se_persiste_y_libera_la_reserva(
     monkeypatch.setattr(cs, "_get_client", lambda: cliente)
 
     with pytest.raises(HTTPException) as error:
-        astral.horoscope(current_user=_user(), repo=_Repo(_chart()), db=None)
+        astral.horoscope(archivo=_ArchivoFalso(), current_user=_user(), repo=_Repo(_chart()), db=None)
 
     assert error.value.status_code == 503
     assert capturadas == [], "un texto cortado no puede quedar como el horoscopo del dia"
@@ -300,7 +354,7 @@ def test_el_429_libera_la_reserva_del_horoscopo(monkeypatch):
     monkeypatch.setattr(cs, "_get_client", lambda: _FakeGroq(_rate_limit_error()))
 
     with pytest.raises(HTTPException) as error:
-        astral.horoscope(current_user=_user(), repo=_Repo(_chart()), db=None)
+        astral.horoscope(archivo=_ArchivoFalso(), current_user=_user(), repo=_Repo(_chart()), db=None)
 
     assert error.value.status_code == 429
     assert capturadas == []
@@ -318,7 +372,7 @@ def test_cualquier_httpexception_del_horoscopo_libera_la_reserva(monkeypatch):
         lambda *_a, **_k: (_ for _ in ()).throw(HTTPException(502, "proveedor caido")))
 
     with pytest.raises(HTTPException) as error:
-        astral.horoscope(current_user=_user(), repo=_Repo(_chart()), db=None)
+        astral.horoscope(archivo=_ArchivoFalso(), current_user=_user(), repo=_Repo(_chart()), db=None)
 
     assert error.value.status_code == 502
     assert liberadas == [operacion]
@@ -332,7 +386,7 @@ def test_un_horoscopo_valido_si_se_captura(monkeypatch):
                         SimpleNamespace(now=lambda _tz=None: datetime(
                             2026, 8, 16, 15, 0, tzinfo=timezone.utc)))
 
-    resultado = astral.horoscope(current_user=_user(), repo=_Repo(_chart()), db=None)
+    resultado = astral.horoscope(archivo=_ArchivoFalso(), current_user=_user(), repo=_Repo(_chart()), db=None)
 
     assert resultado["text"] == entero
     assert capturadas == [resultado]

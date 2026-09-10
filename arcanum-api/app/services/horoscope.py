@@ -6,11 +6,14 @@ redacta como datos. El COMO se escribe vive en `horoscope_prompt`.
 """
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from app.services import correspondences as co
 from app.services import lunar_calendar as lc
+from app.services import house_ingress as hi
 from app.services import natal_chart_engine as nce
+from app.services import profections as pf
 from app.services import transit_weight as tw
 
 
@@ -29,6 +32,46 @@ def local_date(timezone_name: str | None, now: datetime) -> date:
     return now.astimezone(tz).date()
 
 
+def clave_del_periodo(dia: date, cada_dias: int) -> date:
+    """El dia que gobierna la ventana en la que cae `dia`.
+
+    Con `cada_dias = 1` es el dia mismo, que es lo que ve premium. Con 2, dos
+    fechas consecutivas caen en la misma ventana y la segunda llamada es un
+    replay de lo que ya se genero: el plan gratuito lee una interpretacion cada
+    dos dias.
+
+    Las ventanas se anclan al CALENDARIO (por la paridad del dia juliano), no a
+    la primera vez que cada persona uso la app. Anclarlas al uso obligaria a
+    guardar ese primer dia en algun sitio y a decidir que pasa si se salta una
+    ventana entera; con el calendario, la funcion es pura y da lo mismo quien
+    pregunte y cuando.
+
+    Lo que NO se limita es el cielo: `/sky-today` es calculo, es gratis y sigue
+    cambiando cada dia para todo el mundo. Lo que se raciona es la
+    interpretacion escrita, que es lo unico que cuesta.
+    """
+    if cada_dias <= 1:
+        return dia
+    return dia - timedelta(days=dia.toordinal() % cada_dias)
+
+
+def instante_del_dia(timezone_name: str | None, dia: date) -> datetime:
+    """El instante que representa a un dia entero: su MEDIODIA local, en UTC.
+
+    Un dia no es un instante y el cielo cambia dentro de el, asi que recuperar
+    una jornada pasada obliga a elegir uno. Se elige el mediodia porque es el
+    unico punto que no depende de la hora a la que aquella persona hubiera
+    abierto la app, y porque a medianoche la fecha local esta a un minuto de
+    cambiar: un error de zona horaria de una hora daria OTRO dia.
+    """
+    try:
+        tz = ZoneInfo(timezone_name) if timezone_name else ZoneInfo("UTC")
+    except (ZoneInfoNotFoundError, ValueError):
+        tz = ZoneInfo("UTC")
+    return datetime(dia.year, dia.month, dia.day, 12, tzinfo=tz).astimezone(
+        timezone.utc)
+
+
 def expected_terms(sky: dict) -> list[str]:
     """Nombres en espanol que el texto DEBE contener, y por que esos.
 
@@ -41,6 +84,14 @@ def expected_terms(sky: dict) -> list[str]:
     exigir nada, porque un texto que no nombra ningun cuerpo es exactamente el
     horoscopo de revista que esto no quiere ser.
     """
+    # Si hoy no hay transito rapido pero SI hubo un ingreso, el dia se sostiene
+    # sobre el ingreso y lo que hay que exigir es su planeta. Exigir el capitulo
+    # en ese caso mandaria a nombrar justo lo que no ha cambiado.
+    entrada = sky.get("ingress")
+    if not sky.get("today") and entrada:
+        return [nce.POINTS_ES.get(entrada.get("transit", ""),
+                                  entrada.get("transit", ""))]
+
     elegido = sky.get("today") or sky.get("chapter")
     if not elegido:
         return []
@@ -50,20 +101,34 @@ def expected_terms(sky: dict) -> list[str]:
     ]
 
 
-def build_sky(chart_data: dict, now: datetime) -> dict:
-    """Transitos del momento contra la carta, ya ordenados y seleccionados."""
+def build_sky(chart_data: dict, now: datetime, birth=None,
+              local_day: date | None = None) -> dict:
+    """Transitos del momento contra la carta, ya ordenados y seleccionados.
+
+    `birth` y `local_day` habilitan la profeccion anual: sin ellos el orden es
+    el de antes, que es lo correcto para quien no tiene fecha de nacimiento
+    guardada. La profeccion se cuenta contra el dia LOCAL de la persona por lo
+    mismo que el horoscopo: su cumpleanios no cae en el calendario de UTC.
+    """
     objetivos = nce.natal_targets(chart_data or {})
     transitos = nce.compute_transits(objetivos, now)
     sect = nce.sect_of(chart_data or {})
-    seleccion = tw.select(transitos["aspects_to_natal"], sect=sect)
+    profeccion = pf.profection_of(chart_data or {}, birth,
+                                  local_day or now.date()) if birth else None
+    entradas = hi.ingresses(chart_data or {}, now)
+    seleccion = tw.select(transitos["aspects_to_natal"], sect=sect,
+                          profection=profeccion, ingresses=entradas)
     return {
         "datetime": transitos["datetime"],
         "primary": seleccion["primary"],
         "supporting": seleccion["supporting"],
         "chapter": seleccion["chapter"],
         "today": seleccion["today"],
+        "year": seleccion["year"],
+        "ingress": seleccion["ingress"],
         "total_aspects": len(transitos["aspects_to_natal"]),
         "sect": sect,
+        "profection": profeccion,
     }
 
 
@@ -74,8 +139,25 @@ def _describe_aspect(a: dict) -> str:
     natal = nce.POINTS_ES.get(a["natal"], a["natal"])
     aspecto = nce.ASPECTS_ES.get(a["aspect"], a["aspect"])
 
-    partes = [f"{transito} en {aspecto} con {natal} natal",
+    # El signo del punto natal va PEGADO al punto, no como dato suelto: es
+    # su direccion completa. Sin el, "tu Sol" es un nombre generico; con el,
+    # es una coordenada que solo tiene esta persona.
+    donde = f" en {a['natal_sign_es']}" if a.get("natal_sign_es") else ""
+    # Por donde va el que transita, y en que dignidad queda ahi. Es lo que
+    # separa "Venus hace un sextil" de "Venus, en su casa, hace un sextil".
+    por = f" (va por {a['transit_sign_es']})" if a.get("transit_sign_es") else ""
+    partes = [f"{transito}{por} en {aspecto} con {natal} natal{donde}",
               f"orbe {a['orb']:.2f} grados"]
+    dig = co.dignity(a.get("transit"), a.get("transit_sign"))
+    if dig:
+        # `DIGNITY_GLOSS[dig]` es un dict desde que se le anadio el porque, y
+        # sin desempaquetarlo se colaba el repr de Python en el prompt.
+        g = co.DIGNITY_GLOSS[dig]
+        partes.append(f"DIGNIDAD del que transita: {dig}, {g['que']}, "
+                      f"y es así porque {g['porque']}")
+    doctrina = co.aspect(a.get("aspect"))
+    if doctrina:
+        partes.append(f"la figura: {doctrina}")
     partes.append("APLICATIVO (se esta formando)" if a.get("applying")
                   else "SEPARATIVO (ya paso su exactitud)")
     if a.get("exact_at"):
@@ -83,6 +165,65 @@ def _describe_aspect(a: dict) -> str:
     partes.append("planeta lento: capitulo de meses" if a.get("tempo") == tw.SLOW
                   else "planeta rapido: color del dia")
     return " | ".join(partes)
+
+
+def _describe_ingress(i: dict) -> str:
+    """Un ingreso en una linea. Es un SUCESO con hora, no un estado.
+
+    Por eso se dice cuando cruzo: "entro anoche" y "esta en" cuentan cosas
+    distintas, y solo la primera es noticia de hoy.
+    """
+    cuerpo = nce.POINTS_ES.get(i["transit"], i["transit"])
+    horas = i.get("hours_ago")
+    cuando = ("hace menos de una hora" if isinstance(horas, (int, float)) and horas < 1
+              else f"hace {horas:.0f} horas" if isinstance(horas, (int, float))
+              else "en las ultimas 24 horas")
+    partes = [
+        f"{cuerpo} paso de su casa {i['from_house']} a su casa {i['to_house']}",
+        cuando,
+    ]
+    if i.get("retrograde"):
+        partes.append("RETROGRADO: vuelve sobre sus pasos, no estrena nada")
+    if i.get("sign_es"):
+        partes.append(f"por {i['sign_es']}")
+    return " | ".join(partes)
+
+
+def _dominios(sky: dict) -> list[str]:
+    """De que tratan los cuerpos y casas que HOY estan en juego. Solo esos.
+
+    El modelo no tiene por que recordar las series planetarias, y cuando se lo
+    dejabamos a su memoria cerraba con el oro del Sol en un dia de Luna y
+    Saturno. Aqui se le entrega la ficha de lo que de verdad ha salido, y de
+    nada mas: una enciclopedia entera invitaria a pasearse por ella.
+    """
+    vistos: dict[str, str | None] = {}
+    for bloque in (sky.get("today"), sky.get("chapter"), sky.get("year")):
+        if not bloque:
+            continue
+        for clave in ("transit", "natal"):
+            nombre = bloque.get(clave)
+            if nombre and nombre not in vistos:
+                # El signo solo acompana al que TRANSITA: la dignidad de un
+                # punto natal es carta natal, y esto es el cielo de hoy.
+                vistos[nombre] = (bloque.get("transit_sign")
+                                  if clave == "transit" else None)
+    entrada = sky.get("ingress")
+    if entrada and entrada.get("transit") not in vistos:
+        vistos[entrada["transit"]] = entrada.get("sign")
+
+    prof = sky.get("profection")
+    if prof and prof.get("lord") and prof["lord"] not in vistos:
+        vistos[prof["lord"]] = None
+
+    fuera = [ln for n, sg in vistos.items() if (ln := co.line(n, sg))]
+    casa = co.house((prof or {}).get("house"))
+    if casa:
+        fuera.append(f"Tu casa {prof['house']}, la profectada: trata de {casa}.")
+    if entrada and co.house(entrada.get("to_house")):
+        fuera.append(f"La casa {entrada['to_house']}, a la que se entro: "
+                     f"trata de {co.house(entrada['to_house'])}.")
+    return fuera
 
 
 def describe(sky: dict, now: datetime, day_ruler: str | None = None,
@@ -105,19 +246,50 @@ def describe(sky: dict, now: datetime, day_ruler: str | None = None,
         lineas.append("SECTA: carta nocturna (nacio con el Sol bajo el "
                       "horizonte). Manda la Luna; Saturno esta fuera de su secta.")
 
+    # El anio que vive esta persona. Va antes de los carriles porque es lo que
+    # explica POR QUE se eligio ese transito y no otro: el senor del anio pesa
+    # entero y lo que no toca su signo se atenua. Si el texto no puede decir de
+    # quien es el anio, la seleccion queda sin argumento.
+    prof = sky.get("profection")
+    if prof:
+        senor = nce.POINTS_ES.get(prof["lord"], prof["lord"])
+        lineas.append(
+            f"ANIO PROFECTADO: cumplio {prof['age']} anios, asi que gobierna la "
+            f"casa {prof['house']} en {prof['sign_es']}. SENOR DEL ANIO: {senor}. "
+            "Lo que toque a ese planeta o a ese signo es el tema del anio; el "
+            "resto es ruido de fondo. NO le expliques la tecnica: usala."
+        )
+
     # Dos carriles con el papel dicho, en vez de un "principal" que se lo lleva
     # siempre el planeta lento y deja el texto igual durante semanas.
     capitulo = sky.get("chapter")
     hoy = sky.get("today")
 
+    entrada = sky.get("ingress")
+
     if hoy:
         lineas.append("LO DE HOY: " + _describe_aspect(hoy))
+    elif entrada:
+        # El dia sin aspectos rapidos ya no es un dia sin nada que decir: para
+        # eso existe `house_ingress`. El ingreso pasa a ser el suceso del dia.
+        lineas.append("LO DE HOY: ningun transito rapido perfecciona, pero SI "
+                      "cambio algo de sitio. " + _describe_ingress(entrada))
     else:
         lineas.append(
             "LO DE HOY: nada rapido toca su carta hoy. NO lo disimules: di que "
             "la jornada esta tranquila sobre su carta y apoyate en la luna y el "
             "regente del dia. NO inventes un transito."
         )
+
+    if entrada and hoy:
+        # Cuando ademas hay aspecto, el ingreso acompana: cambia el decorado en
+        # el que ocurre lo demas.
+        lineas.append("ADEMAS, CAMBIO DE SITIO: " + _describe_ingress(entrada))
+
+    del_anio = sky.get("year")
+    if del_anio and del_anio is not hoy and del_anio is not capitulo:
+        lineas.append("LO DEL ANIO (toca al senor del anio): "
+                      + _describe_aspect(del_anio))
 
     if capitulo:
         lineas.append(
@@ -127,7 +299,7 @@ def describe(sky: dict, now: datetime, day_ruler: str | None = None,
     else:
         lineas.append("CAPITULO ABIERTO: ninguno. No inventes uno.")
 
-    if not hoy and not capitulo:
+    if not hoy and not capitulo and not entrada:
         lineas.append("NO HAY NINGUN TRANSITO. No nombres ningun planeta en "
                       "aspecto: no lo hay. Cielo en calma sobre su carta.")
 
@@ -150,5 +322,15 @@ def describe(sky: dict, now: datetime, day_ruler: str | None = None,
         # de Bogota: ausencia declarada, jamas una ciudad por defecto.
         lineas.append("HORA PLANETARIA: no disponible (esta persona no tiene "
                       "lugar confirmado). No la menciones ni la sustituyas.")
+
+    # Los dominios van al FINAL, despues de los carriles: primero que cielo
+    # hay, y luego de que trata. Al reves invitaria a empezar el texto por
+    # la correspondencia, que es el orden del horoscopo de revista.
+    fichas = _dominios(sky)
+    if fichas:
+        lineas.append(
+            "DE QUE TRATAN LOS QUE HOY ESTAN EN JUEGO (reparto de la "
+            "tradicion, NO una prediccion): " + " | ".join(fichas)
+        )
 
     return "\n".join(lineas)

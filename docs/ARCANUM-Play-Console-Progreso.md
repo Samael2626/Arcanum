@@ -116,3 +116,115 @@ se declara y se queda.
 
 Lo que no vale es dejarlo como esta al llegar a produccion: pedir permisos de
 publicidad en una app sin publicidad es de lo que Play pregunta.
+
+## COMO SE COMPILA EL RELEASE (no estaba escrito en ninguna parte)
+
+`flutter build` a secas produce un binario que **arranca en negro**. No es un
+fallo del icono ni del arte: `ReleaseConfig.validateForStartup()`
+(`release_config.dart:34`) lanza `StateError` si falta `REVENUECAT_API_KEY`, y
+se llama en `main.dart:41` **antes de `runApp`**. El error lo traga
+`PlatformDispatcher.onError` hacia Crashlytics (`main.dart:31`), asi que
+**no aparece nada en logcat**: proceso vivo, actividad en primer plano, pantalla
+negra y ni una linea de error. Diagnosticado el 03/09/2026 tras comerse el rato.
+
+El comando correcto es:
+
+```
+flutter build appbundle --release --dart-define=REVENUECAT_API_KEY=<la clave>
+flutter build apk --release      --dart-define=REVENUECAT_API_KEY=<la clave>
+```
+
+Con `ADS_ENABLED=true` haria falta ademas `ADMOB_REWARDED_ANDROID` y
+`ADMOB_INTERSTITIAL_ANDROID`; hoy los anuncios estan apagados y no se piden.
+
+**Comprobacion que no se puede saltar:** instalar el binario y abrirlo. Un
+`flutter analyze` verde, unos tests verdes y una firma correcta **no detectan
+esto**, porque el fallo solo existe en modo release y solo al arrancar.
+
+## PENDIENTE DE PRODUCCION: los avisos del Kotlin Gradle Plugin
+
+El build de 1.0.3+10 saca dos WARNING del Kotlin Gradle Plugin: `purchases_flutter`
+todavia aplica el KGP a la manera antigua, y Flutter va a dejar de compilar los
+plugins que lo hagan asi. Hoy **no rompe nada** y el binario sale correcto.
+
+No se toca ahora porque la correccion no es nuestra: viene en el `build.gradle`
+del propio plugin de RevenueCat. Al subir `purchases_flutter` en el futuro, mirar
+si los avisos siguen; si Flutter llega a convertirlos en error antes de que
+RevenueCat los arregle, la salida es fijar la version del plugin y compilar con
+un Flutter anterior hasta que salga la suya.
+
+## BILLING LIBRARY 8 (04/09/2026)
+
+Play bloqueo la version 9 con "tu app usa la version 7.1.1 de la Biblioteca de
+Facturacion Play y debe actualizarse, al menos, a la version 8.0.0". El origen
+era `purchases_flutter 8.11.0`, que arrastra `purchases-hybrid-common 14.3.0` y
+con el Billing 7.1.1 — confirmado en la cache de Gradle, no solo por el mensaje.
+
+Subir dentro de la rama 8 no sirve: **9.0.0 es la primera con Billing 8**, y la
+10.0.0 ya trae Billing 8.3.0 y sube el minSdk de Android a 23 (estamos en 24, no
+obliga a nada). Se fue a `purchases_flutter 10.11.0` → `hybrid-common 18.33.1`.
+
+`purchasePackage()` quedo deprecada en la 10; los dos sitios de
+`monetization_service.dart` usan ahora `purchase(PurchaseParams.package(pkg))`,
+que ademas devuelve el `CustomerInfo` ya sincronizado y ahorra una llamada.
+
+**Como se verifica que el binario lleva la version correcta**, sin depender de lo
+que diga Play: los dex del APK incrustan la cadena
+`com.android.billingclient:billing@@<version>`. En 1.0.3+10 solo aparece `8.3.0`
+y no queda ni un rastro de `7.1.1`.
+
+## PENDIENTE DE PRODUCCION: cuenta de servicio para que RevenueCat valide las compras
+
+Hoy RevenueCat no puede consultar a Play del lado del servidor: le falta la cuenta
+de servicio de Google Cloud. **No bloquea la prueba cerrada**, pero hace falta
+antes de que las compras reales de produccion se validen correctamente — sin esto
+RevenueCat no confirma contra Play si una transaccion es legitima, ni se entera de
+renovaciones, cancelaciones o reembolsos que ocurren fuera de la app.
+
+Pasos, para cuando se retome:
+
+1. Crear una cuenta de servicio en Google Cloud Console con acceso a la
+   **Play Developer API**.
+2. En Play Console → Configuracion → **Acceso a la API**, vincular esa cuenta y
+   darle permisos de **Ver datos financieros** y **Gestionar pedidos y
+   suscripciones**.
+3. Descargar el JSON de credenciales y subirlo en RevenueCat → esa app de Android
+   → **Service account credentials**.
+
+El JSON del paso 3 es una credencial con permiso sobre los pedidos de la cuenta de
+Play: no va al repo, no va a Drive junto a nada mas, y se guarda con el mismo
+criterio que las contrasenas del keystore. Ver
+`ARCANUM-Pendiente-Seguridad-Keystore.md`.
+
+## PENDIENTE ANTES DE PRODUCCION: el paywall se queda mudo si no cargan las ofertas
+
+`paywall_screen.dart:122-124`:
+
+```dart
+onTap: precios[ProductIds.premiumAnnual] == null
+    ? null
+    : _purchaseAnnual,
+```
+
+Cuando RevenueCat no devuelve ofertas, `precios` queda vacio, `onTap` es null y el
+boton principal se desactiva **en silencio**: ni dialogo, ni mensaje, ni una linea
+en logcat. El texto "Oferta no disponible. Intenta de nuevo." ya existe dentro de
+`_purchaseAnnual`, pero nunca se ejecuta porque el boton esta apagado antes de
+poder llamarlo. Por lo mismo la tarjeta sale sin precio y la linea "O $X/mes"
+(linea 130) ni se dibuja.
+
+Visto en el aparato el 04/09/2026 con 1.0.3+10: el paywall abre y se pinta bien,
+pero pulsar "Empezar prueba gratis" no hace nada.
+
+Ahi el motivo era esperable — la app aun no estaba en ningun track, asi que Play
+no tenia productos que servir. El problema es que **en produccion se ve igual**
+ante un fallo de red, una caida de Play o un producto mal configurado: una
+pantalla bonita, sin precios, con el boton principal que no responde ni explica
+por que. El usuario no tiene forma de saber que paso ni que hacer.
+
+Arreglar antes de produccion, de una de estas dos formas:
+1. Dejar el boton activo y que al pulsar muestre el mensaje que ya esta escrito.
+2. Pintar un estado de carga/error visible en la propia tarjeta, en vez de una
+   tarjeta sin precio indistinguible de una lista.
+
+No depende del cambio a Billing 8: ya estaba asi antes.

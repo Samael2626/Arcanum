@@ -17,6 +17,7 @@ class TodayCard extends StatelessWidget {
     this.padding = const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
     this.radius = 18,
     this.intensity = 0.55,
+    this.fondo,
   });
 
   final ArcanumMood mood;
@@ -25,13 +26,18 @@ class TodayCard extends StatelessWidget {
   final double radius;
   final double intensity;
 
+  /// Capa que va DETRAS del contenido y dentro del mismo redondeo: hoy, la
+  /// lamina del signo solar. Va aparte del `child` porque tiene que quedar por
+  /// debajo de todo y recortada por el borde de la tarjeta, no dentro del
+  /// padding. Sin ella la tarjeta es exactamente la de antes.
+  final Widget? fondo;
+
   @override
   Widget build(BuildContext context) {
     final br = BorderRadius.circular(radius);
     return RepaintBoundary(
       child: Container(
         width: double.infinity,
-        padding: padding,
         decoration: BoxDecoration(
           borderRadius: br,
           border: Border.all(color: mood.accent.withValues(alpha: 0.34)),
@@ -51,7 +57,16 @@ class TodayCard extends StatelessWidget {
             ),
           ],
         ),
-        child: child,
+        // El padding va DENTRO y no en el Container: el fondo tiene que
+        // llegar al borde redondeado, no quedarse dentro del margen.
+        child: fondo == null
+            ? Padding(padding: padding, child: child)
+            : Stack(
+                children: [
+                  fondo!,
+                  Padding(padding: padding, child: child),
+                ],
+              ),
       ),
     );
   }

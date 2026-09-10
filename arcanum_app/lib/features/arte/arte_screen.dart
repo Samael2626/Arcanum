@@ -252,6 +252,7 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
                 child: Text(
                   planetGlyph[p] ?? '',
                   style: TextStyle(
+                    fontFamilyFallback: kGlyphFallback,  // el glifo, no el emoji
                     fontSize: 22,
                     height: 1,
                     color: selected
@@ -282,7 +283,13 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
           children: [
             Text(
               planetGlyph[planet] ?? '',
-              style: TextStyle(color: mood.accent, fontSize: 18, height: 1),
+              style: TextStyle(
+                color: mood.accent,
+                fontSize: 18,
+                height: 1,
+                // El glifo, no el emoji del sistema.
+                fontFamilyFallback: kGlyphFallback,
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(

@@ -6,6 +6,9 @@ import 'dart:io';
 import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/core/theme/arcanum_theme.dart';
+import 'package:arcanum_app/core/router/app_router.dart';
+import 'package:arcanum_app/features/horoscopo/compartir_horoscopo.dart';
+import 'package:arcanum_app/features/horoscopo/widgets/tarjeta_compartir.dart';
 import 'package:arcanum_app/features/hoy/hoy_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -122,12 +125,23 @@ class _ApiDeMuestra extends ArcanumApi {
       'applying': true, 'tempo': 'slow',
       'exact_at': '2026-08-28T00:00:00+00:00',
     },
+    'year': {
+      'transit': 'moon', 'natal': 'saturn', 'aspect': 'sextile',
+      'angle': 60, 'orb': 1.1, 'separation': 61.1,
+      'applying': true, 'tempo': 'fast',
+    },
+    // Profeccion anual: sin esto la banda del anio no se pinta, que es
+    // justamente lo que hace la app cuando no hay fecha de nacimiento.
+    'profection': {
+      'age': 35, 'house': 5, 'sign': 'capricorn', 'sign_es': 'Capricornio',
+      'lord': 'saturn', 'points_in_sign': ['saturn'],
+    },
     'sect': 'day',
     'total_aspects': 9,
   };
 
   @override
-  Future<Map<String, dynamic>> horoscope() async => {
+  Future<Map<String, dynamic>> horoscope({DateTime? day}) async => {
     'date': '2026-08-24',
     'text': 'Saturno cierra un cuadrado con tu Sol: figura de tension entre '
         'cuerpos que se miran de frente. En la hora del Sol se trabajaba el oro.',
@@ -139,6 +153,42 @@ class _ApiDeMuestra extends ArcanumApi {
     'supporting': const [],
     'total_aspects': 9,
   };
+
+  @override
+  Future<Map<String, dynamic>> agenda({int days = 7}) async => {
+    'from': '2026-08-24', 'to': '2026-08-31', 'days': days, 'max_days': 30,
+    'background': {
+      'transit': 'jupiter', 'natal': 'north_node', 'aspect': 'opposition',
+    },
+    'events': [
+      {'kind': 'aspect_exact', 'date': '2026-08-25', 'transit': 'mercury',
+       'natal': 'sun', 'aspect': 'square'},
+      {'kind': 'house_ingress', 'date': '2026-08-27', 'transit': 'mars',
+       'from_house': 6, 'to_house': 7},
+      {'kind': 'aspect_exact', 'date': '2026-08-29', 'transit': 'venus',
+       'natal': 'ascendant', 'aspect': 'trine'},
+      {'kind': 'profection_change', 'date': '2026-08-30', 'age': 37,
+       'house': 6, 'lord': 'mercury', 'from_lord': 'venus'},
+    ],
+  };
+
+  @override
+  Future<List<Map<String, dynamic>>> horoscopeHistory({int limit = 30}) async => [
+    {
+      'date': '2026-08-23',
+      'text': 'Marte entró en tu casa 7 y el trato de ayer pide una respuesta.',
+      'sky': {
+        'today': {'transit': 'mars', 'natal': 'venus', 'aspect': 'square'},
+        'profection': {'house': 5, 'lord': 'saturn'},
+      },
+    },
+    // Una de las primeras: su cielo no traia carriles ni profeccion.
+    {
+      'date': '2026-08-01',
+      'text': 'De cuando el motor sabia menos y el texto era mas corto.',
+      'sky': <String, dynamic>{},
+    },
+  ];
 
   @override
   Future<Map<String, dynamic>> celestialOverview() async => {
@@ -199,6 +249,38 @@ Future<void> _montar(WidgetTester tester) async {
         debugShowCheckedModeBanner: false,
         theme: buildArcanumTheme(),
         home: const Scaffold(body: HoyScreen()),
+      ),
+    ),
+  );
+  await tester.pump();
+  await tester.pumpAndSettle();
+}
+
+/// Monta la APP ENTERA por el router, no una pantalla suelta.
+///
+/// Hace falta para retratar lo que solo existe en el shell: la barra de abajo y
+/// el boton flotante del horoscopo. Montando `HoyScreen` a pelo, el boton no
+/// sale en la foto porque no vive ahi -- vive en la carcasa, que es justo la
+/// decision que hay que poder mirar.
+Future<void> _montarApp(WidgetTester tester) async {
+  tester.view
+    ..physicalSize = _telefono * _escala
+    ..devicePixelRatio = _escala;
+  addTearDown(tester.view.reset);
+  final contenedor = ProviderContainer(
+    overrides: [
+      arcanumApiProvider.overrideWithValue(_ApiDeMuestra()),
+      authProvider.overrideWith(_AuthConLugar.new),
+    ],
+  );
+  addTearDown(contenedor.dispose);
+  await tester.pumpWidget(
+    UncontrolledProviderScope(
+      container: contenedor,
+      child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
+        theme: buildArcanumTheme(),
+        routerConfig: contenedor.read(arcanumRouterProvider),
       ),
     ),
   );
@@ -333,6 +415,97 @@ void main() {
     await tester.drag(find.byType(ListView), const Offset(0, -700));
     await tester.pumpAndSettle();
     await _retratar(tester, '05-texto-abierto');
+  });
+
+  testWidgets('06 el boton del horoscopo, sobre Hoy', (tester) async {
+    await _montarApp(tester);
+    await _retratar(tester, '06-boton-horoscopo');
+  });
+
+  testWidgets('07 la pantalla del horoscopo, con el boton apagado', (
+    tester,
+  ) async {
+    await _montarApp(tester);
+    await tester.tap(find.byTooltip('Horóscopo'));
+    await tester.pumpAndSettle();
+    await _retratar(tester, '07-horoscopo');
+  });
+
+  testWidgets('08 el historial, desplegado', (tester) async {
+    await _montarApp(tester);
+    await tester.tap(find.byTooltip('Horóscopo'));
+    await tester.pumpAndSettle();
+    // El boton vive al final de la lista y `ListView` no construye lo que no
+    // se ve: hay que bajar hasta el, no basta con `ensureVisible`.
+    await tester.scrollUntilVisible(
+      find.text('Ver días anteriores'),
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ver días anteriores'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('DÍAS ANTERIORES'),
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.pumpAndSettle();
+    await _retratar(tester, '08-historial');
+  });
+
+  testWidgets('09 la agenda de la semana', (tester) async {
+    await _montarApp(tester);
+    await tester.tap(find.byTooltip('Horóscopo'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('LO QUE VIENE'),
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.pumpAndSettle();
+    await _retratar(tester, '09-agenda');
+  });
+
+  testWidgets('10 la tarjeta que se comparte, tal cual se manda', (
+    tester,
+  ) async {
+    // No es un golden: se guarda el PNG QUE DE VERDAD SALE de `pintarTarjeta`,
+    // con su densidad y su tamano reales. Un golden del widget se capturaria
+    // en pixeles logicos y ensenaria 360x450, que no es lo que recibe nadie.
+    final clave = GlobalKey();
+    await tester.pumpWidget(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: buildArcanumTheme(),
+        home: Scaffold(
+          backgroundColor: Colors.black,
+          body: Center(
+            child: RepaintBoundary(
+              key: clave,
+              child: const TarjetaCompartir(
+                aspecto: {
+                  'transit': 'moon', 'natal': 'midheaven', 'aspect': 'trine',
+                  'angle': 120, 'separation': 119.34,
+                },
+                profeccion: {
+                  'age': 35, 'house': 5, 'sign_es': 'Capricornio',
+                  'lord': 'saturn',
+                },
+                texto: 'Saturno cierra un cuadrado con tu Sol: figura de '
+                    'tension entre cuerpos que se miran de frente. En la hora '
+                    'del Sol se trabajaba el oro.',
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final png = await tester.runAsync(() => pintarTarjeta(clave));
+    expect(png, isNotNull);
+    File('test/capturas/salida/10-tarjeta-compartir.png')
+        .writeAsBytesSync(png!);
   });
 
   testWidgets('99 diagnostico: que hay en pantalla', (tester) async {

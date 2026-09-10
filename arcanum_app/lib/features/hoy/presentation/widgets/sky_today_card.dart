@@ -16,11 +16,16 @@ import '../../../../shared/widgets/info_dot.dart';
 import '../../hoy_lore.dart';
 import '../../sky_today_state.dart';
 import 'today_card.dart';
+import 'lamina_del_signo.dart';
+import 'zodiaco_laminas.g.dart';
 import '../../../../shared/widgets/ai_output.dart';
 import '../../../../core/auth/auth_controller.dart';
 import '../../../../core/privacy/ai_consent_service.dart';
 import '../../../../core/astro/birth_data.dart';
+import 'banda_del_anio.dart';
 import 'sello_del_cielo.dart';
+import '../../../horoscopo/compartir_horoscopo.dart';
+import '../../../horoscopo/widgets/tarjeta_compartir.dart';
 
 /// "Tu cielo de hoy": el transito dominante de esta persona, leido por la IA.
 ///
@@ -59,6 +64,11 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
   /// contacto con ARCANUM era un dialogo legal.
   Future<Map<String, dynamic>>? _lectura;
   Future<Map<String, dynamic>>? _overview;
+
+  /// Ancla de la tarjeta que se comparte. Vive aqui y no dentro del boton
+  /// porque el widget que se captura tiene que estar montado ANTES del toque.
+  final GlobalKey _tarjeta = GlobalKey();
+  bool _compartiendo = false;
   bool _abriendo = false;
   bool _mostrarLectura = false;
   Timer? _lecturaTimer;
@@ -127,6 +137,29 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
     });
   }
 
+  /// Comparte la tarjeta del dia. El `origen` sale del boton que lo lanzo:
+  /// en iPad la hoja se despliega desde ahi, y sin eso se cae.
+  Future<void> _compartir({required String texto, String? fecha}) async {
+    if (_compartiendo) return;
+    setState(() => _compartiendo = true);
+    try {
+      final caja = context.findRenderObject() as RenderBox?;
+      await compartirTarjeta(
+        clave: _tarjeta,
+        fecha: fecha ?? DateTime.now().toIso8601String().split('T').first,
+        texto: 'Mi cielo de hoy, en ARCANUM.',
+        origen: caja == null
+            ? null
+            : caja.localToGlobal(Offset.zero) & caja.size,
+      );
+    } catch (_) {
+      // Compartir es opcional: si el sistema no abre la hoja, la lectura sigue
+      // en pantalla y no se interrumpe con un error.
+    } finally {
+      if (mounted) setState(() => _compartiendo = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // El perfil puede llegar despues de esta tarjeta (perfil encolado que se
@@ -151,8 +184,11 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
         final today = d['today'] as Map<String, dynamic>?;
         final chapter = d['chapter'] as Map<String, dynamic>?;
         final aspecto = today ?? chapter;
+        final signo = signoDesdeIngles[d['sun_sign'] as String? ?? ''];
 
         return _Shell(
+          signo: signo,
+          ingles: d['sun_sign'] as String?,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -161,9 +197,18 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
                 chapter: chapter,
                 overview: _overview,
                 regente: d['day_ruler'] as String?,
+                signo: signo == null ? null : d['sun_sign'] as String?,
                 abierto: _lectura != null,
                 cargando: _abriendo,
                 onAbrir: _romperLacre,
+              ),
+              // El anio va DEBAJO del sello y fuera de el: el sello dice que
+              // aprieta hoy y se abre; la banda dice de quien es el anio y no
+              // se abre nada. Aqui tambien sobrevive al cielo en calma, que es
+              // justo cuando saber el marco del anio es lo unico que queda.
+              BandaDelAnio(
+                profection: d['profection'] as Map<String, dynamic>?,
+                year: d['year'] as Map<String, dynamic>?,
               ),
               if (_lectura != null && _mostrarLectura)
                 FutureBuilder<Map<String, dynamic>>(
@@ -197,10 +242,53 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
                             _TransitHeadline(aspecto),
                             const SizedBox(height: 14),
                           ],
+                          // Si lo que llega se escribió otro día, se dice ANTES
+                          // del texto y no después: leerlo creyendo que es de
+                          // hoy y enterarse al final es peor que no tenerlo.
+                          if (lec.data!['is_previous'] == true) ...[
+                            _LecturaAnterior(
+                              fecha: lec.data!['date'] as String?,
+                            ),
+                            const SizedBox(height: 10),
+                          ],
                           AiOutput(
                             text: texto,
                             surface: 'horoscopo',
                             child: Text(texto, style: ArcanumText.body(15)),
+                          ),
+                          _BotonCompartir(
+                            ocupado: _compartiendo,
+                            onPressed: () => _compartir(
+                              texto: texto,
+                              fecha: lec.data!['date'] as String?,
+                            ),
+                          ),
+                          // La tarjeta se MONTA aqui, fuera de la pantalla.
+                          // No con `Offstage` ni con `Opacity(0)`: los dos se
+                          // saltan el pintado, y sin pintar no hay capa que
+                          // capturar -- `toImage` devolveria un error. Movida
+                          // con `Transform` si se pinta, y nadie la ve.
+                          // Y fuera de la semantica: un lector de pantalla
+                          // leeria dos veces el mismo horoscopo -- el de la
+                          // pantalla y el de la tarjeta escondida --, y en las
+                          // busquedas del arbol aparece duplicado. Lo cazo un
+                          // test de Hoy que ya existia.
+                          Transform.translate(
+                            offset: const Offset(0, -10000),
+                            child: ExcludeSemantics(
+                              child: IgnorePointer(
+                                child: RepaintBoundary(
+                                  key: _tarjeta,
+                                  child: TarjetaCompartir(
+                                    aspecto: aspecto,
+                                    profeccion:
+                                        d['profection']
+                                            as Map<String, dynamic>?,
+                                    texto: texto,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -233,19 +321,62 @@ class _Cargando extends StatelessWidget {
   );
 }
 
+// EL NOMBRE DEL SIGNO va bajo el rotulo de la tarjeta.
+//
+// Se eligio con las dos ubicaciones retratadas y medidas, no de memoria. Con
+// el oro `#C9A84C`, cuyo techo sobre negro es 9,19:
+//
+//   - bajo el ROTULO -- 8,34 a 8,45. Cae dentro de la banda oscura que la
+//     tarjeta ya tiene arriba, asi que va cerca del techo del color.
+//   - bajo el ARO, como pie -- 2,99 a 8,53. Cae en la franja limpia, que es
+//     donde el grabado se ve a plena luz, y NO pasa AA en las planchas
+//     claras: Aries 2,99 y Capricornio 3,51. Para usarla habria que darle su
+//     propia banda de velo, y eso se come parte de la franja que el encuadre
+//     de cada signo costo ganar.
+//
+// Ademas no roba altura a la lamina y no toca la jerarquia: el rotulo ya era
+// el bloque que identifica la tarjeta.
+
 class _Shell extends StatelessWidget {
   final Widget child;
-  const _Shell({required this.child});
+
+  /// Signo solar de quien mira, para poner su lamina de fondo. Llega null
+  /// mientras el cielo carga o si la carta no trae Sol: entonces la tarjeta es
+  /// la de siempre, sin grabado, y no se rompe nada.
+  final Signo? signo;
+
+  /// El mismo signo, en ingles, para el glifo y el nombre.
+  final String? ingles;
+
+  const _Shell({required this.child, this.signo, this.ingles});
 
   @override
   Widget build(BuildContext context) => TodayCard(
     mood: ArcanumMood.neutral,
     intensity: 0.6,
+    fondo: signo == null
+        ? null
+        : LaminaDelSigno(signo: signo!, radio: BorderRadius.circular(18)),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Center(
-          child: SectionLabel('TU CIELO DE HOY', infoKey: 'transitos'),
+        Center(
+          child: signo == null
+              ? const SectionLabel('TU CIELO DE HOY', infoKey: 'transitos')
+              : Column(
+                  children: [
+                    const SectionLabel('TU CIELO DE HOY', infoKey: 'transitos'),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${signGlyph[ingles] ?? ''}  ${signEs[ingles] ?? ''}'
+                          .toUpperCase(),
+                      style: ArcanumText.label().copyWith(
+                        color: ArcanumColors.gold,
+                        fontFamilyFallback: kGlyphFallback,
+                      ),
+                    ),
+                  ],
+                ),
         ),
         const SizedBox(height: 16),
         child,
@@ -435,6 +566,8 @@ class _FailureState extends ConsumerState<_Failure> {
         // No dice "reintentar": lo que hay que rehacer es la decision, y
         // llamarlo reintento la disfrazaria de fallo tecnico.
         return 'Revisar el permiso';
+      case SkyTodayFailure.sinCupo:
+        return 'Ver planes y créditos';
     }
   }
 }
@@ -481,6 +614,103 @@ class _LocalReading extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// El botón de compartir. Discreto y al final: se comparte lo que ya se leyó.
+class _BotonCompartir extends StatelessWidget {
+  const _BotonCompartir({required this.ocupado, required this.onPressed});
+
+  final bool ocupado;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.centerLeft,
+    child: TextButton.icon(
+      onPressed: ocupado ? null : onPressed,
+      icon: Icon(
+        Icons.ios_share,
+        size: 16,
+        color: ocupado ? ArcanumColors.goldMuted : ArcanumColors.gold,
+      ),
+      label: Text(
+        ocupado ? 'Preparando…' : 'Compartir',
+        style: ArcanumText.body(
+          13,
+          color: ocupado ? ArcanumColors.goldMuted : ArcanumColors.gold,
+        ),
+      ),
+    ),
+  );
+}
+
+/// El aviso de que esta lectura es de otro día.
+///
+/// El plan gratuito genera una interpretación cada dos días, así que el segundo
+/// recibe la anterior. Eso NO se disfraza: se dice qué día se escribió, antes
+/// del texto, y se ofrece la única salida que lo cambia. El sello de arriba
+/// sigue siendo el de hoy — el cálculo nunca se raciona.
+class _LecturaAnterior extends StatelessWidget {
+  const _LecturaAnterior({required this.fecha});
+
+  final String? fecha;
+
+  static const _meses = [
+    'enero',
+    'febrero',
+    'marzo',
+    'abril',
+    'mayo',
+    'junio',
+    'julio',
+    'agosto',
+    'septiembre',
+    'octubre',
+    'noviembre',
+    'diciembre',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final d = fecha == null ? null : DateTime.tryParse(fecha!);
+    final cuando = d == null
+        ? 'de un día anterior'
+        : 'del ${d.day} de ${_meses[d.month - 1]}';
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: ArcanumColors.surfaceHigh.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(10),
+        border: Border(
+          left: BorderSide(color: ArcanumColors.goldMuted, width: 2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Esta es tu lectura $cuando.',
+            style: ArcanumText.body(13, color: ArcanumColors.ivoryMuted),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'El cielo de arriba sí es el de hoy. Con la suscripción, la lectura '
+            'también se escribe cada día.',
+            style: ArcanumText.body(12, color: ArcanumColors.ivoryMuted),
+          ),
+          const SizedBox(height: 4),
+          InkWell(
+            onTap: () => context.go('/paywall'),
+            child: Text(
+              'Ver la suscripción',
+              style: ArcanumText.body(13, color: ArcanumColors.gold),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

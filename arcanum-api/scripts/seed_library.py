@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -39,6 +40,32 @@ DATA_DIR = Path(__file__).parent / "library_data"
 # Estado de una traducción que aún no ha revisado nadie. Lo que NO está así
 # lleva mano humana encima y este script no lo toca.
 MACHINE = "machine"
+
+# La versalita del original impreso, que Gutenberg transcribe en MAYUSCULAS.
+#
+# Culpeper abre muchos capitulos con la primera palabra entera en caja alta --
+# "BESIDES its common name..." -- porque en el impreso esa palabra lleva capital
+# y versalitas. Al traducir, esa forma se arrastra a una palabra de otra
+# longitud y sale partida: "BESIDES" acabo en "ADemás", con dos mayusculas
+# pegadas al resto en minuscula. Se veia en 6 de los 82 capitulos traducidos
+# (alkanet, amaranthus, bishops-weed, ladies-bed-straw, brank-ursine, bugle).
+#
+# Se corrige AQUI, en la ingesta, y no al pintar: es un defecto del dato, y
+# parchearlo en el cliente lo dejaria mal en la base, en la busqueda y en los
+# pasajes guardados.
+#
+# Solo dispara al principio del parrafo y solo si a las mayusculas les sigue
+# una minuscula PEGADA. "CONSIDERANDO que..." -- palabra entera en caja alta
+# seguida de espacio -- no cumple, y se queda como esta: ahi la versalita si
+# sobrevivio entera a la traduccion y es fiel al impreso.
+_VERSALITA_PARTIDA = re.compile(r"^([A-ZÁÉÍÓÚÑ]{2,})(?=[a-záéíóúñ])")
+
+
+def corregir_versalita_inicial(texto: str) -> str:
+    """«ADemás de su nombre» -> «Además de su nombre»."""
+    return _VERSALITA_PARTIDA.sub(
+        lambda m: m.group(1)[0] + m.group(1)[1:].lower(), texto, count=1
+    )
 
 # Culpeper afirma curar la peste, la ictericia y la hidropesía. Google Play
 # prohíbe las afirmaciones de salud engañosas: presentar esto como consejo
@@ -141,7 +168,9 @@ def main() -> None:
                     # traducción automática dentro. Perder la corrección ya es
                     # malo; perderla y seguir diciendo que está revisada, peor.
                     if paragraph.translation_status in (None, MACHINE):
-                        paragraph.text_es = spanish[index]
+                        paragraph.text_es = corregir_versalita_inicial(
+                            spanish[index]
+                        )
                         # "machine" hasta que alguien la revise. Se muestra al
                         # usuario: una traducción automática debe declararse.
                         paragraph.translation_status = MACHINE

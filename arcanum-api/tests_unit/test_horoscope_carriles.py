@@ -17,6 +17,30 @@ import pytest
 from app.services import horoscope as ho
 from app.services import transit_weight as tw
 
+
+class _ArchivoFalso:
+    """El archivo de horoscopos. Registra lo que se le manda guardar.
+
+    No commitea: la ruta guarda y captura en un solo commit, y aqui se
+    comprueba justo eso -- que lo archivado y lo cobrado van juntos.
+    """
+
+    def __init__(self):
+        self.guardadas = []
+
+    def add(self, user_id, local_date, text, sky, commit=False):
+        self.guardadas.append((user_id, local_date, text, sky))
+
+    def last(self, user_id, limit=30):
+        return []
+
+
+# Fecha de nacimiento del doble: la profeccion anual la necesita para saber
+# que anio vive esta persona. Sin ella el endpoint sigue funcionando, pero
+# entonces el doble no ejercitaria ese camino.
+NACIMIENTO = datetime(1990, 6, 15, 12, 0, tzinfo=timezone.utc)
+
+
 AHORA = datetime(2026, 8, 18, 12, 0, tzinfo=timezone.utc)
 
 
@@ -174,11 +198,13 @@ def test_la_respuesta_lleva_los_dos_carriles_y_la_secta(monkeypatch):
                         lambda _sky, _terms: ("Un texto entero.", {"available": True}))
 
     usuario = SimpleNamespace(id=uuid4(), birth_timezone="America/Bogota",
+                           subscription_tier="free",
+                              birth_date=NACIMIENTO,
                               birth_lat=None, birth_lon=None)
     carta = SimpleNamespace(chart_data={
         "planets": [{"name": "sun", "longitude": 10.0, "house": 10}]})
 
-    astral.horoscope(current_user=usuario,
+    astral.horoscope(archivo=_ArchivoFalso(), current_user=usuario,
                      repo=SimpleNamespace(get_by_user_id=lambda _i: carta),
                      db=None)
 
@@ -189,3 +215,40 @@ def test_la_respuesta_lleva_los_dos_carriles_y_la_secta(monkeypatch):
         assert clave in result, f"la respuesta del horoscopo no incluye {clave}"
     # El Sol en casa 10 esta sobre el horizonte: la secta viaja resuelta.
     assert result["sect"] == "day"
+
+
+# ── La frontera entre eleccion y adivinacion ────────────────────────────────
+# Se puede decir a QUE SE PRESTA el cielo; no se puede decir que le va a pasar
+# a quien lee. La linea es el sujeto, y si alguien la borra estos tests caen.
+
+def test_el_prompt_permite_la_afinidad():
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    assert "# AFINIDAD: A QUE SE PRESTA ESTE CIELO" in P
+    assert "esta del lado de" in P
+
+
+def test_el_prompt_sigue_vetando_la_promesa_de_resultado():
+    """Que la puerta se abra a la eleccion no la abre al pronostico."""
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    for formula in ('"te ira bien en"', '"conseguiras"', '"recibiras"',
+                    '"la suerte"'):
+        assert formula in P, f"falta el veto de {formula}"
+    assert "Prohibidas sin excepcion" in P
+
+
+def test_la_afinidad_no_se_convierte_en_orden():
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    assert "Y NO ES UNA ORDEN" in P
+    assert '"deberias limar"' in P
+
+
+def test_un_cielo_que_no_empuja_se_puede_decir():
+    """Inventar afinidad para no dejar hueco es el vicio a evitar."""
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    assert "CUANDO NO HAY, NO HAY" in P
+
+
+def test_el_prompt_sigue_exigiendo_que_se_entienda():
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    assert "# SE TIENE QUE ENTENDER SIN SABER NADA" in P
+    assert "CADA TERMINO SE PAGA EN EL ACTO" in P

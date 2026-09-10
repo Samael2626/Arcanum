@@ -172,10 +172,49 @@ class ArcanumApi {
   /// No lleva `Idempotency-Key`: la unicidad la pone el servidor con la fecha
   /// local de la persona. Pero llama al modelo igual que el Oraculo, asi que
   /// necesita la misma espera; sin esto quedaba con los 12 s globales.
-  Future<Map<String, dynamic>> horoscope() async {
+  ///
+  /// Con [day] se recupera una jornada pasada, y eso CUESTA UN CRÉDITO: el cupo
+  /// de aquel día venció y el de hoy es de hoy. Si esa jornada ya se generó en
+  /// su momento, el servidor la devuelve como replay y no cobra nada.
+  Future<Map<String, dynamic>> horoscope({DateTime? day}) async {
     final res = await _dio.get(
       '/astral/horoscope',
+      queryParameters: day == null
+          ? null
+          : {'day': day.toIso8601String().split('T').first},
       options: Options(receiveTimeout: _esperaModelo),
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Los horóscopos ya escritos de esta persona, del más reciente al más viejo.
+  ///
+  /// NO genera nada: lee el archivo. Por eso no lleva la espera larga del
+  /// modelo ni pide consentimiento — mirar atrás no manda nada a terceros.
+  ///
+  /// Las lecturas viejas pueden venir sin `year`, `profection` o `ingress`:
+  /// son campos que el motor aprendió después. Quien las pinte tiene que
+  /// tolerarlo.
+  Future<List<Map<String, dynamic>>> horoscopeHistory({int limit = 30}) async {
+    final res = await _dio.get(
+      '/astral/horoscope/history',
+      queryParameters: {'limit': limit},
+    );
+    final data = res.data as Map<String, dynamic>;
+    return (data['readings'] as List? ?? [])
+        .cast<Map<String, dynamic>>()
+        .toList();
+  }
+
+  /// La agenda del cielo: lo que le pasa a tu carta en los próximos días.
+  ///
+  /// Cálculo puro, como `skyToday`: ni cupo, ni modelo, ni terceros. El
+  /// servidor acota `days` a su propio techo (30) y devuelve `max_days` para
+  /// que aquí no haya que repetir ese número ni adivinarlo.
+  Future<Map<String, dynamic>> agenda({int days = 7}) async {
+    final res = await _dio.get(
+      '/astral/agenda',
+      queryParameters: {'days': days},
     );
     return res.data as Map<String, dynamic>;
   }
@@ -260,11 +299,11 @@ class ArcanumApi {
     String? excerpt,
     String? note,
   }) => createContentReport(
-        source: surface,
-        contentRef: '',
-        reason: reason,
-        note: note,
-      );
+    source: surface,
+    contentRef: '',
+    reason: reason,
+    note: note,
+  );
 
   /// Tira de tarot. spread: 'three_card' | 'celtic_cross'. Requiere auth.
   /// Devuelve la sesión guardada (cartas en data['cards_drawn']['cards']).

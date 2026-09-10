@@ -21,12 +21,18 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Los precios vienen de Play/App Store ya localizados. Si no cargan, el
-    // SKU no se muestra ni se puede tocar: mejor una via menos que un precio
-    // inventado, que ademas es motivo de rechazo en ambas tiendas.
-    final precios =
-        ref.watch(storePricesProvider).value ?? const <String, String>{};
+    // Los precios vienen de Play/App Store ya localizados. Si no cargan no se
+    // ensena ninguna cifra: un precio inventado miente fuera de Estados Unidos
+    // y es motivo de rechazo en ambas tiendas. Pero la tarjeta si dice que no
+    // hay precio, y el boton sigue vivo para poder explicarlo y reintentar.
+    // `.value ?? {}` aplastaba los tres estados del provider en uno: cargando,
+    // fallido y "la tienda no tiene nada" quedaban igual de mudos. Se conserva
+    // el AsyncValue para poder decir cual de los tres es.
+    final preciosAsync = ref.watch(storePricesProvider);
+    final precios = preciosAsync.value ?? const <String, String>{};
+    final cargandoPrecios = preciosAsync.isLoading;
     final hayConsumibles = ProductIds.enVenta.any(precios.containsKey);
+    final hayAnual = precios[ProductIds.premiumAnnual] != null;
     // El ahorro se calcula con los importes reales de la tienda. Escrito a
     // mano ("AHORRA 42%") era una afirmacion sobre precios en dolares que deja
     // de ser cierta en cuanto cambia la moneda o el precio en la consola.
@@ -100,7 +106,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   ],
                   accent: ArcanumColors.goldMuted,
                   selected: false,
-                  onTap: hayConsumibles ? _showConsumablesSheet : null,
+                  onTap: hayConsumibles
+                      ? _showConsumablesSheet
+                      : () => _avisarSinOfertas(cargandoPrecios),
+                  estado: hayConsumibles ? null : _leyendaOfertas(cargandoPrecios),
                   ctaLabel: 'Ver créditos y packs',
                 ),
                 const SizedBox(height: 14),
@@ -119,9 +128,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   ],
                   accent: ArcanumColors.gold,
                   selected: true,
-                  onTap: precios[ProductIds.premiumAnnual] == null
-                      ? null
-                      : _purchaseAnnual,
+                  onTap: hayAnual
+                      ? _purchaseAnnual
+                      : () => _avisarSinOfertas(cargandoPrecios),
+                  estado: hayAnual ? null : _leyendaOfertas(cargandoPrecios),
                   badge: ahorroAnual,
                 ),
                 const SizedBox(height: 10),
@@ -196,12 +206,17 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         });
         return;
       }
-      final success = await service.purchasePackage(annual);
-      if (success && mounted) {
+      final resultado = await service.purchasePackage(annual);
+      if (resultado == PurchaseOutcome.comprada && mounted) {
         Navigator.of(context).pop(true);
       } else {
         setState(() {
           _loading = false;
+          // Cancelar es una decision, no un fallo: ahi no se dice nada. Que la
+          // tienda falle si hay que contarlo.
+          if (resultado == PurchaseOutcome.fallida) {
+            _error = 'No se pudo completar la compra. Inténtalo de nuevo.';
+          }
         });
       }
     } catch (e) {
@@ -210,6 +225,23 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         _loading = false;
       });
     }
+  }
+
+  /// Lo que se pinta donde iria el precio mientras no hay ninguno.
+  String _leyendaOfertas(bool cargando) => cargando
+      ? 'Consultando los precios de Google Play…'
+      : 'Precios no disponibles ahora mismo';
+
+  /// Un boton apagado que no dice por que es un callejon sin salida: el usuario
+  /// pulsa, no pasa nada y no tiene forma de saber si es culpa suya. Si no hay
+  /// oferta que comprar se dice, y ademas se reintenta la consulta.
+  void _avisarSinOfertas(bool cargando) {
+    if (!cargando) ref.invalidate(storePricesProvider);
+    setState(() {
+      _error = cargando
+          ? 'Todavía estamos consultando los precios. Inténtalo en un momento.'
+          : 'Oferta no disponible. Revisa tu conexión e inténtalo de nuevo.';
+    });
   }
 
   Future<void> _purchaseMonthly() async {
@@ -228,12 +260,17 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         });
         return;
       }
-      final success = await service.purchasePackage(monthly);
-      if (success && mounted) {
+      final resultado = await service.purchasePackage(monthly);
+      if (resultado == PurchaseOutcome.comprada && mounted) {
         Navigator.of(context).pop(true);
       } else {
         setState(() {
           _loading = false;
+          // Cancelar es una decision, no un fallo: ahi no se dice nada. Que la
+          // tienda falle si hay que contarlo.
+          if (resultado == PurchaseOutcome.fallida) {
+            _error = 'No se pudo completar la compra. Inténtalo de nuevo.';
+          }
         });
       }
     } catch (e) {
@@ -297,6 +334,11 @@ class _TierCard extends StatelessWidget {
   /// hoja de packs de pago.
   final String? ctaLabel;
 
+  /// Ocupa el sitio del precio cuando la tienda todavia no ha dado ninguno.
+  /// Una tarjeta sin precio y sin explicacion no se distingue de una tarjeta
+  /// que simplemente no cuesta nada.
+  final String? estado;
+
   const _TierCard({
     required this.title,
     required this.subtitle,
@@ -307,6 +349,7 @@ class _TierCard extends StatelessWidget {
     this.onTap,
     this.badge,
     this.ctaLabel,
+    this.estado,
   });
 
   @override
@@ -380,6 +423,16 @@ class _TierCard extends StatelessWidget {
               Text(
                 price,
                 style: ArcanumText.heading(26, color: accent),
+              ),
+            ] else if (estado != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                estado!,
+                style: ArcanumText.body(
+                  13,
+                  color: ArcanumColors.ivoryMuted,
+                  italic: true,
+                ),
               ),
             ],
             const SizedBox(height: 12),
@@ -489,7 +542,17 @@ class _ConsumiblesSheet extends ConsumerWidget {
     Navigator.of(context).pop();
     final service = ProviderScope.containerOf(parentContext)
         .read(monetizationServiceProvider);
-    await service.purchaseProduct(productId);
+    final resultado = await service.purchaseProduct(productId);
+    // La hoja ya esta cerrada, asi que el aviso va sobre la pantalla de abajo.
+    // Cancelar no se comenta; fallar sin decir nada dejaba al usuario creyendo
+    // que habia comprado.
+    if (resultado == PurchaseOutcome.fallida && parentContext.mounted) {
+      ScaffoldMessenger.of(parentContext).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo completar la compra. Inténtalo de nuevo.'),
+        ),
+      );
+    }
   }
 }
 

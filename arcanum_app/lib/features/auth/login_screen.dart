@@ -48,14 +48,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: ArcanumColors.ivoryMuted),
-          onPressed: () => context.go('/hoy'),
-        ),
-      ),
+      // SIN botón de cerrar. Llevaba a `/hoy`, y desde que la guarda del router
+      // manda a `/login` a quien no tiene sesión, `/hoy` devolvía aquí mismo:
+      // un botón que no hacía nada visible. Y con sesión esta pantalla ya no se
+      // alcanza, así que no hay ningún caso en el que haya algo que cerrar.
+      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(28),

@@ -6,6 +6,8 @@
 /// citable al oráculo.
 library;
 
+import 'gutenberg_markup.dart';
+
 /// Cómo llegó la traducción de un párrafo. Se muestra al usuario: una
 /// traducción automática debe declararse.
 enum TranslationStatus {
@@ -75,8 +77,14 @@ class LibraryParagraph {
 
   /// El texto a mostrar. Cae al original si no hay traducción todavía: es
   /// preferible leer en inglés a ver un hueco sin explicación.
-  String textFor({required bool spanish}) =>
-      spanish ? (textEs ?? textOriginal) : textOriginal;
+  ///
+  /// Sale ya sin las notas editoriales de Gutenberg. Es el único sitio por el
+  /// que asoma el texto del párrafo, así que limpiar aquí vale a la vez para el
+  /// lector, la búsqueda y los pasajes guardados. El marcado de cursiva sí se
+  /// conserva: lo interpreta [runsDeMarcado] al pintar.
+  String textFor({required bool spanish}) => limpiarNotasEditoriales(
+        spanish ? (textEs ?? textOriginal) : textOriginal,
+      );
 
   bool get hasTranslation => textEs != null && textEs!.isNotEmpty;
 

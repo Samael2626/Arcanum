@@ -260,7 +260,12 @@ class _NatalWheelState extends State<NatalWheel>
             children: [
               Text(
                 planetGlyph[name] ?? '?',
-                style: TextStyle(fontSize: 46, color: mood.accent),
+                style: TextStyle(
+                  fontSize: 46,
+                  color: mood.accent,
+                  // El glifo, no el emoji del sistema.
+                  fontFamilyFallback: kGlyphFallback,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(

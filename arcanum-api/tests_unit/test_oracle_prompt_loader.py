@@ -43,16 +43,27 @@ def test_en_produccion_sin_catalogo_lanza_503(monkeypatch):
     assert exc.value.status_code == 503
 
 
-def test_en_desarrollo_sin_catalogo_usa_respaldo_que_se_declara(monkeypatch):
+def test_en_desarrollo_sin_catalogo_usa_el_respaldo(monkeypatch):
+    """Se sirve el respaldo, pero SIN contarle al modelo donde corre.
+
+    Antes este test exigia leer «Modo desarrollo» en el prompt, o sea fijaba la
+    filtracion: esa frase iba dentro del system prompt y el modelo la tomaba
+    por contexto. Que falte la voz se avisa por el log, no por el prompt.
+    """
     monkeypatch.setattr(settings, "ARCANUM_DATA_DIR", None)
     monkeypatch.setattr(settings, "ENVIRONMENT", "development")
     texto = oracle_prompt.get_oracle_system_prompt()
-    assert "Modo desarrollo" in texto
+    assert texto == oracle_prompt._FALLBACK_DESARROLLO
+    for filtracion in ("Modo desarrollo", "ARCANUM_DATA_DIR", "system prompt"):
+        assert filtracion not in texto
 
 
 def test_el_respaldo_nunca_se_usa_en_produccion(catalogo, monkeypatch):
     monkeypatch.setattr(settings, "ENVIRONMENT", "production")
-    assert "Modo desarrollo" not in oracle_prompt.get_oracle_system_prompt()
+    assert (
+        oracle_prompt.get_oracle_system_prompt()
+        != oracle_prompt._FALLBACK_DESARROLLO
+    )
 
 
 # ── La variable de entorno, que es la unica via en produccion ────────────────

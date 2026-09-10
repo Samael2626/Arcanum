@@ -270,6 +270,7 @@ class _TarotViewState extends ConsumerState<_TarotView> {
                   child: Text(
                     glyph,
                     style: const TextStyle(
+                      fontFamilyFallback: kGlyphFallback,  // el glifo, no el emoji
                       fontSize: 38,
                       color: ArcanumColors.gold,
                     ),

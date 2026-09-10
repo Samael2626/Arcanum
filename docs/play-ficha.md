@@ -302,7 +302,7 @@ Todo generado y validado contra los requisitos de Play:
 
 Se regenera con `python tool/generar_material_ficha.py`.
 
-> **Donde estan de verdad:** `D:\Proyectos\Arcanum\.tmpicha\` (el worktree
+> **Donde estan de verdad:** `D:\Proyectos\Arcanum\.tmp\ficha\` (el worktree
 > principal, no el de release). `.tmp/` esta fuera de git a proposito.
 
 **Verificado el 26/08 leyendo las cabeceras PNG, no el nombre del archivo:**
@@ -323,6 +323,16 @@ Valida hasta  2054-01-06                    Play exige >= 2033-10-22
 Alias         UPLOAD
 debuggable    ausente del manifiesto
 ```
+
+> **El grafico destacado ya no se dibuja con PIL.** El arte definitivo es el
+> sello del astrolabio con el color realzado del icono del lanzador —los siete
+> medallones a 0.62 de opacidad con pozo interior, la rampa de oro
+> `f7e6b0/d9b463/9a7940`— sobre cinco orbitas y un campo de estrellas.
+> Vive versionado en `arcanum_app/tool/ficha/grafico-destacado-1024x500.png`
+> (y su `.svg`), y el generador solo lo valida a 1024x500 y lo aplana a RGB.
+> El vectorial que lo compone es `.tmp/ficha/generar-destacado.js`, que reutiliza
+> el nucleo de `generar-master.js`; `.tmp/` no esta versionado, asi que el PNG y
+> el SVG son la fuente que hay que conservar.
 
 > **Por qué 1080x1920 y no el formato del móvil.** Play exige que el lado mayor
 > de una captura no pase del **doble** del menor. El formato moderno (390x844,
