@@ -400,6 +400,12 @@ void main() {
     expect(api.horoscopeCalls, 1);
     expect(api.celestialOverviewCalls, 1);
     expect(await AiConsentService().status('user-a'), AiConsentStatus.granted);
+    // Los otros aspectos ya no salen desplegados: tapaban la pantalla entera.
+    // Se piden, y a partir de ahi todo lo de abajo sigue igual.
+    expect(find.byType(AspectWheel), findsNothing);
+    await tester.tap(find.text('OTROS ASPECTOS (3)'));
+    await tester.pumpAndSettle();
+
     expect(find.text('Urano trígono Luna'), findsOneWidget);
     expect(find.text('Neptuno cuadratura Sol'), findsOneWidget);
     expect(find.text('Plutón oposición Venus'), findsOneWidget);

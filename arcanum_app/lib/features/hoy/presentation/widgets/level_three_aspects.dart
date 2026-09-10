@@ -9,15 +9,29 @@ import '../../domain/figura_aspecto.dart';
 
 const double aspectBodyHaloScale = 1.5;
 
-class LevelThreeAspects extends StatelessWidget {
+/// La rejilla entera desplegada de golpe tapaba el resto de la pantalla: son
+/// dos columnas de relojes de 176 px que empujan hacia abajo todo lo que va
+/// despues. El aspecto que importa hoy ya esta destacado mas arriba, en el
+/// sello; esto es el detalle, y el detalle se pide.
+///
+/// Colapsada por defecto, con el mismo gesto que la capa 3 de Cielos:
+/// `AnimatedCrossFade` de 180 ms y el chevron en oro.
+class LevelThreeAspects extends StatefulWidget {
   const LevelThreeAspects({super.key, required this.overview});
 
   final Future<Map<String, dynamic>> overview;
 
   @override
+  State<LevelThreeAspects> createState() => _LevelThreeAspectsState();
+}
+
+class _LevelThreeAspectsState extends State<LevelThreeAspects> {
+  bool _abierto = false;
+
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, dynamic>>(
-      future: overview,
+      future: widget.overview,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Padding(
@@ -67,38 +81,123 @@ class LevelThreeAspects extends StatelessWidget {
           );
         }
 
+        final rejilla = GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisExtent: 176,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+          ),
+          itemCount: aspects.length,
+          itemBuilder: (context, index) {
+            final aspect = aspects[index];
+            final transit = aspect['transit'] as String?;
+            final natal = aspect['natal'] as String?;
+            return _AspectTarget(
+              index: index,
+              aspect: aspect,
+              transitLongitude: transitLongitudes[transit],
+              natalLongitude: natalLongitudes[natal],
+            );
+          },
+        );
+
         return Padding(
           padding: const EdgeInsets.only(top: 20),
           child: Column(
             children: [
-              Text('TODOS LOS ASPECTOS', style: ArcanumText.label()),
-              const SizedBox(height: 12),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisExtent: 176,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                ),
-                itemCount: aspects.length,
-                itemBuilder: (context, index) {
-                  final aspect = aspects[index];
-                  final transit = aspect['transit'] as String?;
-                  final natal = aspect['natal'] as String?;
-                  return _AspectTarget(
-                    index: index,
-                    aspect: aspect,
-                    transitLongitude: transitLongitudes[transit],
-                    natalLongitude: natalLongitudes[natal],
-                  );
-                },
+              _Interruptor(
+                abierto: _abierto,
+                cuantos: aspects.length,
+                onTap: () => setState(() => _abierto = !_abierto),
+              ),
+              // `AnimatedSize` y no el `AnimatedCrossFade` de Cielos, aunque el
+              // gesto que se ve sea el mismo: el crossfade construye SIEMPRE
+              // sus dos hijos, asi que la rejilla entera seguiria montandose
+              // cerrada -- que es justo lo que se venia a quitar. Aqui son N
+              // relojes de 176 px con su pintura; alli era un parrafo.
+              AnimatedSize(
+                duration: const Duration(milliseconds: 180),
+                alignment: Alignment.topCenter,
+                curve: Curves.easeOut,
+                child: _abierto
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: rejilla,
+                      )
+                    : const SizedBox(width: double.infinity),
               ),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+/// La fila que abre y cierra. Cerrada dice cuantos hay detras -- "OTROS
+/// ASPECTOS (5)" --, porque un rotulo pelado no invita a tocar nada.
+///
+/// "OTROS" y no "TODOS": el que manda hoy ya esta arriba, en el sello, y estos
+/// son los demas. Es ademas lo que dice el aviso de dos parrafos mas arriba
+/// cuando no hay ninguno.
+///
+/// El rotulo largo no cabe, medido con `TextPainter` sobre `ArcanumText.label`
+/// (12 px con 3 de letterSpacing): "VER TODOS LOS ASPECTOS (3)" pide 390 px y
+/// dentro de la tarjeta hay 318. "OTROS ASPECTOS (3)" mide 270, los mismos que
+/// el rotulo que ya vivia aqui.
+class _Interruptor extends StatelessWidget {
+  const _Interruptor({
+    required this.abierto,
+    required this.cuantos,
+    required this.onTap,
+  });
+
+  final bool abierto;
+  final int cuantos;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final rotulo = abierto ? 'OTROS ASPECTOS' : 'OTROS ASPECTOS ($cuantos)';
+    return Semantics(
+      button: true,
+      expanded: abierto,
+      label: abierto
+          ? 'Ocultar los otros aspectos'
+          : 'Ver los otros $cuantos aspectos',
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        // 48 de alto: es el minimo que se puede tocar sin fallar.
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Flexible por si el usuario agranda la letra del sistema: mide
+              // justo, y sin esto volveria a desbordar en vez de encogerse.
+              Flexible(
+                child: ExcludeSemantics(
+                  child: Text(
+                    rotulo,
+                    style: ArcanumText.label(),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Icon(
+                abierto ? Icons.expand_less : Icons.expand_more,
+                size: 18,
+                color: ArcanumColors.goldMuted,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
