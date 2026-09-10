@@ -252,3 +252,22 @@ def test_el_prompt_sigue_exigiendo_que_se_entienda():
     from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
     assert "# SE TIENE QUE ENTENDER SIN SABER NADA" in P
     assert "CADA TERMINO SE PAGA EN EL ACTO" in P
+
+
+# ── La vuelta del 10-sep-2026: se derogo la prohibicion de la jornada ───────
+
+def test_el_prompt_permite_hablar_de_la_jornada():
+    """Lo contrario de lo que fijaba la regla del 23-ago, y a proposito."""
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    assert "# LA FRONTERA: LA JORNADA SI, EL RESULTADO NO" in P
+    assert "en segunda persona" in P
+    assert "PROHIBIDO el animo" not in P, (
+        "la prohibicion se derogo el 10-sep-2026; si vuelve, es que alguien "
+        "deshizo la decision sin querer")
+
+
+def test_la_jornada_tiene_que_colgar_de_un_aspecto():
+    """Sin esto, hablar del dia de alguien es el horoscopo de revista."""
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    assert "CUELGA de un aspecto" in P
+    assert "terreno reconocible" in P

@@ -55,6 +55,32 @@ FORMULAS_DE_GREMIO: tuple[str, ...] = (
 # domicilio", "del roce sale la obra" -- que son la doctrina dicha, no copiada.
 MINIMO_COPIA = 45
 
+# La promesa de RESULTADO CERRADO, que es la unica mitad de la regla del
+# 23-ago-2026 que sobrevivio a la vuelta del 10-sep. Desde esa vuelta el texto
+# SI habla de la jornada de quien lee, asi que la frontera dejo de ser de
+# sujeto y paso a ser de verificabilidad: "vas a encontrarte mas friccion"
+# sigue siendo verdad aunque el dia acabe de otra manera; "vas a ganar esa
+# discusion" se comprueba manana, y por eso es adivinacion.
+#
+# Es lo bastante determinista para comprobarse en vez de pedirse, que es lo que
+# este archivo hace con todo lo que se puede mirar con una funcion pura.
+#
+# DELIBERADAMENTE MAS CORTA QUE EL PROMPT. El prompt veta ademas "tendras",
+# "encontraras" y "recibiras" pelados, y aqui no entran: con la jornada ya
+# permitida, "tendras que decidir con menos margen" y "encontraras mas
+# resistencia de la que esperabas" son exactamente lo que se vino a buscar.
+# Marcarlas costaria un reintento y castigaria al modelo por obedecer. Se
+# quedan las que solo pueden ser una promesa de logro.
+PROMESAS_DE_RESULTADO: tuple[str, ...] = (
+    "conseguiras", "vas a conseguir",
+    "lograras", "vas a lograr",
+    "obtendras", "vas a obtener",
+    "ganaras", "vas a ganar",
+    "te ira bien", "te saldra bien", "todo saldra bien",
+    "tendras exito", "el exito esta asegurado",
+    "tendras suerte", "la suerte estara de tu lado",
+)
+
 
 def _plano(texto: str) -> str:
     """Minusculas y sin tildes, para que 'energía' y 'energia' colisionen."""
@@ -137,6 +163,17 @@ def formulas_de_gremio(texto: str) -> list[str]:
     return fuera
 
 
+def promesas_de_resultado(texto: str) -> list[str]:
+    """Promesas de logro: lo unico que ya no puede decir el horoscopo.
+
+    A diferencia de las vetadas, aqui no hay nada que reescribir con otra
+    palabra: la frase promete un desenlace, y el desenlace no se sabe. Se cae
+    la frase.
+    """
+    plano = _plano(texto)
+    return [p for p in PROMESAS_DE_RESULTADO if p in plano]
+
+
 def frases_copiadas(texto: str, datos: str) -> list[str]:
     """Trozos del bloque de datos pegados palabra por palabra.
 
@@ -185,6 +222,15 @@ def defectos(texto: str, datos: str) -> list[str]:
     llamador decidir si hace falta reintentar.
     """
     partes: list[str] = []
+
+    # Primero la frontera, que es la unica de estas que no es de estilo.
+    promesas = promesas_de_resultado(texto)
+    if promesas:
+        partes.append(
+            "prometiste un resultado cerrado (" + ", ".join(promesas) + "). "
+            "Puedes hablar de su jornada, de lo que roza y de lo que tiene que "
+            "decidir; como acaba no lo sabes. Esa frase no se reescribe con "
+            "otra palabra: se cae")
 
     vetadas = palabras_vetadas(texto)
     if vetadas:
