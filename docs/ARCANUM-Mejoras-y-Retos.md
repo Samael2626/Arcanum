@@ -2,7 +2,7 @@
 tags: [arcanum, roadmap, retos, semana-4]
 tipo: roadmap
 area: arcanum
-actualizado: 2026-09-09
+actualizado: 2026-09-10
 ---
 
 # ARCANUM — Oportunidades de Mejora y Retos Futuros
@@ -69,34 +69,37 @@ se pueden actualizar, así que envejecen cada vez que se toca esa pantalla.
 Arreglarlo cuando alguien vuelva a `SkyTodayCard` — probablemente el `drag` fijo
 de `-900` px ya no deja el botón donde estaba.
 
-## Deuda: auditoría del 09/09 — tres clases de defecto con casos abiertos ⏳ PENDIENTE (09/09/2026)
+## Deuda: lo que quedó abierto tras el release del 10/09 ⏳ PENDIENTE (10/09/2026)
 
-Tras el lote de 8 bugs de testers se barrieron las mismas clases de defecto por
-todo el árbol, buscando más instancias de lo ya probado. **La clase «dos
-nociones de entorno» salió limpia**; las otras tres dejan casos abiertos que NO
-entraron en el release por ser cosméticos o de diagnóstico, ninguno funcional.
+Tras el lote de 8 bugs de testers se barrieron por todo el árbol las mismas
+clases de defecto que ya se habían probado. **La clase «dos nociones de
+entorno» salió limpia y se cerró.** Esto es lo que sigue abierto, recontado el
+10/09 con el release ya mergeado.
 
-### Glifos pintados sin `ArcanumGlifos` — 11 sitios
+### Glifos sin `ArcanumGlifos` — 34 sitios, pero solo 1 con riesgo real
 
 El respaldo `fontFamilyFallback: kGlyphFallback` solo lo llevan los
 constructores de `ArcanumText`. Un `TextStyle(...)` crudo deja que el sistema
 elija la fuente, y en varios Android eso es Noto Color Emoji.
 
-Barrido hecho partiendo del inventario real de la fuente
-(`assets/fonts/glifos_manifest.txt`, 41 glifos): se busca todo literal Dart que
-contenga uno de ellos, más los mapas que los sirven. Son 149 líneas, 82 de
-ellas declaraciones de datos.
+El barrido parte del inventario real de la fuente
+(`assets/fonts/glifos_manifest.txt`, 41 glifos) y busca todo literal Dart que
+contenga uno, más los mapas que los sirven. **Separado por riesgo, que es lo
+que importa:**
 
-  grimorio_atmosphere.dart:478      ⛨ a 52 px
-  grimorio_screen.dart:209, 568     ✦ y ❦ a 52 px
-  grimorio_detail.dart:233, 383     ☽ + planeta del pie astral, ✧
-  hoy_lore.dart:367                 el planeta de la hoja de lore
-  indice_screen.dart:242-245        el mapa de planetas del índice
-  arcanum_card.dart:111             el ✧ del ornamento, COMPARTIDO por la app
+- **Riesgo real de emoji a color — 1 sitio.** `cielos_screen.dart:998` pinta
+  `☽` a 60 px en el estado vacío «Aún no hay carta que trazar». La Luna es de
+  los que Android resuelve como emoji. Es el único que queda de esa clase.
+- **Ornamentos — 33 sitios.** `✶ ⛧ ✦ ❦ ✧` a 42-60 px en estados vacíos,
+  cabeceras y separadores, repartidos por arte, cielos, grimorio, hoy,
+  lecturas, onboarding, paywall y `arcanum_card.dart:111` (este último
+  compartido por toda la app). No son glifos astrales, así que es improbable
+  que salgan como emoji; lo que pierden es la forma garantizada de la fuente.
 
-Gradiente de riesgo: `☉ ☽ ♀` son los que Android resuelve como emoji a color;
-los ornamentos `✧ ✦ ❦` es menos probable, pero sin la fuente tampoco tienen
-forma garantizada. Ninguno de estos fue reportado por un tester.
+Ya cerrados en el release: el arte de la carta del Tarot —los 22 mayores, que
+era el bug reportado—, los nueve del primer barrido, y `LoginPrompt`.
+`ComingSoon` tiene la misma forma exacta que `LoginPrompt` (glifo a 64 px con
+estilo propio) y **está en la lista de los 33**.
 
 ### Marcado de Gutenberg que el limpiador no cubre — 13 párrafos
 
