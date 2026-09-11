@@ -141,6 +141,42 @@ Con `ADS_ENABLED=true` haria falta ademas `ADMOB_REWARDED_ANDROID` y
 `flutter analyze` verde, unos tests verdes y una firma correcta **no detectan
 esto**, porque el fallo solo existe en modo release y solo al arrancar.
 
+### DONDE VIVE LA CACHE DE PUB (11/09/2026) — no volver a moverla al temporal
+
+```
+PUB_CACHE = D:\Softwares\PubCache      (variable de USUARIO, persistente)
+```
+
+Junto al SDK de Android y al JDK, que es donde el `CLAUDE.md` manda los stores
+grandes. **No hace falta ponerla en el comando de build**: ya esta en el
+entorno del usuario y cualquier terminal nueva la coge sola.
+
+**Por que no esta en `C:`.** `C:` va al 93 % y Dart falla al compilar cuando se
+llena. Por eso se saco de `%LOCALAPPDATA%\Pub\Cache`.
+
+**Por que ya NO esta en `D:	mp`.** Ahi estuvo desde el 23/08 y el 10/09 el
+build de release **reventó**: cuatro plugins fallando a la vez con "cannot find
+symbol" sobre clases que el propio paquete trae —`GeneratedAndroidFirebaseCore`,
+`ProxyApiRegistrar`, `FlutterSecureStorage`, `SharedPreferencesAsyncApi`—. No
+era el SDK ni el lockfile: **153 de los 185 paquetes estaban reducidos a su
+`pubspec.yaml`**. `D:	mp` es ademas `TEMP`/`TMP` del usuario y Storage Sense
+esta activo con umbral de 30 dias; una caché dentro del directorio temporal es
+una caché que alguien barre.
+
+Si vuelve a pasar algo parecido, el sintoma es inconfundible —faltan clases
+*del propio paquete*, no del SDK— y el arreglo es:
+
+```
+dart pub cache repair
+```
+
+Reinstala todo **en las versiones exactas del `pubspec.lock`**: no toca ni una
+version, asi que no arrastra el lio de KGP ni el de Billing. Tras la caida del
+10/09 reinstalo 130 paquetes sin un solo error.
+
+**Lo que NO hay que hacer** es cambiar versiones de plugin para "que compile":
+el problema nunca estuvo en las versiones.
+
 ## RELEASE 10/09/2026 — el backend a produccion; la app NO
 
 **Mergeado `integrate/legal-y-tienda` a `main` (`da488dd`) y desplegado.** 42
