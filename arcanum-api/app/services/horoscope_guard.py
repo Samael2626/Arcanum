@@ -163,6 +163,51 @@ def formulas_de_gremio(texto: str) -> list[str]:
     return fuera
 
 
+# La ORDEN, que el prompt prohibe desde el 5-sep y se colo por la puerta que
+# abrio la vuelta del 10-sep. Medido: con la frontera nueva el modelo cerro un
+# texto con "recuerda que la precision del trazo sera mas valiosa que la
+# rapidez de la idea" -- manda, y ademas pronostica.
+#
+# Decir a que se presta el cielo vale; decirle a alguien lo que tiene que hacer,
+# no. La diferencia esta en el sujeto: "es dia de limar" habla del dia,
+# "aprovecha para limar" le habla a el.
+#
+# Tan corta como la de las promesas, y por lo mismo. Fuera se quedan "tienes
+# que" y "hay que", que chocan con la jornada recien permitida -- "tienes que
+# decidir con menos margen" describe su dia, no le manda nada.
+# La segunda tanda del 11-sep anadio la practica MANDADA, que es la misma regla
+# de siempre -- el prompt pide la materia "como constatacion": "a la hora de
+# Venus se consagraba el cobre", no "consagra cobre" -- y se escapaba porque
+# ninguna de las de arriba aparece. Medido: "al alba, consagra el estano de
+# Jupiter" y "puedes trabajar con objetos dorados".
+#
+# El imperfecto ("se consagraba") y el imperativo ("consagra el") se distinguen
+# por el literal, asi que aqui no hay ambiguedad que temer.
+ORDENES: tuple[str, ...] = (
+    "recuerda que",
+    "aprovecha para",
+    "no dejes pasar",
+    "deberias",
+    "asegurate de",
+    "tienes que aprovechar",
+    "consagra el",
+    "consagra la",
+    "puedes trabajar",
+    "puedes usar",
+    "puedes llevar",
+)
+
+
+def ordenes(texto: str) -> list[str]:
+    """Consejo en imperativo: el cielo se describe, a quien lee no se le manda.
+
+    Se mira solo el literal, sin ventana ni contexto: no hay forma honrada de
+    escribir "no dejes pasar" hablando del cielo y no de quien lee.
+    """
+    plano = _plano(texto)
+    return [o for o in ORDENES if o in plano]
+
+
 def promesas_de_resultado(texto: str) -> list[str]:
     """Promesas de logro: lo unico que ya no puede decir el horoscopo.
 
@@ -231,6 +276,14 @@ def defectos(texto: str, datos: str) -> list[str]:
             "Puedes hablar de su jornada, de lo que roza y de lo que tiene que "
             "decidir; como acaba no lo sabes. Esa frase no se reescribe con "
             "otra palabra: se cae")
+
+    mandatos = ordenes(texto)
+    if mandatos:
+        partes.append(
+            "le mandaste algo a quien lee (" + ", ".join(mandatos) + "). El "
+            "cielo se describe y se dice a que se presta; lo que haga con eso "
+            "lo decide el. Cambia el sujeto: no 'aprovecha para limar', sino "
+            "'es dia de limar'")
 
     vetadas = palabras_vetadas(texto)
     if vetadas:

@@ -271,3 +271,21 @@ def test_la_jornada_tiene_que_colgar_de_un_aspecto():
     from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
     assert "CUELGA de un aspecto" in P
     assert "terreno reconocible" in P
+
+
+def test_el_prompt_da_las_palabras_del_animo():
+    """El reemplazo tiene que estar de verdad, no ser un hueco.
+
+    Mismo patron que "virtud" en el prompt del Oraculo: prohibir "energia" sin
+    poner nada en su sitio deja al modelo sin vocabulario para el animo, y
+    vuelve a la palabra vetada. Medido: con la frontera nueva y sin estas
+    palabras, "energia" salio en 4 de 4 corridas reales.
+    """
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    # Los espacios se aplanan: una frase de dos palabras no puede depender de
+    # por donde el prompt corte la linea.
+    plano = " ".join(P.lower().split())
+    for palabra in ("la tension", "el roce", "la prisa", "la desgana",
+                    "el filo", "lo que aprieta"):
+        assert palabra in plano, f"falta '{palabra}' como recambio de 'energia'"
+    assert "energia" in plano, "el veto tiene que seguir citando la palabra"

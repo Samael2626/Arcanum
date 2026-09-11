@@ -265,3 +265,46 @@ def test_las_promesas_del_guard_estan_vetadas_en_el_prompt():
         distintiva = max(formula.split(), key=len)
         assert distintiva in plano, (
             f"'{formula}' se marca en codigo y no se veta en el prompt")
+
+
+# ── La orden encubierta, que se colo por la puerta del 10-sep ───────────────
+
+ORDEN = (
+    "La Luna cruza tu Marte en cuadratura y el dia se pone de filo. Recuerda "
+    "que la precision del trazo sera mas valiosa que la rapidez de la idea."
+)
+
+
+def test_la_orden_encubierta_se_marca():
+    """Salida REAL del modelo con la frontera nueva, corrida #2 del 10-sep."""
+    assert hg.ordenes(ORDEN) == ["recuerda que"]
+    assert any("mandaste algo" in d for d in hg.defectos(ORDEN, DATOS_REAL))
+
+
+def test_describir_el_dia_no_es_mandarlo():
+    """El limite: mismo asunto, sujeto distinto."""
+    assert hg.ordenes("es dia de limar y no de cortar") == []
+    assert hg.ordenes("tendras que decidir con menos margen") == []
+    assert hg.ordenes("hoy hay filo en lo que digas") == []
+
+
+def test_las_ordenes_del_guard_estan_vetadas_en_el_prompt():
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    plano = hg._plano(P)
+    for formula in hg.ORDENES:
+        distintiva = max(formula.split(), key=len)
+        assert distintiva in plano, (
+            f"'{formula}' se marca en codigo y no se veta en el prompt")
+
+
+# Salidas REALES de la segunda tanda, 11-sep-2026: la orden se disfrazo de
+# practica en imperativo, que ninguna de las formulas anteriores tocaba.
+def test_la_practica_mandada_se_marca():
+    assert hg.ordenes("al alba, consagra el estaño de Júpiter") == ["consagra el"]
+    assert hg.ordenes("puedes trabajar con objetos dorados") == ["puedes trabajar"]
+
+
+def test_la_practica_como_constatacion_no_se_marca():
+    """Es la forma que el prompt PIDE: el imperfecto, no el imperativo."""
+    assert hg.ordenes("a la hora de Venus se consagraba el cobre") == []
+    assert hg.ordenes("en la hora de Júpiter se trabajaba el estaño") == []

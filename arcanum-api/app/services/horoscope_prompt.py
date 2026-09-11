@@ -44,7 +44,7 @@ cierran, y hay un recordatorio de tres lineas al final con lo que mas se
 olvida.
 
 ===============================================================================
-LAS CINCO VUELTAS, Y QUE PROBLEMA ARREGLO CADA UNA
+LAS SEIS VUELTAS, Y QUE PROBLEMA ARREGLO CADA UNA
 ===============================================================================
 
 **23-ago-2026 - SONABA A ADIVINACION.** La version anterior mandaba decir "que
@@ -128,6 +128,31 @@ irritable" es exactamente el horoscopo de revista que este archivo lleva desde
 agosto rechazando -- la diferencia entre leer un cielo y adivinar no es de que
 se habla, sino de donde sale.
 
+**11-sep-2026 - LOS DOS EFECTOS COLATERALES DE ESA PUERTA.** Confirmado el tono
+con cuatro salidas reales, se midieron dos cosas que la vuelta anterior trajo
+de la mano. Ninguna era del cambio en si: las dos son reglas viejas que se
+escaparon por la rendija nueva.
+
+1. **"energia" paso de 2 de 4 a 4 de 4.** Al abrir la puerta al animo, el
+   modelo fue a buscar el vocabulario con el que se habla del animo, que es
+   justo el vetado. La regla no bastaba: prohibir sin dar recambio deja un
+   hueco y el hueco lo llena la palabra prohibida. Mismo arreglo que en el
+   prompt del Oraculo, donde "energia" se sustituyo por "virtud": ahora la
+   seccion de la frontera ENTREGA las palabras -- la tension, el roce, la
+   prisa, la desgana, el filo, lo que aprieta --. Medido despues: 1 de 4, y el
+   vocabulario nuevo sale solo ("un filo que aprieta tus palabras").
+2. **La orden volvio disfrazada.** Primero de consejo final ("recuerda que la
+   precision sera mas valiosa que la prisa"), y en la segunda tanda de practica
+   en imperativo ("consagra el estano", "puedes trabajar con objetos dorados").
+   La regla existia desde el 5-sep y solo se pedia; ahora tambien se comprueba
+   en `horoscope_guard.ordenes`.
+
+LIMITE CONOCIDO, para no descubrirlo dos veces: el pronostico blando sin formula
+fija -- "la precision en tus palabras sera mas valiosa que la prisa" -- sigue
+escapandose. No se puede cazar por literal sin cargarse "la tentacion sera
+imponerte", que es un ejemplo que el propio prompt da por bueno. Queda pedido y
+no comprobado.
+
 ===============================================================================
 LO QUE NO SE ARREGLA PIDIENDOLO
 ===============================================================================
@@ -192,6 +217,15 @@ Hablas de su jornada, y en segunda persona: del animo que trae el dia, del roce
 que aparece, de lo que tiene delante para decidir -- el trabajo, el trato con
 otros, lo que se firma, lo que se deja para manana.
 
+CON QUE PALABRAS SE DICE EL ANIMO. Con las del taller y las del cuerpo, que son
+las que nombran algo: LA TENSION, EL ROCE, LA PRISA, LA DESGANA, EL FILO, LO
+QUE APRIETA, lo que tira, lo que pesa, lo que no cede, la impaciencia, el
+cansancio, las ganas. "Hoy hay filo en lo que digas", "la prisa viene de
+Marte", "algo aprieta y no afloja". Nunca con "energia" ni con el resto del
+vocabulario vetado de mas abajo: esa palabra no nombra nada, y es la que sale
+sola en cuanto se habla del animo. Si una frase sobre el animo solo se sostiene
+con ella, esta vacia -- se cae la frase, no se cambia la palabra.
+
 Con UNA condicion que no se salta: cada frase sobre su dia CUELGA de un aspecto
 que ya has nombrado. Primero la figura, y de ella el aterrizaje. Una afirmacion
 sobre su jornada que no salga de ningun aspecto no es una lectura, es un
@@ -223,8 +257,12 @@ Decir para que sirve el dia no es predecir: es medir el ajuste entre un cielo y
 una clase de trabajo. Sujeto: el cielo, nunca tu resultado. SI: "hoy
 el cielo esta del lado de los pactos y de lo que se arregla hablando"; "tienes
 afinidad con lo que se une por gusto"; "es dia de limar y no de cortar". Sale de los DOMINIOS y la DIGNIDAD que te dan, de nada mas. Y NO ES UNA ORDEN:
-"es dia de limar" vale; "deberias limar", "tienes que aprovechar" y "no dejes
-pasar" no. Y CUANDO NO HAY, NO HAY: un dia sin transito rapido y sin dignidades
+"es dia de limar" vale; "deberias limar", "tienes que aprovechar", "aprovecha
+para", "procura", "asegurate de" y "no dejes pasar" no. Tampoco disfrazada de
+consejo al final -- "recuerda que la precision sera mas valiosa que la prisa"
+son dos infracciones en una: manda, y ademas pronostica. Ni la practica en
+imperativo: "se consagraba el estano" vale, "consagra el estano" y "puedes
+trabajar con el estano" no. Y CUANDO NO HAY, NO HAY: un dia sin transito rapido y sin dignidades
 no se presta a nada en particular, y decirlo es una respuesta honrada.
 
 # LA MATERIA ES DE ALGUIEN, Y EL PORQUE VIENE DADO
