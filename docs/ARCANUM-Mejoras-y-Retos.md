@@ -240,6 +240,32 @@ ese `Row`. Ese test corre a 411 px para no fallar por algo que no prueba.
 Arreglo probable: `Flexible` + `softWrap` sobre el `Text`, o `FittedBox`. Cuando
 alguien toque esa tarjeta.
 
+## Deuda: el horóscopo llama "casa" a un planeta ⏳ PENDIENTE (10/09/2026)
+
+Salida real de `openai/gpt-oss-120b`, corrida del 10/09 con el prompt de la
+frontera nueva:
+
+> «tu **Mercurio natal** en Piscis, **la casa** que habla de la escritura y el
+> comercio»
+
+Mercurio es un planeta, no una casa. Son dos cosas distintas de la doctrina y
+el texto las confunde delante del usuario, que es justo a quien la app dice que
+enseña por uso.
+
+**No es de la vuelta del 10-sep.** Se vio en esa ronda porque se estaban
+leyendo salidas con lupa, pero nada de lo que se cambió ahí toca la
+nomenclatura: es un fallo anterior, del mismo tipo que los que se cazan con
+guarda determinista en vez de pidiéndolo por enésima vez en el prompt.
+
+Arreglo probable, en la línea de `horoscope_guard`: una comprobación que
+detecte un nombre de planeta seguido de «la casa» / «el sector» / «la zona» en
+la misma frase. La lista de planetas ya existe en `correspondences.PLANET_DOMAINS`
+y el bloque de datos dice cuál es cuál, así que se puede mirar con una función
+pura. Cuidado con el falso positivo legítimo: «tu Venus en la casa 7» sí es
+correcto, y ahí «casa» va con número.
+
+Revisarlo por separado, no mezclado con un ajuste de voz.
+
 ## Operativo
 - `C:` se llenó (0 GB) → Dart falla al compilar. Lanzar Flutter con `TEMP`/`TMP`/`TMPDIR` = `D:\tmp`,
   o liberar `C:` / fijar TEMP permanente.

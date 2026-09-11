@@ -209,3 +209,102 @@ def test_las_vetadas_del_guard_son_las_del_prompt():
     plano = hg._plano(P)
     for palabra in hg.PALABRAS_VETADAS:
         assert palabra in plano, f"'{palabra}' se veta en código y no en el prompt"
+
+
+# ── La frontera del 10-sep-2026: la jornada si, el resultado no ─────────────
+# La regla del 23-ago prohibia hablar del animo y de las decisiones de quien
+# lee. Se derogo a proposito. Lo que quedo en pie es la promesa de logro, y
+# como eso si se puede mirar con una funcion pura, se comprueba en vez de
+# pedirse.
+
+JORNADA = (
+    "Saturno se mide con tu Júpiter desde hace meses, y hoy la Luna cruza tu "
+    "Marte en cuadratura, la figura de dos que empujan desde ángulos "
+    "distintos y ninguno cede: vas a encontrarte más fricción de la que "
+    "esperabas en algo que dabas por cerrado, y tendrás que decidir con menos "
+    "margen del que te gustaría. La tentación será imponerte."
+)
+
+PROMESA = (
+    "La Luna cruza tu Marte en cuadratura y conseguirás por fin cerrar ese "
+    "asunto: te irá bien en lo que firmes hoy."
+)
+
+
+def test_hablar_de_la_jornada_ya_no_se_marca():
+    """El corazon de la vuelta: esto es lo que se vino a permitir.
+
+    Si algun dia esto vuelve a marcarse, la derogacion se deshizo por la
+    puerta de atras.
+    """
+    assert hg.promesas_de_resultado(JORNADA) == []
+    assert hg.defectos(JORNADA, DATOS_REAL) == []
+
+
+def test_la_promesa_de_resultado_si_se_marca():
+    marcadas = hg.promesas_de_resultado(PROMESA)
+    assert "conseguiras" in marcadas
+    assert "te ira bien" in marcadas
+    assert any("resultado cerrado" in d for d in hg.defectos(PROMESA, DATOS_REAL))
+
+
+def test_las_promesas_del_guard_estan_vetadas_en_el_prompt():
+    """La guarda puede ser mas corta que el prompt, nunca mas ancha.
+
+    Si marca algo que el prompt no veta, el modelo se lleva un reintento por
+    una regla que nunca se le dijo.
+
+    Se busca la palabra mas larga de cada formula, que es la que la identifica:
+    comparar la formula entera fallaria por como esta cortada la lista en el
+    prompt, y comparar la primera palabra dejaria pasar cualquier cosa que
+    empiece por "te" o por "todo".
+    """
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    plano = hg._plano(P)
+    for formula in hg.PROMESAS_DE_RESULTADO:
+        distintiva = max(formula.split(), key=len)
+        assert distintiva in plano, (
+            f"'{formula}' se marca en codigo y no se veta en el prompt")
+
+
+# ── La orden encubierta, que se colo por la puerta del 10-sep ───────────────
+
+ORDEN = (
+    "La Luna cruza tu Marte en cuadratura y el dia se pone de filo. Recuerda "
+    "que la precision del trazo sera mas valiosa que la rapidez de la idea."
+)
+
+
+def test_la_orden_encubierta_se_marca():
+    """Salida REAL del modelo con la frontera nueva, corrida #2 del 10-sep."""
+    assert hg.ordenes(ORDEN) == ["recuerda que"]
+    assert any("mandaste algo" in d for d in hg.defectos(ORDEN, DATOS_REAL))
+
+
+def test_describir_el_dia_no_es_mandarlo():
+    """El limite: mismo asunto, sujeto distinto."""
+    assert hg.ordenes("es dia de limar y no de cortar") == []
+    assert hg.ordenes("tendras que decidir con menos margen") == []
+    assert hg.ordenes("hoy hay filo en lo que digas") == []
+
+
+def test_las_ordenes_del_guard_estan_vetadas_en_el_prompt():
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    plano = hg._plano(P)
+    for formula in hg.ORDENES:
+        distintiva = max(formula.split(), key=len)
+        assert distintiva in plano, (
+            f"'{formula}' se marca en codigo y no se veta en el prompt")
+
+
+# Salidas REALES de la segunda tanda, 11-sep-2026: la orden se disfrazo de
+# practica en imperativo, que ninguna de las formulas anteriores tocaba.
+def test_la_practica_mandada_se_marca():
+    assert hg.ordenes("al alba, consagra el estaño de Júpiter") == ["consagra el"]
+    assert hg.ordenes("puedes trabajar con objetos dorados") == ["puedes trabajar"]
+
+
+def test_la_practica_como_constatacion_no_se_marca():
+    """Es la forma que el prompt PIDE: el imperfecto, no el imperativo."""
+    assert hg.ordenes("a la hora de Venus se consagraba el cobre") == []
+    assert hg.ordenes("en la hora de Júpiter se trabajaba el estaño") == []
