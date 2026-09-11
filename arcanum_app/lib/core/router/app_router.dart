@@ -21,7 +21,6 @@ import '../../features/lecturas/presentation/indice_screen.dart';
 import '../../features/saber/saber_screen.dart';
 import '../../features/settings/privacy_screen.dart';
 import '../../features/settings/settings_screen.dart';
-import '../content/sections.dart';
 import 'app_shell.dart';
 
 /// Rutas que se pueden ver SIN sesion.
@@ -98,6 +97,16 @@ final arcanumRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(path: '/hoy', builder: (c, s) => const HoyScreen()),
             ],
           ),
+          // El orden de las ramas ES el de la barra de abajo, y el de
+          // `arcanumSections`. Los tres tienen que decir lo mismo.
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/horoscopo',
+                builder: (c, s) => const HoroscopoScreen(),
+              ),
+            ],
+          ),
           StatefulShellBranch(
             routes: [
               GoRoute(path: '/cielos', builder: (c, s) => const CielosScreen()),
@@ -172,18 +181,6 @@ final arcanumRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/oraculo',
                 builder: (c, s) => const OraculoScreen(),
-              ),
-            ],
-          ),
-          // Sexta rama SIN destino en la barra inferior: se entra por el boton
-          // flotante del shell. Es una rama y no una ruta de primer nivel para
-          // que conserve su pila y su scroll como cualquier seccion, y para que
-          // la barra de abajo siga visible mientras se lee.
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: rutaHoroscopo,
-                builder: (c, s) => const HoroscopoScreen(),
               ),
             ],
           ),

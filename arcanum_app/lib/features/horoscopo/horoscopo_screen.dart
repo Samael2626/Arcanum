@@ -27,9 +27,7 @@ class HoroscopoScreen extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: Colors.transparent,
     body: ListView(
-      // El hueco de abajo es el del boton flotante: sin el, la ultima linea
-      // del texto queda debajo del boton en las pantallas cortas.
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: const [
         _Entradilla(),
         SizedBox(height: 14),

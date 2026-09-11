@@ -4,14 +4,14 @@
 /// identidad, la marca), un subtítulo LLANO (el maestro: qué es esto, siempre
 /// visible) y la clave de glosario del "?" (la explicación a fondo).
 ///
-/// Las CINCO PRIMERAS son, en ese orden, las ramas del shell y los destinos de
-/// la barra inferior. Si cambias uno, cambia el otro.
+/// ESTA LISTA ES LA BARRA DE ABAJO, en este orden: cada seccion es una rama del
+/// shell y un destino de la barra, y los dos ordenes son el mismo. Si cambias
+/// uno, cambia el otro.
 ///
-/// La sexta ('/horoscopo') es una rama SIN destino en la barra: se llega por el
-/// boton flotante del shell. Esta aqui porque necesita la misma barra superior
-/// que las demas -- nombre, subtitulo y "?" --, y no en la barra de abajo
-/// porque seis etiquetas no caben en una pantalla estrecha y ninguna de las
-/// cinco actuales sobra.
+/// El horoscopo estuvo fuera de la barra hasta el 11-sep-2026, en una rama a la
+/// que solo se llegaba por un boton flotante. Se decidio darle pestana: es lo
+/// que se abre a diario, y estando fuera ninguna pestana quedaba marcada
+/// mientras se leia.
 class ArcanumSection {
   /// Ruta raíz de la rama (p. ej. '/hoy').
   final String route;
@@ -41,6 +41,12 @@ const List<ArcanumSection> arcanumSections = [
     helpKey: 'hora_planetaria',
   ),
   ArcanumSection(
+    route: '/horoscopo',
+    title: 'Horóscopo',
+    subtitle: 'Tu cielo de hoy, sobre tu carta',
+    helpKey: 'transitos',
+  ),
+  ArcanumSection(
     route: '/cielos',
     title: 'Cielos',
     subtitle: 'Tu carta natal y los signos del zodiaco',
@@ -64,23 +70,7 @@ const List<ArcanumSection> arcanumSections = [
     subtitle: 'Consulta: tarot y respuestas guiadas',
     helpKey: 'tarot',
   ),
-  // Sexta rama, sin destino en la barra inferior. Ver la nota de arriba.
-  ArcanumSection(
-    route: '/horoscopo',
-    title: 'Horóscopo',
-    subtitle: 'Tu cielo de hoy, sobre tu carta',
-    helpKey: 'transitos',
-  ),
 ];
-
-/// Ruta de la rama del horoscopo. Vive aqui y no suelta en el shell para que
-/// el router, la barra superior y el boton flotante digan la misma cadena.
-const rutaHoroscopo = '/horoscopo';
-
-/// Indice de esa rama dentro del shell: va detras de las cinco de la barra.
-final indiceHoroscopo = arcanumSections.indexWhere(
-  (s) => s.route == rutaHoroscopo,
-);
 
 /// La sección cuya raíz coincide EXACTA con [location]. Devuelve null en las
 /// sub-rutas (un capítulo, una obra): ahí la barra superior de sección se

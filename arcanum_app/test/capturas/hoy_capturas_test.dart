@@ -417,23 +417,25 @@ void main() {
     await _retratar(tester, '05-texto-abierto');
   });
 
-  testWidgets('06 el boton del horoscopo, sobre Hoy', (tester) async {
-    await _montarApp(tester);
-    await _retratar(tester, '06-boton-horoscopo');
-  });
-
-  testWidgets('07 la pantalla del horoscopo, con el boton apagado', (
+  testWidgets('06 la barra de abajo, con el horoscopo ya como pestaña', (
     tester,
   ) async {
     await _montarApp(tester);
-    await tester.tap(find.byTooltip('Horóscopo'));
+    await _retratar(tester, '06-barra-pestanas');
+  });
+
+  testWidgets('07 la pantalla del horoscopo, con su pestaña marcada', (
+    tester,
+  ) async {
+    await _montarApp(tester);
+    await tester.tap(find.text('Horóscopo'));
     await tester.pumpAndSettle();
     await _retratar(tester, '07-horoscopo');
   });
 
   testWidgets('08 el historial, desplegado', (tester) async {
     await _montarApp(tester);
-    await tester.tap(find.byTooltip('Horóscopo'));
+    await tester.tap(find.text('Horóscopo'));
     await tester.pumpAndSettle();
     // El boton vive al final de la lista y `ListView` no construye lo que no
     // se ve: hay que bajar hasta el, no basta con `ensureVisible`.
@@ -456,7 +458,7 @@ void main() {
 
   testWidgets('09 la agenda de la semana', (tester) async {
     await _montarApp(tester);
-    await tester.tap(find.byTooltip('Horóscopo'));
+    await tester.tap(find.text('Horóscopo'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.text('LO QUE VIENE'),

@@ -1,9 +1,15 @@
-// El boton flotante del horoscopo: que este en las cinco pantallas, que lleve
-// a la suya, y que ahi dentro se apague sin desaparecer.
+// El horóscopo como PESTAÑA, que es lo que se decidió el 11-sep-2026.
+//
+// Sustituye a `boton_horoscopo_test.dart`. Aquel probaba un botón flotante que
+// existía porque el horóscopo estaba fuera de la barra, y con él probaba el
+// caso especial que eso obligaba: ninguna pestaña marcada, el indicador
+// apagado a mano, un índice falso para que `NavigationBar` no protestara. Ese
+// caso especial ya no existe, así que lo que aquí se prueba es lo contrario:
+// que el horóscopo SÍ queda marcado, como cualquier otra sección.
 //
 // Se monta la app ENTERA por el router y no una pantalla suelta, porque lo que
-// se prueba es justo lo que vive en la carcasa: un test que montara
-// `HoroscopoScreen` a pelo pasaria aunque el boton no existiera.
+// se prueba vive en la carcasa: un test que montara `HoroscopoScreen` a pelo
+// pasaría aunque no hubiera pestaña.
 import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/core/router/app_router.dart';
@@ -105,73 +111,50 @@ void main() {
   // siguiente empezando dentro del horoscopo.
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('el boton esta sobre Hoy, sin ser una pestaña', (tester) async {
+  testWidgets('el horóscopo es una pestaña, y ya no hay botón flotante', (
+    tester,
+  ) async {
     await _montar(tester);
     expect(find.byType(HoyScreen), findsOneWidget);
-    expect(find.byType(FloatingActionButton), findsWidgets);
-    expect(find.byTooltip('Horóscopo'), findsOneWidget);
-    // La barra sigue teniendo CINCO destinos: esto no añade una sexta.
-    expect(_barra(tester).destinations.length, 5);
+    expect(find.byType(FloatingActionButton), findsNothing);
+    // Seis destinos: los cinco de siempre más el horóscopo, detrás de Hoy.
+    final barra = _barra(tester);
+    expect(barra.destinations.length, 6);
+    expect(find.text('Horóscopo'), findsOneWidget);
   });
 
-  testWidgets('lleva a la pantalla del horoscopo', (tester) async {
+  testWidgets('la pestaña lleva a su pantalla', (tester) async {
     await _montar(tester);
-    await tester.tap(find.byTooltip('Horóscopo'));
+    await tester.tap(find.text('Horóscopo'));
     await tester.pumpAndSettle();
     expect(find.byType(HoroscopoScreen), findsOneWidget);
   });
 
-  testWidgets('dentro, el boton sigue ahi pero ya no hace nada', (
+  testWidgets('y ahí dentro SÍ queda marcada, que es lo que cambió', (
     tester,
   ) async {
     await _montar(tester);
-    await tester.tap(find.byTooltip('Horóscopo'));
+    await tester.tap(find.text('Horóscopo'));
     await tester.pumpAndSettle();
 
-    // No desaparece: si se escondiera, el sitio al que se vuelve dejaria de
-    // estar donde estaba.
-    final fab = tester.widget<FloatingActionButton>(
-      find.byWidgetPredicate(
-        (w) => w is FloatingActionButton && w.heroTag == 'fab-horoscopo',
-      ),
+    // Antes se le daba el 0 y se apagaba el indicador, porque el horóscopo no
+    // era ninguna de las pestañas. Ahora es la segunda y se dice.
+    expect(_barra(tester).selectedIndex, 1);
+    expect(
+      find.byType(NavigationBarTheme),
+      findsNothing,
+      reason: 'el tema que apagaba el indicador ya no hace falta',
     );
-    expect(fab.onPressed, isNull);
-    expect(find.byTooltip('Horóscopo'), findsNothing);
-
-    // Y tocarlo no cambia nada.
-    await tester.tap(find.byWidgetPredicate(
-      (w) => w is FloatingActionButton && w.heroTag == 'fab-horoscopo',
-    ));
-    await tester.pumpAndSettle();
-    expect(find.byType(HoroscopoScreen), findsOneWidget);
   });
 
-  testWidgets('ninguna pestaña se marca cuando estas en el horoscopo', (
-    tester,
-  ) async {
+  testWidgets('desde el horóscopo se vuelve por la barra', (tester) async {
     await _montar(tester);
-    await tester.tap(find.byTooltip('Horóscopo'));
-    await tester.pumpAndSettle();
-
-    // `NavigationBar` exige un indice valido y no admite "ninguno": se le da el
-    // 0 y se apaga el indicador. Marcar "Hoy" sin estar en Hoy seria mentir.
-    expect(_barra(tester).selectedIndex, 0);
-    final tema = tester.widget<NavigationBarTheme>(
-      find.ancestor(
-        of: find.byType(NavigationBar),
-        matching: find.byType(NavigationBarTheme),
-      ),
-    );
-    expect(tema.data.indicatorColor, Colors.transparent);
-  });
-
-  testWidgets('desde el horoscopo se vuelve por la barra', (tester) async {
-    await _montar(tester);
-    await tester.tap(find.byTooltip('Horóscopo'));
+    await tester.tap(find.text('Horóscopo'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Hoy'));
     await tester.pumpAndSettle();
     expect(find.byType(HoyScreen), findsOneWidget);
     expect(find.byType(HoroscopoScreen), findsNothing);
+    expect(_barra(tester).selectedIndex, 0);
   });
 }
