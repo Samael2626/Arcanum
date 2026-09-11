@@ -267,5 +267,12 @@ correcto, y ahí «casa» va con número.
 Revisarlo por separado, no mezclado con un ajuste de voz.
 
 ## Operativo
-- `C:` se llenó (0 GB) → Dart falla al compilar. Lanzar Flutter con `TEMP`/`TMP`/`TMPDIR` = `D:\tmp`,
-  o liberar `C:` / fijar TEMP permanente.
+- `C:` se llenó (0 GB) → Dart falla al compilar. `TEMP`/`TMP` del usuario ya
+  apuntan a `D:\tmp` de forma permanente, así que no hay que pasarlos en cada
+  build. Sigue pendiente liberar `C:`, que va al 93 %.
+- **La caché de pub NO va dentro de `D:\tmp`.** Estuvo ahí y el 11/09/2026 se
+  movió a `D:\Softwares\PubCache` (variable de usuario `PUB_CACHE`, persistente).
+  `D:\tmp` es el directorio temporal del usuario y lo barren: el 10/09 se
+  encontró con 153 de 185 paquetes reducidos a su `pubspec.yaml`, y eso tiró
+  un build de release entero. El síntoma y el arreglo (`dart pub cache repair`)
+  están en `ARCANUM-Play-Console-Progreso.md`.
