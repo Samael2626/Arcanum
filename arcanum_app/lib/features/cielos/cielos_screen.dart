@@ -14,6 +14,7 @@ import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
+import '../../shared/creditos.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
 import '../../shared/widgets/content_report_sheet.dart';
@@ -542,14 +543,11 @@ class _AspectRowState extends ConsumerState<_AspectRow> {
   }
 
   Future<void> _openCreditsPaywall() async {
-    try {
-      final balance = await ref.read(arcanumApiProvider).creditsBalance();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saldo actual: ${balance['balance'] ?? 0} créditos.')));
-      context.push('/paywall');
-    } catch (error) {
-      if (mounted) setState(() => _oracleError = 'No se pudo actualizar tu saldo. Inténtalo de nuevo.');
-    }
+    final fallo = await abrirPaywallDeCreditos(
+      context,
+      ref.read(arcanumApiProvider),
+    );
+    if (fallo != null && mounted) setState(() => _oracleError = fallo);
   }
   static const _toneColor = {
     AspectTone.fusion: ArcanumColors.aspectUnion,

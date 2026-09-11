@@ -21,7 +21,6 @@ import '../../features/lecturas/presentation/indice_screen.dart';
 import '../../features/saber/saber_screen.dart';
 import '../../features/settings/privacy_screen.dart';
 import '../../features/settings/settings_screen.dart';
-import '../../features/tarot/tarot_screen.dart';
 import '../content/sections.dart';
 import 'app_shell.dart';
 
@@ -165,15 +164,14 @@ final arcanumRouterProvider = Provider<GoRouter>((ref) {
           ),
           StatefulShellBranch(
             routes: [
+              // Sin sub-rutas: la tirada por la tradicion NO es una pantalla
+              // aparte. Vivio aqui como '/oraculo/tarot' desde el primer dia y
+              // nunca tuvo puerta -- ni un push, ni un go, en 329 commits --,
+              // asi que era una pantalla entera que nadie podia abrir. Ahora
+              // es el selector de interprete dentro de Consultar.
               GoRoute(
                 path: '/oraculo',
                 builder: (c, s) => const OraculoScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'tarot',
-                    builder: (c, s) => const TarotScreen(),
-                  ),
-                ],
               ),
             ],
           ),
