@@ -22,6 +22,7 @@ import '../../../../shared/widgets/ai_output.dart';
 import '../../../../core/auth/auth_controller.dart';
 import '../../../../core/privacy/ai_consent_service.dart';
 import '../../../../core/astro/birth_data.dart';
+import '../../../../core/state/flow_providers.dart';
 import 'banda_del_anio.dart';
 import 'sello_del_cielo.dart';
 import '../../../horoscopo/compartir_horoscopo.dart';
@@ -547,7 +548,15 @@ class _FailureState extends ConsumerState<_Failure> {
           children: [
             if (route != null)
               TextButton(
-                onPressed: () => context.go(route),
+                onPressed: () {
+                  // "Sin carta natal" manda a la otra CARA de esta pestana, no
+                  // a otra seccion: sin fijar la cara, el `go` a '/hoy' desde
+                  // '/hoy' no movería nada.
+                  if (_failure == SkyTodayFailure.sinCartaNatal) {
+                    ref.read(cieloCaraProvider.notifier).set(1);
+                  }
+                  context.go(route);
+                },
                 child: Text(
                   _actionLabel(_failure),
                   style: ArcanumText.body(14, color: ArcanumColors.gold),

@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 /// Metadatos de cada sección de la app.
 ///
 /// Una sola fuente de verdad para la barra superior: el nombre MÍSTICO (la
@@ -13,6 +15,13 @@
 /// que se abre a diario, y estando fuera ninguna pestana quedaba marcada
 /// mientras se leia.
 class ArcanumSection {
+  /// Iconos del destino en la barra. Viven aqui y no sueltos en el shell
+  /// porque la barra SE CONSTRUYE de esta lista: escritos a mano, un dia hubo
+  /// seis destinos contra cinco ramas y tocar el ultimo llamaba a una rama que
+  /// no existia. Ningun test lo veia.
+  final IconData icon;
+  final IconData selectedIcon;
+
   /// Ruta raíz de la rama (p. ej. '/hoy').
   final String route;
 
@@ -30,42 +39,48 @@ class ArcanumSection {
     required this.title,
     required this.subtitle,
     required this.helpKey,
+    required this.icon,
+    required this.selectedIcon,
   });
 }
 
 const List<ArcanumSection> arcanumSections = [
   ArcanumSection(
     route: '/hoy',
-    title: 'Hoy',
-    subtitle: 'El cielo de hoy y tu siguiente paso',
-    helpKey: 'hora_planetaria',
+    icon: Icons.wb_twilight_outlined,
+    selectedIcon: Icons.wb_twilight,
+    title: 'Cielo',
+    subtitle: 'Tu carta natal y lo que hoy la toca',
+    helpKey: 'carta_natal',
   ),
   ArcanumSection(
     route: '/horoscopo',
+    icon: Icons.brightness_4_outlined,
+    selectedIcon: Icons.brightness_4,
     title: 'Horóscopo',
     subtitle: 'Tu cielo de hoy, sobre tu carta',
     helpKey: 'transitos',
   ),
   ArcanumSection(
-    route: '/cielos',
-    title: 'Cielos',
-    subtitle: 'Tu carta natal y los signos del zodiaco',
-    helpKey: 'carta_natal',
-  ),
-  ArcanumSection(
     route: '/grimorio',
+    icon: Icons.menu_book_outlined,
+    selectedIcon: Icons.menu_book,
     title: 'Grimorio',
     subtitle: 'Tu diario mágico: notas, ritos y hechizos',
     helpKey: 'grimorio',
   ),
   ArcanumSection(
     route: '/saber',
+    icon: Icons.local_library_outlined,
+    selectedIcon: Icons.local_library,
     title: 'Saber',
     subtitle: 'Plantas y libros de la tradición',
     helpKey: 'materia',
   ),
   ArcanumSection(
     route: '/oraculo',
+    icon: Icons.style_outlined,
+    selectedIcon: Icons.style,
     title: 'Oráculo',
     subtitle: 'Consulta: tarot y respuestas guiadas',
     helpKey: 'tarot',

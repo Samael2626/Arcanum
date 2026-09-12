@@ -12,6 +12,7 @@
 // pasaría aunque no hubiera pestaña.
 import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
+import 'package:arcanum_app/core/content/sections.dart';
 import 'package:arcanum_app/core/router/app_router.dart';
 import 'package:arcanum_app/core/theme/arcanum_theme.dart';
 import 'package:arcanum_app/features/horoscopo/horoscopo_screen.dart';
@@ -106,6 +107,29 @@ NavigationBar _barra(WidgetTester tester) =>
     tester.widget<NavigationBar>(find.byType(NavigationBar));
 
 void main() {
+  // La barra y las ramas del shell tienen que ser la MISMA lista. Lo fueron
+  // hasta que se quito Cielos de `arcanumSections` y el destino se quedo
+  // escrito a mano en el shell: seis destinos, cinco ramas, y tocar el ultimo
+  // llamaba a una rama que no existia. Ningun test lo veia porque cada uno
+  // miraba su lado.
+  testWidgets('cada destino de la barra lleva a una rama que existe', (
+    tester,
+  ) async {
+    await _montar(tester);
+    final barra = _barra(tester);
+    expect(barra.destinations.length, arcanumSections.length);
+    // Y se tocan todos, de atras adelante: si alguno apuntara a una rama
+    // inexistente, `goBranch` reventaria aqui.
+    for (var i = barra.destinations.length - 1; i >= 0; i--) {
+      await tester.tap(find.text(arcanumSections[i].title));
+      // `pump` con tiempo fijo y no `pumpAndSettle`: el Grimorio tiene un
+      // sello que respira en bucle y el arbol no se queda quieto nunca.
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(_barra(tester).selectedIndex, i,
+          reason: 'el destino ${arcanumSections[i].title} no llego a su rama');
+    }
+  });
+
   // Ya no hace falta devolver el router a /hoy entre tests: cada uno construye
   // el suyo desde su contenedor. Cuando era global, el que navegaba dejaba al
   // siguiente empezando dentro del horoscopo.
@@ -117,10 +141,12 @@ void main() {
     await _montar(tester);
     expect(find.byType(HoyScreen), findsOneWidget);
     expect(find.byType(FloatingActionButton), findsNothing);
-    // Seis destinos: los cinco de siempre más el horóscopo, detrás de Hoy.
+    // Cinco destinos: Hoy y Cielos se fundieron en "Cielo", y el horóscopo
+    // ocupa el hueco.
     final barra = _barra(tester);
-    expect(barra.destinations.length, 6);
+    expect(barra.destinations.length, 5);
     expect(find.text('Horóscopo'), findsOneWidget);
+    expect(find.text('Cielos'), findsNothing);
   });
 
   testWidgets('la pestaña lleva a su pantalla', (tester) async {
@@ -151,7 +177,7 @@ void main() {
     await _montar(tester);
     await tester.tap(find.text('Horóscopo'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Hoy'));
+    await tester.tap(find.text('Cielo'));
     await tester.pumpAndSettle();
     expect(find.byType(HoyScreen), findsOneWidget);
     expect(find.byType(HoroscopoScreen), findsNothing);

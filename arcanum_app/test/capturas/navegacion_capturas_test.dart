@@ -150,6 +150,13 @@ void main() {
     await _retratar(tester, 'nav-1-barra');
   });
 
+  testWidgets('n3 la cara Tu carta, del mismo Cielo', (tester) async {
+    await _montar(tester);
+    await tester.tap(find.text('Tu carta'));
+    await tester.pump(const Duration(milliseconds: 400));
+    await _retratar(tester, 'nav-3-cielo-carta');
+  });
+
   testWidgets('n2 la cabecera de Consultar, en el Oráculo', (tester) async {
     await _montar(tester);
     await tester.tap(find.text('Oráculo'));

@@ -58,37 +58,17 @@ class AppShell extends StatelessWidget {
             index,
             initialLocation: index == indice,
           ),
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.wb_twilight_outlined),
-              selectedIcon: Icon(Icons.wb_twilight),
-              label: 'Hoy',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.brightness_4_outlined),
-              selectedIcon: Icon(Icons.brightness_4),
-              label: 'Horóscopo',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.auto_awesome_outlined),
-              selectedIcon: Icon(Icons.auto_awesome),
-              label: 'Cielos',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.menu_book_outlined),
-              selectedIcon: Icon(Icons.menu_book),
-              label: 'Grimorio',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.local_library_outlined),
-              selectedIcon: Icon(Icons.local_library),
-              label: 'Saber',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.style_outlined),
-              selectedIcon: Icon(Icons.style),
-              label: 'Oráculo',
-            ),
+          // La barra SALE de `arcanumSections`, no de una lista escrita a
+          // mano: son la misma cosa y mantenerlas en dos sitios ya se torcio
+          // una vez -- seis destinos contra cinco ramas, y tocar el ultimo
+          // llamaba a una rama inexistente.
+          destinations: [
+            for (final seccion in arcanumSections)
+              NavigationDestination(
+                icon: Icon(seccion.icon),
+                selectedIcon: Icon(seccion.selectedIcon),
+                label: seccion.title,
+              ),
           ],
       ),
     );

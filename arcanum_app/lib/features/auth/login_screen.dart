@@ -37,7 +37,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref
           .read(authProvider.notifier)
           .login(_email.text.trim(), _password.text);
-      if (mounted) context.go('/cielos');
+      // A '/hoy', que es donde arranca la app. Mandaba a '/cielos' -- una
+      // tercera respuesta a "cual es la primera pantalla", distinta de la del
+      // registro y de la del arranque --, y esa ruta ya no existe.
+      if (mounted) context.go('/hoy');
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {

@@ -36,6 +36,21 @@ class CielosFocusPlanet extends Notifier<String?> {
 final cielosFocusPlanetProvider =
     NotifierProvider<CielosFocusPlanet, String?>(CielosFocusPlanet.new);
 
+/// Cara de la pestaña Cielo: 0 = Ahora (el instrumento del instante), 1 = Tu
+/// carta (la rueda natal).
+///
+/// Existe porque las dos caras son UNA pestaña desde el 11-sep-2026, y lo que
+/// antes era un salto de sección -- "Hoy → Cielos" -- ahora es un cambio de
+/// cara dentro de la misma. Sin esto, el chip de Hoy que llevaba a la rueda
+/// navegaría a la pestaña donde ya está y no pasaría nada.
+class CieloCara extends Notifier<int> {
+  @override
+  int build() => 0;
+  void set(int cara) => state = cara;
+}
+
+final cieloCaraProvider = NotifierProvider<CieloCara, int>(CieloCara.new);
+
 /// Carta de tarot a abrir en Oráculo → Aprender al entrar (Hoy → Oráculo). Es
 /// el slug de la carta ('el-sol'); Oráculo arranca en modo Aprender y abre su
 /// ficha. Se limpia tras consumirse.

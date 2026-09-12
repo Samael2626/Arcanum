@@ -196,8 +196,11 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         }
         context.go('/oraculo');
       case NextStepKind.cielos:
+        // Ya NO es un salto de seccion: desde el 11-sep-2026 la rueda es la
+        // otra cara de esta misma pestana. Navegar a '/hoy' desde '/hoy' no
+        // haria nada, asi que lo que se cambia es la cara.
         ref.read(cielosFocusPlanetProvider.notifier).set(planet);
-        context.go('/cielos');
+        ref.read(cieloCaraProvider.notifier).set(1);
     }
   }
 

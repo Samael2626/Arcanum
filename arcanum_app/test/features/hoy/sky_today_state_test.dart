@@ -20,7 +20,9 @@ void main() {
 
       expect(failure, SkyTodayFailure.sinCartaNatal);
       expect(skyFailureMessage(failure), contains('carta natal'));
-      expect(skyFailureRoute(failure), '/cielos');
+      // La rueda es la otra CARA de la pestana Cielo desde el 11-sep-2026,
+      // no otra seccion: la ruta es la misma y lo que cambia es la cara.
+      expect(skyFailureRoute(failure), '/hoy');
       expect(skyFailureMessage(failure), isNot(contains('conexión')));
     });
 

@@ -6,10 +6,9 @@ import '../auth/auth_controller.dart';
 
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/register_screen.dart';
-import '../../features/cielos/cielos_screen.dart';
+import '../../features/cielo/cielo_screen.dart';
 import '../../features/grimorio/grimorio_screen.dart';
 import '../../features/horoscopo/horoscopo_screen.dart';
-import '../../features/hoy/hoy_screen.dart';
 import '../../features/lecturas/presentation/lector_screen.dart';
 import '../../features/lecturas/presentation/obra_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
@@ -92,9 +91,13 @@ final arcanumRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state, navigationShell) =>
             AppShell(navigationShell: navigationShell),
         branches: [
+          // Una rama para las dos caras del cielo. La ruta sigue siendo
+          // '/hoy' aunque la pestana se llame "Cielo": renombrarla a '/cielo'
+          // obligaria a tocar el login, la guarda de sesion y sus tests a
+          // cambio de nada que el usuario vea.
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/hoy', builder: (c, s) => const HoyScreen()),
+              GoRoute(path: '/hoy', builder: (c, s) => const CieloScreen()),
             ],
           ),
           // El orden de las ramas ES el de la barra de abajo, y el de
@@ -105,11 +108,6 @@ final arcanumRouterProvider = Provider<GoRouter>((ref) {
                 path: '/horoscopo',
                 builder: (c, s) => const HoroscopoScreen(),
               ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(path: '/cielos', builder: (c, s) => const CielosScreen()),
             ],
           ),
           StatefulShellBranch(

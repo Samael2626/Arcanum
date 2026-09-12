@@ -130,7 +130,10 @@ bool allowsLocalReading(SkyTodayFailure failure) =>
 String? skyFailureRoute(SkyTodayFailure failure) {
   switch (failure) {
     case SkyTodayFailure.sinCartaNatal:
-      return '/cielos';
+      // La rueda natal es la otra cara de esta pestana, no otra seccion. Quien
+      // navegue aqui tiene que cambiar la cara, no solo la ruta: lo hace
+      // `sky_today_card` con `cieloCaraProvider`.
+      return '/hoy';
     case SkyTodayFailure.sinDatosDeNacimiento:
       return '/perfil';
     case SkyTodayFailure.sesionExpirada:
