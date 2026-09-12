@@ -12,6 +12,24 @@ DioException _dio(int status, {Object? detail}) => DioException(
 );
 
 void main() {
+  // La regla de `push` contra `go`, escrita en `shared/creditos.dart`: se apila
+  // lo que es un recado del que se vuelve, y se reemplaza cuando el sitio de
+  // partida ya no vale. Antes las puertas al paywall se comportaban de las dos
+  // maneras sin motivo.
+  group('desvio o reemplazo', () {
+    test('el perfil y la tienda son recados: se vuelve de ellos', () {
+      expect(skyFailureEsDesvio(SkyTodayFailure.sinDatosDeNacimiento), isTrue);
+      expect(skyFailureEsDesvio(SkyTodayFailure.sinCupo), isTrue);
+    });
+
+    test('la sesión caída y la otra cara de la pestaña reemplazan', () {
+      // Con la sesión caída la pila entera deja de valer; y apilar la rueda
+      // natal sobre la pestaña en la que ya estás no significa nada.
+      expect(skyFailureEsDesvio(SkyTodayFailure.sesionExpirada), isFalse);
+      expect(skyFailureEsDesvio(SkyTodayFailure.sinCartaNatal), isFalse);
+    });
+  });
+
   group('cada fallo se dice por lo que es', () {
     test('sin carta natal se ofrece calcularla, no revisar la conexión', () {
       final failure = classifySkyFailure(

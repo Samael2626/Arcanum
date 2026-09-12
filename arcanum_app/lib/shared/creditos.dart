@@ -15,6 +15,18 @@ import 'package:go_router/go_router.dart';
 
 import '../core/api/arcanum_api.dart';
 
+/// SE APILA, NO SE REEMPLAZA, y esa es la regla de toda la app:
+///
+///   `push`  un recado del que se VUELVE a lo que estabas haciendo -- la
+///           tienda, el perfil, los ajustes, la politica.
+///   `go`    el sitio de partida ya no vale -- la sesion se cayo, o el destino
+///           es la otra cara de la pestana en la que ya estas.
+///
+/// La tienda es lo primero: nadie compra creditos como fin en si mismo, sino
+/// para seguir con la tirada que se quedo a medias. Con `go` esa tirada
+/// desaparece de la pila y volver es imposible salvo por la barra de abajo,
+/// que ademas te deja en la raiz de la seccion.
+///
 /// Ensena el saldo que queda y abre la tienda.
 ///
 /// Devuelve `null` si todo fue bien, o el mensaje a mostrar si ni siquiera se

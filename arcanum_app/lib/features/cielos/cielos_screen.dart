@@ -15,6 +15,7 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/creditos.dart';
+import '../../shared/widgets/login_prompt.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
 import '../../shared/widgets/content_report_sheet.dart';
@@ -41,54 +42,16 @@ class CielosScreen extends ConsumerWidget {
         ),
       );
     }
-    if (!auth.isAuthenticated) return const _LoginPrompt();
+    if (!auth.isAuthenticated) {
+      return const LoginPrompt(
+        glyph: '✶',
+        title: 'Tu cielo te espera',
+        description:
+            'Inicia sesión para revelar tu carta natal y los tránsitos del '
+            'cielo de hoy sobre ella.',
+      );
+    }
     return const _NatalView();
-  }
-}
-
-class _LoginPrompt extends StatelessWidget {
-  const _LoginPrompt();
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 36),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              '✶',
-              style: TextStyle(fontSize: 60, color: ArcanumColors.goldMuted),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Tu cielo te espera',
-              textAlign: TextAlign.center,
-              style: ArcanumText.heading(30),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Inicia sesión para revelar tu carta natal y los tránsitos del cielo de hoy sobre ella.',
-              textAlign: TextAlign.center,
-              style: ArcanumText.body(16, color: ArcanumColors.ivoryMuted),
-            ),
-            const SizedBox(height: 28),
-            GoldButton(
-              label: 'Iniciar sesión',
-              onPressed: () => context.go('/login'),
-            ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () => context.go('/register'),
-              child: Text(
-                'Crear cuenta',
-                style: ArcanumText.body(15, color: ArcanumColors.gold),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 
@@ -1006,7 +969,8 @@ class _NoBirthData extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           'Para dibujar tu rueda natal necesito el instante y el lugar exactos '
-          'de tu nacimiento: fecha, hora y coordenadas.',
+          'de tu NACIMIENTO: fecha, hora y coordenadas. No es el sitio donde '
+          'vives ahora, que se guarda aparte en tu perfil.',
           textAlign: TextAlign.center,
           style: ArcanumText.body(16, color: ArcanumColors.ivoryMuted),
         ),

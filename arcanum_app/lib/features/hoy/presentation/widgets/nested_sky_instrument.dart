@@ -171,15 +171,22 @@ class _NestedSkyInstrumentState extends State<NestedSkyInstrument> {
               dato: _datoLunar(illumination, age),
             ),
             const SizedBox(height: 16),
+            // DOS LUGARES DISTINTOS, y hay que decir cual falta. Este es
+            // donde ESTAS -- fija el amanecer y el ocaso, o sea la hora
+            // planetaria -- y se guarda en el perfil. El otro es donde
+            // NACISTE, que dibuja la rueda y vive en el onboarding. Decir "tu
+            // lugar" a secas hacia que quien ya habia dado el de nacimiento
+            // creyera que lo tenia puesto.
             Text(
-              'No disponible sin tu lugar',
+              'No disponible sin saber dónde estás',
               textAlign: TextAlign.center,
               style: ArcanumText.heading(23),
             ),
             const SizedBox(height: 8),
             Text(
-              'El regente y la hora dependen del amanecer y el ocaso de un '
-              'lugar confirmado. La Luna permanece porque es global.',
+              'El regente y la hora dependen del amanecer y el ocaso del sitio '
+              'donde estás ahora, no del de tu nacimiento. La Luna permanece '
+              'porque es global.',
               textAlign: TextAlign.center,
               style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
             ),
@@ -193,7 +200,7 @@ class _NestedSkyInstrumentState extends State<NestedSkyInstrument> {
                 ),
               ),
               child: Text(
-                'Confirmar mi lugar',
+                'Añadir dónde vivo',
                 style: ArcanumText.body(14, color: ArcanumColors.gold),
               ),
             ),

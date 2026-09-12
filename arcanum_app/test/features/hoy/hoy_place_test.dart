@@ -147,6 +147,6 @@ void main() {
     expect(find.text('Gibosa creciente'), findsOneWidget);
     // El regente y la hora se declaran ausentes, no se rellenan.
     expect(find.textContaining('Día de '), findsNothing);
-    expect(find.text('No disponible sin tu lugar'), findsOneWidget);
+    expect(find.text('No disponible sin saber dónde estás'), findsOneWidget);
   });
 }

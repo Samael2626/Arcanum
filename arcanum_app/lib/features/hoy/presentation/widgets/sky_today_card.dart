@@ -555,7 +555,13 @@ class _FailureState extends ConsumerState<_Failure> {
                   if (_failure == SkyTodayFailure.sinCartaNatal) {
                     ref.read(cieloCaraProvider.notifier).set(1);
                   }
-                  context.go(route);
+                  // El perfil y la tienda son recados: se apilan y se vuelve.
+                  // La sesion caida y la otra cara de esta pestana reemplazan.
+                  if (skyFailureEsDesvio(_failure)) {
+                    context.push(route);
+                  } else {
+                    context.go(route);
+                  }
                 },
                 child: Text(
                   _actionLabel(_failure),
@@ -728,7 +734,7 @@ class _LecturaAnterior extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           InkWell(
-            onTap: () => context.go('/paywall'),
+            onTap: () => context.push('/paywall'),
             child: Text(
               'Ver la suscripción',
               style: ArcanumText.body(13, color: ArcanumColors.gold),

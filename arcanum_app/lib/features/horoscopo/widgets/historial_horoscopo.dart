@@ -234,7 +234,9 @@ class _DiaSinAbrirState extends ConsumerState<_DiaSinAbrir> {
               style: ArcanumText.body(12, color: ArcanumColors.ivoryMuted),
             ),
             TextButton(
-              onPressed: () => context.go('/paywall'),
+              // `push` y no `go`: se viene a la tienda para poder seguir
+              // leyendo el historial, no para quedarse en ella.
+              onPressed: () => context.push('/paywall'),
               child: Text(
                 'Ver planes y créditos',
                 style: ArcanumText.body(13, color: ArcanumColors.gold),

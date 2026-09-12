@@ -76,10 +76,13 @@ class _Toggle extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(22),
           onTap: () => onChanged(value),
-          child: AnimatedContainer(
+          // 48 de alto, igual que el de Cielo. Se quedo en 40 desde que se
+          // escribio, por debajo del minimo que se puede tocar sin fallar.
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: AnimatedContainer(
             duration: const Duration(milliseconds: 220),
             alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(22),
               color: selected
@@ -98,6 +101,7 @@ class _Toggle extends StatelessWidget {
                 color: selected ? ArcanumColors.gold : ArcanumColors.ivoryMuted,
               ),
             ),
+          ),
           ),
         ),
       ),
