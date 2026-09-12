@@ -104,6 +104,11 @@ void main() {
     expect(find.text('LEE'), findsOneWidget);
     expect(find.text('Oráculo'), findsOneWidget);
     expect(find.text('Tradición'), findsOneWidget);
+    // Y el renglón que paga el término, sin esperar a que lo toques.
+    expect(
+      find.text('Un modelo interpreta tu tirada y responde.'),
+      findsOneWidget,
+    );
     // Por defecto manda el oráculo, y entonces el aviso de IA es verdad.
     expect(find.textContaining('modelo de IA'), findsOneWidget);
     expect(find.text('Consultar al oráculo'), findsOneWidget);
@@ -115,9 +120,14 @@ void main() {
     await _elegirTradicion(tester);
 
     expect(find.textContaining('modelo de IA'), findsNothing);
-    // Las dos siguen a la vista: lo que cambia es cuál está marcada.
+    // Las dos siguen a la vista: lo que cambia es cuál está marcada, y lo que
+    // dice el renglón de debajo.
     expect(find.text('Oráculo'), findsOneWidget);
     expect(find.text('Tradición'), findsOneWidget);
+    expect(
+      find.text('El significado del Book T, tal cual. Sin IA.'),
+      findsOneWidget,
+    );
     // Y aparece la tirada que solo sirve esta vía.
     expect(find.text('Una carta'), findsOneWidget);
   });

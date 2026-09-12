@@ -778,12 +778,32 @@ class _SelectorDeInterprete extends StatelessWidget {
     // caracter ocupa el tamano de fuente entero. Ahi esto "desborda" 39 px y
     // no es verdad. Las medidas de ancho solo valen con las fuentes cargadas
     // -- lo hace `test/capturas/`.
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('LEE', style: ArcanumText.label()),
-        const SizedBox(width: 14),
-        Flexible(child: _via('Oráculo', Interprete.oraculo)),
-        Flexible(child: _via('Tradición', Interprete.tradicion)),
+        Row(
+          children: [
+            Text('LEE', style: ArcanumText.label()),
+            const SizedBox(width: 14),
+            Flexible(child: _via('Oráculo', Interprete.oraculo)),
+            Flexible(child: _via('Tradición', Interprete.tradicion)),
+          ],
+        ),
+        // El renglon que paga el termino. Sin el, "Tradicion" no dice de que
+        // va hasta que se toca, y esta app tiene por norma explicar cada
+        // palabra de oficio en el acto -- no dejarla para que la descubras.
+        Padding(
+          padding: const EdgeInsets.only(left: 2, top: 2),
+          child: Text(
+            valor == Interprete.tradicion
+                ? 'El significado del Book T, tal cual. Sin IA.'
+                : 'Un modelo interpreta tu tirada y responde.',
+            style: ArcanumText.body(
+              12,
+              color: ArcanumColors.ivoryMuted.withValues(alpha: 0.75),
+            ),
+          ),
+        ),
       ],
     );
   }
