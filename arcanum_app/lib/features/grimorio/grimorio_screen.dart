@@ -10,7 +10,6 @@ import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_surface.dart';
-import '../../shared/widgets/info_dot.dart';
 import '../../shared/widgets/login_prompt.dart';
 import 'grimorio_atmosphere.dart';
 import 'grimorio_detail.dart';
@@ -156,8 +155,17 @@ class _GrimorioScreenState extends ConsumerState<GrimorioScreen> {
   }
 }
 
-// ── Cabecera del libro ──────────────────────────────────────────────────────
+// ── Filete de apertura del codice ───────────────────────────────────────────
 
+/// Solo el filete: el titulo, el subtitulo y el "?" se fueron el 12-sep-2026.
+///
+/// Los repetia. La barra de seccion ya dice "Grimorio · Tu diario cifrado y los
+/// pasajes que guardas" con su propio "?", y esto volvia a decir "Grimorio · Tu
+/// libro cifrado" con otro: dos titulos, dos subtitulos que ni coincidian, y
+/// dos puertas al glosario a cuatro dedos. Visto en el aparato.
+///
+/// El filete se queda porque hace algo que la barra no hace: marcar donde
+/// empiezan las hojas del codice.
 class _GrimoireHeader extends StatelessWidget {
   const _GrimoireHeader();
   @override
@@ -178,28 +186,6 @@ class _GrimoireHeader extends StatelessWidget {
     );
     return Column(
       children: [
-        Text(
-          'Grimorio',
-          textAlign: TextAlign.center,
-          style: ArcanumText.heading(38).copyWith(letterSpacing: 2),
-        ),
-        const SizedBox(height: 2),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Tu libro cifrado',
-              style: ArcanumText.body(
-                15,
-                italic: true,
-                color: ArcanumColors.ivoryMuted,
-              ),
-            ),
-            const SizedBox(width: 8),
-            const InfoDot('grimorio'),
-          ],
-        ),
-        const SizedBox(height: 14),
         Row(
           children: [
             rule(),
