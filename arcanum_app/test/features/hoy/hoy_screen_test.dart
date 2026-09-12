@@ -403,7 +403,7 @@ void main() {
     // Los otros aspectos ya no salen desplegados: tapaban la pantalla entera.
     // Se piden, y a partir de ahi todo lo de abajo sigue igual.
     expect(find.byType(AspectWheel), findsNothing);
-    await tester.tap(find.text('OTROS ASPECTOS (3)'));
+    await tester.tap(find.text('VER TODOS LOS ASPECTOS (3)'));
     await tester.pumpAndSettle();
 
     expect(find.text('Urano trígono Luna'), findsOneWidget);
