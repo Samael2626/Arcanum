@@ -114,8 +114,9 @@ void main() {
     expect(find.text('Consultar al oráculo'), findsOneWidget);
   });
 
-  testWidgets('la tradición no anuncia una IA que no interviene',
-      (tester) async {
+  testWidgets('la tradición no anuncia una IA que no interviene', (
+    tester,
+  ) async {
     await _abrir(tester, _Api());
     await _elegirTradicion(tester);
 
@@ -125,15 +126,21 @@ void main() {
     expect(find.text('Oráculo'), findsOneWidget);
     expect(find.text('Tradición'), findsOneWidget);
     expect(
-      find.text('El significado del Book T, tal cual. Sin IA.'),
+      find.text(
+        'El significado del Book T, tal cual. Sin IA, pero cuenta como tirada.',
+      ),
       findsOneWidget,
     );
+    // "Sin IA" no puede leerse como "gratis": las dos vias gastan el mismo
+    // cupo diario en el servidor, y el renglon de los limites lo dice.
+    expect(find.textContaining('descuenta de tu cupo diario'), findsOneWidget);
     // Y aparece la tirada que solo sirve esta vía.
     expect(find.text('Una carta'), findsOneWidget);
   });
 
-  testWidgets('tira de verdad por el endpoint clásico y trae el Book T',
-      (tester) async {
+  testWidgets('tira de verdad por el endpoint clásico y trae el Book T', (
+    tester,
+  ) async {
     final api = _Api();
     await _abrir(tester, api);
     await _elegirTradicion(tester);
@@ -145,13 +152,17 @@ void main() {
 
     expect(api.clavesClasicas, hasLength(1));
     expect(api.llamadasAlOraculo, 0, reason: 'la vía clásica no toca la IA');
-    expect(find.text('El salto que todavía no sabe dónde cae.'), findsOneWidget);
+    expect(
+      find.text('El salto que todavía no sabe dónde cae.'),
+      findsOneWidget,
+    );
     // Y no ofrece interpretar: no hay sesión que interpretar.
     expect(find.text('Pedir interpretación'), findsNothing);
   });
 
-  testWidgets('volver al oráculo no deja puesta la tirada de la otra vía',
-      (tester) async {
+  testWidgets('volver al oráculo no deja puesta la tirada de la otra vía', (
+    tester,
+  ) async {
     final api = _Api();
     await _abrir(tester, api);
     await _elegirTradicion(tester);
@@ -171,13 +182,15 @@ void main() {
     await _abrir(tester, _Api());
     for (final rotulo in ['Oráculo', 'Tradición']) {
       final caja = tester.getRect(
-        find.ancestor(
-          of: find.text(rotulo),
-          matching: find.byType(InkWell),
-        ).first,
+        find
+            .ancestor(of: find.text(rotulo), matching: find.byType(InkWell))
+            .first,
       );
-      expect(caja.height, greaterThanOrEqualTo(48),
-          reason: '$rotulo se queda por debajo de lo que se puede tocar');
+      expect(
+        caja.height,
+        greaterThanOrEqualTo(48),
+        reason: '$rotulo se queda por debajo de lo que se puede tocar',
+      );
     }
   });
 
@@ -186,16 +199,16 @@ void main() {
     // Arranca en el oráculo: tocarlo otra vez no hace nada, y el InkWell lo
     // dice con onTap nulo en vez de fingir que responde.
     final activo = tester.widget<InkWell>(
-      find.ancestor(
-        of: find.text('Oráculo'),
-        matching: find.byType(InkWell),
-      ).first,
+      find
+          .ancestor(of: find.text('Oráculo'), matching: find.byType(InkWell))
+          .first,
     );
     expect(activo.onTap, isNull);
   });
 
-  testWidgets('un reintento reutiliza la clave y una tirada nueva la cambia',
-      (tester) async {
+  testWidgets('un reintento reutiliza la clave y una tirada nueva la cambia', (
+    tester,
+  ) async {
     final api = _Api(fallaLaPrimera: true);
     await _abrir(tester, api);
     await _elegirTradicion(tester);
@@ -213,7 +226,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(api.clavesClasicas, hasLength(2));
     expect(api.clavesClasicas.first, isNotNull);
-    expect(api.clavesClasicas[1], api.clavesClasicas.first,
-        reason: 'reintentar lo mismo no puede cobrar dos veces');
+    expect(
+      api.clavesClasicas[1],
+      api.clavesClasicas.first,
+      reason: 'reintentar lo mismo no puede cobrar dos veces',
+    );
   });
 }

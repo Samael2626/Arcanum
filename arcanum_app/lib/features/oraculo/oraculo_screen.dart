@@ -192,6 +192,7 @@ class _OracleViewState extends ConsumerState<_OracleView> {
   bool _drawing = false;
   String? _drawError;
   List<Map<String, dynamic>>? _cards;
+
   /// Id de la lectura clasica, para poder reportar su contenido.
   String? _readingId;
   // id de la tirada visible (DivinationSession.id). Ancla la interpretación
@@ -333,9 +334,7 @@ class _OracleViewState extends ConsumerState<_OracleView> {
       final cards = esClasica
           ? ((data['resolved'] as List?) ?? const [])
                 .cast<Map<String, dynamic>>()
-                .map(
-                  (c) => {...c, 'drawn_upright': c['reversed'] != true},
-                )
+                .map((c) => {...c, 'drawn_upright': c['reversed'] != true})
                 .toList()
           : ((data['cards_drawn'] as Map)['cards'] as List)
                 .cast<Map<String, dynamic>>();
@@ -456,29 +455,29 @@ class _OracleViewState extends ConsumerState<_OracleView> {
         // ningun modelo toca seria avisar de algo que no pasa, y de paso
         // restarle la unica cosa que distingue a la via clasica.
         if (_interprete == Interprete.oraculo) ...[
-        Semantics(
-          label: 'Aviso de inteligencia artificial',
-          child: ArcanumCard(
-            intensity: 0.35,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(
-                  Icons.auto_awesome_outlined,
-                  color: ArcanumColors.gold,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Estás hablando con un modelo de IA. Sus respuestas son simbólicas y pueden contener errores.',
-                    style: ArcanumText.body(14),
+          Semantics(
+            label: 'Aviso de inteligencia artificial',
+            child: ArcanumCard(
+              intensity: 0.35,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.auto_awesome_outlined,
+                    color: ArcanumColors.gold,
+                    size: 20,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Estás hablando con un modelo de IA. Sus respuestas son simbólicas y pueden contener errores.',
+                      style: ArcanumText.body(14),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
           const SizedBox(height: 18),
         ],
         // `Wrap` y no `Row`: a 360 px las dos pastillas de siempre ya
@@ -551,7 +550,13 @@ class _OracleViewState extends ConsumerState<_OracleView> {
           onPressed: _draw,
         ),
         const SizedBox(height: 8),
+        // "Sin IA" no significa "gratis": las dos vias pasan por el mismo
+        // cupo. `/tarot/spread` y `/tarot/draw-one` reservan en el bucket
+        // "tarot" con el mismo limite diario que la via del oraculo, asi que
+        // el renglon tiene que decirlo o alguien leera "sin IA" y asumira que
+        // la tirada no cuesta nada.
         Text(
+          'Cualquiera de las dos vías descuenta de tu cupo diario. '
           'Los límites y créditos se actualizan desde el servidor.',
           textAlign: TextAlign.center,
           style: ArcanumText.body(
@@ -641,10 +646,10 @@ class _OracleViewState extends ConsumerState<_OracleView> {
                 child: Scrollbar(
                   child: SingleChildScrollView(
                     child: AiOutput(
-                    text: _iaReply!,
-                    surface: 'oraculo',
-                    child: Text(_iaReply!, style: ArcanumText.body(16)),
-                  ),
+                      text: _iaReply!,
+                      surface: 'oraculo',
+                      child: Text(_iaReply!, style: ArcanumText.body(16)),
+                    ),
                   ),
                 ),
               ),
@@ -796,7 +801,8 @@ class _SelectorDeInterprete extends StatelessWidget {
           padding: const EdgeInsets.only(left: 2, top: 2),
           child: Text(
             valor == Interprete.tradicion
-                ? 'El significado del Book T, tal cual. Sin IA.'
+                ? 'El significado del Book T, tal cual. Sin IA, pero cuenta '
+                      'como tirada.'
                 : 'Un modelo interpreta tu tirada y responde.',
             style: ArcanumText.body(
               12,
@@ -814,7 +820,8 @@ class _SelectorDeInterprete extends StatelessWidget {
       button: true,
       selected: activa,
       label: cual == Interprete.tradicion
-          ? 'Que lean la tradición: el significado del Book T, sin IA'
+          ? 'Que lean la tradición: el significado del Book T, sin IA; '
+                'cuenta como tirada igual'
           : 'Que lea el oráculo: un modelo interpreta la tirada',
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
@@ -844,9 +851,7 @@ class _SelectorDeInterprete extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: ArcanumText.body(
                       15,
-                      color: activa
-                          ? ArcanumColors.ivory
-                          : ArcanumColors.gold,
+                      color: activa ? ArcanumColors.ivory : ArcanumColors.gold,
                     ),
                   ),
                 ),
