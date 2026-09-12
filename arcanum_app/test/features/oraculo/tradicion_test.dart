@@ -92,7 +92,7 @@ Future<void> _abrir(WidgetTester tester, _Api api) async {
 }
 
 Future<void> _elegirTradicion(WidgetTester tester) async {
-  await tester.tap(find.text('La tradición'));
+  await tester.tap(find.text('Tradición'));
   await tester.pumpAndSettle();
 }
 
@@ -100,9 +100,10 @@ void main() {
   testWidgets('la puerta existe y arranca en el oráculo', (tester) async {
     await _abrir(tester, _Api());
 
-    expect(find.text('QUIÉN LEE LAS CARTAS'), findsOneWidget);
-    expect(find.text('El oráculo'), findsOneWidget);
-    expect(find.text('La tradición'), findsOneWidget);
+    // Discreto: un renglón con las dos vías a la vista.
+    expect(find.text('LEE'), findsOneWidget);
+    expect(find.text('Oráculo'), findsOneWidget);
+    expect(find.text('Tradición'), findsOneWidget);
     // Por defecto manda el oráculo, y entonces el aviso de IA es verdad.
     expect(find.textContaining('modelo de IA'), findsOneWidget);
     expect(find.text('Consultar al oráculo'), findsOneWidget);
@@ -114,6 +115,9 @@ void main() {
     await _elegirTradicion(tester);
 
     expect(find.textContaining('modelo de IA'), findsNothing);
+    // Las dos siguen a la vista: lo que cambia es cuál está marcada.
+    expect(find.text('Oráculo'), findsOneWidget);
+    expect(find.text('Tradición'), findsOneWidget);
     // Y aparece la tirada que solo sirve esta vía.
     expect(find.text('Una carta'), findsOneWidget);
   });
@@ -144,13 +148,40 @@ void main() {
     await tester.tap(find.text('Una carta'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('El oráculo'));
+    await tester.tap(find.text('Oráculo'));
     await tester.pumpAndSettle();
 
     // "Una carta" no existe en `/oracle/tarot/draw`: si sobreviviera, el botón
     // llamaría a una tirada que ese endpoint no sirve.
     expect(find.text('Una carta'), findsNothing);
     expect(find.text('Consultar al oráculo'), findsOneWidget);
+  });
+
+  testWidgets('las dos vías se pueden tocar sin fallar', (tester) async {
+    await _abrir(tester, _Api());
+    for (final rotulo in ['Oráculo', 'Tradición']) {
+      final caja = tester.getRect(
+        find.ancestor(
+          of: find.text(rotulo),
+          matching: find.byType(InkWell),
+        ).first,
+      );
+      expect(caja.height, greaterThanOrEqualTo(48),
+          reason: '$rotulo se queda por debajo de lo que se puede tocar');
+    }
+  });
+
+  testWidgets('la vía activa no se puede volver a tocar', (tester) async {
+    await _abrir(tester, _Api());
+    // Arranca en el oráculo: tocarlo otra vez no hace nada, y el InkWell lo
+    // dice con onTap nulo en vez de fingir que responde.
+    final activo = tester.widget<InkWell>(
+      find.ancestor(
+        of: find.text('Oráculo'),
+        matching: find.byType(InkWell),
+      ).first,
+    );
+    expect(activo.onTap, isNull);
   });
 
   testWidgets('un reintento reutiliza la clave y una tirada nueva la cambia',

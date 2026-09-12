@@ -749,8 +749,19 @@ class _OracleViewState extends ConsumerState<_OracleView> {
 
 /// Quien lee las cartas, dentro de Consultar.
 ///
-/// Dos pildoras y no tres segmentos arriba: la eleccion no es "que hago" sino
-/// "de donde sale el significado", y las dos opciones acaban en una tirada.
+/// DISCRETO A PROPOSITO, y con las dos vias a la vista: una linea que dice
+/// "LEE" y las dos opciones al lado, la activa en marfil con un filete debajo
+/// y la otra en oro, que en esta app es la marca de lo que se toca.
+///
+/// La primera version eran dos pastillas con titulo y descripcion y no cabia,
+/// asi que se probaron cuatro maneras dibujadas en Flutter y retratadas a
+/// 360 px con las fuentes reales. Esta gana porque enseña que HAY eleccion sin
+/// abrir nada y sin ocupar mas que un renglon.
+///
+/// EL FILETE SALE DEL TEXTO, no de la caja. Ponerlo como `Border` sobre el
+/// area tactil de 48 hacia que el `Row` estirase al hijo y la linea cayera al
+/// fondo del bloque, despegada de la palabra. Va sobre un contenedor que
+/// envuelve solo al `Text`, dentro de un `Center` que encoge a lo ancho.
 class _SelectorDeInterprete extends StatelessWidget {
   const _SelectorDeInterprete({required this.valor, required this.onChanged});
 
@@ -759,86 +770,65 @@ class _SelectorDeInterprete extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    // Con Crimson Pro real el renglon entero mide ~210 px de los 312 que hay
+    // a 360, asi que sobra sitio. Los `Flexible` son para la escala de letra
+    // grande del sistema, no porque no quepa.
+    //
+    // OJO AL MEDIR: en un test sin `FontLoader`, Flutter usa Ahem, donde cada
+    // caracter ocupa el tamano de fuente entero. Ahi esto "desborda" 39 px y
+    // no es verdad. Las medidas de ancho solo valen con las fuentes cargadas
+    // -- lo hace `test/capturas/`.
+    return Row(
       children: [
-        Text(
-          'QUIÉN LEE LAS CARTAS',
-          textAlign: TextAlign.center,
-          style: ArcanumText.label(),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            _pildora(
-              'El oráculo',
-              'Un modelo interpreta tu tirada',
-              Interprete.oraculo,
-            ),
-            const SizedBox(width: 10),
-            _pildora(
-              'La tradición',
-              'El significado del Book T, sin IA',
-              Interprete.tradicion,
-            ),
-          ],
-        ),
+        Text('LEE', style: ArcanumText.label()),
+        const SizedBox(width: 14),
+        Flexible(child: _via('Oráculo', Interprete.oraculo)),
+        Flexible(child: _via('Tradición', Interprete.tradicion)),
       ],
     );
   }
 
-  Widget _pildora(String titulo, String pie, Interprete cual) {
-    final elegida = cual == valor;
-    return Expanded(
-      child: Semantics(
-        button: true,
-        selected: elegida,
-        label: '$titulo. $pie',
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: () => onChanged(cual),
-          // 48 de alto minimo: es lo que se puede tocar sin fallar, y el
-          // conmutador de arriba se quedo en 38 desde siempre.
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 48),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                color: elegida
-                    ? ArcanumColors.gold.withValues(alpha: 0.16)
-                    : Colors.transparent,
-                border: Border.all(
-                  color: elegida
-                      ? ArcanumColors.gold
-                      : ArcanumColors.goldMuted.withValues(alpha: 0.4),
-                ),
-              ),
+  Widget _via(String rotulo, Interprete cual) {
+    final activa = cual == valor;
+    return Semantics(
+      button: true,
+      selected: activa,
+      label: cual == Interprete.tradicion
+          ? 'Que lean la tradición: el significado del Book T, sin IA'
+          : 'Que lea el oráculo: un modelo interpreta la tirada',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: activa ? null : () => onChanged(cual),
+        // 48 de alto: lo que se toca no baja de ahi.
+        child: SizedBox(
+          height: 48,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Center(
+              widthFactor: 1,
               child: ExcludeSemantics(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      titulo,
-                      textAlign: TextAlign.center,
-                      style: ArcanumText.body(
-                        15,
-                        color: elegida
-                            ? ArcanumColors.gold
-                            : ArcanumColors.ivoryMuted,
-                      ),
+                child: Container(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  decoration: activa
+                      ? const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: ArcanumColors.gold,
+                              width: 1.4,
+                            ),
+                          ),
+                        )
+                      : null,
+                  child: Text(
+                    rotulo,
+                    overflow: TextOverflow.ellipsis,
+                    style: ArcanumText.body(
+                      15,
+                      color: activa
+                          ? ArcanumColors.ivory
+                          : ArcanumColors.gold,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      pie,
-                      textAlign: TextAlign.center,
-                      style: ArcanumText.body(
-                        11,
-                        color: ArcanumColors.ivoryMuted.withValues(alpha: 0.75),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
