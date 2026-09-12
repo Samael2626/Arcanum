@@ -300,6 +300,11 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
                                             d['profection']
                                                 as Map<String, dynamic>?,
                                         texto: texto,
+                                        // El mismo signo que pinta la lamina
+                                        // de la tarjeta de arriba: lo que se
+                                        // comparte y lo que se ve son uno.
+                                        signo: signo,
+                                        signoIngles: d['sun_sign'] as String?,
                                       ),
                                     ),
                                   ),

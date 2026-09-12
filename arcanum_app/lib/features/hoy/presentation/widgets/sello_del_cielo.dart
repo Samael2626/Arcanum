@@ -138,7 +138,7 @@ class _SelloDelCieloState extends State<SelloDelCielo>
                     children: [
                       CustomPaint(
                         size: const Size(168, 168),
-                        painter: _PintorRueda(
+                        painter: PintorRueda(
                           anguloNominal: angulo,
                           separacion: separacion,
                           progreso: t,
@@ -407,8 +407,12 @@ class _CieloEnCalma extends StatelessWidget {
 ///
 /// `shouldRepaint` solo devuelve true cuando cambia el progreso: en reposo esto
 /// no repinta nada, que es lo que el guardian de rendimiento de Hoy exige.
-class _PintorRueda extends CustomPainter {
-  const _PintorRueda({
+/// PUBLICO A PROPOSITO. Lo usa tambien la tarjeta que se comparte, que antes
+/// dibujaba su propia figura con otro pintor: eran dos maneras de pintar el
+/// mismo aro, y cuando llego la lamina zodiacal solo se actualizo una. Quien
+/// cambie este pintor cambia las dos.
+class PintorRueda extends CustomPainter {
+  const PintorRueda({
     required this.anguloNominal,
     required this.separacion,
     required this.progreso,
@@ -596,7 +600,7 @@ class _PintorRueda extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_PintorRueda viejo) =>
+  bool shouldRepaint(PintorRueda viejo) =>
       viejo.progreso != progreso ||
       viejo.anguloNominal != anguloNominal ||
       viejo.separacion != separacion ||

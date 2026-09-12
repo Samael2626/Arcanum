@@ -9,6 +9,7 @@ import 'package:arcanum_app/core/theme/arcanum_theme.dart';
 import 'package:arcanum_app/core/router/app_router.dart';
 import 'package:arcanum_app/features/horoscopo/compartir_horoscopo.dart';
 import 'package:arcanum_app/features/horoscopo/widgets/tarjeta_compartir.dart';
+import 'package:arcanum_app/features/hoy/presentation/widgets/zodiaco_laminas.g.dart';
 import 'package:arcanum_app/features/hoy/hoy_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -497,12 +498,26 @@ void main() {
                 texto: 'Saturno cierra un cuadrado con tu Sol: figura de '
                     'tension entre cuerpos que se miran de frente. En la hora '
                     'del Sol se trabajaba el oro.',
+                // Con signo, que es el caso normal: la lamina de fondo y el
+                // nombre son justo lo que faltaba y lo que hay que retratar.
+                signo: Signo.capricornio,
+                signoIngles: 'capricorn',
               ),
             ),
           ),
         ),
       ),
     );
+    await tester.pumpAndSettle();
+    // La lamina es un `Image.asset`, y en un test no se resuelve sola: sin
+    // `precacheImage` dentro de `runAsync` el retrato sale SIN grabado y
+    // parece que el fondo no funciona. Es exactamente lo que hace
+    // `zodiaco_capturas_test`, y por el mismo motivo.
+    await tester.runAsync(() async {
+      for (final elemento in tester.widgetList<Image>(find.byType(Image))) {
+        await precacheImage(elemento.image, tester.element(find.byType(Image)));
+      }
+    });
     await tester.pumpAndSettle();
     final png = await tester.runAsync(() => pintarTarjeta(clave));
     expect(png, isNotNull);
