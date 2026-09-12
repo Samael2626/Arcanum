@@ -191,8 +191,17 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         ref.read(materiaPlanetProvider.notifier).set(planet);
         context.go('/saber');
       case NextStepKind.culpeper:
+        // `go` y NO `push`: el capitulo vive en la rama de Saber, y un `push`
+        // desde otra pestana lo apila en la rama de ESTA -- se acaba leyendo
+        // un capitulo de la Biblioteca con la cabecera de Cielo encima y la
+        // pestana Cielo marcada abajo. Visto en el aparato el 12-sep-2026.
+        //
+        // Con `go`, el shell cambia a la rama que le corresponde y el lector
+        // hereda su contexto: la barra de seccion se oculta (es una sub-ruta)
+        // y volver lleva al indice de la obra, que es el recorrido de quien
+        // lee.
         if (slug != null) {
-          context.push('/saber/$culpeperWorkSlug/$slug');
+          context.go('/saber/$culpeperWorkSlug/$slug');
         }
       case NextStepKind.grimoire:
         ref.read(grimoireComposeProvider.notifier).set(true);

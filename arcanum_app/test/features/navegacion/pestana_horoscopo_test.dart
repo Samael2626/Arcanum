@@ -19,6 +19,7 @@ import 'package:arcanum_app/features/horoscopo/horoscopo_screen.dart';
 import 'package:arcanum_app/features/hoy/hoy_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,6 +35,39 @@ class _AuthDePrueba extends AuthNotifier {
 
 class _ApiMuda extends ArcanumApi {
   _ApiMuda() : super(Dio());
+
+  /// Saber monta Plantas y Biblioteca al entrar, y el lector pide su capitulo.
+  /// Sin doblarlos, las llamadas se van al Dio real y quedan temporizadores
+  /// colgando: el test muere por algo que no es lo que prueba.
+  @override
+  Future<List<Map<String, dynamic>>> materiaList({
+    String? itemType,
+    String? planet,
+    String? q,
+  }) async => [];
+
+  @override
+  Future<List<Map<String, dynamic>>> libraryWorks() async => [];
+
+  @override
+  Future<List<Map<String, dynamic>>> allProgress() async => [];
+
+  @override
+  Future<Map<String, dynamic>> progressForWork(String workSlug) async => {};
+
+  @override
+  Future<Map<String, dynamic>> libraryWork(String slug, {String? kind}) async =>
+      {'slug': slug, 'title': 'Culpeper', 'chapters': <Map>[]};
+
+  @override
+  Future<Map<String, dynamic>> libraryChapter(
+    String workSlug,
+    String chapterSlug,
+  ) async => {
+    'slug': chapterSlug,
+    'title': 'Henbane',
+    'paragraphs': <Map<String, dynamic>>[],
+  };
 
   @override
   Future<Map<String, dynamic>> today({
@@ -170,6 +204,30 @@ void main() {
       find.byType(NavigationBarTheme),
       findsNothing,
       reason: 'el tema que apagaba el indicador ya no hace falta',
+    );
+  });
+
+  // Un capítulo de la Biblioteca abierto desde OTRA pestaña tiene que acabar
+  // en la rama de Saber. Con `push` se apilaba en la rama de origen: se leía
+  // con la cabecera de esa sección encima y su pestaña marcada abajo. Visto en
+  // el aparato el 12-sep-2026.
+  testWidgets('un capítulo abierto desde fuera aterriza en Saber', (
+    tester,
+  ) async {
+    await _montar(tester);
+    expect(_barra(tester).selectedIndex, 0, reason: 'se arranca en Cielo');
+
+    final router =
+        tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig!
+            as GoRouter;
+    router.go('/saber/culpeper-complete-herbal/henbane');
+    await tester.pump(const Duration(milliseconds: 400));
+
+    final saber = arcanumSections.indexWhere((s) => s.route == '/saber');
+    expect(
+      _barra(tester).selectedIndex,
+      saber,
+      reason: 'el capítulo se quedó en la rama de la pestaña de origen',
     );
   });
 
