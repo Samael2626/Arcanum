@@ -17,7 +17,6 @@ import '../../shared/widgets/arcanum_surface.dart';
 import 'hoy_guidance.dart';
 import 'hoy_lore.dart';
 import 'presentation/widgets/nested_sky_instrument.dart';
-import 'presentation/widgets/sky_today_card.dart';
 import 'presentation/widgets/today_card.dart';
 
 /// El cielo de hoy de ESTA persona, o solo la luna si no ha confirmado lugar.
@@ -164,11 +163,19 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
           _NextStepCard(step: step, onTap: () => _runStep(step)),
           const SizedBox(height: 18),
         ],
+        // AQUI NO VA `SkyTodayCard`, y es a proposito desde el 12-sep-2026.
+        //
+        // La tenia, y la pestana Horoscopo tambien: la MISMA tarjeta montada
+        // dos veces, con estado propio cada una. Comprobado en el aparato:
+        // abrir el sello en una dejaba la otra cerrada, asi que quien leyera
+        // su horoscopo aqui lo encontraba sin abrir alla, y abrirlo era un
+        // segundo intento de generacion.
+        //
+        // No era una decision: era lo de siempre, de cuando Hoy y el horoscopo
+        // no compartian barra. Desde que el horoscopo tiene pestana propia, la
+        // lectura vive ALLI y esta cara se queda con lo suyo -- el instrumento
+        // del instante y el siguiente paso.
         _skyInstrument(ruler: ruler, hour: hour, moon: moon),
-        const SizedBox(height: 18),
-        // La lectura personal cierra la pantalla. Carga por su cuenta para que
-        // un fallo no se lleve por delante el instrumento local.
-        const SkyTodayCard(),
       ],
     );
   }
