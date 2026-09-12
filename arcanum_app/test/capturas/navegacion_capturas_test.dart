@@ -107,6 +107,11 @@ class _Api extends ArcanumApi {
 
   @override
   Future<Map<String, dynamic>> celestialOverview() async => {};
+
+  /// El Grimorio pide su lista al construirse. Sin doblarla, la llamada se va
+  /// al Dio real y el test muere con un temporizador pendiente.
+  @override
+  Future<List<Map<String, dynamic>>> grimoireList() async => [];
 }
 
 Future<void> _montar(WidgetTester tester) async {
@@ -162,5 +167,12 @@ void main() {
     await tester.tap(find.text('Oráculo'));
     await tester.pumpAndSettle();
     await _retratar(tester, 'nav-2-oraculo-consultar');
+  });
+
+  testWidgets('n4 el Grimorio, con su frase nueva', (tester) async {
+    await _montar(tester);
+    await tester.tap(find.text('Grimorio'));
+    await tester.pump(const Duration(milliseconds: 400));
+    await _retratar(tester, 'nav-4-grimorio');
   });
 }

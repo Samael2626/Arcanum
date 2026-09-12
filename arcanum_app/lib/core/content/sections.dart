@@ -2,6 +2,17 @@ import 'package:flutter/material.dart';
 
 /// Metadatos de cada sección de la app.
 ///
+/// EL SUBTITULO DICE LO QUE HAY DENTRO, en palabras corrientes. Tres estaban
+/// mal y se corrigieron el 11-sep-2026, cada una por su motivo:
+///
+///   Cielo     decia "y los signos del zodiaco", que no esta en la pantalla:
+///             lo que hay son transitos sobre la carta natal.
+///   Grimorio  prometia "ritos y hechizos" como si hubiera plantillas -- es un
+///             editor libre -- y se callaba los pasajes guardados, que son la
+///             mitad de la seccion.
+///   Oraculo   decia "respuestas guiadas", que no dice nada, y escondia que
+///             hay dos modos y ahora tres vias.
+///
 /// Una sola fuente de verdad para la barra superior: el nombre MÍSTICO (la
 /// identidad, la marca), un subtítulo LLANO (el maestro: qué es esto, siempre
 /// visible) y la clave de glosario del "?" (la explicación a fondo).
@@ -66,7 +77,7 @@ const List<ArcanumSection> arcanumSections = [
     icon: Icons.menu_book_outlined,
     selectedIcon: Icons.menu_book,
     title: 'Grimorio',
-    subtitle: 'Tu diario mágico: notas, ritos y hechizos',
+    subtitle: 'Tu diario cifrado y los pasajes que guardas',
     helpKey: 'grimorio',
   ),
   ArcanumSection(
@@ -82,7 +93,7 @@ const List<ArcanumSection> arcanumSections = [
     icon: Icons.style_outlined,
     selectedIcon: Icons.style,
     title: 'Oráculo',
-    subtitle: 'Consulta: tarot y respuestas guiadas',
+    subtitle: 'Tira las cartas, pregunta, o estudia el mazo',
     helpKey: 'tarot',
   ),
 ];
