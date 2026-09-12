@@ -108,7 +108,7 @@ void main() {
       expect(find.byType(HoyScreen), findsNothing);
     });
 
-    for (final ruta in ['/hoy', '/cielos', '/grimorio', '/saber', '/oraculo',
+    for (final ruta in ['/hoy', '/horoscopo', '/grimorio', '/saber', '/oraculo',
                         '/horoscopo', '/perfil', '/settings', '/paywall']) {
       testWidgets('$ruta redirige a login', (tester) async {
         await _arrancar(tester, ruta: ruta);

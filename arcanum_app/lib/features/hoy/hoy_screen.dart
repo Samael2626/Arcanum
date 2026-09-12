@@ -17,7 +17,6 @@ import '../../shared/widgets/arcanum_surface.dart';
 import 'hoy_guidance.dart';
 import 'hoy_lore.dart';
 import 'presentation/widgets/nested_sky_instrument.dart';
-import 'presentation/widgets/sky_today_card.dart';
 import 'presentation/widgets/today_card.dart';
 
 /// El cielo de hoy de ESTA persona, o solo la luna si no ha confirmado lugar.
@@ -164,11 +163,19 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
           _NextStepCard(step: step, onTap: () => _runStep(step)),
           const SizedBox(height: 18),
         ],
+        // AQUI NO VA `SkyTodayCard`, y es a proposito desde el 12-sep-2026.
+        //
+        // La tenia, y la pestana Horoscopo tambien: la MISMA tarjeta montada
+        // dos veces, con estado propio cada una. Comprobado en el aparato:
+        // abrir el sello en una dejaba la otra cerrada, asi que quien leyera
+        // su horoscopo aqui lo encontraba sin abrir alla, y abrirlo era un
+        // segundo intento de generacion.
+        //
+        // No era una decision: era lo de siempre, de cuando Hoy y el horoscopo
+        // no compartian barra. Desde que el horoscopo tiene pestana propia, la
+        // lectura vive ALLI y esta cara se queda con lo suyo -- el instrumento
+        // del instante y el siguiente paso.
         _skyInstrument(ruler: ruler, hour: hour, moon: moon),
-        const SizedBox(height: 18),
-        // La lectura personal cierra la pantalla. Carga por su cuenta para que
-        // un fallo no se lleve por delante el instrumento local.
-        const SkyTodayCard(),
       ],
     );
   }
@@ -184,8 +191,17 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         ref.read(materiaPlanetProvider.notifier).set(planet);
         context.go('/saber');
       case NextStepKind.culpeper:
+        // `go` y NO `push`: el capitulo vive en la rama de Saber, y un `push`
+        // desde otra pestana lo apila en la rama de ESTA -- se acaba leyendo
+        // un capitulo de la Biblioteca con la cabecera de Cielo encima y la
+        // pestana Cielo marcada abajo. Visto en el aparato el 12-sep-2026.
+        //
+        // Con `go`, el shell cambia a la rama que le corresponde y el lector
+        // hereda su contexto: la barra de seccion se oculta (es una sub-ruta)
+        // y volver lleva al indice de la obra, que es el recorrido de quien
+        // lee.
         if (slug != null) {
-          context.push('/saber/$culpeperWorkSlug/$slug');
+          context.go('/saber/$culpeperWorkSlug/$slug');
         }
       case NextStepKind.grimoire:
         ref.read(grimoireComposeProvider.notifier).set(true);
@@ -196,8 +212,11 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         }
         context.go('/oraculo');
       case NextStepKind.cielos:
+        // Ya NO es un salto de seccion: desde el 11-sep-2026 la rueda es la
+        // otra cara de esta misma pestana. Navegar a '/hoy' desde '/hoy' no
+        // haria nada, asi que lo que se cambia es la cara.
         ref.read(cielosFocusPlanetProvider.notifier).set(planet);
-        context.go('/cielos');
+        ref.read(cieloCaraProvider.notifier).set(1);
     }
   }
 

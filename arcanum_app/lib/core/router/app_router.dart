@@ -6,10 +6,9 @@ import '../auth/auth_controller.dart';
 
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/register_screen.dart';
-import '../../features/cielos/cielos_screen.dart';
+import '../../features/cielo/cielo_screen.dart';
 import '../../features/grimorio/grimorio_screen.dart';
 import '../../features/horoscopo/horoscopo_screen.dart';
-import '../../features/hoy/hoy_screen.dart';
 import '../../features/lecturas/presentation/lector_screen.dart';
 import '../../features/lecturas/presentation/obra_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
@@ -21,8 +20,6 @@ import '../../features/lecturas/presentation/indice_screen.dart';
 import '../../features/saber/saber_screen.dart';
 import '../../features/settings/privacy_screen.dart';
 import '../../features/settings/settings_screen.dart';
-import '../../features/tarot/tarot_screen.dart';
-import '../content/sections.dart';
 import 'app_shell.dart';
 
 /// Rutas que se pueden ver SIN sesion.
@@ -94,14 +91,23 @@ final arcanumRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state, navigationShell) =>
             AppShell(navigationShell: navigationShell),
         branches: [
+          // Una rama para las dos caras del cielo. La ruta sigue siendo
+          // '/hoy' aunque la pestana se llame "Cielo": renombrarla a '/cielo'
+          // obligaria a tocar el login, la guarda de sesion y sus tests a
+          // cambio de nada que el usuario vea.
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/hoy', builder: (c, s) => const HoyScreen()),
+              GoRoute(path: '/hoy', builder: (c, s) => const CieloScreen()),
             ],
           ),
+          // El orden de las ramas ES el de la barra de abajo, y el de
+          // `arcanumSections`. Los tres tienen que decir lo mismo.
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/cielos', builder: (c, s) => const CielosScreen()),
+              GoRoute(
+                path: '/horoscopo',
+                builder: (c, s) => const HoroscopoScreen(),
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -165,27 +171,14 @@ final arcanumRouterProvider = Provider<GoRouter>((ref) {
           ),
           StatefulShellBranch(
             routes: [
+              // Sin sub-rutas: la tirada por la tradicion NO es una pantalla
+              // aparte. Vivio aqui como '/oraculo/tarot' desde el primer dia y
+              // nunca tuvo puerta -- ni un push, ni un go, en 329 commits --,
+              // asi que era una pantalla entera que nadie podia abrir. Ahora
+              // es el selector de interprete dentro de Consultar.
               GoRoute(
                 path: '/oraculo',
                 builder: (c, s) => const OraculoScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'tarot',
-                    builder: (c, s) => const TarotScreen(),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          // Sexta rama SIN destino en la barra inferior: se entra por el boton
-          // flotante del shell. Es una rama y no una ruta de primer nivel para
-          // que conserve su pila y su scroll como cualquier seccion, y para que
-          // la barra de abajo siga visible mientras se lee.
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: rutaHoroscopo,
-                builder: (c, s) => const HoroscopoScreen(),
               ),
             ],
           ),

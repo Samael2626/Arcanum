@@ -111,7 +111,7 @@ void main() {
       }
 
       expect(
-        find.text('No disponible sin tu lugar'),
+        find.text('No disponible sin saber dónde estás'),
         findsNothing,
         reason: 'el lugar SI llego: la pantalla no puede seguir negandolo',
       );

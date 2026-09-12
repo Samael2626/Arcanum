@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/api/arcanum_api.dart';
 import '../../core/api/oracle_error.dart';
@@ -9,6 +8,8 @@ import '../../core/privacy/ai_consent_service.dart';
 import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
+import '../../shared/creditos.dart';
+import '../../shared/titulo_book_t.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/gold_button.dart';
 import '../../shared/widgets/login_prompt.dart';
@@ -17,7 +18,31 @@ import 'tarot_learn.dart';
 import 'widgets/tarot_card.dart';
 import '../../shared/widgets/ai_output.dart';
 
-const _spreads = <(String, String)>[
+/// Quien lee las cartas. No son dos actividades: las dos TIRAN, y lo que
+/// cambia es de donde sale el significado.
+///
+/// Por eso vive aqui dentro y no como un tercer modo junto a Consultar y
+/// Aprender: ponerlo arriba sugeriria tres actividades cuando hay dos. Y
+/// ademas no cabia -- medido con `TextPainter` a 360 px, tres segmentos dejan
+/// 101 px cada uno y "Consultar" ya pide 135.
+enum Interprete {
+  /// `/oracle/tarot/draw` + `/oracle/ia`: la tirada se guarda y un modelo la
+  /// interpreta.
+  oraculo,
+
+  /// `/tarot/spread` y `/tarot/draw-one`: el servidor devuelve las cartas ya
+  /// resueltas con su significado del Book T. Ningun modelo toca esto.
+  tradicion,
+}
+
+/// Las tiradas de cada via. La clasica anade "Una carta", que el endpoint del
+/// oraculo no sirve.
+const _spreadsOraculo = <(String, String)>[
+  ('three_card', 'Tres cartas'),
+  ('celtic_cross', 'Cruz Celta'),
+];
+const _spreadsTradicion = <(String, String)>[
+  ('one_card', 'Una carta'),
   ('three_card', 'Tres cartas'),
   ('celtic_cross', 'Cruz Celta'),
 ];
@@ -163,9 +188,13 @@ class _OracleViewState extends ConsumerState<_OracleView> {
   final _question = TextEditingController();
 
   String _spread = 'three_card';
+  Interprete _interprete = Interprete.oraculo;
   bool _drawing = false;
   String? _drawError;
   List<Map<String, dynamic>>? _cards;
+
+  /// Id de la lectura clasica, para poder reportar su contenido.
+  String? _readingId;
   // id de la tirada visible (DivinationSession.id). Ancla la interpretación
   // IA a estas cartas exactas (modo 2/3 del endpoint /oracle/ia).
   String? _sessionId;
@@ -244,6 +273,35 @@ class _OracleViewState extends ConsumerState<_OracleView> {
     setState(() => _activeCard = i);
   }
 
+  /// Las tiradas que sirve la via elegida.
+  List<(String, String)> get _tiradas =>
+      _interprete == Interprete.tradicion ? _spreadsTradicion : _spreadsOraculo;
+
+  /// Cambiar de interprete tira lo que hubiera en pantalla: las cartas de una
+  /// via no se pueden leer con la otra -- la clasica trae su significado
+  /// dentro y la del oraculo no --, y dejarlas puestas invitaria a pedir una
+  /// interpretacion de una tirada que ya no existe.
+  ///
+  /// Y "Una carta" solo existe en la clasica: al volver al oraculo hay que
+  /// sacar de ahi al que se hubiera quedado, o el boton llamaria a una tirada
+  /// que ese endpoint no sirve.
+  void _cambiarInterprete(Interprete nuevo) {
+    if (nuevo == _interprete) return;
+    setState(() {
+      _interprete = nuevo;
+      if (!_tiradas.any((t) => t.$1 == _spread)) _spread = 'three_card';
+      _cards = null;
+      _sessionId = null;
+      _readingId = null;
+      _drawError = null;
+      _iaError = null;
+      _iaReply = null;
+      _iaContentRef = null;
+      _cardKeys = const [];
+      _showSticky = false;
+    });
+  }
+
   Future<void> _draw() async {
     final key = _drawIdempotencyKey ??= IdempotencyKey.create();
     setState(() {
@@ -254,14 +312,39 @@ class _OracleViewState extends ConsumerState<_OracleView> {
       _iaContentRef = null;
     });
     try {
-      final data = await _api.tarotDraw(_spread, idempotencyKey: key);
-      final cards = ((data['cards_drawn'] as Map)['cards'] as List)
-          .cast<Map<String, dynamic>>();
+      final esClasica = _interprete == Interprete.tradicion;
+      final pregunta = _question.text.trim();
+      final data = esClasica
+          ? (_spread == 'one_card'
+                ? await _api.tarotDrawOne(
+                    question: pregunta.isEmpty ? null : pregunta,
+                    idempotencyKey: key,
+                  )
+                : await _api.tarotSpread(
+                    spreadType: _spread,
+                    question: pregunta.isEmpty ? null : pregunta,
+                    idempotencyKey: key,
+                  ))
+          : await _api.tarotDraw(_spread, idempotencyKey: key);
+      // Las dos vias devuelven las cartas en sitios distintos. La clasica
+      // ademas dice `reversed` donde la otra dice `drawn_upright`, asi que se
+      // traduce aqui y no en la vista: asi `TarotCardView` -- el naipe con su
+      // arte y su volteo -- sirve para las dos y no hay dos maneras de pintar
+      // una carta.
+      final cards = esClasica
+          ? ((data['resolved'] as List?) ?? const [])
+                .cast<Map<String, dynamic>>()
+                .map((c) => {...c, 'drawn_upright': c['reversed'] != true})
+                .toList()
+          : ((data['cards_drawn'] as Map)['cards'] as List)
+                .cast<Map<String, dynamic>>();
       if (!mounted) return;
       _drawIdempotencyKey = null;
       setState(() {
         _cards = cards;
-        _sessionId = data['id'] as String?;
+        _readingId = esClasica ? data['id'] as String? : null;
+        // Solo la via del oraculo deja sesion que interpretar despues.
+        _sessionId = esClasica ? null : data['id'] as String?;
         _drawNonce++;
         _activeCard = 0;
         _cardKeys = List.generate(cards.length, (_) => GlobalKey());
@@ -281,6 +364,7 @@ class _OracleViewState extends ConsumerState<_OracleView> {
         setState(() {
           _cards = null;
           _sessionId = null;
+          _readingId = null;
           _drawError = isCreditsRequired(error)
               ? 'Saldo insuficiente. Puedes comprar créditos.'
               : oracleErrorMessage(error);
@@ -340,22 +424,9 @@ class _OracleViewState extends ConsumerState<_OracleView> {
   }
 
   Future<void> _openCreditsPaywall() async {
-    try {
-      final balance = await _api.creditsBalance();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Saldo actual: ${balance['balance'] ?? 0} créditos.'),
-        ),
-      );
-      context.push('/paywall');
-    } catch (error) {
-      if (mounted) {
-        setState(
-          () =>
-              _iaError = 'No se pudo actualizar tu saldo. Inténtalo de nuevo.',
-        );
-      }
+    final fallo = await abrirPaywallDeCreditos(context, _api);
+    if (fallo != null && mounted) {
+      setState(() => _iaError = fallo);
     }
   }
 
@@ -375,33 +446,48 @@ class _OracleViewState extends ConsumerState<_OracleView> {
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
       children: [
         const SizedBox(height: 8),
-        Semantics(
-          label: 'Aviso de inteligencia artificial',
-          child: ArcanumCard(
-            intensity: 0.35,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(
-                  Icons.auto_awesome_outlined,
-                  color: ArcanumColors.gold,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Estás hablando con un modelo de IA. Sus respuestas son simbólicas y pueden contener errores.',
-                    style: ArcanumText.body(14),
+        _SelectorDeInterprete(
+          valor: _interprete,
+          onChanged: _cambiarInterprete,
+        ),
+        const SizedBox(height: 16),
+        // El aviso de IA solo cuando la hay. Ensenarlo sobre una tirada que
+        // ningun modelo toca seria avisar de algo que no pasa, y de paso
+        // restarle la unica cosa que distingue a la via clasica.
+        if (_interprete == Interprete.oraculo) ...[
+          Semantics(
+            label: 'Aviso de inteligencia artificial',
+            child: ArcanumCard(
+              intensity: 0.35,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.auto_awesome_outlined,
+                    color: ArcanumColors.gold,
+                    size: 20,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Estás hablando con un modelo de IA. Sus respuestas son simbólicas y pueden contener errores.',
+                      style: ArcanumText.body(14),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 18),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: _spreads.map((s) {
+          const SizedBox(height: 18),
+        ],
+        // `Wrap` y no `Row`: a 360 px las dos pastillas de siempre ya
+        // desbordaban 79 px, y no se veia porque los tests corrian a 800. Con
+        // "Una carta" de la via clasica son tres. Que bajen de linea en vez de
+        // salirse es lo que hacia la pantalla que esto sustituye.
+        Wrap(
+          alignment: WrapAlignment.center,
+          runSpacing: 8,
+          children: _tiradas.map((s) {
             final sel = s.$1 == _spread;
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -455,12 +541,22 @@ class _OracleViewState extends ConsumerState<_OracleView> {
         ),
         const SizedBox(height: 20),
         GoldButton(
-          label: 'Consultar al oráculo',
+          label: switch ((_interprete, _spread)) {
+            (Interprete.oraculo, _) => 'Consultar al oráculo',
+            (Interprete.tradicion, 'one_card') => 'Sacar una carta',
+            (Interprete.tradicion, _) => 'Tirar las cartas',
+          },
           loading: _drawing,
           onPressed: _draw,
         ),
         const SizedBox(height: 8),
+        // "Sin IA" no significa "gratis": las dos vias pasan por el mismo
+        // cupo. `/tarot/spread` y `/tarot/draw-one` reservan en el bucket
+        // "tarot" con el mismo limite diario que la via del oraculo, asi que
+        // el renglon tiene que decirlo o alguien leera "sin IA" y asumira que
+        // la tirada no cuesta nada.
         Text(
+          'Cualquiera de las dos vías descuenta de tu cupo diario. '
           'Los límites y créditos se actualizan desde el servidor.',
           textAlign: TextAlign.center,
           style: ArcanumText.body(
@@ -482,14 +578,43 @@ class _OracleViewState extends ConsumerState<_OracleView> {
           for (var i = 0; i < _cards!.length; i++)
             KeyedSubtree(
               key: _cardKeys.length > i ? _cardKeys[i] : null,
-              child: TarotCardView(
-                key: ValueKey('$_drawNonce-$i'),
-                card: _cards![i],
-                index: i,
-                active: _activeCard == i,
-                onToggle: () => _jumpTo(i),
+              child: Column(
+                children: [
+                  TarotCardView(
+                    key: ValueKey('$_drawNonce-$i'),
+                    card: _cards![i],
+                    index: i,
+                    active: _activeCard == i,
+                    onToggle: () => _jumpTo(i),
+                  ),
+                  // El SIGNIFICADO ya lo pinta `TarotCardView`, que lee
+                  // `meaning` de la carta: por eso aqui solo va el titulo del
+                  // Book T, que es lo unico que la carta no ensena. Ponerlo
+                  // entero duplicaba el texto, y un test lo caza.
+                  if (_interprete == Interprete.tradicion)
+                    _TituloBookT(carta: _cards![i]),
+                ],
               ),
             ),
+        if (_interprete == Interprete.tradicion && _cards != null) ...[
+          const SizedBox(height: 8),
+          const SectionLabel('TIRADAS DEL SISTEMA'),
+          const SizedBox(height: 10),
+          Text(
+            'Interpretaciones según el sistema Golden Dawn / Book T. Las cartas '
+            'llegan ya resueltas con su significado y su orientación.',
+            textAlign: TextAlign.center,
+            style: ArcanumText.body(13, color: ArcanumColors.ivoryMuted),
+          ),
+          if (_readingId != null)
+            Center(
+              child: ContentReportButton(
+                api: _api,
+                source: 'tarot',
+                contentRef: '$_readingId:tirada',
+              ),
+            ),
+        ],
         if (_sessionId != null) ...[
           const SizedBox(height: 8),
           const SectionLabel('IA RITUAL'),
@@ -521,10 +646,10 @@ class _OracleViewState extends ConsumerState<_OracleView> {
                 child: Scrollbar(
                   child: SingleChildScrollView(
                     child: AiOutput(
-                    text: _iaReply!,
-                    surface: 'oraculo',
-                    child: Text(_iaReply!, style: ArcanumText.body(16)),
-                  ),
+                      text: _iaReply!,
+                      surface: 'oraculo',
+                      child: Text(_iaReply!, style: ArcanumText.body(16)),
+                    ),
                   ),
                 ),
               ),
@@ -621,6 +746,147 @@ class _OracleViewState extends ConsumerState<_OracleView> {
                     ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Quien lee las cartas, dentro de Consultar.
+///
+/// DISCRETO A PROPOSITO, y con las dos vias a la vista: una linea que dice
+/// "LEE" y las dos opciones al lado, la activa en marfil con un filete debajo
+/// y la otra en oro, que en esta app es la marca de lo que se toca.
+///
+/// La primera version eran dos pastillas con titulo y descripcion y no cabia,
+/// asi que se probaron cuatro maneras dibujadas en Flutter y retratadas a
+/// 360 px con las fuentes reales. Esta gana porque enseña que HAY eleccion sin
+/// abrir nada y sin ocupar mas que un renglon.
+///
+/// EL FILETE SALE DEL TEXTO, no de la caja. Ponerlo como `Border` sobre el
+/// area tactil de 48 hacia que el `Row` estirase al hijo y la linea cayera al
+/// fondo del bloque, despegada de la palabra. Va sobre un contenedor que
+/// envuelve solo al `Text`, dentro de un `Center` que encoge a lo ancho.
+class _SelectorDeInterprete extends StatelessWidget {
+  const _SelectorDeInterprete({required this.valor, required this.onChanged});
+
+  final Interprete valor;
+  final ValueChanged<Interprete> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    // Con Crimson Pro real el renglon entero mide ~210 px de los 312 que hay
+    // a 360, asi que sobra sitio. Los `Flexible` son para la escala de letra
+    // grande del sistema, no porque no quepa.
+    //
+    // OJO AL MEDIR: en un test sin `FontLoader`, Flutter usa Ahem, donde cada
+    // caracter ocupa el tamano de fuente entero. Ahi esto "desborda" 39 px y
+    // no es verdad. Las medidas de ancho solo valen con las fuentes cargadas
+    // -- lo hace `test/capturas/`.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text('LEE', style: ArcanumText.label()),
+            const SizedBox(width: 14),
+            Flexible(child: _via('Oráculo', Interprete.oraculo)),
+            Flexible(child: _via('Tradición', Interprete.tradicion)),
+          ],
+        ),
+        // El renglon que paga el termino. Sin el, "Tradicion" no dice de que
+        // va hasta que se toca, y esta app tiene por norma explicar cada
+        // palabra de oficio en el acto -- no dejarla para que la descubras.
+        Padding(
+          padding: const EdgeInsets.only(left: 2, top: 2),
+          child: Text(
+            valor == Interprete.tradicion
+                ? 'El significado del Book T, tal cual. Sin IA, pero cuenta '
+                      'como tirada.'
+                : 'Un modelo interpreta tu tirada y responde.',
+            style: ArcanumText.body(
+              12,
+              color: ArcanumColors.ivoryMuted.withValues(alpha: 0.75),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _via(String rotulo, Interprete cual) {
+    final activa = cual == valor;
+    return Semantics(
+      button: true,
+      selected: activa,
+      label: cual == Interprete.tradicion
+          ? 'Que lean la tradición: el significado del Book T, sin IA; '
+                'cuenta como tirada igual'
+          : 'Que lea el oráculo: un modelo interpreta la tirada',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: activa ? null : () => onChanged(cual),
+        // 48 de alto: lo que se toca no baja de ahi.
+        child: SizedBox(
+          height: 48,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Center(
+              widthFactor: 1,
+              child: ExcludeSemantics(
+                child: Container(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  decoration: activa
+                      ? const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: ArcanumColors.gold,
+                              width: 1.4,
+                            ),
+                          ),
+                        )
+                      : null,
+                  child: Text(
+                    rotulo,
+                    overflow: TextOverflow.ellipsis,
+                    style: ArcanumText.body(
+                      15,
+                      color: activa ? ArcanumColors.ivory : ArcanumColors.gold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// El titulo del Book T de una carta de la via clasica.
+///
+/// Solo el titulo: el significado ya lo pinta `TarotCardView` desde el mismo
+/// mapa. Este nombre -- "The Spirit of Aether" y sus hermanos -- es lo que
+/// distingue a la lectura por la tradicion, y se traduce en `titulo_book_t`.
+class _TituloBookT extends StatelessWidget {
+  const _TituloBookT({required this.carta});
+
+  final Map<String, dynamic> carta;
+
+  @override
+  Widget build(BuildContext context) {
+    final titulo = tituloEnEspanol(carta['title_book_t'] as String?);
+    if (titulo.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 2, bottom: 16),
+      child: Text(
+        titulo,
+        textAlign: TextAlign.center,
+        style: ArcanumText.body(
+          13,
+          italic: true,
+          color: ArcanumColors.goldMuted,
         ),
       ),
     );

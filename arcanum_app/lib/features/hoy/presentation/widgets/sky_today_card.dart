@@ -22,6 +22,7 @@ import '../../../../shared/widgets/ai_output.dart';
 import '../../../../core/auth/auth_controller.dart';
 import '../../../../core/privacy/ai_consent_service.dart';
 import '../../../../core/astro/birth_data.dart';
+import '../../../../core/state/flow_providers.dart';
 import 'banda_del_anio.dart';
 import 'sello_del_cielo.dart';
 import '../../../horoscopo/compartir_horoscopo.dart';
@@ -299,6 +300,11 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
                                             d['profection']
                                                 as Map<String, dynamic>?,
                                         texto: texto,
+                                        // El mismo signo que pinta la lamina
+                                        // de la tarjeta de arriba: lo que se
+                                        // comparte y lo que se ve son uno.
+                                        signo: signo,
+                                        signoIngles: d['sun_sign'] as String?,
                                       ),
                                     ),
                                   ),
@@ -547,7 +553,21 @@ class _FailureState extends ConsumerState<_Failure> {
           children: [
             if (route != null)
               TextButton(
-                onPressed: () => context.go(route),
+                onPressed: () {
+                  // "Sin carta natal" manda a la otra CARA de esta pestana, no
+                  // a otra seccion: sin fijar la cara, el `go` a '/hoy' desde
+                  // '/hoy' no movería nada.
+                  if (_failure == SkyTodayFailure.sinCartaNatal) {
+                    ref.read(cieloCaraProvider.notifier).set(1);
+                  }
+                  // El perfil y la tienda son recados: se apilan y se vuelve.
+                  // La sesion caida y la otra cara de esta pestana reemplazan.
+                  if (skyFailureEsDesvio(_failure)) {
+                    context.push(route);
+                  } else {
+                    context.go(route);
+                  }
+                },
                 child: Text(
                   _actionLabel(_failure),
                   style: ArcanumText.body(14, color: ArcanumColors.gold),
@@ -719,7 +739,7 @@ class _LecturaAnterior extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           InkWell(
-            onTap: () => context.go('/paywall'),
+            onTap: () => context.push('/paywall'),
             child: Text(
               'Ver la suscripción',
               style: ArcanumText.body(13, color: ArcanumColors.gold),

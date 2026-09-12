@@ -169,9 +169,13 @@ class _PassageCard extends ConsumerWidget {
   }
 
   /// Abre el lector en la posición exacta del pasaje.
+  ///
+  /// `go` y NO `push`: el capítulo vive en la rama de Saber y los pasajes en
+  /// la de Grimorio. Un `push` lo apilaría aquí, y se leería con la cabecera
+  /// del Grimorio encima y su pestaña marcada abajo.
   void _open(BuildContext context) {
     final p = passage.position;
-    context.push(
+    context.go(
       '/saber/${p.workSlug}/${p.chapterSlug}'
       '?anchor=${Uri.encodeComponent(p.paragraphAnchor)}'
       '&fragment=${p.fragmentIndex}',

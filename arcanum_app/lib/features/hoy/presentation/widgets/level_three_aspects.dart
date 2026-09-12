@@ -137,17 +137,18 @@ class _LevelThreeAspectsState extends State<LevelThreeAspects> {
   }
 }
 
-/// La fila que abre y cierra. Cerrada dice cuantos hay detras -- "OTROS
-/// ASPECTOS (5)" --, porque un rotulo pelado no invita a tocar nada.
+/// La fila que abre y cierra. Cerrada dice cuantos hay detras -- "VER TODOS
+/// LOS ASPECTOS (5)" --, porque un rotulo pelado no invita a tocar nada.
 ///
-/// "OTROS" y no "TODOS": el que manda hoy ya esta arriba, en el sello, y estos
-/// son los demas. Es ademas lo que dice el aviso de dos parrafos mas arriba
-/// cuando no hay ninguno.
+/// RECTIFICADO EL 11-SEP-2026. Esto decia "OTROS ASPECTOS", acortado porque
+/// una medicion daba 390 px para el rotulo largo contra 318 disponibles. La
+/// medicion estaba MAL: un `TextPainter` en un test sin `FontLoader` usa Ahem,
+/// donde cada caracter ocupa el tamano de fuente entero -- 26 caracteres por
+/// 15 px dan justo esos 390. Con Crimson Pro cargada de verdad, "VER TODOS LOS
+/// ASPECTOS (3)" mide 234 y cabe de sobra.
 ///
-/// El rotulo largo no cabe, medido con `TextPainter` sobre `ArcanumText.label`
-/// (12 px con 3 de letterSpacing): "VER TODOS LOS ASPECTOS (3)" pide 390 px y
-/// dentro de la tarjeta hay 318. "OTROS ASPECTOS (3)" mide 270, los mismos que
-/// el rotulo que ya vivia aqui.
+/// Las medidas de ancho solo valen con las fuentes cargadas. Lo hacen los
+/// ficheros de `test/capturas/`, y por eso las capturas nunca mintieron.
 class _Interruptor extends StatelessWidget {
   const _Interruptor({
     required this.abierto,
@@ -161,13 +162,15 @@ class _Interruptor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rotulo = abierto ? 'OTROS ASPECTOS' : 'OTROS ASPECTOS ($cuantos)';
+    final rotulo = abierto
+        ? 'TODOS LOS ASPECTOS'
+        : 'VER TODOS LOS ASPECTOS ($cuantos)';
     return Semantics(
       button: true,
       expanded: abierto,
       label: abierto
-          ? 'Ocultar los otros aspectos'
-          : 'Ver los otros $cuantos aspectos',
+          ? 'Ocultar los demás aspectos'
+          : 'Ver los $cuantos aspectos',
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),

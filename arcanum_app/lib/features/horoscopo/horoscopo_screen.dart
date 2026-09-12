@@ -14,8 +14,6 @@ library;
 
 import 'package:flutter/material.dart';
 
-import '../../core/theme/arcanum_colors.dart';
-import '../../core/theme/arcanum_theme.dart';
 import '../hoy/presentation/widgets/sky_today_card.dart';
 import 'widgets/agenda_del_cielo.dart';
 import 'widgets/historial_horoscopo.dart';
@@ -27,12 +25,14 @@ class HoroscopoScreen extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: Colors.transparent,
     body: ListView(
-      // El hueco de abajo es el del boton flotante: sin el, la ultima linea
-      // del texto queda debajo del boton en las pantallas cortas.
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: const [
-        _Entradilla(),
-        SizedBox(height: 14),
+        // SIN ENTRADILLA, desde el 12-sep-2026. Decia "Tu cielo de hoy, leido
+        // sobre tu carta natal: el transito que aprieta, el anio que gobierna
+        // y lo que eso dice hoy" -- justo debajo del subtitulo de la barra,
+        // que dice "Tu cielo de hoy, sobre tu carta". La misma idea estirada,
+        // dos veces seguidas. Se escribio cuando la seccion no tenia subtitulo
+        // visible.
         SkyTodayCard(),
         // La agenda va justo detras del dia: se lee "hoy, y luego esto".
         AgendaDelCielo(),
@@ -44,17 +44,3 @@ class HoroscopoScreen extends StatelessWidget {
   );
 }
 
-/// Una linea que dice de que va esto antes de que la persona toque nada.
-class _Entradilla extends StatelessWidget {
-  const _Entradilla();
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 4),
-    child: Text(
-      'Tu cielo de hoy, leído sobre tu carta natal: el tránsito que aprieta, '
-      'el año que gobierna y lo que eso dice hoy.',
-      style: ArcanumText.body(13, color: ArcanumColors.ivoryMuted),
-    ),
-  );
-}

@@ -11,18 +11,27 @@
 /// si no cabe ninguna entera no se corta a media palabra — se deja fuera. Un
 /// texto cortado con puntos suspensivos promete algo que la imagen no da.
 ///
-/// La figura se dibuja con `figuraDe`, la misma del sello: los dos cuerpos a su
-/// separación real. Aquí tampoco se finge un triángulo equilátero.
+/// LO QUE SE VE ES LO MISMO QUE EN LA APP, y se consigue reusando las piezas
+/// reales, no copiándolas. Esta tarjeta nació antes de la plantilla zodiacal de
+/// los doce signos y se quedó atrás: la app enseñaba el grabado de Bayer con su
+/// aro realzado y el nombre del signo, y lo que salía por WhatsApp era un fondo
+/// negro con una figura suelta. Dos maneras de pintar lo mismo, y solo una se
+/// actualizó.
+///
+/// Ahora el fondo es `LaminaDelSigno` —el mismo widget que la tarjeta de Hoy— y
+/// la figura es `PintorRueda`, el mismo pintor del sello. Cambiar el diseño de
+/// Hoy cambia esto con él.
 library;
 
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
 import '../../../shared/astro_symbols.dart';
-import '../../hoy/domain/figura_aspecto.dart';
+import '../../hoy/presentation/widgets/lamina_del_signo.dart';
+import '../../hoy/presentation/widgets/sello_del_cielo.dart';
+import '../../hoy/presentation/widgets/zodiaco_laminas.g.dart';
 
 /// Tamaño lógico. A `pixelRatio: 3` sale 1080x1350, que es 4:5 exacto.
 const tarjetaAncho = 360.0;
@@ -34,7 +43,16 @@ class TarjetaCompartir extends StatelessWidget {
     required this.aspecto,
     required this.profeccion,
     required this.texto,
+    this.signo,
+    this.signoIngles,
   });
+
+  /// Signo solar de quien comparte. Null mientras el cielo carga o si la carta
+  /// no trae Sol: entonces la tarjeta sale sin grabado, igual que la de Hoy, y
+  /// no se rompe nada.
+  final Signo? signo;
+
+  /// El mismo signo en ingles, para el glifo y el nombre.
 
   /// El tránsito del día (`today`, o el capítulo si hoy no hay nada rápido).
   final Map<String, dynamic>? aspecto;
@@ -43,15 +61,20 @@ class TarjetaCompartir extends StatelessWidget {
   /// hay banda, igual que en la pantalla.
   final Map<String, dynamic>? profeccion;
 
+  final String? signoIngles;
+
   /// El horóscopo completo. Aquí solo se usa su primera oración.
   final String texto;
 
   @override
   Widget build(BuildContext context) {
     final frase = primeraFrase(texto);
+    final a = aspecto;
     return Container(
       width: tarjetaAncho,
       height: tarjetaAlto,
+      // El degradado sigue de fondo para cuando NO hay signo: es lo que se ve
+      // si la carta no trae Sol, y sin el la tarjeta quedaria en negro liso.
       decoration: const BoxDecoration(
         color: ArcanumColors.background,
         gradient: RadialGradient(
@@ -60,7 +83,41 @@ class TarjetaCompartir extends StatelessWidget {
           colors: [Color(0xFF1D1608), ArcanumColors.background],
         ),
       ),
-      child: Padding(
+      child: Stack(
+        children: [
+          // La lamina, con su velo por zonas y su delta por signo. El MISMO
+          // widget que pinta el fondo de la tarjeta de Hoy.
+          if (signo != null) ...[
+            LaminaDelSigno(signo: signo!, radio: BorderRadius.zero),
+            // OSCURECIDO PROPIO DE ESTA TARJETA, y a proposito no se toca el
+            // velo de `LaminaDelSigno`: ese esta medido para la tarjeta de Hoy
+            // -- 320x627 -- y cambiarlo alli movería doce contrastes ya
+            // validados. Esta es 360x450, y su bloque de texto cae donde aquel
+            // velo todavia no ha cerrado.
+            //
+            // Medido sobre los doce signos: sin esto, el titular de Tauro se
+            // queda en 4,43 contra el 4,5 de AA. Tauro es la plancha del papel
+            // crema, la misma que ya obligo a corregir la banda del rotulo.
+            const Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      stops: [0.52, 0.70, 1.0],
+                      colors: [
+                        Color(0x000A0A0F),
+                        Color(0x8C0A0A0F),
+                        Color(0xB30A0A0F),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+          Padding(
         padding: const EdgeInsets.fromLTRB(26, 24, 26, 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -73,12 +130,35 @@ class TarjetaCompartir extends StatelessWidget {
                 color: ArcanumColors.gold,
               ).copyWith(letterSpacing: 5),
             ),
-            const SizedBox(height: 14),
+            if (signoIngles != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                '${signGlyph[signoIngles] ?? ''}  '
+                        '${signEs[signoIngles] ?? ''}'
+                    .toUpperCase(),
+                textAlign: TextAlign.center,
+                style: ArcanumText.label().copyWith(
+                  color: ArcanumColors.gold,
+                  fontFamilyFallback: kGlyphFallback,
+                ),
+              ),
+            ],
+            const SizedBox(height: 10),
             Expanded(
               child: Center(
+                // `progreso: 1` -- el sello ya roto. En la app el aro se abre
+                // con una animacion; aqui la tarjeta retrata el final.
                 child: SizedBox.square(
-                  dimension: 150,
-                  child: CustomPaint(painter: _PintorFigura(aspecto)),
+                  dimension: 168,
+                  child: CustomPaint(
+                    painter: PintorRueda(
+                      anguloNominal: (a?['angle'] as num?)?.toInt() ?? 0,
+                      separacion: (a?['separation'] as num?)?.toDouble(),
+                      progreso: 1,
+                      sobreLamina: signo != null,
+                      glifo: signGlyph[signoIngles ?? ''],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -94,7 +174,11 @@ class TarjetaCompartir extends StatelessWidget {
               Text(
                 _lineaDelAnio()!,
                 textAlign: TextAlign.center,
-                style: ArcanumText.body(12, color: ArcanumColors.ivoryMuted),
+                // Oro y no `ivoryMuted`: medido sobre la lamina, el marfil
+                // apagado se quedaba en 4,04 de contraste, por debajo del 4,5
+                // de AA. El oro claro pasa y ademas separa el dato del
+                // horoscopo, que va en marfil.
+                style: ArcanumText.body(12, color: ArcanumColors.goldLight),
               ),
               const SizedBox(height: 12),
             ],
@@ -121,6 +205,8 @@ class TarjetaCompartir extends StatelessWidget {
             ),
           ],
         ),
+          ),
+        ],
       ),
     );
   }
@@ -163,87 +249,4 @@ String primeraFrase(String texto) {
   }
   final frase = limpio.substring(0, fin.end).trim();
   return frase.length <= _maxFrase ? frase : '';
-}
-
-/// La figura del aspecto: aro, cuerda y los dos cuerpos.
-class _PintorFigura extends CustomPainter {
-  const _PintorFigura(this.aspecto);
-
-  final Map<String, dynamic>? aspecto;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final centro = size.center(Offset.zero);
-    final r = size.width / 2 - 10;
-
-    canvas.drawCircle(
-      centro,
-      r,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1
-        ..color = ArcanumColors.goldMuted.withValues(alpha: 0.55),
-    );
-    canvas.drawCircle(
-      centro,
-      r * 0.82,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 0.8
-        ..color = ArcanumColors.goldMuted.withValues(alpha: 0.25),
-    );
-
-    final a = aspecto;
-    if (a == null) return;
-    final figura = figuraDe(
-      anguloNominal: (a['angle'] as num?)?.toInt() ?? 0,
-      separacion: (a['separation'] as num?)?.toDouble(),
-      radio: r,
-      centro: PuntoRueda(centro.dx, centro.dy),
-    );
-
-    final trazo = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4
-      ..strokeCap = StrokeCap.round
-      ..color = ArcanumColors.gold.withValues(alpha: 0.85);
-    final camino = Path()
-      ..moveTo(figura.vertices.first.x, figura.vertices.first.y);
-    for (final v in figura.vertices.skip(1)) {
-      camino.lineTo(v.x, v.y);
-    }
-    if (figura.cerrada) camino.close();
-    canvas.drawPath(camino, trazo);
-
-    for (final p in [figura.transito, figura.natal]) {
-      canvas.drawCircle(
-        Offset(p.x, p.y),
-        4.5,
-        Paint()..color = ArcanumColors.goldLight,
-      );
-    }
-
-    // Un punto de luz en el centro: el ojo necesita un ancla cuando la figura
-    // es una recta (oposicion) y no hay poligono que mirar.
-    canvas.drawCircle(
-      centro,
-      2,
-      Paint()..color = ArcanumColors.goldMuted.withValues(alpha: 0.8),
-    );
-    // Marcas cardinales, para que el aro no sea un circulo pelado.
-    for (var i = 0; i < 12; i++) {
-      final ang = i * math.pi / 6;
-      final dir = Offset(math.cos(ang), math.sin(ang));
-      canvas.drawLine(
-        centro + dir * r,
-        centro + dir * (r - (i % 3 == 0 ? 6 : 3)),
-        Paint()
-          ..strokeWidth = i % 3 == 0 ? 1.2 : 0.7
-          ..color = ArcanumColors.goldMuted.withValues(alpha: 0.5),
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_PintorFigura viejo) => viejo.aspecto != aspecto;
 }

@@ -9,6 +9,7 @@ import 'package:arcanum_app/core/theme/arcanum_theme.dart';
 import 'package:arcanum_app/core/router/app_router.dart';
 import 'package:arcanum_app/features/horoscopo/compartir_horoscopo.dart';
 import 'package:arcanum_app/features/horoscopo/widgets/tarjeta_compartir.dart';
+import 'package:arcanum_app/features/hoy/presentation/widgets/zodiaco_laminas.g.dart';
 import 'package:arcanum_app/features/hoy/hoy_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -288,6 +289,15 @@ Future<void> _montarApp(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// El sello ya NO esta en Hoy: desde el 12-sep-2026 la lectura vive solo en la
+/// pestana Horoscopo, porque estaba montada en las dos y eran dos instancias
+/// con estado propio. Estas capturas retratan esa pantalla.
+Future<void> _montarHoroscopo(WidgetTester tester) async {
+  await _montarApp(tester);
+  await tester.tap(find.text('Horóscopo'));
+  await tester.pumpAndSettle();
+}
+
 Future<void> _retratar(WidgetTester tester, String nombre) async {
   // SIEMPRE la raiz, por dos razones. Un dialogo no vive dentro de la pantalla:
   // se monta en el overlay de la app, asi que retratando solo `HoyScreen` sale
@@ -317,9 +327,7 @@ void main() {
   });
 
   testWidgets('02 el sello, al fondo de la pantalla', (tester) async {
-    await _montar(tester);
-    await tester.drag(find.byType(ListView), const Offset(0, -900));
-    await tester.pumpAndSettle();
+    await _montarHoroscopo(tester);
     await _retratar(tester, '02-sello-cerrado');
   });
 
@@ -342,9 +350,7 @@ void main() {
   });
 
   testWidgets('03 el consentimiento, antes de gastar nada', (tester) async {
-    await _montar(tester);
-    await tester.drag(find.byType(ListView), const Offset(0, -900));
-    await tester.pumpAndSettle();
+    await _montarHoroscopo(tester);
     // El boton puede quedar fuera del alto del telefono de referencia: sin
     // esto el toque cae en el vacio y la captura no llega a existir.
     await tester.ensureVisible(find.text('Abrir el sello del Sol'));
@@ -355,9 +361,7 @@ void main() {
   });
 
   testWidgets('04 el sello abierto', (tester) async {
-    await _montar(tester);
-    await tester.drag(find.byType(ListView), const Offset(0, -900));
-    await tester.pumpAndSettle();
+    await _montarHoroscopo(tester);
     // El boton puede quedar fuera del alto del telefono de referencia: sin
     // esto el toque cae en el vacio y la captura no llega a existir.
     await tester.ensureVisible(find.text('Abrir el sello del Sol'));
@@ -378,9 +382,7 @@ void main() {
     // El gesto no se ve en un estado final: hay que parar la animacion a la
     // mitad. Con pumpAndSettle se salta entera y el pliegue seria invisible,
     // que es justo por lo que se dio por ausente la primera vez.
-    await _montar(tester);
-    await tester.drag(find.byType(ListView), const Offset(0, -900));
-    await tester.pumpAndSettle();
+    await _montarHoroscopo(tester);
     await tester.ensureVisible(find.text('Abrir el sello del Sol'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Abrir el sello del Sol'));
@@ -396,9 +398,7 @@ void main() {
   });
 
   testWidgets('05 el texto, ya abierto', (tester) async {
-    await _montar(tester);
-    await tester.drag(find.byType(ListView), const Offset(0, -900));
-    await tester.pumpAndSettle();
+    await _montarHoroscopo(tester);
     await tester.ensureVisible(find.text('Abrir el sello del Sol'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Abrir el sello del Sol'));
@@ -417,23 +417,25 @@ void main() {
     await _retratar(tester, '05-texto-abierto');
   });
 
-  testWidgets('06 el boton del horoscopo, sobre Hoy', (tester) async {
-    await _montarApp(tester);
-    await _retratar(tester, '06-boton-horoscopo');
-  });
-
-  testWidgets('07 la pantalla del horoscopo, con el boton apagado', (
+  testWidgets('06 la barra de abajo, con el horoscopo ya como pestaña', (
     tester,
   ) async {
     await _montarApp(tester);
-    await tester.tap(find.byTooltip('Horóscopo'));
+    await _retratar(tester, '06-barra-pestanas');
+  });
+
+  testWidgets('07 la pantalla del horoscopo, con su pestaña marcada', (
+    tester,
+  ) async {
+    await _montarApp(tester);
+    await tester.tap(find.text('Horóscopo'));
     await tester.pumpAndSettle();
     await _retratar(tester, '07-horoscopo');
   });
 
   testWidgets('08 el historial, desplegado', (tester) async {
     await _montarApp(tester);
-    await tester.tap(find.byTooltip('Horóscopo'));
+    await tester.tap(find.text('Horóscopo'));
     await tester.pumpAndSettle();
     // El boton vive al final de la lista y `ListView` no construye lo que no
     // se ve: hay que bajar hasta el, no basta con `ensureVisible`.
@@ -456,7 +458,7 @@ void main() {
 
   testWidgets('09 la agenda de la semana', (tester) async {
     await _montarApp(tester);
-    await tester.tap(find.byTooltip('Horóscopo'));
+    await tester.tap(find.text('Horóscopo'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.text('LO QUE VIENE'),
@@ -495,12 +497,26 @@ void main() {
                 texto: 'Saturno cierra un cuadrado con tu Sol: figura de '
                     'tension entre cuerpos que se miran de frente. En la hora '
                     'del Sol se trabajaba el oro.',
+                // Con signo, que es el caso normal: la lamina de fondo y el
+                // nombre son justo lo que faltaba y lo que hay que retratar.
+                signo: Signo.capricornio,
+                signoIngles: 'capricorn',
               ),
             ),
           ),
         ),
       ),
     );
+    await tester.pumpAndSettle();
+    // La lamina es un `Image.asset`, y en un test no se resuelve sola: sin
+    // `precacheImage` dentro de `runAsync` el retrato sale SIN grabado y
+    // parece que el fondo no funciona. Es exactamente lo que hace
+    // `zodiaco_capturas_test`, y por el mismo motivo.
+    await tester.runAsync(() async {
+      for (final elemento in tester.widgetList<Image>(find.byType(Image))) {
+        await precacheImage(elemento.image, tester.element(find.byType(Image)));
+      }
+    });
     await tester.pumpAndSettle();
     final png = await tester.runAsync(() => pintarTarjeta(clave));
     expect(png, isNotNull);

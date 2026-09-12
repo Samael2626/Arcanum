@@ -57,22 +57,22 @@ void main() {
   testWidgets('arranca cerrado: ni un reloj a la vista', (tester) async {
     await _montar(tester);
 
-    expect(find.text('OTROS ASPECTOS (3)'), findsOneWidget);
-    expect(find.text('OTROS ASPECTOS'), findsNothing);
+    expect(find.text('VER TODOS LOS ASPECTOS (3)'), findsOneWidget);
+    expect(find.text('TODOS LOS ASPECTOS'), findsNothing);
     expect(find.byType(GridView), findsNothing);
   });
 
   testWidgets('se abre al tocarlo, y se vuelve a cerrar', (tester) async {
     await _montar(tester);
 
-    await tester.tap(find.text('OTROS ASPECTOS (3)'));
+    await tester.tap(find.text('VER TODOS LOS ASPECTOS (3)'));
     await tester.pumpAndSettle();
 
     expect(find.byType(GridView), findsOneWidget);
-    expect(find.text('OTROS ASPECTOS'), findsOneWidget);
+    expect(find.text('TODOS LOS ASPECTOS'), findsOneWidget);
     expect(find.textContaining('Marte'), findsWidgets);
 
-    await tester.tap(find.text('OTROS ASPECTOS'));
+    await tester.tap(find.text('TODOS LOS ASPECTOS'));
     await tester.pumpAndSettle();
     expect(find.byType(GridView), findsNothing);
   });
@@ -80,7 +80,7 @@ void main() {
   testWidgets('el interruptor se puede tocar sin fallar', (tester) async {
     await _montar(tester);
 
-    final alto = tester.getRect(find.text('OTROS ASPECTOS (3)').first);
+    final alto = tester.getRect(find.text('VER TODOS LOS ASPECTOS (3)').first);
     final caja = tester.getRect(find.byType(InkWell).first);
     expect(caja.height, greaterThanOrEqualTo(48),
         reason: 'lo tocable no baja de 48');

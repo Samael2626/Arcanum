@@ -125,12 +125,28 @@ bool allowsLocalReading(SkyTodayFailure failure) =>
     // mismo, y lo que se limita es la interpretacion, no el instrumento.
     failure == SkyTodayFailure.sinCupo;
 
+/// Si el destino de [skyFailureRoute] es un DESVIO del que se vuelve.
+///
+/// La regla esta en `shared/creditos.dart`: se apila lo que es un recado y se
+/// reemplaza cuando el sitio de partida ya no vale. Aqui solo dos casos
+/// reemplazan -- la sesion caida, porque la pila entera deja de valer, y la
+/// carta natal, porque el destino es la otra cara de esta misma pestana y
+/// apilarla sobre si misma no significa nada.
+bool skyFailureEsDesvio(SkyTodayFailure failure) => switch (failure) {
+  SkyTodayFailure.sesionExpirada => false,
+  SkyTodayFailure.sinCartaNatal => false,
+  _ => true,
+};
+
 /// A donde lleva el boton de arreglar esto, o null si no hay nada que la
 /// persona pueda hacer salvo reintentar.
 String? skyFailureRoute(SkyTodayFailure failure) {
   switch (failure) {
     case SkyTodayFailure.sinCartaNatal:
-      return '/cielos';
+      // La rueda natal es la otra cara de esta pestana, no otra seccion. Quien
+      // navegue aqui tiene que cambiar la cara, no solo la ruta: lo hace
+      // `sky_today_card` con `cieloCaraProvider`.
+      return '/hoy';
     case SkyTodayFailure.sinDatosDeNacimiento:
       return '/perfil';
     case SkyTodayFailure.sesionExpirada:
