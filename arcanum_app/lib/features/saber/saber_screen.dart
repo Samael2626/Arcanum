@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/arcanum_colors.dart';
-import '../../core/theme/arcanum_theme.dart';
+import '../../shared/widgets/arcanum_toggle.dart';
 import '../arte/arte_screen.dart';
 import '../lecturas/presentation/lecturas_screen.dart';
 
@@ -48,63 +47,12 @@ class _Toggle extends StatelessWidget {
   const _Toggle({required this.index, required this.onChanged});
 
   @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 340),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            children: [
-              _pill('Plantas', 0),
-              const SizedBox(width: 10),
-              _pill('Biblioteca', 1),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _pill(String label, int value) {
-    final selected = value == index;
-    return Expanded(
-      child: Semantics(
-        button: true,
-        selected: selected,
-        label: label,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(22),
-          onTap: () => onChanged(value),
-          // 48 de alto, igual que el de Cielo. Se quedo en 40 desde que se
-          // escribio, por debajo del minimo que se puede tocar sin fallar.
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 48),
-            child: AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(22),
-              color: selected
-                  ? ArcanumColors.gold.withValues(alpha: 0.16)
-                  : Colors.transparent,
-              border: Border.all(
-                color: selected
-                    ? ArcanumColors.gold
-                    : ArcanumColors.goldMuted.withValues(alpha: 0.4),
-              ),
-            ),
-            child: Text(
-              label,
-              style: ArcanumText.body(
-                16,
-                color: selected ? ArcanumColors.gold : ArcanumColors.ivoryMuted,
-              ),
-            ),
-          ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => ArcanumToggle(
+    index: index,
+    onChanged: onChanged,
+    options: const [
+      ArcanumToggleOption(label: 'Plantas'),
+      ArcanumToggleOption(label: 'Biblioteca'),
+    ],
+  );
 }

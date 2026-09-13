@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/state/flow_providers.dart';
-import '../../core/theme/arcanum_colors.dart';
-import '../../core/theme/arcanum_theme.dart';
+import '../../shared/widgets/arcanum_toggle.dart';
 import '../cielos/cielos_screen.dart';
 import '../hoy/hoy_screen.dart';
 
@@ -83,68 +82,12 @@ class _Caras extends StatelessWidget {
   final ValueChanged<int> onChanged;
 
   @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 340),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            children: [
-              _pastilla('Ahora', 0),
-              const SizedBox(width: 10),
-              _pastilla('Tu carta', 1),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _pastilla(String rotulo, int valor) {
-    final elegida = valor == cara;
-    return Expanded(
-      child: Semantics(
-        button: true,
-        selected: elegida,
-        label: rotulo,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(22),
-          onTap: () => onChanged(valor),
-          // 48 de alto: lo que se toca no baja de ahi. El de Saber se quedo en
-          // 40 y no se toca aqui, que es otra pantalla y otro commit.
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 48),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(22),
-                color: elegida
-                    ? ArcanumColors.gold.withValues(alpha: 0.16)
-                    : Colors.transparent,
-                border: Border.all(
-                  color: elegida
-                      ? ArcanumColors.gold
-                      : ArcanumColors.goldMuted.withValues(alpha: 0.4),
-                ),
-              ),
-              child: ExcludeSemantics(
-                child: Text(
-                  rotulo,
-                  overflow: TextOverflow.ellipsis,
-                  style: ArcanumText.body(
-                    16,
-                    color: elegida
-                        ? ArcanumColors.gold
-                        : ArcanumColors.ivoryMuted,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => ArcanumToggle(
+    index: cara,
+    onChanged: onChanged,
+    options: const [
+      ArcanumToggleOption(label: 'Ahora'),
+      ArcanumToggleOption(label: 'Tu carta'),
+    ],
+  );
 }

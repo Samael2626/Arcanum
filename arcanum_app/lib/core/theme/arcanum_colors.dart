@@ -9,6 +9,12 @@ class ArcanumColors {
   static const goldMuted = Color(0xFF8A6E32);
   /// Oro claro de los rombos y realces finos del instrumento.
   static const goldLight = Color(0xFFECD79A);
+  /// Oro de los rotulos en versalitas. NO es `goldMuted`: ese se queda en
+  /// 3,50:1 sobre `surfaceHigh` y no llega al 4,5:1 que pide el texto. Este
+  /// es el primer punto de la interpolacion goldMuted->gold que pasa en los
+  /// cuatro fondos de la casa (peor caso 4,54:1 sobre surfaceHigh).
+  /// `goldMuted` sigue valiendo para filetes y trazos, que piden 3:1.
+  static const goldLabel = Color(0xFF9E813A);
   static const burgundy = Color(0xFF4A0E1A);
   // Vino legible sobre fondos oscuros — estado "invertida" de una carta.
   static const burgundyLight = Color(0xFFB07686);

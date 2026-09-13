@@ -11,6 +11,7 @@ import '../../core/theme/arcanum_theme.dart';
 import '../../shared/creditos.dart';
 import '../../shared/titulo_book_t.dart';
 import '../../shared/widgets/arcanum_card.dart';
+import '../../shared/widgets/arcanum_toggle.dart';
 import '../../shared/widgets/gold_button.dart';
 import '../../shared/widgets/login_prompt.dart';
 import '../../shared/widgets/content_report_sheet.dart';
@@ -135,46 +136,17 @@ class _ModeToggle extends StatelessWidget {
   const _ModeToggle({required this.mode, required this.onChanged});
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: ArcanumColors.goldMuted.withValues(alpha: 0.4),
-        ),
-      ),
-      child: Row(children: [_seg('Consultar', 0), _seg('Aprender', 1)]),
-    );
-  }
-
-  Widget _seg(String label, int value) {
-    final selected = value == mode;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => onChanged(value),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(vertical: 9),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            color: selected
-                ? ArcanumColors.gold.withValues(alpha: 0.16)
-                : Colors.transparent,
-          ),
-          child: Text(
-            label,
-            style: ArcanumText.body(
-              15,
-              color: selected ? ArcanumColors.gold : ArcanumColors.ivoryMuted,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => ArcanumToggle(
+    index: mode,
+    onChanged: onChanged,
+    maxWidth: null,
+    padding: const EdgeInsets.symmetric(horizontal: 24),
+    fontSize: 15,
+    options: const [
+      ArcanumToggleOption(label: 'Consultar'),
+      ArcanumToggleOption(label: 'Aprender'),
+    ],
+  );
 }
 
 class _OracleView extends ConsumerStatefulWidget {
@@ -755,18 +727,21 @@ class _OracleViewState extends ConsumerState<_OracleView> {
 /// Quien lee las cartas, dentro de Consultar.
 ///
 /// DISCRETO A PROPOSITO, y con las dos vias a la vista: una linea que dice
-/// "LEE" y las dos opciones al lado, la activa en marfil con un filete debajo
-/// y la otra en oro, que en esta app es la marca de lo que se toca.
+/// "LEE" y las dos opciones al lado. La activa se distingue por el COLOR y el
+/// PESO de la letra, no por un filete: ver `ArcanumSelection`, que es donde
+/// vive la regla y el porque con los numeros.
 ///
 /// La primera version eran dos pastillas con titulo y descripcion y no cabia,
 /// asi que se probaron cuatro maneras dibujadas en Flutter y retratadas a
 /// 360 px con las fuentes reales. Esta gana porque enseña que HAY eleccion sin
 /// abrir nada y sin ocupar mas que un renglon.
 ///
-/// EL FILETE SALE DEL TEXTO, no de la caja. Ponerlo como `Border` sobre el
-/// area tactil de 48 hacia que el `Row` estirase al hijo y la linea cayera al
-/// fondo del bloque, despegada de la palabra. Va sobre un contenedor que
-/// envuelve solo al `Text`, dentro de un `Center` que encoge a lo ancho.
+/// Tuvo un filete bajo la palabra activa hasta que se midio: 1,80:1 al 30 %
+/// de oro, y ni pleno resolvia el problema de fondo, que es que en esta
+/// paleta ninguna linea ni relleno separa dos superficies. El estado lo lleva
+/// ahora el texto, que es lo unico que pasa con holgura (13,16:1). Comparte
+/// [ArcanumSelection] con `ArcanumToggle` aunque la disposicion sea otra: la
+/// regla es una sola, las presentaciones son dos.
 class _SelectorDeInterprete extends StatelessWidget {
   const _SelectorDeInterprete({required this.valor, required this.onChanged});
 
@@ -824,7 +799,7 @@ class _SelectorDeInterprete extends StatelessWidget {
                 'cuenta como tirada igual'
           : 'Que lea el oráculo: un modelo interpreta la tirada',
       child: InkWell(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(ArcanumSelection.radius),
         onTap: activa ? null : () => onChanged(cual),
         // 48 de alto: lo que se toca no baja de ahi.
         child: SizedBox(
@@ -834,25 +809,12 @@ class _SelectorDeInterprete extends StatelessWidget {
             child: Center(
               widthFactor: 1,
               child: ExcludeSemantics(
-                child: Container(
+                child: Padding(
                   padding: const EdgeInsets.only(bottom: 4),
-                  decoration: activa
-                      ? const BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color: ArcanumColors.gold,
-                              width: 1.4,
-                            ),
-                          ),
-                        )
-                      : null,
                   child: Text(
                     rotulo,
                     overflow: TextOverflow.ellipsis,
-                    style: ArcanumText.body(
-                      15,
-                      color: activa ? ArcanumColors.ivory : ArcanumColors.gold,
-                    ),
+                    style: ArcanumSelection.textStyle(activa, size: 15),
                   ),
                 ),
               ),
