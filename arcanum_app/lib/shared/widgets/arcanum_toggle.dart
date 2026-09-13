@@ -14,25 +14,26 @@ import '../../core/theme/arcanum_theme.dart';
 ///
 /// POR QUE, con los numeros delante:
 ///
-/// No hay borde ni relleno que pueda senalar el estado en esta paleta. Se
-/// midio sobre la superficie real de la app (`ArcanumSurface` con humor
-/// neutro e `intensity` 0.55, que da una base #131118):
+/// No hay borde ni relleno que pueda senalar el estado en esta paleta, y esto
+/// se remidio desde cero al cambiar el material a Resina -- no se dio por
+/// heredado, porque una superficie OPACA tiene otra aritmetica que una
+/// translucida. Sobre Resina, con el especular al 8,5 % incluido:
 ///
-///   relleno elevado  #211D2A contra la base .... 1,14:1
-///   relleno hundido  #0B0A0E contra la base .... 1,05:1
-///   elevado contra hundido ..................... 1,20:1
-///   filete de oro al 30 % ...................... 1,80:1
+///   elevado contra el panel .................... 1,15:1
+///   hundido contra el panel .................... 1,55:1
+///   ELEVADO contra HUNDIDO ..................... 1,79:1
 ///
-/// Ninguno llega al 3:1 que pide WCAG 1.4.11, y no es cuestion de afinar: la
-/// base contra negro absoluto da 1,12:1 (no hay suelo por debajo) y para
-/// llegar a 3:1 por arriba haria falta subir a rgb(95,95,123), que ya no es
-/// la penumbra de esta app.
+/// Mejor que con el vidrio (alli el par era 1,20:1), porque al ser opaca la
+/// superficie tiene color propio en vez de copiar el del fondo. Pero sigue
+/// sin llegar al 3:1 de WCAG 1.4.11: para que el relleno solo lo lograra
+/// habria que subir el elevado a #887790, un malva claro que no es esta app.
 ///
 /// La salida es que el estado lo lleve el TEXTO: 1.4.11 excluye expresamente
-/// lo textual, asi que el criterio que aplica es 1.4.3, y ahi vamos sobrados
-/// -- goldLight sobre el panel da 13,16:1 e ivoryMuted 8,70:1. El peso y el
-/// icono relleno estan para 1.4.1: sin ellos el color seria la UNICA senal y
-/// quien no distinga el oro del gris veria dos rotulos iguales.
+/// lo textual, asi que el criterio que aplica es 1.4.3, y sobre Resina vamos
+/// sobrados en los dos estados -- goldLight sobre el elevado 7,63:1 y sobre
+/// el hundido 13,66:1; ivoryMuted 5,05:1 y 9,03:1. El peso y el icono relleno
+/// estan para 1.4.1: sin ellos el color seria la UNICA senal, y quien no
+/// distinga el oro del gris veria dos rotulos iguales.
 ///
 /// El relleno y la sombra que se pintan aqui son material, no senal. Se
 /// pueden cambiar. Los tres avisos de arriba, no -- sin los tres, esto
@@ -60,28 +61,50 @@ abstract final class ArcanumSelection {
   static IconData icon(bool selected, IconData outlined, IconData filled) =>
       selected ? filled : outlined;
 
-  /// El material. No senala nada: solo da cuerpo a la pieza.
+  /// El material: Resina. No senala nada, solo da cuerpo a la pieza.
+  ///
+  /// SIN DESENFOQUE, y no es un detalle: es un degradado vertical opaco mas
+  /// un reflejo especular. No fuerza `saveLayer`, no lee lo que hay detras y
+  /// no se encarece por apilarse. El especular va al 8,5 % -- un gum-UI
+  /// tipico anda por el 30-40 % -- y muere al 48 % de altura.
+  ///
+  /// Los dos degradados son verticales y van sobre superficie opaca, asi que
+  /// se funden en UNO solo con mas paradas en vez de pintar dos capas. Es la
+  /// razon de que aqui haya cuatro colores y no dos: los de arriba ya llevan
+  /// el especular dentro.
   static BoxDecoration surface(bool selected) => BoxDecoration(
     borderRadius: BorderRadius.circular(radius),
     gradient: selected
-        // Hundido: la luz cae abajo, como el fondo de una pieza rehundida.
-        ? const RadialGradient(
-            center: Alignment(0, 0.56),
-            radius: 1.1,
-            colors: [Color(0xFF0F0D13), Color(0xFF0B0A0E)],
+        // Hundido: arranca oscuro arriba y aclara al pie. La luz se invierte,
+        // y con ella el especular, que casi desaparece.
+        ? const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF120F17),
+              Color(0xFF0E0C12),
+              Color(0xFF16121A),
+            ],
+            stops: [0, .48, 1],
           )
-        // Elevado: la luz sube hacia el borde de arriba.
-        : const RadialGradient(
-            center: Alignment(0, -0.4),
-            radius: 1.1,
-            colors: [Color(0xFF211D2A), Color(0xFF16131C)],
+        // Elevado: la resina pulida, con el reflejo ya fundido en las dos
+        // primeras paradas.
+        : const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF413A45),
+              Color(0xFF332D38),
+              Color(0xFF1D1822),
+            ],
+            stops: [0, .26, 1],
           ),
     boxShadow: selected
         ? null
         : const [
             BoxShadow(
-              color: Color(0x59000000),
-              blurRadius: 18,
+              color: Color(0x8C000000),
+              blurRadius: 20,
               offset: Offset(0, 8),
             ),
           ],

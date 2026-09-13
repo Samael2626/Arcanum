@@ -10,14 +10,23 @@ class ArcanumColors {
   /// Oro claro de los rombos y realces finos del instrumento.
   static const goldLight = Color(0xFFECD79A);
   /// Oro de los rotulos en versalitas. NO es `goldMuted`: ese se queda en
-  /// 3,50:1 sobre `surfaceHigh` y no llega al 4,5:1 que pide el texto. Este
-  /// es el primer punto de la interpolacion goldMuted->gold que pasa en los
-  /// cuatro fondos de la casa (peor caso 4,54:1 sobre surfaceHigh).
-  /// `goldMuted` sigue valiendo para filetes y trazos, que piden 3:1.
-  static const goldLabel = Color(0xFF9E813A);
+  /// 3,50:1 sobre `surfaceHigh` y no llega al 4,5:1 que pide el texto.
+  ///
+  /// Estuvo en #9E813A mientras el material era vidrio translucido sobre un
+  /// panel de #131118. Con Resina el panel es OPACO y su cima llega a
+  /// #262028 antes del especular y a #383238 despues, asi que #9E813A caia a
+  /// 3,38:1 -- y fallaba incluso con el especular a cero. Remedido contra esa
+  /// cima: peor caso 4,51:1, y de 6,09:1 para arriba en los demas fondos.
+  ///
+  /// `goldMuted` sigue intacto para filetes y trazos, que piden 3:1.
+  static const goldLabel = Color(0xFFB79845);
   static const burgundy = Color(0xFF4A0E1A);
   // Vino legible sobre fondos oscuros — estado "invertida" de una carta.
-  static const burgundyLight = Color(0xFFB07686);
+  //
+  // Subido de #B07686 al llegar Resina: sobre la cima iluminada del panel
+  // opaco daba 3,45:1 y se usa siempre como texto de 11 a 15 px, que pide
+  // 4,5:1. Ahora 4,52:1 en el peor caso.
+  static const burgundyLight = Color(0xFFC38D9B);
   static const ivory = Color(0xFFF5F0E8);
   static const ivoryMuted = Color(0xFFB8B0A0);
   static const error = Color(0xFF8B1A1A);
