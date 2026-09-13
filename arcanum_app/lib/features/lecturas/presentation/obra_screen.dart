@@ -271,7 +271,6 @@ class _PrimaryAction extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           color: ArcanumColors.gold.withValues(alpha: 0.12),
-          border: Border.all(color: ArcanumColors.gold.withValues(alpha: 0.65)),
         ),
         child: Column(
           children: [

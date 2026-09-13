@@ -187,7 +187,6 @@ class ReaderBottomBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: gold.withValues(alpha: 0.14))),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -359,7 +358,6 @@ class _ClosingButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: gold.withValues(alpha: 0.5)),
           color: gold.withValues(alpha: 0.07),
         ),
         child: Column(
@@ -577,21 +575,36 @@ class _PaletteChip extends StatelessWidget {
           color: palette == ReaderPalette.sepia
               ? ReaderColors.sepiaBackground
               : ArcanumColors.background,
-          border: Border.all(
-            color: selected
-                ? ArcanumColors.gold
-                : ArcanumColors.goldMuted.withValues(alpha: 0.4),
-            width: selected ? 1.5 : 1,
-          ),
         ),
-        child: Text(
-          palette.label,
-          style: ArcanumText.body(
-            14,
-            color: palette == ReaderPalette.sepia
-                ? ReaderColors.sepiaInk
-                : ArcanumColors.ivory,
-          ),
+        // Aqui el relleno NO puede llevar el estado: es la MUESTRA de la
+        // paleta -- el sepia se ve sepia --, y cambiarlo destruiria lo que el
+        // chip esta ensenando. Asi que el aviso va en el peso de la letra y en
+        // una marca, que son forma y no color.
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (selected) ...[
+              Icon(
+                Icons.check,
+                size: 15,
+                color: palette == ReaderPalette.sepia
+                    ? ReaderColors.sepiaInk
+                    : ArcanumColors.ivory,
+              ),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              palette.label,
+              style: ArcanumText.body(
+                14,
+                color: palette == ReaderPalette.sepia
+                    ? ReaderColors.sepiaInk
+                    : ArcanumColors.ivory,
+              ).copyWith(
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ],
         ),
       ),
     ),

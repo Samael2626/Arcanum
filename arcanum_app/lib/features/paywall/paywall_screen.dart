@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../shared/widgets/arcanum_resin.dart';
+import '../../shared/widgets/arcanum_toggle.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/monetization/monetization_service.dart';
@@ -358,15 +360,10 @@ class _TierCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: ArcanumColors.surface,
-          border: Border.all(
-            color: selected
-                ? accent
-                : accent.withValues(alpha: 0.3),
-            width: selected ? 1.5 : 1,
-          ),
+        // Sin filete, pero aqui el aviso no puede quedarse en un halo: esta
+        // es la pantalla donde se decide QUE se compra. Lleva los tres de la
+        // regla -- material hundido, marca de verificado y peso en el titulo.
+        decoration: ArcanumSelection.surface(selected, radio: 16).copyWith(
           boxShadow: selected
               ? [
                   BoxShadow(
@@ -375,7 +372,7 @@ class _TierCard extends StatelessWidget {
                     spreadRadius: 1,
                   ),
                 ]
-              : null,
+              : ArcanumResin.shadow,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -386,9 +383,26 @@ class _TierCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: ArcanumText.heading(20, color: accent),
+                      Row(
+                        children: [
+                          if (selected) ...[
+                            Icon(
+                              Icons.check_circle,
+                              size: 17,
+                              color: accent,
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          Text(
+                            title,
+                            style: ArcanumText.heading(20, color: accent)
+                                .copyWith(
+                                  fontWeight: selected
+                                      ? FontWeight.w700
+                                      : FontWeight.w600,
+                                ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -582,10 +596,7 @@ class _ConsumableTile extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             color: ArcanumColors.surfaceHigh,
-            border: Border.all(
-              color: ArcanumColors.goldMuted.withValues(alpha: 0.3),
             ),
-          ),
           child: Row(
             children: [
               Expanded(

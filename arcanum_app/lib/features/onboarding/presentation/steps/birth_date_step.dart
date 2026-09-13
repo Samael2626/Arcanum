@@ -89,7 +89,6 @@ class _BirthDateStepState extends ConsumerState<BirthDateStep> {
                 child: OutlinedButton(
                   onPressed: widget.onBack,
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: ArcanumColors.ivoryMuted),
                     padding: const EdgeInsets.symmetric(vertical: 18),
                   ),
                   child: Text(

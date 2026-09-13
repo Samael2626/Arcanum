@@ -9,6 +9,7 @@ library;
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../../shared/widgets/arcanum_toggle.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/arcanum_api.dart';
@@ -329,25 +330,10 @@ class _TarotCatalogState extends ConsumerState<TarotCatalog> {
               duration: const Duration(milliseconds: 200),
               alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(horizontal: 18),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                color: selected
-                    ? ArcanumColors.gold.withValues(alpha: 0.16)
-                    : Colors.transparent,
-                border: Border.all(
-                  color: selected
-                      ? ArcanumColors.gold
-                      : ArcanumColors.goldMuted.withValues(alpha: 0.4),
-                ),
-              ),
+              decoration: ArcanumSelection.surface(selected, radio: 20),
               child: Text(
                 label,
-                style: ArcanumText.body(
-                  14,
-                  color: selected
-                      ? ArcanumColors.gold
-                      : ArcanumColors.ivoryMuted,
-                ),
+                style: ArcanumSelection.textStyle(selected, size: 14),
               ),
             ),
           );
