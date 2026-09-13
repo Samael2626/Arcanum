@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../shared/widgets/arcanum_mood.dart';
+import '../../../../shared/widgets/arcanum_resin.dart';
 
 /// El panel de Hoy: gradiente plano dentro de un `RepaintBoundary`.
 ///
@@ -38,24 +39,18 @@ class TodayCard extends StatelessWidget {
     return RepaintBoundary(
       child: Container(
         width: double.infinity,
+        // SIN FILETE, como el resto. Llevaba Border.all(accent al 34 %) y era
+        // el ultimo rectangulo duro que quedaba en Cielo: con todo lo demas ya
+        // sin linea, se leia como una pegatina sobre el lienzo.
+        //
+        // El degradado y la sombra salen de ArcanumResin y no se copian aqui:
+        // asi el tope de luz que protege el texto es UNO, no dos que se
+        // separan con el tiempo. La sombra sube de blur 6 a la de la casa
+        // (18, desplazada 8): sin filete, es lo unico que despega la pieza.
         decoration: BoxDecoration(
           borderRadius: br,
-          border: Border.all(color: mood.accent.withValues(alpha: 0.34)),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color.lerp(mood.edge, mood.core, intensity * 0.45)!,
-              mood.edge,
-            ],
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x4A000000),
-              blurRadius: 6,
-              offset: Offset(0, 3),
-            ),
-          ],
+          gradient: ArcanumResin.gradient(mood: mood, intensity: intensity),
+          boxShadow: ArcanumResin.shadow,
         ),
         // El padding va DENTRO y no en el Container: el fondo tiene que
         // llegar al borde redondeado, no quedarse dentro del margen.

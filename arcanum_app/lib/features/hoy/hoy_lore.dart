@@ -378,7 +378,6 @@ Widget _hourRow(String planetKey) {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: m.glow.withValues(alpha: 0.12),
-            border: Border.all(color: m.accent.withValues(alpha: 0.35)),
           ),
           child: Text(
             glyph,

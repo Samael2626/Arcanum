@@ -277,7 +277,6 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           color: mood.glow.withValues(alpha: 0.08),
-          border: Border.all(color: mood.accent.withValues(alpha: 0.4)),
         ),
         child: Row(
           children: [
@@ -503,7 +502,6 @@ class _MateriaCard extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: br,
-            border: Border.all(color: mood.accent.withValues(alpha: 0.36)),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,

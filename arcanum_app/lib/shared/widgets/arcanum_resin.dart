@@ -88,30 +88,47 @@ class ArcanumResin extends StatelessWidget {
     return floor;
   }
 
-  @override
-  Widget build(BuildContext context) {
+  /// La sombra de la casa: lo que separa una pieza del fondo ahora que no hay
+  /// filete. La comparten `ArcanumCard` y `TodayCard`, y por eso vive aqui y
+  /// no copiada en cada una.
+  static const shadow = [
+    BoxShadow(color: Color(0x59000000), blurRadius: 18, offset: Offset(0, 8)),
+  ];
+
+  /// El degradado del material, para las piezas que pintan su propio fondo y
+  /// no pueden envolverse en un [ArcanumResin] -- hoy, `TodayCard`. Sale de
+  /// aqui para que el tope de luz sea uno solo y no dos que se separan.
+  static LinearGradient gradient({
+    required ArcanumMood mood,
+    double intensity = 1.0,
+    double? drift,
+  }) {
     final base = Color.lerp(mood.edge, mood.core, intensity.clamp(0.0, 1.0))!;
 
     // La respiracion solo abre y cierra el reflejo. No mueve geometria ni
     // anade capas: es el mismo gradiente con otro alfa.
     final vivo = drift == null
         ? _specular
-        : _specular * (0.72 + 0.28 * (0.5 + 0.5 * math.sin(drift! * 6.283)));
+        : _specular * (0.72 + 0.28 * (0.5 + 0.5 * math.sin(drift * 6.283)));
 
     final cima = _capLight(
       Color.alphaBlend(const Color(0xFFF5F0E8).withValues(alpha: vivo), base),
       mood.edge,
     );
+    return LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [cima, base, mood.edge],
+      stops: const [0.0, _specularEnd, 1.0],
+    );
+  }
 
+  @override
+  Widget build(BuildContext context) {
     Widget painted = DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: borderRadius,
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [cima, base, mood.edge],
-          stops: const [0.0, _specularEnd, 1.0],
-        ),
+        gradient: gradient(mood: mood, intensity: intensity, drift: drift),
       ),
       child: child,
     );

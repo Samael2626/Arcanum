@@ -58,13 +58,13 @@ void main() {
 
     // El boton apagado en silencio era el bug: el usuario pulsaba, no pasaba
     // nada, y no habia forma de saber si era culpa suya.
-    final boton = tester.widget<OutlinedButton>(
-      find.widgetWithText(OutlinedButton, 'Empezar prueba gratis'),
+    final boton = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Empezar prueba gratis'),
     );
     expect(boton.onPressed, isNotNull);
 
     await tester.tap(
-      find.widgetWithText(OutlinedButton, 'Empezar prueba gratis'),
+      find.widgetWithText(FilledButton, 'Empezar prueba gratis'),
     );
     await tester.pump();
 

@@ -74,13 +74,7 @@ class ArcanumCard extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: br,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: ArcanumResin.shadow,
       ),
       child: ClipRRect(borderRadius: br, child: content),
     );

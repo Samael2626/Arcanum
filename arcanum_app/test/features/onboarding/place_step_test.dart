@@ -57,11 +57,12 @@ void main() {
     await tester.pumpAndSettle();
 
     // El boton existe pero esta apagado: `onPressed` null.
-    // GoldButton se dibuja sobre un OutlinedButton.
-    final boton = tester.widget<OutlinedButton>(
+    // GoldButton se dibuja sobre un FilledButton: el primario pasó a ir
+    // relleno de oro cuando se quitaron los filetes de la app.
+    final boton = tester.widget<FilledButton>(
       find.ancestor(
         of: find.text('Finalizar'),
-        matching: find.byType(OutlinedButton),
+        matching: find.byType(FilledButton),
       ),
     );
     expect(boton.onPressed, isNull);

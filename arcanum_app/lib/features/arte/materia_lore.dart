@@ -265,7 +265,6 @@ class _BridgeCard extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
                 color: mood.glow.withValues(alpha: 0.08),
-                border: Border.all(color: mood.accent.withValues(alpha: 0.5)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -708,7 +707,6 @@ Widget _chip(String text, ArcanumMood mood) => Container(
   decoration: BoxDecoration(
     borderRadius: BorderRadius.circular(16),
     color: mood.glow.withValues(alpha: 0.08),
-    border: Border.all(color: mood.accent.withValues(alpha: 0.45)),
   ),
   child: Text(
     _cap(text),

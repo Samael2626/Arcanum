@@ -354,7 +354,6 @@ class _NextStepCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   color: mood.glow.withValues(alpha: 0.16),
-                  border: Border.all(color: mood.accent.withValues(alpha: 0.6)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -403,7 +402,6 @@ class _JumpChip extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           color: mood.glow.withValues(alpha: 0.10),
-          border: Border.all(color: mood.accent.withValues(alpha: 0.45)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

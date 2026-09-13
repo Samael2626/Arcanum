@@ -159,7 +159,6 @@ class IlluminatedDropCap extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         borderRadius: r,
-        border: Border.all(color: mood.accent.withValues(alpha: 0.42)),
         boxShadow: [
           BoxShadow(
             color: mood.glow.withValues(alpha: 0.16),

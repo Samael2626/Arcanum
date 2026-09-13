@@ -249,14 +249,7 @@ class _CodexLeaf extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: r,
-          border: Border.all(color: accent.withValues(alpha: 0.28)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.38),
-              blurRadius: 16,
-              offset: const Offset(0, 7),
-            ),
-          ],
+          boxShadow: ArcanumResin.shadow,
         ),
         child: ClipRRect(
           borderRadius: r,

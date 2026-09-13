@@ -470,25 +470,26 @@ class _OracleViewState extends ConsumerState<_OracleView> {
                     horizontal: 16,
                     vertical: 8,
                   ),
+                  // Sin filete, como el resto: el elegido se hunde y el que
+                  // no, se eleva. La senal la carga el texto, igual que en
+                  // ArcanumToggle -- de ahi salen tambien color y peso.
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    color: sel
-                        ? ArcanumColors.gold.withValues(alpha: 0.16)
-                        : Colors.transparent,
-                    border: Border.all(
-                      color: sel
-                          ? ArcanumColors.gold
-                          : ArcanumColors.goldMuted.withValues(alpha: 0.4),
-                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: sel
+                        ? const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Color(0xFF120F17), Color(0xFF16121A)],
+                          )
+                        : const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Color(0xFF332D38), Color(0xFF1D1822)],
+                          ),
                   ),
                   child: Text(
                     s.$2,
-                    style: ArcanumText.body(
-                      14,
-                      color: sel
-                          ? ArcanumColors.gold
-                          : ArcanumColors.ivoryMuted,
-                    ),
+                    style: ArcanumSelection.textStyle(sel, size: 14),
                   ),
                 ),
               ),

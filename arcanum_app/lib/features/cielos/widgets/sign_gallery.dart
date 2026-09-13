@@ -128,7 +128,6 @@ class _SignCard extends StatelessWidget {
     decoration: BoxDecoration(
       color: ArcanumColors.background.withValues(alpha: 0.5),
       borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: accent.withValues(alpha: 0.6)),
     ),
     child: Text(
       txt,
