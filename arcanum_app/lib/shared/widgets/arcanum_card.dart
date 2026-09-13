@@ -7,12 +7,27 @@ import 'arcanum_mood.dart';
 import 'arcanum_resin.dart';
 import 'info_dot.dart';
 
-/// Tarjeta base de ARCANUM, ahora apoyada en el sistema de atmósferas.
+/// Tarjeta base de ARCANUM.
 ///
-/// Por defecto viste una atmósfera neutra sutil (pergamino vivo) con el mismo
-/// borde dorado de siempre → las pantallas que ya la usan mejoran solas sin
-/// recargarse. Opta a [mood] (elemento/planeta) y [frame] para el tratamiento
-/// premium completo (marco biselado + florituras), como en Hoy.
+/// SIN FILETE. Llevaba `Border.all(accent al 30 %)` desde siempre, y se quita
+/// aqui: es la regla congelada del sistema, y como esta tarjeta se instancia
+/// 18 veces en nueve pantallas, quitarlo aqui se lleva de golpe casi todos los
+/// bordes de la app.
+///
+/// Que separa entonces la tarjeta del fondo, si no hay linea. Dos cosas, y
+/// ninguna es un borde:
+///
+///   · la SOMBRA, que la despega (negro al 35 %, blur 18, desplazada 8 abajo);
+///   · el REFLEJO de la resina en su canto de arriba, que le da el filo.
+///
+/// Y no se pierde nada medible: el filete al 30 % daba 1,80:1 contra el panel,
+/// muy por debajo del 3:1 que pediria WCAG 1.4.11 a un limite que hiciera
+/// falta para identificar un control. Esta tarjeta ademas solo agrupa, no se
+/// opera, asi que ese criterio ni siquiera le aplica -- lo que tiene que pasar
+/// es el texto de dentro, y pasa de sobra.
+///
+/// Opta a [mood] (elemento/planeta) y [frame] para el tratamiento premium
+/// completo (marco biselado + florituras), como en Hoy.
 class ArcanumCard extends StatelessWidget {
   final Widget child;
 
@@ -59,9 +74,6 @@ class ArcanumCard extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: br,
-        border: Border.all(
-          color: (mood?.accent ?? ArcanumColors.gold).withValues(alpha: 0.30),
-        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.35),
