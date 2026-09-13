@@ -83,7 +83,7 @@ class AppShell extends StatelessWidget {
   }
 }
 
-/// Barra superior de una sección: identidad + qué es + ayuda + perfil.
+/// Barra superior de una sección: el sello, identidad, qué es, ayuda y avatar.
 class _SectionBar extends StatelessWidget {
   final ArcanumSection section;
   const _SectionBar({required this.section});
@@ -91,10 +91,12 @@ class _SectionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 10, 6),
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          const _SelloDeCuenta(),
+          const SizedBox(width: 6),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,6 +125,56 @@ class _SectionBar extends StatelessWidget {
           const SizedBox(width: 12),
           const _ProfileAvatar(),
         ],
+      ),
+    );
+  }
+}
+
+/// El sello: segunda puerta al cajon de la cuenta, arriba a la izquierda.
+///
+/// NO es un icono de tres lineas. El glifo es U+26E4, el pentaculo, y no se
+/// invento para esto: ya viaja dentro de `ArcanumGlifos`, la fuente propia de
+/// la app, asi que no anade un asset ni toca el manifiesto que vigila
+/// `glifos_fallback_test`. Se pinta con `kGlyphFallback` por la misma razon
+/// que el resto de glifos: sin declararlo, cada Android elige su fuente y en
+/// varios sale un emoji de colores.
+///
+/// Abre EL MISMO `endDrawer` que el avatar. No hay un segundo cajon ni un
+/// segundo widget: son dos tiradores del mismo.
+///
+/// Sin filete, como todo. Lo que le da cuerpo es el material, y su zona tactil
+/// son 48 aunque el glifo mida 22.
+class _SelloDeCuenta extends StatelessWidget {
+  const _SelloDeCuenta();
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'Tu cuenta',
+      child: Semantics(
+        button: true,
+        label: 'Tu cuenta',
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: Scaffold.of(context).openEndDrawer,
+          child: ExcludeSemantics(
+            child: SizedBox(
+              width: 48,
+              height: 48,
+              child: Center(
+                child: Text(
+                  '⛤',
+                  style: TextStyle(
+                    fontFamilyFallback: kGlyphFallback,
+                    fontSize: 22,
+                    height: 1,
+                    color: ArcanumColors.gold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
