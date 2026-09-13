@@ -9,7 +9,7 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
-import '../../shared/widgets/arcanum_surface.dart';
+import '../../shared/widgets/arcanum_resin.dart';
 import '../../shared/widgets/login_prompt.dart';
 import 'grimorio_atmosphere.dart';
 import 'grimorio_detail.dart';
@@ -264,7 +264,7 @@ class _CodexLeaf extends StatelessWidget {
             children: [
               // Base parchment neutral + susurro del regente por encima.
               const Positioned.fill(
-                child: ArcanumSurface(
+                child: ArcanumResin(
                   mood: ArcanumMood.neutral,
                   intensity: 0.5,
                 ),

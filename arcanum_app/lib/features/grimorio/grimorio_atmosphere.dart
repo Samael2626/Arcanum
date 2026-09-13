@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/arcanum_mood.dart';
-import '../../shared/widgets/arcanum_surface.dart';
+import '../../shared/widgets/arcanum_resin.dart';
 
 // ── Léxico del códice ───────────────────────────────────────────────────────
 
@@ -127,10 +127,9 @@ class _GrimoireSkyState extends State<GrimoireSky>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _drift,
-      builder: (context, _) => ArcanumSurface(
+      builder: (context, _) => ArcanumResin(
         mood: widget.mood,
         drift: _drift.value,
-        grain: false,
         intensity: widget.intensity,
       ),
     );
@@ -171,7 +170,7 @@ class IlluminatedDropCap extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: r,
-        child: ArcanumSurface(
+        child: ArcanumResin(
           mood: mood,
           intensity: 0.85,
           child: Center(

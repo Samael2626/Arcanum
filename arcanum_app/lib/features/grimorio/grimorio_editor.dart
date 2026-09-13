@@ -9,7 +9,7 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/arcanum_field.dart';
 import '../../shared/widgets/arcanum_mood.dart';
-import '../../shared/widgets/arcanum_surface.dart';
+import '../../shared/widgets/arcanum_resin.dart';
 import '../../shared/widgets/gold_button.dart';
 import 'grimorio_atmosphere.dart';
 
@@ -256,7 +256,7 @@ class _WritingPage extends StatelessWidget {
         child: Stack(
           children: [
             const Positioned.fill(
-              child: ArcanumSurface(mood: ArcanumMood.neutral, intensity: 0.55),
+              child: ArcanumResin(mood: ArcanumMood.neutral, intensity: 0.55),
             ),
             // Filete superior dorado, como el canto del pliego.
             Positioned(

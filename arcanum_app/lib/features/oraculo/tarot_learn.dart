@@ -15,7 +15,7 @@ import '../../core/api/arcanum_api.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/arcanum_mood.dart';
-import '../../shared/widgets/arcanum_surface.dart';
+import '../../shared/widgets/arcanum_resin.dart';
 import 'widgets/tarot_card.dart';
 import '../../shared/titulo_book_t.dart';
 
@@ -80,7 +80,7 @@ void showTarotCardSheet(BuildContext context, Map<String, dynamic> card) {
       expand: false,
       builder: (_, scroll) => ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        child: ArcanumSurface(
+        child: ArcanumResin(
           mood: mood,
           intensity: 0.42,
           child: SingleChildScrollView(

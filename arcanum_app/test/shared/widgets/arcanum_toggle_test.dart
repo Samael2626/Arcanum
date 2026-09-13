@@ -11,7 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// texto por 1.4.3. Un comentario en el widget no impide que alguien quite
 /// uno dentro de seis meses; esto si.
 void main() {
-  Widget _montar({required int index, List<ArcanumToggleOption>? options}) =>
+  Widget montar({required int index, List<ArcanumToggleOption>? options}) =>
       MaterialApp(
         home: Scaffold(
           body: ArcanumToggle(
@@ -27,27 +27,27 @@ void main() {
         ),
       );
 
-  TextStyle _estilo(WidgetTester t, String rotulo) =>
+  TextStyle estilo(WidgetTester t, String rotulo) =>
       t.widget<Text>(find.text(rotulo)).style!;
 
   group('los tres avisos', () {
     testWidgets('1 · el color separa lo elegido de lo que no', (t) async {
-      await t.pumpWidget(_montar(index: 0));
-      expect(_estilo(t, 'Ahora').color, ArcanumColors.goldLight);
-      expect(_estilo(t, 'Tu carta').color, ArcanumColors.ivoryMuted);
+      await t.pumpWidget(montar(index: 0));
+      expect(estilo(t, 'Ahora').color, ArcanumColors.goldLight);
+      expect(estilo(t, 'Tu carta').color, ArcanumColors.ivoryMuted);
     });
 
     testWidgets('2 · el peso tambien, y no solo el color', (t) async {
-      await t.pumpWidget(_montar(index: 0));
-      expect(_estilo(t, 'Ahora').fontWeight, FontWeight.w600);
-      expect(_estilo(t, 'Tu carta').fontWeight, FontWeight.w400);
+      await t.pumpWidget(montar(index: 0));
+      expect(estilo(t, 'Ahora').fontWeight, FontWeight.w600);
+      expect(estilo(t, 'Tu carta').fontWeight, FontWeight.w400);
     });
 
     testWidgets('3 · con icono, la forma cambia de contorno a relleno', (
       t,
     ) async {
       await t.pumpWidget(
-        _montar(
+        montar(
           index: 0,
           options: const [
             ArcanumToggleOption(
@@ -81,7 +81,7 @@ void main() {
     testWidgets('ninguna pieza lleva filete: el borde no dice el estado', (
       t,
     ) async {
-      await t.pumpWidget(_montar(index: 0));
+      await t.pumpWidget(montar(index: 0));
       final fondos = t
           .widgetList<AnimatedContainer>(find.byType(AnimatedContainer))
           .map((w) => w.decoration! as BoxDecoration);
@@ -98,7 +98,7 @@ void main() {
 
   group('lo que se toca', () {
     testWidgets('ningun segmento baja de 48 de alto', (t) async {
-      await t.pumpWidget(_montar(index: 0));
+      await t.pumpWidget(montar(index: 0));
       for (final rotulo in ['Ahora', 'Tu carta']) {
         expect(
           t.getSize(find.ancestor(
@@ -135,7 +135,7 @@ void main() {
     });
 
     testWidgets('el radio es el de la casa, no uno propio', (t) async {
-      await t.pumpWidget(_montar(index: 0));
+      await t.pumpWidget(montar(index: 0));
       final d =
           t.widget<AnimatedContainer>(find.byType(AnimatedContainer).first)
               .decoration!

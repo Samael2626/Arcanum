@@ -4,7 +4,7 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
-import '../../shared/widgets/arcanum_surface.dart';
+import '../../shared/widgets/arcanum_resin.dart';
 
 /// Lore esotérico de un signo (Agrippa / Culpeper) + sus correspondencias.
 class SignLore {
@@ -393,7 +393,7 @@ void showSignLoreSheet(BuildContext context, String signKey) {
       expand: false,
       builder: (_, scrollController) => ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        child: ArcanumSurface(
+        child: ArcanumResin(
           mood: mood,
           intensity: 0.42,
           child: SingleChildScrollView(

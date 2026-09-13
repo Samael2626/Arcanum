@@ -4,7 +4,7 @@ import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
 import '../../../shared/astro_symbols.dart';
 import '../../../shared/widgets/arcanum_mood.dart';
-import '../../../shared/widgets/arcanum_surface.dart';
+import '../../../shared/widgets/arcanum_resin.dart';
 import '../sign_lore.dart';
 
 /// Galería de los 12 signos como cartas ilustradas, cada una vestida con la
@@ -80,7 +80,7 @@ class _SignCard extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: br,
-          child: ArcanumSurface(
+          child: ArcanumResin(
             mood: mood,
             intensity: highlighted ? 0.5 : 0.4,
             child: Padding(

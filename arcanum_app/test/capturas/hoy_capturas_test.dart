@@ -368,10 +368,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Abrir el sello del Sol'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.check_box_outline_blank).first);
-    await tester.pump();
-    await tester.tap(find.byIcon(Icons.check_box_outline_blank).first);
-    await tester.pump();
+    // El dialogo de consentimiento dejo de tener casillas: hoy es el texto de
+    // la Ley 1581 y dos botones. El capturador seguia tocando dos casillas que
+    // ya no existen y por eso estas tres capturas no se generaban.
     await tester.tap(find.widgetWithText(FilledButton, 'Acepto'));
     await tester.pump(const Duration(milliseconds: 1200));
     await tester.pumpAndSettle();
@@ -387,10 +386,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Abrir el sello del Sol'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.check_box_outline_blank).first);
-    await tester.pump();
-    await tester.tap(find.byIcon(Icons.check_box_outline_blank).first);
-    await tester.pump();
+    // El dialogo de consentimiento dejo de tener casillas: hoy es el texto de
+    // la Ley 1581 y dos botones. El capturador seguia tocando dos casillas que
+    // ya no existen y por eso estas tres capturas no se generaban.
     await tester.tap(find.widgetWithText(FilledButton, 'Acepto'));
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(milliseconds: 260));
@@ -403,10 +401,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Abrir el sello del Sol'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.check_box_outline_blank).first);
-    await tester.pump();
-    await tester.tap(find.byIcon(Icons.check_box_outline_blank).first);
-    await tester.pump();
+    // El dialogo de consentimiento dejo de tener casillas: hoy es el texto de
+    // la Ley 1581 y dos botones. El capturador seguia tocando dos casillas que
+    // ya no existen y por eso estas tres capturas no se generaban.
     await tester.tap(find.widgetWithText(FilledButton, 'Acepto'));
     await tester.pump(const Duration(milliseconds: 1200));
     await tester.pumpAndSettle();

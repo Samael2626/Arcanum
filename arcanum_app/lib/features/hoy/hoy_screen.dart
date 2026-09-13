@@ -13,7 +13,7 @@ import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/arcanum_mood.dart';
-import '../../shared/widgets/arcanum_surface.dart';
+import '../../shared/widgets/arcanum_resin.dart';
 import 'hoy_guidance.dart';
 import 'hoy_lore.dart';
 import 'presentation/widgets/nested_sky_instrument.dart';
@@ -458,10 +458,9 @@ class _LivingSkyState extends State<_LivingSky>
       animation: _fade,
       builder: (context, _) {
         final mood = widget.mood;
-        return ArcanumSurface(
+        return ArcanumResin(
           mood: mood,
           drift: null,
-          grain: false,
           // Cielo como INSINUACIÓN del regente: penumbra profunda para que el
           // color se lea misterioso, no brillante. Los paneles rebotan sobre él.
           intensity: 0.34,

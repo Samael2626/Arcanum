@@ -4,7 +4,7 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import 'arcanum_frame.dart';
 import 'arcanum_mood.dart';
-import 'arcanum_surface.dart';
+import 'arcanum_resin.dart';
 import 'info_dot.dart';
 
 /// Tarjeta base de ARCANUM, ahora apoyada en el sistema de atmósferas.
@@ -45,7 +45,7 @@ class ArcanumCard extends StatelessWidget {
     final m = mood ?? ArcanumMood.neutral;
     final br = BorderRadius.circular(radius);
 
-    Widget content = ArcanumSurface(
+    Widget content = ArcanumResin(
       mood: m,
       borderRadius: br,
       intensity: intensity ?? (mood == null ? 0.55 : 1.0),

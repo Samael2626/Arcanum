@@ -5,7 +5,7 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
-import '../../shared/widgets/arcanum_surface.dart';
+import '../../shared/widgets/arcanum_resin.dart';
 import '../lecturas/domain/library_models.dart';
 import 'materia_engravings.dart';
 import 'materia_specimen.dart';
@@ -60,7 +60,7 @@ ArcanumMood materiaMood(String? planet, String? element) {
 /// resumen); el lore completo (usos, estudio, fuente) llega por [future].
 ///
 /// Sigue el andamiaje de las hojas de Hoy/Cielos (DraggableScrollableSheet +
-/// ArcanumSurface a intensidad ~0.42), para que todo ARCANUM respire igual.
+/// ArcanumResin a intensidad ~0.42), para que todo ARCANUM respire igual.
 void showMateriaLoreSheet(
   BuildContext context, {
   required Future<Map<String, dynamic>> future,
@@ -88,7 +88,7 @@ void showMateriaLoreSheet(
       expand: false,
       builder: (_, scroll) => ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        child: ArcanumSurface(
+        child: ArcanumResin(
           mood: mood,
           intensity: 0.42,
           child: SingleChildScrollView(
