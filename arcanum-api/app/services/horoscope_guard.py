@@ -7,7 +7,7 @@ las tres veces, copio frases enteras del bloque de datos, y uso la formula de
 gremio que el prompt prohibe expresamente. Pedirlo por sexta vez no iba a
 funcionar.
 
-Lo determinista no se pide, se comprueba. Estas cuatro cosas se pueden mirar
+Lo determinista no se pide, se comprueba. Estas cosas se pueden mirar
 con una funcion pura -- no hacen falta juicios de estilo -- y por eso salen del
 prompt y entran aqui. El prompt CONSERVA las reglas, porque el modelo tiene que
 saber que existen; lo que ya no hace es depender de que las recuerde.
@@ -163,49 +163,88 @@ def formulas_de_gremio(texto: str) -> list[str]:
     return fuera
 
 
-# La ORDEN, que el prompt prohibe desde el 5-sep y se colo por la puerta que
-# abrio la vuelta del 10-sep. Medido: con la frontera nueva el modelo cerro un
-# texto con "recuerda que la precision del trazo sera mas valiosa que la
-# rapidez de la idea" -- manda, y ademas pronostica.
+# LA ORDEN YA NO SE MARCA. Retirada el 13-sep-2026 por decision explicita de
+# Samuel, igual que la vuelta del 10-sep y documentada por la misma razon: una
+# guarda que desaparece sin nota parece un descuido al mes siguiente.
 #
-# Decir a que se presta el cielo vale; decirle a alguien lo que tiene que hacer,
-# no. La diferencia esta en el sujeto: "es dia de limar" habla del dia,
-# "aprovecha para limar" le habla a el.
+# La lista ORDENES y la funcion `ordenes` vivieron aqui desde el 11-sep y
+# cazaban "recuerda que", "aprovecha para", "consagra el", "puedes trabajar".
+# Todas ellas son ahora exactamente lo que se quiere que el texto escriba: el
+# horoscopo dice que hacer hoy, en imperativo.
 #
-# Tan corta como la de las promesas, y por lo mismo. Fuera se quedan "tienes
-# que" y "hay que", que chocan con la jornada recien permitida -- "tienes que
-# decidir con menos margen" describe su dia, no le manda nada.
-# La segunda tanda del 11-sep anadio la practica MANDADA, que es la misma regla
-# de siempre -- el prompt pide la materia "como constatacion": "a la hora de
-# Venus se consagraba el cobre", no "consagra cobre" -- y se escapaba porque
-# ninguna de las de arriba aparece. Medido: "al alba, consagra el estano de
-# Jupiter" y "puedes trabajar con objetos dorados".
+# LO QUE NO SE AFLOJA, y no es un descuido que siga aqui: `promesas_de_resultado`
+# se queda intacta, palabra por palabra. Son DOS EJES, y confundirlos fue lo que
+# hizo que la regla del 23-ago se derogara entera cuando solo sobraba su mitad:
 #
-# El imperfecto ("se consagraba") y el imperativo ("consagra el") se distinguen
-# por el literal, asi que aqui no hay ambiguedad que temer.
-ORDENES: tuple[str, ...] = (
-    "recuerda que",
-    "aprovecha para",
-    "no dejes pasar",
-    "deberias",
-    "asegurate de",
-    "tienes que aprovechar",
-    "consagra el",
-    "consagra la",
-    "puedes trabajar",
-    "puedes usar",
-    "puedes llevar",
+#   "cierra ese pendiente hoy" ..... que hacer. NO se comprueba manana. Vale.
+#   "vas a cerrar ese asunto" ...... como acaba. Se comprueba manana. No vale.
+#
+# Aflojar la primera no dice nada sobre la segunda. Si algun dia alguien viene a
+# quitar la segunda, que sea con su propia decision escrita, no arrastrada por
+# esta.
+
+# Y EL LIMITE QUE SI NACE DE ABRIR ESA PUERTA: el imperativo no cruza a la
+# asesoria real. Mientras el texto solo describia, el veto de consejo medico,
+# legal y financiero se cumplia solo -- describir no aconseja. Con el mandato
+# permitido es justo por ahi por donde se sale del registro simbolico, asi que
+# esto pasa de pedirse a comprobarse.
+#
+# Hace falta el VERBO y el DOMINIO en la misma oracion, nunca uno solo. El verbo
+# suelto no vale porque "deja", "firma" y "toma" son el registro cotidiano que
+# se acaba de permitir -- "no firmes todavia" es un ejemplo que el prompt da por
+# bueno --; el dominio suelto tampoco, porque nombrar el terreno no es aconsejar
+# sobre el: "hoy el cielo esta del lado de lo que se firma" describe, no manda.
+ASESORIA_DOMINIOS: tuple[str, ...] = (
+    # Salud
+    "medicamento", "medicacion", "pastilla", "pastillas", "dosis",
+    "tratamiento", "farmaco", "receta medica", "terapia", "antidepresivo",
+    "diagnostico", "operacion quirurgica",
+    # Dinero
+    "acciones", "bolsa", "inversion", "inversiones", "credito", "prestamo",
+    "hipoteca", "criptomoneda", "criptomonedas", "bitcoin", "ahorros",
+    "deuda", "deudas",
+    # Derecho. FUERA "demanda" y "denuncia" a secas: son tambien verbos
+    # corrientes, y en la primera muestra real contra Groq el texto escribio
+    # "lo que la obra demanda" y se llevo un reintento entero por nada. La
+    # forma accionable lleva casi siempre su objeto delante.
+    "demanda judicial", "abogado", "juicio", "pleito", "notario", "herencia",
+)
+
+# Imperativo afirmativo y negativo, los dos, porque "no dejes la medicacion" es
+# tan asesoria como "deja la medicacion".
+#
+# Los rechazos de delante son medidos, no defensivos: casi todos estos verbos
+# tienen un gemelo que es SUSTANTIVO o impersonal, y el prompt bendice justo esa
+# forma. "hoy el cielo esta del lado de lo que se firma y de las deudas viejas"
+# tiene el verbo y el dominio en la misma oracion y no aconseja nada -- se cazo
+# en el primer pase de tests. Igual "la demanda", "el cambio", "una baja".
+_VERBO_DE_ASESORIA = re.compile(
+    r"(?<!se )(?<!la )(?<!el )(?<!las )(?<!los )(?<!una )(?<!un )"
+    r"\b(?:no\s+)?("
+    r"vend[ea]s?|compr[ae]s?|inviert[ae]s?|invierte|retir[ae]s?|"
+    r"contrat[ae]s?|cancel[ae]s?|firm[ae]s?|demand[ae]s?|denunci[ae]s?|"
+    r"dej[ae]s?|tom[ae]s?|suspend[ae]s?|pid[ae]s?|acud[ae]s?|reclam[ae]s?|"
+    r"cambi[ae]s?|sub[ae]s?|baj[ae]s?"
+    r")\b"
 )
 
 
-def ordenes(texto: str) -> list[str]:
-    """Consejo en imperativo: el cielo se describe, a quien lee no se le manda.
+def asesoria_real(texto: str) -> list[str]:
+    """Imperativo que se sale del registro simbolico y aconseja de verdad.
 
-    Se mira solo el literal, sin ventana ni contexto: no hay forma honrada de
-    escribir "no dejes pasar" hablando del cielo y no de quien lee.
+    Se mira por ORACION, no por texto entero: un cielo que habla de lo que se
+    firma en el primer parrafo y manda dormir antes de contestar en el tercero
+    no esta aconsejando sobre un contrato, y marcarlo costaria un reintento.
+
+    Devuelve la oracion recortada, no la formula, porque aqui lo que hay que
+    ensenarle al modelo es la frase entera que se pasa de la raya.
     """
-    plano = _plano(texto)
-    return [o for o in ORDENES if o in plano]
+    fuera = []
+    for oracion in re.split("[.!?" + chr(10) + "]", _plano(texto)):
+        dominio = next((d for d in ASESORIA_DOMINIOS if d in oracion), None)
+        if dominio and _VERBO_DE_ASESORIA.search(oracion):
+            fuera.append(f'"{oracion.strip()[:80]}" (habla de {dominio})')
+    return fuera
 
 
 def promesas_de_resultado(texto: str) -> list[str]:
@@ -277,13 +316,14 @@ def defectos(texto: str, datos: str) -> list[str]:
             "decidir; como acaba no lo sabes. Esa frase no se reescribe con "
             "otra palabra: se cae")
 
-    mandatos = ordenes(texto)
-    if mandatos:
+    asesoria = asesoria_real(texto)
+    if asesoria:
         partes.append(
-            "le mandaste algo a quien lee (" + ", ".join(mandatos) + "). El "
-            "cielo se describe y se dice a que se presta; lo que haga con eso "
-            "lo decide el. Cambia el sujeto: no 'aprovecha para limar', sino "
-            "'es dia de limar'")
+            "cruzaste a consejo real (" + "; ".join(asesoria) + "). Puedes "
+            "decirle que haga, pero en el registro simbolico y cotidiano: las "
+            "relaciones, lo que decide por si mismo, el ritmo del dia. Una "
+            "decision de dinero, de salud o de derecho no se manda nunca. Di "
+            "el terreno sin dar la instruccion")
 
     vetadas = palabras_vetadas(texto)
     if vetadas:

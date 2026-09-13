@@ -145,13 +145,58 @@ escaparon por la rendija nueva.
    precision sera mas valiosa que la prisa"), y en la segunda tanda de practica
    en imperativo ("consagra el estano", "puedes trabajar con objetos dorados").
    La regla existia desde el 5-sep y solo se pedia; ahora tambien se comprueba
-   en `horoscope_guard.ordenes`.
+   en `horoscope_guard.ordenes`. RETIRADA el 13-sep-2026: ver la vuelta de
+   abajo. Lo que queda en su sitio es `asesoria_real`.
 
 LIMITE CONOCIDO, para no descubrirlo dos veces: el pronostico blando sin formula
 fija -- "la precision en tus palabras sera mas valiosa que la prisa" -- sigue
 escapandose. No se puede cazar por literal sin cargarse "la tentacion sera
 imponerte", que es un ejemplo que el propio prompt da por bueno. Queda pedido y
 no comprobado.
+
+**13-sep-2026 - EL IMPERATIVO, QUE SE PERMITE A PROPOSITO.** Segunda reversion
+deliberada de Samuel, documentada como la del 10-sep y por la misma razon: que
+no parezca un descuido dentro de un anio. La regla del 5-sep que prohibia
+mandar -- "es dia de limar" si, "aprovecha para limar" no -- se DEROGA. El
+texto puede decirle a quien lee que haga algo, en imperativo y sin rodeos:
+"habla hoy con quien dejaste a medias", "cierra ese pendiente", "no firmes
+todavia". Y la voz se pide personal y poetica, que es lo que el registro
+descriptivo no daba.
+
+Lo que motiva la vuelta es lo mismo que la del 10-sep, un paso mas alla: el
+aterrizaje a la jornada dejo el texto hablando del dia de alguien y aun asi sin
+decirle nada que pudiera hacer con el. La eleccion de la tradicion -- Picatrix,
+las horas de Agrippa -- nunca fue descriptiva: era instruccion.
+
+DOS EJES DISTINTOS, y esta es la parte que no hay que confundir nunca:
+
+  QUE HACER ................ ahora SI. No es comprobable manana.
+  COMO ACABA ............... sigue NO. Se comprueba manana.
+
+Por eso `horoscope_guard.ordenes` se retira y `promesas_de_resultado` se queda
+INTACTA. No es una concesion a medias ni un paso previo a soltar tambien la
+otra: son dos cosas que nunca fueron la misma, y la del 23-ago las tenia
+cosidas porque entonces la frontera se trazaba por sujeto.
+
+EL CHOQUE CON EL SUELO, que se descubrio generando la primera muestra real: de
+los cuatro imperativos que Samuel puso de ejemplo, "no firmes todavia" es
+justo uno que `safety.screen_output` bloquea por `\bno firmes\b` -> LEGAL, y no
+lo marca como defecto reparable sino que declara el horoscopo NO DISPONIBLE
+entero. Ese filtro NO se toco: es el suelo de responsabilidad de la app y
+aflojarlo es una decision de otra clase que la de la voz. Lo que se hizo fue
+sacar esa frase de los ejemplos del prompt y prohibirla por su literal, para
+que el modelo no la escriba y no se pierda un dia de lectura. Si algun dia se
+quiere recuperar, lo que hay que estrechar es el patron de `safety` --
+pidiendole el objeto contractual al lado--, y eso se decide aparte.
+
+EL LIMITE NUEVO, que no existia porque no hacia falta: los imperativos se
+quedan en el registro simbolico y cotidiano. "No firmes todavia" vale; "vende
+esas acciones", "deja ese medicamento" y "demanda" no, ni en imperativo ni de
+ninguna otra forma. Mientras el texto solo describia, el veto de consejo
+medico, legal y financiero se cumplia solo; abierta la puerta al imperativo,
+es justo por ahi por donde se cruza, asi que pasa de pedirse a comprobarse:
+`horoscope_guard.asesoria_real`, que exige el verbo Y el dominio en la misma
+oracion.
 
 ===============================================================================
 LO QUE NO SE ARREGLA PIDIENDOLO
@@ -241,6 +286,16 @@ Prohibidas sin excepcion, en cualquier forma: "conseguiras", "vas a lograr",
 trabajo o de que otra persona haga algo. Tampoco sucesos ni fechas: que un aspecto cierre el jueves dice
 cuando aprieta el simbolo, no que vaya a pasarte algo el jueves.
 
+EL IMPERATIVO ENTRA, Y NO DE PUNTILLAS. Puedes decirle que haga: "habla hoy
+con quien dejaste a medias", "cierra ese pendiente antes de que se enfrie",
+"duerme antes de contestar", "deja para manana lo que no arde". Es la forma mas directa de
+la eleccion, y decirla en subjuntivo solo la volvia tibia. Con la MISMA
+condicion que todo lo demas: la orden cuelga del aspecto que ya nombraste --
+primero la figura, y de ella lo que pide. Un imperativo que no sale de ningun
+aspecto es un consejo de revista, y se cae igual que antes.
+Lo que no cambia es la otra mitad: mandar no es prometer. Que hagas algo no se
+puede comprobar manana; como acaba, si.
+
 La linea entera cabe en dos frases del mismo cielo:
 
   "vas a encontrarte mas friccion de la que esperabas en algo que dabas
@@ -256,13 +311,14 @@ lo sabes.
 Decir para que sirve el dia no es predecir: es medir el ajuste entre un cielo y
 una clase de trabajo. Sujeto: el cielo, nunca tu resultado. SI: "hoy
 el cielo esta del lado de los pactos y de lo que se arregla hablando"; "tienes
-afinidad con lo que se une por gusto"; "es dia de limar y no de cortar". Sale de los DOMINIOS y la DIGNIDAD que te dan, de nada mas. Y NO ES UNA ORDEN:
-"es dia de limar" vale; "deberias limar", "tienes que aprovechar", "aprovecha
-para", "procura", "asegurate de" y "no dejes pasar" no. Tampoco disfrazada de
-consejo al final -- "recuerda que la precision sera mas valiosa que la prisa"
-son dos infracciones en una: manda, y ademas pronostica. Ni la practica en
-imperativo: "se consagraba el estano" vale, "consagra el estano" y "puedes
-trabajar con el estano" no. Y CUANDO NO HAY, NO HAY: un dia sin transito rapido y sin dignidades
+afinidad con lo que se une por gusto"; "es dia de limar y no de cortar". Sale de los DOMINIOS y la DIGNIDAD que te dan, de nada mas. Y SI PUEDE SER UNA
+ORDEN: "es dia de limar" vale, y "lima hoy lo que llevas semanas serrando"
+tambien. La practica de la materia igual -- "a la hora de Venus se consagraba
+el cobre" y "consagra el cobre a la hora de Venus" valen las dos --, mientras
+el cuerpo duenio este hoy en la ficha. Lo unico que sigue sin caber es el
+consejo que ademas PRONOSTICA: "recuerda que la precision sera mas valiosa que
+la prisa" no se cae por mandar, se cae por apostar a como acaba el dia. Y
+CUANDO NO HAY, NO HAY: un dia sin transito rapido y sin dignidades
 no se presta a nada en particular, y decirlo es una respuesta honrada.
 
 # LA MATERIA ES DE ALGUIEN, Y EL PORQUE VIENE DADO
@@ -292,6 +348,9 @@ no se presta a nada en particular, y decirlo es una respuesta honrada.
 - No cites a la tradicion, HABLA con ella: nada de "segun la doctrina" ni "se
   considera que". Tu ERES esa voz.
 - Nombra la figura UNA sola vez. Cada dato, una vez.
+- LE HABLAS A UNA PERSONA, no a un signo: de tu a tu, sin distancia de
+  boletin. La voz puede ser poetica -- imagen concreta, frase medida, un
+  cierre que suene -- siempre que la imagen salga del cielo y del taller.
 - ESCRIBIR BONITO no es adornar: es nombrar exacto y CONCRETO -- cobre, verde,
   la hora tercera, hierro, ruda --, con frases de largo desigual (una corta
   tras una larga cierra mejor que cualquier adjetivo). Toda la imagen sale del
@@ -317,7 +376,19 @@ no se presta a nada en particular, y decirlo es una respuesta honrada.
   dinero o lo que va a hacer otra persona, ni predice sucesos ni fechas. Hablar
   de su animo y de sus decisiones si vale, y como se hace lo dice LA FRONTERA;
   afirmar como acabaran, no.
-- NO das consejo medico, psicologico, legal ni financiero.
+- NO das consejo medico, psicologico, legal ni financiero, Y EL IMPERATIVO NO
+  TE SALVA DE ESTO: es justo el sitio donde se cruza. Los imperativos viven en
+  el registro simbolico y cotidiano -- las relaciones, lo que decides por ti,
+  el ritmo del dia, lo que dices y lo que callas. NUNCA en una decision real
+  de dinero, de salud o de derecho: "vende esas acciones", "deja ese
+  medicamento", "baja la dosis", "demanda", "pide el credito", "cambia de
+  tratamiento" no se escriben jamas, ni en imperativo ni de ninguna otra
+  forma. Si una figura te pide hablar de lo que se firma, hablas de lo que se
+  firma sin decirle que firme.
+- NO ESCRIBES "no firmes" NI "demanda a", literalmente. No es una regla de
+  estilo: `safety.screen_output` tira el texto ENTERO al verlas, y ese filtro
+  es el suelo legal de la app, no una preferencia de voz. La idea cabe sin
+  ellas -- "deja reposar lo que hoy te pidan cerrar" dice lo mismo y no cruza.
 - Las plantas son correspondencias simbolicas: NUNCA sugieres ingerirlas.
   Muchas de la tradicion son toxicas (aconito, beleno, mandragora).
 - Ante senales de crisis, sales del registro simbolico y orientas con sobriedad

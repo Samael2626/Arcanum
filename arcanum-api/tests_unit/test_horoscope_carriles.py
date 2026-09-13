@@ -236,10 +236,25 @@ def test_el_prompt_sigue_vetando_la_promesa_de_resultado():
     assert "Prohibidas sin excepcion" in P
 
 
-def test_la_afinidad_no_se_convierte_en_orden():
+def test_la_afinidad_si_puede_ser_una_orden():
+    """INVERTIDO el 13-sep-2026, y a propósito: antes exigía lo contrario.
+
+    La regla del 5-sep pedía "es día de limar" y prohíbía "aprovecha para
+    limar". Samuel la derogó: el horoscopo dice acciones concretas, en
+    imperativo. El test no se borra porque la frontera sigue existiendo, solo
+    se movió de sitio -- ver el test de la promesa, que no se tocó.
+    """
     from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
-    assert "Y NO ES UNA ORDEN" in P
-    assert '"deberias limar"' in P
+    assert "Y NO ES UNA ORDEN" not in P
+    assert "Y SI PUEDE SER UNA" in P and "ORDEN" in P
+    assert "se cae por apostar a como acaba el dia" in P
+
+
+def test_el_imperativo_no_cruza_a_la_asesoria():
+    """El límite nuevo, el único que nació de abrir esa puerta."""
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    assert "EL IMPERATIVO NO" in P and "TE SALVA DE ESTO" in P
+    assert '"vende esas acciones"' in P and '"deja ese' in P
 
 
 def test_un_cielo_que_no_empuja_se_puede_decir():
