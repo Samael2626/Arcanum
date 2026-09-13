@@ -249,9 +249,6 @@ class _AspectTarget extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: ArcanumColors.gold.withValues(alpha: 0.18),
-              ),
             ),
             child: Column(
               children: [

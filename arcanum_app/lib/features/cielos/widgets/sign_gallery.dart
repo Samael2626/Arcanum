@@ -63,11 +63,11 @@ class _SignCard extends StatelessWidget {
       onTap: () => showSignLoreSheet(context, signKey),
       child: Container(
         decoration: BoxDecoration(
+          // SIN FILETE, y este era de los peores: cambiaba de color Y de
+          // grosor con el estado, que es justo lo que la regla prohibe. Lo
+          // senala ya el distintivo "Sol"/"AC" de dentro, que es contenido y
+          // no depende del color.
           borderRadius: br,
-          border: Border.all(
-            color: mood.accent.withValues(alpha: highlighted ? 0.75 : 0.34),
-            width: highlighted ? 1.4 : 1,
-          ),
           boxShadow: [
             BoxShadow(
               color: highlighted

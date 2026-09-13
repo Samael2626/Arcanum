@@ -470,12 +470,12 @@ class _GrimoireEmpty extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 30),
-            OutlinedButton(
+            // Boton fantasma sin filete: lo que le da cuerpo es el material.
+            TextButton(
               onPressed: onWrite,
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(
-                  color: ArcanumColors.gold.withValues(alpha: 0.7),
-                ),
+              style: TextButton.styleFrom(
+                backgroundColor: const Color(0xFF332D38),
+                foregroundColor: ArcanumColors.goldLight,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 26,
                   vertical: 14,
@@ -526,9 +526,6 @@ class _BreathingSealState extends State<_BreathingSeal>
           alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(
-              color: ArcanumColors.gold.withValues(alpha: 0.4),
-            ),
             gradient: RadialGradient(
               colors: [
                 ArcanumColors.gold.withValues(alpha: 0.06 + 0.05 * t),
@@ -663,8 +660,10 @@ class _SavedPassagesLink extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: ArcanumColors.goldMuted.withValues(alpha: 0.45),
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF332D38), Color(0xFF1D1822)],
           ),
         ),
         child: Row(

@@ -72,8 +72,14 @@ abstract final class ArcanumSelection {
   /// se funden en UNO solo con mas paradas en vez de pintar dos capas. Es la
   /// razon de que aqui haya cuatro colores y no dos: los de arriba ya llevan
   /// el especular dentro.
-  static BoxDecoration surface(bool selected) => BoxDecoration(
-    borderRadius: BorderRadius.circular(radius),
+  ///
+  /// `radio` existe porque no todo lo seleccionable es un segmento: hay chips
+  /// de tirada, de obra y de materia con su propio redondeo. Lo que NO cambia
+  /// de un sitio a otro es el reparto elevado/hundido, y por eso sale de aqui
+  /// en vez de copiarse en cada pantalla.
+  static BoxDecoration surface(bool selected, {double radio = radius}) =>
+      BoxDecoration(
+    borderRadius: BorderRadius.circular(radio),
     gradient: selected
         // Hundido: arranca oscuro arriba y aclara al pie. La luz se invierte,
         // y con ella el especular, que casi desaparece.

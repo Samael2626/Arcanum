@@ -684,11 +684,6 @@ class _OracleViewState extends ConsumerState<_OracleView> {
             ),
             decoration: BoxDecoration(
               color: ArcanumColors.background.withValues(alpha: 0.94),
-              border: Border(
-                bottom: BorderSide(
-                  color: ArcanumColors.gold.withValues(alpha: 0.3),
-                ),
-              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.5),

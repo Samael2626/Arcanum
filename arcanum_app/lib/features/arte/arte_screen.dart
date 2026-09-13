@@ -177,11 +177,7 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
                   color: selected
                       ? ArcanumColors.gold.withValues(alpha: 0.16)
                       : Colors.transparent,
-                  border: Border.all(
-                    color: selected
-                        ? ArcanumColors.gold
-                        : ArcanumColors.goldMuted.withValues(alpha: 0.4),
-                  ),
+
                 ),
                 child: Text(
                   label,
@@ -233,12 +229,6 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
                       mood.glow.withValues(alpha: 0.0),
                     ],
                   ),
-                  border: Border.all(
-                    color: mood.accent.withValues(
-                      alpha: selected ? 0.95 : 0.30,
-                    ),
-                    width: selected ? 1.6 : 1,
-                  ),
                   boxShadow: selected
                       ? [
                           BoxShadow(
@@ -255,6 +245,10 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
                     fontFamilyFallback: kGlyphFallback,  // el glifo, no el emoji
                     fontSize: 22,
                     height: 1,
+                    // El peso, ademas del color. Al quitar el filete el color
+                    // se quedaba de unico aviso, y eso no lo ve quien no
+                    // distingue el oro del gris.
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                     color: selected
                         ? mood.accent
                         : ArcanumColors.ivoryMuted.withValues(alpha: 0.85),

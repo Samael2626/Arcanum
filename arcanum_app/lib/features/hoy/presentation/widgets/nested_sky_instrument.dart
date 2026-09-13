@@ -371,11 +371,7 @@ class _Boton extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: ArcanumColors.background.withValues(alpha: 0.55),
-              border: Border.all(
-                color: activo
-                    ? acento
-                    : ArcanumColors.gold.withValues(alpha: 0.2),
-              ),
+
               boxShadow: activo
                   ? [
                       BoxShadow(

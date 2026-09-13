@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../shared/widgets/arcanum_mood.dart';
+import '../../shared/widgets/arcanum_resin.dart';
+import 'arcanum_drawer.dart';
+
 import '../auth/auth_controller.dart';
 import '../content/sections.dart';
 import '../theme/arcanum_colors.dart';
@@ -30,6 +34,10 @@ class AppShell extends StatelessWidget {
     final indice = navigationShell.currentIndex;
 
     return Scaffold(
+      // El cajon de la cuenta cuelga del avatar, a la derecha, que es donde
+      // esta el avatar. `endDrawer` y no `drawer`: abrirlo desde el borde
+      // izquierdo chocaria con el gesto de volver atras del sistema.
+      endDrawer: const ArcanumDrawer(),
       body: SafeArea(
         child: Column(
           children: [
@@ -120,8 +128,12 @@ class _SectionBar extends StatelessWidget {
   }
 }
 
-/// Avatar circular con la inicial del practicante. Único punto de entrada al
-/// perfil (y, dentro, a los ajustes) desde cualquier pantalla.
+/// Avatar circular con la inicial del practicante. Abre el cajon de la cuenta
+/// -- Perfil, Ajustes y Privacidad -- desde cualquier seccion.
+///
+/// Antes empujaba directo a `/perfil`, y Ajustes y Privacidad colgaban uno
+/// dentro del otro: tres toques para llegar a la politica de datos. El cajon
+/// los pone a la misma altura.
 class _ProfileAvatar extends ConsumerWidget {
   const _ProfileAvatar();
 
@@ -134,26 +146,20 @@ class _ProfileAvatar extends ConsumerWidget {
         : '☾';
     return Semantics(
       button: true,
-      label: 'Abrir perfil',
+      label: 'Abrir tu cuenta',
       child: InkWell(
         customBorder: const CircleBorder(),
-        onTap: () => context.push('/perfil'),
+        onTap: Scaffold.of(context).openEndDrawer,
         child: Container(
           width: 40,
           height: 40,
           alignment: Alignment.center,
+          // Sin filete, como el resto de la app: lo que le da forma es el
+          // propio material.
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(
-              color: ArcanumColors.gold.withValues(alpha: 0.7),
-              width: 1.2,
-            ),
-            gradient: RadialGradient(
-              colors: [
-                ArcanumColors.gold.withValues(alpha: 0.16),
-                Colors.transparent,
-              ],
-            ),
+            gradient: ArcanumResin.gradient(mood: ArcanumMood.neutral),
+            boxShadow: ArcanumResin.shadow,
           ),
           child: Text(
             initial,

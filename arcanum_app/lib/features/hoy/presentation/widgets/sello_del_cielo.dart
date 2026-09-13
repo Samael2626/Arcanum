@@ -362,9 +362,6 @@ class _Lacre extends StatelessWidget {
           center: Alignment(-.35, -.4),
           colors: [Color(0xFF7D2033), ArcanumColors.burgundy],
         ),
-        border: Border.all(
-          color: ArcanumColors.burgundyLight.withValues(alpha: .45),
-        ),
         boxShadow: const [
           BoxShadow(
             color: Color(0x8C000000),

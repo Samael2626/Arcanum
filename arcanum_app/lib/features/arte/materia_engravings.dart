@@ -1850,10 +1850,6 @@ class MateriaSeal extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: mood.glow.withValues(alpha: 0.10),
-        border: Border.all(
-          color: mood.accent.withValues(alpha: 0.42),
-          width: 0.9,
-        ),
       ),
       child: Text(
         glyph,
