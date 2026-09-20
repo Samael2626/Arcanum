@@ -201,8 +201,10 @@ class _LectorScreenState extends ConsumerState<LectorScreen> {
     final onSepia = settings.palette == ReaderPalette.sepia;
     final textColor = onSepia ? ReaderColors.sepiaInk : ArcanumColors.ivory;
 
-    final style = ArcanumText.body(settings.fontSize, color: textColor)
-        .copyWith(height: 1.62);
+    final style = ArcanumText.body(
+      settings.fontSize,
+      color: textColor,
+    ).copyWith(height: 1.62);
 
     return LayoutBuilder(
       builder: (context, constraints) {

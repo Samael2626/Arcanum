@@ -257,10 +257,7 @@ class _CodexLeaf extends StatelessWidget {
             children: [
               // Base parchment neutral + susurro del regente por encima.
               const Positioned.fill(
-                child: ArcanumResin(
-                  mood: ArcanumMood.neutral,
-                  intensity: 0.5,
-                ),
+                child: ArcanumResin(mood: ArcanumMood.neutral, intensity: 0.5),
               ),
               Positioned.fill(
                 child: IgnorePointer(
@@ -640,7 +637,6 @@ class _QuillFab extends StatelessWidget {
     );
   }
 }
-
 
 /// Puerta a "Pasajes guardados": lo que el usuario subrayo leyendo.
 ///

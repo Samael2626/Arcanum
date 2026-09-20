@@ -33,8 +33,11 @@ void main() {
 
       expect(gradle, contains('manifestPlaceholders["admobApplicationId"]'));
       expect(gradle, contains("System.getenv(\"ADMOB_APP_ID\")"));
-      expect(gradle, contains(_testAppId),
-          reason: 'debug debe usar el App ID de prueba de Google');
+      expect(
+        gradle,
+        contains(_testAppId),
+        reason: 'debug debe usar el App ID de prueba de Google',
+      );
       // Falla cerrado, pero solo cuando el build LLEVA anuncios.
       //
       // Antes abortaba cualquier release sin ADMOB_APP_ID. El binario de
@@ -44,16 +47,17 @@ void main() {
       expect(gradle, contains('ADMOB_APP_ID ausente con ADS_ENABLED=true'));
       expect(gradle, contains('System.getenv("ADS_ENABLED")'));
       expect(
-        RegExp(r'releaseRequested\s*&&\s*adsEnabled\s*&&\s*!admobApplicationId')
-            .hasMatch(gradle),
+        RegExp(
+          r'releaseRequested\s*&&\s*adsEnabled\s*&&\s*!admobApplicationId',
+        ).hasMatch(gradle),
         isTrue,
-        reason: 'con anuncios activos, el release sin ADMOB_APP_ID debe abortar',
+        reason:
+            'con anuncios activos, el release sin ADMOB_APP_ID debe abortar',
       );
       // El unico ca-app-pub del repositorio es el de prueba.
-      final ids = RegExp(r'ca-app-pub-[0-9]+~[0-9]+')
-          .allMatches(gradle)
-          .map((m) => m.group(0))
-          .toSet();
+      final ids = RegExp(
+        r'ca-app-pub-[0-9]+~[0-9]+',
+      ).allMatches(gradle).map((m) => m.group(0)).toSet();
       expect(ids, {_testAppId});
     });
 
@@ -68,19 +72,27 @@ void main() {
         return;
       }
       final dump = Process.runSync(aapt, [
-        'dump', 'xmltree', apk.path, '--file', 'AndroidManifest.xml',
+        'dump',
+        'xmltree',
+        apk.path,
+        '--file',
+        'AndroidManifest.xml',
       ]);
       final out = '${dump.stdout}';
       expect(out, contains('com.google.android.gms.ads.APPLICATION_ID'));
       expect(out, contains(_testAppId));
-      expect(out, isNot(contains(r'${admobApplicationId}')),
-          reason: 'el placeholder debe quedar resuelto en el APK');
+      expect(
+        out,
+        isNot(contains(r'${admobApplicationId}')),
+        reason: 'el placeholder debe quedar resuelto en el APK',
+      );
     });
   });
 }
 
 String? _findAapt2() {
-  final home = Platform.environment['ANDROID_HOME'] ??
+  final home =
+      Platform.environment['ANDROID_HOME'] ??
       Platform.environment['ANDROID_SDK_ROOT'];
   if (home == null) return null;
   final buildTools = Directory('$home/build-tools');

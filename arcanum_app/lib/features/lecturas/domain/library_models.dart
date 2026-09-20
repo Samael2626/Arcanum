@@ -83,8 +83,8 @@ class LibraryParagraph {
   /// lector, la búsqueda y los pasajes guardados. El marcado de cursiva sí se
   /// conserva: lo interpreta [runsDeMarcado] al pintar.
   String textFor({required bool spanish}) => limpiarNotasEditoriales(
-        spanish ? (textEs ?? textOriginal) : textOriginal,
-      );
+    spanish ? (textEs ?? textOriginal) : textOriginal,
+  );
 
   bool get hasTranslation => textEs != null && textEs!.isNotEmpty;
 

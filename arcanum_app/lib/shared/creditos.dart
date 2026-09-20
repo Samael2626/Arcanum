@@ -40,7 +40,9 @@ Future<String?> abrirPaywallDeCreditos(
     final saldo = await api.creditsBalance();
     if (!context.mounted) return null;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Saldo actual: ${saldo['balance'] ?? 0} créditos.')),
+      SnackBar(
+        content: Text('Saldo actual: ${saldo['balance'] ?? 0} créditos.'),
+      ),
     );
     context.push('/paywall');
     return null;

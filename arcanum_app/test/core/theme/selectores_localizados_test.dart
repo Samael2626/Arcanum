@@ -114,10 +114,9 @@ void main() {
       //
       // `dayPeriodColor` está tipado como `Color` aunque acepte un
       // `WidgetStateColor`: hay que devolverlo a su tipo para poder resolverlo.
-      final periodo =
-          (tema.dayPeriodColor! as WidgetStateColor).resolve({
-            WidgetState.selected,
-          });
+      final periodo = (tema.dayPeriodColor! as WidgetStateColor).resolve({
+        WidgetState.selected,
+      });
       expect(periodo, isNot(ArcanumColors.burgundy));
       expect(
         (tema.dayPeriodTextColor! as WidgetStateColor).resolve({
@@ -134,7 +133,8 @@ void main() {
 
       final dialogo = tester.widget<Dialog>(find.byType(Dialog).first);
       expect(
-        dialogo.backgroundColor ?? buildArcanumTheme().timePickerTheme.backgroundColor,
+        dialogo.backgroundColor ??
+            buildArcanumTheme().timePickerTheme.backgroundColor,
         ArcanumColors.surface,
       );
     });

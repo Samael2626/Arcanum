@@ -117,16 +117,21 @@ class CityCatalog implements CityIndex {
   /// para poder medirlo y probarlo con el dataset real.
   factory CityCatalog.parse(String source, ByteData index) {
     final headerEnd = source.indexOf('\n');
-    final header = headerEnd < 0 ? <String>[] : source.substring(0, headerEnd).split('\t');
+    final header = headerEnd < 0
+        ? <String>[]
+        : source.substring(0, headerEnd).split('\t');
     if (header.length < 6 || header[0] != _magic || header[1] != _version) {
-      throw const FormatException('Catalogo de ciudades ilegible o de otra version');
+      throw const FormatException(
+        'Catalogo de ciudades ilegible o de otra version',
+      );
     }
     final countryCount = int.parse(header[2]);
     final regionCount = int.parse(header[3]);
     final zoneCount = int.parse(header[4]);
     final cityCount = int.parse(header[5]);
 
-    final totalLines = 1 + countryCount + regionCount + zoneCount + cityCount * 2;
+    final totalLines =
+        1 + countryCount + regionCount + zoneCount + cityCount * 2;
     final lineStarts = Int32List(totalLines + 1);
     var line = 1;
     final length = source.length;
@@ -154,7 +159,8 @@ class CityCatalog implements CityIndex {
       while (tabs < 2) {
         if (source.codeUnitAt(cursor++) == _tab) tabs++;
       }
-      codes[i] = (source.codeUnitAt(cursor) << 8) | source.codeUnitAt(cursor + 1);
+      codes[i] =
+          (source.codeUnitAt(cursor) << 8) | source.codeUnitAt(cursor + 1);
     }
 
     return CityCatalog._(
@@ -178,7 +184,9 @@ class CityCatalog implements CityIndex {
     if (data.lengthInBytes < 12 ||
         data.getInt32(0, Endian.little) != _indexMagic ||
         data.getInt32(4, Endian.little) != _indexVersion) {
-      throw const FormatException('Indice de ciudades ilegible o de otra version');
+      throw const FormatException(
+        'Indice de ciudades ilegible o de otra version',
+      );
     }
     final count = data.getInt32(8, Endian.little);
     if (data.lengthInBytes < 12 + count * 4) {
@@ -200,8 +208,7 @@ class CityCatalog implements CityIndex {
     String query, {
     String? countryCode,
     int limit = 30,
-  }) async =>
-      searchSync(query, countryCode: countryCode, limit: limit);
+  }) async => searchSync(query, countryCode: countryCode, limit: limit);
 
   /// Version sincrona de [search]. Es la que se mide: si esto pasa de 16 ms, el
   /// buscador no sirve para escribir en directo.
@@ -264,7 +271,9 @@ class CityCatalog implements CityIndex {
     for (var i = 0; i < _countryCount; i++) {
       final line = _lineAt(_countryLine0 + i);
       final tab = line.indexOf('\t');
-      list.add(Country(code: line.substring(0, tab), name: line.substring(tab + 1)));
+      list.add(
+        Country(code: line.substring(0, tab), name: line.substring(tab + 1)),
+      );
     }
     final result = List<Country>.unmodifiable(list);
     _countryCache = result;
@@ -305,7 +314,8 @@ class CityCatalog implements CityIndex {
   /// empieza por [needle], positivo si va despues. El salto de linea corta la
   /// palabra, asi que un nombre mas corto siempre va antes.
   int _compareEntry(int entry, String needle) {
-    final start = _lineStarts[_searchLine0 + (entry & _cityMask)] + (entry >> _cityBits);
+    final start =
+        _lineStarts[_searchLine0 + (entry & _cityMask)] + (entry >> _cityBits);
     for (var i = 0; i < needle.length; i++) {
       final here = _raw.codeUnitAt(start + i);
       if (here == _newline) return -1;
@@ -373,24 +383,101 @@ class CityCatalog implements CityIndex {
   }
 
   static const Map<int, String> _folded = {
-    0xE0: 'a', 0xE1: 'a', 0xE2: 'a', 0xE3: 'a', 0xE4: 'a', 0xE5: 'a',
-    0xE6: 'ae', 0xE7: 'c', 0xE8: 'e', 0xE9: 'e', 0xEA: 'e', 0xEB: 'e',
-    0xEC: 'i', 0xED: 'i', 0xEE: 'i', 0xEF: 'i', 0xF0: 'd', 0xF1: 'n',
-    0xF2: 'o', 0xF3: 'o', 0xF4: 'o', 0xF5: 'o', 0xF6: 'o', 0xF8: 'o',
-    0xF9: 'u', 0xFA: 'u', 0xFB: 'u', 0xFC: 'u', 0xFD: 'y', 0xFE: 'th',
-    0xFF: 'y', 0xDF: 'ss',
-    0x101: 'a', 0x103: 'a', 0x105: 'a', 0x107: 'c', 0x109: 'c', 0x10B: 'c',
-    0x10D: 'c', 0x10F: 'd', 0x111: 'd', 0x113: 'e', 0x115: 'e', 0x117: 'e',
-    0x119: 'e', 0x11B: 'e', 0x11D: 'g', 0x11F: 'g', 0x121: 'g', 0x123: 'g',
-    0x125: 'h', 0x127: 'h', 0x129: 'i', 0x12B: 'i', 0x12D: 'i', 0x12F: 'i',
-    0x131: 'i', 0x135: 'j', 0x137: 'k', 0x13A: 'l', 0x13C: 'l', 0x13E: 'l',
-    0x140: 'l', 0x142: 'l', 0x144: 'n', 0x146: 'n', 0x148: 'n', 0x14B: 'n',
-    0x14D: 'o', 0x14F: 'o', 0x151: 'o', 0x153: 'oe', 0x155: 'r', 0x157: 'r',
-    0x159: 'r', 0x15B: 's', 0x15D: 's', 0x15F: 's', 0x161: 's', 0x163: 't',
-    0x165: 't', 0x167: 't', 0x169: 'u', 0x16B: 'u', 0x16D: 'u', 0x16F: 'u',
-    0x171: 'u', 0x173: 'u', 0x175: 'w', 0x177: 'y', 0x17A: 'z', 0x17C: 'z',
+    0xE0: 'a',
+    0xE1: 'a',
+    0xE2: 'a',
+    0xE3: 'a',
+    0xE4: 'a',
+    0xE5: 'a',
+    0xE6: 'ae',
+    0xE7: 'c',
+    0xE8: 'e',
+    0xE9: 'e',
+    0xEA: 'e',
+    0xEB: 'e',
+    0xEC: 'i',
+    0xED: 'i',
+    0xEE: 'i',
+    0xEF: 'i',
+    0xF0: 'd',
+    0xF1: 'n',
+    0xF2: 'o',
+    0xF3: 'o',
+    0xF4: 'o',
+    0xF5: 'o',
+    0xF6: 'o',
+    0xF8: 'o',
+    0xF9: 'u',
+    0xFA: 'u',
+    0xFB: 'u',
+    0xFC: 'u',
+    0xFD: 'y',
+    0xFE: 'th',
+    0xFF: 'y',
+    0xDF: 'ss',
+    0x101: 'a',
+    0x103: 'a',
+    0x105: 'a',
+    0x107: 'c',
+    0x109: 'c',
+    0x10B: 'c',
+    0x10D: 'c',
+    0x10F: 'd',
+    0x111: 'd',
+    0x113: 'e',
+    0x115: 'e',
+    0x117: 'e',
+    0x119: 'e',
+    0x11B: 'e',
+    0x11D: 'g',
+    0x11F: 'g',
+    0x121: 'g',
+    0x123: 'g',
+    0x125: 'h',
+    0x127: 'h',
+    0x129: 'i',
+    0x12B: 'i',
+    0x12D: 'i',
+    0x12F: 'i',
+    0x131: 'i',
+    0x135: 'j',
+    0x137: 'k',
+    0x13A: 'l',
+    0x13C: 'l',
+    0x13E: 'l',
+    0x140: 'l',
+    0x142: 'l',
+    0x144: 'n',
+    0x146: 'n',
+    0x148: 'n',
+    0x14B: 'n',
+    0x14D: 'o',
+    0x14F: 'o',
+    0x151: 'o',
+    0x153: 'oe',
+    0x155: 'r',
+    0x157: 'r',
+    0x159: 'r',
+    0x15B: 's',
+    0x15D: 's',
+    0x15F: 's',
+    0x161: 's',
+    0x163: 't',
+    0x165: 't',
+    0x167: 't',
+    0x169: 'u',
+    0x16B: 'u',
+    0x16D: 'u',
+    0x16F: 'u',
+    0x171: 'u',
+    0x173: 'u',
+    0x175: 'w',
+    0x177: 'y',
+    0x17A: 'z',
+    0x17C: 'z',
     0x17E: 'z',
-    0x2BB: "'", 0x2019: "'",
+    0x2BB: "'",
+    0x2019: "'",
   };
 }
 

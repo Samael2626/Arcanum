@@ -33,7 +33,11 @@ void main() {
   group('cada fallo se dice por lo que es', () {
     test('sin carta natal se ofrece calcularla, no revisar la conexión', () {
       final failure = classifySkyFailure(
-        _dio(404, detail: 'Calcula primero tu carta natal con POST /astral/natal-chart.'),
+        _dio(
+          404,
+          detail:
+              'Calcula primero tu carta natal con POST /astral/natal-chart.',
+        ),
       );
 
       expect(failure, SkyTodayFailure.sinCartaNatal);
@@ -150,10 +154,14 @@ void main() {
       // final, en `sinRed`. La app mandaba a mirar el wifi mientras el
       // servidor decía exactamente qué pasaba.
       final failure = classifySkyFailure(
-        _dio(402, detail: {
-          'code': 'credits_required',
-          'message': 'Se agotó tu cupo diario. Compra créditos o mejora tu plan.',
-        }),
+        _dio(
+          402,
+          detail: {
+            'code': 'credits_required',
+            'message':
+                'Se agotó tu cupo diario. Compra créditos o mejora tu plan.',
+          },
+        ),
       );
 
       expect(failure, SkyTodayFailure.sinCupo);

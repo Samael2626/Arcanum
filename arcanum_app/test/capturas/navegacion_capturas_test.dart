@@ -80,12 +80,16 @@ class _Api extends ArcanumApi {
   }) async => {
     'day_ruler': 'sun',
     'planetary_hour': {
-      'planet': 'venus', 'minutes_remaining': 38,
-      'is_daytime': true, 'hour_number': 4,
+      'planet': 'venus',
+      'minutes_remaining': 38,
+      'is_daytime': true,
+      'hour_number': 4,
     },
     'moon': {
-      'illumination': 0.62, 'is_waxing': true,
-      'phase_name': 'Gibosa creciente', 'age_days': 10.0,
+      'illumination': 0.62,
+      'is_waxing': true,
+      'phase_name': 'Gibosa creciente',
+      'age_days': 10.0,
     },
   };
 
@@ -94,15 +98,27 @@ class _Api extends ArcanumApi {
     'date': '2026-09-11',
     'day_ruler': 'sun',
     'today': {
-      'transit': 'moon', 'natal': 'midheaven', 'aspect': 'trine',
-      'angle': 120, 'orb': 0.66, 'separation': 119.34, 'applying': true,
+      'transit': 'moon',
+      'natal': 'midheaven',
+      'aspect': 'trine',
+      'angle': 120,
+      'orb': 0.66,
+      'separation': 119.34,
+      'applying': true,
     },
-    'chapter': null, 'year': null, 'ingress': null,
+    'chapter': null,
+    'year': null,
+    'ingress': null,
     'profection': {
-      'age': 35, 'house': 5, 'sign': 'capricorn', 'sign_es': 'Capricornio',
-      'lord': 'saturn', 'points_in_sign': ['saturn'],
+      'age': 35,
+      'house': 5,
+      'sign': 'capricorn',
+      'sign_es': 'Capricornio',
+      'lord': 'saturn',
+      'points_in_sign': ['saturn'],
     },
-    'sect': 'day', 'total_aspects': 3,
+    'sect': 'day',
+    'total_aspects': 3,
   };
 
   @override
@@ -140,8 +156,10 @@ Future<void> _montar(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-Future<void> _retratar(WidgetTester tester, String nombre) =>
-    expectLater(find.byType(MaterialApp), matchesGoldenFile('salida/$nombre.png'));
+Future<void> _retratar(WidgetTester tester, String nombre) => expectLater(
+  find.byType(MaterialApp),
+  matchesGoldenFile('salida/$nombre.png'),
+);
 
 void main() {
   setUpAll(() async {

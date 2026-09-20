@@ -21,7 +21,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class _Auth extends AuthNotifier {
   @override
   AuthState build() => const AuthState(AuthStatus.authenticated, {
-    'id': 'user-a', 'birth_lat': '4.710000', 'birth_lon': '-74.070000',
+    'id': 'user-a',
+    'birth_lat': '4.710000',
+    'birth_lon': '-74.070000',
   });
 }
 
@@ -39,19 +41,32 @@ class _Api extends ArcanumApi {
 
   @override
   Future<Map<String, dynamic>> skyToday() async => {
-    'date': '2026-09-10', 'day_ruler': 'sun',
+    'date': '2026-09-10',
+    'day_ruler': 'sun',
     'today': {
-      'transit': 'moon', 'natal': 'midheaven', 'aspect': 'trine',
-      'angle': 120, 'orb': 0.66, 'separation': 119.34, 'applying': true,
+      'transit': 'moon',
+      'natal': 'midheaven',
+      'aspect': 'trine',
+      'angle': 120,
+      'orb': 0.66,
+      'separation': 119.34,
+      'applying': true,
     },
-    'chapter': null, 'year': null, 'ingress': null,
-    'profection': null, 'sect': 'day', 'total_aspects': 3,
+    'chapter': null,
+    'year': null,
+    'ingress': null,
+    'profection': null,
+    'sect': 'day',
+    'total_aspects': 3,
   };
 
   @override
   Future<Map<String, dynamic>> horoscope({DateTime? day}) async => {
-    'date': '2026-09-10', 'requested_date': '2026-09-10',
-    'is_previous': false, 'today': null, 'chapter': null,
+    'date': '2026-09-10',
+    'requested_date': '2026-09-10',
+    'is_previous': false,
+    'today': null,
+    'chapter': null,
     'text': 'La Luna llega a trígono con tu Medio Cielo.',
   };
 
@@ -100,8 +115,9 @@ void main() {
     );
   });
 
-  testWidgets('pero se sigue midiendo entera, o no hay nada que capturar',
-      (tester) async {
+  testWidgets('pero se sigue midiendo entera, o no hay nada que capturar', (
+    tester,
+  ) async {
     await _abrir(tester);
 
     final caja = tester.renderObject<RenderBox>(find.byType(TarjetaCompartir));

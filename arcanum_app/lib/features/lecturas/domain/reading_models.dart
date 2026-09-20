@@ -29,14 +29,17 @@ class ReadingProgress {
 
   ReadingPosition get position => where.position;
 
-  factory ReadingProgress.fromJson(Map<String, dynamic> json) => ReadingProgress(
-    id: json['id'] as String,
-    where: ResolvedPosition.fromJson(json['position'] as Map<String, dynamic>),
-    spanish: (json['language'] as String? ?? 'es') == 'es',
-    updatedAt:
-        DateTime.tryParse(json['updated_at'] as String? ?? '')?.toLocal() ??
-        DateTime.now(),
-  );
+  factory ReadingProgress.fromJson(Map<String, dynamic> json) =>
+      ReadingProgress(
+        id: json['id'] as String,
+        where: ResolvedPosition.fromJson(
+          json['position'] as Map<String, dynamic>,
+        ),
+        spanish: (json['language'] as String? ?? 'es') == 'es',
+        updatedAt:
+            DateTime.tryParse(json['updated_at'] as String? ?? '')?.toLocal() ??
+            DateTime.now(),
+      );
 }
 
 /// Un punto que el usuario marcó a mano. No mueve el progreso automático.
@@ -56,14 +59,17 @@ class ReadingBookmark {
 
   ReadingPosition get position => where.position;
 
-  factory ReadingBookmark.fromJson(Map<String, dynamic> json) => ReadingBookmark(
-    id: json['id'] as String,
-    where: ResolvedPosition.fromJson(json['position'] as Map<String, dynamic>),
-    label: json['label'] as String?,
-    createdAt:
-        DateTime.tryParse(json['created_at'] as String? ?? '')?.toLocal() ??
-        DateTime.now(),
-  );
+  factory ReadingBookmark.fromJson(Map<String, dynamic> json) =>
+      ReadingBookmark(
+        id: json['id'] as String,
+        where: ResolvedPosition.fromJson(
+          json['position'] as Map<String, dynamic>,
+        ),
+        label: json['label'] as String?,
+        createdAt:
+            DateTime.tryParse(json['created_at'] as String? ?? '')?.toLocal() ??
+            DateTime.now(),
+      );
 }
 
 /// Un pasaje guardado, con su nota personal ya descifrada en memoria.

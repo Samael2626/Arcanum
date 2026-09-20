@@ -26,8 +26,7 @@ class AiConsentService {
   final ArcanumApi? _api;
   static const _keyPrefix = 'groq_ai_consent_';
 
-  String _key(String userId) =>
-      '$_keyPrefix${aiConsentPolicyVersion}_$userId';
+  String _key(String userId) => '$_keyPrefix${aiConsentPolicyVersion}_$userId';
 
   Future<AiConsentStatus> status(String userId) async {
     final prefs = await SharedPreferences.getInstance();

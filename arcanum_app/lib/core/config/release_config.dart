@@ -44,7 +44,8 @@ abstract final class ReleaseConfig {
     final missing = <String>[
       if (apiKey.trim().isEmpty) 'REVENUECAT_API_KEY',
       if (ads && rewardedAndroid.trim().isEmpty) 'ADMOB_REWARDED_ANDROID',
-      if (ads && interstitialAndroid.trim().isEmpty) 'ADMOB_INTERSTITIAL_ANDROID',
+      if (ads && interstitialAndroid.trim().isEmpty)
+        'ADMOB_INTERSTITIAL_ANDROID',
     ];
     if (missing.isNotEmpty) {
       throw StateError(

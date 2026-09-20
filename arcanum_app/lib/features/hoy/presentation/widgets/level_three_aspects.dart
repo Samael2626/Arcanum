@@ -247,9 +247,7 @@ class _AspectTarget extends StatelessWidget {
           child: Container(
             constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-            ),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
             child: Column(
               children: [
                 AspectWheel(

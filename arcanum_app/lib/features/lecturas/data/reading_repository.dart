@@ -59,9 +59,9 @@ class ReadingRepository {
   // ── Marcadores ───────────────────────────────────────────────────────────
 
   Future<List<ReadingBookmark>> bookmarks({String? workSlug}) async =>
-      (await _api.bookmarks(workSlug: workSlug))
-          .map(ReadingBookmark.fromJson)
-          .toList();
+      (await _api.bookmarks(
+        workSlug: workSlug,
+      )).map(ReadingBookmark.fromJson).toList();
 
   /// Crea un marcador. Devuelve null si ya había uno en esa posición (409):
   /// marcar dos veces el mismo punto no es un error que enseñar en rojo.

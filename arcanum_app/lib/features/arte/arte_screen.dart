@@ -177,7 +177,6 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
                   color: selected
                       ? ArcanumColors.gold.withValues(alpha: 0.16)
                       : Colors.transparent,
-
                 ),
                 child: Text(
                   label,
@@ -242,7 +241,7 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
                 child: Text(
                   planetGlyph[p] ?? '',
                   style: TextStyle(
-                    fontFamilyFallback: kGlyphFallback,  // el glifo, no el emoji
+                    fontFamilyFallback: kGlyphFallback, // el glifo, no el emoji
                     fontSize: 22,
                     height: 1,
                     // El peso, ademas del color. Al quitar el filete el color
@@ -330,7 +329,8 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
       return;
     }
 
-    final tier = ref.read(subscriptionProvider).value?.tier ?? SubscriptionTier.free;
+    final tier =
+        ref.read(subscriptionProvider).value?.tier ?? SubscriptionTier.free;
     final quota = ref.read(quotaServiceProvider);
     final canView = await quota.canPerform('materia', tier);
     if (!canView) {
@@ -384,10 +384,7 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
               style: TextStyle(fontSize: 36, color: ArcanumColors.gold),
             ),
             const SizedBox(height: 16),
-            Text(
-              'Cupo diario agotado',
-              style: ArcanumText.heading(22),
-            ),
+            Text('Cupo diario agotado', style: ArcanumText.heading(22)),
             const SizedBox(height: 8),
             Text(
               hayAnuncio

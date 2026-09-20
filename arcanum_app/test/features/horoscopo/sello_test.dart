@@ -192,9 +192,7 @@ void main() {
         // En un `ListView`, que es como la monta la pantalla del horoscopo:
         // los tests arrastran por el scrollable para llegar al sello.
         child: MaterialApp(
-          home: Scaffold(
-            body: ListView(children: const [SkyTodayCard()]),
-          ),
+          home: Scaffold(body: ListView(children: const [SkyTodayCard()])),
         ),
       ),
     );
@@ -218,9 +216,7 @@ void main() {
         // En un `ListView`, que es como la monta la pantalla del horoscopo:
         // los tests arrastran por el scrollable para llegar al sello.
         child: MaterialApp(
-          home: Scaffold(
-            body: ListView(children: const [SkyTodayCard()]),
-          ),
+          home: Scaffold(body: ListView(children: const [SkyTodayCard()])),
         ),
       ),
     );
@@ -247,9 +243,7 @@ void main() {
         // En un `ListView`, que es como la monta la pantalla del horoscopo:
         // los tests arrastran por el scrollable para llegar al sello.
         child: MaterialApp(
-          home: Scaffold(
-            body: ListView(children: const [SkyTodayCard()]),
-          ),
+          home: Scaffold(body: ListView(children: const [SkyTodayCard()])),
         ),
       ),
     );
@@ -279,9 +273,7 @@ void main() {
         // En un `ListView`, que es como la monta la pantalla del horoscopo:
         // los tests arrastran por el scrollable para llegar al sello.
         child: MaterialApp(
-          home: Scaffold(
-            body: ListView(children: const [SkyTodayCard()]),
-          ),
+          home: Scaffold(body: ListView(children: const [SkyTodayCard()])),
         ),
       ),
     );

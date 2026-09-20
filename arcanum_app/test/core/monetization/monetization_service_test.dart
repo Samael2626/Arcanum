@@ -68,24 +68,27 @@ void main() {
       expect(estado.isActive, isFalse);
     });
 
-    test('restaurar una suscripcion activa devuelve premium con su producto', () {
-      final estado = service.parseSubscription(
-        _customerInfo(
-          entitlements: {
-            EntitlementIds.premium: _entitlement(
-              productId: ProductIds.premiumAnnual,
-              expirationDate: '2027-08-01T00:00:00Z',
-            ),
-          },
-        ),
-      );
+    test(
+      'restaurar una suscripcion activa devuelve premium con su producto',
+      () {
+        final estado = service.parseSubscription(
+          _customerInfo(
+            entitlements: {
+              EntitlementIds.premium: _entitlement(
+                productId: ProductIds.premiumAnnual,
+                expirationDate: '2027-08-01T00:00:00Z',
+              ),
+            },
+          ),
+        );
 
-      expect(estado.isActive, isTrue);
-      expect(estado.tier, SubscriptionTier.premium);
-      expect(estado.productId, ProductIds.premiumAnnual);
-      expect(estado.expirationDate, DateTime.parse('2027-08-01T00:00:00Z'));
-      expect(estado.isTrial, isFalse);
-    });
+        expect(estado.isActive, isTrue);
+        expect(estado.tier, SubscriptionTier.premium);
+        expect(estado.productId, ProductIds.premiumAnnual);
+        expect(estado.expirationDate, DateTime.parse('2027-08-01T00:00:00Z'));
+        expect(estado.isTrial, isFalse);
+      },
+    );
 
     test('la prueba gratuita se distingue de una compra pagada', () {
       final estado = service.parseSubscription(

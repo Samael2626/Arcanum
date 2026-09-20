@@ -50,7 +50,8 @@ class BandaDelAnio extends StatelessWidget {
     final signo = p['sign_es'] as String?;
 
     return Semantics(
-      label: 'Año profectado: casa $casa, en ${signo ?? "su signo"}, '
+      label:
+          'Año profectado: casa $casa, en ${signo ?? "su signo"}, '
           'regido por ${pointEs(senor)}',
       child: Padding(
         padding: const EdgeInsets.only(top: 14),

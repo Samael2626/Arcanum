@@ -154,10 +154,7 @@ const _kindRotation = [
 /// contradiría la regencia. Devuelve null si el planeta no es de los clásicos
 /// (no debería pasar: las horas solo las rigen los siete), y la pantalla
 /// entonces simplemente no muestra la tarjeta.
-NextStep? nextStepFor({
-  required String hourPlanet,
-  required int hourNumber,
-}) {
+NextStep? nextStepFor({required String hourPlanet, required int hourNumber}) {
   if (!classicalPlanets.contains(hourPlanet)) return null;
   final es = _planetEs[hourPlanet] ?? hourPlanet;
   final eyebrow = 'AHORA · Hora de $es';

@@ -26,8 +26,9 @@ class AdUnitIds {
   ///
   ///     flutter build appbundle --release \
   ///       --dart-define=ADMOB_REWARDED_ANDROID=ca-app-pub-XXXX/YYYY
-  static const _rewardedAndroid =
-      String.fromEnvironment('ADMOB_REWARDED_ANDROID');
+  static const _rewardedAndroid = String.fromEnvironment(
+    'ADMOB_REWARDED_ANDROID',
+  );
   static const _rewardedIos = String.fromEnvironment('ADMOB_REWARDED_IOS');
 
   static String get rewarded {
@@ -123,10 +124,9 @@ class AdsService {
 
     ad.show(
       onUserEarnedReward: (ad, reward) {
-        _controller.add(AdEvent.earnedReward(
-          reward.type,
-          reward.amount.toDouble(),
-        ));
+        _controller.add(
+          AdEvent.earnedReward(reward.type, reward.amount.toDouble()),
+        );
         if (!completer.isCompleted) completer.complete(true);
       },
     );

@@ -27,8 +27,16 @@ void main() {
       // puede llegar como `transit` o como `natal` desde que solo trabajamos
       // con cuerpos clásicos.
       const delMotor = [
-        'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn',
-        'north_node', 'ascendant', 'midheaven',
+        'sun',
+        'moon',
+        'mercury',
+        'venus',
+        'mars',
+        'jupiter',
+        'saturn',
+        'north_node',
+        'ascendant',
+        'midheaven',
       ];
       for (final clave in delMotor) {
         expect(

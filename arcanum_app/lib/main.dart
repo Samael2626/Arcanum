@@ -60,19 +60,22 @@ void main() async {
     await FirebaseCrashlytics.instance.recordError(error, stack, fatal: false);
   }
 
-  runZonedGuarded(() {
-    runApp(
-      ProviderScope(
-        overrides: [
-          if (cityCatalog != null)
-            cityIndexProvider.overrideWithValue(cityCatalog),
-        ],
-        child: const ArcanumApp(),
-      ),
-    );
-  }, (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-  });
+  runZonedGuarded(
+    () {
+      runApp(
+        ProviderScope(
+          overrides: [
+            if (cityCatalog != null)
+              cityIndexProvider.overrideWithValue(cityCatalog),
+          ],
+          child: const ArcanumApp(),
+        ),
+      );
+    },
+    (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    },
+  );
 }
 
 class ArcanumApp extends ConsumerWidget {

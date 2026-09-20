@@ -249,8 +249,18 @@ String _pieDeSeparacion(double? separacion, String? exactoEn) {
 }
 
 const _meses = [
-  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto',
-  'septiembre', 'octubre', 'noviembre', 'diciembre',
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
 ];
 
 /// «hoy», «mañana» o «el 28 de agosto».
@@ -445,29 +455,30 @@ class PintorRueda extends CustomPainter {
         centro,
         r,
         Paint()
-          ..shader = ui.Gradient.radial(centro, r, [
-            const Color(0xFF0A0A0F).withValues(alpha: .42),
-            const Color(0xFF0A0A0F).withValues(alpha: .34),
-            const Color(0x000A0A0F),
-          ], [0.0, 0.5, 0.72]),
+          ..shader = ui.Gradient.radial(
+            centro,
+            r,
+            [
+              const Color(0xFF0A0A0F).withValues(alpha: .42),
+              const Color(0xFF0A0A0F).withValues(alpha: .34),
+              const Color(0x000A0A0F),
+            ],
+            [0.0, 0.5, 0.72],
+          ),
       );
     }
 
     final rueda = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = sobreLamina ? 1.2 : 1
-      ..color = ArcanumColors.gold.withValues(
-        alpha: sobreLamina ? .78 : .16,
-      );
+      ..color = ArcanumColors.gold.withValues(alpha: sobreLamina ? .78 : .16);
     lienzo.drawCircle(centro, radio, rueda);
     lienzo.drawCircle(
       centro,
       radio - 9,
       rueda
         ..strokeWidth = .8
-        ..color = ArcanumColors.gold.withValues(
-          alpha: sobreLamina ? .45 : .07,
-        ),
+        ..color = ArcanumColors.gold.withValues(alpha: sobreLamina ? .45 : .07),
     );
 
     final f = figuraDe(
@@ -589,10 +600,7 @@ class PintorRueda extends CustomPainter {
         ),
         textDirection: TextDirection.ltr,
       )..layout();
-      texto.paint(
-        lienzo,
-        centro - Offset(texto.width / 2, texto.height / 2),
-      );
+      texto.paint(lienzo, centro - Offset(texto.width / 2, texto.height / 2));
     }
   }
 

@@ -50,9 +50,9 @@ final _corchetesDeNota = RegExp(r'\[(_[^_\n]+_)\]|(_[^_\n]+_)\]|\[(_[^_\n]+_)');
 /// guiones bajos siguen ahi a proposito: [runsDeMarcado] los necesita al pintar,
 /// y son lo bastante estrechos como para que la medida solo peque de prudente.
 String limpiarNotasEditoriales(String texto) => texto.replaceAllMapped(
-      _corchetesDeNota,
-      (m) => m.group(1) ?? m.group(2) ?? m.group(3)!,
-    );
+  _corchetesDeNota,
+  (m) => m.group(1) ?? m.group(2) ?? m.group(3)!,
+);
 
 /// Parte el texto en tramos rectos y en cursiva.
 ///

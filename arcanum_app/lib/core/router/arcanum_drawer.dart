@@ -69,8 +69,7 @@ class ArcanumDrawer extends StatelessWidget {
                 end: base.end,
                 stops: base.stops,
                 colors: [
-                  for (final c in base.colors)
-                    c.withValues(alpha: _opacidad),
+                  for (final c in base.colors) c.withValues(alpha: _opacidad),
                 ],
               ),
             ),

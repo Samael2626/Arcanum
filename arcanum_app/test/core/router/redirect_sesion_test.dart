@@ -22,9 +22,12 @@ class _AuthDePrueba extends AuthNotifier {
   static AuthStatus inicial = AuthStatus.unauthenticated;
 
   @override
-  AuthState build() => AuthState(inicial, inicial == AuthStatus.authenticated
-      ? const {'id': 'user-a', 'birth_lat': '4.71', 'birth_lon': '-74.07'}
-      : null);
+  AuthState build() => AuthState(
+    inicial,
+    inicial == AuthStatus.authenticated
+        ? const {'id': 'user-a', 'birth_lat': '4.71', 'birth_lon': '-74.07'}
+        : null,
+  );
 
   void entrar() => state = const AuthState(AuthStatus.authenticated, {
     'id': 'user-a',
@@ -39,8 +42,10 @@ class _ApiMuda extends ArcanumApi {
 
   @override
   Future<Map<String, dynamic>> moon() async => {
-    'illumination': 0.34, 'is_waxing': false,
-    'phase_name': 'Cuarto Menguante', 'age_days': 24.0,
+    'illumination': 0.34,
+    'is_waxing': false,
+    'phase_name': 'Cuarto Menguante',
+    'age_days': 24.0,
   };
 
   @override
@@ -50,19 +55,29 @@ class _ApiMuda extends ArcanumApi {
   }) async => {
     'day_ruler': 'sun',
     'planetary_hour': {
-      'planet': 'venus', 'minutes_remaining': 38,
-      'is_daytime': true, 'hour_number': 4,
+      'planet': 'venus',
+      'minutes_remaining': 38,
+      'is_daytime': true,
+      'hour_number': 4,
     },
     'moon': {
-      'illumination': 0.34, 'is_waxing': false,
-      'phase_name': 'Cuarto Menguante', 'age_days': 24.0,
+      'illumination': 0.34,
+      'is_waxing': false,
+      'phase_name': 'Cuarto Menguante',
+      'age_days': 24.0,
     },
   };
 
   @override
   Future<Map<String, dynamic>> skyToday() async => {
-    'date': '2026-09-05', 'day_ruler': 'sun', 'today': null, 'chapter': null,
-    'year': null, 'ingress': null, 'profection': null, 'sect': 'day',
+    'date': '2026-09-05',
+    'day_ruler': 'sun',
+    'today': null,
+    'chapter': null,
+    'year': null,
+    'ingress': null,
+    'profection': null,
+    'sect': 'day',
     'total_aspects': 0,
   };
 }
@@ -108,8 +123,17 @@ void main() {
       expect(find.byType(HoyScreen), findsNothing);
     });
 
-    for (final ruta in ['/hoy', '/horoscopo', '/grimorio', '/saber', '/oraculo',
-                        '/horoscopo', '/perfil', '/settings', '/paywall']) {
+    for (final ruta in [
+      '/hoy',
+      '/horoscopo',
+      '/grimorio',
+      '/saber',
+      '/oraculo',
+      '/horoscopo',
+      '/perfil',
+      '/settings',
+      '/paywall',
+    ]) {
       testWidgets('$ruta redirige a login', (tester) async {
         await _arrancar(tester, ruta: ruta);
         expect(find.byType(LoginScreen), findsOneWidget);
@@ -200,8 +224,10 @@ void main() {
       );
       addTearDown(b.dispose);
 
-      expect(identical(a.read(arcanumRouterProvider),
-          b.read(arcanumRouterProvider)), isFalse);
+      expect(
+        identical(a.read(arcanumRouterProvider), b.read(arcanumRouterProvider)),
+        isFalse,
+      );
       // `currentConfiguration` esta vacia hasta que un widget lo monta; lo que
       // ya existe al construirlo es su punto de partida.
       expect(
@@ -209,7 +235,11 @@ void main() {
         '/hoy',
       );
       expect(
-        a.read(arcanumRouterProvider).routerDelegate.currentConfiguration.uri
+        a
+            .read(arcanumRouterProvider)
+            .routerDelegate
+            .currentConfiguration
+            .uri
             .path,
         '/perfil',
         reason: 'el primero se movio, y eso no puede contagiar al segundo',

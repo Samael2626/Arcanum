@@ -91,7 +91,9 @@ class ReaderSettingsController extends Notifier<ReaderSettings> {
       await prefs.setDouble(_kWidth, state.maxWidth);
       await prefs.setString(_kPalette, state.palette.name);
     } catch (error) {
-      debugPrint('ARCANUM lector: no se pudieron guardar los ajustes ($error).');
+      debugPrint(
+        'ARCANUM lector: no se pudieron guardar los ajustes ($error).',
+      );
     }
   }
 

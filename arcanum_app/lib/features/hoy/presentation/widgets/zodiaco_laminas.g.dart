@@ -28,7 +28,20 @@ class LaminaSigno {
   final bool banda;
 }
 
-enum Signo { capricornio, aries, tauro, geminis, cancer, leo, virgo, libra, escorpio, sagitario, acuario, piscis }
+enum Signo {
+  capricornio,
+  aries,
+  tauro,
+  geminis,
+  cancer,
+  leo,
+  virgo,
+  libra,
+  escorpio,
+  sagitario,
+  acuario,
+  piscis,
+}
 
 /// Alto de la tarjeta sobre el que se midieron los delta. Los numeros del velo
 /// se leen contra este alto y se escalan al alto real de la tarjeta.

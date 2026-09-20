@@ -38,11 +38,13 @@ void main() {
       }
     });
 
-    test('registrar uso o bonus no cambia nada: no hay contabilidad local',
-        () async {
-      await quota.recordUsage('oracle');
-      await quota.grantBonus('oracle');
-      expect(await quota.canPerform('oracle', SubscriptionTier.free), isTrue);
-    });
+    test(
+      'registrar uso o bonus no cambia nada: no hay contabilidad local',
+      () async {
+        await quota.recordUsage('oracle');
+        await quota.grantBonus('oracle');
+        expect(await quota.canPerform('oracle', SubscriptionTier.free), isTrue);
+      },
+    );
   });
 }

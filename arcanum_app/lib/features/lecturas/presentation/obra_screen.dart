@@ -194,9 +194,7 @@ class _ObraScreenState extends ConsumerState<ObraScreen> {
 
             // Comenzar o Reanudar: la decisión principal, sola y sin competencia.
             _PrimaryAction(
-              label: progress == null
-                  ? 'Comenzar lectura'
-                  : 'Reanudar lectura',
+              label: progress == null ? 'Comenzar lectura' : 'Reanudar lectura',
               sub: progress?.where.chapterTitle,
               onTap: () => _open(work, progress),
             ),
@@ -256,7 +254,11 @@ class _PrimaryAction extends StatelessWidget {
   final String? sub;
   final VoidCallback onTap;
 
-  const _PrimaryAction({required this.label, required this.sub, required this.onTap});
+  const _PrimaryAction({
+    required this.label,
+    required this.sub,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -274,7 +276,10 @@ class _PrimaryAction extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(label, style: ArcanumText.body(16.5, color: ArcanumColors.gold)),
+            Text(
+              label,
+              style: ArcanumText.body(16.5, color: ArcanumColors.gold),
+            ),
             if (sub != null) ...[
               const SizedBox(height: 3),
               Text(
@@ -430,7 +435,10 @@ class _Note extends StatelessWidget {
       children: [
         Text(title, style: ArcanumText.label()),
         const SizedBox(height: 7),
-        Text(body, style: ArcanumText.body(13, color: ArcanumColors.ivoryMuted)),
+        Text(
+          body,
+          style: ArcanumText.body(13, color: ArcanumColors.ivoryMuted),
+        ),
       ],
     ),
   );

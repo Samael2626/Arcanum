@@ -35,8 +35,11 @@ void main() {
     );
 
     expect(app, same(existing));
-    expect(initializeCalls, 0,
-        reason: 'volver a inicializar es lo que provocaba duplicate-app');
+    expect(
+      initializeCalls,
+      0,
+      reason: 'volver a inicializar es lo que provocaba duplicate-app',
+    );
   });
 
   test('si no hay app, inicializa con las opciones dadas', () async {
@@ -86,8 +89,13 @@ void main() {
         initialize: ({FirebaseOptions? options}) async =>
             throw FirebaseException(plugin: 'core', code: 'invalid-api-key'),
       ),
-      throwsA(isA<FirebaseException>()
-          .having((e) => e.code, 'code', 'invalid-api-key')),
+      throwsA(
+        isA<FirebaseException>().having(
+          (e) => e.code,
+          'code',
+          'invalid-api-key',
+        ),
+      ),
     );
   });
 
@@ -98,7 +106,9 @@ void main() {
         lookup: () => throw FirebaseException(plugin: 'core', code: 'unknown'),
         initialize: ({FirebaseOptions? options}) async => _FakeApp('[DEFAULT]'),
       ),
-      throwsA(isA<FirebaseException>().having((e) => e.code, 'code', 'unknown')),
+      throwsA(
+        isA<FirebaseException>().having((e) => e.code, 'code', 'unknown'),
+      ),
     );
   });
 }

@@ -43,7 +43,10 @@ const _telefono = Size(360, 640);
 const _escala = 3.0;
 
 /// La misma configuración que monta `main.dart`.
-Future<void> _montar(WidgetTester tester, VoidCallback Function(BuildContext) abrir) async {
+Future<void> _montar(
+  WidgetTester tester,
+  VoidCallback Function(BuildContext) abrir,
+) async {
   tester.view
     ..physicalSize = _telefono * _escala
     ..devicePixelRatio = _escala;
@@ -63,7 +66,10 @@ Future<void> _montar(WidgetTester tester, VoidCallback Function(BuildContext) ab
       home: Scaffold(
         body: Builder(
           builder: (context) => Center(
-            child: TextButton(onPressed: abrir(context), child: const Text('abrir')),
+            child: TextButton(
+              onPressed: abrir(context),
+              child: const Text('abrir'),
+            ),
           ),
         ),
       ),
@@ -82,12 +88,13 @@ void main() {
   testWidgets('11 el selector de fecha', (tester) async {
     await _montar(
       tester,
-      (context) => () => showDatePicker(
-        context: context,
-        initialDate: DateTime(1990, 6, 15),
-        firstDate: DateTime(1900),
-        lastDate: DateTime(2030),
-      ),
+      (context) =>
+          () => showDatePicker(
+            context: context,
+            initialDate: DateTime(1990, 6, 15),
+            firstDate: DateTime(1900),
+            lastDate: DateTime(2030),
+          ),
     );
     await expectLater(
       find.byType(MaterialApp),
@@ -98,10 +105,11 @@ void main() {
   testWidgets('12 el selector de hora', (tester) async {
     await _montar(
       tester,
-      (context) => () => showTimePicker(
-        context: context,
-        initialTime: const TimeOfDay(hour: 14, minute: 30),
-      ),
+      (context) =>
+          () => showTimePicker(
+            context: context,
+            initialTime: const TimeOfDay(hour: 14, minute: 30),
+          ),
     );
     await expectLater(
       find.byType(MaterialApp),

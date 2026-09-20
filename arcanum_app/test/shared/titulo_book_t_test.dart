@@ -11,11 +11,15 @@ void main() {
   test('se queda con la mitad española', () {
     expect(tituloEnEspanol('The Fool / El Loco'), 'El Loco');
     expect(
-      tituloEnEspanol('Root of the Powers of Water / Raíz de los Poderes del Agua'),
+      tituloEnEspanol(
+        'Root of the Powers of Water / Raíz de los Poderes del Agua',
+      ),
       'Raíz de los Poderes del Agua',
     );
-    expect(tituloEnEspanol('Lord of Material Works / Señor de las Obras Materiales'),
-        'Señor de las Obras Materiales');
+    expect(
+      tituloEnEspanol('Lord of Material Works / Señor de las Obras Materiales'),
+      'Señor de las Obras Materiales',
+    );
   });
 
   test('un título que ya viene solo en español no se toca', () {

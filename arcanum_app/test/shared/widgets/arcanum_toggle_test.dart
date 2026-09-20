@@ -101,10 +101,16 @@ void main() {
       await t.pumpWidget(montar(index: 0));
       for (final rotulo in ['Ahora', 'Tu carta']) {
         expect(
-          t.getSize(find.ancestor(
-            of: find.text(rotulo),
-            matching: find.byType(ConstrainedBox),
-          ).first).height,
+          t
+              .getSize(
+                find
+                    .ancestor(
+                      of: find.text(rotulo),
+                      matching: find.byType(ConstrainedBox),
+                    )
+                    .first,
+              )
+              .height,
           greaterThanOrEqualTo(ArcanumSelection.minTapHeight),
         );
       }
@@ -137,13 +143,13 @@ void main() {
     testWidgets('el radio es el de la casa, no uno propio', (t) async {
       await t.pumpWidget(montar(index: 0));
       final d =
-          t.widget<AnimatedContainer>(find.byType(AnimatedContainer).first)
-              .decoration!
-          as BoxDecoration;
-      expect(
-        d.borderRadius,
-        BorderRadius.circular(ArcanumSelection.radius),
-      );
+          t
+                  .widget<AnimatedContainer>(
+                    find.byType(AnimatedContainer).first,
+                  )
+                  .decoration!
+              as BoxDecoration;
+      expect(d.borderRadius, BorderRadius.circular(ArcanumSelection.radius));
       expect(ArcanumSelection.radius, 16.0);
     });
   });

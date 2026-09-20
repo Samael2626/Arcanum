@@ -16,12 +16,30 @@ final _overview = <String, dynamic>{
       {'name': 'saturn', 'longitude': 310.0},
     ],
     'aspects_to_natal': [
-      {'transit': 'moon', 'natal': 'midheaven', 'aspect': 'trine',
-        'angle': 120, 'orb': 0.6, 'applying': true},
-      {'transit': 'mars', 'natal': 'sun', 'aspect': 'square',
-        'angle': 90, 'orb': 1.1, 'applying': false},
-      {'transit': 'saturn', 'natal': 'venus', 'aspect': 'opposition',
-        'angle': 180, 'orb': 2.0, 'applying': true},
+      {
+        'transit': 'moon',
+        'natal': 'midheaven',
+        'aspect': 'trine',
+        'angle': 120,
+        'orb': 0.6,
+        'applying': true,
+      },
+      {
+        'transit': 'mars',
+        'natal': 'sun',
+        'aspect': 'square',
+        'angle': 90,
+        'orb': 1.1,
+        'applying': false,
+      },
+      {
+        'transit': 'saturn',
+        'natal': 'venus',
+        'aspect': 'opposition',
+        'angle': 180,
+        'orb': 2.0,
+        'applying': true,
+      },
     ],
   },
   'natal_chart': {
@@ -82,8 +100,11 @@ void main() {
 
     final alto = tester.getRect(find.text('VER TODOS LOS ASPECTOS (3)').first);
     final caja = tester.getRect(find.byType(InkWell).first);
-    expect(caja.height, greaterThanOrEqualTo(48),
-        reason: 'lo tocable no baja de 48');
+    expect(
+      caja.height,
+      greaterThanOrEqualTo(48),
+      reason: 'lo tocable no baja de 48',
+    );
     expect(alto.height, lessThanOrEqualTo(caja.height));
   });
 }

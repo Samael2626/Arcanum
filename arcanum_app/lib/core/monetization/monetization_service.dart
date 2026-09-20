@@ -139,7 +139,8 @@ class MonetizationService {
     final offerings = await getOfferings();
     final paquetes = offerings?.current?.availablePackages ?? const <Package>[];
     return {
-      for (final p in paquetes) p.storeProduct.identifier: p.storeProduct.priceString,
+      for (final p in paquetes)
+        p.storeProduct.identifier: p.storeProduct.priceString,
     };
   }
 
@@ -160,8 +161,9 @@ class MonetizationService {
     try {
       // purchase() ya devuelve el CustomerInfo sincronizado: no hace falta pedirlo aparte
       final result = await Purchases.purchase(PurchaseParams.package(package));
-      return result.customerInfo.entitlements.active
-              .containsKey(EntitlementIds.premium)
+      return result.customerInfo.entitlements.active.containsKey(
+            EntitlementIds.premium,
+          )
           ? PurchaseOutcome.comprada
           : PurchaseOutcome.fallida;
     } on PlatformException catch (e) {

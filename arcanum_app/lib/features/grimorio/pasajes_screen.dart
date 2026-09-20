@@ -235,11 +235,7 @@ class _Empty extends StatelessWidget {
   final String title;
   final String body;
 
-  const _Empty({
-    required this.glyph,
-    required this.title,
-    required this.body,
-  });
+  const _Empty({required this.glyph, required this.title, required this.body});
 
   @override
   Widget build(BuildContext context) => Center(
@@ -250,10 +246,17 @@ class _Empty extends StatelessWidget {
         children: [
           Text(
             glyph,
-            style: const TextStyle(fontSize: 44, color: ArcanumColors.goldMuted),
+            style: const TextStyle(
+              fontSize: 44,
+              color: ArcanumColors.goldMuted,
+            ),
           ),
           const SizedBox(height: 20),
-          Text(title, textAlign: TextAlign.center, style: ArcanumText.heading(22)),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: ArcanumText.heading(22),
+          ),
           const SizedBox(height: 12),
           Text(
             body,

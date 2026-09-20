@@ -26,8 +26,11 @@ void main() {
         expect(s.title, isNotEmpty);
         expect(s.subtitle, isNotEmpty);
         expect(s.helpKey, isNotEmpty, reason: '${s.title} no tiene "?"');
-        expect(s.icon, isNot(s.selectedIcon),
-            reason: '${s.title} no cambia de icono al elegirla');
+        expect(
+          s.icon,
+          isNot(s.selectedIcon),
+          reason: '${s.title} no cambia de icono al elegirla',
+        );
       }
     });
 
@@ -42,10 +45,13 @@ void main() {
 
   group('los rótulos que se ven', () {
     test('son estos cinco, en este orden', () {
-      expect(
-        arcanumSections.map((s) => s.title).toList(),
-        ['Cielo', 'Horóscopo', 'Grimorio', 'Saber', 'Oráculo'],
-      );
+      expect(arcanumSections.map((s) => s.title).toList(), [
+        'Cielo',
+        'Horóscopo',
+        'Grimorio',
+        'Saber',
+        'Oráculo',
+      ]);
     });
 
     // Cada subtítulo dice LO QUE HAY DENTRO, en palabras corrientes. Los tres
@@ -54,9 +60,15 @@ void main() {
       final porRuta = {for (final s in arcanumSections) s.route: s.subtitle};
       expect(porRuta['/hoy'], 'Tu carta natal y lo que hoy la toca');
       expect(porRuta['/horoscopo'], 'Tu cielo de hoy, sobre tu carta');
-      expect(porRuta['/grimorio'], 'Tu diario cifrado y los pasajes que guardas');
+      expect(
+        porRuta['/grimorio'],
+        'Tu diario cifrado y los pasajes que guardas',
+      );
       expect(porRuta['/saber'], 'Plantas y libros de la tradición');
-      expect(porRuta['/oraculo'], 'Tira las cartas, pregunta, o estudia el mazo');
+      expect(
+        porRuta['/oraculo'],
+        'Tira las cartas, pregunta, o estudia el mazo',
+      );
     });
 
     test('ninguno promete lo que la pantalla no tiene', () {
@@ -64,10 +76,16 @@ void main() {
       // «ritos y hechizos» sugería plantillas en un editor libre; «respuestas
       // guiadas» no decía nada; «los signos del zodiaco» no está en Cielo, que
       // enseña tránsitos sobre la carta natal.
-      for (final promesa in ['ritos y hechizos', 'respuestas guiadas',
-                             'los signos del zodiaco']) {
-        expect(todos, isNot(contains(promesa)),
-            reason: '"$promesa" volvió a un subtítulo');
+      for (final promesa in [
+        'ritos y hechizos',
+        'respuestas guiadas',
+        'los signos del zodiaco',
+      ]) {
+        expect(
+          todos,
+          isNot(contains(promesa)),
+          reason: '"$promesa" volvió a un subtítulo',
+        );
       }
     });
   });

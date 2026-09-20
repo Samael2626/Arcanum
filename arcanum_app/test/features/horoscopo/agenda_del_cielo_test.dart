@@ -23,11 +23,8 @@ class _ApiConAgenda extends ArcanumApi {
     pedidos.add(days);
     if (falla) throw DioException(requestOptions: RequestOptions(path: '/x'));
     final hoy = DateTime.now();
-    String dia(int mas) => hoy
-        .add(Duration(days: mas))
-        .toIso8601String()
-        .split('T')
-        .first;
+    String dia(int mas) =>
+        hoy.add(Duration(days: mas)).toIso8601String().split('T').first;
     return {
       'from': dia(0),
       'to': dia(days),
@@ -35,7 +32,11 @@ class _ApiConAgenda extends ArcanumApi {
       'max_days': tope,
       'background': vacia
           ? null
-          : {'transit': 'jupiter', 'natal': 'north_node', 'aspect': 'opposition'},
+          : {
+              'transit': 'jupiter',
+              'natal': 'north_node',
+              'aspect': 'opposition',
+            },
       'events': vacia
           ? []
           : [
@@ -122,10 +123,7 @@ void main() {
     expect(find.text('30 días'), findsOneWidget);
     expect(find.textContaining('90'), findsNothing);
     expect(find.textContaining('meses'), findsNothing);
-    expect(
-      find.textContaining('La agenda llega a 30 días'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('La agenda llega a 30 días'), findsOneWidget);
   });
 
   testWidgets('un periodo sin nada lo dice, sin disimular', (tester) async {

@@ -17,6 +17,7 @@ import 'package:go_router/go_router.dart';
 const _work = 'culpeper-complete-herbal';
 const _chapter = 'amara-dulcis';
 const _next = 'all-heal';
+
 /// Capitulo de UNA sola pagina: el caso que no registraba nada.
 const _short = 'plate-1';
 
@@ -65,41 +66,42 @@ class _FakeApi extends ArcanumApi {
   ];
 
   @override
-  Future<Map<String, dynamic>> libraryWork(String slug, {String? kind}) async => {
-    'slug': _work,
-    'title': 'The Complete Herbal',
-    'author': 'Nicholas Culpeper',
-    'year': 1653,
-    'language': 'en',
-    'license_note': 'Dominio publico.',
-    'advisory': 'Documento historico de 1653.',
-    'chapters': [
+  Future<Map<String, dynamic>> libraryWork(String slug, {String? kind}) async =>
       {
-        'slug': _chapter,
-        'title': 'Amara Dulcis',
-        'kind': 'herb',
-        'position': 1,
-        'meta': const {},
-        'paragraph_count': 3,
-      },
-      {
-        'slug': _next,
-        'title': 'All-Heal',
-        'kind': 'herb',
-        'position': 2,
-        'meta': const {},
-        'paragraph_count': 3,
-      },
-      {
-        'slug': _short,
-        'title': 'Plate 1',
-        'kind': 'front',
-        'position': 0,
-        'meta': const {},
-        'paragraph_count': 1,
-      },
-    ],
-  };
+        'slug': _work,
+        'title': 'The Complete Herbal',
+        'author': 'Nicholas Culpeper',
+        'year': 1653,
+        'language': 'en',
+        'license_note': 'Dominio publico.',
+        'advisory': 'Documento historico de 1653.',
+        'chapters': [
+          {
+            'slug': _chapter,
+            'title': 'Amara Dulcis',
+            'kind': 'herb',
+            'position': 1,
+            'meta': const {},
+            'paragraph_count': 3,
+          },
+          {
+            'slug': _next,
+            'title': 'All-Heal',
+            'kind': 'herb',
+            'position': 2,
+            'meta': const {},
+            'paragraph_count': 3,
+          },
+          {
+            'slug': _short,
+            'title': 'Plate 1',
+            'kind': 'front',
+            'position': 0,
+            'meta': const {},
+            'paragraph_count': 1,
+          },
+        ],
+      };
 
   @override
   Future<Map<String, dynamic>> libraryChapter(
@@ -220,8 +222,9 @@ class _FakeApi extends ArcanumApi {
 
 class _FakeCrypto extends GrimoireCrypto {
   @override
-  Future<({String ciphertext, String iv})> encryptText(String plaintext) async =>
-      (ciphertext: 'sellado:$plaintext'.codeUnits.join('-'), iv: 'iv');
+  Future<({String ciphertext, String iv})> encryptText(
+    String plaintext,
+  ) async => (ciphertext: 'sellado:$plaintext'.codeUnits.join('-'), iv: 'iv');
 
   @override
   Future<String> decryptText(String ciphertextB64, String ivB64) async =>
@@ -259,31 +262,30 @@ Widget _app(_FakeApi api, _FakeCrypto crypto, String initial) {
         // Scaffold. Aqui se pone a mano para que InkWell encuentre Material.
         builder: (c, s) => const Scaffold(body: SaberScreen()),
         routes: [
-        GoRoute(
-          path: 'pasajes',
-          builder: (c, s) => const PasajesScreen(),
-        ),
-        GoRoute(
-          path: ':work',
-          builder: (c, s) => ObraScreen(workSlug: s.pathParameters['work']!),
-          routes: [
-            GoRoute(
-              path: 'indice',
-              builder: (c, s) => const Scaffold(body: Text('INDICE')),
-            ),
-            GoRoute(
-              path: ':chapter',
-              builder: (c, s) => LectorScreen(
-                workSlug: s.pathParameters['work']!,
-                chapterSlug: s.pathParameters['chapter']!,
-                anchor: s.uri.queryParameters['anchor'],
-                fragmentIndex:
-                    int.tryParse(s.uri.queryParameters['fragment'] ?? '') ?? 0,
+          GoRoute(path: 'pasajes', builder: (c, s) => const PasajesScreen()),
+          GoRoute(
+            path: ':work',
+            builder: (c, s) => ObraScreen(workSlug: s.pathParameters['work']!),
+            routes: [
+              GoRoute(
+                path: 'indice',
+                builder: (c, s) => const Scaffold(body: Text('INDICE')),
               ),
-            ),
-          ],
-        ),
-      ]),
+              GoRoute(
+                path: ':chapter',
+                builder: (c, s) => LectorScreen(
+                  workSlug: s.pathParameters['work']!,
+                  chapterSlug: s.pathParameters['chapter']!,
+                  anchor: s.uri.queryParameters['anchor'],
+                  fragmentIndex:
+                      int.tryParse(s.uri.queryParameters['fragment'] ?? '') ??
+                      0,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     ],
   );
 
@@ -541,23 +543,24 @@ void main() {
       expect(position['fragment_index'], 0);
     });
 
-    testWidgets('la pagina de cierre hereda la posicion de la ultima de texto', (
-      tester,
-    ) async {
-      await pumpAt(tester, '/saber/$_work/$_short');
-      await tester.pump(const Duration(seconds: 2));
+    testWidgets(
+      'la pagina de cierre hereda la posicion de la ultima de texto',
+      (tester) async {
+        await pumpAt(tester, '/saber/$_work/$_short');
+        await tester.pump(const Duration(seconds: 2));
 
-      await tester.tap(find.text('Siguiente'));
-      await tester.pumpAndSettle();
-      await tester.pump(const Duration(seconds: 2));
+        await tester.tap(find.text('Siguiente'));
+        await tester.pumpAndSettle();
+        await tester.pump(const Duration(seconds: 2));
 
-      expect(find.text('Fin del capítulo'), findsOneWidget);
-      // El cierre no es texto de la obra: no puede inventarse una posicion
-      // propia ni dejar de guardar. Hereda la ultima real.
-      final position = api.savedProgress.last;
-      expect(position['chapter_slug'], _short);
-      expect(position['paragraph_anchor'], '$_work.$_short.1');
-    });
+        expect(find.text('Fin del capítulo'), findsOneWidget);
+        // El cierre no es texto de la obra: no puede inventarse una posicion
+        // propia ni dejar de guardar. Hereda la ultima real.
+        final position = api.savedProgress.last;
+        expect(position['chapter_slug'], _short);
+        expect(position['paragraph_anchor'], '$_work.$_short.1');
+      },
+    );
 
     testWidgets('salir desde el cierre conserva la ultima posicion', (
       tester,
@@ -654,9 +657,8 @@ void main() {
     ) async {
       await pumpAt(tester, '/saber/$_work/$_chapter');
 
-      Text primerParrafo() => tester.widget<Text>(
-        find.textContaining('Parrafo castellano 1'),
-      );
+      Text primerParrafo() =>
+          tester.widget<Text>(find.textContaining('Parrafo castellano 1'));
       final antes = primerParrafo().style!.fontSize!;
 
       await tester.tap(find.byIcon(Icons.text_fields));
@@ -697,10 +699,7 @@ void main() {
 
       expect(find.text('It is under the planet Mercury.'), findsOneWidget);
       expect(find.text('mi nota privada'), findsOneWidget);
-      expect(
-        find.text('THE COMPLETE HERBAL · AMARA DULCIS'),
-        findsOneWidget,
-      );
+      expect(find.text('THE COMPLETE HERBAL · AMARA DULCIS'), findsOneWidget);
     });
 
     testWidgets('tocar un pasaje abre el lector en su posicion exacta', (
@@ -736,10 +735,7 @@ void main() {
       api.passageList = const [];
       await pumpAt(tester, '/saber/pasajes');
 
-      expect(
-        find.text('Aún no has guardado ningún pasaje'),
-        findsOneWidget,
-      );
+      expect(find.text('Aún no has guardado ningún pasaje'), findsOneWidget);
     });
   });
 }

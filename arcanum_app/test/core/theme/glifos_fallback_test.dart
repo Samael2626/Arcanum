@@ -90,9 +90,9 @@ void main() {
         final texto = f.readAsStringSync();
         final puntos = <int>[
           ...texto.runes,
-          ...escape.allMatches(texto).map(
-                (m) => int.parse(m.group(1)!, radix: 16),
-              ),
+          ...escape
+              .allMatches(texto)
+              .map((m) => int.parse(m.group(1)!, radix: 16)),
         ];
         for (final p in puntos) {
           if (p >= 0x2600 && p <= 0x2BFF) usados.putIfAbsent(p, () => f.path);
@@ -103,7 +103,8 @@ void main() {
       expect(
         fuera,
         isEmpty,
-        reason: 'glifos que ArcanumGlifos no trae — correr '
+        reason:
+            'glifos que ArcanumGlifos no trae — correr '
             'tool/generar_fuente_glifos.py: '
             '${fuera.map((p) => 'U+${p.toRadixString(16).toUpperCase()} '
                 '${String.fromCharCode(p)} (${usados[p]})').join(', ')}',

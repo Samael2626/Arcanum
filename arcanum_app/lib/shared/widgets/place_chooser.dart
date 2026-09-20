@@ -304,9 +304,7 @@ class _PlaceChooserSheetState extends ConsumerState<_PlaceChooserSheet> {
       barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (ctx) => Dialog(
         backgroundColor: ArcanumColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(

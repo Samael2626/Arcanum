@@ -17,11 +17,13 @@ Future<void> _pumpPaywall(WidgetTester tester) async {
         // Sin precios de tienda la hoja de packs no se abre, y es a proposito:
         // no se vende lo que no se sabe cuanto cuesta. Aqui se simula que la
         // tienda respondio para poder probar el CTA.
-        storePricesProvider.overrideWith((ref) async => const {
-          ProductIds.credit1: 'COP 4.900',
-          ProductIds.pack3: 'COP 11.900',
-          ProductIds.premiumAnnual: 'COP 199.900/año',
-        }),
+        storePricesProvider.overrideWith(
+          (ref) async => const {
+            ProductIds.credit1: 'COP 4.900',
+            ProductIds.pack3: 'COP 11.900',
+            ProductIds.premiumAnnual: 'COP 199.900/año',
+          },
+        ),
       ],
       child: const MaterialApp(home: PaywallScreen()),
     ),
@@ -30,7 +32,9 @@ Future<void> _pumpPaywall(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('Practicante anuncia los packs, no "Continuar gratis"', (tester) async {
+  testWidgets('Practicante anuncia los packs, no "Continuar gratis"', (
+    tester,
+  ) async {
     await _pumpPaywall(tester);
 
     // 1) el CTA explícito de Practicante está presente
@@ -42,13 +46,19 @@ void main() {
       matching: find.byType(Column),
     );
     expect(
-      find.descendant(of: practicante.first, matching: find.text('Continuar gratis')),
+      find.descendant(
+        of: practicante.first,
+        matching: find.text('Continuar gratis'),
+      ),
       findsNothing,
-      reason: 'Practicante abre packs de pago: no puede decir "Continuar gratis"',
+      reason:
+          'Practicante abre packs de pago: no puede decir "Continuar gratis"',
     );
   });
 
-  testWidgets('tocar el CTA de Practicante abre la hoja de packs', (tester) async {
+  testWidgets('tocar el CTA de Practicante abre la hoja de packs', (
+    tester,
+  ) async {
     await _pumpPaywall(tester);
 
     expect(find.text('Créditos y packs'), findsNothing);

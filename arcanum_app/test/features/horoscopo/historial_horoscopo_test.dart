@@ -29,11 +29,16 @@ class _ApiConArchivo extends ArcanumApi {
         response: Response(
           requestOptions: RequestOptions(path: '/astral/horoscope'),
           statusCode: 402,
-          data: const {'detail': {'code': 'credits_required'}},
+          data: const {
+            'detail': {'code': 'credits_required'},
+          },
         ),
       );
     }
-    return {'date': day.toIso8601String().split('T').first, 'text': 'aquel día'};
+    return {
+      'date': day.toIso8601String().split('T').first,
+      'text': 'aquel día',
+    };
   }
 
   @override
@@ -133,7 +138,10 @@ void main() {
     await _montar(tester, []);
     await tester.tap(find.text('Ver días anteriores'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Todavía no hay días guardados'), findsOneWidget);
+    expect(
+      find.textContaining('Todavía no hay días guardados'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('un fallo de red no enseña la traza', (tester) async {
@@ -141,7 +149,10 @@ void main() {
     await tester.tap(find.text('Ver días anteriores'));
     await tester.pumpAndSettle();
 
-    expect(find.text('No se pudo leer tu archivo ahora mismo.'), findsOneWidget);
+    expect(
+      find.text('No se pudo leer tu archivo ahora mismo.'),
+      findsOneWidget,
+    );
     expect(find.textContaining('DioException'), findsNothing);
     expect(find.text('Reintentar'), findsOneWidget);
   });
@@ -158,16 +169,12 @@ void main() {
     test('no se ofrece nada anterior a la primera lectura', () {
       // Antes de esa fecha no había nada que abrir: cobrar por "recuperar" un
       // día en el que no era usuaria sería venderle una ausencia.
-      final faltan = diasSinAbrir([
-        archivada(DateTime(2026, 9, 8)),
-      ], hoy: hoy);
+      final faltan = diasSinAbrir([archivada(DateTime(2026, 9, 8))], hoy: hoy);
       expect(faltan, [DateTime(2026, 9, 9)]);
     });
 
     test('ni hoy, que es gratis', () {
-      final faltan = diasSinAbrir([
-        archivada(DateTime(2026, 9, 1)),
-      ], hoy: hoy);
+      final faltan = diasSinAbrir([archivada(DateTime(2026, 9, 1))], hoy: hoy);
       expect(faltan.contains(hoy), isFalse);
     });
 
@@ -185,17 +192,13 @@ void main() {
     });
 
     test('se ofrecen como mucho cinco, y los más recientes', () {
-      final faltan = diasSinAbrir([
-        archivada(DateTime(2026, 8, 20)),
-      ], hoy: hoy);
+      final faltan = diasSinAbrir([archivada(DateTime(2026, 8, 20))], hoy: hoy);
       expect(faltan.length, 5);
       expect(faltan.first, DateTime(2026, 9, 9));
     });
 
     test('nada más allá del horizonte del motor', () {
-      final faltan = diasSinAbrir([
-        archivada(DateTime(2026, 1, 1)),
-      ], hoy: hoy);
+      final faltan = diasSinAbrir([archivada(DateTime(2026, 1, 1))], hoy: hoy);
       final masViejo = faltan.last;
       expect(hoy.difference(masViejo).inDays, lessThanOrEqualTo(30));
     });
@@ -228,7 +231,10 @@ void main() {
       await tester.tap(find.text('Recuperarlo por 1 crédito').first);
       await tester.pumpAndSettle();
 
-      expect(find.text('No te quedan créditos para recuperarlo.'), findsOneWidget);
+      expect(
+        find.text('No te quedan créditos para recuperarlo.'),
+        findsOneWidget,
+      );
       expect(find.text('Ver planes y créditos'), findsOneWidget);
       expect(find.textContaining('DioException'), findsNothing);
     });

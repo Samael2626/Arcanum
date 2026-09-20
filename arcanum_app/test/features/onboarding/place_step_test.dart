@@ -35,8 +35,9 @@ class _FakeCityIndex implements CityIndex {
   }
 
   @override
-  Future<List<Country>> countries() async =>
-      const [Country(code: 'CO', name: 'Colombia')];
+  Future<List<Country>> countries() async => const [
+    Country(code: 'CO', name: 'Colombia'),
+  ];
 }
 
 Widget _host({required VoidCallback onNext}) => ProviderScope(
@@ -82,35 +83,36 @@ void main() {
     expect(find.text('Buscar mi ciudad'), findsOneWidget);
   });
 
-  testWidgets('elegir del catalogo deja el nombre legible y permite finalizar', (
-    tester,
-  ) async {
-    var avanzo = false;
-    await tester.pumpWidget(_host(onNext: () => avanzo = true));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'elegir del catalogo deja el nombre legible y permite finalizar',
+    (tester) async {
+      var avanzo = false;
+      await tester.pumpWidget(_host(onNext: () => avanzo = true));
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Buscar mi ciudad'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Buscar mi ciudad'));
+      await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField).first, 'Medell');
-    await tester.pumpAndSettle(const Duration(milliseconds: 400));
+      await tester.enterText(find.byType(TextField).first, 'Medell');
+      await tester.pumpAndSettle(const Duration(milliseconds: 400));
 
-    // Elegir la fila NO cierra la hoja: hace falta confirmar.
-    await tester.tap(find.text('Medellín, Antioquia, Colombia').last);
-    await tester.pumpAndSettle();
-    expect(avanzo, isFalse, reason: 'tocar la fila no confirma nada todavia');
+      // Elegir la fila NO cierra la hoja: hace falta confirmar.
+      await tester.tap(find.text('Medellín, Antioquia, Colombia').last);
+      await tester.pumpAndSettle();
+      expect(avanzo, isFalse, reason: 'tocar la fila no confirma nada todavia');
 
-    await tester.tap(find.text('Usar este lugar'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Usar este lugar'));
+      await tester.pumpAndSettle();
 
-    // El nombre del catalogo, no la ristra de Nominatim.
-    expect(find.text('Medellín, Antioquia, Colombia'), findsOneWidget);
-    expect(find.text('Buscar mi ciudad'), findsNothing);
+      // El nombre del catalogo, no la ristra de Nominatim.
+      expect(find.text('Medellín, Antioquia, Colombia'), findsOneWidget);
+      expect(find.text('Buscar mi ciudad'), findsNothing);
 
-    await tester.tap(find.text('Finalizar'));
-    await tester.pumpAndSettle();
-    expect(avanzo, isTrue);
-  });
+      await tester.tap(find.text('Finalizar'));
+      await tester.pumpAndSettle();
+      expect(avanzo, isTrue);
+    },
+  );
 
   testWidgets('cerrar el selector sin elegir no deja lugar', (tester) async {
     var avanzo = false;
