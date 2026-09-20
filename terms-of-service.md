@@ -45,9 +45,8 @@ La App opera bajo un modelo freemium con funcionalidades gratuitas y premium.
 - Esta versión **no muestra anuncios**
 
 ### 3.2 Tier Premium (Místico)
-- Suscripción mensual o anual, con créditos periódicos incluidos
-- Funcionalidades ampliadas
-- Periodo de prueba gratuito: si no cancelas antes de que termine, se convierte en suscripción de pago
+- Suscripción mensual o anual
+- Límites diarios ampliados (tarot: 50/día, oráculo: 20/día) y horóscopo cada día
 
 ### 3.3 Consumibles
 - **Lectura del Umbral** — 1 crédito
