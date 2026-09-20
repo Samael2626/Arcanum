@@ -205,18 +205,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SectionLabel('PRIVACIDAD'),
+                    const SectionLabel('LICENCIAS'),
                     const SizedBox(height: 12),
-                    Text(
-                      'Consulta cómo tratamos tus datos y cómo cerrar el umbral.',
-                      style: ArcanumText.body(16),
-                    ),
-                    const SizedBox(height: 12),
-                    TextButton.icon(
-                      onPressed: () => context.push('/privacy'),
-                      icon: const Icon(Icons.privacy_tip_outlined),
-                      label: const Text('Privacidad y datos'),
-                    ),
+                    // "Privacidad y datos" vivia aqui dentro, a tres toques del
+                    // arranque. Subio al cajon de la cuenta, al lado de Perfil:
+                    // es la pantalla que hay que poder encontrar sin buscarla.
                     // La SIL Open Font License exige distribuir su texto con el
                     // software, y CC BY 4.0 pide atribuir GeoNames. Sin una
                     // pantalla donde leerlo, ARCANUM incumple las dos.

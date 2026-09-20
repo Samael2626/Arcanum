@@ -1372,12 +1372,8 @@ class TarotNaipe extends StatelessWidget {
                 spreadRadius: 1,
               ),
           ],
-          border: active
-              ? Border.all(
-                  color: ArcanumColors.gold.withValues(alpha: 0.9),
-                  width: 1.5,
-                )
-              : null,
+          // La carta activa ya se distingue por su halo y su escala; el
+          // filete era un tercer aviso para lo mismo.
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(radius),

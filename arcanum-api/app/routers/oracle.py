@@ -56,7 +56,7 @@ def draw_tarot(
     if spread_type not in ("three_card", "celtic_cross"):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Tipo de extensión no soportado.")
     payload = {"spread_type": spread_type, "enc_question": enc_question, "question_iv": question_iv}
-    limit = settings.TAROT_PREMIUM_DAILY if current_user.subscription_tier == "premium" else settings.TAROT_FREE_DAILY
+    limit = settings.TAROT_PREMIUM_DAILY if current_user.is_premium else settings.TAROT_FREE_DAILY
     reservation = UsageService().reserve(db, current_user.id, "tarot", idempotency_key, payload, limit)
     if reservation.replay:
         return reservation.operation.result
@@ -130,7 +130,7 @@ def ritual_ia(
         card_count = len(cards)
         expected_cards = [card.get("name") or card.get("slug") or "" for card in cards]
 
-    is_premium = current_user.subscription_tier == "premium"
+    is_premium = current_user.is_premium
     reservation = UsageService().reserve(
         db,
         current_user.id,

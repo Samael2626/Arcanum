@@ -50,12 +50,15 @@ class ArcanumText {
         fontStyle: italic ? FontStyle.italic : FontStyle.normal,
       );
 
+  /// Rotulo en versalitas. El color NO es `goldMuted`: a 12 px y w600 esto
+  /// es texto normal para WCAG (grande empieza en 18,66 px en negrita), asi
+  /// que pide 4,5:1 y `goldMuted` se queda en 3,50:1 sobre `surfaceHigh`.
   static TextStyle label() => const TextStyle(
     fontFamily: 'Crimson Pro',
     fontFamilyFallback: kGlyphFallback,
     fontSize: 12,
     letterSpacing: 3,
-    color: ArcanumColors.goldMuted,
+    color: ArcanumColors.goldLabel,
     fontWeight: FontWeight.w600,
   );
 }

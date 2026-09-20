@@ -22,7 +22,7 @@ router = APIRouter(prefix="/tarot", tags=["tarot"])
 
 
 def _limit(user: UserEntity) -> int:
-    return settings.TAROT_PREMIUM_DAILY if user.subscription_tier == "premium" else settings.TAROT_FREE_DAILY
+    return settings.TAROT_PREMIUM_DAILY if user.is_premium else settings.TAROT_FREE_DAILY
 
 
 def _reserve(db: Session, user: UserEntity, key: str, payload: dict):

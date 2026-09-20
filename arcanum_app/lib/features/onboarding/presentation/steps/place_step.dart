@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/widgets/arcanum_toggle.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/arcanum_colors.dart';
@@ -126,7 +127,6 @@ class _PlaceStepState extends ConsumerState<PlaceStep> {
                 child: OutlinedButton(
                   onPressed: widget.onBack,
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: ArcanumColors.ivoryMuted),
                     padding: const EdgeInsets.symmetric(vertical: 18),
                   ),
                   child: Text(
@@ -179,14 +179,10 @@ class _Elegido extends StatelessWidget {
           // 48 dp minimos de zona tactil; en la practica es bastante mas.
           constraints: const BoxConstraints(minHeight: 72),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: elegido
-                  ? ArcanumColors.gold.withValues(alpha: 0.55)
-                  : ArcanumColors.ivoryMuted.withValues(alpha: 0.35),
-            ),
-          ),
+          // Sin filete: el estado lo lleva el material -- hundido si ya hay
+          // lugar, elevado si falta por elegir -- mas el icono, que cambia de
+          // lupa a chincheta, y el peso de la letra.
+          decoration: ArcanumSelection.surface(elegido, radio: 12),
           child: Row(
             children: [
               Icon(

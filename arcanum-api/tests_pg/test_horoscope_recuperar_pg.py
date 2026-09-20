@@ -14,6 +14,7 @@ from sqlalchemy import text
 from app.adapters.repositories import HoroscopeReadingRepository
 from app.routers import astral
 from app.services import claude_service as cs
+from app.domain.entities import UserEntity
 
 NOW = datetime(2026, 8, 16, 15, 0, tzinfo=timezone.utc)
 HOY = date(2026, 8, 16)          # en Bogota, las 10:00 del 16
@@ -47,7 +48,7 @@ class _Repo:
 
 
 def _user(user_id):
-    return SimpleNamespace(id=user_id, birth_timezone="America/Bogota",
+    return UserEntity(email="t@arcanum.test", hashed_password="x", id=user_id, birth_timezone="America/Bogota",
                            subscription_tier="free",
                            birth_date=datetime(1990, 6, 15, 12, tzinfo=timezone.utc),
                            birth_lat=None, birth_lon=None)

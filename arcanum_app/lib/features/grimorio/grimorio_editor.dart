@@ -9,7 +9,7 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/arcanum_field.dart';
 import '../../shared/widgets/arcanum_mood.dart';
-import '../../shared/widgets/arcanum_surface.dart';
+import '../../shared/widgets/arcanum_resin.dart';
 import '../../shared/widgets/gold_button.dart';
 import 'grimorio_atmosphere.dart';
 
@@ -192,11 +192,7 @@ class _TypeSelector extends StatelessWidget {
               color: sel
                   ? ArcanumColors.gold.withValues(alpha: 0.16)
                   : Colors.transparent,
-              border: Border.all(
-                color: sel
-                    ? ArcanumColors.gold
-                    : ArcanumColors.goldMuted.withValues(alpha: 0.4),
-              ),
+
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -240,9 +236,6 @@ class _WritingPage extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: r,
-        border: Border.all(
-          color: ArcanumColors.goldMuted.withValues(alpha: 0.45),
-        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.3),
@@ -256,7 +249,7 @@ class _WritingPage extends StatelessWidget {
         child: Stack(
           children: [
             const Positioned.fill(
-              child: ArcanumSurface(mood: ArcanumMood.neutral, intensity: 0.55),
+              child: ArcanumResin(mood: ArcanumMood.neutral, intensity: 0.55),
             ),
             // Filete superior dorado, como el canto del pliego.
             Positioned(

@@ -10,6 +10,7 @@ Dos mitades, y la segunda importa tanto como la primera:
 import pytest
 
 from app.services import safety
+from app.domain.entities import UserEntity
 
 # Textos que produccion genero de verdad contra Groq, copiados tal cual.
 # Ninguno puede dispararse.
@@ -204,7 +205,7 @@ def test_la_pregunta_en_crisis_no_llega_al_modelo_ni_gasta_cuota(monkeypatch):
     with _pytest.raises(HTTPException) as err:
         oracle.ritual_ia(
             body=oracle.OracleQuestion(question="ya no quiero vivir"),
-            current_user=SimpleNamespace(id=uuid4(), subscription_tier="free",
+            current_user=UserEntity(email="t@arcanum.test", hashed_password="x", id=uuid4(), subscription_tier="free",
                                          preferred_tradition="hermetica"),
             natal_repo=SimpleNamespace(get_by_user_id=lambda _i: object()),
             conv_repo=None, div_repo=None, db=None, idempotency_key="k",

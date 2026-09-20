@@ -306,7 +306,6 @@ class _PlaceChooserSheetState extends ConsumerState<_PlaceChooserSheet> {
         backgroundColor: ArcanumColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: ArcanumColors.gold.withValues(alpha: 0.4)),
         ),
         child: Padding(
           padding: const EdgeInsets.all(24),

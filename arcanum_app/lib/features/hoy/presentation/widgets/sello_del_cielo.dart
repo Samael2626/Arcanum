@@ -16,7 +16,7 @@
 ///   - la curva se pasa de largo y vuelve, nada se detiene en seco
 ///
 /// LO QUE EL GUARDIAN DE RENDIMIENTO DE HOY PROHIBE, y por eso no esta aqui:
-/// `ArcanumTilt`, `ArcanumFrame`, un segundo `ArcanumSurface` y
+/// `ArcanumTilt`, `ArcanumFrame`, un segundo `ArcanumResin` y
 /// `TweenAnimationBuilder`. Se usa un `AnimationController` que solo corre
 /// durante la apertura y un `CustomPainter` que solo repinta si cambia el
 /// progreso. En reposo esto no anima nada.
@@ -361,9 +361,6 @@ class _Lacre extends StatelessWidget {
         gradient: const RadialGradient(
           center: Alignment(-.35, -.4),
           colors: [Color(0xFF7D2033), ArcanumColors.burgundy],
-        ),
-        border: Border.all(
-          color: ArcanumColors.burgundyLight.withValues(alpha: .45),
         ),
         boxShadow: const [
           BoxShadow(

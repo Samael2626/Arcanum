@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from uuid import UUID
 
 
@@ -31,6 +31,52 @@ class UserEntity:
     onboarding_completed: bool = False
     created_at: datetime | None = None
     updated_at: datetime | None = None
+
+    @property
+    def is_premium(self) -> bool:
+        """Si HOY tiene derecho a los limites de pago.
+
+        `subscription_tier` por si solo no basta, y ese fue el agujero: se
+        escribia "premium" al comprar y solo volvia a "free" cuando llegaba el
+        EXPIRATION del webhook. Si ese evento se perdia -- webhook caido, 5xx
+        agotando reintentos, o un usuario que RevenueCat no supo asociar -- el
+        tier se quedaba en "premium" PARA SIEMPRE. Nadie miraba la fecha, que
+        si estaba guardada, cargada en esta entidad y disponible en los cinco
+        sitios que deciden.
+
+        Con una prueba gratuita eso deja de ser un caso raro: la mayoria de
+        los trials no convierten, asi que el camino de expiracion pasa a ser
+        el mayoritario.
+
+        FECHA NULA = SIGUE SIENDO PREMIUM, a proposito. Hoy no hay producto de
+        por vida -- solo mensual y anual --, asi que una fecha vacia es
+        siempre una anomalia nuestra, no un caso legitimo. Y ante una anomalia
+        se prefiere no cortarle el acceso a quien pago: hay usuarios en la
+        base desde antes de que el webhook guardara la fecha, y cerrar aqui
+        les quitaria el plan de golpe y sin aviso. Se registra en
+        `premium_sin_fecha` para poder contarlos.
+        """
+        if self.subscription_tier != "premium":
+            return False
+        vence = self.subscription_expires_at
+        if vence is None:
+            return True
+        # La columna es TIMESTAMP WITH TIME ZONE y Postgres lo devuelve con
+        # tzinfo, pero un test o un fixture puede construirlo naive. Comparar
+        # naive con aware lanza TypeError, y aqui eso no seria un fallo de
+        # borde: tumbaria la autorizacion de todas las rutas de pago. Se
+        # asume UTC, que es lo que guarda la columna.
+        if vence.tzinfo is None:
+            vence = vence.replace(tzinfo=timezone.utc)
+        return vence > datetime.now(timezone.utc)
+
+    @property
+    def premium_sin_fecha(self) -> bool:
+        """Premium sin fecha de expiracion: anomalia que conviene ver en el log."""
+        return (
+            self.subscription_tier == "premium"
+            and self.subscription_expires_at is None
+        )
 
 
 @dataclass

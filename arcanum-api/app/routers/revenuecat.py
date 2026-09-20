@@ -173,6 +173,22 @@ async def revenuecat_webhook(request: Request, authorization: str | None = Heade
             amount = _CONSUMABLE_CREDITS.get(product_id)
             if amount is not None:
                 CreditService().grant(db, user.id, amount, "purchase", product_id, event_id)
+            else:
+                # DINERO COBRADO SIN ENTREGAR. Caia al final del if/elif, se
+                # sellaba processed_at y se devolvia 200: RevenueCat lo daba
+                # por bueno y no reintentaba nunca. El usuario pagaba, no
+                # recibia el credito, y no quedaba ni una linea de log --
+                # solo se sabria por su reclamo.
+                #
+                # Se registra como ERROR, no warning: esto siempre es un fallo
+                # nuestro (un SKU creado en la tienda sin anadirlo a
+                # _CONSUMABLE_CREDITS de arriba) y se arregla desplegando.
+                logger.error(
+                    "RevenueCat: consumible DESCONOCIDO, cobrado y sin acreditar. "
+                    "product_id=%s user=%s event=%s tx=%s. "
+                    "Anadelo a _CONSUMABLE_CREDITS y acredita a mano.",
+                    product_id, user.id, event_id, transaction_id,
+                )
         elif event_type == "REFUND" and product_id in _CONSUMABLE_CREDITS:
             CreditService().grant(db, user.id, -_CONSUMABLE_CREDITS[product_id], "refund", product_id, event_id)
         elif event_type == "REFUND_REVERSED" and product_id in _CONSUMABLE_CREDITS:

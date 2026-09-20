@@ -4,7 +4,7 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
-import '../../shared/widgets/arcanum_surface.dart';
+import '../../shared/widgets/arcanum_resin.dart';
 
 /// Lore esotérico de un planeta clásico (correspondencias de Agrippa / Golden
 /// Dawn) para las hojas de detalle de la pantalla Hoy.
@@ -378,7 +378,6 @@ Widget _hourRow(String planetKey) {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: m.glow.withValues(alpha: 0.12),
-            border: Border.all(color: m.accent.withValues(alpha: 0.35)),
           ),
           child: Text(
             glyph,
@@ -480,7 +479,7 @@ void _sheet(
       expand: false,
       builder: (_, scroll) => ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        child: ArcanumSurface(
+        child: ArcanumResin(
           mood: mood,
           intensity: 0.40,
           child: SingleChildScrollView(

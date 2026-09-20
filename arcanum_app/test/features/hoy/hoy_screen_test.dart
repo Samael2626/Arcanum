@@ -1,12 +1,9 @@
 import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
-import 'package:arcanum_app/core/privacy/ai_consent_service.dart';
 import 'package:arcanum_app/features/hoy/hoy_screen.dart';
-import 'package:arcanum_app/features/hoy/presentation/widgets/level_three_aspects.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_frame.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_motion.dart';
-import 'package:arcanum_app/shared/widgets/arcanum_surface.dart';
-import 'package:arcanum_app/shared/widgets/ai_output.dart';
+import 'package:arcanum_app/shared/widgets/arcanum_resin.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -203,7 +200,10 @@ void main() {
     expect(find.text('INSTRUMENTO DEL DÍA'), findsOneWidget);
     expect(find.byType(ArcanumTilt), findsNothing);
     expect(find.byType(ArcanumFrame), findsNothing);
-    expect(find.byType(ArcanumSurface), findsOneWidget);
+    // El guardian no pide que exista una superficie: pide que haya EXACTAMENTE
+    // una. Vigila que no se apilen materiales caros en la pantalla que se abre
+    // todos los dias. Al migrar a Resina cambia el tipo, no la intencion.
+    expect(find.byType(ArcanumResin), findsOneWidget);
     expect(find.byType(TweenAnimationBuilder<double>), findsNothing);
 
     final chip = find.ancestor(

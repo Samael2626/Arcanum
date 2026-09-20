@@ -4,7 +4,7 @@ import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
 import '../../../shared/astro_symbols.dart';
 import '../../../shared/widgets/arcanum_mood.dart';
-import '../../../shared/widgets/arcanum_surface.dart';
+import '../../../shared/widgets/arcanum_resin.dart';
 import '../sign_lore.dart';
 
 /// Galería de los 12 signos como cartas ilustradas, cada una vestida con la
@@ -63,11 +63,11 @@ class _SignCard extends StatelessWidget {
       onTap: () => showSignLoreSheet(context, signKey),
       child: Container(
         decoration: BoxDecoration(
+          // SIN FILETE, y este era de los peores: cambiaba de color Y de
+          // grosor con el estado, que es justo lo que la regla prohibe. Lo
+          // senala ya el distintivo "Sol"/"AC" de dentro, que es contenido y
+          // no depende del color.
           borderRadius: br,
-          border: Border.all(
-            color: mood.accent.withValues(alpha: highlighted ? 0.75 : 0.34),
-            width: highlighted ? 1.4 : 1,
-          ),
           boxShadow: [
             BoxShadow(
               color: highlighted
@@ -80,7 +80,7 @@ class _SignCard extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: br,
-          child: ArcanumSurface(
+          child: ArcanumResin(
             mood: mood,
             intensity: highlighted ? 0.5 : 0.4,
             child: Padding(
@@ -128,7 +128,6 @@ class _SignCard extends StatelessWidget {
     decoration: BoxDecoration(
       color: ArcanumColors.background.withValues(alpha: 0.5),
       borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: accent.withValues(alpha: 0.6)),
     ),
     child: Text(
       txt,

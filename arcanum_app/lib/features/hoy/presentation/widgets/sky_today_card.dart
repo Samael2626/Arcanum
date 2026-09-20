@@ -19,6 +19,7 @@ import 'today_card.dart';
 import 'lamina_del_signo.dart';
 import 'zodiaco_laminas.g.dart';
 import '../../../../shared/widgets/ai_output.dart';
+import '../../../../shared/widgets/prosa_generada.dart';
 import '../../../../core/auth/auth_controller.dart';
 import '../../../../core/privacy/ai_consent_service.dart';
 import '../../../../core/astro/birth_data.dart';
@@ -255,7 +256,7 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
                           AiOutput(
                             text: texto,
                             surface: 'horoscopo',
-                            child: Text(texto, style: ArcanumText.body(15)),
+                            child: ProsaGenerada(texto),
                           ),
                           _BotonCompartir(
                             ocupado: _compartiendo,
@@ -441,6 +442,10 @@ class _TransitHeadline extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Wrap(
+            // Los terminos iban pegados unos a otros: sin separacion, cuatro
+            // chips seguidos se leen como una sola palabra larga.
+            spacing: 8,
+            runSpacing: 6,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               _Term(

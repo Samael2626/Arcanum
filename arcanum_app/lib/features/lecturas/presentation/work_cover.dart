@@ -61,9 +61,6 @@ class WorkCover extends StatelessWidget {
             end: Alignment.bottomRight,
             colors: [tint, ArcanumColors.background],
           ),
-          border: Border.all(
-            color: ArcanumColors.goldMuted.withValues(alpha: 0.45),
-          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.45),

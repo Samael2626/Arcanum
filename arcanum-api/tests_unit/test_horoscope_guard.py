@@ -267,44 +267,86 @@ def test_las_promesas_del_guard_estan_vetadas_en_el_prompt():
             f"'{formula}' se marca en codigo y no se veta en el prompt")
 
 
-# ── La orden encubierta, que se colo por la puerta del 10-sep ───────────────
+# ── La vuelta del 13-sep-2026: la orden se permite, la promesa no ──────
+
+# Estos tests son los del 11-sep INVERTIDOS, no borrados: las mismas salidas
+# reales del modelo, que antes se rechazaban y ahora se aceptan a proposito.
+# Dejarlos con la evidencia a la vista es lo que distingue una derogación de un
+# descuido: si algún día vuelven a marcarse, se verá que alguien deshizo una
+# decisión, no que arregló un bug.
 
 ORDEN = (
-    "La Luna cruza tu Marte en cuadratura y el dia se pone de filo. Recuerda "
-    "que la precision del trazo sera mas valiosa que la rapidez de la idea."
+    "La Luna cruza tu Marte en cuadratura y el día se pone de filo. Cierra ese "
+    "pendiente antes de que se enfríe, y no firmes todavía."
 )
 
 
-def test_la_orden_encubierta_se_marca():
-    """Salida REAL del modelo con la frontera nueva, corrida #2 del 10-sep."""
-    assert hg.ordenes(ORDEN) == ["recuerda que"]
-    assert any("mandaste algo" in d for d in hg.defectos(ORDEN, DATOS_REAL))
+def test_la_guarda_de_ordenes_ya_no_existe():
+    """Retirada el 13-sep-2026 por decisión explícita, no por olvido."""
+    assert not hasattr(hg, "ordenes")
+    assert not hasattr(hg, "ORDENES")
 
 
-def test_describir_el_dia_no_es_mandarlo():
-    """El limite: mismo asunto, sujeto distinto."""
-    assert hg.ordenes("es dia de limar y no de cortar") == []
-    assert hg.ordenes("tendras que decidir con menos margen") == []
-    assert hg.ordenes("hoy hay filo en lo que digas") == []
+def test_el_imperativo_ya_no_se_marca():
+    """Lo que se vino a permitir: decirle a quien lee que haga algo."""
+    assert hg.defectos(ORDEN, DATOS_REAL) == []
+    for frase in ("aprovecha para limar", "consagra el estaño de Júpiter",
+                  "habla hoy con quien dejaste a medias",
+                  "no firmes todavía"):
+        assert hg.defectos(frase, DATOS_REAL) == [], frase
 
 
-def test_las_ordenes_del_guard_estan_vetadas_en_el_prompt():
+def test_aflojar_la_orden_no_aflojo_la_promesa():
+    """Los DOS EJES, fijados juntos porque el riesgo es confundirlos.
+
+    Mandar no es prometer: lo primero no se comprueba mañana, lo segundo sí.
+    Si una vuelta futura arrastra la promesa detrás de la orden, cae aquí.
+    """
+    assert hg.defectos("cierra ese asunto hoy", DATOS_REAL) == []
+    assert "conseguiras" in hg.promesas_de_resultado(
+        "cierra ese asunto hoy y conseguirás por fin cerrarlo")
+    assert hg.promesas_de_resultado(PROMESA)
+
+
+def test_el_prompt_ya_no_veta_la_orden():
     from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
-    plano = hg._plano(P)
-    for formula in hg.ORDENES:
-        distintiva = max(formula.split(), key=len)
-        assert distintiva in plano, (
-            f"'{formula}' se marca en codigo y no se veta en el prompt")
+    assert "Y NO ES UNA ORDEN" not in P
+    assert "EL IMPERATIVO ENTRA" in P
 
 
-# Salidas REALES de la segunda tanda, 11-sep-2026: la orden se disfrazo de
-# practica en imperativo, que ninguna de las formulas anteriores tocaba.
-def test_la_practica_mandada_se_marca():
-    assert hg.ordenes("al alba, consagra el estaño de Júpiter") == ["consagra el"]
-    assert hg.ordenes("puedes trabajar con objetos dorados") == ["puedes trabajar"]
+# ── El límite nuevo: el imperativo no cruza a la asesoría real ───────────
+
+def test_el_consejo_profesional_se_marca():
+    """Lo único que la puerta abierta del 13-sep trajo consigo que sí se veta."""
+    for frase in ("vende esas acciones antes del jueves",
+                  "deja ese medicamento",
+                  "baja la dosis del tratamiento",
+                  "pide el préstamo hoy",
+                  "demanda judicial: no la pongas todavia"):
+        assert hg.asesoria_real(frase), frase
+        assert any("consejo real" in d for d in hg.defectos(frase, DATOS_REAL))
 
 
-def test_la_practica_como_constatacion_no_se_marca():
-    """Es la forma que el prompt PIDE: el imperfecto, no el imperativo."""
-    assert hg.ordenes("a la hora de Venus se consagraba el cobre") == []
-    assert hg.ordenes("en la hora de Júpiter se trabajaba el estaño") == []
+def test_el_registro_cotidiano_no_es_asesoria():
+    """Hacen falta el verbo Y el dominio: uno solo es falso positivo.
+
+    "no firmes todavía" es un ejemplo que el propio prompt da por bueno, y
+    "lo que se firma" es el terreno nombrado sin instrucción encima.
+    """
+    for frase in ("no firmes todavía",
+                  "cierra ese pendiente antes de que se enfríe",
+                  "hoy el cielo está del lado de lo que se firma",
+                  "habla hoy con quien dejaste a medias",
+                  "deja para mañana lo que no arde",
+                  # Falso positivo MEDIDO contra Groq el 13-sep: "demanda" es
+                  # tambien un verbo corriente, y costaba un reintento entero.
+                  "haz lo que la obra demanda"):
+        assert hg.asesoria_real(frase) == [], frase
+
+
+def test_la_asesoria_se_mira_por_oracion():
+    """Dominio en una frase y verbo en otra no es aconsejar sobre el dominio."""
+    texto = ("Hoy el cielo está del lado de lo que se firma y de las deudas "
+             "viejas. Duerme antes de contestar, y deja para mañana lo que "
+             "no arde.")
+    assert hg.asesoria_real(texto) == []

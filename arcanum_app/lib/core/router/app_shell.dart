@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../shared/widgets/arcanum_mood.dart';
+import '../../shared/widgets/arcanum_resin.dart';
+import 'arcanum_drawer.dart';
+
 import '../auth/auth_controller.dart';
 import '../content/sections.dart';
 import '../theme/arcanum_colors.dart';
@@ -30,6 +34,10 @@ class AppShell extends StatelessWidget {
     final indice = navigationShell.currentIndex;
 
     return Scaffold(
+      // El cajon de la cuenta cuelga del avatar, a la derecha, que es donde
+      // esta el avatar. `endDrawer` y no `drawer`: abrirlo desde el borde
+      // izquierdo chocaria con el gesto de volver atras del sistema.
+      endDrawer: const ArcanumDrawer(),
       body: SafeArea(
         child: Column(
           children: [
@@ -75,7 +83,7 @@ class AppShell extends StatelessWidget {
   }
 }
 
-/// Barra superior de una sección: identidad + qué es + ayuda + perfil.
+/// Barra superior de una sección: el sello, identidad, qué es, ayuda y avatar.
 class _SectionBar extends StatelessWidget {
   final ArcanumSection section;
   const _SectionBar({required this.section});
@@ -83,10 +91,12 @@ class _SectionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 10, 6),
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          const _SelloDeCuenta(),
+          const SizedBox(width: 6),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,8 +130,62 @@ class _SectionBar extends StatelessWidget {
   }
 }
 
-/// Avatar circular con la inicial del practicante. Único punto de entrada al
-/// perfil (y, dentro, a los ajustes) desde cualquier pantalla.
+/// El sello: segunda puerta al cajon de la cuenta, arriba a la izquierda.
+///
+/// NO es un icono de tres lineas. El glifo es U+26E4, el pentaculo, y no se
+/// invento para esto: ya viaja dentro de `ArcanumGlifos`, la fuente propia de
+/// la app, asi que no anade un asset ni toca el manifiesto que vigila
+/// `glifos_fallback_test`. Se pinta con `kGlyphFallback` por la misma razon
+/// que el resto de glifos: sin declararlo, cada Android elige su fuente y en
+/// varios sale un emoji de colores.
+///
+/// Abre EL MISMO `endDrawer` que el avatar. No hay un segundo cajon ni un
+/// segundo widget: son dos tiradores del mismo.
+///
+/// Sin filete, como todo. Lo que le da cuerpo es el material, y su zona tactil
+/// son 48 aunque el glifo mida 22.
+class _SelloDeCuenta extends StatelessWidget {
+  const _SelloDeCuenta();
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'Tu cuenta',
+      child: Semantics(
+        button: true,
+        label: 'Tu cuenta',
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: Scaffold.of(context).openEndDrawer,
+          child: ExcludeSemantics(
+            child: SizedBox(
+              width: 48,
+              height: 48,
+              child: Center(
+                child: Text(
+                  '⛤',
+                  style: TextStyle(
+                    fontFamilyFallback: kGlyphFallback,
+                    fontSize: 22,
+                    height: 1,
+                    color: ArcanumColors.gold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Avatar circular con la inicial del practicante. Abre el cajon de la cuenta
+/// -- Perfil, Ajustes y Privacidad -- desde cualquier seccion.
+///
+/// Antes empujaba directo a `/perfil`, y Ajustes y Privacidad colgaban uno
+/// dentro del otro: tres toques para llegar a la politica de datos. El cajon
+/// los pone a la misma altura.
 class _ProfileAvatar extends ConsumerWidget {
   const _ProfileAvatar();
 
@@ -134,26 +198,20 @@ class _ProfileAvatar extends ConsumerWidget {
         : '☾';
     return Semantics(
       button: true,
-      label: 'Abrir perfil',
+      label: 'Abrir tu cuenta',
       child: InkWell(
         customBorder: const CircleBorder(),
-        onTap: () => context.push('/perfil'),
+        onTap: Scaffold.of(context).openEndDrawer,
         child: Container(
           width: 40,
           height: 40,
           alignment: Alignment.center,
+          // Sin filete, como el resto de la app: lo que le da forma es el
+          // propio material.
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(
-              color: ArcanumColors.gold.withValues(alpha: 0.7),
-              width: 1.2,
-            ),
-            gradient: RadialGradient(
-              colors: [
-                ArcanumColors.gold.withValues(alpha: 0.16),
-                Colors.transparent,
-              ],
-            ),
+            gradient: ArcanumResin.gradient(mood: ArcanumMood.neutral),
+            boxShadow: ArcanumResin.shadow,
           ),
           child: Text(
             initial,

@@ -6,7 +6,7 @@ import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
 import '../../../shared/astro_symbols.dart';
 import '../../../shared/widgets/arcanum_mood.dart';
-import '../../../shared/widgets/arcanum_surface.dart';
+import '../../../shared/widgets/arcanum_resin.dart';
 import '../sign_lore.dart';
 
 // ── Correspondencias visuales por elemento (zodíaco de la rueda) ──────────────
@@ -360,7 +360,7 @@ class _NatalWheelState extends State<NatalWheel>
       isScrollControlled: true,
       builder: (ctx) => ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        child: ArcanumSurface(
+        child: ArcanumResin(
           mood: mood,
           intensity: 0.42,
           child: Padding(

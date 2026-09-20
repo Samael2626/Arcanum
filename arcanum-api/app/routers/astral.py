@@ -265,7 +265,7 @@ def horoscope(
         momento = hs.instante_del_dia(zona, dia)
     else:
         cada = (settings.HOROSCOPE_PREMIUM_EVERY_DAYS
-                if current_user.subscription_tier == "premium"
+                if current_user.is_premium
                 else settings.HOROSCOPE_FREE_EVERY_DAYS)
         clave, limite = hs.clave_del_periodo(hoy, cada), settings.HOROSCOPE_DAILY
         momento = now

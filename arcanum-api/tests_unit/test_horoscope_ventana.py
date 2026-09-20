@@ -19,6 +19,7 @@ from app.application.services.usage_service import UsageService
 from app.core.config import settings
 from app.routers import astral
 from app.services import horoscope as ho
+from app.domain.entities import UserEntity
 
 AHORA = datetime(2026, 9, 5, 12, 0, tzinfo=timezone.utc)
 NACIMIENTO = datetime(1990, 6, 15, 12, tzinfo=timezone.utc)
@@ -55,7 +56,7 @@ def _chart():
 
 
 def _user(tier="free", tz="America/Bogota"):
-    return SimpleNamespace(id=uuid4(), birth_timezone=tz, subscription_tier=tier,
+    return UserEntity(email="t@arcanum.test", hashed_password="x", id=uuid4(), birth_timezone=tz, subscription_tier=tier,
                            birth_date=NACIMIENTO, birth_lat=None, birth_lon=None)
 
 

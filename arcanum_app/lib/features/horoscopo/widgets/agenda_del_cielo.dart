@@ -20,6 +20,7 @@ import '../../../core/content/glossary.dart';
 import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
 import '../../../shared/astro_symbols.dart';
+import '../../../shared/widgets/arcanum_toggle.dart';
 import '../../../shared/widgets/info_dot.dart';
 
 class AgendaDelCielo extends ConsumerStatefulWidget {
@@ -314,6 +315,18 @@ class _Fondo extends StatelessWidget {
   }
 }
 
+/// Pestana del periodo de la agenda (7 dias / 30 dias).
+///
+/// Se quedo fuera del inventario original de conmutadores porque vive dentro
+/// de la fila del rotulo "LO QUE VIENE" y no parecia un segmentado suelto.
+/// Lo es: dos opciones excluyentes que eligen lo mismo para la misma lista.
+/// Llevaba todavia el filete oro/oro-apagado, la senal que se retiro de toda
+/// la app, asi que aqui se pasa a [ArcanumSelection] como los demas.
+///
+/// NO usa `ArcanumToggle` entero a proposito: aquel reparte el ancho entre
+/// sus segmentos y aqui el ancho lo manda el rotulo de la izquierda. Lo que
+/// se comparte es la regla -- color, peso y material --, que es lo unico que
+/// tenia que ser igual.
 class _Pestana extends StatelessWidget {
   const _Pestana({
     required this.rotulo,
@@ -326,27 +339,28 @@ class _Pestana extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => InkWell(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(14),
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: activa
-              ? ArcanumColors.gold
-              : ArcanumColors.goldMuted.withValues(alpha: 0.4),
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    selected: activa,
+    label: rotulo,
+    child: InkWell(
+      onTap: activa ? null : onTap,
+      borderRadius: BorderRadius.circular(ArcanumSelection.radius),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          minHeight: ArcanumSelection.minTapHeight,
         ),
-        color: activa
-            ? ArcanumColors.gold.withValues(alpha: 0.12)
-            : Colors.transparent,
-      ),
-      child: Text(
-        rotulo,
-        style: ArcanumText.body(
-          12,
-          color: activa ? ArcanumColors.goldLight : ArcanumColors.ivoryMuted,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: ArcanumSelection.surface(activa),
+          child: ExcludeSemantics(
+            child: Text(
+              rotulo,
+              style: ArcanumSelection.textStyle(activa, size: 13),
+            ),
+          ),
         ),
       ),
     ),

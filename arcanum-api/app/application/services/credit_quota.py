@@ -16,7 +16,7 @@ def enforce_quota_or_spend(
     premium_limit: int,
     reason: str,
 ) -> None:
-    daily_limit = premium_limit if user.subscription_tier == "premium" else free_limit
+    daily_limit = premium_limit if user.is_premium else free_limit
     try:
         enforce_user_quota(
             scope=scope,

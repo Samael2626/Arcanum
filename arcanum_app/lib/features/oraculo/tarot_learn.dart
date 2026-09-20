@@ -9,13 +9,14 @@ library;
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../../shared/widgets/arcanum_toggle.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/arcanum_api.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/arcanum_mood.dart';
-import '../../shared/widgets/arcanum_surface.dart';
+import '../../shared/widgets/arcanum_resin.dart';
 import 'widgets/tarot_card.dart';
 import '../../shared/titulo_book_t.dart';
 
@@ -80,7 +81,7 @@ void showTarotCardSheet(BuildContext context, Map<String, dynamic> card) {
       expand: false,
       builder: (_, scroll) => ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        child: ArcanumSurface(
+        child: ArcanumResin(
           mood: mood,
           intensity: 0.42,
           child: SingleChildScrollView(
@@ -329,25 +330,10 @@ class _TarotCatalogState extends ConsumerState<TarotCatalog> {
               duration: const Duration(milliseconds: 200),
               alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(horizontal: 18),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                color: selected
-                    ? ArcanumColors.gold.withValues(alpha: 0.16)
-                    : Colors.transparent,
-                border: Border.all(
-                  color: selected
-                      ? ArcanumColors.gold
-                      : ArcanumColors.goldMuted.withValues(alpha: 0.4),
-                ),
-              ),
+              decoration: ArcanumSelection.surface(selected, radio: 20),
               child: Text(
                 label,
-                style: ArcanumText.body(
-                  14,
-                  color: selected
-                      ? ArcanumColors.gold
-                      : ArcanumColors.ivoryMuted,
-                ),
+                style: ArcanumSelection.textStyle(selected, size: 14),
               ),
             ),
           );
