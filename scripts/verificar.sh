@@ -138,6 +138,11 @@ higiene() {
     corre "codificacion" enc.log bash -c "echo '$CAMBIADOS' | tr '\n' '\0' | xargs -0 -r $PY scripts/check_encoding.py"
   fi
 
+  # El paywall anuncia numeros que viven en config.py, en dos sitios sin
+  # nada que los ate. Cuatro vinetas de esa pantalla ya prometieron cosas
+  # inexistentes hasta el 19-sep-2026.
+  corre "paywall contra config.py" limites.log "$PY" scripts/check_limites_paywall.py
+
   # El CI no se dispara en toda rama. Si estas en una que no cubre, el verde
   # de aqui es el UNICO verde que vas a tener antes de mezclar.
   local RAMA; RAMA="$(git branch --show-current 2>/dev/null || echo '?')"

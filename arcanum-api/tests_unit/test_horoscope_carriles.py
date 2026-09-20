@@ -16,6 +16,7 @@ import pytest
 
 from app.services import horoscope as ho
 from app.services import transit_weight as tw
+from app.domain.entities import UserEntity
 
 
 class _ArchivoFalso:
@@ -197,7 +198,7 @@ def test_la_respuesta_lleva_los_dos_carriles_y_la_secta(monkeypatch):
     monkeypatch.setattr(astral, "generate_horoscope",
                         lambda _sky, _terms: ("Un texto entero.", {"available": True}))
 
-    usuario = SimpleNamespace(id=uuid4(), birth_timezone="America/Bogota",
+    usuario = UserEntity(email="t@arcanum.test", hashed_password="x", id=uuid4(), birth_timezone="America/Bogota",
                            subscription_tier="free",
                               birth_date=NACIMIENTO,
                               birth_lat=None, birth_lon=None)

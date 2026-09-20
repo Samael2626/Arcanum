@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from app.application.services import usage_service
 from app.application.services.usage_service import UsageService
 from app.models.usage_operation import UsageOperation
+from app.domain.entities import UserEntity
 
 
 class Result:
@@ -215,7 +216,7 @@ def test_oracle_reverses_reservation_for_recoverable_provider_failures(monkeypat
     operation = SimpleNamespace(result=None)
     reservation = SimpleNamespace(operation=operation, replay=False)
     reversed_operations = []
-    user = SimpleNamespace(id=uuid4(), subscription_tier="free", preferred_tradition=None)
+    user = UserEntity(email="t@arcanum.test", hashed_password="x", id=uuid4(), subscription_tier="free", preferred_tradition=None)
     natal_repo = SimpleNamespace(get_by_user_id=lambda _: SimpleNamespace())
     conversation_repo = SimpleNamespace()
     div_repo = SimpleNamespace()
@@ -255,7 +256,7 @@ def test_tarot_write_failure_reverses_the_reservation(monkeypatch):
     # router las consulta para decidir si sella la hora planetaria. Un objeto
     # sin `birth_lat` levanta AttributeError a proposito — no se atrapa, porque
     # un usuario malformado es un error de programa, no una ausencia de lugar.
-    user = SimpleNamespace(
+    user = UserEntity(email="t@arcanum.test", hashed_password="x", 
         id=uuid4(), subscription_tier="free", birth_lat=None, birth_lon=None
     )
     service = SimpleNamespace(

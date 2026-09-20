@@ -27,6 +27,7 @@ from app.application.services.usage_service import UsageService
 from app.core.config import settings
 from app.routers import astral
 from app.services import claude_service as cs
+from app.domain.entities import UserEntity
 
 
 class _ArchivoFalso:
@@ -298,7 +299,7 @@ def test_el_oraculo_no_manda_reasoning_effort(monkeypatch):
 
 
 def _user(tz="America/Bogota", tier="free"):
-    return SimpleNamespace(id=uuid4(), birth_timezone=tz,
+    return UserEntity(email="t@arcanum.test", hashed_password="x", id=uuid4(), birth_timezone=tz,
                            subscription_tier=tier,
                            birth_date=NACIMIENTO,
                            birth_lat=None, birth_lon=None)

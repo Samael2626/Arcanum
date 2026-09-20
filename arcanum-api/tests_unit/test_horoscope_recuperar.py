@@ -21,6 +21,7 @@ from app.core.config import settings
 from app.routers import astral
 from app.services import horoscope as ho
 from app.services import horoscope_agenda as hag
+from app.domain.entities import UserEntity
 
 # 12:00 UTC del 5-sep; en Bogota (UTC-5) son las 07:00 del mismo dia.
 AHORA = datetime(2026, 9, 5, 12, 0, tzinfo=timezone.utc)
@@ -52,7 +53,7 @@ class _Repo:
 
 
 def _user(tier="free"):
-    return SimpleNamespace(id=uuid4(), birth_timezone="America/Bogota",
+    return UserEntity(email="t@arcanum.test", hashed_password="x", id=uuid4(), birth_timezone="America/Bogota",
                            subscription_tier=tier, birth_date=NACIMIENTO,
                            birth_lat=None, birth_lon=None)
 

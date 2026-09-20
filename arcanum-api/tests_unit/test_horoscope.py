@@ -13,6 +13,7 @@ from app.application.services.usage_service import UsageService
 from app.routers import astral
 from app.services import claude_service as cs
 from app.services import horoscope as hs
+from app.domain.entities import UserEntity
 
 
 class _ArchivoFalso:
@@ -169,7 +170,7 @@ def test_sin_clave_de_groq_no_hay_horoscopo(monkeypatch):
 
 
 def _user(tz="America/Bogota", tier="free"):
-    return SimpleNamespace(id=uuid4(), birth_timezone=tz,
+    return UserEntity(email="t@arcanum.test", hashed_password="x", id=uuid4(), birth_timezone=tz,
                            subscription_tier=tier,
                            birth_date=NACIMIENTO,
                            birth_lat=None, birth_lon=None)
