@@ -5,7 +5,6 @@
 //   - que un fallo de red no escupe la traza
 import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/features/horoscopo/widgets/historial_horoscopo.dart';
-import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

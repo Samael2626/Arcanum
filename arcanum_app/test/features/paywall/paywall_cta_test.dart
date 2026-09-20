@@ -64,7 +64,26 @@ void main() {
 
     // Explorador (sin precio, no seleccionado) sigue con el fallback.
     expect(find.text('Continuar gratis'), findsOneWidget);
-    // Místico (seleccionado) sigue ofreciendo la prueba.
-    expect(find.text('Empezar prueba gratis'), findsOneWidget);
+    // Místico (seleccionado) tiene su propia etiqueta.
+    expect(find.text('Suscribirme'), findsOneWidget);
+  });
+
+  testWidgets('el paywall no promete una prueba que no existe', (tester) async {
+    await _pumpPaywall(tester);
+
+    // No hay oferta introductoria configurada en la tienda. Mientras no la
+    // haya, ni el botón ni las viñetas pueden anunciarla: quien pulsara con
+    // el plan anual seleccionado pagaba el año entero en el acto creyendo
+    // que empezaba una prueba.
+    //
+    // Cuando se cree la oferta en Play Console, este test se cae — y ese es
+    // justo el aviso de que ya se puede volver a prometer.
+    for (final promesa in ['prueba gratis', '7 días gratis', 'gratis por']) {
+      expect(
+        find.textContaining(promesa),
+        findsNothing,
+        reason: 'El paywall anuncia "\$promesa" y no hay trial en la tienda.',
+      );
+    }
   });
 }

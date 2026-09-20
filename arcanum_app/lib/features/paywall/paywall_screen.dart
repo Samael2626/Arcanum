@@ -79,12 +79,17 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   title: 'Explorador',
                   subtitle: 'Siempre gratis',
                   price: '',
+                  // Cada renglon se corresponde con un limite REAL del
+                  // servidor. "3 capitulos de Saber / semana" decia un cupo
+                  // que no existe: la biblioteca no pasa por UsageService y
+                  // nunca tuvo tope. Se dice lo que hay, que ademas es mejor.
                   features: const [
                     'Carta natal y tránsitos',
                     '1 tirada de tarot / día',
-                    '1 lectura oráculo / día',
+                    '1 lectura del oráculo / día',
+                    'Tu horóscopo, cada dos días',
                     'Grimorio personal',
-                    '3 capítulos de Saber / semana',
+                    'Saber, sin límite',
                   ],
                   accent: ArcanumColors.ivoryMuted,
                   selected: false,
@@ -121,12 +126,30 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   title: 'Místico',
                   subtitle: 'La experiencia completa',
                   price: precios[ProductIds.premiumAnnual] ?? '',
+                  // Los numeros salen de config.py y no de la intencion:
+                  // TAROT_PREMIUM_DAILY 50, ORACLE_PREMIUM_DAILY 20,
+                  // HOROSCOPE_PREMIUM_EVERY_DAYS 1. Se cayeron tres renglones
+                  // que no resistian la comprobacion:
+                  //
+                  //   "7 dias gratis"          no hay oferta de prueba en la
+                  //                            tienda; vuelve cuando la haya.
+                  //   "Modo Aprender completo" tarot_learn no tiene gate: es
+                  //                            igual para todos.
+                  //   "Interpretaciones        ORACLE_MODEL_FREE y
+                  //    profundas"              ORACLE_MODEL_PREMIUM son hoy
+                  //                            el MISMO modelo.
+                  //
+                  // Tambien se fue "Sin anuncios": con ADS_ENABLED en false
+                  // nadie ve anuncios, asi que no distingue un plan del otro.
+                  //
+                  // Y NO se pone "creditos incluidos": el webhook solo concede
+                  // creditos en compras de consumible (revenuecat.py:172). No
+                  // hay ni un grant en RENEWAL, asi que un suscriptor recibe
+                  // CERO creditos. Cuando exista ese grant, este renglon.
                   features: const [
-                    'Más lecturas diarias según tu plan',
-                    'Sin anuncios',
-                    'Interpretaciones profundas',
-                    'Modo Aprender completo',
-                    '7 días gratis',
+                    '50 tiradas de tarot / día',
+                    '20 lecturas del oráculo / día',
+                    'Tu horóscopo, cada día',
                   ],
                   accent: ArcanumColors.gold,
                   selected: true,
@@ -480,9 +503,12 @@ class _TierCard extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: GoldButton(
+                // "Empezar prueba gratis" salia siempre, hubiera oferta o
+                // no: quien pulsaba con un plan anual seleccionado pagaba el
+                // ano entero en el acto creyendo que empezaba una prueba.
                 label: ctaLabel ??
                     (selected
-                        ? 'Empezar prueba gratis'
+                        ? 'Suscribirme'
                         : price.isEmpty
                             ? 'Continuar gratis'
                             : 'Ver opciones'),
