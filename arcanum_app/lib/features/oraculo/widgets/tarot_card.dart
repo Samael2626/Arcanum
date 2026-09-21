@@ -1384,17 +1384,181 @@ class TarotNaipe extends StatelessWidget {
   }
 }
 
-// ── Bloque de lectura: naipe animado (deal + flip + tilt + glow) + texto ───
+// ── Bloque de lectura: naipe animado (deal + volteo por palo + tilt) ───────
 
-/// Carta de tarot con presencia física: reparto con peso (easeOutBack),
-/// flip 3D dorso→cara con micro-overshoot, tilt hacia el puntero y glow
-/// pulsante cuando está activa. La cara es VECTORIAL (TarotFacePainter).
-/// PURO PRESENTACIONAL: no altera los datos del draw ni el orden.
+/// Como se voltea cada familia de cartas.
+///
+/// El palo no es decoracion: cada elemento se mueve como se mueve su materia,
+/// y el gesto ya dice de que palo es la carta antes de que se lea el nombre.
+/// El fuego es seco y rapido y tiembla al parar; el agua entra con rebote y
+/// deja estela; el aire corta en diagonal y no vuelve; la tierra es lenta y
+/// pesa al aterrizar; los Mayores se toman su tiempo porque se lo han ganado.
+enum TarotFlipStyle { mayor, bastos, copas, espadas, oros, llano }
+
+/// Los numeros de un volteo. Todo sale de aqui: sin constantes sueltas
+/// repartidas por el `build`, y sin una rama por palo dentro de la animacion.
+@immutable
+class _FlipSpec {
+  /// Duracion del giro dorso->cara.
+  final int flipMs;
+
+  /// Curva del giro. `easeOutBack` rebota; las demas no.
+  final Curve curve;
+
+  /// Ventana de ASENTAMIENTO, posterior al giro. Ahi viven el rebote de
+  /// escala, el temblor, la reverencia de las figuras, el halo residual y la
+  /// contraccion de la sombra. Al acabar, la carta queda en reposo absoluto:
+  /// cero frames programados, que es lo que exige el test de rendimiento.
+  final int settleMs;
+
+  /// Escala de mas al asentarse (Mayores: 1.0 -> 1.03 -> 1.0).
+  final double overshoot;
+
+  /// Escala de menos al asentarse (Oros: 1.0 -> 0.98 -> 1.0).
+  final double squash;
+
+  /// Franja de luz dorada al pasar por el canto.
+  final bool flash;
+
+  /// Halo tenue en el borde que se apaga despues del giro.
+  final bool halo;
+
+  /// Temblor de +-2 grados que se disipa (Bastos).
+  final bool tremor;
+
+  /// Motas doradas que suben del borde inferior (Bastos).
+  final bool motes;
+
+  /// Barrido especular en el canto, con traza que tarda mas (Copas).
+  final bool sweep;
+
+  /// Giro en Z DURANTE el volteo, en radianes: el corte diagonal de Espadas.
+  final double diagonal;
+
+  /// Linea de 1 px de esquina a esquina en el instante del corte (Espadas).
+  final bool cut;
+
+  /// Sobreancho de sombra que se contrae al aterrizar (Oros).
+  final double shadowSpread;
+
+  const _FlipSpec({
+    required this.flipMs,
+    required this.curve,
+    required this.settleMs,
+    this.overshoot = 0,
+    this.squash = 0,
+    this.flash = false,
+    this.halo = false,
+    this.tremor = false,
+    this.motes = false,
+    this.sweep = false,
+    this.diagonal = 0,
+    this.cut = false,
+    this.shadowSpread = 0,
+  });
+
+  static const _mayor = _FlipSpec(
+    flipMs: 700,
+    curve: Curves.easeInOutCubic,
+    settleMs: 1500, // lo marca el halo, que es lo ultimo en apagarse
+    overshoot: 0.03,
+    flash: true,
+    halo: true,
+  );
+
+  static const _bastos = _FlipSpec(
+    flipMs: 250,
+    curve: Curves.easeInOut, // sin rebote: el fuego no vuelve sobre sus pasos
+    settleMs: 420,
+    tremor: true,
+    motes: true,
+  );
+
+  static const _copas = _FlipSpec(
+    flipMs: 430,
+    curve: Curves.easeOutBack, // rebote suave: el agua se mece al posarse
+    settleMs: 620,
+    sweep: true,
+  );
+
+  static const _espadas = _FlipSpec(
+    flipMs: 200, // la mas rapida de las cinco
+    curve: Curves.easeInOut,
+    settleMs: 300,
+    diagonal: 0.26, // ~15 grados
+    cut: true,
+  );
+
+  static const _oros = _FlipSpec(
+    flipMs: 500, // la mas lenta despues de los Mayores
+    curve: Curves.easeInOut,
+    settleMs: 460,
+    squash: 0.02,
+    shadowSpread: 14,
+  );
+
+  static const _llano = _FlipSpec(
+    flipMs: 620,
+    curve: Curves.easeOutBack,
+    settleMs: 300,
+  );
+
+  /// El estilo de una carta ya resuelta. `TarotFace` conoce el palo y el tipo:
+  /// aqui no se vuelve a inferir nada del `slug`.
+  static TarotFlipStyle styleOf(TarotFace face) {
+    if (face.kind == TarotFaceKind.major) return TarotFlipStyle.mayor;
+    switch (face.suit) {
+      case 'bastos':
+        return TarotFlipStyle.bastos;
+      case 'copas':
+        return TarotFlipStyle.copas;
+      case 'espadas':
+        return TarotFlipStyle.espadas;
+      case 'oros':
+        return TarotFlipStyle.oros;
+      default:
+        return TarotFlipStyle.llano;
+    }
+  }
+
+  static _FlipSpec of(TarotFlipStyle style) => switch (style) {
+    TarotFlipStyle.mayor => _mayor,
+    TarotFlipStyle.bastos => _bastos,
+    TarotFlipStyle.copas => _copas,
+    TarotFlipStyle.espadas => _espadas,
+    TarotFlipStyle.oros => _oros,
+    TarotFlipStyle.llano => _llano,
+  };
+}
+
+/// Estado del ojo de la esquina: cuanto ve la carta de si misma.
+///
+/// [iluminado] esta PINTADO PERO SIN USAR. Es el estado de la Fase 3, cuando
+/// la cara deje de ser vectorial y ensene el grabado Rider-Waite-Smith: hasta
+/// entonces ninguna rama lo elige. Existe aqui para no rehacer el painter, y
+/// no se borra por "codigo muerto": tiene fecha de entrada.
+enum TarotEyeState { cerrado, abierto, iluminado }
+
+/// Carta de tarot con presencia fisica: reparto con peso (easeOutBack),
+/// volteo 3D dorso->cara DIFERENCIADO POR PALO y disparado por el toque,
+/// tilt hacia el puntero y glow pulsante cuando esta activa. La cara es
+/// VECTORIAL (TarotFacePainter).
+///
+/// PURO PRESENTACIONAL: no altera los datos del draw ni el orden, y NO conoce
+/// Riverpod. La pista del gesto entra por [pulseHint] y sale por [onHintShown]
+/// porque quien sabe si ya se enseno es la pantalla, no el naipe.
 class TarotCardView extends StatefulWidget {
   final Map<String, dynamic> card;
   final int index;
   final bool active;
   final VoidCallback onToggle;
+
+  /// Cuando es `true`, el ojo pulsa un par de veces tras abrirse para ensenar
+  /// que la carta se toca. Lo decide la pantalla leyendo la preferencia.
+  final bool pulseHint;
+
+  /// Se llama UNA vez, cuando la pista ya se ha ensenado entera.
+  final VoidCallback? onHintShown;
 
   const TarotCardView({
     super.key,
@@ -1402,6 +1566,8 @@ class TarotCardView extends StatefulWidget {
     required this.index,
     required this.active,
     required this.onToggle,
+    this.pulseHint = false,
+    this.onHintShown,
   });
 
   @override
@@ -1413,18 +1579,33 @@ class _TarotCardViewState extends State<TarotCardView>
   static const double _w = 158;
   static const double _h = _w * 1.6;
 
+  /// Tres pulsos de 600 ms. Mas seria insistir.
+  static const int _pulseMs = 1800;
+
   late final AnimationController _deal;
   late final AnimationController _flip;
+  late final AnimationController _settle;
   late final AnimationController _engage;
+  late final AnimationController _pulse;
 
   Timer? _dealTimer;
-  Timer? _flipTimer;
 
   Offset _tilt = Offset.zero;
   bool _hovering = false;
   bool _pressing = false;
+  bool _revealed = false;
+  bool _hintDone = false;
 
   late final TarotFace _face = TarotFace.resolve(widget.card);
+  late final TarotFlipStyle _style = _FlipSpec.styleOf(_face);
+  late final _FlipSpec _spec = _FlipSpec.of(_style);
+
+  /// Las 16 figuras hacen una reverencia breve DESPUES del volteo de su palo.
+  /// Los numerales no: una carta de corte tiene a quien inclinarse.
+  bool get _isCourt => _face.kind == TarotFaceKind.court;
+
+  bool get _reducedMotion =>
+      MediaQuery.maybeOf(context)?.disableAnimations ?? false;
 
   double get _baseTilt {
     final sign = widget.index.isEven ? 1.0 : -1.0;
@@ -1440,19 +1621,28 @@ class _TarotCardViewState extends State<TarotCardView>
     );
     _flip = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 620),
+      duration: Duration(milliseconds: _spec.flipMs),
+    );
+    _settle = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: _spec.settleMs),
     );
     _engage = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 170),
     );
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: _pulseMs),
+    );
 
-    final base = 90 + widget.index * 110;
-    _dealTimer = Timer(Duration(milliseconds: base), () {
+    _flip.addStatusListener(_onFlipStatus);
+    _pulse.addStatusListener(_onPulseStatus);
+
+    // El reparto SI es automatico: la carta llega sola a su sitio, boca abajo.
+    // Lo que ya no se dispara solo es el volteo -- eso lo pide el dedo.
+    _dealTimer = Timer(Duration(milliseconds: 90 + widget.index * 110), () {
       if (mounted) _deal.forward();
-    });
-    _flipTimer = Timer(Duration(milliseconds: base + 300), () {
-      if (mounted) _flip.forward();
     });
 
     if (widget.active) _engage.value = 1;
@@ -1471,11 +1661,53 @@ class _TarotCardViewState extends State<TarotCardView>
   @override
   void dispose() {
     _dealTimer?.cancel();
-    _flipTimer?.cancel();
+    _flip.removeStatusListener(_onFlipStatus);
+    _pulse.removeStatusListener(_onPulseStatus);
     _deal.dispose();
     _flip.dispose();
+    _settle.dispose();
     _engage.dispose();
+    _pulse.dispose();
     super.dispose();
+  }
+
+  void _onFlipStatus(AnimationStatus status) {
+    if (status != AnimationStatus.completed || !mounted) return;
+    _settle.forward();
+    if (widget.pulseHint && !_hintDone) _pulse.forward();
+  }
+
+  void _onPulseStatus(AnimationStatus status) {
+    if (status != AnimationStatus.completed) return;
+    _markHintShown();
+  }
+
+  void _markHintShown() {
+    if (_hintDone) return;
+    _hintDone = true;
+    widget.onHintShown?.call();
+  }
+
+  /// El toque descubre la carta. Una carta ya descubierta ya no se vuelve a
+  /// tapar: el segundo toque la enfoca, que es lo que el toque hacia antes.
+  /// Cada naipe va por su cuenta -- no hay interruptor que las voltee todas.
+  void _handleTap() {
+    if (_revealed) {
+      widget.onToggle();
+      return;
+    }
+    setState(() => _revealed = true);
+
+    if (_reducedMotion) {
+      // Preferencia de movimiento reducido: la carta CAMBIA de estado, no se
+      // mueve. Y la pista se da por vista: sin animacion no hay gesto que
+      // ensenar, y nadie quiere que se lo recuerden en cada tirada.
+      _flip.value = 1;
+      _settle.value = 1;
+      _markHintShown();
+      return;
+    }
+    _flip.forward();
   }
 
   bool get _engaged => widget.active || _hovering || _pressing;
@@ -1526,9 +1758,9 @@ class _TarotCardViewState extends State<TarotCardView>
           _pressing = false;
           _syncEngage();
         },
-        onTap: widget.onToggle,
+        onTap: _handleTap,
         child: AnimatedBuilder(
-          animation: Listenable.merge([_deal, _flip, _engage]),
+          animation: Listenable.merge([_deal, _flip, _settle, _engage, _pulse]),
           builder: (context, _) => _buildAnimated(reversed),
         ),
       ),
@@ -1544,13 +1776,25 @@ class _TarotCardViewState extends State<TarotCardView>
             style: ArcanumText.label(),
           ),
           const SizedBox(height: 10),
-          naipe,
+          Semantics(
+            button: true,
+            label: _revealed ? 'Enfocar la carta' : 'Descubrir la carta',
+            child: naipe,
+          ),
           const SizedBox(height: 14),
-          _readingText(reversed),
+          // El texto solo aparece cuando la carta ya se ha descubierto: leerlo
+          // antes destriparia el naipe y el volteo no significaria nada.
+          if (_revealed) _readingText(reversed),
         ],
       ),
     );
   }
+
+  /// Rampa 0..1 de los primeros [lenMs] de la ventana de asentamiento.
+  double _window(double ms, double lenMs) => (ms / lenMs).clamp(0.0, 1.0);
+
+  /// Ida y vuelta: 0 -> 1 -> 0. Sirve para todo lo que sube y se deshace.
+  double _bump(double u) => math.sin(math.pi * u);
 
   Widget _buildAnimated(bool reversed) {
     final d = _deal.value.clamp(0.0, 1.0);
@@ -1559,9 +1803,15 @@ class _TarotCardViewState extends State<TarotCardView>
     final dealDy = (1 - de) * 34;
     final dealScale = 0.93 + 0.07 * de;
 
-    final fe = Curves.easeOutBack.transform(_flip.value);
+    final fe = _spec.curve.transform(_flip.value);
     final angle = (1 - fe) * math.pi;
     final showFace = angle <= math.pi / 2;
+
+    // 1 exactamente en el canto (90 grados), 0 en las dos caras.
+    final crossing = (1 - (fe - 0.5).abs() / 0.5).clamp(0.0, 1.0);
+
+    final settleMs = _settle.value * _spec.settleMs;
+    final landed = _flip.value; // 0 antes de tocar, 1 con la cara arriba
 
     final eng = Curves.easeOut.transform(_engage.value);
     const maxTilt = 0.20;
@@ -1573,6 +1823,25 @@ class _TarotCardViewState extends State<TarotCardView>
     final bt = _baseTilt * (1 - eng);
     final lift = 1 + 0.03 * eng;
 
+    // Asentamiento: rebote de los Mayores y aplastamiento de Oros, en la misma
+    // curva de ida y vuelta. Solo uno de los dos es distinto de cero.
+    final settleScale =
+        1 + (_spec.overshoot - _spec.squash) * _bump(_window(settleMs, 260));
+
+    // Fuego: temblor que se disipa. Oscilacion amortiguada, no un rebote.
+    final tremor = _spec.tremor
+        ? 0.035 * math.sin(settleMs / 28) * math.exp(-settleMs / 140)
+        : 0.0;
+
+    // Figuras: una reverencia de ~2,5 grados que se revierte en ~150 ms.
+    final bow = _isCourt ? 0.044 * _bump(_window(settleMs, 300)) : 0.0;
+
+    // Aire: el giro no es sobre el eje vertical, sino en diagonal. Maximo en
+    // el canto y cero en las dos caras, para no dejar la carta torcida.
+    final diagonal = _spec.diagonal * _bump(fe);
+
+    final scale = dealScale * lift * settleScale;
+
     final matrix = Matrix4.identity()
       ..setEntry(
         3,
@@ -1580,10 +1849,10 @@ class _TarotCardViewState extends State<TarotCardView>
         0.0019,
       ) // perspectiva más honda: el tilt se lee como 3D real
       ..translateByDouble(0.0, dealDy - 8 * eng, 0.0, 1.0)
-      ..scaleByDouble(dealScale * lift, dealScale * lift, dealScale * lift, 1.0)
-      ..rotateX(rotX)
+      ..scaleByDouble(scale, scale, scale, 1.0)
+      ..rotateX(rotX + bow)
       ..rotateY(angle + rotY)
-      ..rotateZ(bt);
+      ..rotateZ(bt + tremor + diagonal);
 
     Widget faceWidget = CustomPaint(
       size: const Size(_w, _h),
@@ -1593,6 +1862,14 @@ class _TarotCardViewState extends State<TarotCardView>
     if (reversed) {
       faceWidget = Transform.rotate(angle: math.pi, child: faceWidget);
     }
+
+    // Tierra: la sombra llega mas ancha de lo que le toca y se contrae.
+    final spread = _spec.shadowSpread * (1 - _window(settleMs, 460)) * landed;
+
+    // Mayores: halo residual en el borde. Es un `BoxShadow`, no un glow con
+    // desenfoque sobre el contenido: la sombra de una caja no lee lo que hay
+    // detras y no fuerza `saveLayer`. Esa es la unica forma barata de hacerlo.
+    final halo = _spec.halo ? 0.30 * (1 - _settle.value) * landed : 0.0;
 
     return Opacity(
       opacity: opacity,
@@ -1607,7 +1884,8 @@ class _TarotCardViewState extends State<TarotCardView>
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.45),
-                blurRadius: 12 + 20 * eng,
+                blurRadius: 12 + 20 * eng + spread,
+                spreadRadius: spread * 0.35,
                 offset: Offset(0, 6 + 12 * eng),
               ),
               if (widget.active)
@@ -1616,20 +1894,140 @@ class _TarotCardViewState extends State<TarotCardView>
                   blurRadius: 30,
                   spreadRadius: 2,
                 ),
+              if (halo > 0.004)
+                BoxShadow(
+                  color: ArcanumColors.gold.withValues(alpha: halo),
+                  blurRadius: 18,
+                  spreadRadius: 1,
+                ),
             ],
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(_w * 0.10),
-            child: showFace
-                ? faceWidget
-                : CustomPaint(
-                    size: const Size(_w, _h),
-                    painter: const _TarotBackPainter(),
+            child: Stack(
+              children: [
+                if (showFace)
+                  faceWidget
+                else
+                  // El dorso viaja con la carta girada mas de 90 grados, asi
+                  // que todo lo que lleve encima saldria en espejo. Se deshace
+                  // el espejo aqui para que el ojo caiga en SU esquina y no en
+                  // la de enfrente. Es un `Transform` mas, sin capa nueva.
+                  Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.identity()..rotateY(math.pi),
+                    child: const RepaintBoundary(
+                      child: CustomPaint(
+                        size: Size(_w, _h),
+                        painter: _TarotBackPainter(),
+                      ),
+                    ),
                   ),
+
+                // Copas: barrido especular en el canto con traza que se apaga
+                // mas tarde que el propio barrido. Gradiente pintado, no
+                // shader: `arcanum_resin.dart` tampoco lo es.
+                if (_spec.sweep && landed > 0)
+                  CustomPaint(
+                    size: const Size(_w, _h),
+                    painter: _SweepPainter(
+                      progress: _window(settleMs, 300),
+                      trace: (1 - _window(settleMs, 620)) * 0.5,
+                    ),
+                  ),
+
+                // Espadas: el corte. Una linea de 1 px de esquina a esquina
+                // que aparece en el canto y se va en lo que queda de giro
+                // (100 ms de los 200 del volteo).
+                if (_spec.cut && fe > 0.5)
+                  CustomPaint(
+                    size: const Size(_w, _h),
+                    painter: _CutPainter(1 - (fe - 0.5) / 0.5),
+                  ),
+
+                // Mayores: la franja de luz que cruza la carta justo cuando
+                // esta de canto. `crossing` al cubo la concentra en el
+                // instante en vez de repartirla por todo el giro.
+                if (_spec.flash && crossing > 0.05)
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          stops: const [0.40, 0.50, 0.60],
+                          colors: [
+                            const Color(0x00000000),
+                            ArcanumColors.gold.withValues(
+                              alpha: 0.85 * math.pow(crossing, 3).toDouble(),
+                            ),
+                            const Color(0x00000000),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // Bastos: dos o tres motas que suben del borde de abajo y se
+                // apagan. Widgets sueltos con color y posicion animados: no
+                // hay sistema de particulas, ni falta.
+                if (_spec.motes && landed > 0) ..._buildMotes(settleMs),
+
+                // El ojo: cuanto ve la carta de si misma.
+                Positioned(
+                  right: 9,
+                  bottom: 9,
+                  child: CustomPaint(
+                    size: const Size(_eyeW, _eyeW * 0.62),
+                    painter: _EyePainter(
+                      state: showFace
+                          // Fase 3: cuando la cara ensene el grabado RWS, esta
+                          // rama elegira `iluminado`. Hoy no hay grabado.
+                          ? TarotEyeState.abierto
+                          : TarotEyeState.cerrado,
+                      pulse: _pulseShape(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  static const double _eyeW = 22;
+
+  /// Tres medios senos seguidos: el ojo late tres veces y se para solo.
+  double _pulseShape() {
+    if (_pulse.value == 0 || _pulse.isCompleted) return 0;
+    final k = _pulse.value * 3;
+    return math.sin(math.pi * (k - k.floorToDouble()));
+  }
+
+  List<Widget> _buildMotes(double settleMs) {
+    const seeds = [0.30, 0.52, 0.71];
+    final motes = <Widget>[];
+    for (var i = 0; i < seeds.length; i++) {
+      final u = ((_window(settleMs, 420) - i * 0.10) / 0.72).clamp(0.0, 1.0);
+      if (u <= 0 || u >= 1) continue;
+      motes.add(
+        Positioned(
+          left: _w * seeds[i],
+          bottom: 6 + 28 * u,
+          child: Container(
+            width: 3,
+            height: 3,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: ArcanumColors.gold.withValues(alpha: _bump(u) * 0.85),
+            ),
+          ),
+        ),
+      );
+    }
+    return motes;
   }
 
   Widget _readingText(bool reversed) {
@@ -1671,6 +2069,176 @@ class _TarotCardViewState extends State<TarotCardView>
       ],
     );
   }
+}
+
+/// Copas: barrido especular que recorre la carta, y su traza.
+///
+/// Dos bandas de gradiente sobre el mismo eje: la que va delante es el
+/// barrido, la que se queda detras es lo que el agua tarda en olvidarlo. No
+/// hay `saveLayer` aqui: son dos `drawRect` con `shader`.
+class _SweepPainter extends CustomPainter {
+  final double progress;
+  final double trace;
+
+  const _SweepPainter({required this.progress, required this.trace});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+
+    if (trace > 0.01) {
+      final resto = Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0x00000000),
+            ArcanumColors.ivory.withValues(alpha: 0.10 * trace),
+            const Color(0x00000000),
+          ],
+        ).createShader(rect);
+      canvas.drawRect(rect, resto);
+    }
+
+    if (progress <= 0 || progress >= 1) return;
+    // El barrido cruza de arriba a abajo; el centro de la banda va en
+    // `progress` y la banda ocupa un 24 % de la carta.
+    final centro = progress;
+    final paint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        stops: [
+          (centro - 0.12).clamp(0.0, 1.0),
+          centro,
+          (centro + 0.12).clamp(0.0, 1.0),
+        ],
+        colors: [
+          const Color(0x00000000),
+          ArcanumColors.ivory.withValues(alpha: 0.28 * _bump(progress)),
+          const Color(0x00000000),
+        ],
+      ).createShader(rect);
+    canvas.drawRect(rect, paint);
+  }
+
+  static double _bump(double u) => math.sin(math.pi * u);
+
+  @override
+  bool shouldRepaint(_SweepPainter old) =>
+      old.progress != progress || old.trace != trace;
+}
+
+/// Espadas: la linea del corte, de esquina a esquina y de 1 px.
+class _CutPainter extends CustomPainter {
+  final double alpha;
+
+  const _CutPainter(this.alpha);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (alpha <= 0.01) return;
+    final paint = Paint()
+      ..color = ArcanumColors.ivory.withValues(alpha: alpha.clamp(0.0, 1.0))
+      ..strokeWidth = 1
+      ..isAntiAlias = true;
+    canvas.drawLine(Offset.zero, Offset(size.width, size.height), paint);
+  }
+
+  @override
+  bool shouldRepaint(_CutPainter old) => old.alpha != alpha;
+}
+
+/// El ojo de la esquina: cuanto ve la carta de si misma.
+///
+/// Tres estados y un solo trazo: el parpado de arriba baja hasta juntarse con
+/// el de abajo cuando la carta esta boca abajo, y se levanta al descubrirla.
+/// [TarotEyeState.iluminado] queda pintado y sin usar hasta la Fase 3.
+class _EyePainter extends CustomPainter {
+  final TarotEyeState state;
+
+  /// 0..1. Late al ensenar el gesto por primera vez, y solo esa vez.
+  final double pulse;
+
+  const _EyePainter({required this.state, this.pulse = 0});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final abierto = state != TarotEyeState.cerrado;
+    final encendido = state == TarotEyeState.iluminado;
+
+    // El pulso agranda el ojo desde su centro. Escalar el lienzo cuesta menos
+    // que recalcular cada curva, y no anade capa.
+    if (pulse > 0) {
+      final k = 1 + 0.22 * pulse;
+      canvas.translate(size.width / 2, size.height / 2);
+      canvas.scale(k, k);
+      canvas.translate(-size.width / 2, -size.height / 2);
+    }
+
+    final w = size.width;
+    final h = size.height;
+    final cy = h / 2;
+    final color = encendido ? ArcanumColors.gold : ArcanumColors.goldMuted;
+    final alpha = encendido ? 1.0 : (abierto ? 0.80 : 0.45);
+
+    final trazo = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2
+      ..strokeCap = StrokeCap.round
+      ..isAntiAlias = true
+      ..color = color.withValues(alpha: alpha);
+
+    if (encendido) {
+      // Aureola del estado de Fase 3: un halo corto alrededor de la almendra.
+      canvas.drawCircle(
+        Offset(w / 2, cy),
+        w * 0.46,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..color = ArcanumColors.gold.withValues(alpha: 0.35),
+      );
+    }
+
+    // Parpado de abajo: siempre el mismo arco.
+    final abajo = Path()
+      ..moveTo(w * 0.06, cy)
+      ..quadraticBezierTo(w * 0.5, h * 1.02, w * 0.94, cy);
+    canvas.drawPath(abajo, trazo);
+
+    if (!abierto) {
+      // Cerrado: el parpado de arriba se apoya sobre el de abajo y salen tres
+      // pestanas cortas. Sin iris: no hay nada que mirar todavia.
+      canvas.drawLine(Offset(w * 0.06, cy), Offset(w * 0.94, cy), trazo);
+      for (final t in const [0.28, 0.5, 0.72]) {
+        final x = w * t;
+        final y = cy + h * (0.30 - (t - 0.5).abs() * 0.5);
+        canvas.drawLine(Offset(x, y), Offset(x, y + h * 0.16), trazo);
+      }
+      return;
+    }
+
+    // Abierto: la almendra completa y el iris.
+    final arriba = Path()
+      ..moveTo(w * 0.06, cy)
+      ..quadraticBezierTo(w * 0.5, -h * 0.02, w * 0.94, cy);
+    canvas.drawPath(arriba, trazo);
+
+    final iris = Paint()
+      ..color = color.withValues(alpha: encendido ? 0.95 : 0.65)
+      ..isAntiAlias = true;
+    canvas.drawCircle(Offset(w / 2, cy), h * 0.26, iris);
+    canvas.drawCircle(
+      Offset(w / 2, cy),
+      h * 0.11,
+      Paint()..color = ArcanumColors.surface.withValues(alpha: 0.9),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_EyePainter old) =>
+      old.state != state || old.pulse != pulse;
 }
 
 /// Dorso de la carta: sello geométrico oculto. Un heptagrama {7/3}

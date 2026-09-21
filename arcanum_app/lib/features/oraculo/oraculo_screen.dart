@@ -15,6 +15,7 @@ import '../../shared/widgets/arcanum_toggle.dart';
 import '../../shared/widgets/gold_button.dart';
 import '../../shared/widgets/login_prompt.dart';
 import '../../shared/widgets/content_report_sheet.dart';
+import 'data/tarot_hint.dart';
 import 'tarot_learn.dart';
 import 'widgets/tarot_card.dart';
 import '../../shared/widgets/ai_output.dart';
@@ -559,6 +560,13 @@ class _OracleViewState extends ConsumerState<_OracleView> {
                     index: i,
                     active: _activeCard == i,
                     onToggle: () => _jumpTo(i),
+                    // La pista del gesto la decide la PANTALLA, que si conoce
+                    // Riverpod: el naipe solo la obedece. Y solo la primera
+                    // carta de la tirada la ensena -- tres ojos latiendo a la
+                    // vez serian tres avisos para un solo gesto.
+                    pulseHint: i == 0 && !ref.watch(tarotHintSeenProvider),
+                    onHintShown: () =>
+                        ref.read(tarotHintSeenProvider.notifier).markSeen(),
                   ),
                   // El SIGNIFICADO ya lo pinta `TarotCardView`, que lee
                   // `meaning` de la carta: por eso aqui solo va el titulo del
