@@ -21,8 +21,8 @@ String oracleErrorMessage(Object error) {
     final detail = rawDetail is String
         ? rawDetail
         : rawDetail is Map && rawDetail['message'] is String
-            ? rawDetail['message'] as String
-            : null;
+        ? rawDetail['message'] as String
+        : null;
     switch (status) {
       case 400:
         return detail ?? 'Falta pregunta o tirada.';
@@ -44,12 +44,14 @@ String oracleErrorMessage(Object error) {
         }
         return validationFallbackMessage;
       case 429:
-        return detail ?? 'El oráculo está saturado. Intenta de nuevo en unos minutos.';
+        return detail ??
+            'El oráculo está saturado. Intenta de nuevo en unos minutos.';
       case 500:
         // Fallo del servidor: el detail puede traer trazas o texto tecnico.
         return 'El oráculo tuvo un problema temporal. Intenta de nuevo más tarde.';
       case 503:
-        return detail ?? 'El oráculo no está disponible. Intenta de nuevo más tarde.';
+        return detail ??
+            'El oráculo no está disponible. Intenta de nuevo más tarde.';
     }
     if (status != null && status >= 500) {
       return 'El oráculo tuvo un problema temporal. Intenta de nuevo más tarde.';
@@ -60,7 +62,8 @@ String oracleErrorMessage(Object error) {
 }
 
 String assistantReply(Map<String, dynamic> conversation) {
-  final messages = (conversation['messages'] as List?)?.cast<Map<String, dynamic>>();
+  final messages = (conversation['messages'] as List?)
+      ?.cast<Map<String, dynamic>>();
   if (messages == null) return '';
   final assistant = messages.lastWhere(
     (message) => message['role'] == 'assistant',

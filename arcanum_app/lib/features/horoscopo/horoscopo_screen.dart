@@ -43,4 +43,3 @@ class HoroscopoScreen extends StatelessWidget {
     ),
   );
 }
-

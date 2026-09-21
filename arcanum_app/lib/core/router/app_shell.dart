@@ -58,26 +58,24 @@ class AppShell extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: NavigationBar(
-          selectedIndex: indice,
-          // Tocar la pestaña en la que ya estás vuelve a su raíz, que es lo que
-          // espera cualquiera: sirve para salir de una sub-ruta sin buscar el
-          // botón de volver.
-          onDestinationSelected: (index) => navigationShell.goBranch(
-            index,
-            initialLocation: index == indice,
-          ),
-          // La barra SALE de `arcanumSections`, no de una lista escrita a
-          // mano: son la misma cosa y mantenerlas en dos sitios ya se torcio
-          // una vez -- seis destinos contra cinco ramas, y tocar el ultimo
-          // llamaba a una rama inexistente.
-          destinations: [
-            for (final seccion in arcanumSections)
-              NavigationDestination(
-                icon: Icon(seccion.icon),
-                selectedIcon: Icon(seccion.selectedIcon),
-                label: seccion.title,
-              ),
-          ],
+        selectedIndex: indice,
+        // Tocar la pestaña en la que ya estás vuelve a su raíz, que es lo que
+        // espera cualquiera: sirve para salir de una sub-ruta sin buscar el
+        // botón de volver.
+        onDestinationSelected: (index) =>
+            navigationShell.goBranch(index, initialLocation: index == indice),
+        // La barra SALE de `arcanumSections`, no de una lista escrita a
+        // mano: son la misma cosa y mantenerlas en dos sitios ya se torcio
+        // una vez -- seis destinos contra cinco ramas, y tocar el ultimo
+        // llamaba a una rama inexistente.
+        destinations: [
+          for (final seccion in arcanumSections)
+            NavigationDestination(
+              icon: Icon(seccion.icon),
+              selectedIcon: Icon(seccion.selectedIcon),
+              label: seccion.title,
+            ),
+        ],
       ),
     );
   }

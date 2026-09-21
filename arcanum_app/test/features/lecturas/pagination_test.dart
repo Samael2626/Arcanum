@@ -6,11 +6,14 @@ import 'package:flutter_test/flutter_test.dart';
 /// Con una medida real haría falta pantalla y el test dejaría de comprobar el
 /// reparto para comprobar la tipografía. Aquí una palabra ocupa 1, así que
 /// "cabe" se lee directamente en el enunciado de cada caso.
-double wordsMeasure(String text) =>
-    text.trim().isEmpty ? 0 : text.trim().split(RegExp(r'\s+')).length.toDouble();
+double wordsMeasure(String text) => text.trim().isEmpty
+    ? 0
+    : text.trim().split(RegExp(r'\s+')).length.toDouble();
 
-ParagraphSource p(String anchor, int words) =>
-    ParagraphSource(anchor: anchor, text: List.filled(words, 'palabra').join(' '));
+ParagraphSource p(String anchor, int words) => ParagraphSource(
+  anchor: anchor,
+  text: List.filled(words, 'palabra').join(' '),
+);
 
 void main() {
   group('reparto en paginas', () {

@@ -21,7 +21,10 @@ void main() {
     );
     final container = t.widget<Container>(
       find
-          .ancestor(of: find.byType(ArcanumResin), matching: find.byType(Container))
+          .ancestor(
+            of: find.byType(ArcanumResin),
+            matching: find.byType(Container),
+          )
           .first,
     );
     return container.decoration! as BoxDecoration;

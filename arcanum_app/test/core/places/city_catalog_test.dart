@@ -11,11 +11,15 @@ import 'package:flutter_test/flutter_test.dart';
 CityCatalog loadRealCatalog() {
   final file = File('assets/data/cities.txt');
   if (!file.existsSync()) {
-    fail('Falta ${file.path}. Generalo con: python tools/build_city_catalog.py');
+    fail(
+      'Falta ${file.path}. Generalo con: python tools/build_city_catalog.py',
+    );
   }
   final index = File('assets/data/cities.bin');
   if (!index.existsSync()) {
-    fail('Falta ${index.path}. Generalo con: python tools/build_city_catalog.py');
+    fail(
+      'Falta ${index.path}. Generalo con: python tools/build_city_catalog.py',
+    );
   }
   return CityCatalog.parse(
     file.readAsStringSync(),
@@ -57,21 +61,32 @@ void main() {
     expect(plain.first.countryCode, 'MX');
   });
 
-  test('los que empiezan por la consulta van antes que los que la contienen', () {
-    final results = catalog.searchSync('york', limit: 30);
-    expect(results.length, greaterThan(3));
-    var seenInside = false;
-    for (final city in results) {
-      if (startsWithQuery(city, 'york')) {
-        expect(seenInside, isFalse,
-            reason: '${city.label} empieza por la consulta y va detras de una '
-                'coincidencia interior');
-      } else {
-        seenInside = true;
+  test(
+    'los que empiezan por la consulta van antes que los que la contienen',
+    () {
+      final results = catalog.searchSync('york', limit: 30);
+      expect(results.length, greaterThan(3));
+      var seenInside = false;
+      for (final city in results) {
+        if (startsWithQuery(city, 'york')) {
+          expect(
+            seenInside,
+            isFalse,
+            reason:
+                '${city.label} empieza por la consulta y va detras de una '
+                'coincidencia interior',
+          );
+        } else {
+          seenInside = true;
+        }
       }
-    }
-    expect(seenInside, isTrue, reason: 'la muestra deberia mezclar los dos casos');
-  });
+      expect(
+        seenInside,
+        isTrue,
+        reason: 'la muestra deberia mezclar los dos casos',
+      );
+    },
+  );
 
   test('a igualdad manda la poblacion: Madrid es la capital', () {
     final results = catalog.searchSync('madrid');
@@ -102,7 +117,10 @@ void main() {
     expect(all.any((c) => c.countryCode != 'ES'), isTrue);
 
     // Minusculas y codigo inexistente.
-    expect(catalog.searchSync('cordoba', countryCode: 'es').first.countryCode, 'ES');
+    expect(
+      catalog.searchSync('cordoba', countryCode: 'es').first.countryCode,
+      'ES',
+    );
     expect(catalog.searchSync('cordoba', countryCode: 'ZZ'), isEmpty);
   });
 
@@ -156,7 +174,9 @@ void main() {
     expect(byCode['KR'], 'Corea del Sur');
     expect(byCode['CD'], 'República Democrática del Congo');
 
-    final names = countries.map((c) => CityCatalog.foldForSearch(c.name)).toList();
+    final names = countries
+        .map((c) => CityCatalog.foldForSearch(c.name))
+        .toList();
     final sorted = [...names]..sort();
     expect(names, sorted);
   });
@@ -168,15 +188,21 @@ void main() {
     expect(singapur.first.label, 'Singapore, Singapur');
   });
 
-  test('la coincidencia mas poblada por subcadena no adelanta a un prefijo', () {
-    final results = catalog.searchSync('york', limit: 30);
-    final ny = results.indexWhere((c) => c.name == 'New York City');
-    final york = results.indexWhere((c) => c.name == 'York');
-    expect(york, isNonNegative);
-    expect(ny, isNonNegative);
-    expect(york, lessThan(ny),
-        reason: 'New York City es mucho mayor, pero solo contiene la consulta');
-  });
+  test(
+    'la coincidencia mas poblada por subcadena no adelanta a un prefijo',
+    () {
+      final results = catalog.searchSync('york', limit: 30);
+      final ny = results.indexWhere((c) => c.name == 'New York City');
+      final york = results.indexWhere((c) => c.name == 'York');
+      expect(york, isNonNegative);
+      expect(ny, isNonNegative);
+      expect(
+        york,
+        lessThan(ny),
+        reason: 'New York City es mucho mayor, pero solo contiene la consulta',
+      );
+    },
+  );
 
   test('las coordenadas son las de GeoNames', () {
     final bogota = catalog.searchSync('bogota', countryCode: 'CO').first;

@@ -10,7 +10,9 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('como se parte', () {
     test('por lineas en blanco, que es lo que pide el prompt', () {
-      final p = ProsaGenerada.partir('Lo de hoy.\n\nEl capitulo.\n\nEl cierre.');
+      final p = ProsaGenerada.partir(
+        'Lo de hoy.\n\nEl capitulo.\n\nEl cierre.',
+      );
       expect(p, ['Lo de hoy.', 'El capitulo.', 'El cierre.']);
     });
 
@@ -51,7 +53,8 @@ void main() {
     expect(
       huecos.last,
       greaterThan(huecos.first),
-      reason: 'El giro de describir a proponer se marca con aire, no con un '
+      reason:
+          'El giro de describir a proponer se marca con aire, no con un '
           'encabezado.',
     );
   });

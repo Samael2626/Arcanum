@@ -364,7 +364,8 @@ class _NatalViewState extends ConsumerState<_NatalView> {
                     child: Text(
                       planetGlyph[name] ?? '✶',
                       style: const TextStyle(
-                        fontFamilyFallback: kGlyphFallback,  // el glifo, no el emoji
+                        fontFamilyFallback:
+                            kGlyphFallback, // el glifo, no el emoji
                         fontSize: 22,
                         color: ArcanumColors.gold,
                       ),
@@ -482,14 +483,16 @@ class _AspectRowState extends ConsumerState<_AspectRow> {
       _oracleContentRef = null;
     });
     try {
-      final response = await ref.read(arcanumApiProvider).oracleIa(
-        question: transitOracleQuestion(
-          transit: aspect['transit'] as String,
-          natal: aspect['natal'] as String,
-          aspect: aspect['aspect'] as String,
-        ),
-        idempotencyKey: key,
-      );
+      final response = await ref
+          .read(arcanumApiProvider)
+          .oracleIa(
+            question: transitOracleQuestion(
+              transit: aspect['transit'] as String,
+              natal: aspect['natal'] as String,
+              aspect: aspect['aspect'] as String,
+            ),
+            idempotencyKey: key,
+          );
       if (!mounted) return;
       _idempotencyKey = null;
       setState(() {
@@ -499,7 +502,11 @@ class _AspectRowState extends ConsumerState<_AspectRow> {
     } catch (error) {
       if (isCreditsRequired(error)) await _openCreditsPaywall();
       if (!mounted) return;
-      setState(() => _oracleError = isCreditsRequired(error) ? 'Saldo insuficiente. Puedes comprar créditos.' : oracleErrorMessage(error));
+      setState(
+        () => _oracleError = isCreditsRequired(error)
+            ? 'Saldo insuficiente. Puedes comprar créditos.'
+            : oracleErrorMessage(error),
+      );
     } finally {
       if (mounted) setState(() => _asking = false);
     }
@@ -512,6 +519,7 @@ class _AspectRowState extends ConsumerState<_AspectRow> {
     );
     if (fallo != null && mounted) setState(() => _oracleError = fallo);
   }
+
   static const _toneColor = {
     AspectTone.fusion: ArcanumColors.aspectUnion,
     AspectTone.armonico: ArcanumColors.aspectHarmony,
@@ -662,7 +670,10 @@ class _Reading extends StatelessWidget {
             TextButton.icon(
               onPressed: onOpenTarot,
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
@@ -819,7 +830,7 @@ class _SolarSummary extends StatelessWidget {
             Text(
               glyph,
               style: const TextStyle(
-                fontFamilyFallback: kGlyphFallback,  // el glifo, no el emoji
+                fontFamilyFallback: kGlyphFallback, // el glifo, no el emoji
                 fontSize: 22,
                 color: ArcanumColors.goldMuted,
               ),

@@ -76,12 +76,16 @@ class _ApiMuda extends ArcanumApi {
   }) async => {
     'day_ruler': 'sun',
     'planetary_hour': {
-      'planet': 'venus', 'minutes_remaining': 38,
-      'is_daytime': true, 'hour_number': 4,
+      'planet': 'venus',
+      'minutes_remaining': 38,
+      'is_daytime': true,
+      'hour_number': 4,
     },
     'moon': {
-      'illumination': 0.62, 'is_waxing': true,
-      'phase_name': 'Gibosa creciente', 'age_days': 10.0,
+      'illumination': 0.62,
+      'is_waxing': true,
+      'phase_name': 'Gibosa creciente',
+      'age_days': 10.0,
     },
   };
 
@@ -90,15 +94,24 @@ class _ApiMuda extends ArcanumApi {
     'date': '2026-09-04',
     'day_ruler': 'sun',
     'today': {
-      'transit': 'moon', 'natal': 'midheaven', 'aspect': 'trine',
-      'angle': 120, 'orb': 0.66, 'separation': 119.34, 'applying': true,
+      'transit': 'moon',
+      'natal': 'midheaven',
+      'aspect': 'trine',
+      'angle': 120,
+      'orb': 0.66,
+      'separation': 119.34,
+      'applying': true,
     },
     'chapter': null,
     'year': null,
     'ingress': null,
     'profection': {
-      'age': 35, 'house': 5, 'sign': 'capricorn', 'sign_es': 'Capricornio',
-      'lord': 'saturn', 'points_in_sign': ['saturn'],
+      'age': 35,
+      'house': 5,
+      'sign': 'capricorn',
+      'sign_es': 'Capricornio',
+      'lord': 'saturn',
+      'points_in_sign': ['saturn'],
     },
     'sect': 'day',
     'total_aspects': 3,
@@ -159,8 +172,11 @@ void main() {
       // `pump` con tiempo fijo y no `pumpAndSettle`: el Grimorio tiene un
       // sello que respira en bucle y el arbol no se queda quieto nunca.
       await tester.pump(const Duration(milliseconds: 400));
-      expect(_barra(tester).selectedIndex, i,
-          reason: 'el destino ${arcanumSections[i].title} no llego a su rama');
+      expect(
+        _barra(tester).selectedIndex,
+        i,
+        reason: 'el destino ${arcanumSections[i].title} no llego a su rama',
+      );
     }
   });
 

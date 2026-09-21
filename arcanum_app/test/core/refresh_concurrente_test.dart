@@ -28,33 +28,55 @@ class _Servidor implements HttpClientAdapter {
   final List<String> accesosVistos = [];
 
   @override
-  Future<ResponseBody> fetch(RequestOptions options, Stream<Uint8List>? _,
-      Future<void>? cancelar) async {
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? _,
+    Future<void>? cancelar,
+  ) async {
     if (options.path.contains('/auth/refresh')) {
       refrescos++;
       final enviado = (options.data as Map)['refresh_token'] as String;
       if (enviado != refreshValido) {
         // Token ya rotado: el backend real devuelve 401 aqui.
         rechazos++;
-        return ResponseBody.fromString('{"detail":"invalido"}', 401,
-            headers: {Headers.contentTypeHeader: [Headers.jsonContentType]});
+        return ResponseBody.fromString(
+          '{"detail":"invalido"}',
+          401,
+          headers: {
+            Headers.contentTypeHeader: [Headers.jsonContentType],
+          },
+        );
       }
       contador++;
       refreshValido = 'R$contador';
       return ResponseBody.fromString(
-        '{"access_token":"A$contador","refresh_token":"R$contador"}', 200,
-        headers: {Headers.contentTypeHeader: [Headers.jsonContentType]});
+        '{"access_token":"A$contador","refresh_token":"R$contador"}',
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
     }
 
     final auth = options.headers['Authorization'] as String? ?? '';
     accesosVistos.add(auth);
     // Solo el acceso mas reciente vale. El viejo (A1) esta caducado.
     if (auth == 'Bearer A1' || auth.isEmpty) {
-      return ResponseBody.fromString('{"detail":"caducado"}', 401,
-          headers: {Headers.contentTypeHeader: [Headers.jsonContentType]});
+      return ResponseBody.fromString(
+        '{"detail":"caducado"}',
+        401,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
     }
-    return ResponseBody.fromString('{"ok":true}', 200,
-        headers: {Headers.contentTypeHeader: [Headers.jsonContentType]});
+    return ResponseBody.fromString(
+      '{"ok":true}',
+      200,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
   }
 
   @override
@@ -78,6 +100,7 @@ class _Memoria extends TokenStorage {
     _a = access;
     _r = refresh;
   }
+
   @override
   Future<void> setAccess(String access) async => _a = access;
   @override
@@ -122,11 +145,16 @@ void main() {
     final quedaSesion = !storage.limpiada && (await storage.access) != null;
 
     // ignore: avoid_print
-    print('resultados=$resultados refrescos=${servidor.refrescos} '
-        'rechazos=${servidor.rechazos} sesion=$quedaSesion');
+    print(
+      'resultados=$resultados refrescos=${servidor.refrescos} '
+      'rechazos=${servidor.rechazos} sesion=$quedaSesion',
+    );
 
-    expect(resultados.every((c) => c == 200), isTrue,
-        reason: 'alguna peticion fallo: $resultados');
+    expect(
+      resultados.every((c) => c == 200),
+      isTrue,
+      reason: 'alguna peticion fallo: $resultados',
+    );
     expect(quedaSesion, isTrue, reason: 'la sesion se cerro sola');
   });
 

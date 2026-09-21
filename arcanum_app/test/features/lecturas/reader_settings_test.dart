@@ -22,9 +22,9 @@ void main() {
     addTearDown(container.dispose);
 
     container.read(readerSettingsProvider.notifier).setFontSize(22);
-    container.read(readerSettingsProvider.notifier).setPalette(
-      ReaderPalette.sepia,
-    );
+    container
+        .read(readerSettingsProvider.notifier)
+        .setPalette(ReaderPalette.sepia);
     await Future<void>.delayed(Duration.zero);
 
     final prefs = await SharedPreferences.getInstance();

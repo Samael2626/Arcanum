@@ -257,9 +257,8 @@ class _BridgeCard extends StatelessWidget {
           label: 'Leer «${bridge.chapterTitle}» en ${bridge.workTitle}',
           child: InkWell(
             borderRadius: BorderRadius.circular(14),
-            onTap: () => context.push(
-              '/saber/${bridge.workSlug}/${bridge.chapterSlug}',
-            ),
+            onTap: () =>
+                context.push('/saber/${bridge.workSlug}/${bridge.chapterSlug}'),
             child: Container(
               padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
               decoration: BoxDecoration(
@@ -284,8 +283,7 @@ class _BridgeCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   _rulings(),
-                  if (bridge.excerpt != null &&
-                      bridge.excerpt!.isNotEmpty) ...[
+                  if (bridge.excerpt != null && bridge.excerpt!.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),

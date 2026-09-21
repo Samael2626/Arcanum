@@ -33,8 +33,9 @@ class CielosFocusPlanet extends Notifier<String?> {
   void set(String? planet) => state = planet;
 }
 
-final cielosFocusPlanetProvider =
-    NotifierProvider<CielosFocusPlanet, String?>(CielosFocusPlanet.new);
+final cielosFocusPlanetProvider = NotifierProvider<CielosFocusPlanet, String?>(
+  CielosFocusPlanet.new,
+);
 
 /// Cara de la pestaña Cielo: 0 = Ahora (el instrumento del instante), 1 = Tu
 /// carta (la rueda natal).
@@ -60,5 +61,6 @@ class OraculoFocusCard extends Notifier<String?> {
   void set(String? slug) => state = slug;
 }
 
-final oraculoFocusCardProvider =
-    NotifierProvider<OraculoFocusCard, String?>(OraculoFocusCard.new);
+final oraculoFocusCardProvider = NotifierProvider<OraculoFocusCard, String?>(
+  OraculoFocusCard.new,
+);

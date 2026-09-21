@@ -102,12 +102,16 @@ class _ApiDeMuestra extends ArcanumApi {
   }) async => {
     'day_ruler': 'sun',
     'planetary_hour': {
-      'planet': 'venus', 'minutes_remaining': 38,
-      'is_daytime': true, 'hour_number': 4,
+      'planet': 'venus',
+      'minutes_remaining': 38,
+      'is_daytime': true,
+      'hour_number': 4,
     },
     'moon': {
-      'illumination': 0.62, 'is_waxing': true,
-      'phase_name': 'Gibosa creciente', 'age_days': 10.0,
+      'illumination': 0.62,
+      'is_waxing': true,
+      'phase_name': 'Gibosa creciente',
+      'age_days': 10.0,
     },
   };
 
@@ -116,26 +120,45 @@ class _ApiDeMuestra extends ArcanumApi {
     'date': '2026-08-24',
     'day_ruler': 'sun',
     'today': {
-      'transit': 'moon', 'natal': 'midheaven', 'aspect': 'trine',
-      'angle': 120, 'orb': 0.66, 'separation': 119.34,
-      'applying': true, 'tempo': 'fast',
+      'transit': 'moon',
+      'natal': 'midheaven',
+      'aspect': 'trine',
+      'angle': 120,
+      'orb': 0.66,
+      'separation': 119.34,
+      'applying': true,
+      'tempo': 'fast',
     },
     'chapter': {
-      'transit': 'saturn', 'natal': 'sun', 'aspect': 'square',
-      'angle': 90, 'orb': 0.2, 'separation': 89.8,
-      'applying': true, 'tempo': 'slow',
+      'transit': 'saturn',
+      'natal': 'sun',
+      'aspect': 'square',
+      'angle': 90,
+      'orb': 0.2,
+      'separation': 89.8,
+      'applying': true,
+      'tempo': 'slow',
       'exact_at': '2026-08-28T00:00:00+00:00',
     },
     'year': {
-      'transit': 'moon', 'natal': 'saturn', 'aspect': 'sextile',
-      'angle': 60, 'orb': 1.1, 'separation': 61.1,
-      'applying': true, 'tempo': 'fast',
+      'transit': 'moon',
+      'natal': 'saturn',
+      'aspect': 'sextile',
+      'angle': 60,
+      'orb': 1.1,
+      'separation': 61.1,
+      'applying': true,
+      'tempo': 'fast',
     },
     // Profeccion anual: sin esto la banda del anio no se pinta, que es
     // justamente lo que hace la app cuando no hay fecha de nacimiento.
     'profection': {
-      'age': 35, 'house': 5, 'sign': 'capricorn', 'sign_es': 'Capricornio',
-      'lord': 'saturn', 'points_in_sign': ['saturn'],
+      'age': 35,
+      'house': 5,
+      'sign': 'capricorn',
+      'sign_es': 'Capricornio',
+      'lord': 'saturn',
+      'points_in_sign': ['saturn'],
     },
     'sect': 'day',
     'total_aspects': 9,
@@ -144,11 +167,15 @@ class _ApiDeMuestra extends ArcanumApi {
   @override
   Future<Map<String, dynamic>> horoscope({DateTime? day}) async => {
     'date': '2026-08-24',
-    'text': 'Saturno cierra un cuadrado con tu Sol: figura de tension entre '
+    'text':
+        'Saturno cierra un cuadrado con tu Sol: figura de tension entre '
         'cuerpos que se miran de frente. En la hora del Sol se trabajaba el oro.',
     'primary': {
-      'transit': 'saturn', 'natal': 'sun', 'aspect': 'square',
-      'orb': 0.2, 'applying': true,
+      'transit': 'saturn',
+      'natal': 'sun',
+      'aspect': 'square',
+      'orb': 0.2,
+      'applying': true,
       'exact_at': '2026-08-28T00:00:00+00:00',
     },
     'supporting': const [],
@@ -157,24 +184,52 @@ class _ApiDeMuestra extends ArcanumApi {
 
   @override
   Future<Map<String, dynamic>> agenda({int days = 7}) async => {
-    'from': '2026-08-24', 'to': '2026-08-31', 'days': days, 'max_days': 30,
+    'from': '2026-08-24',
+    'to': '2026-08-31',
+    'days': days,
+    'max_days': 30,
     'background': {
-      'transit': 'jupiter', 'natal': 'north_node', 'aspect': 'opposition',
+      'transit': 'jupiter',
+      'natal': 'north_node',
+      'aspect': 'opposition',
     },
     'events': [
-      {'kind': 'aspect_exact', 'date': '2026-08-25', 'transit': 'mercury',
-       'natal': 'sun', 'aspect': 'square'},
-      {'kind': 'house_ingress', 'date': '2026-08-27', 'transit': 'mars',
-       'from_house': 6, 'to_house': 7},
-      {'kind': 'aspect_exact', 'date': '2026-08-29', 'transit': 'venus',
-       'natal': 'ascendant', 'aspect': 'trine'},
-      {'kind': 'profection_change', 'date': '2026-08-30', 'age': 37,
-       'house': 6, 'lord': 'mercury', 'from_lord': 'venus'},
+      {
+        'kind': 'aspect_exact',
+        'date': '2026-08-25',
+        'transit': 'mercury',
+        'natal': 'sun',
+        'aspect': 'square',
+      },
+      {
+        'kind': 'house_ingress',
+        'date': '2026-08-27',
+        'transit': 'mars',
+        'from_house': 6,
+        'to_house': 7,
+      },
+      {
+        'kind': 'aspect_exact',
+        'date': '2026-08-29',
+        'transit': 'venus',
+        'natal': 'ascendant',
+        'aspect': 'trine',
+      },
+      {
+        'kind': 'profection_change',
+        'date': '2026-08-30',
+        'age': 37,
+        'house': 6,
+        'lord': 'mercury',
+        'from_lord': 'venus',
+      },
     ],
   };
 
   @override
-  Future<List<Map<String, dynamic>>> horoscopeHistory({int limit = 30}) async => [
+  Future<List<Map<String, dynamic>>> horoscopeHistory({
+    int limit = 30,
+  }) async => [
     {
       'date': '2026-08-23',
       'text': 'Marte entró en tu casa 7 y el trato de ayer pide una respuesta.',
@@ -212,12 +267,27 @@ class _ApiDeMuestra extends ArcanumApi {
         {'name': 'jupiter', 'longitude': 42.0},
       ],
       'aspects_to_natal': [
-        {'transit': 'saturn', 'natal': 'sun', 'aspect': 'square',
-         'angle': 90, 'separation': 89.8},
-        {'transit': 'moon', 'natal': 'midheaven', 'aspect': 'trine',
-         'angle': 120, 'separation': 119.34},
-        {'transit': 'jupiter', 'natal': 'venus', 'aspect': 'sextile',
-         'angle': 60, 'separation': 60.4},
+        {
+          'transit': 'saturn',
+          'natal': 'sun',
+          'aspect': 'square',
+          'angle': 90,
+          'separation': 89.8,
+        },
+        {
+          'transit': 'moon',
+          'natal': 'midheaven',
+          'aspect': 'trine',
+          'angle': 120,
+          'separation': 119.34,
+        },
+        {
+          'transit': 'jupiter',
+          'natal': 'venus',
+          'aspect': 'sextile',
+          'angle': 60,
+          'separation': 60.4,
+        },
       ],
     },
   };
@@ -484,14 +554,20 @@ void main() {
               key: clave,
               child: const TarjetaCompartir(
                 aspecto: {
-                  'transit': 'moon', 'natal': 'midheaven', 'aspect': 'trine',
-                  'angle': 120, 'separation': 119.34,
+                  'transit': 'moon',
+                  'natal': 'midheaven',
+                  'aspect': 'trine',
+                  'angle': 120,
+                  'separation': 119.34,
                 },
                 profeccion: {
-                  'age': 35, 'house': 5, 'sign_es': 'Capricornio',
+                  'age': 35,
+                  'house': 5,
+                  'sign_es': 'Capricornio',
                   'lord': 'saturn',
                 },
-                texto: 'Saturno cierra un cuadrado con tu Sol: figura de '
+                texto:
+                    'Saturno cierra un cuadrado con tu Sol: figura de '
                     'tension entre cuerpos que se miran de frente. En la hora '
                     'del Sol se trabajaba el oro.',
                 // Con signo, que es el caso normal: la lamina de fondo y el
@@ -517,13 +593,15 @@ void main() {
     await tester.pumpAndSettle();
     final png = await tester.runAsync(() => pintarTarjeta(clave));
     expect(png, isNotNull);
-    File('test/capturas/salida/10-tarjeta-compartir.png')
-        .writeAsBytesSync(png!);
+    File(
+      'test/capturas/salida/10-tarjeta-compartir.png',
+    ).writeAsBytesSync(png!);
   });
 
   testWidgets('99 diagnostico: que hay en pantalla', (tester) async {
     await _montar(tester);
-    final textos = tester.widgetList<Text>(find.byType(Text))
+    final textos = tester
+        .widgetList<Text>(find.byType(Text))
         .map((t) => t.data)
         .where((d) => d != null && d.trim().isNotEmpty)
         .toList();

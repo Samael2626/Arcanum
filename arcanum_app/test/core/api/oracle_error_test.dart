@@ -36,27 +36,41 @@ void main() {
     });
 
     test('el 422 de dominio nombra la carta natal, sin rutas de la API', () {
-      final msg = oracleErrorMessage(_http(422, data: {
-        'detail': 'Calcula primero tu carta natal con POST /astral/natal-chart.',
-      }));
-      expect(msg, 'Falta tu carta natal. Calcúlala antes de consultar al oráculo.');
+      final msg = oracleErrorMessage(
+        _http(
+          422,
+          data: {
+            'detail':
+                'Calcula primero tu carta natal con POST /astral/natal-chart.',
+          },
+        ),
+      );
+      expect(
+        msg,
+        'Falta tu carta natal. Calcúlala antes de consultar al oráculo.',
+      );
       expect(msg, isNot(contains('/astral')));
       expect(msg, isNot(contains('POST')));
     });
 
     test('el 422 de validacion con detail lista no habla de carta natal', () {
       // Lo que devuelve FastAPI cuando falta la cabecera Idempotency-Key.
-      final msg = oracleErrorMessage(_http(422, data: {
-        'detail': [
-          {
-            'type': 'missing',
-            'loc': ['header', 'Idempotency-Key'],
-            'msg': 'Field required',
-            'input': null,
-            'url': 'https://errors.pydantic.dev/2.10/v/missing',
-          }
-        ],
-      }));
+      final msg = oracleErrorMessage(
+        _http(
+          422,
+          data: {
+            'detail': [
+              {
+                'type': 'missing',
+                'loc': ['header', 'Idempotency-Key'],
+                'msg': 'Field required',
+                'input': null,
+                'url': 'https://errors.pydantic.dev/2.10/v/missing',
+              },
+            ],
+          },
+        ),
+      );
       expect(msg, validationFallbackMessage);
       expect(msg.toLowerCase(), isNot(contains('carta natal')));
       expect(msg, isNot(contains('Idempotency-Key')));
@@ -87,7 +101,13 @@ void main() {
 
     test('el 500 da mensaje humano y no filtra nada tecnico', () {
       final msg = oracleErrorMessage(
-        _http(500, data: {'detail': "TypeError: build_oracle_context() missing 1 required positional argument: 'db'"}),
+        _http(
+          500,
+          data: {
+            'detail':
+                "TypeError: build_oracle_context() missing 1 required positional argument: 'db'",
+          },
+        ),
       );
       expect(
         msg,
@@ -112,7 +132,9 @@ void main() {
     });
 
     test('un fallo desconocido no expone el objeto de error', () {
-      final msg = oracleErrorMessage(StateError('socket cerrado en /oracle/ia'));
+      final msg = oracleErrorMessage(
+        StateError('socket cerrado en /oracle/ia'),
+      );
       expect(msg, 'La IA ritual no respondió. Intenta de nuevo.');
       expect(msg, isNot(contains('socket cerrado')));
       expect(msg, isNot(contains('StateError')));
@@ -167,7 +189,9 @@ void main() {
       response: Response(
         requestOptions: RequestOptions(path: '/oracle/ia'),
         statusCode: 402,
-        data: {'detail': {'message': 'Compra créditos para continuar.'}},
+        data: {
+          'detail': {'message': 'Compra créditos para continuar.'},
+        },
       ),
     );
     expect(oracleErrorMessage(error), 'Compra créditos para continuar.');

@@ -25,10 +25,3 @@ class CreditService:
             return False
         db.execute(update(User).where(User.id == user_id).values(credits_balance=User.credits_balance + delta))
         return True
-
-    def spend(self, db: Session, user_id: UUID, amount: int, reason: str) -> bool:
-        result = db.execute(update(User).where(User.id == user_id, User.credits_balance >= amount).values(credits_balance=User.credits_balance - amount).returning(User.credits_balance)).first()
-        if result is None:
-            return False
-        db.add(CreditLedger(user_id=user_id, delta=-amount, reason=reason))
-        return True

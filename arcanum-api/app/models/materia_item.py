@@ -1,6 +1,5 @@
-from sqlalchemy import Column, DateTime, String, text, ARRAY
+from sqlalchemy import Column, String, text, ARRAY
 from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB
-from sqlalchemy.sql import func
 from app.db.session import Base
 
 class MateriaItem(Base):

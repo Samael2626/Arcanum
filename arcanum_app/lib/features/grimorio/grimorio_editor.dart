@@ -192,7 +192,6 @@ class _TypeSelector extends StatelessWidget {
               color: sel
                   ? ArcanumColors.gold.withValues(alpha: 0.16)
                   : Colors.transparent,
-
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,

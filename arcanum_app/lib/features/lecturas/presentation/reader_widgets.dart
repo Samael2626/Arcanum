@@ -186,8 +186,7 @@ class ReaderBottomBar extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      decoration: BoxDecoration(
-      ),
+      decoration: BoxDecoration(),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
@@ -199,13 +198,7 @@ class ReaderBottomBar extends StatelessWidget {
             muted,
           ),
           _action('Índice', Icons.list_alt_outlined, onIndex, gold, muted),
-          _action(
-            'Marcar',
-            Icons.bookmark_border,
-            onBookmark,
-            gold,
-            muted,
-          ),
+          _action('Marcar', Icons.bookmark_border, onBookmark, gold, muted),
           _action(
             'Siguiente',
             Icons.chevron_right,
@@ -595,14 +588,15 @@ class _PaletteChip extends StatelessWidget {
             ],
             Text(
               palette.label,
-              style: ArcanumText.body(
-                14,
-                color: palette == ReaderPalette.sepia
-                    ? ReaderColors.sepiaInk
-                    : ArcanumColors.ivory,
-              ).copyWith(
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-              ),
+              style:
+                  ArcanumText.body(
+                    14,
+                    color: palette == ReaderPalette.sepia
+                        ? ReaderColors.sepiaInk
+                        : ArcanumColors.ivory,
+                  ).copyWith(
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                  ),
             ),
           ],
         ),
@@ -672,12 +666,19 @@ Future<String?> showPassageNoteDialog(
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.lock_outline, size: 13, color: ArcanumColors.goldMuted),
+              const Icon(
+                Icons.lock_outline,
+                size: 13,
+                color: ArcanumColors.goldMuted,
+              ),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   'Tu nota se cifra en este dispositivo. Nadie más puede leerla.',
-                  style: ArcanumText.body(11.5, color: ArcanumColors.ivoryMuted),
+                  style: ArcanumText.body(
+                    11.5,
+                    color: ArcanumColors.ivoryMuted,
+                  ),
                 ),
               ),
             ],
@@ -824,7 +825,9 @@ class _MateriaLinkState extends ConsumerState<_MateriaLink> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo abrir la ficha de la planta.')),
+        const SnackBar(
+          content: Text('No se pudo abrir la ficha de la planta.'),
+        ),
       );
     } finally {
       if (mounted) setState(() => _opening = false);
@@ -981,9 +984,9 @@ class _PassageActionsState extends ConsumerState<_PassageActions> {
               await Clipboard.setData(ClipboardData(text: widget.text));
               if (context.mounted) {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Pasaje copiado')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('Pasaje copiado')));
               }
             }),
             _row(
@@ -1017,9 +1020,7 @@ class _PassageActionsState extends ConsumerState<_PassageActions> {
                     Text('EL ORÁCULO', style: ArcanumText.label()),
                     const SizedBox(height: 8),
                     Text(
-                      _reply!.isEmpty
-                          ? 'El oráculo guardó silencio.'
-                          : _reply!,
+                      _reply!.isEmpty ? 'El oráculo guardó silencio.' : _reply!,
                       style: ArcanumText.body(14.5),
                     ),
                   ],
@@ -1032,9 +1033,7 @@ class _PassageActionsState extends ConsumerState<_PassageActions> {
   }
 
   Widget _row(IconData icon, String label, VoidCallback? onTap) {
-    final color = onTap == null
-        ? ArcanumColors.ivoryMuted
-        : ArcanumColors.gold;
+    final color = onTap == null ? ArcanumColors.ivoryMuted : ArcanumColors.gold;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),

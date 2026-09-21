@@ -38,10 +38,9 @@ class WorkCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tint = HSLColor.fromColor(ArcanumColors.surfaceHigh)
-        .withHue((200 + _hueShift * 120) % 360)
-        .withLightness(0.11)
-        .toColor();
+    final tint = HSLColor.fromColor(
+      ArcanumColors.surfaceHigh,
+    ).withHue((200 + _hueShift * 120) % 360).withLightness(0.11).toColor();
 
     return Semantics(
       label: '$title, de $author${year != null ? ', $year' : ''}',

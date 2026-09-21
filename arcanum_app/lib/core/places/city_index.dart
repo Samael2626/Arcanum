@@ -37,8 +37,7 @@ class City {
 
   /// Lo que ve la persona en la lista y en la confirmacion.
   /// "Córdoba, Andalucía, España" — sin region: "Mónaco, Mónaco".
-  String get label =>
-      [name, if (region.isNotEmpty) region, country].join(', ');
+  String get label => [name, if (region.isNotEmpty) region, country].join(', ');
 }
 
 /// Un pais del desplegable.
@@ -68,7 +67,11 @@ abstract class CityIndex {
   /// - Una [query] vacia o de un solo caracter devuelve lista vacia: filtrar
   ///   69.000 filas por una letra no ayuda a nadie y bloquea la interfaz.
   /// - Nunca lanza por una consulta rara. Sin resultados es lista vacia.
-  Future<List<City>> search(String query, {String? countryCode, int limit = 30});
+  Future<List<City>> search(
+    String query, {
+    String? countryCode,
+    int limit = 30,
+  });
 
   /// Paises del catalogo, ordenados alfabeticamente por nombre.
   Future<List<Country>> countries();

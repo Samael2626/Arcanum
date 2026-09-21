@@ -12,7 +12,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.data.deck_data import LEGACY_STATIC_DECK, attr, derive_name_es
-from app.domain.spreads import get_spread, list_spreads
+from app.domain.spreads import get_spread
 from app.models.tarot import TarotCard, TarotReading
 from app.schemas.tarot import TarotCardInDeck, TarotReadingResponse
 

@@ -85,17 +85,49 @@ const String kToxicNotice =
 /// Las que de verdad envenenan. La lista es corta a proposito: cada nombre de
 /// aqui es una planta que puede matar, no una que "conviene vigilar".
 const List<String> kToxicBotanicals = [
-  'acónito', 'aconito', 'beleño', 'beleno', 'mandrágora', 'mandragora',
-  'belladona', 'cicuta', 'estramonio', 'digital', 'dedalera',
-  'tejo', 'adelfa', 'ruda', 'ajenjo', 'poleo', 'muérdago', 'muerdago',
+  'acónito',
+  'aconito',
+  'beleño',
+  'beleno',
+  'mandrágora',
+  'mandragora',
+  'belladona',
+  'cicuta',
+  'estramonio',
+  'digital',
+  'dedalera',
+  'tejo',
+  'adelfa',
+  'ruda',
+  'ajenjo',
+  'poleo',
+  'muérdago',
+  'muerdago',
 ];
 
 /// Alimentos. Nombrarlas o beberlas no es un riesgo; el aviso solo recuerda
 /// que acompanan y no tratan.
 const List<String> kCulinaryBotanicals = [
-  'manzanilla', 'tilo', 'menta', 'hierbabuena', 'jengibre', 'romero',
-  'laurel', 'salvia', 'lavanda', 'canela', 'tomillo', 'melisa', 'anís',
-  'anis', 'valeriana', 'té', 'infusión', 'infusion', 'tisana', 'hierba',
+  'manzanilla',
+  'tilo',
+  'menta',
+  'hierbabuena',
+  'jengibre',
+  'romero',
+  'laurel',
+  'salvia',
+  'lavanda',
+  'canela',
+  'tomillo',
+  'melisa',
+  'anís',
+  'anis',
+  'valeriana',
+  'té',
+  'infusión',
+  'infusion',
+  'tisana',
+  'hierba',
 ];
 
 /// Busca la planta como PALABRA ENTERA, no como subcadena.
@@ -302,7 +334,9 @@ class _ReportSheetState extends State<_ReportSheet> {
       _error = null;
     });
     try {
-      await widget.ref.read(arcanumApiProvider).reportContent(
+      await widget.ref
+          .read(arcanumApiProvider)
+          .reportContent(
             surface: widget.surface,
             reason: _reason!,
             excerpt: widget.text,
@@ -310,9 +344,9 @@ class _ReportSheetState extends State<_ReportSheet> {
           );
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gracias. Lo revisaremos.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Gracias. Lo revisaremos.')));
     } catch (_) {
       // Sin traza cruda en pantalla: no le dice nada a quien lee y expone
       // detalle del servidor. El motivo concreto vive en el log.
@@ -349,7 +383,9 @@ class _ReportSheetState extends State<_ReportSheet> {
           // sitio, asi que no se hereda una API que ya avisa de su retirada.
           for (final entry in kReportReasons.entries)
             InkWell(
-              onTap: _sending ? null : () => setState(() => _reason = entry.key),
+              onTap: _sending
+                  ? null
+                  : () => setState(() => _reason = entry.key),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Row(

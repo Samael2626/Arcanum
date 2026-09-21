@@ -14,16 +14,19 @@ void main() {
     );
   });
 
-  test('release rechaza unidades AdMob ausentes cuando los anuncios estan activos', () {
-    expect(
-      () => ReleaseConfig.validateForStartup(
-        releaseMode: true,
-        apiKey: 'public_sdk_key',
-        ads: true,
-      ),
-      throwsStateError,
-    );
-  });
+  test(
+    'release rechaza unidades AdMob ausentes cuando los anuncios estan activos',
+    () {
+      expect(
+        () => ReleaseConfig.validateForStartup(
+          releaseMode: true,
+          apiKey: 'public_sdk_key',
+          ads: true,
+        ),
+        throwsStateError,
+      );
+    },
+  );
 
   test('con anuncios apagados no se exigen unidades AdMob', () {
     // Los anuncios estan apagados hasta que exista el UMP: exigir sus

@@ -28,14 +28,19 @@ void main() {
     );
   });
 
-  test('tampoco hay una configuracion de red que lo permita por la puerta de atras', () {
-    final config = File('android/app/src/main/res/xml/network_security_config.xml');
-    if (!config.existsSync()) return;
-    expect(
-      config.readAsStringSync(),
-      isNot(contains('cleartextTrafficPermitted="true"')),
-    );
-  });
+  test(
+    'tampoco hay una configuracion de red que lo permita por la puerta de atras',
+    () {
+      final config = File(
+        'android/app/src/main/res/xml/network_security_config.xml',
+      );
+      if (!config.existsSync()) return;
+      expect(
+        config.readAsStringSync(),
+        isNot(contains('cleartextTrafficPermitted="true"')),
+      );
+    },
+  );
 
   test('el APK de release no declara cleartext', () {
     // Solo corre si hay un APK de release construido; en local no suele

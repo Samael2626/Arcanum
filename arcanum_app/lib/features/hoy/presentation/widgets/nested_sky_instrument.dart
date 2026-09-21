@@ -134,8 +134,7 @@ class _NestedSkyInstrumentState extends State<NestedSkyInstrument> {
                   widget.hour,
                   (widget.hour?['minutes_remaining'] as num?)?.toInt(),
                 ),
-                hourNumber:
-                    (widget.hour?['hour_number'] as num?)?.toInt() ?? 0,
+                hourNumber: (widget.hour?['hour_number'] as num?)?.toInt() ?? 0,
                 isDay: widget.hour?['is_daytime'] == true,
                 onTap: widget.onHourTap!,
               ),
@@ -290,7 +289,7 @@ class _Selector extends StatelessWidget {
           child: Text(
             planetGlyph[ruler] ?? '✦',
             style: TextStyle(
-              fontFamilyFallback: kGlyphFallback,  // el glifo, no el emoji
+              fontFamilyFallback: kGlyphFallback, // el glifo, no el emoji
               fontSize: 20,
               height: 1,
               color: ArcanumMood.forPlanet(ruler).accent,
@@ -300,15 +299,14 @@ class _Selector extends StatelessWidget {
         const SizedBox(width: 10),
         _Boton(
           key: const Key('hoy-selector-hour'),
-          semantica:
-              'Hora planetaria: ${planetEs[hourPlanet] ?? hourPlanet}',
+          semantica: 'Hora planetaria: ${planetEs[hourPlanet] ?? hourPlanet}',
           activo: elegido == SkyBody.hour,
           acento: ArcanumMood.forPlanet(hourPlanet).accent,
           onTap: () => onElegir(SkyBody.hour),
           child: Text(
             planetGlyph[hourPlanet] ?? '✦',
             style: TextStyle(
-              fontFamilyFallback: kGlyphFallback,  // el glifo, no el emoji
+              fontFamilyFallback: kGlyphFallback, // el glifo, no el emoji
               fontSize: 20,
               height: 1,
               color: ArcanumMood.forPlanet(hourPlanet).accent,
@@ -324,11 +322,7 @@ class _Selector extends StatelessWidget {
           onTap: () => onElegir(SkyBody.moon),
           // El disco lunar de verdad, con su fase: es mas reconocible que un
           // glifo y ya se dibuja arriba, asi que no introduce vocabulario nuevo.
-          child: MoonDisc(
-            illumination: illumination,
-            waxing: waxing,
-            size: 20,
-          ),
+          child: MoonDisc(illumination: illumination, waxing: waxing, size: 20),
         ),
       ],
     );
@@ -413,7 +407,11 @@ class _Panel extends StatelessWidget {
           style: ArcanumText.body(13, color: ArcanumColors.ivoryMuted),
         ),
         const SizedBox(height: 4),
-        Text(nombre, textAlign: TextAlign.center, style: ArcanumText.heading(26)),
+        Text(
+          nombre,
+          textAlign: TextAlign.center,
+          style: ArcanumText.heading(26),
+        ),
         const SizedBox(height: 5),
         Text(
           dato,

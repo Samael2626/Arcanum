@@ -41,12 +41,16 @@ void main() {
   test('carga e indexado del catalogo real dentro de presupuesto', () {
     final file = File('assets/data/cities.txt');
     if (!file.existsSync()) {
-      fail('Falta ${file.path}. Generalo con: python tools/build_city_catalog.py');
+      fail(
+        'Falta ${file.path}. Generalo con: python tools/build_city_catalog.py',
+      );
     }
 
     final indexFile = File('assets/data/cities.bin');
     if (!indexFile.existsSync()) {
-      fail('Falta ${indexFile.path}. Generalo con: python tools/build_city_catalog.py');
+      fail(
+        'Falta ${indexFile.path}. Generalo con: python tools/build_city_catalog.py',
+      );
     }
 
     final readWatch = Stopwatch()..start();
@@ -64,14 +68,19 @@ void main() {
     firstWatch.stop();
 
     // ignore: avoid_print
-    print('[perf] leer asset ${source.length ~/ 1024} KB: '
-        '${readWatch.elapsedMilliseconds} ms | indexar: '
-        '${parseWatch.elapsedMilliseconds} ms | primera busqueda: '
-        '${firstWatch.elapsedMicroseconds} us');
+    print(
+      '[perf] leer asset ${source.length ~/ 1024} KB: '
+      '${readWatch.elapsedMilliseconds} ms | indexar: '
+      '${parseWatch.elapsedMilliseconds} ms | primera busqueda: '
+      '${firstWatch.elapsedMicroseconds} us',
+    );
 
     expect(catalog.cityCount, greaterThan(69000));
-    expect(parseWatch.elapsed, lessThan(loadBudget),
-        reason: 'indexar el catalogo tarda demasiado');
+    expect(
+      parseWatch.elapsed,
+      lessThan(loadBudget),
+      reason: 'indexar el catalogo tarda demasiado',
+    );
 
     var worst = Duration.zero;
     var worstQuery = '';
@@ -89,8 +98,11 @@ void main() {
       }
       // ignore: avoid_print
       print('[perf] "$query": ${watch.elapsedMicroseconds} us');
-      expect(watch.elapsed, lessThan(frameBudget),
-          reason: 'la busqueda "$query" no cabe en un fotograma');
+      expect(
+        watch.elapsed,
+        lessThan(frameBudget),
+        reason: 'la busqueda "$query" no cabe en un fotograma',
+      );
     }
 
     // Con filtro de pais, que descarta filas pero recorre lo mismo.

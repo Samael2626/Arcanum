@@ -16,22 +16,24 @@ import 'package:flutter_test/flutter_test.dart';
 /// `props` son las PROPIEDADES de la ficha: el widget las lee de
 /// `d['properties']`, no de la raiz del mapa.
 Future<void> _abrir(WidgetTester tester, Map<String, dynamic> props) async {
-  await tester.pumpWidget(MaterialApp(
-    home: Builder(
-      builder: (context) => Scaffold(
-        body: TextButton(
-          onPressed: () => showMateriaLoreSheet(
-            context,
-            future: Future.value(<String, dynamic>{'properties': props}),
-            slug: 'x',
-            name: 'Prueba',
-            itemType: 'planta',
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Builder(
+        builder: (context) => Scaffold(
+          body: TextButton(
+            onPressed: () => showMateriaLoreSheet(
+              context,
+              future: Future.value(<String, dynamic>{'properties': props}),
+              slug: 'x',
+              name: 'Prueba',
+              itemType: 'planta',
+            ),
+            child: const Text('abrir'),
           ),
-          child: const Text('abrir'),
         ),
       ),
     ),
-  ));
+  );
   await tester.tap(find.text('abrir'));
   await tester.pumpAndSettle();
 }

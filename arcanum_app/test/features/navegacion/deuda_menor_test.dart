@@ -81,10 +81,9 @@ void main() {
     await tester.pump();
     for (final rotulo in ['Plantas', 'Biblioteca']) {
       final caja = tester.getRect(
-        find.ancestor(
-          of: find.text(rotulo),
-          matching: find.byType(InkWell),
-        ).first,
+        find
+            .ancestor(of: find.text(rotulo), matching: find.byType(InkWell))
+            .first,
       );
       expect(
         caja.height,

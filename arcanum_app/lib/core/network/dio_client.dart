@@ -55,7 +55,7 @@ Dio buildDio(TokenStorage storage, {Dio? refreshDio}) {
 
 class _AuthInterceptor extends QueuedInterceptor {
   _AuthInterceptor(this._storage, [Dio? refreshDio])
-      : _bare = refreshDio ?? Dio(BaseOptions(baseUrl: kBaseUrl));
+    : _bare = refreshDio ?? Dio(BaseOptions(baseUrl: kBaseUrl));
   final TokenStorage _storage;
   // Dio "desnudo" para el refresh: no pasa por este interceptor (evita recursión).
   final Dio _bare;

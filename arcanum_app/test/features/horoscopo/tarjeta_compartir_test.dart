@@ -60,8 +60,10 @@ Future<GlobalKey> _montar(
 /// enteros seria pagar caro una comprobacion barata.
 (int, int) _tamanoPng(Uint8List png) {
   int leer(int desde) =>
-      (png[desde] << 24) | (png[desde + 1] << 16) |
-      (png[desde + 2] << 8) | png[desde + 3];
+      (png[desde] << 24) |
+      (png[desde + 1] << 16) |
+      (png[desde + 2] << 8) |
+      png[desde + 3];
   return (leer(16), leer(20));
 }
 
@@ -76,7 +78,10 @@ void main() {
 
     test('respeta los signos de cierre y los espacios sobrantes', () {
       expect(primeraFrase('  ¿Y si no?   Pues eso.  '), '¿Y si no?');
-      expect(primeraFrase('Una sola línea sin más.'), 'Una sola línea sin más.');
+      expect(
+        primeraFrase('Una sola línea sin más.'),
+        'Una sola línea sin más.',
+      );
     });
 
     test('si la primera oración no cabe, NO se corta: se deja fuera', () {

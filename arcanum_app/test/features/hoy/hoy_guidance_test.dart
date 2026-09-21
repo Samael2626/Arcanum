@@ -38,12 +38,15 @@ void main() {
       expect(step.slug, 'rosemary');
     });
 
-    test('Culpeper cae a plantas cuando el planeta no tiene capítulo limpio', () {
-      // La Luna no tiene hierba lunar coincidente en Culpeper.
-      final step = nextStepFor(hourPlanet: 'moon', hourNumber: 2);
-      expect(step!.kind, NextStepKind.materia);
-      expect(step.planet, 'moon');
-    });
+    test(
+      'Culpeper cae a plantas cuando el planeta no tiene capítulo limpio',
+      () {
+        // La Luna no tiene hierba lunar coincidente en Culpeper.
+        final step = nextStepFor(hourPlanet: 'moon', hourNumber: 2);
+        expect(step!.kind, NextStepKind.materia);
+        expect(step.planet, 'moon');
+      },
+    );
 
     test('el paso de tarot lleva el arcano planetario', () {
       final step = nextStepFor(hourPlanet: 'mars', hourNumber: 3);

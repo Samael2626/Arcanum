@@ -43,7 +43,7 @@ def client(engine, monkeypatch):
 
 def _event(app_user_id, event_type, product_id=CREDITS_PRODUCT, *,
            event_id=None, transaction_id="tx-1", ms=1_800_000_000_000,
-           expiration_ms=None):
+           expiration_ms=None, cancel_reason=None):
     event = {
         "id": event_id or f"evt-{uuid.uuid4()}",
         "type": event_type,
@@ -54,7 +54,19 @@ def _event(app_user_id, event_type, product_id=CREDITS_PRODUCT, *,
     }
     if expiration_ms is not None:
         event["expiration_at_ms"] = expiration_ms
+    if cancel_reason is not None:
+        event["cancel_reason"] = cancel_reason
     return {"event": event, "customer": {"original_app_user_id": str(app_user_id)}}
+
+
+def _refund(app_user_id, product_id=CREDITS_PRODUCT, **kw):
+    """Un reembolso real de RevenueCat: CANCELLATION + cancel_reason.
+
+    No existe un evento REFUND. Los tests que lo inventaban pasaban en verde
+    contra una rama del router que en produccion no se ejecutaba nunca.
+    """
+    return _event(app_user_id, "CANCELLATION", product_id,
+                  cancel_reason="CUSTOMER_SUPPORT", **kw)
 
 
 def _post(client, payload, token=SECRET):
@@ -153,12 +165,12 @@ def test_usuario_inexistente_responde_5xx_y_no_quema_el_evento(client, engine):
     assert _balance(engine, huerfano) == CREDITS_AMOUNT
 
 
-# 5) Refund ------------------------------------------------------------------
-def test_refund_crea_reverso_compensatorio_auditable(client, engine, user_id):
+# 5) Reembolso (CANCELLATION + cancel_reason CUSTOMER_SUPPORT) ------------------------------------------------------------------
+def test_reembolso_por_cancellation_crea_reverso_compensatorio_auditable(client, engine, user_id):
     assert _post(client, _event(user_id, "NON_RENEWING_PURCHASE")).status_code == 200
     assert _balance(engine, user_id) == CREDITS_AMOUNT
 
-    resp = _post(client, _event(user_id, "REFUND", ms=1_800_000_001_000))
+    resp = _post(client, _refund(user_id, ms=1_800_000_001_000))
     assert resp.status_code == 200
     assert _balance(engine, user_id) == 0
 
@@ -174,7 +186,7 @@ def test_refund_crea_reverso_compensatorio_auditable(client, engine, user_id):
 # 6) REFUND_REVERSED ---------------------------------------------------------
 def test_refund_reversed_compensa_el_refund_previo(client, engine, user_id):
     assert _post(client, _event(user_id, "NON_RENEWING_PURCHASE")).status_code == 200
-    assert _post(client, _event(user_id, "REFUND", ms=1_800_000_001_000)).status_code == 200
+    assert _post(client, _refund(user_id, ms=1_800_000_001_000)).status_code == 200
     assert _balance(engine, user_id) == 0
 
     resp = _post(client, _event(user_id, "REFUND_REVERSED", ms=1_800_000_002_000))
@@ -194,7 +206,7 @@ def test_refund_reversed_sin_refund_previo_no_regala_creditos(client, engine, us
 
 def test_dos_refund_reversed_no_compensan_el_mismo_refund_dos_veces(client, engine, user_id):
     assert _post(client, _event(user_id, "NON_RENEWING_PURCHASE")).status_code == 200
-    assert _post(client, _event(user_id, "REFUND", ms=1_800_000_001_000)).status_code == 200
+    assert _post(client, _refund(user_id, ms=1_800_000_001_000)).status_code == 200
     assert _post(client, _event(user_id, "REFUND_REVERSED", ms=1_800_000_002_000)).status_code == 200
     assert _balance(engine, user_id) == CREDITS_AMOUNT
 
@@ -206,7 +218,7 @@ def test_dos_refund_reversed_no_compensan_el_mismo_refund_dos_veces(client, engi
 
 def test_refund_reversed_de_otra_transaccion_no_se_correlaciona(client, engine, user_id):
     assert _post(client, _event(user_id, "NON_RENEWING_PURCHASE", transaction_id="tx-A")).status_code == 200
-    assert _post(client, _event(user_id, "REFUND", transaction_id="tx-A", ms=1_800_000_001_000)).status_code == 200
+    assert _post(client, _refund(user_id, transaction_id="tx-A", ms=1_800_000_001_000)).status_code == 200
     assert _balance(engine, user_id) == 0
 
     resp = _post(client, _event(user_id, "REFUND_REVERSED", transaction_id="tx-B", ms=1_800_000_002_000))
@@ -266,3 +278,85 @@ def test_el_inbox_guarda_transaction_id_para_correlacionar(client, engine, user_
     assert rows[0][0] == "tx-corr"
     assert rows[0][1] == "1800000000000"
     assert rows[0][2] is True
+
+
+# 10) El bug del evento REFUND inexistente -----------------------------------
+# RevenueCat nunca manda type="REFUND". Verificado contra la doc oficial
+# (integrations/webhooks/event-types-and-fields, 2026-09-21): un reembolso es
+# CANCELLATION con cancel_reason CUSTOMER_SUPPORT, tambien para consumibles.
+# Estos tests fijan esa forma para que la rama no vuelva a morir en silencio.
+
+def test_evento_refund_inexistente_no_toca_creditos(client, engine, user_id):
+    """Guardia contra la regresion: si alguien reintroduce type="REFUND", no hace nada."""
+    assert _post(client, _event(user_id, "NON_RENEWING_PURCHASE")).status_code == 200
+    resp = _post(client, _event(user_id, "REFUND", ms=1_800_000_001_000))
+    assert resp.status_code == 200
+    assert _balance(engine, user_id) == CREDITS_AMOUNT
+    assert len(_ledger(engine, user_id)) == 1
+
+
+def test_cancelacion_normal_de_consumible_no_retira_creditos(client, engine, user_id):
+    """Sin cancel_reason no es reembolso: el credito comprado se queda."""
+    assert _post(client, _event(user_id, "NON_RENEWING_PURCHASE")).status_code == 200
+    resp = _post(client, _event(user_id, "CANCELLATION", ms=1_800_000_001_000))
+    assert resp.status_code == 200 and resp.json()["status"] == "processed"
+    assert _balance(engine, user_id) == CREDITS_AMOUNT
+    assert len(_ledger(engine, user_id)) == 1
+
+
+@pytest.mark.parametrize("reason", ["UNSUBSCRIBE", "BILLING_ERROR",
+                                    "DEVELOPER_INITIATED", "PRICE_INCREASE", "UNKNOWN"])
+def test_cancelacion_por_motivo_que_no_es_reembolso_no_retira_creditos(
+        client, engine, user_id, reason):
+    assert _post(client, _event(user_id, "NON_RENEWING_PURCHASE")).status_code == 200
+    resp = _post(client, _event(user_id, "CANCELLATION", ms=1_800_000_001_000,
+                                cancel_reason=reason))
+    assert resp.status_code == 200
+    assert _balance(engine, user_id) == CREDITS_AMOUNT, reason
+
+
+def test_cancel_reason_en_minusculas_tambien_es_reembolso(client, engine, user_id):
+    """RevenueCat documenta MAYUSCULAS; comparar sin normalizar seria fragil."""
+    assert _post(client, _event(user_id, "NON_RENEWING_PURCHASE")).status_code == 200
+    resp = _post(client, _event(user_id, "CANCELLATION", ms=1_800_000_001_000,
+                                cancel_reason="customer_support"))
+    assert resp.status_code == 200
+    assert _balance(engine, user_id) == 0
+
+
+def test_cancelacion_de_suscripcion_con_reembolso_no_retira_creditos_de_consumibles(
+        client, engine, user_id):
+    """Un reembolso de la suscripcion no puede tocar el saldo de creditos."""
+    assert _post(client, _event(user_id, "NON_RENEWING_PURCHASE")).status_code == 200
+    assert _post(client, _event(user_id, "INITIAL_PURCHASE", SUBSCRIPTION,
+                                transaction_id="tx-sub",
+                                expiration_ms=1_900_000_000_000)).status_code == 200
+
+    resp = _post(client, _event(user_id, "CANCELLATION", SUBSCRIPTION,
+                                transaction_id="tx-sub", ms=1_800_000_001_000,
+                                cancel_reason="CUSTOMER_SUPPORT",
+                                expiration_ms=1_900_000_000_000))
+    assert resp.status_code == 200
+    assert _balance(engine, user_id) == CREDITS_AMOUNT
+    # El tier solo cae con EXPIRATION, igual que una cancelacion corriente.
+    assert _tier(engine, user_id)[0] == "premium"
+
+
+def test_reembolso_de_sku_desconocido_avisa_y_no_inventa_un_importe(
+        client, engine, user_id, caplog):
+    assert _post(client, _event(user_id, "NON_RENEWING_PURCHASE")).status_code == 200
+    with caplog.at_level("ERROR"):
+        resp = _post(client, _refund(user_id, product_id="arcanum_sku_fantasma",
+                                     transaction_id="tx-Z", ms=1_800_000_001_000))
+    assert resp.status_code == 200
+    assert _balance(engine, user_id) == CREDITS_AMOUNT
+    assert "reembolso de consumible DESCONOCIDO" in caplog.text
+
+
+def test_reembolso_repetido_no_retira_dos_veces(client, engine, user_id):
+    payload = _refund(user_id, ms=1_800_000_001_000)
+    assert _post(client, _event(user_id, "NON_RENEWING_PURCHASE")).status_code == 200
+    assert _post(client, payload).status_code == 200
+    assert _balance(engine, user_id) == 0
+    assert _post(client, payload).json()["status"] == "duplicate"
+    assert _balance(engine, user_id) == 0

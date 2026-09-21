@@ -77,8 +77,10 @@ abstract final class ArcanumSelection {
   /// de tirada, de obra y de materia con su propio redondeo. Lo que NO cambia
   /// de un sitio a otro es el reparto elevado/hundido, y por eso sale de aqui
   /// en vez de copiarse en cada pantalla.
-  static BoxDecoration surface(bool selected, {double radio = radius}) =>
-      BoxDecoration(
+  static BoxDecoration surface(
+    bool selected, {
+    double radio = radius,
+  }) => BoxDecoration(
     borderRadius: BorderRadius.circular(radio),
     gradient: selected
         // Hundido: arranca oscuro arriba y aclara al pie. La luz se invierte,
@@ -86,11 +88,7 @@ abstract final class ArcanumSelection {
         ? const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF120F17),
-              Color(0xFF0E0C12),
-              Color(0xFF16121A),
-            ],
+            colors: [Color(0xFF120F17), Color(0xFF0E0C12), Color(0xFF16121A)],
             stops: [0, .48, 1],
           )
         // Elevado: la resina pulida, con el reflejo ya fundido en las dos
@@ -98,11 +96,7 @@ abstract final class ArcanumSelection {
         : const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF413A45),
-              Color(0xFF332D38),
-              Color(0xFF1D1822),
-            ],
+            colors: [Color(0xFF413A45), Color(0xFF332D38), Color(0xFF1D1822)],
             stops: [0, .26, 1],
           ),
     boxShadow: selected

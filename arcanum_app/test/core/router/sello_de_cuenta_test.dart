@@ -84,7 +84,8 @@ void main() {
     expect(
       glifosEmpaquetados(),
       contains(sello),
-      reason: 'U+26E4 tiene que estar en glifos_manifest.txt. Si se cambia el '
+      reason:
+          'U+26E4 tiene que estar en glifos_manifest.txt. Si se cambia el '
           'sello por otro simbolo, hay que correr tool/generar_fuente_glifos.py '
           'o el telefono lo pintara con la fuente que le parezca.',
     );

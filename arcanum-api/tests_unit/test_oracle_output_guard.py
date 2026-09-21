@@ -25,7 +25,7 @@ from groq import RateLimitError
 
 from app.application.services.usage_service import UsageService
 from app.core.config import settings
-from app.routers import astral
+from app.routers import astral, oracle
 from app.services import claude_service as cs
 from app.domain.entities import UserEntity
 
@@ -222,13 +222,82 @@ def test_el_horoscopo_usa_el_modelo_free_de_settings(monkeypatch):
     assert cliente.kwargs[0]["model"] == "modelo-free-de-settings"
 
 
-def test_el_oraculo_pasa_el_modelo_premium_o_free_segun_el_tramo():
-    import inspect
+@pytest.mark.parametrize("tier,esperado", [
+    ("premium", "modelo-premium"),
+    ("free", "modelo-free"),
+])
+def test_el_oraculo_pasa_el_modelo_premium_o_free_segun_el_tramo(
+        monkeypatch, tier, esperado):
+    """Invoca el endpoint de verdad, con un usuario de cada tramo.
 
-    from app.routers import oracle
+    Antes esto era un `inspect.getsource` buscando un literal: pasaba aunque la
+    condicion estuviese invertida, mientras la cadena siguiera escrita en el
+    fichero. Lo unico que prueba que el tramo decide el modelo es ver que
+    modelo sale hacia el proveedor.
+    """
+    monkeypatch.setattr(settings, "ORACLE_MODEL_PREMIUM", "modelo-premium")
+    monkeypatch.setattr(settings, "ORACLE_MODEL_FREE", "modelo-free")
+    _espia_reserva(monkeypatch)
+    vistos = _espia_modelo(monkeypatch)
 
-    fuente = inspect.getsource(oracle)
-    assert "settings.ORACLE_MODEL_PREMIUM if is_premium else settings.ORACLE_MODEL_FREE" in fuente
+    oracle.ritual_ia(
+        body=oracle.OracleQuestion(question="que sostengo hoy"),
+        current_user=_user(tier=tier),
+        natal_repo=_Repo(_chart_oraculo()),
+        conv_repo=_ConvRepoFalso(),
+        div_repo=None,
+        db=_DbFalso(),
+        idempotency_key="k-modelo",
+    )
+
+    assert vistos == [esperado]
+
+
+def test_un_premium_caducado_cobra_el_modelo_free(monkeypatch):
+    """El tramo no es el campo, es `is_premium`.
+
+    Un `subscription_tier == "premium"` con la fecha ya pasada NO puede seguir
+    llevandose el modelo caro: eso es servicio de pago regalado despues de que
+    el pago se acabo.
+    """
+    monkeypatch.setattr(settings, "ORACLE_MODEL_PREMIUM", "modelo-premium")
+    monkeypatch.setattr(settings, "ORACLE_MODEL_FREE", "modelo-free")
+    _espia_reserva(monkeypatch)
+    vistos = _espia_modelo(monkeypatch)
+
+    caducado = _user(tier="premium")
+    caducado.subscription_expires_at = datetime(2020, 1, 1, tzinfo=timezone.utc)
+    assert caducado.is_premium is False
+
+    oracle.ritual_ia(
+        body=oracle.OracleQuestion(question="sigo siendo premium"),
+        current_user=caducado, natal_repo=_Repo(_chart_oraculo()),
+        conv_repo=_ConvRepoFalso(), div_repo=None, db=_DbFalso(),
+        idempotency_key="k-caducado",
+    )
+
+    assert vistos == ["modelo-free"]
+
+
+@pytest.mark.parametrize("tier,ajuste,esperado", [
+    ("premium", "ORACLE_PREMIUM_DAILY", 40),
+    ("free", "ORACLE_FREE_DAILY", 3),
+])
+def test_el_cupo_diario_del_oraculo_sale_del_tramo(
+        monkeypatch, tier, ajuste, esperado):
+    """El otro lado de `is_premium` en esta ruta: cuantas consultas se conceden."""
+    monkeypatch.setattr(settings, ajuste, esperado)
+    limites = _espia_limite(monkeypatch)
+    _espia_modelo(monkeypatch)
+
+    oracle.ritual_ia(
+        body=oracle.OracleQuestion(question="cuantas me quedan"),
+        current_user=_user(tier=tier), natal_repo=_Repo(_chart_oraculo()),
+        conv_repo=_ConvRepoFalso(), div_repo=None, db=_DbFalso(),
+        idempotency_key="k-cupo",
+    )
+
+    assert limites == [esperado]
 
 
 # ── Los techos medidos ───────────────────────────────────────────────────────
@@ -330,6 +399,68 @@ def _espia_reserva(monkeypatch):
     monkeypatch.setattr(UsageService, "capture",
                         lambda _self, _db, op, res: capturadas.append(res))
     return operacion, liberadas, capturadas
+
+
+def _chart_oraculo():
+    """La carta, con lo que el contexto del oraculo necesita de ella.
+
+    `build_oracle_context` cachea por `calculated_at`, que el camino del
+    horoscopo no mira; por eso no basta con `_chart()`.
+    """
+    return SimpleNamespace(
+        chart_data={"planets": [{"name": "sun", "longitude": 10.0}]},
+        calculated_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        house_system="placidus",
+    )
+
+
+class _ConvRepoFalso:
+    """El archivo de conversaciones del oraculo. Devuelve algo validable."""
+
+    def create_or_update(self, user_id, messages, tradition_context=None, commit=False):
+        ahora = datetime(2026, 9, 21, 12, 0, tzinfo=timezone.utc)
+        return SimpleNamespace(id=uuid4(), user_id=user_id, messages=messages,
+                               tradition_context=tradition_context,
+                               created_at=ahora, updated_at=ahora)
+
+
+class _DbFalso:
+    def rollback(self):
+        pass
+
+    def commit(self):
+        pass
+
+
+def _espia_modelo(monkeypatch):
+    """Sustituye al proveedor y devuelve la lista de modelos que se le pidieron.
+
+    Lo que se comprueba es la decision de `oracle.py`, no lo que Groq haga con
+    ella, asi que el corte va justo donde la ruta entrega el modelo.
+    """
+    vistos: list[str] = []
+
+    def _responder(**kwargs):
+        vistos.append(kwargs["model"])
+        return "El Loco abre el camino y el Mago lo ordena."
+
+    monkeypatch.setattr(oracle, "get_claude_response", _responder)
+    return vistos
+
+
+def _espia_limite(monkeypatch):
+    """Devuelve la lista de cupos diarios con los que se llamo a reserve."""
+    limites: list[int] = []
+    operacion = SimpleNamespace(result=None)
+
+    def _reserve(_self, _db, _uid, _accion, _clave, _payload, daily_limit):
+        limites.append(daily_limit)
+        return SimpleNamespace(operation=operacion, replay=False)
+
+    monkeypatch.setattr(UsageService, "reserve", _reserve)
+    monkeypatch.setattr(UsageService, "capture", lambda *_a, **_k: None)
+    monkeypatch.setattr(UsageService, "reverse", lambda *_a, **_k: None)
+    return limites
 
 
 @pytest.mark.parametrize("texto,finish", [

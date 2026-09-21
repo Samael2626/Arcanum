@@ -63,15 +63,10 @@ void main() {
     );
     expect(boton.onPressed, isNotNull);
 
-    await tester.tap(
-      find.widgetWithText(FilledButton, 'Suscribirme'),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Suscribirme'));
     await tester.pump();
 
-    expect(
-      find.textContaining('Oferta no disponible'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Oferta no disponible'), findsOneWidget);
   });
 
   testWidgets('se muestran los precios que da la tienda, en su moneda', (

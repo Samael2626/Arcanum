@@ -173,10 +173,7 @@ Widget _attributions(Map<String, dynamic> card) {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              width: 96,
-              child: Text(label, style: ArcanumText.label()),
-            ),
+            SizedBox(width: 96, child: Text(label, style: ArcanumText.label())),
             Expanded(
               child: Text(
                 value,
@@ -370,7 +367,9 @@ class _TarotCatalogState extends ConsumerState<TarotCatalog> {
                     // limita por el MENOR de ancho o alto disponibles.
                     builder: (context, c) {
                       final w = math.min(c.maxWidth, c.maxHeight / 1.6);
-                      return Center(child: TarotNaipe(card: card, width: w));
+                      return Center(
+                        child: TarotNaipe(card: card, width: w),
+                      );
                     },
                   ),
                 ),

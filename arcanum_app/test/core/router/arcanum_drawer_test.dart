@@ -18,14 +18,16 @@ void main() {
             path: r,
             builder: (c, s) => Scaffold(
               endDrawer: const ArcanumDrawer(),
-              appBar: AppBar(actions: [
-                Builder(
-                  builder: (c) => IconButton(
-                    icon: const Icon(Icons.person),
-                    onPressed: Scaffold.of(c).openEndDrawer,
+              appBar: AppBar(
+                actions: [
+                  Builder(
+                    builder: (c) => IconButton(
+                      icon: const Icon(Icons.person),
+                      onPressed: Scaffold.of(c).openEndDrawer,
+                    ),
                   ),
-                ),
-              ]),
+                ],
+              ),
               body: Text('pantalla $r'),
             ),
           ),
@@ -59,7 +61,8 @@ void main() {
     expect(
       find.text('pantalla /privacy'),
       findsOneWidget,
-      reason: 'Estaba a tres toques metida dentro de Ajustes. Si vuelve a '
+      reason:
+          'Estaba a tres toques metida dentro de Ajustes. Si vuelve a '
           'estarlo, el cajon deja de tener sentido.',
     );
   });

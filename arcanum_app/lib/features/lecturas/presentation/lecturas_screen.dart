@@ -160,10 +160,7 @@ class _ShelfEntry extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       work.title,
-                      style: ArcanumText.heading(
-                        20,
-                        color: ArcanumColors.gold,
-                      ),
+                      style: ArcanumText.heading(20, color: ArcanumColors.gold),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -176,19 +173,13 @@ class _ShelfEntry extends StatelessWidget {
                     const SizedBox(height: 12),
 
                     if (started) ...[
-                      Text(
-                        'REANUDAR LECTURA',
-                        style: ArcanumText.label(),
-                      ),
+                      Text('REANUDAR LECTURA', style: ArcanumText.label()),
                       const SizedBox(height: 3),
                       Text(
                         progress!.where.chapterTitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: ArcanumText.body(
-                          14,
-                          color: ArcanumColors.ivory,
-                        ),
+                        style: ArcanumText.body(14, color: ArcanumColors.ivory),
                       ),
                     ] else
                       Text(

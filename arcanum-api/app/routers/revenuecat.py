@@ -40,6 +40,12 @@ _CONSUMABLE_RETIRADOS = {
 _CONSUMABLE_CREDITS = {**_CONSUMABLE_EN_VENTA, **_CONSUMABLE_RETIRADOS}
 _SUBSCRIPTION_PRODUCTS = {"arcanum_premium_monthly", "arcanum_premium_annual"}
 _PREMIUM_EVENTS = {"INITIAL_PURCHASE", "RENEWAL", "PRODUCT_CHANGE", "UNCANCELLATION"}
+# RevenueCat NO tiene un evento REFUND. Un reembolso llega como CANCELLATION con
+# cancel_reason CUSTOMER_SUPPORT (refund de Apple support, de Google Play via
+# RevenueCat, de Amazon o de web). Verificado contra la doc oficial 2026-09-21:
+# integrations/webhooks/event-types-and-fields. Esperar un tipo "REFUND" dejaba
+# la rama muerta y los consumibles reembolsados seguian acreditados.
+_REFUND_CANCEL_REASON = "CUSTOMER_SUPPORT"
 _REVOKE_EVENTS = {"EXPIRATION"}
 
 
@@ -52,6 +58,10 @@ def _verify_signature(authorization: str | None) -> bool:
         return False
     token = authorization.removeprefix("Bearer ").strip()
     return hmac.compare_digest(token, settings.REVENUECAT_WEBHOOK_SECRET)
+
+
+def _is_refund(event: dict) -> bool:
+    return (event.get("cancel_reason") or "").strip().upper() == _REFUND_CANCEL_REASON
 
 
 def _expiration(ms: int | None) -> datetime | None:
@@ -189,8 +199,19 @@ async def revenuecat_webhook(request: Request, authorization: str | None = Heade
                     "Anadelo a _CONSUMABLE_CREDITS y acredita a mano.",
                     product_id, user.id, event_id, transaction_id,
                 )
-        elif event_type == "REFUND" and product_id in _CONSUMABLE_CREDITS:
+        elif event_type == "CANCELLATION" and _is_refund(event) and product_id in _CONSUMABLE_CREDITS:
+            # Reembolso de consumible: se retira lo acreditado. El asiento queda
+            # con reason "refund" porque es la correlacion que luego busca
+            # _pending_refund_credits para un REFUND_REVERSED.
             CreditService().grant(db, user.id, -_CONSUMABLE_CREDITS[product_id], "refund", product_id, event_id)
+        elif event_type == "CANCELLATION" and _is_refund(event) and product_id not in _SUBSCRIPTION_PRODUCTS:
+            # Reembolso de un consumible que no esta en el mapa: no se puede
+            # saber cuanto retirar. Se avisa fuerte en vez de callar.
+            logger.error(
+                "RevenueCat: reembolso de consumible DESCONOCIDO, creditos NO retirados. "
+                "product_id=%s user=%s event=%s tx=%s.",
+                product_id, user.id, event_id, transaction_id,
+            )
         elif event_type == "REFUND_REVERSED" and product_id in _CONSUMABLE_CREDITS:
             pending = _pending_refund_credits(db, transaction_id)
             if pending <= 0:
@@ -209,6 +230,9 @@ async def revenuecat_webhook(request: Request, authorization: str | None = Heade
             user.subscription_tier = "premium"
             user.subscription_expires_at = _expiration(event.get("expiration_at_ms"))
         elif event_type == "CANCELLATION" and product_id in _SUBSCRIPTION_PRODUCTS:
+            # Cancelacion corriente (el usuario se da de baja): no revoca nada,
+            # el acceso vive hasta EXPIRATION. Un reembolso de suscripcion cae
+            # aqui igual y tambien espera su EXPIRATION, que si degrada el tier.
             user.subscription_expires_at = _expiration(event.get("expiration_at_ms"))
         elif event_type == "EXPIRATION" and product_id in _SUBSCRIPTION_PRODUCTS:
             user.subscription_tier = "free"

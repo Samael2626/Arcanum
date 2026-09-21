@@ -45,11 +45,20 @@ class _Api extends ArcanumApi {
     'date': '2026-09-05',
     'day_ruler': 'sun',
     'today': {
-      'transit': 'moon', 'natal': 'midheaven', 'aspect': 'trine',
-      'angle': 120, 'orb': 0.66, 'separation': 119.34, 'applying': true,
+      'transit': 'moon',
+      'natal': 'midheaven',
+      'aspect': 'trine',
+      'angle': 120,
+      'orb': 0.66,
+      'separation': 119.34,
+      'applying': true,
     },
-    'chapter': null, 'year': null, 'ingress': null,
-    'profection': null, 'sect': 'day', 'total_aspects': 3,
+    'chapter': null,
+    'year': null,
+    'ingress': null,
+    'profection': null,
+    'sect': 'day',
+    'total_aspects': 3,
   };
 
   @override
@@ -58,7 +67,8 @@ class _Api extends ArcanumApi {
     'requested_date': '2026-09-05',
     'is_previous': esAnterior,
     'text': 'La Luna llega a trígono con tu Medio Cielo.',
-    'today': null, 'chapter': null,
+    'today': null,
+    'chapter': null,
   };
 
   @override
@@ -91,10 +101,8 @@ Future<void> _abrir(WidgetTester tester, {required bool esAnterior}) async {
 /// El texto vive DOS veces en el árbol: en la pantalla y en la tarjeta que se
 /// comparte, montada fuera de cuadro para poder capturarla. Los finders se
 /// acotan a la lectura visible.
-Finder _lecturaVisible(String texto) => find.descendant(
-  of: find.byType(AiOutput),
-  matching: find.text(texto),
-);
+Finder _lecturaVisible(String texto) =>
+    find.descendant(of: find.byType(AiOutput), matching: find.text(texto));
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -102,8 +110,14 @@ void main() {
   testWidgets('una lectura de otro día lo dice, con su fecha', (tester) async {
     await _abrir(tester, esAnterior: true);
 
-    expect(find.text('Esta es tu lectura del 4 de septiembre.'), findsOneWidget);
-    expect(find.textContaining('El cielo de arriba sí es el de hoy'), findsOneWidget);
+    expect(
+      find.text('Esta es tu lectura del 4 de septiembre.'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('El cielo de arriba sí es el de hoy'),
+      findsOneWidget,
+    );
     expect(find.text('Ver la suscripción'), findsOneWidget);
   });
 
@@ -116,16 +130,22 @@ void main() {
     final texto = tester.getTopLeft(
       _lecturaVisible('La Luna llega a trígono con tu Medio Cielo.'),
     );
-    expect(aviso.dy, lessThan(texto.dy),
-        reason: 'leerlo creyendo que es de hoy y enterarse al final es peor '
-            'que no tenerlo');
+    expect(
+      aviso.dy,
+      lessThan(texto.dy),
+      reason:
+          'leerlo creyendo que es de hoy y enterarse al final es peor '
+          'que no tenerlo',
+    );
   });
 
   testWidgets('la lectura del día no lleva ningún aviso', (tester) async {
     await _abrir(tester, esAnterior: false);
 
     expect(find.textContaining('Esta es tu lectura'), findsNothing);
-    expect(_lecturaVisible('La Luna llega a trígono con tu Medio Cielo.'),
-        findsOneWidget);
+    expect(
+      _lecturaVisible('La Luna llega a trígono con tu Medio Cielo.'),
+      findsOneWidget,
+    );
   });
 }

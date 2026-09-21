@@ -15,31 +15,38 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Widget _wrap(Widget child) => ProviderScope(
-      child: MaterialApp(home: Scaffold(body: child)),
-    );
+  child: MaterialApp(home: Scaffold(body: child)),
+);
 
 /// Abre el dialogo de consentimiento y, si se indica, pulsa un boton.
 /// Devuelve lo que `ensureGranted` respondio.
 Future<bool?> _abrirDialogo(WidgetTester tester, {String? pulsar}) async {
   bool? resultado;
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      // Sin API: el dialogo se prueba solo. Con el provider real, construir el
-      // servicio arrastra Dio y el fallo se traga dentro del onPressed async,
-      // dejando un test que dice "no aparece el texto" cuando lo que pasa es
-      // que el dialogo nunca llego a abrirse.
-      aiConsentServiceProvider.overrideWithValue(AiConsentService()),
-    ],
-    child: MaterialApp(home: Scaffold(body:
-    Consumer(builder: (context, ref, _) {
-      return TextButton(
-        onPressed: () async => resultado = await ref
-            .read(aiConsentServiceProvider)
-            .ensureGranted(context, userId: 'usuario-1'),
-        child: const Text('ir'),
-      );
-    }),
-    ))));
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        // Sin API: el dialogo se prueba solo. Con el provider real, construir el
+        // servicio arrastra Dio y el fallo se traga dentro del onPressed async,
+        // dejando un test que dice "no aparece el texto" cuando lo que pasa es
+        // que el dialogo nunca llego a abrirse.
+        aiConsentServiceProvider.overrideWithValue(AiConsentService()),
+      ],
+      child: MaterialApp(
+        home: Scaffold(
+          body: Consumer(
+            builder: (context, ref, _) {
+              return TextButton(
+                onPressed: () async => resultado = await ref
+                    .read(aiConsentServiceProvider)
+                    .ensureGranted(context, userId: 'usuario-1'),
+                child: const Text('ir'),
+              );
+            },
+          ),
+        ),
+      ),
+    ),
+  );
   await tester.tap(find.text('ir'));
   await tester.pumpAndSettle();
   if (pulsar != null) {
@@ -53,11 +60,14 @@ void main() {
   setUp(resetDisclosureForTest);
 
   group('el aviso de IA', () {
-    testWidgets('acompaña al texto, no vive solo en los Términos',
-        (tester) async {
-      await tester.pumpWidget(_wrap(
-        const AiOutput(text: 'Saturno cuadra tu Sol.', surface: 'oraculo'),
-      ));
+    testWidgets('acompaña al texto, no vive solo en los Términos', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          const AiOutput(text: 'Saturno cuadra tu Sol.', surface: 'oraculo'),
+        ),
+      );
 
       expect(find.text('Saturno cuadra tu Sol.'), findsOneWidget);
       // El art. 50(5) del AI Act pide la informacion "at the latest at the time
@@ -65,32 +75,33 @@ void main() {
       expect(find.textContaining('inteligencia artificial'), findsOneWidget);
     });
 
-    testWidgets('la segunda vez se reduce a una linea',
-        (tester) async {
+    testWidgets('la segunda vez se reduce a una linea', (tester) async {
       // Primera exposicion: aviso largo. El art. 50(5) pide "at the latest at
       // the time of the first interaction", no bajo cada parrafo.
-      await tester.pumpWidget(_wrap(
-        const AiOutput(text: 'uno', surface: 'oraculo'),
-      ));
+      await tester.pumpWidget(
+        _wrap(const AiOutput(text: 'uno', surface: 'oraculo')),
+      );
       expect(find.textContaining('inteligencia artificial'), findsOneWidget);
 
       // Segunda: solo la linea de pie.
-      await tester.pumpWidget(_wrap(
-        const AiOutput(text: 'dos', surface: 'oraculo'),
-      ));
+      await tester.pumpWidget(
+        _wrap(const AiOutput(text: 'dos', surface: 'oraculo')),
+      );
       expect(find.textContaining('inteligencia artificial'), findsNothing);
       expect(find.text('Generado con IA'), findsOneWidget);
       expect(find.text('Reportar'), findsOneWidget);
     });
 
     testWidgets('respeta la presentación de cada pantalla', (tester) async {
-      await tester.pumpWidget(_wrap(
-        const AiOutput(
-          text: 'crudo',
-          surface: 'oraculo',
-          child: Text('presentado', key: Key('propio')),
+      await tester.pumpWidget(
+        _wrap(
+          const AiOutput(
+            text: 'crudo',
+            surface: 'oraculo',
+            child: Text('presentado', key: Key('propio')),
+          ),
         ),
-      ));
+      );
       expect(find.byKey(const Key('propio')), findsOneWidget);
       // Primera exposicion de la sesion: aviso largo.
       expect(find.textContaining('inteligencia artificial'), findsOneWidget);
@@ -98,11 +109,12 @@ void main() {
   });
 
   group('el botón de reportar', () {
-    testWidgets('está presente y abre la hoja SIN salir de la app',
-        (tester) async {
-      await tester.pumpWidget(_wrap(
-        const AiOutput(text: 'texto reportable', surface: 'oraculo'),
-      ));
+    testWidgets('está presente y abre la hoja SIN salir de la app', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(const AiOutput(text: 'texto reportable', surface: 'oraculo')),
+      );
 
       expect(find.text('Reportar'), findsOneWidget);
       await tester.tap(find.text('Reportar'));
@@ -113,9 +125,9 @@ void main() {
     });
 
     testWidgets('no deja enviar sin elegir un motivo', (tester) async {
-      await tester.pumpWidget(_wrap(
-        const AiOutput(text: 'texto', surface: 'oraculo'),
-      ));
+      await tester.pumpWidget(
+        _wrap(const AiOutput(text: 'texto', surface: 'oraculo')),
+      );
       await tester.tap(find.text('Reportar'));
       await tester.pumpAndSettle();
 
@@ -126,9 +138,9 @@ void main() {
     });
 
     testWidgets('ofrece un motivo para el consejo de salud', (tester) async {
-      await tester.pumpWidget(_wrap(
-        const AiOutput(text: 'texto', surface: 'horoscopo'),
-      ));
+      await tester.pumpWidget(
+        _wrap(const AiOutput(text: 'texto', surface: 'horoscopo')),
+      );
       await tester.tap(find.text('Reportar'));
       await tester.pumpAndSettle();
       expect(find.text('Da consejo médico o de salud'), findsOneWidget);
@@ -168,7 +180,10 @@ void main() {
       SharedPreferences.setMockInitialValues({
         'groq_ai_consent_${aiConsentPolicyVersion}_$usuario': false,
       });
-      expect(await AiConsentService().status(usuario), AiConsentStatus.declined);
+      expect(
+        await AiConsentService().status(usuario),
+        AiConsentStatus.declined,
+      );
     });
 
     test('cada usuario tiene el suyo', () async {
@@ -223,8 +238,7 @@ void main() {
   group('la puerta del consentimiento', () {
     setUp(() => SharedPreferences.setMockInitialValues({}));
 
-    test('sin permiso, el horóscopo es lectura local y no un error de red',
-        () {
+    test('sin permiso, el horóscopo es lectura local y no un error de red', () {
       // El horoscopo manda fecha, hora y lugar de nacimiento fuera. Antes se
       // llamaba en el inicializador del campo: los datos salian del telefono
       // antes de que nadie preguntase. Se detecto revisando, no en pruebas.
@@ -259,28 +273,46 @@ void main() {
 
     test('un veneno real si trae aviso duro, y ese no se acorta', () {
       // Aqui el riesgo no es una multa: es una intoxicacion.
-      for (final t in ['acónito', 'beleño', 'mandrágora', 'belladona',
-                       'cicuta', 'estramonio', 'digital']) {
-        expect(toxicNoticeFor('Usa $t en el rito.'), kToxicNotice,
-            reason: '$t debería disparar el aviso duro');
+      for (final t in [
+        'acónito',
+        'beleño',
+        'mandrágora',
+        'belladona',
+        'cicuta',
+        'estramonio',
+        'digital',
+      ]) {
+        expect(
+          toxicNoticeFor('Usa $t en el rito.'),
+          kToxicNotice,
+          reason: '$t debería disparar el aviso duro',
+        );
       }
     });
 
-    testWidgets('con planta corriente, el recordatorio de salud va al pie',
-        (tester) async {
+    testWidgets('con planta corriente, el recordatorio de salud va al pie', (
+      tester,
+    ) async {
       // Google Play: "Apps must also remind users to consult a healthcare
       // professional". Cabe en el pie, no hace falta un bloque.
-      await tester.pumpWidget(_wrap(
-        const AiOutput(text: 'Bebe una infusión de tilo.', surface: 'oraculo'),
-      ));
+      await tester.pumpWidget(
+        _wrap(
+          const AiOutput(
+            text: 'Bebe una infusión de tilo.',
+            surface: 'oraculo',
+          ),
+        ),
+      );
       expect(find.text(kHealthReminder), findsOneWidget);
       expect(find.text(kToxicNotice), findsNothing);
     });
 
     testWidgets('sin plantas, el pie es solo IA y Reportar', (tester) async {
-      await tester.pumpWidget(_wrap(
-        const AiOutput(text: 'Saturno cuadra tu Sol.', surface: 'horoscopo'),
-      ));
+      await tester.pumpWidget(
+        _wrap(
+          const AiOutput(text: 'Saturno cuadra tu Sol.', surface: 'horoscopo'),
+        ),
+      );
       expect(find.text(kHealthReminder), findsNothing);
       expect(find.text('Reportar'), findsOneWidget);
     });
@@ -306,20 +338,27 @@ void main() {
     });
 
     test('la planta nombrada de verdad si cuenta', () {
-      expect(mentionsCulinary('Bebe una infusión de tilo al anochecer.'), isTrue);
+      expect(
+        mentionsCulinary('Bebe una infusión de tilo al anochecer.'),
+        isTrue,
+      );
       expect(mentionsCulinary('Un té sereno antes del rito.'), isTrue);
       expect(mentionsCulinary('Menta fresca sobre el altar.'), isTrue);
       expect(toxicNoticeFor('Coloca beleño sobre el altar.'), kToxicNotice);
     });
 
-    testWidgets('un texto sin plantas no trae recordatorio de salud',
-        (tester) async {
-      await tester.pumpWidget(_wrap(
-        const AiOutput(
-          text: 'El regente del día, Venus, invita a una proyección estética.',
-          surface: 'horoscopo',
+    testWidgets('un texto sin plantas no trae recordatorio de salud', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          const AiOutput(
+            text:
+                'El regente del día, Venus, invita a una proyección estética.',
+            surface: 'horoscopo',
+          ),
         ),
-      ));
+      );
       // Un aviso que salta cuando no toca ensena a ignorarlo, y entonces
       // tampoco se lee el dia que la planta es beleno de verdad.
       expect(find.text(kHealthReminder), findsNothing);

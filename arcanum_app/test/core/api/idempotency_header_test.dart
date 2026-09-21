@@ -10,11 +10,18 @@ class _CapturingAdapter implements HttpClientAdapter {
   final List<RequestOptions> requests = [];
 
   @override
-  Future<ResponseBody> fetch(RequestOptions options, Stream<Uint8List>? requestStream,
-      Future<void>? cancelFuture) async {
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
     requests.add(options);
     return ResponseBody.fromString(
-      jsonEncode({'id': 'x', 'cards_drawn': {'cards': []}, 'resolved': []}),
+      jsonEncode({
+        'id': 'x',
+        'cards_drawn': {'cards': []},
+        'resolved': [],
+      }),
       200,
       headers: {
         Headers.contentTypeHeader: [Headers.jsonContentType],
@@ -54,16 +61,23 @@ void main() {
     ]);
     for (var i = 0; i < 4; i++) {
       final key = headerOf(i);
-      expect(key, isNotNull, reason: 'ruta ${adapter.requests[i].path} sin cabecera');
+      expect(
+        key,
+        isNotNull,
+        reason: 'ruta ${adapter.requests[i].path} sin cabecera',
+      );
       expect(key, isNotEmpty);
     }
   });
 
-  test('sin clave explicita el cliente genera una distinta por llamada', () async {
-    await api.tarotDrawOne();
-    await api.tarotDrawOne();
-    expect(headerOf(0), isNot(headerOf(1)));
-  });
+  test(
+    'sin clave explicita el cliente genera una distinta por llamada',
+    () async {
+      await api.tarotDrawOne();
+      await api.tarotDrawOne();
+      expect(headerOf(0), isNot(headerOf(1)));
+    },
+  );
 
   test('la clave que pasa la pantalla es la que viaja', () async {
     const key = 'clave-de-la-pantalla';
@@ -77,8 +91,9 @@ void main() {
     final keys = List.generate(50, (_) => IdempotencyKey.create());
     expect(keys.toSet(), hasLength(50));
     expect(
-      RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$')
-          .hasMatch(keys.first),
+      RegExp(
+        r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
+      ).hasMatch(keys.first),
       isTrue,
       reason: keys.first,
     );

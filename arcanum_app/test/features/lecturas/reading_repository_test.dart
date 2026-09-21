@@ -132,8 +132,12 @@ class _FakeCrypto extends GrimoireCrypto {
   bool failDecrypt = false;
 
   @override
-  Future<({String ciphertext, String iv})> encryptText(String plaintext) async =>
-      (ciphertext: 'sellado(${plaintext.split('').reversed.join()})', iv: 'iv-fijo');
+  Future<({String ciphertext, String iv})> encryptText(
+    String plaintext,
+  ) async => (
+    ciphertext: 'sellado(${plaintext.split('').reversed.join()})',
+    iv: 'iv-fijo',
+  );
 
   @override
   Future<String> decryptText(String ciphertextB64, String ivB64) async {
@@ -148,7 +152,10 @@ class _FakeCrypto extends GrimoireCrypto {
 
 DioException _status(int code) => DioException(
   requestOptions: RequestOptions(path: '/reading'),
-  response: Response(requestOptions: RequestOptions(path: '/reading'), statusCode: code),
+  response: Response(
+    requestOptions: RequestOptions(path: '/reading'),
+    statusCode: code,
+  ),
 );
 
 const _position = ReadingPosition(
@@ -213,10 +220,13 @@ void main() {
   });
 
   group('marcadores', () {
-    test('marcar dos veces el mismo punto devuelve null, no un error', () async {
-      api.bookmarkError = _status(409);
-      expect(await repo.addBookmark(_position), isNull);
-    });
+    test(
+      'marcar dos veces el mismo punto devuelve null, no un error',
+      () async {
+        api.bookmarkError = _status(409);
+        expect(await repo.addBookmark(_position), isNull);
+      },
+    );
 
     test('un marcador nuevo conserva su posicion', () async {
       final bookmark = await repo.addBookmark(_position, label: 'Regencia');
@@ -273,31 +283,36 @@ void main() {
       expect(passages.single.noteUnreadable, isFalse);
     });
 
-    test('una nota que esta clave no puede abrir se declara, no se oculta',
-        () async {
-      crypto.failDecrypt = true;
-      api.storedPassages = [
-        {
-          'id': 'p1',
-          'position': _SpyApi._echoPosition(_position.toJson()),
-          'quote_text': 'cita',
-          'quote_language': 'es',
-          'encrypted_note': 'sellado(algo)',
-          'note_iv': 'iv-fijo',
-          'created_at': '2026-08-12T10:00:00Z',
-        },
-      ];
+    test(
+      'una nota que esta clave no puede abrir se declara, no se oculta',
+      () async {
+        crypto.failDecrypt = true;
+        api.storedPassages = [
+          {
+            'id': 'p1',
+            'position': _SpyApi._echoPosition(_position.toJson()),
+            'quote_text': 'cita',
+            'quote_language': 'es',
+            'encrypted_note': 'sellado(algo)',
+            'note_iv': 'iv-fijo',
+            'created_at': '2026-08-12T10:00:00Z',
+          },
+        ];
 
-      final passage = (await repo.passages()).single;
+        final passage = (await repo.passages()).single;
 
-      // Fingir que no hay nota seria mentirle a quien la escribio.
-      expect(passage.note, isNull);
-      expect(passage.noteUnreadable, isTrue);
-    });
+        // Fingir que no hay nota seria mentirle a quien la escribio.
+        expect(passage.note, isNull);
+        expect(passage.noteUnreadable, isTrue);
+      },
+    );
 
     test('editar la nota vuelve a cifrar', () async {
       await repo.updateNote('p1', 'nota nueva');
-      expect(api.lastNoteBody!['encrypted_note'], isNot(contains('nota nueva')));
+      expect(
+        api.lastNoteBody!['encrypted_note'],
+        isNot(contains('nota nueva')),
+      );
       expect(api.lastNoteBody!['note_iv'], 'iv-fijo');
     });
 

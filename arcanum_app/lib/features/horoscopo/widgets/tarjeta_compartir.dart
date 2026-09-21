@@ -23,7 +23,6 @@
 /// Hoy cambia esto con él.
 library;
 
-
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/arcanum_colors.dart';
@@ -118,93 +117,96 @@ class TarjetaCompartir extends StatelessWidget {
             ),
           ],
           Padding(
-        padding: const EdgeInsets.fromLTRB(26, 24, 26, 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'ARCANUM',
-              textAlign: TextAlign.center,
-              style: ArcanumText.body(
-                11,
-                color: ArcanumColors.gold,
-              ).copyWith(letterSpacing: 5),
-            ),
-            if (signoIngles != null) ...[
-              const SizedBox(height: 6),
-              Text(
-                '${signGlyph[signoIngles] ?? ''}  '
-                        '${signEs[signoIngles] ?? ''}'
-                    .toUpperCase(),
-                textAlign: TextAlign.center,
-                style: ArcanumText.label().copyWith(
-                  color: ArcanumColors.gold,
-                  fontFamilyFallback: kGlyphFallback,
+            padding: const EdgeInsets.fromLTRB(26, 24, 26, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'ARCANUM',
+                  textAlign: TextAlign.center,
+                  style: ArcanumText.body(
+                    11,
+                    color: ArcanumColors.gold,
+                  ).copyWith(letterSpacing: 5),
                 ),
-              ),
-            ],
-            const SizedBox(height: 10),
-            Expanded(
-              child: Center(
-                // `progreso: 1` -- el sello ya roto. En la app el aro se abre
-                // con una animacion; aqui la tarjeta retrata el final.
-                child: SizedBox.square(
-                  dimension: 168,
-                  child: CustomPaint(
-                    painter: PintorRueda(
-                      anguloNominal: (a?['angle'] as num?)?.toInt() ?? 0,
-                      separacion: (a?['separation'] as num?)?.toDouble(),
-                      progreso: 1,
-                      sobreLamina: signo != null,
-                      glifo: signGlyph[signoIngles ?? ''],
+                if (signoIngles != null) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    '${signGlyph[signoIngles] ?? ''}  '
+                            '${signEs[signoIngles] ?? ''}'
+                        .toUpperCase(),
+                    textAlign: TextAlign.center,
+                    style: ArcanumText.label().copyWith(
+                      color: ArcanumColors.gold,
+                      fontFamilyFallback: kGlyphFallback,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 10),
+                Expanded(
+                  child: Center(
+                    // `progreso: 1` -- el sello ya roto. En la app el aro se abre
+                    // con una animacion; aqui la tarjeta retrata el final.
+                    child: SizedBox.square(
+                      dimension: 168,
+                      child: CustomPaint(
+                        painter: PintorRueda(
+                          anguloNominal: (a?['angle'] as num?)?.toInt() ?? 0,
+                          separacion: (a?['separation'] as num?)?.toDouble(),
+                          progreso: 1,
+                          sobreLamina: signo != null,
+                          glifo: signGlyph[signoIngles ?? ''],
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+                if (_titular() != null) ...[
+                  Text(
+                    _titular()!,
+                    textAlign: TextAlign.center,
+                    style: ArcanumText.heading(
+                      19,
+                      color: ArcanumColors.goldLight,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                ],
+                if (profeccion != null) ...[
+                  Text(
+                    _lineaDelAnio()!,
+                    textAlign: TextAlign.center,
+                    // Oro y no `ivoryMuted`: medido sobre la lamina, el marfil
+                    // apagado se quedaba en 4,04 de contraste, por debajo del 4,5
+                    // de AA. El oro claro pasa y ademas separa el dato del
+                    // horoscopo, que va en marfil.
+                    style: ArcanumText.body(12, color: ArcanumColors.goldLight),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                if (frase.isNotEmpty)
+                  Text(
+                    frase,
+                    textAlign: TextAlign.center,
+                    style: ArcanumText.body(13, color: ArcanumColors.ivory),
+                  ),
+                const SizedBox(height: 14),
+                Container(
+                  height: 1,
+                  color: ArcanumColors.goldMuted.withValues(alpha: 0.35),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Descifra el cielo, traza tu camino',
+                  textAlign: TextAlign.center,
+                  style: ArcanumText.body(
+                    10,
+                    color: ArcanumColors.ivoryMuted,
+                    italic: true,
+                  ),
+                ),
+              ],
             ),
-            if (_titular() != null) ...[
-              Text(
-                _titular()!,
-                textAlign: TextAlign.center,
-                style: ArcanumText.heading(19, color: ArcanumColors.goldLight),
-              ),
-              const SizedBox(height: 6),
-            ],
-            if (profeccion != null) ...[
-              Text(
-                _lineaDelAnio()!,
-                textAlign: TextAlign.center,
-                // Oro y no `ivoryMuted`: medido sobre la lamina, el marfil
-                // apagado se quedaba en 4,04 de contraste, por debajo del 4,5
-                // de AA. El oro claro pasa y ademas separa el dato del
-                // horoscopo, que va en marfil.
-                style: ArcanumText.body(12, color: ArcanumColors.goldLight),
-              ),
-              const SizedBox(height: 12),
-            ],
-            if (frase.isNotEmpty)
-              Text(
-                frase,
-                textAlign: TextAlign.center,
-                style: ArcanumText.body(13, color: ArcanumColors.ivory),
-              ),
-            const SizedBox(height: 14),
-            Container(
-              height: 1,
-              color: ArcanumColors.goldMuted.withValues(alpha: 0.35),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Descifra el cielo, traza tu camino',
-              textAlign: TextAlign.center,
-              style: ArcanumText.body(
-                10,
-                color: ArcanumColors.ivoryMuted,
-                italic: true,
-              ),
-            ),
-          ],
-        ),
           ),
         ],
       ),

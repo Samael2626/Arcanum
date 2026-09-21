@@ -213,7 +213,6 @@ class _KindChip extends StatelessWidget {
           color: selected
               ? ArcanumColors.gold.withValues(alpha: 0.16)
               : Colors.transparent,
-
         ),
         child: Text(
           '$label · $count',

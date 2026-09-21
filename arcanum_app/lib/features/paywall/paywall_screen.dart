@@ -116,7 +116,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   onTap: hayConsumibles
                       ? _showConsumablesSheet
                       : () => _avisarSinOfertas(cargandoPrecios),
-                  estado: hayConsumibles ? null : _leyendaOfertas(cargandoPrecios),
+                  estado: hayConsumibles
+                      ? null
+                      : _leyendaOfertas(cargandoPrecios),
                   ctaLabel: 'Ver créditos y packs',
                 ),
                 const SizedBox(height: 14),
@@ -163,18 +165,18 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
                 // Monthly option
                 if (precios[ProductIds.premiumMonthly] != null)
-                Center(
-                  child: TextButton(
-                    onPressed: _loading ? null : _purchaseMonthly,
-                    child: Text(
-                      'O ${precios[ProductIds.premiumMonthly]}/mes',
-                      style: ArcanumText.body(
-                        14,
-                        color: ArcanumColors.goldMuted,
+                  Center(
+                    child: TextButton(
+                      onPressed: _loading ? null : _purchaseMonthly,
+                      child: Text(
+                        'O ${precios[ProductIds.premiumMonthly]}/mes',
+                        style: ArcanumText.body(
+                          14,
+                          color: ArcanumColors.goldMuted,
+                        ),
                       ),
                     ),
                   ),
-                ),
 
                 if (_loading) ...[
                   const SizedBox(height: 16),
@@ -409,11 +411,7 @@ class _TierCard extends StatelessWidget {
                       Row(
                         children: [
                           if (selected) ...[
-                            Icon(
-                              Icons.check_circle,
-                              size: 17,
-                              color: accent,
-                            ),
+                            Icon(Icons.check_circle, size: 17, color: accent),
                             const SizedBox(width: 6),
                           ],
                           Text(
@@ -448,19 +446,13 @@ class _TierCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                       color: accent.withValues(alpha: 0.15),
                     ),
-                    child: Text(
-                      badge!,
-                      style: ArcanumText.label(),
-                    ),
+                    child: Text(badge!, style: ArcanumText.label()),
                   ),
               ],
             ),
             if (price.isNotEmpty) ...[
               const SizedBox(height: 12),
-              Text(
-                price,
-                style: ArcanumText.heading(26, color: accent),
-              ),
+              Text(price, style: ArcanumText.heading(26, color: accent)),
             ] else if (estado != null) ...[
               const SizedBox(height: 12),
               Text(
@@ -506,12 +498,13 @@ class _TierCard extends StatelessWidget {
                 // "Empezar prueba gratis" salia siempre, hubiera oferta o
                 // no: quien pulsaba con un plan anual seleccionado pagaba el
                 // ano entero en el acto creyendo que empezaba una prueba.
-                label: ctaLabel ??
+                label:
+                    ctaLabel ??
                     (selected
                         ? 'Suscribirme'
                         : price.isEmpty
-                            ? 'Continuar gratis'
-                            : 'Ver opciones'),
+                        ? 'Continuar gratis'
+                        : 'Ver opciones'),
                 onPressed: onTap,
               ),
             ),
@@ -540,10 +533,7 @@ class _ConsumiblesSheet extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Créditos y packs',
-            style: ArcanumText.heading(22),
-          ),
+          Text('Créditos y packs', style: ArcanumText.heading(22)),
           const SizedBox(height: 6),
           Text(
             'Compra solo lo que necesitas. Ningún crédito expira.',
@@ -580,8 +570,9 @@ class _ConsumiblesSheet extends ConsumerWidget {
 
   Future<void> _comprar(BuildContext context, String productId) async {
     Navigator.of(context).pop();
-    final service = ProviderScope.containerOf(parentContext)
-        .read(monetizationServiceProvider);
+    final service = ProviderScope.containerOf(
+      parentContext,
+    ).read(monetizationServiceProvider);
     final resultado = await service.purchaseProduct(productId);
     // La hoja ya esta cerrada, asi que el aviso va sobre la pantalla de abajo.
     // Cancelar no se comenta; fallar sin decir nada dejaba al usuario creyendo
@@ -622,7 +613,7 @@ class _ConsumableTile extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             color: ArcanumColors.surfaceHigh,
-            ),
+          ),
           child: Row(
             children: [
               Expanded(

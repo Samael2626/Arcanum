@@ -21,26 +21,28 @@ class _FailingLibraryRepository implements LibraryRepository {
 }
 
 DioException _serverError() => DioException(
-      requestOptions: RequestOptions(
-        path: '/library',
-        baseUrl: 'https://arcanum-code-production.up.railway.app',
-      ),
-      response: Response(
-        requestOptions: RequestOptions(path: '/library'),
-        statusCode: 500,
-        data: {
-          'detail': "ResponseValidationError: 2 validation errors:\n"
-              "  {'type': 'missing', 'loc': ('response', 0, 'chapter_count')}"
-        },
-      ),
-    );
+  requestOptions: RequestOptions(
+    path: '/library',
+    baseUrl: 'https://arcanum-code-production.up.railway.app',
+  ),
+  response: Response(
+    requestOptions: RequestOptions(path: '/library'),
+    statusCode: 500,
+    data: {
+      'detail':
+          "ResponseValidationError: 2 validation errors:\n"
+          "  {'type': 'missing', 'loc': ('response', 0, 'chapter_count')}",
+    },
+  ),
+);
 
 Future<void> _pumpLecturas(WidgetTester tester, Object error) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        libraryRepositoryProvider
-            .overrideWithValue(_FailingLibraryRepository(error)),
+        libraryRepositoryProvider.overrideWithValue(
+          _FailingLibraryRepository(error),
+        ),
       ],
       child: const MaterialApp(home: Scaffold(body: LecturasScreen())),
     ),
@@ -63,8 +65,11 @@ void main() {
       'chapter_count',
       'validation',
     ]) {
-      expect(find.textContaining(leak), findsNothing,
-          reason: 'la pantalla filtro "$leak"');
+      expect(
+        find.textContaining(leak),
+        findsNothing,
+        reason: 'la pantalla filtro "$leak"',
+      );
     }
   });
 

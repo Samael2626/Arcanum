@@ -19,11 +19,18 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _ingles = {
-  Signo.aries: 'aries', Signo.tauro: 'taurus', Signo.geminis: 'gemini',
-  Signo.cancer: 'cancer', Signo.leo: 'leo', Signo.virgo: 'virgo',
-  Signo.libra: 'libra', Signo.escorpio: 'scorpio',
-  Signo.sagitario: 'sagittarius', Signo.capricornio: 'capricorn',
-  Signo.acuario: 'aquarius', Signo.piscis: 'pisces',
+  Signo.aries: 'aries',
+  Signo.tauro: 'taurus',
+  Signo.geminis: 'gemini',
+  Signo.cancer: 'cancer',
+  Signo.leo: 'leo',
+  Signo.virgo: 'virgo',
+  Signo.libra: 'libra',
+  Signo.escorpio: 'scorpio',
+  Signo.sagitario: 'sagittarius',
+  Signo.capricornio: 'capricorn',
+  Signo.acuario: 'aquarius',
+  Signo.piscis: 'pisces',
 };
 
 Future<void> _cargarFuentes() async {
@@ -65,13 +72,15 @@ void main() {
                 key: clave,
                 child: TarjetaCompartir(
                   aspecto: const {
-                    'transit': 'moon', 'natal': 'midheaven',
-                    'aspect': 'trine', 'angle': 120, 'separation': 119.34,
+                    'transit': 'moon',
+                    'natal': 'midheaven',
+                    'aspect': 'trine',
+                    'angle': 120,
+                    'separation': 119.34,
                   },
-                  profeccion: const {
-                    'age': 35, 'house': 5, 'lord': 'saturn',
-                  },
-                  texto: 'Saturno cierra un cuadrado con tu Sol: figura de '
+                  profeccion: const {'age': 35, 'house': 5, 'lord': 'saturn'},
+                  texto:
+                      'Saturno cierra un cuadrado con tu Sol: figura de '
                       'tension entre cuerpos que se miran de frente.',
                   signo: entrada.key,
                   signoIngles: entrada.value,
@@ -92,8 +101,9 @@ void main() {
       await tester.pumpAndSettle();
       final png = await tester.runAsync(() => pintarTarjeta(clave));
       expect(png, isNotNull);
-      File('test/capturas/salida/tc-${entrada.value}.png')
-          .writeAsBytesSync(png!);
+      File(
+        'test/capturas/salida/tc-${entrada.value}.png',
+      ).writeAsBytesSync(png!);
     });
   }
 }
