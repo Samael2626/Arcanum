@@ -86,6 +86,27 @@ void main() {
     expect(tester.binding.hasScheduledFrame, isFalse);
   });
 
+  testWidgets(
+    'la invitacion ocupa el hueco del significado, y se va con el giro',
+    (tester) async {
+      await tester.pumpWidget(_app(mayor));
+      await _reposo(tester);
+
+      expect(find.text('Toca la carta para descubrirla.'), findsOneWidget);
+      expect(find.text('Un significado.'), findsNothing);
+
+      await tester.tap(_naipe);
+      await _reposo(tester);
+
+      expect(
+        find.text('Toca la carta para descubrirla.'),
+        findsNothing,
+        reason: 'la invitacion sobra en cuanto la carta ya esta descubierta',
+      );
+      expect(find.text('Un significado.'), findsOneWidget);
+    },
+  );
+
   testWidgets('el toque la descubre, y el segundo toque enfoca', (
     tester,
   ) async {

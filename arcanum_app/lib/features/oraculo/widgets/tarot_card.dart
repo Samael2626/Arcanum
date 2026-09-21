@@ -1607,6 +1607,11 @@ class _TarotCardViewState extends State<TarotCardView>
   bool get _reducedMotion =>
       MediaQuery.maybeOf(context)?.disableAnimations ?? false;
 
+  /// Si la CARA es la que mira al frente. El corte esta en el canto (90
+  /// grados), no en el toque: entre el dedo y el medio giro la carta sigue
+  /// estando boca abajo, y todo lo que cuelga de ella tiene que creerselo.
+  bool get _showFace => _spec.curve.transform(_flip.value) >= 0.5;
+
   double get _baseTilt {
     final sign = widget.index.isEven ? 1.0 : -1.0;
     return sign * (0.011 + (widget.index % 3) * 0.004);
@@ -1776,15 +1781,28 @@ class _TarotCardViewState extends State<TarotCardView>
             style: ArcanumText.label(),
           ),
           const SizedBox(height: 10),
-          Semantics(
-            button: true,
-            label: _revealed ? 'Enfocar la carta' : 'Descubrir la carta',
+          // Tanto el rotulo como lo que va debajo del naipe cambian en el
+          // MISMO instante en que la cara queda arriba, no al tocar: mientras
+          // la carta gira, sigue estando boca abajo.
+          AnimatedBuilder(
+            animation: _flip,
+            builder: (context, child) => Semantics(
+              button: true,
+              label: _showFace ? 'Enfocar la carta' : 'Descubrir la carta',
+              child: child,
+            ),
             child: naipe,
           ),
           const SizedBox(height: 14),
-          // El texto solo aparece cuando la carta ya se ha descubierto: leerlo
-          // antes destriparia el naipe y el volteo no significaria nada.
-          if (_revealed) _readingText(reversed),
+          // El significado solo aparece cuando la cara ya esta arriba: leerlo
+          // antes destriparia el naipe y el volteo no significaria nada. En su
+          // sitio, mientras tanto, la invitacion a tocarla -- sin ella el
+          // gesto existe pero nadie lo descubre.
+          AnimatedBuilder(
+            animation: _flip,
+            builder: (context, _) =>
+                _showFace ? _readingText(reversed) : const _TapToReveal(),
+          ),
         ],
       ),
     );
@@ -1805,7 +1823,7 @@ class _TarotCardViewState extends State<TarotCardView>
 
     final fe = _spec.curve.transform(_flip.value);
     final angle = (1 - fe) * math.pi;
-    final showFace = angle <= math.pi / 2;
+    final showFace = _showFace;
 
     // 1 exactamente en el canto (90 grados), 0 en las dos caras.
     final crossing = (1 - (fe - 0.5).abs() / 0.5).clamp(0.0, 1.0);
@@ -2069,6 +2087,27 @@ class _TarotCardViewState extends State<TarotCardView>
       ],
     );
   }
+}
+
+/// La invitacion a tocar la carta, en el hueco donde luego ira el significado.
+///
+/// Mismo molde que `_TermHint` en Cielos ("Toca cualquier termino para saber
+/// que significa"): cuerpo pequeno, cursiva y `ivoryMuted`. Y el mismo verbo
+/// que la etiqueta de accesibilidad del naipe -- aqui las cartas se DESCUBREN,
+/// que es como habla el resto de la app.
+///
+/// No se desvanece por su cuenta: desaparece en el canto del giro, con la
+/// carta. Una animacion propia competiria con el volteo, que es el gesto que
+/// se esta ensenando.
+class _TapToReveal extends StatelessWidget {
+  const _TapToReveal();
+
+  @override
+  Widget build(BuildContext context) => Text(
+    'Toca la carta para descubrirla.',
+    textAlign: TextAlign.center,
+    style: ArcanumText.body(13, color: ArcanumColors.ivoryMuted, italic: true),
+  );
 }
 
 /// Copas: barrido especular que recorre la carta, y su traza.
