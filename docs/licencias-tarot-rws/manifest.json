@@ -1,0 +1,2264 @@
+{
+ "el-loco": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Fool",
+  "arcana": "major",
+  "suit": null,
+  "number": 0,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_00_Fool.jpg",
+  "image_file": "File:RWS Tarot 00 Fool.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/90/RWS_Tarot_00_Fool.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1144,
+   1919
+  ],
+  "source_bytes": 1177006,
+  "sha1_source": "a707c0123b59fd2420b05645e9d3d16b74235b42",
+  "evidencia": "docs/licencias-tarot-rws/el-loco.wikitext.txt",
+  "status": "verificado"
+ },
+ "el-mago": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Magician",
+  "arcana": "major",
+  "suit": null,
+  "number": 1,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_01_Magician.jpg",
+  "image_file": "File:RWS Tarot 01 Magician.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/de/RWS_Tarot_01_Magician.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1108,
+   1920
+  ],
+  "source_bytes": 800458,
+  "sha1_source": "d24df085c3c22da8cd7f88c0f2a4256c6ae50fda",
+  "evidencia": "docs/licencias-tarot-rws/el-mago.wikitext.txt",
+  "status": "verificado"
+ },
+ "la-sacerdotisa": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "High Priestess",
+  "arcana": "major",
+  "suit": null,
+  "number": 2,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_02_High_Priestess.jpg",
+  "image_file": "File:RWS Tarot 02 High Priestess.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/8/88/RWS_Tarot_02_High_Priestess.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1117,
+   1919
+  ],
+  "source_bytes": 884438,
+  "sha1_source": "bb96b30d13035c34a06006ea4aca8ab9a5a98506",
+  "evidencia": "docs/licencias-tarot-rws/la-sacerdotisa.wikitext.txt",
+  "status": "verificado"
+ },
+ "la-emperatriz": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Empress",
+  "arcana": "major",
+  "suit": null,
+  "number": 3,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_03_Empress.jpg",
+  "image_file": "File:RWS Tarot 03 Empress.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/d2/RWS_Tarot_03_Empress.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1123,
+   1920
+  ],
+  "source_bytes": 949129,
+  "sha1_source": "0c04891e42d51937390049994de8ac8867b201a1",
+  "evidencia": "docs/licencias-tarot-rws/la-emperatriz.wikitext.txt",
+  "status": "verificado"
+ },
+ "el-emperador": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Emperor",
+  "arcana": "major",
+  "suit": null,
+  "number": 4,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_04_Emperor.jpg",
+  "image_file": "File:RWS Tarot 04 Emperor.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/c/c3/RWS_Tarot_04_Emperor.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1117,
+   1919
+  ],
+  "source_bytes": 938373,
+  "sha1_source": "3fc0742d9a9199a226641a86b099df9540cfc3a3",
+  "evidencia": "docs/licencias-tarot-rws/el-emperador.wikitext.txt",
+  "status": "verificado"
+ },
+ "el-hierofante": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Hierophant",
+  "arcana": "major",
+  "suit": null,
+  "number": 5,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_05_Hierophant.jpg",
+  "image_file": "File:RWS Tarot 05 Hierophant.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/8/8d/RWS_Tarot_05_Hierophant.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1114,
+   1919
+  ],
+  "source_bytes": 900561,
+  "sha1_source": "1e7b864bcaf4c672d8fdf17e2abf7379326949c4",
+  "evidencia": "docs/licencias-tarot-rws/el-hierofante.wikitext.txt",
+  "status": "verificado"
+ },
+ "los-enamorados": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Lovers",
+  "arcana": "major",
+  "suit": null,
+  "number": 6,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_06_Lovers.jpg",
+  "image_file": "File:RWS Tarot 06 Lovers.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/db/RWS_Tarot_06_Lovers.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1122,
+   1920
+  ],
+  "source_bytes": 995290,
+  "sha1_source": "1c18b372fc4658948f2d1e9770b2aa87a2e4ac02",
+  "evidencia": "docs/licencias-tarot-rws/los-enamorados.wikitext.txt",
+  "status": "verificado"
+ },
+ "el-carro": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Chariot",
+  "arcana": "major",
+  "suit": null,
+  "number": 7,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_07_Chariot.jpg",
+  "image_file": "File:RWS Tarot 07 Chariot.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/9b/RWS_Tarot_07_Chariot.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1111,
+   1919
+  ],
+  "source_bytes": 859575,
+  "sha1_source": "8a93a2130017d32a7e8f9612d0874b5b1b41f83d",
+  "evidencia": "docs/licencias-tarot-rws/el-carro.wikitext.txt",
+  "status": "verificado"
+ },
+ "la-fuerza": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Strength",
+  "arcana": "major",
+  "suit": null,
+  "number": 8,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_08_Strength.jpg",
+  "image_file": "File:RWS Tarot 08 Strength.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f5/RWS_Tarot_08_Strength.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1114,
+   1919
+  ],
+  "source_bytes": 806480,
+  "sha1_source": "16baefeee43cee6b285838d27af690a0cf7e9db6",
+  "evidencia": "docs/licencias-tarot-rws/la-fuerza.wikitext.txt",
+  "status": "verificado"
+ },
+ "el-ermitano": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Hermit",
+  "arcana": "major",
+  "suit": null,
+  "number": 9,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_09_Hermit.jpg",
+  "image_file": "File:RWS Tarot 09 Hermit.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/4d/RWS_Tarot_09_Hermit.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1123,
+   1920
+  ],
+  "source_bytes": 735989,
+  "sha1_source": "106bf91c47522063c78d60ab412c53064541f617",
+  "evidencia": "docs/licencias-tarot-rws/el-ermitano.wikitext.txt",
+  "status": "verificado"
+ },
+ "la-rueda": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Wheel of Fortune",
+  "arcana": "major",
+  "suit": null,
+  "number": 10,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_10_Wheel_of_Fortune.jpg",
+  "image_file": "File:RWS Tarot 10 Wheel of Fortune.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/3c/RWS_Tarot_10_Wheel_of_Fortune.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1104,
+   1920
+  ],
+  "source_bytes": 1155837,
+  "sha1_source": "0758555fa3b5960fb631cba01879f3be0260a278",
+  "evidencia": "docs/licencias-tarot-rws/la-rueda.wikitext.txt",
+  "status": "verificado"
+ },
+ "la-justicia": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Justice",
+  "arcana": "major",
+  "suit": null,
+  "number": 11,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_11_Justice.jpg",
+  "image_file": "File:RWS Tarot 11 Justice.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/e0/RWS_Tarot_11_Justice.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1114,
+   1919
+  ],
+  "source_bytes": 893399,
+  "sha1_source": "16404e646dac8b8f5de4841b9259065059a04f71",
+  "evidencia": "docs/licencias-tarot-rws/la-justicia.wikitext.txt",
+  "status": "verificado"
+ },
+ "el-colgado": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Hanged Man",
+  "arcana": "major",
+  "suit": null,
+  "number": 12,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_12_Hanged_Man.jpg",
+  "image_file": "File:RWS Tarot 12 Hanged Man.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/2b/RWS_Tarot_12_Hanged_Man.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1092,
+   1920
+  ],
+  "source_bytes": 1138974,
+  "sha1_source": "41d2398a09087cc2936fcc70fcde7d92552331fd",
+  "evidencia": "docs/licencias-tarot-rws/el-colgado.wikitext.txt",
+  "status": "verificado"
+ },
+ "la-muerte": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Death",
+  "arcana": "major",
+  "suit": null,
+  "number": 13,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_13_Death.jpg",
+  "image_file": "File:RWS Tarot 13 Death.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/d7/RWS_Tarot_13_Death.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1111,
+   1919
+  ],
+  "source_bytes": 922316,
+  "sha1_source": "a49bfe7b626af084f33a67dbb22c001718f80a80",
+  "evidencia": "docs/licencias-tarot-rws/la-muerte.wikitext.txt",
+  "status": "verificado"
+ },
+ "la-templanza": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Temperance",
+  "arcana": "major",
+  "suit": null,
+  "number": 14,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_14_Temperance.jpg",
+  "image_file": "File:RWS Tarot 14 Temperance.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f8/RWS_Tarot_14_Temperance.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1106,
+   1920
+  ],
+  "source_bytes": 957655,
+  "sha1_source": "2d9eb7320f00cbf6d9e7ae334853ff7185a6b769",
+  "evidencia": "docs/licencias-tarot-rws/la-templanza.wikitext.txt",
+  "status": "verificado"
+ },
+ "el-diablo": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Devil",
+  "arcana": "major",
+  "suit": null,
+  "number": 15,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_15_Devil.jpg",
+  "image_file": "File:RWS Tarot 15 Devil.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/5/55/RWS_Tarot_15_Devil.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1090,
+   1920
+  ],
+  "source_bytes": 779014,
+  "sha1_source": "fc1d9242a524d82317fc45b27ef9e93af550b082",
+  "evidencia": "docs/licencias-tarot-rws/el-diablo.wikitext.txt",
+  "status": "verificado"
+ },
+ "la-torre": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Tower",
+  "arcana": "major",
+  "suit": null,
+  "number": 16,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_16_Tower.jpg",
+  "image_file": "File:RWS Tarot 16 Tower.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/5/53/RWS_Tarot_16_Tower.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1109,
+   1920
+  ],
+  "source_bytes": 758728,
+  "sha1_source": "c9da59cdde2b85b49c9e0ce67a6a08c7893ca926",
+  "evidencia": "docs/licencias-tarot-rws/la-torre.wikitext.txt",
+  "status": "verificado"
+ },
+ "la-estrella": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Star",
+  "arcana": "major",
+  "suit": null,
+  "number": 17,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_17_Star.jpg",
+  "image_file": "File:RWS Tarot 17 Star.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/db/RWS_Tarot_17_Star.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1114,
+   1919
+  ],
+  "source_bytes": 852520,
+  "sha1_source": "e220037a9310a12abd5733711810b4497a23ef77",
+  "evidencia": "docs/licencias-tarot-rws/la-estrella.wikitext.txt",
+  "status": "verificado"
+ },
+ "la-luna": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Moon",
+  "arcana": "major",
+  "suit": null,
+  "number": 18,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_18_Moon.jpg",
+  "image_file": "File:RWS Tarot 18 Moon.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/7/7f/RWS_Tarot_18_Moon.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1111,
+   1919
+  ],
+  "source_bytes": 859000,
+  "sha1_source": "e85cd51cdb95ef3b46284c0c317f72414b4ef30e",
+  "evidencia": "docs/licencias-tarot-rws/la-luna.wikitext.txt",
+  "status": "verificado"
+ },
+ "el-sol": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Sun",
+  "arcana": "major",
+  "suit": null,
+  "number": 19,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_19_Sun.jpg",
+  "image_file": "File:RWS Tarot 19 Sun.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/1/17/RWS_Tarot_19_Sun.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1114,
+   1919
+  ],
+  "source_bytes": 935619,
+  "sha1_source": "c12879caebe972e194e81743e5925c5b8c5607d8",
+  "evidencia": "docs/licencias-tarot-rws/el-sol.wikitext.txt",
+  "status": "verificado"
+ },
+ "el-juicio": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Judgement",
+  "arcana": "major",
+  "suit": null,
+  "number": 20,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_20_Judgement.jpg",
+  "image_file": "File:RWS Tarot 20 Judgement.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/dd/RWS_Tarot_20_Judgement.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1115,
+   1920
+  ],
+  "source_bytes": 934640,
+  "sha1_source": "19f6e9aae7c8169c75946e3eeb2b517cb295eb53",
+  "evidencia": "docs/licencias-tarot-rws/el-juicio.wikitext.txt",
+  "status": "verificado"
+ },
+ "el-mundo": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "World",
+  "arcana": "major",
+  "suit": null,
+  "number": 21,
+  "source": "https://commons.wikimedia.org/wiki/File:RWS_Tarot_21_World.jpg",
+  "image_file": "File:RWS Tarot 21 World.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/ff/RWS_Tarot_21_World.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1112,
+   1920
+  ],
+  "source_bytes": 1171390,
+  "sha1_source": "5b41b2ebeffac2fea5348b2607479a4ee0fd99b8",
+  "evidencia": "docs/licencias-tarot-rws/el-mundo.wikitext.txt",
+  "status": "verificado"
+ },
+ "as-de-bastos": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Ace of Wands",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 1,
+  "source": "https://commons.wikimedia.org/wiki/File:Wands01.jpg",
+  "image_file": "File:Wands01.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/1/11/Wands01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1106,
+   1920
+  ],
+  "source_bytes": 849701,
+  "sha1_source": "87dcc6561605687ecd2bcd672f3157ad6b1eaaae",
+  "evidencia": "docs/licencias-tarot-rws/as-de-bastos.wikitext.txt",
+  "status": "verificado"
+ },
+ "dos-de-bastos": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Two of Wands",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 2,
+  "source": "https://commons.wikimedia.org/wiki/File:Wands02.jpg",
+  "image_file": "File:Wands02.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/0/0f/Wands02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1115,
+   1920
+  ],
+  "source_bytes": 847840,
+  "sha1_source": "224cd7b4b1512574f77dfbeca6f64ec30eb779e1",
+  "evidencia": "docs/licencias-tarot-rws/dos-de-bastos.wikitext.txt",
+  "status": "verificado"
+ },
+ "tres-de-bastos": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Three of Wands",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 3,
+  "source": "https://commons.wikimedia.org/wiki/File:Wands03.jpg",
+  "image_file": "File:Wands03.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/ff/Wands03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1103,
+   1920
+  ],
+  "source_bytes": 939010,
+  "sha1_source": "8b18d992a00b65f783f1ce95930ea7a6d7771eab",
+  "evidencia": "docs/licencias-tarot-rws/tres-de-bastos.wikitext.txt",
+  "status": "verificado"
+ },
+ "cuatro-de-bastos": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Four of Wands",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 4,
+  "source": "https://commons.wikimedia.org/wiki/File:Wands04.jpg",
+  "image_file": "File:Wands04.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Wands04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1108,
+   1920
+  ],
+  "source_bytes": 797257,
+  "sha1_source": "d938100eabd3e515789eac05dcebb2d7749d57df",
+  "evidencia": "docs/licencias-tarot-rws/cuatro-de-bastos.wikitext.txt",
+  "status": "verificado"
+ },
+ "cinco-de-bastos": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Five of Wands",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 5,
+  "source": "https://commons.wikimedia.org/wiki/File:Wands05.jpg",
+  "image_file": "File:Wands05.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Wands05.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1108,
+   1920
+  ],
+  "source_bytes": 843454,
+  "sha1_source": "480db3a9788df55659a554252e6f305e55f35720",
+  "evidencia": "docs/licencias-tarot-rws/cinco-de-bastos.wikitext.txt",
+  "status": "verificado"
+ },
+ "seis-de-bastos": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Six of Wands",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 6,
+  "source": "https://commons.wikimedia.org/wiki/File:Wands06.jpg",
+  "image_file": "File:Wands06.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/3b/Wands06.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1118,
+   1920
+  ],
+  "source_bytes": 878047,
+  "sha1_source": "a06a540821876a1693ac1856cbf017bc8b011dbf",
+  "evidencia": "docs/licencias-tarot-rws/seis-de-bastos.wikitext.txt",
+  "status": "verificado"
+ },
+ "siete-de-bastos": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Seven of Wands",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 7,
+  "source": "https://commons.wikimedia.org/wiki/File:Wands07.jpg",
+  "image_file": "File:Wands07.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/e4/Wands07.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1109,
+   1920
+  ],
+  "source_bytes": 762723,
+  "sha1_source": "d63a45b166eda1dc993268f78a760a86f7c52209",
+  "evidencia": "docs/licencias-tarot-rws/siete-de-bastos.wikitext.txt",
+  "status": "verificado"
+ },
+ "ocho-de-bastos": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Eight of Wands",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 8,
+  "source": "https://commons.wikimedia.org/wiki/File:Wands08.jpg",
+  "image_file": "File:Wands08.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/6/6b/Wands08.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1115,
+   1920
+  ],
+  "source_bytes": 767846,
+  "sha1_source": "ee83d049b8fa4f4fd378f0f69b58fc4c25b4ab8b",
+  "evidencia": "docs/licencias-tarot-rws/ocho-de-bastos.wikitext.txt",
+  "status": "verificado"
+ },
+ "nueve-de-bastos": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Nine of Wands",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 9,
+  "source": "https://commons.wikimedia.org/wiki/File:Wands09.jpg",
+  "image_file": "File:Wands09.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/e7/Wands09.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1114,
+   1919
+  ],
+  "source_bytes": 883412,
+  "sha1_source": "3715a212b70ecc95737b6b1ea5ee360332624218",
+  "evidencia": "docs/licencias-tarot-rws/nueve-de-bastos.wikitext.txt",
+  "status": "verificado"
+ },
+ "diez-de-bastos": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Ten of Wands",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 10,
+  "source": "https://commons.wikimedia.org/wiki/File:Wands10.jpg",
+  "image_file": "File:Wands10.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/0/0b/Wands10.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1101,
+   1920
+  ],
+  "source_bytes": 822089,
+  "sha1_source": "7931b8e703b4fe520ffd4bda5da49d8087c1e3ca",
+  "evidencia": "docs/licencias-tarot-rws/diez-de-bastos.wikitext.txt",
+  "status": "verificado"
+ },
+ "sota-de-bastos": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Page of Wands",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 11,
+  "source": "https://commons.wikimedia.org/wiki/File:Wands11.jpg",
+  "image_file": "File:Wands11.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/6/6a/Wands11.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1109,
+   1920
+  ],
+  "source_bytes": 951740,
+  "sha1_source": "0b898179e4d32aed7a57f583083fe9c699c9481e",
+  "evidencia": "docs/licencias-tarot-rws/sota-de-bastos.wikitext.txt",
+  "status": "verificado"
+ },
+ "caballero-de-bastos": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Knight of Wands",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 12,
+  "source": "https://commons.wikimedia.org/wiki/File:Wands12.jpg",
+  "image_file": "File:Wands12.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/1/16/Wands12.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1115,
+   1920
+  ],
+  "source_bytes": 988758,
+  "sha1_source": "0260e923a92c43ed4943ce475a05eb03f0086cf4",
+  "evidencia": "docs/licencias-tarot-rws/caballero-de-bastos.wikitext.txt",
+  "status": "verificado"
+ },
+ "reina-de-bastos": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Queen of Wands",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 13,
+  "source": "https://commons.wikimedia.org/wiki/File:Wands13.jpg",
+  "image_file": "File:Wands13.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/0/0d/Wands13.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1118,
+   1920
+  ],
+  "source_bytes": 971970,
+  "sha1_source": "011c387bbdebeca12b308bda5555a7c024705e75",
+  "evidencia": "docs/licencias-tarot-rws/reina-de-bastos.wikitext.txt",
+  "status": "verificado"
+ },
+ "rey-de-bastos": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "King of Wands",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 14,
+  "source": "https://commons.wikimedia.org/wiki/File:Wands14.jpg",
+  "image_file": "File:Wands14.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/c/ce/Wands14.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1104,
+   1920
+  ],
+  "source_bytes": 984389,
+  "sha1_source": "d181026328ff20bd53162d74806a97a138925822",
+  "evidencia": "docs/licencias-tarot-rws/rey-de-bastos.wikitext.txt",
+  "status": "verificado"
+ },
+ "as-de-copas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Ace of Cups",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 1,
+  "source": "https://commons.wikimedia.org/wiki/File:Cups01.jpg",
+  "image_file": "File:Cups01.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/36/Cups01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1112,
+   1920
+  ],
+  "source_bytes": 923080,
+  "sha1_source": "d9aaeedc3e15d2983cabcf1a63135039070864e7",
+  "evidencia": "docs/licencias-tarot-rws/as-de-copas.wikitext.txt",
+  "status": "verificado"
+ },
+ "dos-de-copas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Two of Cups",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 2,
+  "source": "https://commons.wikimedia.org/wiki/File:Cups02.jpg",
+  "image_file": "File:Cups02.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f8/Cups02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1109,
+   1920
+  ],
+  "source_bytes": 1138042,
+  "sha1_source": "31ff6179cff02fcdb6a292ec4d15e66e4727bd55",
+  "evidencia": "docs/licencias-tarot-rws/dos-de-copas.wikitext.txt",
+  "status": "verificado"
+ },
+ "tres-de-copas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Three of Cups",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 3,
+  "source": "https://commons.wikimedia.org/wiki/File:Cups03.jpg",
+  "image_file": "File:Cups03.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Cups03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1117,
+   1919
+  ],
+  "source_bytes": 1153303,
+  "sha1_source": "8644f8f839d1e7c785ce4cd28c0a7553b40f29ca",
+  "evidencia": "docs/licencias-tarot-rws/tres-de-copas.wikitext.txt",
+  "status": "verificado"
+ },
+ "cuatro-de-copas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Four of Cups",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 4,
+  "source": "https://commons.wikimedia.org/wiki/File:Cups04.jpg",
+  "image_file": "File:Cups04.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/35/Cups04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1118,
+   1920
+  ],
+  "source_bytes": 804378,
+  "sha1_source": "aced20aeeb9b69215ea5df106bb3ccc9710b2f8a",
+  "evidencia": "docs/licencias-tarot-rws/cuatro-de-copas.wikitext.txt",
+  "status": "verificado"
+ },
+ "cinco-de-copas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Five of Cups",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 5,
+  "source": "https://commons.wikimedia.org/wiki/File:Cups05.jpg",
+  "image_file": "File:Cups05.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Cups05.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1121,
+   1920
+  ],
+  "source_bytes": 702301,
+  "sha1_source": "28d89b259fcfccce0336557e2f691244304475ae",
+  "evidencia": "docs/licencias-tarot-rws/cinco-de-copas.wikitext.txt",
+  "status": "verificado"
+ },
+ "seis-de-copas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Six of Cups",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 6,
+  "source": "https://commons.wikimedia.org/wiki/File:Cups06.jpg",
+  "image_file": "File:Cups06.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/1/17/Cups06.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1115,
+   1920
+  ],
+  "source_bytes": 984386,
+  "sha1_source": "0c98185dbc9c36f1383b576e20b154e254e02a83",
+  "evidencia": "docs/licencias-tarot-rws/seis-de-copas.wikitext.txt",
+  "status": "verificado"
+ },
+ "siete-de-copas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Seven of Cups",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 7,
+  "source": "https://commons.wikimedia.org/wiki/File:Cups07.jpg",
+  "image_file": "File:Cups07.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/a/ae/Cups07.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1109,
+   1920
+  ],
+  "source_bytes": 808227,
+  "sha1_source": "46cddf039c6cdbb73062ec02d9b46305a1c68c7e",
+  "evidencia": "docs/licencias-tarot-rws/siete-de-copas.wikitext.txt",
+  "status": "verificado"
+ },
+ "ocho-de-copas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Eight of Cups",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 8,
+  "source": "https://commons.wikimedia.org/wiki/File:Cups08.jpg",
+  "image_file": "File:Cups08.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/6/60/Cups08.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1114,
+   1919
+  ],
+  "source_bytes": 829918,
+  "sha1_source": "89419f820aa82cb855cd705c97741f439a2ef757",
+  "evidencia": "docs/licencias-tarot-rws/ocho-de-copas.wikitext.txt",
+  "status": "verificado"
+ },
+ "nueve-de-copas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Nine of Cups",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 9,
+  "source": "https://commons.wikimedia.org/wiki/File:Cups09.jpg",
+  "image_file": "File:Cups09.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/24/Cups09.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1114,
+   1919
+  ],
+  "source_bytes": 824525,
+  "sha1_source": "d06b79c496232ae7a12e8c1bd034b37b5580202e",
+  "evidencia": "docs/licencias-tarot-rws/nueve-de-copas.wikitext.txt",
+  "status": "verificado"
+ },
+ "diez-de-copas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Ten of Cups",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 10,
+  "source": "https://commons.wikimedia.org/wiki/File:Cups10.jpg",
+  "image_file": "File:Cups10.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/8/84/Cups10.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1109,
+   1920
+  ],
+  "source_bytes": 955053,
+  "sha1_source": "29c49649940bac0a8c0dff6e1cb651f60e1b47af",
+  "evidencia": "docs/licencias-tarot-rws/diez-de-copas.wikitext.txt",
+  "status": "verificado"
+ },
+ "sota-de-copas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Page of Cups",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 11,
+  "source": "https://commons.wikimedia.org/wiki/File:Cups11.jpg",
+  "image_file": "File:Cups11.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/a/ad/Cups11.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1115,
+   1920
+  ],
+  "source_bytes": 943695,
+  "sha1_source": "ef5138a1d6bea70661665547298e79364754ee90",
+  "evidencia": "docs/licencias-tarot-rws/sota-de-copas.wikitext.txt",
+  "status": "verificado"
+ },
+ "caballero-de-copas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Knight of Cups",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 12,
+  "source": "https://commons.wikimedia.org/wiki/File:Cups12.jpg",
+  "image_file": "File:Cups12.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/fa/Cups12.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1109,
+   1920
+  ],
+  "source_bytes": 908276,
+  "sha1_source": "bfcbc0b7014f2041b38eb76cb7b7e253d21ad3aa",
+  "evidencia": "docs/licencias-tarot-rws/caballero-de-copas.wikitext.txt",
+  "status": "verificado"
+ },
+ "reina-de-copas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Queen of Cups",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 13,
+  "source": "https://commons.wikimedia.org/wiki/File:Cups13.jpg",
+  "image_file": "File:Cups13.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/6/62/Cups13.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1114,
+   1919
+  ],
+  "source_bytes": 866465,
+  "sha1_source": "69b68cee5e7e09e624a53169aed26035ab04143e",
+  "evidencia": "docs/licencias-tarot-rws/reina-de-copas.wikitext.txt",
+  "status": "verificado"
+ },
+ "rey-de-copas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "King of Cups",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 14,
+  "source": "https://commons.wikimedia.org/wiki/File:Cups14.jpg",
+  "image_file": "File:Cups14.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/0/04/Cups14.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1121,
+   1920
+  ],
+  "source_bytes": 903180,
+  "sha1_source": "a78389417bbcbc09e8fdeddec49332938cf48a86",
+  "evidencia": "docs/licencias-tarot-rws/rey-de-copas.wikitext.txt",
+  "status": "verificado"
+ },
+ "as-de-espadas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Ace of Swords",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 1,
+  "source": "https://commons.wikimedia.org/wiki/File:Swords01.jpg",
+  "image_file": "File:Swords01.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Swords01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1109,
+   1920
+  ],
+  "source_bytes": 850219,
+  "sha1_source": "8ec8b145cc670007aeb8020ce7940d9ba0ab40fe",
+  "evidencia": "docs/licencias-tarot-rws/as-de-espadas.wikitext.txt",
+  "status": "verificado"
+ },
+ "dos-de-espadas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Two of Swords",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 2,
+  "source": "https://commons.wikimedia.org/wiki/File:Swords02.jpg",
+  "image_file": "File:Swords02.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Swords02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1121,
+   1920
+  ],
+  "source_bytes": 810433,
+  "sha1_source": "303a13183017cca280fe5a79ddc513b00277a8b5",
+  "evidencia": "docs/licencias-tarot-rws/dos-de-espadas.wikitext.txt",
+  "status": "verificado"
+ },
+ "tres-de-espadas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Three of Swords",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 3,
+  "source": "https://commons.wikimedia.org/wiki/File:Swords03.jpg",
+  "image_file": "File:Swords03.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/0/02/Swords03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1103,
+   1920
+  ],
+  "source_bytes": 725080,
+  "sha1_source": "a4490aa4f6e1751adc47a40b2860a41c1fb4c810",
+  "evidencia": "docs/licencias-tarot-rws/tres-de-espadas.wikitext.txt",
+  "status": "verificado"
+ },
+ "cuatro-de-espadas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Four of Swords",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 4,
+  "source": "https://commons.wikimedia.org/wiki/File:Swords04.jpg",
+  "image_file": "File:Swords04.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/bf/Swords04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1117,
+   1919
+  ],
+  "source_bytes": 854971,
+  "sha1_source": "0f50aad1a018ab09ea2d3223c5175ff988688128",
+  "evidencia": "docs/licencias-tarot-rws/cuatro-de-espadas.wikitext.txt",
+  "status": "verificado"
+ },
+ "cinco-de-espadas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Five of Swords",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 5,
+  "source": "https://commons.wikimedia.org/wiki/File:Swords05.jpg",
+  "image_file": "File:Swords05.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/23/Swords05.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1109,
+   1920
+  ],
+  "source_bytes": 889221,
+  "sha1_source": "b92b4bdb92b8b8262979440366c4d7c37b9ed152",
+  "evidencia": "docs/licencias-tarot-rws/cinco-de-espadas.wikitext.txt",
+  "status": "verificado"
+ },
+ "seis-de-espadas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Six of Swords",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 6,
+  "source": "https://commons.wikimedia.org/wiki/File:Swords06.jpg",
+  "image_file": "File:Swords06.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/29/Swords06.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1111,
+   1919
+  ],
+  "source_bytes": 935341,
+  "sha1_source": "295ec146bc425729ec5c7be675fd6ce3bd94c628",
+  "evidencia": "docs/licencias-tarot-rws/seis-de-espadas.wikitext.txt",
+  "status": "verificado"
+ },
+ "siete-de-espadas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Seven of Swords",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 7,
+  "source": "https://commons.wikimedia.org/wiki/File:Swords07.jpg",
+  "image_file": "File:Swords07.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/34/Swords07.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1114,
+   1919
+  ],
+  "source_bytes": 794393,
+  "sha1_source": "4bb5e8567295b28c2d4956b33a0d26a83d52a2f8",
+  "evidencia": "docs/licencias-tarot-rws/siete-de-espadas.wikitext.txt",
+  "status": "verificado"
+ },
+ "ocho-de-espadas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Eight of Swords",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 8,
+  "source": "https://commons.wikimedia.org/wiki/File:Swords08.jpg",
+  "image_file": "File:Swords08.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/a/a7/Swords08.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1114,
+   1919
+  ],
+  "source_bytes": 894497,
+  "sha1_source": "668676cf4f43fb66c4d13641dc1cbd9bcf692bf0",
+  "evidencia": "docs/licencias-tarot-rws/ocho-de-espadas.wikitext.txt",
+  "status": "verificado"
+ },
+ "nueve-de-espadas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Nine of Swords",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 9,
+  "source": "https://commons.wikimedia.org/wiki/File:Swords09.jpg",
+  "image_file": "File:Swords09.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Swords09.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1114,
+   1919
+  ],
+  "source_bytes": 789057,
+  "sha1_source": "eb3289e1366812310982a0d865910599d94154b1",
+  "evidencia": "docs/licencias-tarot-rws/nueve-de-espadas.wikitext.txt",
+  "status": "verificado"
+ },
+ "diez-de-espadas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Ten of Swords",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 10,
+  "source": "https://commons.wikimedia.org/wiki/File:Swords10.jpg",
+  "image_file": "File:Swords10.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Swords10.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1107,
+   1920
+  ],
+  "source_bytes": 730530,
+  "sha1_source": "589beb4b5e987e11b3e298b7a02a27de9bc424b6",
+  "evidencia": "docs/licencias-tarot-rws/diez-de-espadas.wikitext.txt",
+  "status": "verificado"
+ },
+ "sota-de-espadas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Page of Swords",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 11,
+  "source": "https://commons.wikimedia.org/wiki/File:Swords11.jpg",
+  "image_file": "File:Swords11.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Swords11.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1108,
+   1920
+  ],
+  "source_bytes": 872818,
+  "sha1_source": "a4aabf1894b6fc513a0e115b63e0b762be391b73",
+  "evidencia": "docs/licencias-tarot-rws/sota-de-espadas.wikitext.txt",
+  "status": "verificado"
+ },
+ "caballero-de-espadas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Knight of Swords",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 12,
+  "source": "https://commons.wikimedia.org/wiki/File:Swords12.jpg",
+  "image_file": "File:Swords12.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/b0/Swords12.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1112,
+   1920
+  ],
+  "source_bytes": 852095,
+  "sha1_source": "4c0d208cc07285f28587db0d3f89a6a1af62ac5b",
+  "evidencia": "docs/licencias-tarot-rws/caballero-de-espadas.wikitext.txt",
+  "status": "verificado"
+ },
+ "reina-de-espadas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Queen of Swords",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 13,
+  "source": "https://commons.wikimedia.org/wiki/File:Swords13.jpg",
+  "image_file": "File:Swords13.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Swords13.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1104,
+   1920
+  ],
+  "source_bytes": 817537,
+  "sha1_source": "e4b59f06e66bc3643d5b1a2876638af8b046e4f0",
+  "evidencia": "docs/licencias-tarot-rws/reina-de-espadas.wikitext.txt",
+  "status": "verificado"
+ },
+ "rey-de-espadas": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "King of Swords",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 14,
+  "source": "https://commons.wikimedia.org/wiki/File:Swords14.jpg",
+  "image_file": "File:Swords14.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/33/Swords14.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1117,
+   1919
+  ],
+  "source_bytes": 932596,
+  "sha1_source": "69a4d993f44ecef40a8b4c4bfb5452770290130d",
+  "evidencia": "docs/licencias-tarot-rws/rey-de-espadas.wikitext.txt",
+  "status": "verificado"
+ },
+ "as-de-oros": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Ace of Pentacles",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 1,
+  "source": "https://commons.wikimedia.org/wiki/File:Pents01.jpg",
+  "image_file": "File:Pents01.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/fd/Pents01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1109,
+   1920
+  ],
+  "source_bytes": 864022,
+  "sha1_source": "3d4f8dc21e8892cd5fadbd3c748358c8984856c6",
+  "evidencia": "docs/licencias-tarot-rws/as-de-oros.wikitext.txt",
+  "status": "verificado"
+ },
+ "dos-de-oros": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Two of Pentacles",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 2,
+  "source": "https://commons.wikimedia.org/wiki/File:Pents02.jpg",
+  "image_file": "File:Pents02.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Pents02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1112,
+   1920
+  ],
+  "source_bytes": 918042,
+  "sha1_source": "4924c94b5553a2aff65a932f066391b47e7db517",
+  "evidencia": "docs/licencias-tarot-rws/dos-de-oros.wikitext.txt",
+  "status": "verificado"
+ },
+ "tres-de-oros": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Three of Pentacles",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 3,
+  "source": "https://commons.wikimedia.org/wiki/File:Pents03.jpg",
+  "image_file": "File:Pents03.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/42/Pents03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1117,
+   1919
+  ],
+  "source_bytes": 889863,
+  "sha1_source": "ca857869e950b28e912b0a585f597d7f68112fae",
+  "evidencia": "docs/licencias-tarot-rws/tres-de-oros.wikitext.txt",
+  "status": "verificado"
+ },
+ "cuatro-de-oros": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Four of Pentacles",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 4,
+  "source": "https://commons.wikimedia.org/wiki/File:Pents04.jpg",
+  "image_file": "File:Pents04.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/35/Pents04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1110,
+   1920
+  ],
+  "source_bytes": 811275,
+  "sha1_source": "4d9da9f40f497226ae0777923c9a38796adbe0c1",
+  "evidencia": "docs/licencias-tarot-rws/cuatro-de-oros.wikitext.txt",
+  "status": "verificado"
+ },
+ "cinco-de-oros": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Five of Pentacles",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 5,
+  "source": "https://commons.wikimedia.org/wiki/File:Pents05.jpg",
+  "image_file": "File:Pents05.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/96/Pents05.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1112,
+   1920
+  ],
+  "source_bytes": 899969,
+  "sha1_source": "cbe62be71c1a110125dd55887843ce04c3827976",
+  "evidencia": "docs/licencias-tarot-rws/cinco-de-oros.wikitext.txt",
+  "status": "verificado"
+ },
+ "seis-de-oros": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Six of Pentacles",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 6,
+  "source": "https://commons.wikimedia.org/wiki/File:Pents06.jpg",
+  "image_file": "File:Pents06.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/a/a6/Pents06.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1109,
+   1920
+  ],
+  "source_bytes": 871487,
+  "sha1_source": "cdbc8cabea9dbe863673891f6c19cd9a8310b258",
+  "evidencia": "docs/licencias-tarot-rws/seis-de-oros.wikitext.txt",
+  "status": "verificado"
+ },
+ "siete-de-oros": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Seven of Pentacles",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 7,
+  "source": "https://commons.wikimedia.org/wiki/File:Pents07.jpg",
+  "image_file": "File:Pents07.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/6/6a/Pents07.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1114,
+   1919
+  ],
+  "source_bytes": 935784,
+  "sha1_source": "c9caaba37d822b79b329f31e7db4f13d8fd2fd9b",
+  "evidencia": "docs/licencias-tarot-rws/siete-de-oros.wikitext.txt",
+  "status": "verificado"
+ },
+ "ocho-de-oros": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Eight of Pentacles",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 8,
+  "source": "https://commons.wikimedia.org/wiki/File:Pents08.jpg",
+  "image_file": "File:Pents08.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/49/Pents08.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1117,
+   1920
+  ],
+  "source_bytes": 889064,
+  "sha1_source": "7ee1f241af3bb05d2bd81c07f2a4cd2291cc60ba",
+  "evidencia": "docs/licencias-tarot-rws/ocho-de-oros.wikitext.txt",
+  "status": "verificado"
+ },
+ "nueve-de-oros": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Nine of Pentacles",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 9,
+  "source": "https://commons.wikimedia.org/wiki/File:Pents09.jpg",
+  "image_file": "File:Pents09.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f0/Pents09.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1108,
+   1920
+  ],
+  "source_bytes": 853539,
+  "sha1_source": "2fd48ca167699b1e51985338711e191e23613827",
+  "evidencia": "docs/licencias-tarot-rws/nueve-de-oros.wikitext.txt",
+  "status": "verificado"
+ },
+ "diez-de-oros": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Ten of Pentacles",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 10,
+  "source": "https://commons.wikimedia.org/wiki/File:Pents10.jpg",
+  "image_file": "File:Pents10.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/42/Pents10.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1115,
+   1920
+  ],
+  "source_bytes": 963926,
+  "sha1_source": "af975248f5a406aef38a97bc58348468b3292de6",
+  "evidencia": "docs/licencias-tarot-rws/diez-de-oros.wikitext.txt",
+  "status": "verificado"
+ },
+ "sota-de-oros": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Page of Pentacles",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 11,
+  "source": "https://commons.wikimedia.org/wiki/File:Pents11.jpg",
+  "image_file": "File:Pents11.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Pents11.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1112,
+   1920
+  ],
+  "source_bytes": 766976,
+  "sha1_source": "1f8c81e2972b400c31558dfccfb13c88a0a54dc4",
+  "evidencia": "docs/licencias-tarot-rws/sota-de-oros.wikitext.txt",
+  "status": "verificado"
+ },
+ "caballero-de-oros": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Knight of Pentacles",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 12,
+  "source": "https://commons.wikimedia.org/wiki/File:Pents12.jpg",
+  "image_file": "File:Pents12.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/d5/Pents12.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1111,
+   1919
+  ],
+  "source_bytes": 709002,
+  "sha1_source": "4b71c7b41acda1e05bb507de542e58da16c5b41c",
+  "evidencia": "docs/licencias-tarot-rws/caballero-de-oros.wikitext.txt",
+  "status": "verificado"
+ },
+ "reina-de-oros": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "Queen of Pentacles",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 13,
+  "source": "https://commons.wikimedia.org/wiki/File:Pents13.jpg",
+  "image_file": "File:Pents13.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/8/88/Pents13.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1109,
+   1920
+  ],
+  "source_bytes": 1198823,
+  "sha1_source": "0788c5de3edff7cfb9c94795e7ef96368a636f48",
+  "evidencia": "docs/licencias-tarot-rws/reina-de-oros.wikitext.txt",
+  "status": "verificado"
+ },
+ "rey-de-oros": {
+  "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
+  "card": "King of Pentacles",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 14,
+  "source": "https://commons.wikimedia.org/wiki/File:Pents14.jpg",
+  "image_file": "File:Pents14.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/1/1c/Pents14.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_short": "Public domain",
+  "license_template": "PD-old-auto-expired|deathyear=1942",
+  "license_categories": [
+   "PD-old-80-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "author": "Pamela Colman Smith (1878-1951)",
+  "copyright_holder": "Arthur Edward Waite (1857-1942) -- Smith dibujo por encargo y no figuro como autora",
+  "date_work": "1909",
+  "date_ficha": "1910",
+  "source_px": [
+   1107,
+   1920
+  ],
+  "source_bytes": 821927,
+  "sha1_source": "084fe9710bbd671f793ace7f11fb4c9ec5661900",
+  "evidencia": "docs/licencias-tarot-rws/rey-de-oros.wikitext.txt",
+  "status": "verificado"
+ }
+}

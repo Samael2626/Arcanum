@@ -1,0 +1,15 @@
+<!--This file was moved here using FileImporter from https://en.wikipedia.org/wiki/File:Cups05.jpg-->
+== {{int:filedesc}} ==
+{{Information
+| description    = {{en|Five of Cups—“Pam-A” tarot card from the [[:w:en:Rider–Waite Tarot|Rider–Waite Tarot]] deck.}}
+| date           = 1910
+| source         = http://muzendo.jp/blog/
+| author         = {{Creator:Pamela Colman Smith}}
+| other_fields   = {{information field|Note|[[:w:Pamela Colman Smith|Pamela Colman Smith]] was the artist and worked as an artist 'for hire.' She was not acknowledged as the author of the work. [[:w:Arthur Edward Waite|Arthur Edward Waite]] was the copyright holder and he died in 1942.}}
+}}
+
+== {{int:license-header}} ==
+{{PD-old-auto-expired|deathyear=1942}}
+
+[[Category:Rider-Waite-Smith tarot deck (TaionWC)]]
+[[Category:Cups (Minor Arcana)]]
