@@ -26,7 +26,18 @@
   "source_bytes": 1177006,
   "sha1_source": "a707c0123b59fd2420b05645e9d3d16b74235b42",
   "evidencia": "docs/licencias-tarot-rws/el-loco.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/el-loco.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 82444,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "el-mago": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -55,7 +66,18 @@
   "source_bytes": 800458,
   "sha1_source": "d24df085c3c22da8cd7f88c0f2a4256c6ae50fda",
   "evidencia": "docs/licencias-tarot-rws/el-mago.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/el-mago.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 82522,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "la-sacerdotisa": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -84,7 +106,18 @@
   "source_bytes": 884438,
   "sha1_source": "bb96b30d13035c34a06006ea4aca8ab9a5a98506",
   "evidencia": "docs/licencias-tarot-rws/la-sacerdotisa.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/la-sacerdotisa.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 95602,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "la-emperatriz": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -113,7 +146,18 @@
   "source_bytes": 949129,
   "sha1_source": "0c04891e42d51937390049994de8ac8867b201a1",
   "evidencia": "docs/licencias-tarot-rws/la-emperatriz.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/la-emperatriz.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 108242,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "el-emperador": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -142,7 +186,18 @@
   "source_bytes": 938373,
   "sha1_source": "3fc0742d9a9199a226641a86b099df9540cfc3a3",
   "evidencia": "docs/licencias-tarot-rws/el-emperador.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/el-emperador.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 104394,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "el-hierofante": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -171,7 +226,18 @@
   "source_bytes": 900561,
   "sha1_source": "1e7b864bcaf4c672d8fdf17e2abf7379326949c4",
   "evidencia": "docs/licencias-tarot-rws/el-hierofante.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/el-hierofante.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 103344,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "los-enamorados": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -200,7 +266,18 @@
   "source_bytes": 995290,
   "sha1_source": "1c18b372fc4658948f2d1e9770b2aa87a2e4ac02",
   "evidencia": "docs/licencias-tarot-rws/los-enamorados.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/los-enamorados.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 112506,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "el-carro": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -229,7 +306,18 @@
   "source_bytes": 859575,
   "sha1_source": "8a93a2130017d32a7e8f9612d0874b5b1b41f83d",
   "evidencia": "docs/licencias-tarot-rws/el-carro.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/el-carro.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 95232,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "la-fuerza": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -258,7 +346,18 @@
   "source_bytes": 806480,
   "sha1_source": "16baefeee43cee6b285838d27af690a0cf7e9db6",
   "evidencia": "docs/licencias-tarot-rws/la-fuerza.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/la-fuerza.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 79932,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "el-ermitano": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -287,7 +386,18 @@
   "source_bytes": 735989,
   "sha1_source": "106bf91c47522063c78d60ab412c53064541f617",
   "evidencia": "docs/licencias-tarot-rws/el-ermitano.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/el-ermitano.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 59086,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "la-rueda": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -316,7 +426,18 @@
   "source_bytes": 1155837,
   "sha1_source": "0758555fa3b5960fb631cba01879f3be0260a278",
   "evidencia": "docs/licencias-tarot-rws/la-rueda.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/la-rueda.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 104470,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "la-justicia": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -345,7 +466,18 @@
   "source_bytes": 893399,
   "sha1_source": "16404e646dac8b8f5de4841b9259065059a04f71",
   "evidencia": "docs/licencias-tarot-rws/la-justicia.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/la-justicia.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 100698,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "el-colgado": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -374,7 +506,18 @@
   "source_bytes": 1138974,
   "sha1_source": "41d2398a09087cc2936fcc70fcde7d92552331fd",
   "evidencia": "docs/licencias-tarot-rws/el-colgado.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/el-colgado.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 104612,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "la-muerte": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -403,7 +546,18 @@
   "source_bytes": 922316,
   "sha1_source": "a49bfe7b626af084f33a67dbb22c001718f80a80",
   "evidencia": "docs/licencias-tarot-rws/la-muerte.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/la-muerte.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 107468,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "la-templanza": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -432,7 +586,18 @@
   "source_bytes": 957655,
   "sha1_source": "2d9eb7320f00cbf6d9e7ae334853ff7185a6b769",
   "evidencia": "docs/licencias-tarot-rws/la-templanza.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/la-templanza.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 116554,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "el-diablo": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -461,7 +626,18 @@
   "source_bytes": 779014,
   "sha1_source": "fc1d9242a524d82317fc45b27ef9e93af550b082",
   "evidencia": "docs/licencias-tarot-rws/el-diablo.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/el-diablo.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 82374,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "la-torre": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -490,7 +666,18 @@
   "source_bytes": 758728,
   "sha1_source": "c9da59cdde2b85b49c9e0ce67a6a08c7893ca926",
   "evidencia": "docs/licencias-tarot-rws/la-torre.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/la-torre.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 77338,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "la-estrella": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -519,7 +706,18 @@
   "source_bytes": 852520,
   "sha1_source": "e220037a9310a12abd5733711810b4497a23ef77",
   "evidencia": "docs/licencias-tarot-rws/la-estrella.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/la-estrella.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 87970,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "la-luna": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -548,7 +746,18 @@
   "source_bytes": 859000,
   "sha1_source": "e85cd51cdb95ef3b46284c0c317f72414b4ef30e",
   "evidencia": "docs/licencias-tarot-rws/la-luna.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/la-luna.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 89116,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "el-sol": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -577,7 +786,18 @@
   "source_bytes": 935619,
   "sha1_source": "c12879caebe972e194e81743e5925c5b8c5607d8",
   "evidencia": "docs/licencias-tarot-rws/el-sol.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/el-sol.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 107520,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "el-juicio": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -606,7 +826,18 @@
   "source_bytes": 934640,
   "sha1_source": "19f6e9aae7c8169c75946e3eeb2b517cb295eb53",
   "evidencia": "docs/licencias-tarot-rws/el-juicio.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/el-juicio.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 104552,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "el-mundo": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -635,7 +866,18 @@
   "source_bytes": 1171390,
   "sha1_source": "5b41b2ebeffac2fea5348b2607479a4ee0fd99b8",
   "evidencia": "docs/licencias-tarot-rws/el-mundo.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/el-mundo.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 102990,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "as-de-bastos": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -664,7 +906,18 @@
   "source_bytes": 849701,
   "sha1_source": "87dcc6561605687ecd2bcd672f3157ad6b1eaaae",
   "evidencia": "docs/licencias-tarot-rws/as-de-bastos.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/as-de-bastos.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 95736,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "dos-de-bastos": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -693,7 +946,18 @@
   "source_bytes": 847840,
   "sha1_source": "224cd7b4b1512574f77dfbeca6f64ec30eb779e1",
   "evidencia": "docs/licencias-tarot-rws/dos-de-bastos.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/dos-de-bastos.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 92324,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "tres-de-bastos": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -722,7 +986,18 @@
   "source_bytes": 939010,
   "sha1_source": "8b18d992a00b65f783f1ce95930ea7a6d7771eab",
   "evidencia": "docs/licencias-tarot-rws/tres-de-bastos.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/tres-de-bastos.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 103282,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "cuatro-de-bastos": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -751,7 +1026,18 @@
   "source_bytes": 797257,
   "sha1_source": "d938100eabd3e515789eac05dcebb2d7749d57df",
   "evidencia": "docs/licencias-tarot-rws/cuatro-de-bastos.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/cuatro-de-bastos.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 80254,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "cinco-de-bastos": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -780,7 +1066,18 @@
   "source_bytes": 843454,
   "sha1_source": "480db3a9788df55659a554252e6f305e55f35720",
   "evidencia": "docs/licencias-tarot-rws/cinco-de-bastos.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/cinco-de-bastos.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 85180,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "seis-de-bastos": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -809,7 +1106,18 @@
   "source_bytes": 878047,
   "sha1_source": "a06a540821876a1693ac1856cbf017bc8b011dbf",
   "evidencia": "docs/licencias-tarot-rws/seis-de-bastos.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/seis-de-bastos.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 92988,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "siete-de-bastos": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -838,7 +1146,18 @@
   "source_bytes": 762723,
   "sha1_source": "d63a45b166eda1dc993268f78a760a86f7c52209",
   "evidencia": "docs/licencias-tarot-rws/siete-de-bastos.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/siete-de-bastos.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 68302,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "ocho-de-bastos": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -867,7 +1186,18 @@
   "source_bytes": 767846,
   "sha1_source": "ee83d049b8fa4f4fd378f0f69b58fc4c25b4ab8b",
   "evidencia": "docs/licencias-tarot-rws/ocho-de-bastos.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/ocho-de-bastos.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 67974,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "nueve-de-bastos": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -896,7 +1226,18 @@
   "source_bytes": 883412,
   "sha1_source": "3715a212b70ecc95737b6b1ea5ee360332624218",
   "evidencia": "docs/licencias-tarot-rws/nueve-de-bastos.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/nueve-de-bastos.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 92414,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "diez-de-bastos": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -925,7 +1266,18 @@
   "source_bytes": 822089,
   "sha1_source": "7931b8e703b4fe520ffd4bda5da49d8087c1e3ca",
   "evidencia": "docs/licencias-tarot-rws/diez-de-bastos.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/diez-de-bastos.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 81300,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "sota-de-bastos": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -954,7 +1306,18 @@
   "source_bytes": 951740,
   "sha1_source": "0b898179e4d32aed7a57f583083fe9c699c9481e",
   "evidencia": "docs/licencias-tarot-rws/sota-de-bastos.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/sota-de-bastos.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 106214,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "caballero-de-bastos": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -983,7 +1346,18 @@
   "source_bytes": 988758,
   "sha1_source": "0260e923a92c43ed4943ce475a05eb03f0086cf4",
   "evidencia": "docs/licencias-tarot-rws/caballero-de-bastos.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/caballero-de-bastos.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 112154,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "reina-de-bastos": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1012,7 +1386,18 @@
   "source_bytes": 971970,
   "sha1_source": "011c387bbdebeca12b308bda5555a7c024705e75",
   "evidencia": "docs/licencias-tarot-rws/reina-de-bastos.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/reina-de-bastos.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 113262,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "rey-de-bastos": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1041,7 +1426,18 @@
   "source_bytes": 984389,
   "sha1_source": "d181026328ff20bd53162d74806a97a138925822",
   "evidencia": "docs/licencias-tarot-rws/rey-de-bastos.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/rey-de-bastos.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 116556,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "as-de-copas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1070,7 +1466,18 @@
   "source_bytes": 923080,
   "sha1_source": "d9aaeedc3e15d2983cabcf1a63135039070864e7",
   "evidencia": "docs/licencias-tarot-rws/as-de-copas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/as-de-copas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 106130,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "dos-de-copas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1099,7 +1506,18 @@
   "source_bytes": 1138042,
   "sha1_source": "31ff6179cff02fcdb6a292ec4d15e66e4727bd55",
   "evidencia": "docs/licencias-tarot-rws/dos-de-copas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/dos-de-copas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 100754,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "tres-de-copas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1128,7 +1546,18 @@
   "source_bytes": 1153303,
   "sha1_source": "8644f8f839d1e7c785ce4cd28c0a7553b40f29ca",
   "evidencia": "docs/licencias-tarot-rws/tres-de-copas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/tres-de-copas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 97192,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "cuatro-de-copas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1157,7 +1586,18 @@
   "source_bytes": 804378,
   "sha1_source": "aced20aeeb9b69215ea5df106bb3ccc9710b2f8a",
   "evidencia": "docs/licencias-tarot-rws/cuatro-de-copas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/cuatro-de-copas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 76694,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "cinco-de-copas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1186,7 +1626,18 @@
   "source_bytes": 702301,
   "sha1_source": "28d89b259fcfccce0336557e2f691244304475ae",
   "evidencia": "docs/licencias-tarot-rws/cinco-de-copas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/cinco-de-copas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 55454,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "seis-de-copas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1215,7 +1666,18 @@
   "source_bytes": 984386,
   "sha1_source": "0c98185dbc9c36f1383b576e20b154e254e02a83",
   "evidencia": "docs/licencias-tarot-rws/seis-de-copas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/seis-de-copas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 117272,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "siete-de-copas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1244,7 +1706,18 @@
   "source_bytes": 808227,
   "sha1_source": "46cddf039c6cdbb73062ec02d9b46305a1c68c7e",
   "evidencia": "docs/licencias-tarot-rws/siete-de-copas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/siete-de-copas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 81444,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "ocho-de-copas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1273,7 +1746,18 @@
   "source_bytes": 829918,
   "sha1_source": "89419f820aa82cb855cd705c97741f439a2ef757",
   "evidencia": "docs/licencias-tarot-rws/ocho-de-copas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/ocho-de-copas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 85202,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "nueve-de-copas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1302,7 +1786,18 @@
   "source_bytes": 824525,
   "sha1_source": "d06b79c496232ae7a12e8c1bd034b37b5580202e",
   "evidencia": "docs/licencias-tarot-rws/nueve-de-copas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/nueve-de-copas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 87908,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "diez-de-copas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1331,7 +1826,18 @@
   "source_bytes": 955053,
   "sha1_source": "29c49649940bac0a8c0dff6e1cb651f60e1b47af",
   "evidencia": "docs/licencias-tarot-rws/diez-de-copas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/diez-de-copas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 107194,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "sota-de-copas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1360,7 +1866,18 @@
   "source_bytes": 943695,
   "sha1_source": "ef5138a1d6bea70661665547298e79364754ee90",
   "evidencia": "docs/licencias-tarot-rws/sota-de-copas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/sota-de-copas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 108624,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "caballero-de-copas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1389,7 +1906,18 @@
   "source_bytes": 908276,
   "sha1_source": "bfcbc0b7014f2041b38eb76cb7b7e253d21ad3aa",
   "evidencia": "docs/licencias-tarot-rws/caballero-de-copas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/caballero-de-copas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 104910,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "reina-de-copas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1418,7 +1946,18 @@
   "source_bytes": 866465,
   "sha1_source": "69b68cee5e7e09e624a53169aed26035ab04143e",
   "evidencia": "docs/licencias-tarot-rws/reina-de-copas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/reina-de-copas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 94456,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "rey-de-copas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1447,7 +1986,18 @@
   "source_bytes": 903180,
   "sha1_source": "a78389417bbcbc09e8fdeddec49332938cf48a86",
   "evidencia": "docs/licencias-tarot-rws/rey-de-copas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/rey-de-copas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 101116,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "as-de-espadas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1476,7 +2026,18 @@
   "source_bytes": 850219,
   "sha1_source": "8ec8b145cc670007aeb8020ce7940d9ba0ab40fe",
   "evidencia": "docs/licencias-tarot-rws/as-de-espadas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/as-de-espadas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 94500,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "dos-de-espadas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1505,7 +2066,18 @@
   "source_bytes": 810433,
   "sha1_source": "303a13183017cca280fe5a79ddc513b00277a8b5",
   "evidencia": "docs/licencias-tarot-rws/dos-de-espadas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/dos-de-espadas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 82318,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "tres-de-espadas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1534,7 +2106,18 @@
   "source_bytes": 725080,
   "sha1_source": "a4490aa4f6e1751adc47a40b2860a41c1fb4c810",
   "evidencia": "docs/licencias-tarot-rws/tres-de-espadas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/tres-de-espadas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 68414,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "cuatro-de-espadas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1563,7 +2146,18 @@
   "source_bytes": 854971,
   "sha1_source": "0f50aad1a018ab09ea2d3223c5175ff988688128",
   "evidencia": "docs/licencias-tarot-rws/cuatro-de-espadas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/cuatro-de-espadas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 88916,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "cinco-de-espadas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1592,7 +2186,18 @@
   "source_bytes": 889221,
   "sha1_source": "b92b4bdb92b8b8262979440366c4d7c37b9ed152",
   "evidencia": "docs/licencias-tarot-rws/cinco-de-espadas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/cinco-de-espadas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 96782,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "seis-de-espadas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1621,7 +2226,18 @@
   "source_bytes": 935341,
   "sha1_source": "295ec146bc425729ec5c7be675fd6ce3bd94c628",
   "evidencia": "docs/licencias-tarot-rws/seis-de-espadas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/seis-de-espadas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 103398,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "siete-de-espadas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1650,7 +2266,18 @@
   "source_bytes": 794393,
   "sha1_source": "4bb5e8567295b28c2d4956b33a0d26a83d52a2f8",
   "evidencia": "docs/licencias-tarot-rws/siete-de-espadas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/siete-de-espadas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 76850,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "ocho-de-espadas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1679,7 +2306,18 @@
   "source_bytes": 894497,
   "sha1_source": "668676cf4f43fb66c4d13641dc1cbd9bcf692bf0",
   "evidencia": "docs/licencias-tarot-rws/ocho-de-espadas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/ocho-de-espadas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 100420,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "nueve-de-espadas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1708,7 +2346,18 @@
   "source_bytes": 789057,
   "sha1_source": "eb3289e1366812310982a0d865910599d94154b1",
   "evidencia": "docs/licencias-tarot-rws/nueve-de-espadas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/nueve-de-espadas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 75410,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "diez-de-espadas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1737,7 +2386,18 @@
   "source_bytes": 730530,
   "sha1_source": "589beb4b5e987e11b3e298b7a02a27de9bc424b6",
   "evidencia": "docs/licencias-tarot-rws/diez-de-espadas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/diez-de-espadas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 70482,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "sota-de-espadas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1766,7 +2426,18 @@
   "source_bytes": 872818,
   "sha1_source": "a4aabf1894b6fc513a0e115b63e0b762be391b73",
   "evidencia": "docs/licencias-tarot-rws/sota-de-espadas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/sota-de-espadas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 91948,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "caballero-de-espadas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1795,7 +2466,18 @@
   "source_bytes": 852095,
   "sha1_source": "4c0d208cc07285f28587db0d3f89a6a1af62ac5b",
   "evidencia": "docs/licencias-tarot-rws/caballero-de-espadas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/caballero-de-espadas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 91874,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "reina-de-espadas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1824,7 +2506,18 @@
   "source_bytes": 817537,
   "sha1_source": "e4b59f06e66bc3643d5b1a2876638af8b046e4f0",
   "evidencia": "docs/licencias-tarot-rws/reina-de-espadas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/reina-de-espadas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 82818,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "rey-de-espadas": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1853,7 +2546,18 @@
   "source_bytes": 932596,
   "sha1_source": "69a4d993f44ecef40a8b4c4bfb5452770290130d",
   "evidencia": "docs/licencias-tarot-rws/rey-de-espadas.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/rey-de-espadas.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 103578,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "as-de-oros": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1882,7 +2586,18 @@
   "source_bytes": 864022,
   "sha1_source": "3d4f8dc21e8892cd5fadbd3c748358c8984856c6",
   "evidencia": "docs/licencias-tarot-rws/as-de-oros.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/as-de-oros.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 98428,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "dos-de-oros": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1911,7 +2626,18 @@
   "source_bytes": 918042,
   "sha1_source": "4924c94b5553a2aff65a932f066391b47e7db517",
   "evidencia": "docs/licencias-tarot-rws/dos-de-oros.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/dos-de-oros.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 98026,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "tres-de-oros": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1940,7 +2666,18 @@
   "source_bytes": 889863,
   "sha1_source": "ca857869e950b28e912b0a585f597d7f68112fae",
   "evidencia": "docs/licencias-tarot-rws/tres-de-oros.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/tres-de-oros.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 98484,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "cuatro-de-oros": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1969,7 +2706,18 @@
   "source_bytes": 811275,
   "sha1_source": "4d9da9f40f497226ae0777923c9a38796adbe0c1",
   "evidencia": "docs/licencias-tarot-rws/cuatro-de-oros.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/cuatro-de-oros.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 89004,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "cinco-de-oros": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -1998,7 +2746,18 @@
   "source_bytes": 899969,
   "sha1_source": "cbe62be71c1a110125dd55887843ce04c3827976",
   "evidencia": "docs/licencias-tarot-rws/cinco-de-oros.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/cinco-de-oros.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 103608,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "seis-de-oros": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -2027,7 +2786,18 @@
   "source_bytes": 871487,
   "sha1_source": "cdbc8cabea9dbe863673891f6c19cd9a8310b258",
   "evidencia": "docs/licencias-tarot-rws/seis-de-oros.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/seis-de-oros.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 96986,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "siete-de-oros": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -2056,7 +2826,18 @@
   "source_bytes": 935784,
   "sha1_source": "c9caaba37d822b79b329f31e7db4f13d8fd2fd9b",
   "evidencia": "docs/licencias-tarot-rws/siete-de-oros.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/siete-de-oros.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 107704,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "ocho-de-oros": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -2085,7 +2866,18 @@
   "source_bytes": 889064,
   "sha1_source": "7ee1f241af3bb05d2bd81c07f2a4cd2291cc60ba",
   "evidencia": "docs/licencias-tarot-rws/ocho-de-oros.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/ocho-de-oros.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 98696,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "nueve-de-oros": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -2114,7 +2906,18 @@
   "source_bytes": 853539,
   "sha1_source": "2fd48ca167699b1e51985338711e191e23613827",
   "evidencia": "docs/licencias-tarot-rws/nueve-de-oros.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/nueve-de-oros.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 90918,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "diez-de-oros": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -2143,7 +2946,18 @@
   "source_bytes": 963926,
   "sha1_source": "af975248f5a406aef38a97bc58348468b3292de6",
   "evidencia": "docs/licencias-tarot-rws/diez-de-oros.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/diez-de-oros.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 110836,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "sota-de-oros": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -2172,7 +2986,18 @@
   "source_bytes": 766976,
   "sha1_source": "1f8c81e2972b400c31558dfccfb13c88a0a54dc4",
   "evidencia": "docs/licencias-tarot-rws/sota-de-oros.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/sota-de-oros.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 73304,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "caballero-de-oros": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -2201,7 +3026,18 @@
   "source_bytes": 709002,
   "sha1_source": "4b71c7b41acda1e05bb507de542e58da16c5b41c",
   "evidencia": "docs/licencias-tarot-rws/caballero-de-oros.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/caballero-de-oros.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 64968,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "reina-de-oros": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -2230,7 +3066,18 @@
   "source_bytes": 1198823,
   "sha1_source": "0788c5de3edff7cfb9c94795e7ef96368a636f48",
   "evidencia": "docs/licencias-tarot-rws/reina-de-oros.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/reina-de-oros.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 113830,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  },
  "rey-de-oros": {
   "work": "Pamela Colman Smith y Arthur Edward Waite, Rider-Waite-Smith Tarot (Londres: William Rider & Son, 1909), primer tiraje 'Pam-A'",
@@ -2259,6 +3106,17 @@
   "source_bytes": 821927,
   "sha1_source": "084fe9710bbd671f793ace7f11fb4c9ec5661900",
   "evidencia": "docs/licencias-tarot-rws/rey-de-oros.wikitext.txt",
-  "status": "verificado"
+  "status": "verificado",
+  "asset": "tarot/rey-de-oros.webp",
+  "asset_px": [
+   440,
+   704
+  ],
+  "asset_bytes": 92314,
+  "asset_recorte": {
+   "a": "1:1.60",
+   "desde": "1:1.72",
+   "ancla": 0.38
+  }
  }
 }

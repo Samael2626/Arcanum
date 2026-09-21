@@ -107,7 +107,7 @@ void main() {
     },
   );
 
-  testWidgets('el toque la descubre, y el segundo toque enfoca', (
+  testWidgets('el toque la descubre y el significado aparece con ella', (
     tester,
   ) async {
     var enfocada = 0;
@@ -119,10 +119,70 @@ void main() {
 
     expect(find.text('Un significado.'), findsOneWidget);
     expect(enfocada, 0, reason: 'el primer toque voltea, no enfoca');
+  });
+
+  testWidgets('el segundo toque trae el grabado y el tercero lo devuelve', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(mayor));
+    await _reposo(tester);
+
+    // Boca abajo no hay ninguna imagen: la lamina ni se decodifica.
+    expect(find.byType(Image), findsNothing);
 
     await tester.tap(_naipe);
     await _reposo(tester);
-    expect(enfocada, 1);
+    expect(
+      find.byType(Image),
+      findsNothing,
+      reason: 'el primer toque es la cara vectorial, que se pinta, no se carga',
+    );
+
+    await tester.tap(_naipe);
+    await _reposo(tester);
+    expect(find.byType(Image), findsOneWidget, reason: 'el grabado de 1909');
+
+    await tester.tap(_naipe);
+    await _reposo(tester);
+    expect(
+      find.byType(Image),
+      findsNothing,
+      reason: 'el tercer toque vuelve al trazo de ARCANUM',
+    );
+  });
+
+  testWidgets('la etiqueta de accesibilidad dice a donde lleva el toque', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(mayor));
+    await _reposo(tester);
+    expect(find.bySemanticsLabel('Descubrir la carta'), findsOneWidget);
+
+    await tester.tap(_naipe);
+    await _reposo(tester);
+    expect(find.bySemanticsLabel('Ver el grabado de 1909'), findsOneWidget);
+
+    await tester.tap(_naipe);
+    await _reposo(tester);
+    expect(find.bySemanticsLabel('Volver al trazo de ARCANUM'), findsOneWidget);
+  });
+
+  testWidgets('la carta descubierta se enfoca a cada toque, no solo al abrir', (
+    tester,
+  ) async {
+    var enfocada = 0;
+    await tester.pumpWidget(_app(mayor, onToggle: () => enfocada++));
+    await _reposo(tester);
+
+    await tester.tap(_naipe); // descubrir: todavia no enfoca
+    await _reposo(tester);
+    expect(enfocada, 0);
+
+    await tester.tap(_naipe); // al grabado
+    await _reposo(tester);
+    await tester.tap(_naipe); // de vuelta
+    await _reposo(tester);
+    expect(enfocada, 2);
   });
 
   testWidgets('cada palo acaba en reposo absoluto, sin frames colgando', (

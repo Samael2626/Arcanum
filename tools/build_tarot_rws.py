@@ -49,12 +49,22 @@ Los originales pesan unos 90 MB y NO se versionan: se bajan cuando hacen falta
 y se guardan en `arcanum_app/.fuentes-origen/tarot/`. Lo que se versiona es el
 pipeline, el manifest y el wikitexto de las fichas.
 
-ESTO NO GENERA LAMINAS TODAVIA
+PRIMERO LA PROCEDENCIA, DESPUES LAS LAMINAS
 
-La Fase 3 empieza por la procedencia. Aqui no se recorta ni se escribe ningun
-JPG a `assets/`: meter 78 imagenes en el bundle antes de que la app las use
-seria engordarlo por nada. El manifest queda en `docs/licencias-tarot-rws/`, y
-cuando las laminas se construyan, su bloque se funde con el de `engravings`.
+`--laminas` es un paso aparte y posterior a proposito: mientras la app no use
+las cartas, meterlas en el bundle es engordarlo por nada. Cuando se corre,
+escribe las 78 en `assets/tarot/` y anota en el manifest lo que salio.
+
+EL RECORTE, Y POR QUE NO ES LIBRE
+
+El naipe de ARCANUM es 1:1,60 y el escaneo RWS es 1:1,72. No caben el uno en el
+otro. Se recorta a 1:1,60 anclando en el 38% de la altura sobrante, que es el
+punto donde la figura queda centrada sin comerse el titulo al pie -- probado en
+mockup contra las cuatro familias antes de fijarlo.
+
+440 px de ancho, WebP de calidad 80: 6,97 MB las 78, o 91,5 KB de media. Medido
+contra 380 px (5,23 MB, se le nota) y 520 px (9,39 MB, no se le nota). El naipe
+mide 158 pt, asi que 440 px es 2,8x -- suficiente hasta en pantallas 3x.
 """
 
 from __future__ import annotations
@@ -71,8 +81,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FUENTES = ROOT / "arcanum_app" / ".fuentes-origen" / "tarot"
 EVIDENCIA = ROOT / "docs" / "licencias-tarot-rws"
+LAMINAS = ROOT / "arcanum_app" / "assets" / "tarot"
 TABLA_PATH = Path(__file__).parent / "tarot_rws_cartas.json"
 MANIFEST = EVIDENCIA / "manifest.json"
+
+# La lamina que empaqueta la app. El alto sale del ancho: el naipe es 1:1,60.
+LAMINA_ANCHO = 440
+LAMINA_ALTO = round(LAMINA_ANCHO * 1.6)
+LAMINA_CALIDAD = 80
+# Donde se ancla el recorte dentro de la altura sobrante del escaneo.
+LAMINA_ANCLA = 0.38
 
 API = "https://commons.wikimedia.org/w/api.php"
 UA = "ARCANUM/1.0 (https://arcanum.app; contacto en el repo)"
@@ -439,13 +457,62 @@ def escribir_resumen(manifest: dict) -> None:
     (EVIDENCIA / "LICENCIA.md").write_text("\n".join(lineas), "utf-8")
 
 
+def laminas() -> None:
+    """Escribe las 78 laminas que empaqueta la app, y las anota en el manifest.
+
+    Exige que la comprobacion haya pasado antes: se recorta lo que esta en
+    `.fuentes-origen/`, y eso solo llega ahi con el sha1 cuadrado.
+    """
+    from PIL import Image
+
+    if not MANIFEST.exists():
+        raise SystemExit("falta el manifest: correr primero la comprobacion.")
+    manifest = json.loads(MANIFEST.read_text("utf-8"))
+    LAMINAS.mkdir(parents=True, exist_ok=True)
+
+    total = 0
+    for slug, entrada in manifest.items():
+        origen = FUENTES / f"{slug}.jpg"
+        if not origen.exists():
+            raise SystemExit(
+                f"{slug}: falta el original. Correr la comprobacion antes.")
+        im = Image.open(origen).convert("RGB")
+        w, h = im.size
+        alto = round(w * 1.6)
+        if alto <= h:
+            y = round((h - alto) * LAMINA_ANCLA)
+            im = im.crop((0, y, w, y + alto))
+        im = im.resize((LAMINA_ANCHO, LAMINA_ALTO), Image.LANCZOS)
+        destino = LAMINAS / f"{slug}.webp"
+        im.save(destino, "WEBP", quality=LAMINA_CALIDAD, method=6)
+        peso = destino.stat().st_size
+        total += peso
+        entrada["asset"] = f"tarot/{slug}.webp"
+        entrada["asset_px"] = [LAMINA_ANCHO, LAMINA_ALTO]
+        entrada["asset_bytes"] = peso
+        entrada["asset_recorte"] = {
+            "a": "1:1.60", "desde": "1:1.72", "ancla": LAMINA_ANCLA,
+        }
+        print(f"  {slug:<22} {peso // 1024:>4} KB")
+
+    MANIFEST.write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", "utf-8")
+    escribir_resumen(manifest)
+    print(f"\n{len(manifest)} laminas, {total / 1048576:.2f} MB en "
+          f"{LAMINAS.relative_to(ROOT)}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--sembrar", action="store_true",
                         help="escribe la tabla de sha1 desde Commons (una vez)")
+    parser.add_argument("--laminas", action="store_true",
+                        help="escribe las 78 laminas WebP que empaqueta la app")
     args = parser.parse_args()
     if args.sembrar:
         sembrar()
+    elif args.laminas:
+        laminas()
     else:
         comprobar()
 
