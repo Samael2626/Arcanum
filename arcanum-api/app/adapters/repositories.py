@@ -8,15 +8,13 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import fields
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session, contains_eager, noload, selectinload
 
-from app.core.config import settings
-from app.core.security import create_access_token, create_refresh_token, get_password_hash, verify_password
 from app.domain.entities import (
     DivinationSessionEntity,
     HoroscopeReadingEntity,
@@ -49,7 +47,6 @@ from app.models.refresh_token import RefreshToken
 from app.models.tarot import TarotCard, TarotReading
 from app.models.tradition import Tradition
 from app.models.user import User
-from app.schemas.refresh_token import TokenPair
 
 
 # ── Helpers de conversion ─────────────────────────────────────────────────

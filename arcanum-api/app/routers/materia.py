@@ -1,6 +1,6 @@
-"""Materia Arcana: catÃ¡logo de correspondencias (hierbas, piedras, metales, etc.).
+"""Materia Arcana: catálogo de correspondencias (hierbas, piedras, metales, etc.).
 
-Contenido de referencia, pÃºblico (la app puede gatear por premium mÃ¡s adelante).
+Contenido de referencia, público (la app puede gatear por premium más adelante).
 """
 from typing import Optional
 
@@ -8,7 +8,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 
 from app.api.deps import get_materia_repo, verify_admin_token
 from app.adapters.repositories import MateriaItemRepository
-from app.domain.entities import MateriaItemEntity
 from app.schemas.materia_item import (
     ItemType,
     MateriaItemResponse,
@@ -58,7 +57,7 @@ def create_materia(
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Ya existe un Ã­tem con ese slug",
+            detail="Ya existe un ítem con ese slug",
         )
     item = repo.create(**materia_in.model_dump())
     return MateriaItemResponse.model_validate(item)

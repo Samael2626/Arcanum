@@ -1,6 +1,5 @@
-from sqlalchemy import Column, DateTime, String, text, Boolean, Integer
+from sqlalchemy import Column, String, text, Boolean, Integer
 from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB
-from sqlalchemy.sql import func
 from app.db.session import Base
 
 class Tradition(Base):

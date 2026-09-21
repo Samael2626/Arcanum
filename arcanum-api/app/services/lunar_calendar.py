@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from datetime import date as _date, datetime, time, timezone
+from datetime import datetime, time, timezone
 
 import swisseph as swe
 
