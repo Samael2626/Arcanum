@@ -1,0 +1,22 @@
+== {{int:filedesc}} ==
+{{artwork
+|title = 
+;Name:Hyoscyamus niger
+
+;Family:Solanaceae
+
+|source = Original book source:
+Prof. Dr. Otto Wilhelm Thomé ''Flora von Deutschland, &Ouml;sterreich und der Schweiz''
+1885, Gera, Germany
+[http://www.biolib.de www.biolib.de]
+|permission = Permission granted to use under GFDL by Kurt Stueber
+|other versions = 
+<gallery>
+File:Prof. Dr. Otto Wilhelm Thomé- Flora von Deutschland Österreich und der Schweiz - Schwarzes Bilsenkraut (Hyoscyamus niger; henbane).JPG
+</gallery>
+}}
+== {{int:license-header}} ==
+{{PD-scan|PD-old-auto-1923|deathyear=1925}}
+
+[[Category:Thomé, Flora von Deutschland]]
+[[Category:Hyoscyamus niger - botanical illustrations]]

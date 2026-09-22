@@ -1,0 +1,9 @@
+=={{int:filedesc}}==
+{{Flora Batava
+|v5
+|source          =2477
+|description     ={{la|1=''Trifolium pratense'' L.}}
+|orignal_caption =Trifolium pratense
+}}
+[[Category:Trifolium pratense - botanical illustrations]]
+[[Category:Taken with Canon EOS 350D]]

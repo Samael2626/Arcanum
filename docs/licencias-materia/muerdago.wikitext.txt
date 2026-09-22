@@ -1,0 +1,20 @@
+;Name:''[[Viscum album]]''
+
+;Family:Viscaceae
+
+Original book source:
+
+Prof. Dr. Otto Wilhelm Thomé ''Flora von Deutschland, &Ouml;sterreich und der Schweiz''
+
+1885, Gera, Germany
+
+Source: [http://www.biolib.de www.biolib.de]
+
+{{PD-scan|PD-old-auto-1923|deathyear=1925}}
+
+== derivative works ==
+{{DerivativeVersions|Illustration Viscum album0 clean.jpg}}
+
+[[Category:Thomé, Flora von Deutschland]]
+[[Category:Viscum album - botanical illustrations]]
+[[Category:Media missing infobox template]]

@@ -1,0 +1,20 @@
+== {{int:filedesc}} ==
+
+{{Information
+|Description= 
+{{de|Schafgarbe, Abbildung aus Franz Eugen Köhler: "Köhlers Medizinal-Pflanzen in naturgetreuen Abbildungen und kurz erläuterndem Texte". A blühende Pflanze, natürl. Grösse; 1 Blattabschnitt, vergrössert; 2 ungeöffnetes, 3 geöffnetes Blüthenkörbchen, desgl.; 4 dasselbe im Längsschnitt, desgl.; 5 Randblüthe, desgl.; 6 ungeöffnete Scheibenblüthe mit Spreublättchen, desgl.; 7 geöffnete Scheibenblüthe, desgl.; 8 dieselbe im Längsschnitt, desgl.; 9 einzelnes Staubgefäss, desgl.; 10 Pollen, desgl.; 11 oberer Theil des Griffels mit den beiden Narben, desgl.; 12 Frucht, desgl.; 13 dieselbe im Querschnitt; 14, 15 dieselbe im Längsschnitt von verschiedenen Seiten, desgl.}}
+{{la|Achillea millefolium.}}
+{{ru|Тысячелистник обыкновенный. A — цветущее растение; 1 — сегмент листа; 2 — нераскрытая корзинка; 3 — раскрытая корзинка; 4 — то же в продольном разрезе; 5 — ложноязычковый цветок; 6 — нераскрытый трубчатый цветок с прицветником; 7 — раскрытый трубчатый цветок; 8 — то же в продольном разрезе; 9 — отдельная тычинка; 10 — пыльцевое зерно; 11 — верхняя часть столбика с двухлопастным рыльцем; 12 — плод (семянка); 13 — то же в поперечном разрезе; 14, 15 — то же в продольном разрезе, вид с разных сторон.}}
+|Source=
+http://caliban.mpiz-koeln.mpg.de/koehler (index)<br/>
+http://caliban.mpiz-koeln.mpg.de/koehler/DIGITALIS.jpg (image)
+|Date= {{upload date|2011-01-14}}
+|Author= [[:de:Franz Eugen Köhler]]
+|Permission=PD-OLD-70.
+|other_versions=
+}}
+== {{int:license-header}} ==
+{{PD-old-70}}
+
+[[Category:Köhlers Medizinal-Pflanzen/Set 2]]
+[[Category:Achillea millefolium - botanical illustrations]]

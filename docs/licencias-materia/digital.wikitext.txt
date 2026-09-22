@@ -1,0 +1,14 @@
+=={{int:filedesc}}==
+{{Information
+| Description = ''Digitalis purpurea'' 
+
+Family:Scrophulariaceae
+| Source = ''Flora von Deutschland, &Ouml;sterreich und der Schweiz,''Gera, Germany, by proxy of http://www.biolib.de
+| Date = {{ISOdate|1885}}
+| Author = Prof. Dr. Otto Wilhelm Thom&eacute;
+| Permission = {{PD-scan|PD-old-auto-1923|deathyear=1925}}
+| other_versions = [[Image:Illustration Digitalis purpurea0 clean.jpg|thumb|left|Background cleaned]]
+}}
+
+[[Category:Thomé, Flora von Deutschland]]
+[[Category:Digitalis purpurea - botanical illustrations]]

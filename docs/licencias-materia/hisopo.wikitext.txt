@@ -1,0 +1,20 @@
+== {{int:filedesc}} ==
+
+{{Information
+| Description    = ;Name:Hyssopus officinalis
+
+;Family:Lamiaceae
+| Source         = Original book source:
+Prof. Dr. Otto Wilhelm Thom&eacute; ''Flora von Deutschland, &Ouml;sterreich und der Schweiz''
+1885, Gera, Germany
+
+Source: [http://www.biolib.de www.biolib.de]
+| Date           = 
+| Author         = [[User:Topjabot]]
+| Permission     = {{PD-scan|PD-old-auto-1923|deathyear=1925}}
+| other_versions = 
+}}
+
+
+[[Category:Thomé, Flora von Deutschland]]
+[[Category:Hyssopus officinalis - botanical illustrations]]

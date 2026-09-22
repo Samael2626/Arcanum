@@ -1,0 +1,29 @@
+== {{int:filedesc}} ==
+{{BHL
+| collection = Missouri Botanical Garden's Rare Books Collection
+| source = https://www.biodiversitylibrary.org/pageimage/303700
+| description = Köhler's Medizinal-Pflanzen in naturgetreuen Abbildungen mit kurz erläuterndem Texte : Atlas zur Pharmacopoea germanica, austriaca, belgica, danica, helvetica, hungarica, rossica, suecica, Neerlandica, British pharmacopoeia, zum Codex medicamentarius, sowie zur Pharmacopoeia of the United States of America /
+| pageid = 303700
+| itemid = 10836
+| titleid = 623
+| pagenumbers = Plate 67
+| pagetypes = Illustration
+| volume = v.1
+| pageurl = https://www.biodiversitylibrary.org/page/303700
+| date = 1887
+| DOI = 10.5962/bhl.title.623
+| author = Brandt, Wilhelm; Gürke, M.; Köhler, F. E.; Pabst, G.; Schellenberg, G.; Vogtherr, Max.
+| names = 
+| permissions = {{Biodiversity Heritage Library}}
+| other_versions =
+| other_fields =
+}}
+
+== {{int:license-header}} ==
+
+{{PD-scan|PD-old-70-1923}}
+
+[[Category:Köhler's Medizinal-Pflanzen in naturgetreuen Abbildungen mit kurz erläuterndem Texte (1887)]]
+[[Category:Images uploaded by Fæ]]
+[[Category:Files from the Biodiversity Heritage Library]]
+[[Category:Mentha × piperita - botanical illustrations]]

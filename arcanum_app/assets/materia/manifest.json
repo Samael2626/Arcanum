@@ -1,0 +1,539 @@
+{
+ "acacia": {
+  "nombre": "Acacia",
+  "tipo": "herb",
+  "entonado": "materia/entonado/acacia.webp",
+  "grabado": "materia/grabado/acacia.webp",
+  "px": [
+   440,
+   647
+  ],
+  "obra": "Köhler's Medizinal-Pflanzen (1887)",
+  "autor": "Franz Eugen Köhler, Köhler's Medizinal-Pflanzen",
+  "source": "https://commons.wikimedia.org/wiki/File:Acacia_senegal_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-004.jpg",
+  "license": "public-domain"
+ },
+ "aconito": {
+  "nombre": "Acónito",
+  "tipo": "herb",
+  "entonado": "materia/entonado/aconito.webp",
+  "grabado": "materia/grabado/aconito.webp",
+  "px": [
+   440,
+   597
+  ],
+  "obra": "Köhler's Medizinal-Pflanzen (1887)",
+  "autor": "Hermann Adolf Köhler (1834 - 1879)",
+  "source": "https://commons.wikimedia.org/wiki/File:Aconitum_napellus_(K%C3%B6hler).jpg",
+  "license": "public-domain"
+ },
+ "acuario": {
+  "nombre": "Acuario",
+  "tipo": "sign",
+  "entonado": "materia/entonado/acuario.webp",
+  "grabado": "materia/grabado/acuario.webp",
+  "px": [
+   440,
+   330
+  ],
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "autor": "Johann Bayer",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Aquarius.jpg",
+  "license": "public-domain"
+ },
+ "agrimonia": {
+  "nombre": "Agrimonia",
+  "tipo": "herb",
+  "entonado": "materia/entonado/agrimonia.webp",
+  "grabado": "materia/grabado/agrimonia.webp",
+  "px": [
+   440,
+   724
+  ],
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Agrimonia_eupatoria0.jpg",
+  "license": "public-domain"
+ },
+ "ajenjo": {
+  "nombre": "Ajenjo",
+  "tipo": "herb",
+  "entonado": "materia/entonado/ajenjo.webp",
+  "grabado": "materia/grabado/ajenjo.webp",
+  "px": [
+   440,
+   547
+  ],
+  "obra": "Köhler's Medizinal-Pflanzen (1887)",
+  "autor": "Hermann Adolf Köhler (1834 - 1879)",
+  "source": "https://commons.wikimedia.org/wiki/File:Artemisia_absinthium_(K%C3%B6hler).jpg",
+  "license": "public-domain"
+ },
+ "albahaca": {
+  "nombre": "Albahaca",
+  "tipo": "herb",
+  "entonado": "materia/entonado/albahaca.webp",
+  "grabado": "materia/grabado/albahaca.webp",
+  "px": [
+   440,
+   595
+  ],
+  "obra": "Public-domain botanical illustration (pre-1900), Wikimedia Commons",
+  "autor": "remi.mahel",
+  "source": "https://commons.wikimedia.org/wiki/File:Ocimum_Basilicum.jpg",
+  "license": "public-domain"
+ },
+ "angelica": {
+  "nombre": "Angélica",
+  "tipo": "herb",
+  "entonado": "materia/entonado/angelica.webp",
+  "grabado": "materia/grabado/angelica.webp",
+  "px": [
+   440,
+   711
+  ],
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Angelica_archangelica0.jpg",
+  "license": "public-domain"
+ },
+ "aries": {
+  "nombre": "Aries",
+  "tipo": "sign",
+  "entonado": "materia/entonado/aries.webp",
+  "grabado": "materia/grabado/aries.webp",
+  "px": [
+   440,
+   334
+  ],
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "autor": "Johann Bayer",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Aries.jpg",
+  "license": "public-domain"
+ },
+ "beleno": {
+  "nombre": "Beleño Negro",
+  "tipo": "herb",
+  "entonado": "materia/entonado/beleno.webp",
+  "grabado": "materia/grabado/beleno.webp",
+  "px": [
+   440,
+   702
+  ],
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Hyoscyamus_niger0.jpg",
+  "license": "public-domain"
+ },
+ "belladona": {
+  "nombre": "Belladona",
+  "tipo": "herb",
+  "entonado": "materia/entonado/belladona.webp",
+  "grabado": "materia/grabado/belladona.webp",
+  "px": [
+   440,
+   511
+  ],
+  "obra": "Köhler's Medizinal-Pflanzen (1887)",
+  "autor": "Hermann Adolf Köhler (1834 - 1879)",
+  "source": "https://commons.wikimedia.org/wiki/File:Atropa_belladonna_(K%C3%B6hler).jpg",
+  "license": "public-domain"
+ },
+ "calamo-aromatico": {
+  "nombre": "Cálamo Aromático",
+  "tipo": "herb",
+  "entonado": "materia/entonado/calamo-aromatico.webp",
+  "grabado": "materia/grabado/calamo-aromatico.webp",
+  "px": [
+   440,
+   596
+  ],
+  "obra": "Köhler's Medizinal-Pflanzen (1887)",
+  "autor": "Hermann Adolf Köhler (1834 - 1879)",
+  "source": "https://commons.wikimedia.org/wiki/File:Acorus_calamus_(K%C3%B6hler).jpg",
+  "license": "public-domain"
+ },
+ "cancer": {
+  "nombre": "Cáncer",
+  "tipo": "sign",
+  "entonado": "materia/entonado/cancer.webp",
+  "grabado": "materia/grabado/cancer.webp",
+  "px": [
+   440,
+   331
+  ],
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "autor": "Johann Bayer",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Cancer.jpg",
+  "license": "public-domain"
+ },
+ "capricornio": {
+  "nombre": "Capricornio",
+  "tipo": "sign",
+  "entonado": "materia/entonado/capricornio.webp",
+  "grabado": "materia/grabado/capricornio.webp",
+  "px": [
+   440,
+   338
+  ],
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "autor": "Johann Bayer",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Capricorn.jpg",
+  "license": "public-domain"
+ },
+ "celidonia": {
+  "nombre": "Celidonia",
+  "tipo": "herb",
+  "entonado": "materia/entonado/celidonia.webp",
+  "grabado": "materia/grabado/celidonia.webp",
+  "px": [
+   440,
+   588
+  ],
+  "obra": "Köhler's Medizinal-Pflanzen (1887)",
+  "autor": "Hermann Adolf Köhler (1834 - 1879)",
+  "source": "https://commons.wikimedia.org/wiki/File:Chelidonium_majus_(K%C3%B6hler).jpg",
+  "license": "public-domain"
+ },
+ "dictamo-cretense": {
+  "nombre": "Díctamo Cretense",
+  "tipo": "herb",
+  "entonado": "materia/entonado/dictamo-cretense.webp",
+  "grabado": "materia/grabado/dictamo-cretense.webp",
+  "px": [
+   440,
+   787
+  ],
+  "obra": "Public-domain botanical illustration (pre-1900), Wikimedia Commons",
+  "autor": "William Curtis",
+  "source": "https://commons.wikimedia.org/wiki/File:Origanum_dictamnus.jpg",
+  "license": "public-domain"
+ },
+ "digital": {
+  "nombre": "Digital",
+  "tipo": "herb",
+  "entonado": "materia/entonado/digital.webp",
+  "grabado": "materia/grabado/digital.webp",
+  "px": [
+   440,
+   746
+  ],
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "autor": "Prof. Dr. Otto Wilhelm Thomé",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Digitalis_purpurea0.jpg",
+  "license": "public-domain"
+ },
+ "enebro": {
+  "nombre": "Enebro",
+  "tipo": "herb",
+  "entonado": "materia/entonado/enebro.webp",
+  "grabado": "materia/grabado/enebro.webp",
+  "px": [
+   440,
+   734
+  ],
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Juniperus_communis0.jpg",
+  "license": "public-domain"
+ },
+ "escorpio": {
+  "nombre": "Escorpio",
+  "tipo": "sign",
+  "entonado": "materia/entonado/escorpio.webp",
+  "grabado": "materia/grabado/escorpio.webp",
+  "px": [
+   440,
+   345
+  ],
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "autor": "Johann Bayer",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Scorpio.jpg",
+  "license": "public-domain"
+ },
+ "geminis": {
+  "nombre": "Géminis",
+  "tipo": "sign",
+  "entonado": "materia/entonado/geminis.webp",
+  "grabado": "materia/grabado/geminis.webp",
+  "px": [
+   440,
+   331
+  ],
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "autor": "Johann Bayer",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Gemini.jpg",
+  "license": "public-domain"
+ },
+ "hiperico": {
+  "nombre": "Hipérico",
+  "tipo": "herb",
+  "entonado": "materia/entonado/hiperico.webp",
+  "grabado": "materia/grabado/hiperico.webp",
+  "px": [
+   440,
+   659
+  ],
+  "obra": "Sturm, Deutschlands Flora (1796)",
+  "autor": "Johann Georg Sturm (Painter: Jacob Sturm )",
+  "source": "https://commons.wikimedia.org/wiki/File:Hypericum_perforatum_(Sturm_06,_plate_060)_clean.jpg",
+  "license": "public-domain"
+ },
+ "hisopo": {
+  "nombre": "Hisopo",
+  "tipo": "herb",
+  "entonado": "materia/entonado/hisopo.webp",
+  "grabado": "materia/grabado/hisopo.webp",
+  "px": [
+   440,
+   777
+  ],
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "autor": "User:Topjabot",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Hyssopus_officinalis0.jpg",
+  "license": "public-domain"
+ },
+ "laurel": {
+  "nombre": "Laurel",
+  "tipo": "herb",
+  "entonado": "materia/entonado/laurel.webp",
+  "grabado": "materia/grabado/laurel.webp",
+  "px": [
+   440,
+   685
+  ],
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "autor": "Otto Wilhelm Thomé",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Laurus_nobilis0.jpg",
+  "license": "public-domain"
+ },
+ "leo": {
+  "nombre": "Leo",
+  "tipo": "sign",
+  "entonado": "materia/entonado/leo.webp",
+  "grabado": "materia/grabado/leo.webp",
+  "px": [
+   440,
+   341
+  ],
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "autor": "Johann Bayer",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Leo.jpg",
+  "license": "public-domain"
+ },
+ "libra": {
+  "nombre": "Libra",
+  "tipo": "sign",
+  "entonado": "materia/entonado/libra.webp",
+  "grabado": "materia/grabado/libra.webp",
+  "px": [
+   440,
+   334
+  ],
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "autor": "Johann Bayer",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Libra.jpg",
+  "license": "public-domain"
+ },
+ "mandragora": {
+  "nombre": "Mandrágora",
+  "tipo": "herb",
+  "entonado": "materia/entonado/mandragora.webp",
+  "grabado": "materia/grabado/mandragora.webp",
+  "px": [
+   440,
+   757
+  ],
+  "obra": "Fuchs, De Historia Stirpium (1543) — woodcut",
+  "autor": "Fuchs, Leonhart; Füllmaurer, Heinrich; Meyer, Albrecht; Specklin, Veit Rudolph",
+  "source": "https://commons.wikimedia.org/wiki/File:De_historia_stirpium_commentarii_insignes_(Page_530)_(9367776086).jpg",
+  "license": "public-domain"
+ },
+ "mejorana": {
+  "nombre": "Mejorana",
+  "tipo": "herb",
+  "entonado": "materia/entonado/mejorana.webp",
+  "grabado": "materia/grabado/mejorana.webp",
+  "px": [
+   440,
+   568
+  ],
+  "obra": "Vietz, Icones Plantarum Medico-Oeconomico-Technologicarum (1800), Tab. 122",
+  "autor": "Albrecht, Ignatz.; Ederschen, Joseph.; Kendl, Joseph Lorenz.; Schalbaecher, Jos.; Vietz, Ferdinand Bernhard",
+  "source": "https://commons.wikimedia.org/wiki/File:Icones_plantarum_medico-oeconomico-technologicarum_cum_earum_fructus_ususque_descriptione_%3D_(Tab._122)_(8096970445).jpg",
+  "license": "public-domain"
+ },
+ "menta-piperita": {
+  "nombre": "Menta",
+  "tipo": "herb",
+  "entonado": "materia/entonado/menta-piperita.webp",
+  "grabado": "materia/grabado/menta-piperita.webp",
+  "px": [
+   440,
+   624
+  ],
+  "obra": "Köhler's Medizinal-Pflanzen (1887)",
+  "autor": "Brandt, Wilhelm; Gürke, M.; Köhler, F. E.; Pabst, G.; Schellenberg, G.; Vogtherr, Max.",
+  "source": "https://commons.wikimedia.org/wiki/File:K%C3%B6hler%27s_Medizinal-Pflanzen_in_naturgetreuen_Abbildungen_mit_kurz_erl%C3%A4uterndem_Texte_(Plate_67)_BHL303700.jpg",
+  "license": "public-domain"
+ },
+ "milenrama": {
+  "nombre": "Milenrama",
+  "tipo": "herb",
+  "entonado": "materia/entonado/milenrama.webp",
+  "grabado": "materia/grabado/milenrama.webp",
+  "px": [
+   440,
+   569
+  ],
+  "obra": "Köhler's Medizinal-Pflanzen (1887)",
+  "autor": "de:Franz Eugen Köhler",
+  "source": "https://commons.wikimedia.org/wiki/File:Achillea_millefolium_(K%C3%B6hler).jpg",
+  "license": "public-domain"
+ },
+ "muerdago": {
+  "nombre": "Muérdago",
+  "tipo": "herb",
+  "entonado": "materia/entonado/muerdago.webp",
+  "grabado": "materia/grabado/muerdago.webp",
+  "px": [
+   440,
+   675
+  ],
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Viscum_album0.jpg",
+  "license": "public-domain"
+ },
+ "nuez-moscada": {
+  "nombre": "Nuez Moscada",
+  "tipo": "herb",
+  "entonado": "materia/entonado/nuez-moscada.webp",
+  "grabado": "materia/grabado/nuez-moscada.webp",
+  "px": [
+   440,
+   585
+  ],
+  "obra": "Köhler's Medizinal-Pflanzen (1887)",
+  "autor": "Franz Eugen Köhler, Köhler's Medizinal-Pflanzen",
+  "source": "https://commons.wikimedia.org/wiki/File:Myristica_fragrans_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-097.jpg",
+  "license": "public-domain"
+ },
+ "piscis": {
+  "nombre": "Piscis",
+  "tipo": "sign",
+  "entonado": "materia/entonado/piscis.webp",
+  "grabado": "materia/grabado/piscis.webp",
+  "px": [
+   440,
+   331
+  ],
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "autor": "Johann Bayer",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Pisces.jpg",
+  "license": "public-domain"
+ },
+ "ruda": {
+  "nombre": "Ruda",
+  "tipo": "herb",
+  "entonado": "materia/entonado/ruda.webp",
+  "grabado": "materia/grabado/ruda.webp",
+  "px": [
+   440,
+   718
+  ],
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Ruta_graveolens0.jpg",
+  "license": "public-domain"
+ },
+ "sagitario": {
+  "nombre": "Sagitario",
+  "tipo": "sign",
+  "entonado": "materia/entonado/sagitario.webp",
+  "grabado": "materia/grabado/sagitario.webp",
+  "px": [
+   440,
+   340
+  ],
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "autor": "Johann Bayer",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Sagittarius.jpg",
+  "license": "public-domain"
+ },
+ "tauro": {
+  "nombre": "Tauro",
+  "tipo": "sign",
+  "entonado": "materia/entonado/tauro.webp",
+  "grabado": "materia/grabado/tauro.webp",
+  "px": [
+   440,
+   332
+  ],
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "autor": "Johann Bayer",
+  "source": "https://commons.wikimedia.org/wiki/File:Taurus_-_Johann_Bayer.jpg",
+  "license": "public-domain"
+ },
+ "tomillo": {
+  "nombre": "Tomillo",
+  "tipo": "herb",
+  "entonado": "materia/entonado/tomillo.webp",
+  "grabado": "materia/grabado/tomillo.webp",
+  "px": [
+   440,
+   710
+  ],
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Thymus_serpyllum0.jpg",
+  "license": "public-domain"
+ },
+ "trebol-rojo": {
+  "nombre": "Trébol Rojo",
+  "tipo": "herb",
+  "entonado": "materia/entonado/trebol-rojo.webp",
+  "grabado": "materia/grabado/trebol-rojo.webp",
+  "px": [
+   440,
+   654
+  ],
+  "obra": "Flora Batava (1800–1934)",
+  "autor": "Jan Kops",
+  "source": "https://commons.wikimedia.org/wiki/File:Trifolium_pratense_%E2%80%94_Flora_Batava_%E2%80%94_Volume_v5.jpg",
+  "license": "public-domain"
+ },
+ "valeriana": {
+  "nombre": "Valeriana",
+  "tipo": "herb",
+  "entonado": "materia/entonado/valeriana.webp",
+  "grabado": "materia/grabado/valeriana.webp",
+  "px": [
+   440,
+   729
+  ],
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Valeriana_officinalis0.jpg",
+  "license": "public-domain"
+ },
+ "verbena": {
+  "nombre": "Verbena",
+  "tipo": "herb",
+  "entonado": "materia/entonado/verbena.webp",
+  "grabado": "materia/grabado/verbena.webp",
+  "px": [
+   440,
+   763
+  ],
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Verbena_officinalis0.jpg",
+  "license": "public-domain"
+ },
+ "virgo": {
+  "nombre": "Virgo",
+  "tipo": "sign",
+  "entonado": "materia/entonado/virgo.webp",
+  "grabado": "materia/grabado/virgo.webp",
+  "px": [
+   440,
+   592
+  ],
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "autor": "Johann Bayer",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Virgo.jpg",
+  "license": "public-domain"
+ }
+}

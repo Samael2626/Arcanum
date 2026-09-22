@@ -1,0 +1,22 @@
+== {{int:filedesc}} ==
+{{Information
+|Description= 
+{{fr|1=Planche botanique n° I-21 de l'"Atlas des Plantes médicinales de Köhler en images réalistes avec brèves notes explicatives".}}
+{{de|'''''Schöllkraut''''' (Chelidonium majus L.)<br/>
+Abbildung aus Hermann Adolf Köhler: "Köhlers Medizinal-Pflanzen in naturgetreuen Abbildungen und kurz erläuterndem Texte"}}
+|Source=
+http://caliban.mpiz-koeln.mpg.de/koehler1 (index)<br/>
+http://caliban.mpiz-koeln.mpg.de/koehler1/high/DSC_2614.jpg (image)
+|Date= printed 1887 
+|Author= [[:de:Hermann Köhler (Mediziner)|Hermann Adolf Köhler]] (1834 - 1879)
+|Permission=
+|other_versions=[[Image:Chelidonium_majus_-_Köhler–s_Medizinal-Pflanzen-033.jpg|thumb|left|481 × 588 pixels]]
+}}
+
+== {{int:license-header}} ==
+{{PD-old-100}}
+
+[[Category:Köhlers Medizinal-Pflanzen/Set 2]]
+[[Category:Chelidonium majus - botanical illustrations]]
+[[Category:Silique]]
+[[Category:Taken with Nikon D100]]

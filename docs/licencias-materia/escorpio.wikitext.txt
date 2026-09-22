@@ -1,0 +1,16 @@
+=={{int:filedesc}}==
+{{Information
+|description={{en|1=Johann Bayer - Scorpio}}
+|date=1603
+|source=https://www.raremaps.com/gallery/detail/30961op/scorpio-stars-heightened-in-gold-bayer
+|author={{Creator:Johann Bayer}}
+|permission=
+|other versions=
+}}
+
+=={{int:license-header}}==
+{{PD-old-70-1923}}
+
+[[Category:1603 celestial charts by Johann Bayer]]
+[[Category:Maps from Barry Lawrence Ruderman Antique Maps Inc. (Raremaps.com)]]
+[[Category:Scorpius (constellation) in art]]

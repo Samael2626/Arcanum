@@ -1,0 +1,22 @@
+== {{int:filedesc}} ==
+{{Information
+|Description= 
+{{fr|1=Planche botanique n° I-17 de l'"Atlas des Plantes médicinales de Köhler en images réalistes avec brèves notes explicatives" consacrée à l'[http://www.ubio.org/browser/details.php?namebankID=2676136 acore odorant].}}
+<br/>
+{{de|'''''Kalmus (Deutscher Zitwer)''''' (Acorus calamus)<br/>
+Abbildung aus Hermann Adolf Köhler: "Köhlers Medizinal-Pflanzen in naturgetreuen Abbildungen und kurz erläuterndem Texte"}}
+|Source=
+http://caliban.mpiz-koeln.mpg.de/koehler1 (index)<br/>
+http://caliban.mpiz-koeln.mpg.de/koehler1/high/DSC_2606.jpg (image)
+|Date= printed 1887 
+|Author= [[:de:Hermann Köhler (Mediziner)|Hermann Adolf Köhler]] (1834 - 1879)
+|Permission=
+|other_versions=[[Image:Acorus_calamus_-_Köhler–s_Medizinal-Pflanzen-006.jpg|thumb|482 × 591 pixels]]
+}}
+== {{int:license-header}} ==
+{{PD-old-70}}
+{{PD-old-80}}
+
+[[Category:Köhlers Medizinal-Pflanzen/Set 2]]
+[[Category:Acorus calamus - botanical illustrations]]
+[[Category:Taken with Nikon D100]]

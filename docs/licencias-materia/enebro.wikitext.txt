@@ -1,0 +1,16 @@
+;Name:''Juniperus communis''
+;Family:Cupressaceae
+
+Original book source:
+Prof. Dr. Otto Wilhelm Thomé ''Flora von Deutschland, Österreich und der Schweiz''
+1885, Gera, Germany
+
+Permission granted to use under GFDL by Kurt Stueber
+
+Source: [http://www.biolib.de www.biolib.de]
+
+{{PD-scan|PD-old-auto-1923|deathyear=1925}}
+
+[[Category:Juniperus communis (illustrations)]]
+[[Category:Thomé, Flora von Deutschland]]
+[[Category:Media missing infobox template]]

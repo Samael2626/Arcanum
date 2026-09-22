@@ -1,0 +1,19 @@
+== {{int:filedesc}} ==
+{{Information
+|Description=
+{{fr|1=Planche botanique n° I-10 de l'"Atlas des Plantes médicinales de Köhler en images réalistes avec brèves notes explicatives" consacrée à la [http://www.ubio.org/browser/details.php?namebankID=1671821 belladone].}}
+{{de|'''''Tollkirsche''''' (Atropa belladonna)<br/>
+Abbildung aus Hermann Adolf Köhler: "Köhlers Medizinal-Pflanzen in naturgetreuen Abbildungen und kurz erläuterndem Texte"}}
+|Source=
+http://caliban.mpiz-koeln.mpg.de/koehler (index)<br/>
+http://caliban.mpiz-koeln.mpg.de/koehler/BELLADONNA.jpg (image)
+|Date= printed 1887 
+|Author= [[:de:Hermann Köhler (Mediziner)|Hermann Adolf Köhler]] (1834 - 1879)
+|Permission=
+|other_versions=[[Image:Atropa_belladonna_-_Köhler–s_Medizinal-Pflanzen-018.jpg|thumb|left|479 × 591 pixels]]
+}}
+== {{int:license-header}} ==
+{{PD-old-100}}
+
+[[Category:Köhlers Medizinal-Pflanzen/Set 2]]
+[[Category:Atropa belladonna - botanical illustrations]]

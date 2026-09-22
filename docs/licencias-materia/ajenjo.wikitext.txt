@@ -1,0 +1,19 @@
+== {{int:filedesc}} ==
+{{Information
+|Description= 
+{{fr|1=Planche botanique n° I-68 de l'"Atlas des Plantes médicinales de Köhler en images réalistes avec brèves notes explicatives" consacrée à l'[http://www.ubio.org/browser/details.php?namebankID=2657292 armoise amère].}}
+{{de|'''''Wermutkraut (Absinth)''''' (Artemisia absinthium)<br/>
+Abbildung aus Hermann Adolf Köhler: "Köhlers Medizinal-Pflanzen in naturgetreuen Abbildungen und kurz erläuterndem Texte"}}
+|Source=
+http://caliban.mpiz-koeln.mpg.de/koehler (index)<br/>
+http://caliban.mpiz-koeln.mpg.de/koehler/ABSINTH.jpg(image)
+|Date= printed 1887 
+|Author= [[:de:Hermann Köhler (Mediziner)|Hermann Adolf Köhler]] (1834 - 1879)
+|Permission=
+|other_versions= [[Image:Artemisia_absinthium_-_Köhler–s_Medizinal-Pflanzen-164.jpg|thumb|left|1803 × 2243 pixels]]
+}}
+== {{int:license-header}} ==
+{{PD-old-100}}
+
+[[Category:Köhlers Medizinal-Pflanzen/Set 2]]
+[[Category:Artemisia absinthium - botanical illustrations]]

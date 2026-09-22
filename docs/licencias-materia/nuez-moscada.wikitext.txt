@@ -1,0 +1,15 @@
+
+{{Information
+|Description=
+{{de|Muskatnussbaum. A blühender Zweig mit männlichen Blüthen, nat. Grösse; 1 Staubgefässsäule mit Staubgefässen, vergrössert (stimmt mit der Zeichnung in Hayne, jedoch nicht mit Bâillon in der Beschreibung überein); 2 dieselbe im Längsschnitt, desgl.; 3 dieselbe im Querschnitt, desgl.; 4 Pollen, desgl.; 5 weibliche Blüthe, desgl.; 6 Stempel im Längsschnitt, desgl.; 7 Frucht mit der aufgesprungenen fleischigen Hülle, natürl. Grösse; 8 dieselbe mit halbirter Hülle, desgl.; 9 Nuss mit Arillus, desgl.; 10 dieselbe ohne Arillus, desgl.; 11 Nuss im Längsschnitt, desgl.; 12 Embryo, vergrössert.}}
+{{la|Myristica fragrans.}}
+{{ru|Мускатник душистый. A — цветущая ветвь с мужскими цветками; 1 — тычиночная колонка с тычинками; 2 — то же в продольном разрезе; 3 — то же в поперечном разрезе; 4 — пыльца; 5 — женский цветок; 6 — пестик в продольном разрезе; 7 — плод с раскрывшейся оболочкой; 8 — то же с половинкой оболочки; 9 — семя (мускатный орех) с ариллусом (мускатным цветом); 10 — то же без ариллуса; 11 — семя в продольном разрезе; 12 — зародыш.}}
+{{en|Myristica fragrans illustration by Franz Eugen Köhler in Köhler's Medizinal-Pflanzen}}
+|Date=1897
+|Source=[http://pharm1.pharmazie.uni-greifswald.de/allgemei/koehler/koeh-eng.htm List of Koehler Images]
+|Author=Franz Eugen Köhler, ''Köhler's Medizinal-Pflanzen''
+|Permission={{PD-old}}
+}}
+
+[[Category:Köhlers Medizinal-Pflanzen]]
+[[Category:Myristica fragrans - botanical illustrations]]

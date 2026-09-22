@@ -1,0 +1,27 @@
+== {{int:filedesc}} ==
+{{Information
+|Description= ''[[Hypericum perforatum]]'' L.
+; Original Caption: {{de|1=Tafel 60: Hartheu, ''Hypericum perforatum''<br/>a)&nbsp;Pflanze, verkl. ; b)&nbsp;Stengelstück in nat. Gr.; c)&nbsp;Blatt in nat. Gr.; d)&nbsp;Blüte in nat. Gr.; e)&nbsp;Fruchtknoten in nat. Gr.; f)&nbsp;Narbe, vergr.; g)&nbsp;Staubgefäss, vergr.; h)&nbsp;Kelch in nat. Gr.; i)&nbsp;Frucht in nat. Gr.; k)&nbsp;dieselbe durchschnitten; l)&nbsp;Samen in nat. Gr. und vergr.; m)&nbsp;durchschnittener Same, vergr.}}
+|Source=Figure from ''Deutschlands Flora in Abbildungen'' at http://caliban.mpipz.mpg.de/sturm/flora/high/Sturm06060.html
+|Date=1796
+|Author=Johann Georg Sturm (Painter: [[:en:Jacob Sturm|Jacob Sturm]])
+|Permission=
+|other_versions=<gallery>
+File:Hypericum perforatum (Sturm 06, plate 060) clean.png | clean version (PNG version)
+File:Hypericum perforatum (Sturm 06, plate 060) clean, no-description.jpg | clean version, taxonomic labels removed (JPG version)
+File:Hypericum perforatum (Sturm 06, plate 060) clean, no-description.png | clean version, taxonomic labels removed (PNG version)
+</gallery>
+}}
+
+{{Retouched picture
+|1=Automatic white balance, cleaned background by Gimp tools (heal selection) and divided the background layer to the whole image to get rid of the old pale background.
+|editor=Andreas Plank
+|origoff=http://caliban.mpipz.mpg.de/sturm/flora/high/Sturm06060.JPG
+}}
+
+
+== {{int:license-header}} ==
+{{PD-old-100}}
+
+[[Category:Deutschlands Flora in Abbildungen (asterids)]]
+[[Category:Hypericum perforatum - botanical illustrations]]
