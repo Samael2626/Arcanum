@@ -3,25 +3,32 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../content/sections.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_resin.dart';
 import '../../shared/widgets/arcanum_toggle.dart';
 
-/// El cajon de la cuenta: lo que no es una seccion.
+/// El cajon: TODA la navegacion, desde que la barra de abajo dejo de existir.
 ///
-/// La barra de abajo NO se toca. Sus cinco destinos son las cinco ramas del
-/// shell y siguen siendo los mismos; esto cuelga del avatar y solo guarda lo
-/// que hoy estaba encadenado uno dentro de otro.
+/// Hasta el 21-sep-2026 esto guardaba solo lo secundario -- Perfil, Ajustes,
+/// Privacidad -- y las cinco secciones vivian en una `NavigationBar`. Ahora
+/// cuelgan las dos cosas del mismo cajon, separadas por una linea.
 ///
-/// QUE GANA Y QUE PIERDE, CONTADO
+/// LAS SECCIONES NO SE ESCRIBEN AQUI. Salen de `arcanumSections`, que sigue
+/// siendo la fuente unica: el indice de cada fila es el indice de su rama del
+/// shell, igual que lo era el del destino de la barra. Ese invariante no lo
+/// cambio el quitar la barra, solo cambio quien lo dibuja.
 ///
-///   Perfil      1 -> 2 toques   (abrir el cajon, y luego Perfil)
+/// QUE CUESTA, CONTADO
+///
+///   Cielo       0 -> 0   es el arranque del router
+///   Las otras   1 -> 2   abrir el cajon, y luego la seccion
+///   Perfil      2 -> 2
 ///   Ajustes     2 -> 2
-///   Privacidad  3 -> 2          deja de vivir dentro de Ajustes
+///   Privacidad  2 -> 2
 ///
-/// O sea que NO ahorra toques: los reparte. Lo que compra es un sitio donde
-/// poner lo que venga sin pelear por una sexta pestana.
+/// O sea que lo diario pasa de 4 toques a 8. Se acepta a sabiendas.
 ///
 /// LA EXCEPCION DE MATERIAL, DICHA EN VOZ ALTA
 ///
@@ -41,7 +48,12 @@ import '../../shared/widgets/arcanum_toggle.dart';
 /// transparencia: el alfa del degradado ya deja ver lo de detras y ese no
 /// cuesta nada.
 class ArcanumDrawer extends StatelessWidget {
-  const ArcanumDrawer({super.key});
+  const ArcanumDrawer({super.key, required this.navigationShell});
+
+  /// El mismo shell que dibuja el cuerpo. Hace falta para dos cosas: saber que
+  /// rama esta abierta (que fila va marcada) y cambiar de rama sin perder su
+  /// pila, que es lo que daba `goBranch` a la barra.
+  final StatefulNavigationShell navigationShell;
 
   /// Cuanto deja ver. Por debajo de esto el texto de dentro empieza a pelearse
   /// con lo que hay detras.
@@ -52,13 +64,15 @@ class ArcanumDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final base = ArcanumResin.gradient(mood: ArcanumMood.neutral);
+    final indice = navigationShell.currentIndex;
+
     return Drawer(
       backgroundColor: Colors.transparent,
       elevation: 0,
       width: MediaQuery.of(context).size.width * 0.72,
       child: ClipRRect(
         borderRadius: const BorderRadius.horizontal(
-          left: Radius.circular(ArcanumSelection.radius),
+          right: Radius.circular(ArcanumSelection.radius),
         ),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: _blur, sigmaY: _blur),
@@ -74,34 +88,132 @@ class ArcanumDrawer extends StatelessWidget {
               ),
             ),
             child: SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(20, 22, 20, 14),
+                      child: SectionLabel('ARCANUM'),
+                    ),
+                    for (var i = 0; i < arcanumSections.length; i++)
+                      _FilaSeccion(
+                        seccion: arcanumSections[i],
+                        activa: i == indice,
+                        // `initialLocation` solo cuando ya estas en esa rama:
+                        // es lo que hacia la barra, y sirve para salir de una
+                        // sub-ruta sin buscar el boton de volver.
+                        onTap: () => navigationShell.goBranch(
+                          i,
+                          initialLocation: i == indice,
+                        ),
+                      ),
+                    const _Separador(),
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(20, 6, 20, 14),
+                      child: SectionLabel('TU CUENTA'),
+                    ),
+                    _FilaRuta(
+                      icono: Icons.person_outline,
+                      iconoActivo: Icons.person,
+                      rotulo: 'Perfil',
+                      ruta: '/perfil',
+                    ),
+                    _FilaRuta(
+                      icono: Icons.tune_outlined,
+                      iconoActivo: Icons.tune,
+                      rotulo: 'Ajustes',
+                      ruta: '/settings',
+                    ),
+                    // Privacidad sube aqui: estaba a tres toques metida dentro
+                    // de Ajustes, y es la pantalla que hay que poder encontrar
+                    // sin buscarla.
+                    _FilaRuta(
+                      icono: Icons.privacy_tip_outlined,
+                      iconoActivo: Icons.privacy_tip,
+                      rotulo: 'Privacidad y datos',
+                      ruta: '/privacy',
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// La linea que separa las secciones de la cuenta. Sin filete a los lados: se
+/// para donde para el texto de las filas.
+class _Separador extends StatelessWidget {
+  const _Separador();
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+    child: Divider(
+      height: 1,
+      thickness: 1,
+      color: ArcanumSelection.textStyle(false).color!.withValues(alpha: 0.24),
+    ),
+  );
+}
+
+/// Una fila del cajon, con la regla de seleccion de la casa.
+///
+/// Cero filete. El estado lo llevan el color, el peso y el icono relleno --
+/// los tres juntos, como manda [ArcanumSelection].
+class _Fila extends StatelessWidget {
+  const _Fila({
+    required this.icono,
+    required this.iconoActivo,
+    required this.rotulo,
+    required this.activa,
+    required this.onTap,
+  });
+
+  final IconData icono;
+  final IconData iconoActivo;
+  final String rotulo;
+  final bool activa;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final estilo = ArcanumSelection.textStyle(activa, size: 16);
+
+    return Semantics(
+      button: true,
+      selected: activa,
+      label: rotulo,
+      child: InkWell(
+        // `closeDrawer` y no `Navigator.pop`: el pop depende de que el cajon
+        // haya dejado una entrada de historial en la ruta, y dentro del shell
+        // de go_router eso no se cumple -- el cajon se quedaba abierto encima
+        // de la seccion recien abierta.
+        onTap: () {
+          Scaffold.of(context).closeDrawer();
+          onTap();
+        },
+        child: ExcludeSemantics(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: ArcanumSelection.minTapHeight,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+              child: Row(
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(20, 22, 20, 14),
-                    child: SectionLabel('TU CUENTA'),
+                  Icon(
+                    ArcanumSelection.icon(activa, icono, iconoActivo),
+                    size: 20,
+                    color: estilo.color,
                   ),
-                  _Fila(
-                    icono: Icons.person_outline,
-                    iconoActivo: Icons.person,
-                    rotulo: 'Perfil',
-                    ruta: '/perfil',
-                  ),
-                  _Fila(
-                    icono: Icons.tune_outlined,
-                    iconoActivo: Icons.tune,
-                    rotulo: 'Ajustes',
-                    ruta: '/settings',
-                  ),
-                  // Privacidad sube aqui: estaba a tres toques metida dentro de
-                  // Ajustes, y es la pantalla que hay que poder encontrar sin
-                  // buscarla.
-                  _Fila(
-                    icono: Icons.privacy_tip_outlined,
-                    iconoActivo: Icons.privacy_tip,
-                    rotulo: 'Privacidad y datos',
-                    ruta: '/privacy',
-                  ),
+                  const SizedBox(width: 14),
+                  Expanded(child: Text(rotulo, style: estilo)),
                 ],
               ),
             ),
@@ -112,13 +224,33 @@ class ArcanumDrawer extends StatelessWidget {
   }
 }
 
-/// Una fila del cajon, con la regla de seleccion de la casa.
-///
-/// Cero filete. El estado lo llevan el color, el peso y el icono relleno --
-/// los tres juntos, como manda [ArcanumSelection]. Aqui "activo" significa que
-/// esa pantalla es la que esta abierta detras del cajon.
-class _Fila extends StatelessWidget {
-  const _Fila({
+/// Una seccion: cambia de RAMA, no apila. Aqui "activa" significa que su rama
+/// es la que esta abierta detras del cajon.
+class _FilaSeccion extends StatelessWidget {
+  const _FilaSeccion({
+    required this.seccion,
+    required this.activa,
+    required this.onTap,
+  });
+
+  final ArcanumSection seccion;
+  final bool activa;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => _Fila(
+    icono: seccion.icon,
+    iconoActivo: seccion.selectedIcon,
+    rotulo: seccion.title,
+    activa: activa,
+    onTap: onTap,
+  );
+}
+
+/// Lo de la cuenta: rutas de primer nivel FUERA del shell, asi que se apilan
+/// encima con `push` y se vuelve con el boton de atras.
+class _FilaRuta extends StatelessWidget {
+  const _FilaRuta({
     required this.icono,
     required this.iconoActivo,
     required this.rotulo,
@@ -133,39 +265,14 @@ class _Fila extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final aqui = GoRouterState.of(context).uri.path == ruta;
-    final estilo = ArcanumSelection.textStyle(aqui, size: 16);
-
-    return Semantics(
-      button: true,
-      selected: aqui,
-      label: rotulo,
-      child: InkWell(
-        onTap: () {
-          Navigator.of(context).pop();
-          if (!aqui) context.push(ruta);
-        },
-        child: ExcludeSemantics(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              minHeight: ArcanumSelection.minTapHeight,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-              child: Row(
-                children: [
-                  Icon(
-                    ArcanumSelection.icon(aqui, icono, iconoActivo),
-                    size: 20,
-                    color: estilo.color,
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(child: Text(rotulo, style: estilo)),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+    return _Fila(
+      icono: icono,
+      iconoActivo: iconoActivo,
+      rotulo: rotulo,
+      activa: aqui,
+      onTap: () {
+        if (!aqui) context.push(ruta);
+      },
     );
   }
 }

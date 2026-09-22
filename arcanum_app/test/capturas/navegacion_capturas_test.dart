@@ -1,7 +1,11 @@
 @Tags(['capturas'])
 library;
 
-/// Retrata la NAVEGACIÓN: la barra de abajo y la cabecera de Consultar.
+/// Retrata la NAVEGACIÓN: el cajón lateral y la cabecera de Consultar.
+///
+/// La barra de abajo se quitó el 21-sep-2026 y con ella el retrato que la
+/// enseñaba: ahora el primero es el cajón abierto, que es lo que hace su
+/// trabajo.
 ///
 /// Escrito para poder correrlo tal cual en dos sitios -- la rama del rediseño y
 /// `main` -- y comparar las fotos. Por eso solo toca API pública (el router, el
@@ -156,6 +160,21 @@ Future<void> _montar(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// Abre el cajón por la hamburguesa. Toda sección cuesta dos toques desde el
+/// 21-sep-2026, y este helper es el primero de los dos.
+Future<void> _abrirCajon(WidgetTester tester) async {
+  await tester.tap(find.byIcon(Icons.menu));
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.pump(const Duration(milliseconds: 400));
+}
+
+Future<void> _irA(WidgetTester tester, String titulo) async {
+  await _abrirCajon(tester);
+  await tester.tap(find.text(titulo));
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.pump(const Duration(milliseconds: 400));
+}
+
 Future<void> _retratar(WidgetTester tester, String nombre) => expectLater(
   find.byType(MaterialApp),
   matchesGoldenFile('salida/$nombre.png'),
@@ -168,9 +187,10 @@ void main() {
   });
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('n1 la barra de abajo, desde Hoy', (tester) async {
+  testWidgets('n1 el cajón abierto, desde Hoy', (tester) async {
     await _montar(tester);
-    await _retratar(tester, 'nav-1-barra');
+    await _abrirCajon(tester);
+    await _retratar(tester, 'nav-1-cajon');
   });
 
   testWidgets('n3 la cara Tu carta, del mismo Cielo', (tester) async {
@@ -182,15 +202,13 @@ void main() {
 
   testWidgets('n2 la cabecera de Consultar, en el Oráculo', (tester) async {
     await _montar(tester);
-    await tester.tap(find.text('Oráculo'));
-    await tester.pumpAndSettle();
+    await _irA(tester, 'Oráculo');
     await _retratar(tester, 'nav-2-oraculo-consultar');
   });
 
   testWidgets('n4 el Grimorio, con su frase nueva', (tester) async {
     await _montar(tester);
-    await tester.tap(find.text('Grimorio'));
-    await tester.pump(const Duration(milliseconds: 400));
+    await _irA(tester, 'Grimorio');
     await _retratar(tester, 'nav-4-grimorio');
   });
 }

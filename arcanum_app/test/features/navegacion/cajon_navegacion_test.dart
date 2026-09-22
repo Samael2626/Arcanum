@@ -1,15 +1,14 @@
-// El horóscopo como PESTAÑA, que es lo que se decidió el 11-sep-2026.
+// El horóscopo como SECCIÓN DEL CAJÓN, que es lo que se decidió el
+// 21-sep-2026 al quitar la barra de abajo.
 //
-// Sustituye a `boton_horoscopo_test.dart`. Aquel probaba un botón flotante que
-// existía porque el horóscopo estaba fuera de la barra, y con él probaba el
-// caso especial que eso obligaba: ninguna pestaña marcada, el indicador
-// apagado a mano, un índice falso para que `NavigationBar` no protestara. Ese
-// caso especial ya no existe, así que lo que aquí se prueba es lo contrario:
-// que el horóscopo SÍ queda marcado, como cualquier otra sección.
+// Antes esto probaba la barra: que cada destino llevara a su rama y que el
+// horóscopo quedara MARCADO al leerlo. La barra ya no existe, así que lo que
+// se prueba es lo mismo un piso más abajo -- sobre `StatefulNavigationShell`,
+// que es quien de verdad sabe en qué rama estás. El cajón solo lo dibuja.
 //
 // Se monta la app ENTERA por el router y no una pantalla suelta, porque lo que
 // se prueba vive en la carcasa: un test que montara `HoroscopoScreen` a pelo
-// pasaría aunque no hubiera pestaña.
+// pasaría aunque no hubiera forma de llegar a ella.
 import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/core/content/sections.dart';
@@ -150,32 +149,53 @@ Future<void> _montar(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-NavigationBar _barra(WidgetTester tester) =>
-    tester.widget<NavigationBar>(find.byType(NavigationBar));
+/// En que rama estamos. Sale del shell y no del cajon a proposito: el cajon
+/// no existe mientras esta cerrado, y lo que importa es donde estas, no lo que
+/// se este dibujando.
+int _rama(WidgetTester tester) => tester
+    .widget<StatefulNavigationShell>(find.byType(StatefulNavigationShell))
+    .currentIndex;
+
+/// Abre el cajon por la hamburguesa. Dos toques para cada seccion: ese es el
+/// precio del patron y por eso esta escrito aqui una sola vez.
+Future<void> _abrirCajon(WidgetTester tester) async {
+  await tester.tap(find.byIcon(Icons.menu));
+  // Tiempo fijo y no `pumpAndSettle`, por lo mismo que abajo: desde el
+  // Grimorio el arbol nunca se queda quieto y el settle expira.
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.pump(const Duration(milliseconds: 400));
+}
+
+Future<void> _irA(WidgetTester tester, String titulo) async {
+  await _abrirCajon(tester);
+  await tester.tap(find.text(titulo));
+  // `pump` con tiempo fijo y no `pumpAndSettle`: el Grimorio tiene un sello
+  // que respira en bucle y el arbol no se queda quieto nunca. Dos tiempos
+  // porque aqui se encadenan dos animaciones: el cajon que se cierra y la
+  // rama que entra.
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.pump(const Duration(milliseconds: 400));
+}
 
 void main() {
-  // La barra y las ramas del shell tienen que ser la MISMA lista. Lo fueron
+  // El cajon y las ramas del shell tienen que ser la MISMA lista. Lo fueron
   // hasta que se quito Cielos de `arcanumSections` y el destino se quedo
   // escrito a mano en el shell: seis destinos, cinco ramas, y tocar el ultimo
   // llamaba a una rama que no existia. Ningun test lo veia porque cada uno
-  // miraba su lado.
-  testWidgets('cada destino de la barra lleva a una rama que existe', (
+  // miraba su lado. Quitar la barra no relaja esto: el cajon se construye de
+  // la misma lista y el indice de la fila sigue siendo el de la rama.
+  testWidgets('cada fila del cajón lleva a una rama que existe', (
     tester,
   ) async {
     await _montar(tester);
-    final barra = _barra(tester);
-    expect(barra.destinations.length, arcanumSections.length);
-    // Y se tocan todos, de atras adelante: si alguno apuntara a una rama
+    // Se tocan todas, de atras adelante: si alguna apuntara a una rama
     // inexistente, `goBranch` reventaria aqui.
-    for (var i = barra.destinations.length - 1; i >= 0; i--) {
-      await tester.tap(find.text(arcanumSections[i].title));
-      // `pump` con tiempo fijo y no `pumpAndSettle`: el Grimorio tiene un
-      // sello que respira en bucle y el arbol no se queda quieto nunca.
-      await tester.pump(const Duration(milliseconds: 400));
+    for (var i = arcanumSections.length - 1; i >= 0; i--) {
+      await _irA(tester, arcanumSections[i].title);
       expect(
-        _barra(tester).selectedIndex,
+        _rama(tester),
         i,
-        reason: 'el destino ${arcanumSections[i].title} no llego a su rama',
+        reason: 'la fila ${arcanumSections[i].title} no llego a su rama',
       );
     }
   });
@@ -185,53 +205,58 @@ void main() {
   // siguiente empezando dentro del horoscopo.
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('el horóscopo es una pestaña, y ya no hay botón flotante', (
-    tester,
-  ) async {
+  testWidgets('el cajón lista las cinco secciones y la cuenta', (tester) async {
     await _montar(tester);
     expect(find.byType(HoyScreen), findsOneWidget);
     expect(find.byType(FloatingActionButton), findsNothing);
-    // Cinco destinos: Hoy y Cielos se fundieron en "Cielo", y el horóscopo
-    // ocupa el hueco.
-    final barra = _barra(tester);
-    expect(barra.destinations.length, 5);
-    expect(find.text('Horóscopo'), findsOneWidget);
+    // Y ninguna barra abajo, que es lo que cambio.
+    expect(find.byType(NavigationBar), findsNothing);
+
+    await _abrirCajon(tester);
+    for (final seccion in arcanumSections) {
+      expect(
+        find.text(seccion.title),
+        findsWidgets,
+        reason: '${seccion.title} no esta en el cajon',
+      );
+    }
+    expect(find.text('Perfil'), findsOneWidget);
+    expect(find.text('Ajustes'), findsOneWidget);
+    expect(find.text('Privacidad y datos'), findsOneWidget);
     expect(find.text('Cielos'), findsNothing);
   });
 
-  testWidgets('la pestaña lleva a su pantalla', (tester) async {
+  testWidgets('la fila lleva a su pantalla', (tester) async {
     await _montar(tester);
-    await tester.tap(find.text('Horóscopo'));
-    await tester.pumpAndSettle();
+    await _irA(tester, 'Horóscopo');
     expect(find.byType(HoroscopoScreen), findsOneWidget);
   });
 
-  testWidgets('y ahí dentro SÍ queda marcada, que es lo que cambió', (
+  testWidgets('y ahí dentro SÍ queda marcada, al abrir el cajón', (
     tester,
   ) async {
     await _montar(tester);
-    await tester.tap(find.text('Horóscopo'));
-    await tester.pumpAndSettle();
+    await _irA(tester, 'Horóscopo');
+    expect(_rama(tester), 1);
 
-    // Antes se le daba el 0 y se apagaba el indicador, porque el horóscopo no
-    // era ninguna de las pestañas. Ahora es la segunda y se dice.
-    expect(_barra(tester).selectedIndex, 1);
-    expect(
-      find.byType(NavigationBarTheme),
-      findsNothing,
-      reason: 'el tema que apagaba el indicador ya no hace falta',
-    );
+    // Lo que la barra daba gratis ahora cuesta un toque: hay que abrir el
+    // cajon para ver donde estas. Marcada lo esta, pero solo ahi dentro.
+    await _abrirCajon(tester);
+    // La regla de la casa: sin filete, lo que marca es el icono RELLENO (mas
+    // el color y el peso, que viajan con el).
+    final horoscopo = arcanumSections[1];
+    expect(find.byIcon(horoscopo.selectedIcon), findsOneWidget);
+    expect(find.byIcon(horoscopo.icon), findsNothing);
   });
 
-  // Un capítulo de la Biblioteca abierto desde OTRA pestaña tiene que acabar
+  // Un capítulo de la Biblioteca abierto desde OTRA sección tiene que acabar
   // en la rama de Saber. Con `push` se apilaba en la rama de origen: se leía
-  // con la cabecera de esa sección encima y su pestaña marcada abajo. Visto en
-  // el aparato el 12-sep-2026.
+  // con la cabecera de esa sección encima. Visto en el aparato el 12-sep-2026.
   testWidgets('un capítulo abierto desde fuera aterriza en Saber', (
     tester,
   ) async {
     await _montar(tester);
-    expect(_barra(tester).selectedIndex, 0, reason: 'se arranca en Cielo');
+    expect(_rama(tester), 0, reason: 'se arranca en Cielo');
 
     final router =
         tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig!
@@ -241,20 +266,18 @@ void main() {
 
     final saber = arcanumSections.indexWhere((s) => s.route == '/saber');
     expect(
-      _barra(tester).selectedIndex,
+      _rama(tester),
       saber,
-      reason: 'el capítulo se quedó en la rama de la pestaña de origen',
+      reason: 'el capítulo se quedó en la rama de la sección de origen',
     );
   });
 
-  testWidgets('desde el horóscopo se vuelve por la barra', (tester) async {
+  testWidgets('desde el horóscopo se vuelve por el cajón', (tester) async {
     await _montar(tester);
-    await tester.tap(find.text('Horóscopo'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Cielo'));
-    await tester.pumpAndSettle();
+    await _irA(tester, 'Horóscopo');
+    await _irA(tester, 'Cielo');
     expect(find.byType(HoyScreen), findsOneWidget);
     expect(find.byType(HoroscopoScreen), findsNothing);
-    expect(_barra(tester).selectedIndex, 0);
+    expect(_rama(tester), 0);
   });
 }

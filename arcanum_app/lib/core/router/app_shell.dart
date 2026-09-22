@@ -12,18 +12,21 @@ import '../theme/arcanum_colors.dart';
 import '../theme/arcanum_theme.dart';
 import '../../shared/widgets/info_dot.dart';
 
-/// Carcasa con barra superior contextual + barra inferior.
+/// Carcasa con barra superior contextual. YA NO HAY BARRA INFERIOR.
 ///
-/// Arriba (por pantalla): nombre místico de la sección + subtítulo llano + "?"
-/// que explica + avatar que abre el perfil. Abajo: las secciones, en el mismo
-/// orden que `arcanumSections`. La barra superior se OCULTA en las sub-rutas
-/// (una obra, un capítulo), que traen su propio AppBar con botón de volver.
+/// Arriba (por pantalla): hamburguesa que abre el cajon + nombre místico de la
+/// sección + subtítulo llano + "?" que explica + avatar. La barra superior se
+/// OCULTA en las sub-rutas (una obra, un capítulo), que traen su propio AppBar
+/// con botón de volver.
 ///
-/// EL HORÓSCOPO YA NO ES UN BOTÓN FLOTANTE. Lo fue mientras estuvo fuera de la
-/// barra, y eso obligaba a un caso especial entero aquí dentro: ninguna
-/// pestaña marcada mientras se leía, el indicador apagado a mano y un índice
-/// falso para que `NavigationBar` no protestara. Con pestaña propia, todo eso
-/// sobra.
+/// LA BARRA DE ABAJO SE QUITO EL 21-sep-2026. Toda la navegacion pasa por
+/// `ArcanumDrawer`, que dibuja en vertical la misma `arcanumSections` que
+/// alimentaba a la barra y sigue llamando a `goBranch`: las ramas del shell y
+/// su estado de pila no se tocan, solo cambia quien las ofrece.
+///
+/// Lo que se pierde, dicho en voz alta: la barra marcaba la seccion abierta
+/// sin que nadie hiciera nada, y ahora hay que abrir el cajon para saber donde
+/// estas. Y lo diario pasa de 4 toques a 8. Se decidio a sabiendas.
 class AppShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
   const AppShell({super.key, required this.navigationShell});
@@ -31,13 +34,13 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final router = GoRouter.of(context);
-    final indice = navigationShell.currentIndex;
 
     return Scaffold(
-      // El cajon de la cuenta cuelga del avatar, a la derecha, que es donde
-      // esta el avatar. `endDrawer` y no `drawer`: abrirlo desde el borde
-      // izquierdo chocaria con el gesto de volver atras del sistema.
-      endDrawer: const ArcanumDrawer(),
+      drawer: ArcanumDrawer(navigationShell: navigationShell),
+      // Se abre SOLO por sus dos tiradores, nunca arrastrando desde el borde:
+      // ese gesto es el de volver atras del sistema, y ahora que el cajon
+      // cuelga del lado izquierdo los dos caerian en el mismo sitio.
+      drawerEnableOpenDragGesture: false,
       body: SafeArea(
         child: Column(
           children: [
@@ -57,31 +60,12 @@ class AppShell extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: indice,
-        // Tocar la pestaña en la que ya estás vuelve a su raíz, que es lo que
-        // espera cualquiera: sirve para salir de una sub-ruta sin buscar el
-        // botón de volver.
-        onDestinationSelected: (index) =>
-            navigationShell.goBranch(index, initialLocation: index == indice),
-        // La barra SALE de `arcanumSections`, no de una lista escrita a
-        // mano: son la misma cosa y mantenerlas en dos sitios ya se torcio
-        // una vez -- seis destinos contra cinco ramas, y tocar el ultimo
-        // llamaba a una rama inexistente.
-        destinations: [
-          for (final seccion in arcanumSections)
-            NavigationDestination(
-              icon: Icon(seccion.icon),
-              selectedIcon: Icon(seccion.selectedIcon),
-              label: seccion.title,
-            ),
-        ],
-      ),
     );
   }
 }
 
-/// Barra superior de una sección: el sello, identidad, qué es, ayuda y avatar.
+/// Barra superior de una sección: la hamburguesa, identidad, qué es, ayuda y
+/// avatar.
 class _SectionBar extends StatelessWidget {
   final ArcanumSection section;
   const _SectionBar({required this.section});
@@ -93,7 +77,7 @@ class _SectionBar extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const _SelloDeCuenta(),
+          const _MenuPrincipal(),
           const SizedBox(width: 6),
           Expanded(
             child: Column(
@@ -128,48 +112,34 @@ class _SectionBar extends StatelessWidget {
   }
 }
 
-/// El sello: segunda puerta al cajon de la cuenta, arriba a la izquierda.
+/// La hamburguesa: puerta principal a TODA la navegacion, arriba a la
+/// izquierda, que es donde la busca cualquiera.
 ///
-/// NO es un icono de tres lineas. El glifo es U+26E4, el pentaculo, y no se
-/// invento para esto: ya viaja dentro de `ArcanumGlifos`, la fuente propia de
-/// la app, asi que no anade un asset ni toca el manifiesto que vigila
-/// `glifos_fallback_test`. Se pinta con `kGlyphFallback` por la misma razon
-/// que el resto de glifos: sin declararlo, cada Android elige su fuente y en
-/// varios sale un emoji de colores.
+/// Fue un sello -- el pentaculo U+26E4 de `ArcanumGlifos` -- mientras el cajon
+/// solo guardaba la cuenta. Con las cinco secciones dentro, el glifo bonito
+/// deja de decir lo que hay detras: tres lineas son la convencion y aqui la
+/// convencion pesa mas, porque esto ya no es un adorno sino el unico camino a
+/// las secciones.
 ///
-/// Abre EL MISMO `endDrawer` que el avatar. No hay un segundo cajon ni un
-/// segundo widget: son dos tiradores del mismo.
-///
-/// Sin filete, como todo. Lo que le da cuerpo es el material, y su zona tactil
-/// son 48 aunque el glifo mida 22.
-class _SelloDeCuenta extends StatelessWidget {
-  const _SelloDeCuenta();
+/// Sin filete, como todo. Su zona tactil son 48 aunque el icono mida 22.
+class _MenuPrincipal extends StatelessWidget {
+  const _MenuPrincipal();
 
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: 'Tu cuenta',
+      message: 'Navegación',
       child: Semantics(
         button: true,
-        label: 'Tu cuenta',
+        label: 'Abrir el menú',
         child: InkWell(
           customBorder: const CircleBorder(),
-          onTap: Scaffold.of(context).openEndDrawer,
+          onTap: Scaffold.of(context).openDrawer,
           child: ExcludeSemantics(
             child: SizedBox(
               width: 48,
               height: 48,
-              child: Center(
-                child: Text(
-                  '⛤',
-                  style: TextStyle(
-                    fontFamilyFallback: kGlyphFallback,
-                    fontSize: 22,
-                    height: 1,
-                    color: ArcanumColors.gold,
-                  ),
-                ),
-              ),
+              child: Icon(Icons.menu, size: 22, color: ArcanumColors.gold),
             ),
           ),
         ),
@@ -178,12 +148,11 @@ class _SelloDeCuenta extends StatelessWidget {
   }
 }
 
-/// Avatar circular con la inicial del practicante. Abre el cajon de la cuenta
-/// -- Perfil, Ajustes y Privacidad -- desde cualquier seccion.
+/// Avatar circular con la inicial del practicante. Segundo tirador del MISMO
+/// cajon que la hamburguesa: no hay un segundo cajon ni un segundo widget.
 ///
-/// Antes empujaba directo a `/perfil`, y Ajustes y Privacidad colgaban uno
-/// dentro del otro: tres toques para llegar a la politica de datos. El cajon
-/// los pone a la misma altura.
+/// Se queda aunque la hamburguesa haga ya el trabajo, porque el avatar es lo
+/// que se toca buscando la cuenta, y la cuenta sigue estando ahi dentro.
 class _ProfileAvatar extends ConsumerWidget {
   const _ProfileAvatar();
 
@@ -199,7 +168,7 @@ class _ProfileAvatar extends ConsumerWidget {
       label: 'Abrir tu cuenta',
       child: InkWell(
         customBorder: const CircleBorder(),
-        onTap: Scaffold.of(context).openEndDrawer,
+        onTap: Scaffold.of(context).openDrawer,
         child: Container(
           width: 40,
           height: 40,

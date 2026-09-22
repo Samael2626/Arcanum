@@ -1,48 +1,86 @@
+import 'package:arcanum_app/core/content/sections.dart';
 import 'package:arcanum_app/core/router/arcanum_drawer.dart';
 import 'package:arcanum_app/core/theme/arcanum_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-/// El cajon de la cuenta.
+/// El cajon: TODA la navegacion desde el 21-sep-2026.
 ///
-/// Lo que se fija aqui es la promesa que justifico anadirlo: Privacidad deja de
-/// estar a tres toques. Si alguien la devuelve dentro de Ajustes, esto se cae.
+/// Lo que se fija aqui es lo que justifico cada pieza: que Privacidad no vuelva
+/// a estar a tres toques, que las secciones salgan de `arcanumSections` y no de
+/// una lista escrita a mano, y que la regla de seleccion de la casa se aplique
+/// igual a las dos mitades del cajon.
+///
+/// Se monta un `StatefulShellRoute` de verdad y no un `Scaffold` suelto: el
+/// cajon pide el shell para saber en que rama estas, y fabricarlo a mano seria
+/// probar otra cosa.
 void main() {
-  Future<void> abrir(WidgetTester t, {String en = '/hoy'}) async {
+  Future<GoRouter> abrir(WidgetTester t, {String en = '/hoy'}) async {
     final router = GoRouter(
       initialLocation: en,
       routes: [
-        for (final r in ['/hoy', '/perfil', '/settings', '/privacy'])
-          GoRoute(
-            path: r,
-            builder: (c, s) => Scaffold(
-              endDrawer: const ArcanumDrawer(),
-              appBar: AppBar(
-                actions: [
-                  Builder(
-                    builder: (c) => IconButton(
-                      icon: const Icon(Icons.person),
-                      onPressed: Scaffold.of(c).openEndDrawer,
-                    ),
+        StatefulShellRoute.indexedStack(
+          builder: (c, s, shell) => Scaffold(
+            drawer: ArcanumDrawer(navigationShell: shell),
+            appBar: AppBar(
+              leading: Builder(
+                builder: (c) => IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: Scaffold.of(c).openDrawer,
+                ),
+              ),
+            ),
+            body: shell,
+          ),
+          branches: [
+            for (final seccion in arcanumSections)
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: seccion.route,
+                    builder: (c, s) => Text('pantalla ${seccion.route}'),
                   ),
                 ],
               ),
-              body: Text('pantalla $r'),
-            ),
+          ],
+        ),
+        for (final r in ['/perfil', '/settings', '/privacy'])
+          GoRoute(
+            path: r,
+            builder: (c, s) => Scaffold(body: Text('pantalla $r')),
           ),
       ],
     );
     await t.pumpWidget(MaterialApp.router(routerConfig: router));
     await t.pumpAndSettle();
+    return router;
   }
 
-  testWidgets('las tres viven al mismo nivel, ninguna dentro de otra', (
-    t,
-  ) async {
-    await abrir(t);
-    await t.tap(find.byIcon(Icons.person));
+  Future<void> abrirCajon(WidgetTester t) async {
+    await t.tap(find.byIcon(Icons.menu));
     await t.pumpAndSettle();
+  }
+
+  testWidgets(
+    'las secciones salen de arcanumSections, no de una lista aparte',
+    (t) async {
+      await abrir(t);
+      await abrirCajon(t);
+
+      for (final seccion in arcanumSections) {
+        expect(
+          find.text(seccion.title),
+          findsWidgets,
+          reason: '${seccion.title} no esta en el cajon',
+        );
+      }
+    },
+  );
+
+  testWidgets('las tres de la cuenta viven al mismo nivel', (t) async {
+    await abrir(t);
+    await abrirCajon(t);
 
     expect(find.text('Perfil'), findsOneWidget);
     expect(find.text('Ajustes'), findsOneWidget);
@@ -52,8 +90,7 @@ void main() {
   testWidgets('Privacidad llega en DOS toques desde el arranque', (t) async {
     await abrir(t);
     // 1 · abrir el cajon
-    await t.tap(find.byIcon(Icons.person));
-    await t.pumpAndSettle();
+    await abrirCajon(t);
     // 2 · tocarla
     await t.tap(find.text('Privacidad y datos'));
     await t.pumpAndSettle();
@@ -67,31 +104,46 @@ void main() {
     );
   });
 
+  testWidgets('una seccion cuesta dos toques, y cambia de rama', (t) async {
+    await abrir(t);
+    await abrirCajon(t);
+    await t.tap(find.text('Horóscopo'));
+    await t.pumpAndSettle();
+
+    expect(find.text('pantalla /horoscopo'), findsOneWidget);
+    expect(find.text('Perfil'), findsNothing, reason: 'el cajon se cerro');
+  });
+
   testWidgets('la fila de la pantalla abierta lleva los tres avisos', (
     t,
   ) async {
-    await abrir(t, en: '/perfil');
-    await t.tap(find.byIcon(Icons.person));
-    await t.pumpAndSettle();
+    await abrir(t, en: '/horoscopo');
+    await abrirCajon(t);
 
-    final activa = t.widget<Text>(find.text('Perfil')).style!;
-    final otra = t.widget<Text>(find.text('Ajustes')).style!;
+    final activa = t.widget<Text>(find.text('Horóscopo')).style!;
+    final otra = t.widget<Text>(find.text('Grimorio')).style!;
 
     expect(activa.color, ArcanumColors.goldLight);
     expect(activa.fontWeight, FontWeight.w600);
     expect(otra.color, ArcanumColors.ivoryMuted);
     expect(otra.fontWeight, FontWeight.w400);
     // Y la forma: relleno la de aqui, contorno las otras.
-    expect(find.byIcon(Icons.person_outline), findsNothing);
-    expect(find.byIcon(Icons.tune_outlined), findsOneWidget);
+    expect(find.byIcon(arcanumSections[1].selectedIcon), findsOneWidget);
+    expect(find.byIcon(arcanumSections[1].icon), findsNothing);
+    expect(find.byIcon(arcanumSections[2].icon), findsOneWidget);
   });
 
   testWidgets('ninguna fila baja de 48 de alto', (t) async {
     await abrir(t);
-    await t.tap(find.byIcon(Icons.person));
-    await t.pumpAndSettle();
+    await abrirCajon(t);
 
-    for (final rotulo in ['Perfil', 'Ajustes', 'Privacidad y datos']) {
+    final rotulos = [
+      for (final s in arcanumSections) s.title,
+      'Perfil',
+      'Ajustes',
+      'Privacidad y datos',
+    ];
+    for (final rotulo in rotulos) {
       final caja = find
           .ancestor(
             of: find.text(rotulo),
@@ -102,16 +154,15 @@ void main() {
     }
   });
 
-  testWidgets('tocar la fila de donde ya estas solo cierra el cajon', (
+  testWidgets('tocar la seccion en la que ya estas vuelve a su raiz', (
     t,
   ) async {
-    await abrir(t, en: '/perfil');
-    await t.tap(find.byIcon(Icons.person));
-    await t.pumpAndSettle();
-    await t.tap(find.text('Perfil'));
+    await abrir(t);
+    await abrirCajon(t);
+    await t.tap(find.text('Cielo'));
     await t.pumpAndSettle();
 
-    expect(find.text('pantalla /perfil'), findsOneWidget);
+    expect(find.text('pantalla /hoy'), findsOneWidget);
     expect(find.text('Ajustes'), findsNothing, reason: 'el cajon se cerro');
   });
 }
