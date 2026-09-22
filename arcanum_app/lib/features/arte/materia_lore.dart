@@ -8,6 +8,8 @@ import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_resin.dart';
 import '../lecturas/domain/library_models.dart';
 import 'materia_engravings.dart';
+import 'materia_plate_loader.dart';
+import 'materia_plate_reveal.dart';
 import 'materia_specimen.dart';
 
 /// Nombres en español de cada tipo de Materia Arcana.
@@ -427,11 +429,30 @@ class _LoreHeroState extends State<_LoreHero>
     curve: Curves.easeInOutCubic,
   );
 
+  /// La lamina de la pieza, si es una de las 39 comprobadas.
+  ///
+  /// Se resuelve del manifest ya cargado y, si todavia no lo esta, en cuanto
+  /// llegue. La hoja abre INSTANTANEA y eso no se negocia: primero se dibuja
+  /// lo que haya y la lamina entra despues, nunca al reves.
+  MateriaPlate? _plate;
+
   @override
   void initState() {
     super.initState();
+    _buscarLamina();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _c.forward();
+    });
+  }
+
+  void _buscarLamina() {
+    final plates = MateriaPlates.instance;
+    if (plates.isLoaded) {
+      _plate = plates.resolve(widget.slug);
+      return;
+    }
+    plates.ensureLoaded().then((_) {
+      if (mounted) setState(() => _plate = plates.resolve(widget.slug));
     });
   }
 
@@ -482,19 +503,31 @@ class _LoreHeroState extends State<_LoreHero>
                   ),
                 ),
               ),
-              AnimatedBuilder(
-                animation: _draw,
-                builder: (_, _) => MateriaSpecimen(
-                  slug: widget.slug,
-                  type: widget.itemType,
+              // La pieza con lamina comprobada se revela: entra entonada y
+              // pasa al grabado de epoca con el movimiento de su elemento. El
+              // resto del catalogo sigue dibujando su silueta, como hasta hoy.
+              if (_plate != null)
+                MateriaPlateReveal(
+                  plate: _plate!,
                   mood: mood,
+                  element: widget.element,
                   size: widget.itemType == 'herb' ? 148 : 132,
-                  strokeWidth: 1.7,
-                  progress: _draw.value,
-                  compact: true,
                   semanticLabel: widget.name,
+                )
+              else
+                AnimatedBuilder(
+                  animation: _draw,
+                  builder: (_, _) => MateriaSpecimen(
+                    slug: widget.slug,
+                    type: widget.itemType,
+                    mood: mood,
+                    size: widget.itemType == 'herb' ? 148 : 132,
+                    strokeWidth: 1.7,
+                    progress: _draw.value,
+                    compact: true,
+                    semanticLabel: widget.name,
+                  ),
                 ),
-              ),
               if (planetG != null)
                 Positioned(
                   top: 6,

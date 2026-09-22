@@ -14,6 +14,7 @@ import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/gold_button.dart';
 import 'materia_lore.dart';
+import 'materia_plate_reveal.dart';
 import 'materia_specimen.dart';
 
 const _filters = <(String?, String)>[
@@ -540,14 +541,22 @@ class _MateriaCard extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    MateriaSpecimen(
+                    // Las piezas con lamina comprobada ensenan su cara
+                    // entonada ya en la rejilla; las demas, su silueta.
+                    MateriaPlateThumb(
                       slug: slug,
-                      type: type,
                       mood: mood,
                       size: 102,
-                      strokeWidth: 1.55,
-                      compact: true,
                       semanticLabel: item['name'] as String,
+                      respaldo: MateriaSpecimen(
+                        slug: slug,
+                        type: type,
+                        mood: mood,
+                        size: 102,
+                        strokeWidth: 1.55,
+                        compact: true,
+                        semanticLabel: item['name'] as String,
+                      ),
                     ),
                     const Spacer(),
                     Text(

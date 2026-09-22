@@ -88,12 +88,21 @@ CONTRASTE_RECORTE = (1, 2)
 # Cuanto borde se ignora al decidir si la lamina es clara u oscura (ver
 # _centro). Un 12 % por lado deja fuera el marco de papel de las de Bayer.
 BORDE_IGNORADO = 0.12
-# La polaridad fijada a mano por tipo de pieza, cuando la obra manda mas que
-# la plancha suelta. Las doce de Bayer son figura clara sobre cielo oscuro y
-# van todas igual: dejadas al detector automatico, unas salian invertidas y
-# otras no, y doce laminas de la MISMA obra no pueden ir cada una por su lado.
-# None (o ausente) = que lo decida la lamina.
-POLARIDAD_POR_TIPO = {"sign": False}
+# La polaridad, fijada por tipo de pieza. Ausente = que lo decida la lamina.
+#
+# Esto empezo siendo automatico y no aguanto. Las doce de Bayer son figura
+# clara sobre cielo oscuro y van todas igual, pero el detector invertia unas
+# si y otras no segun cuanto marco de papel entrara en la medida. Y entre las
+# hierbas, belladona y digital -- hojas grandes y oscuras en mitad de la
+# plancha -- pasaban por oscuras y se quedaban sin invertir, asi que su cara
+# "entonada" era papel claro sobre una app negra. Dos de veintisiete, y solo
+# se vieron mirando los retratos.
+#
+# La polaridad no es una propiedad del histograma sino de la OBRA: una plancha
+# botanica es tinta sobre papel y siempre se invierte; un mapa celeste de
+# Bayer ya esta en la polaridad que ARCANUM quiere. La heuristica se queda
+# para los tipos que aun no tienen lamina, donde no hay obra que consultar.
+POLARIDAD_POR_TIPO = {"herb": True, "sign": False}
 
 API = "https://commons.wikimedia.org/w/api.php"
 UA = "ARCANUM/1.0 (https://arcanum.app; contacto en el repo)"

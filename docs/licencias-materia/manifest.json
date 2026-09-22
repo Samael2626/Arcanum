@@ -101,7 +101,7 @@
    440,
    511
   ],
-  "entonado_invertido": false
+  "entonado_invertido": true
  },
  "mandragora": {
   "slug_catalogo": "mandragora",
@@ -587,7 +587,7 @@
    440,
    746
   ],
-  "entonado_invertido": false
+  "entonado_invertido": true
  },
  "beleno": {
   "slug_catalogo": "beleño",
