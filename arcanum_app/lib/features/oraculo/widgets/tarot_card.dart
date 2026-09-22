@@ -1613,6 +1613,18 @@ class _TarotCardViewState extends State<TarotCardView>
   /// Tres pulsos de 600 ms. Mas seria insistir.
   static const int _pulseMs = 1800;
 
+  /// El ACENTO: la misma tanda de efectos del asentamiento, mas corta y mas
+  /// floja, para cuando la carta se enfoca sin voltearse -- por ejemplo desde
+  /// el mini-panel de la tirada.
+  ///
+  /// Un solo numero para las cinco familias, no uno por palo: la personalidad
+  /// ya la pone `_FlipSpec`, y repetirla aqui con cifras a mano seria tener
+  /// dos sitios donde afinar lo mismo. La duracion se encoge y las ventanas de
+  /// cada efecto se encogen CON ella, asi que ninguna constante cambia de
+  /// sitio.
+  static const double _acentoTiempo = 0.45;
+  static const double _acentoFuerza = 0.5;
+
   late final AnimationController _deal;
   late final AnimationController _flip;
   late final AnimationController _settle;
@@ -1625,6 +1637,14 @@ class _TarotCardViewState extends State<TarotCardView>
   bool _hovering = false;
   bool _pressing = false;
   bool _hintDone = false;
+
+  /// Cuanto pega la tanda de efectos en curso: 1 al voltear, [_acentoFuerza]
+  /// al enfocar. Multiplica amplitudes; no toca curvas.
+  double _magnitud = 1;
+
+  /// Cuanto dura: 1 al voltear, [_acentoTiempo] al enfocar. Encoge a la vez el
+  /// controlador y las ventanas de cada efecto.
+  double _escala = 1;
 
   /// La cara a la que se va, y la que se deja atras. El giro siempre lleva de
   /// una a otra: `_flip` va de 0 a 1 UNA VEZ POR TOQUE y se reinicia.
@@ -1699,9 +1719,35 @@ class _TarotCardViewState extends State<TarotCardView>
     super.didUpdateWidget(old);
     if (widget.active && !old.active) {
       _engage.forward();
+      _acentuar();
     } else if (!widget.active && old.active) {
       if (!_hovering && !_pressing) _engage.reverse();
     }
+  }
+
+  /// Un acento: "esta es la carta activa ahora".
+  ///
+  /// Es la tanda de efectos de su palo, en corto. Una carta que se voltea NO
+  /// pasa por aqui: su propio asentamiento ya es el acento, y a fuerza plena
+  /// -- ponerle otro encima seria acentuar dos veces el mismo gesto.
+  ///
+  /// Dispara desde cero cada vez, y ahi esta la clave del reposo: es el MISMO
+  /// controlador que el asentamiento, no uno nuevo. Diez toques seguidos no
+  /// dejan diez animaciones vivas; dejan una, reiniciada diez veces, y al
+  /// acabar la ultima no queda un solo frame programado.
+  void _acentuar() {
+    if (!mounted || _cara == TarotCara.dorso || _flip.isAnimating) return;
+    if (_reducedMotion) {
+      // Sin movimiento no hay acento: la carta ya esta donde tiene que estar.
+      _settle.value = 1;
+      return;
+    }
+    _magnitud = _acentoFuerza;
+    _escala = _acentoTiempo;
+    _settle.duration = Duration(
+      milliseconds: (_spec.settleMs * _acentoTiempo).round(),
+    );
+    _settle.forward(from: 0);
   }
 
   @override
@@ -1719,6 +1765,9 @@ class _TarotCardViewState extends State<TarotCardView>
 
   void _onFlipStatus(AnimationStatus status) {
     if (status != AnimationStatus.completed || !mounted) return;
+    _magnitud = 1;
+    _escala = 1;
+    _settle.duration = Duration(milliseconds: _spec.settleMs);
     _settle.forward(from: 0);
     // La pista solo se ensena al descubrir, no en cada vuelta de cara.
     if (widget.pulseHint && !_hintDone && _cara == TarotCara.vectorial) {
@@ -1897,8 +1946,12 @@ class _TarotCardViewState extends State<TarotCardView>
     );
   }
 
-  /// Rampa 0..1 de los primeros [lenMs] de la ventana de asentamiento.
-  double _window(double ms, double lenMs) => (ms / lenMs).clamp(0.0, 1.0);
+  /// Rampa 0..1 de los primeros [lenMs] de la tanda en curso.
+  ///
+  /// La ventana se encoge con [_escala], igual que el controlador: asi el
+  /// acento es la misma animacion vista en corto y no otra con sus numeros.
+  double _window(double ms, double lenMs) =>
+      (ms / (lenMs * _escala)).clamp(0.0, 1.0);
 
   /// Ida y vuelta: 0 -> 1 -> 0. Sirve para todo lo que sube y se deshace.
   double _bump(double u) => math.sin(math.pi * u);
@@ -1913,11 +1966,28 @@ class _TarotCardViewState extends State<TarotCardView>
     final fe = _spec.curve.transform(_flip.value);
     final angle = (1 - fe) * math.pi;
     final cruzado = _cruzado;
+    final acento = _magnitud < 1;
 
     // 1 exactamente en el canto (90 grados), 0 en las dos caras.
     final crossing = (1 - (fe - 0.5).abs() / 0.5).clamp(0.0, 1.0);
 
-    final settleMs = _settle.value * _spec.settleMs;
+    // EL MOTOR del destello y del corte. Los dos nacieron colgados del giro --
+    // el destello es el canto atrapando la luz, el corte es el instante del
+    // tajo -- y al enfocar no hay giro del que colgarlos: `fe` se queda en 1,
+    // `crossing` en 0, y los dos se apagaban SIN AVISAR. Los Mayores y las
+    // Espadas se habrian quedado sin acento mientras los otros tres palos
+    // funcionaban, que es la peor forma de fallar.
+    //
+    // Con volteo mandan el canto y el filo del giro; sin el, la misma subida y
+    // bajada de la tanda corta. Una expresion, los dos gestos.
+    final pulso = acento ? _bump(_settle.value) : 0.0;
+    final motorFlash = math.max(crossing, pulso);
+    final motorCorte = math.max(
+      fe > 0.5 && !acento ? 1 - (fe - 0.5) / 0.5 : 0.0,
+      pulso,
+    );
+
+    final settleMs = _settle.value * _spec.settleMs * _escala;
     final landed = _flip.value; // 0 antes de tocar, 1 con la cara arriba
 
     final eng = Curves.easeOut.transform(_engage.value);
@@ -1933,15 +2003,26 @@ class _TarotCardViewState extends State<TarotCardView>
     // Asentamiento: rebote de los Mayores y aplastamiento de Oros, en la misma
     // curva de ida y vuelta. Solo uno de los dos es distinto de cero.
     final settleScale =
-        1 + (_spec.overshoot - _spec.squash) * _bump(_window(settleMs, 260));
+        1 +
+        (_spec.overshoot - _spec.squash) *
+            _magnitud *
+            _bump(_window(settleMs, 260));
 
-    // Fuego: temblor que se disipa. Oscilacion amortiguada, no un rebote.
+    // Fuego: temblor que se disipa. Oscilacion amortiguada, no un rebote. La
+    // oscilacion va en tiempo REAL y no escalado: un temblor que se ralentiza
+    // deja de ser un temblor.
+    final tremorMs = settleMs / _escala;
     final tremor = _spec.tremor
-        ? 0.035 * math.sin(settleMs / 28) * math.exp(-settleMs / 140)
+        ? 0.035 *
+              _magnitud *
+              math.sin(tremorMs / 28) *
+              math.exp(-tremorMs / 140)
         : 0.0;
 
     // Figuras: una reverencia de ~2,5 grados que se revierte en ~150 ms.
-    final bow = _isCourt ? 0.044 * _bump(_window(settleMs, 300)) : 0.0;
+    final bow = _isCourt
+        ? 0.044 * _magnitud * _bump(_window(settleMs, 300))
+        : 0.0;
 
     // Aire: el giro no es sobre el eje vertical, sino en diagonal. Maximo en
     // el canto y cero en las dos caras, para no dejar la carta torcida.
@@ -1967,7 +2048,9 @@ class _TarotCardViewState extends State<TarotCardView>
     // Mayores: halo residual en el borde. Es un `BoxShadow`, no un glow con
     // desenfoque sobre el contenido: la sombra de una caja no lee lo que hay
     // detras y no fuerza `saveLayer`. Esa es la unica forma barata de hacerlo.
-    final halo = _spec.halo ? 0.30 * (1 - _settle.value) * landed : 0.0;
+    final halo = _spec.halo
+        ? 0.30 * _magnitud * (1 - _settle.value) * landed
+        : 0.0;
 
     return Opacity(
       opacity: opacity,
@@ -2025,23 +2108,24 @@ class _TarotCardViewState extends State<TarotCardView>
                     size: const Size(_w, _h),
                     painter: _SweepPainter(
                       progress: _window(settleMs, 300),
-                      trace: (1 - _window(settleMs, 620)) * 0.5,
+                      trace: (1 - _window(settleMs, 620)) * 0.5 * _magnitud,
+                      fuerza: _magnitud,
                     ),
                   ),
 
                 // Espadas: el corte. Una linea de 1 px de esquina a esquina
                 // que aparece en el canto y se va en lo que queda de giro
                 // (100 ms de los 200 del volteo).
-                if (_spec.cut && fe > 0.5)
+                if (_spec.cut && motorCorte > 0.01)
                   CustomPaint(
                     size: const Size(_w, _h),
-                    painter: _CutPainter(1 - (fe - 0.5) / 0.5),
+                    painter: _CutPainter(motorCorte * _magnitud),
                   ),
 
                 // Mayores: la franja de luz que cruza la carta justo cuando
                 // esta de canto. `crossing` al cubo la concentra en el
                 // instante en vez de repartirla por todo el giro.
-                if (_spec.flash && crossing > 0.05)
+                if (_spec.flash && motorFlash > 0.05)
                   Positioned.fill(
                     child: DecoratedBox(
                       decoration: BoxDecoration(
@@ -2052,7 +2136,10 @@ class _TarotCardViewState extends State<TarotCardView>
                           colors: [
                             const Color(0x00000000),
                             ArcanumColors.gold.withValues(
-                              alpha: 0.85 * math.pow(crossing, 3).toDouble(),
+                              alpha:
+                                  0.85 *
+                                  _magnitud *
+                                  math.pow(motorFlash, 3).toDouble(),
                             ),
                             const Color(0x00000000),
                           ],
@@ -2182,13 +2269,15 @@ class _TarotCardViewState extends State<TarotCardView>
       motes.add(
         Positioned(
           left: _w * seeds[i],
-          bottom: 6 + 28 * u,
+          bottom: 6 + 28 * u * _magnitud,
           child: Container(
             width: 3,
             height: 3,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: ArcanumColors.gold.withValues(alpha: _bump(u) * 0.85),
+              color: ArcanumColors.gold.withValues(
+                alpha: _bump(u) * 0.85 * _magnitud,
+              ),
             ),
           ),
         ),
@@ -2268,7 +2357,14 @@ class _SweepPainter extends CustomPainter {
   final double progress;
   final double trace;
 
-  const _SweepPainter({required this.progress, required this.trace});
+  /// Cuanto pega. 1 al voltear, menos al acentuar.
+  final double fuerza;
+
+  const _SweepPainter({
+    required this.progress,
+    required this.trace,
+    this.fuerza = 1,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -2303,7 +2399,9 @@ class _SweepPainter extends CustomPainter {
         ],
         colors: [
           const Color(0x00000000),
-          ArcanumColors.ivory.withValues(alpha: 0.28 * _bump(progress)),
+          ArcanumColors.ivory.withValues(
+            alpha: 0.28 * fuerza * _bump(progress),
+          ),
           const Color(0x00000000),
         ],
       ).createShader(rect);
@@ -2314,7 +2412,7 @@ class _SweepPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_SweepPainter old) =>
-      old.progress != progress || old.trace != trace;
+      old.progress != progress || old.trace != trace || old.fuerza != fuerza;
 }
 
 /// Espadas: la linea del corte, de esquina a esquina y de 1 px.

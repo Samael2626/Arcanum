@@ -31,6 +31,7 @@ Widget _app(
   Map<String, dynamic> card, {
   bool disableAnimations = false,
   bool pulseHint = false,
+  bool active = false,
   VoidCallback? onHintShown,
   VoidCallback? onToggle,
 }) => MaterialApp(
@@ -41,7 +42,7 @@ Widget _app(
         child: TarotCardView(
           card: card,
           index: 0,
-          active: false,
+          active: active,
           onToggle: onToggle ?? () {},
           pulseHint: pulseHint,
           onHintShown: onHintShown,
@@ -52,11 +53,19 @@ Widget _app(
 );
 
 /// Deja pasar el reparto y cualquier animacion pendiente.
-Future<void> _reposo(WidgetTester tester) => tester.pumpAndSettle(
-  const Duration(milliseconds: 20),
-  EnginePhase.sendSemanticsUpdate,
-  const Duration(seconds: 6),
-);
+///
+/// El primer `pump` largo no sobra: el reparto arranca desde un `Timer`, y un
+/// `Timer` pendiente NO programa frames. Con `pumpAndSettle` a secas la carta
+/// se daba por quieta sin haberse repartido siquiera, y el reparto saltaba
+/// despues, en mitad de lo que viniera. Este pump lo dispara primero.
+Future<void> _reposo(WidgetTester tester) async {
+  await tester.pump(const Duration(milliseconds: 150));
+  await tester.pumpAndSettle(
+    const Duration(milliseconds: 20),
+    EnginePhase.sendSemanticsUpdate,
+    const Duration(seconds: 6),
+  );
+}
 
 /// El naipe, que es lo unico que recibe el toque: el centro de `TarotCardView`
 /// cae entre el rotulo de la posicion y la carta, y ahi no hay nada que tocar.
@@ -183,6 +192,66 @@ void main() {
     await tester.tap(_naipe); // de vuelta
     await _reposo(tester);
     expect(enfocada, 2);
+  });
+
+  testWidgets('enfocar una carta la acentua, y el acento tambien acaba', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(mayor));
+    await _reposo(tester);
+    await tester.tap(_naipe); // descubrir
+    await _reposo(tester);
+
+    // Enfocarla sin tocarla: es lo que hace el mini-panel de la tirada.
+    await tester.pumpWidget(_app(mayor, active: true));
+    await tester.pump();
+    expect(
+      tester.binding.hasScheduledFrame,
+      isTrue,
+      reason: 'el acento tiene que haber arrancado',
+    );
+
+    await _reposo(tester);
+    expect(tester.binding.hasScheduledFrame, isFalse);
+  });
+
+  testWidgets('diez toques en cadena no dejan nada colgando', (tester) async {
+    // El acento y el asentamiento comparten controlador a proposito: cada
+    // disparo REINICIA el que hay en vez de abrir otro. Diez toques seguidos,
+    // cada uno antes de que acabe el anterior, tienen que dejar una sola
+    // animacion viva -- y ninguna al final.
+    await tester.pumpWidget(_app(mayor));
+    await _reposo(tester);
+
+    for (var i = 0; i < 10; i++) {
+      await tester.tap(_naipe);
+      await tester.pump(const Duration(milliseconds: 40));
+    }
+    await _reposo(tester);
+
+    expect(tester.binding.hasScheduledFrame, isFalse);
+    expect(find.byType(TarotCardView), findsOneWidget);
+  });
+
+  testWidgets('con movimiento reducido, enfocar no anima', (tester) async {
+    await tester.pumpWidget(_app(mayor, disableAnimations: true));
+    await _reposo(tester);
+    await tester.tap(_naipe);
+    await tester.pump();
+
+    await tester.pumpWidget(_app(mayor, disableAnimations: true, active: true));
+
+    // `_engage` -- el glow y el `lift` de la carta activa -- sigue corriendo:
+    // son 170 ms y no entran en este cambio. Lo que NO puede correr es el
+    // acento, que en un Mayor dura 675 ms. Si a los 450 ms ya no queda ni un
+    // frame, es que el acento no llego a arrancar.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 450));
+    expect(
+      tester.binding.hasScheduledFrame,
+      isFalse,
+      reason: 'con movimiento reducido el acento no debe animarse',
+    );
   });
 
   testWidgets('cada palo acaba en reposo absoluto, sin frames colgando', (
