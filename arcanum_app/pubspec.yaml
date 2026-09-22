@@ -96,6 +96,11 @@ flutter:
     - assets/engravings/resinas/
     - assets/engravings/zodiaco/
     - assets/tarot/
+    # Laminas de Materia: la cara entonada (cerrada) y el grabado (abierta).
+    # Las escribe tools/build_materia_laminas.py --laminas.
+    - assets/materia/manifest.json
+    - assets/materia/entonado/
+    - assets/materia/grabado/
     # Licencias de las fuentes: la OFL 1.1 obliga a distribuir su texto con el
     # software. Se empaquetan como asset y se registran en LicenseRegistry para
     # que aparezcan en showLicensePage().

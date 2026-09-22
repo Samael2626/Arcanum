@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import 'engraving_manifest_loader.dart';
+import 'materia_plate_loader.dart';
 import 'materia_engravings.dart';
 
 /// Capa visual unificada de Materia Arcana.
@@ -40,8 +41,21 @@ class MateriaSpecimen extends StatefulWidget {
   State<MateriaSpecimen> createState() => _MateriaSpecimenState();
 }
 
+/// La lamina que toca dibujar, ya resuelta: de donde sale y si es un raster.
+///
+/// Existe porque Materia tiene hoy DOS repertorios: las 39 piezas con lamina
+/// historica comprobada (WebP, la cara entonada) y el resto, que sigue con su
+/// grabado vectorial (SVG). Un solo tipo evita que la pantalla tenga que saber
+/// de cual de los dos manifiestos vino cada pieza.
+class _Lamina {
+  const _Lamina(this.assetPath, {required this.raster});
+
+  final String assetPath;
+  final bool raster;
+}
+
 class _MateriaSpecimenState extends State<MateriaSpecimen> {
-  Future<EngravingEntry?>? _entry;
+  Future<_Lamina?>? _entry;
 
   @override
   void initState() {
@@ -59,12 +73,26 @@ class _MateriaSpecimenState extends State<MateriaSpecimen> {
     }
   }
 
-  Future<EngravingEntry?>? _resolve() {
+  /// Manda la lamina historica; el SVG vectorial es el respaldo.
+  ///
+  /// El orden no es capricho: donde hay plancha de epoca comprobada, esa es la
+  /// pieza. Los doce signos apuntaban a un `.jpg` que se cargaba con
+  /// `SvgPicture.asset`, no se parseaba nunca y caian al grabado procedural en
+  /// silencio -- por eso aqui se decide ademas si la lamina es raster, en vez
+  /// de dar por hecho que todo lo que hay en un manifest es un SVG.
+  Future<_Lamina?>? _resolve() {
     return () async {
+      final plates = MateriaPlates.instance;
+      await plates.ensureLoaded();
+      final plate = plates.resolve(widget.slug);
+      if (plate != null) return _Lamina(plate.entonadoPath, raster: true);
+
       final manifest = EngravingManifest.instance;
       await manifest.ensureLoaded();
       final entry = manifest.resolve(widget.slug);
-      return entry?.isFinal == true ? entry : null;
+      if (entry?.isFinal != true) return null;
+      final path = entry!.assetPath!;
+      return _Lamina(path, raster: !path.endsWith('.svg'));
     }();
   }
 
@@ -80,13 +108,14 @@ class _MateriaSpecimenState extends State<MateriaSpecimen> {
     }
     final future = _entry;
     if (future == null) return _fallback();
-    return FutureBuilder<EngravingEntry?>(
+    return FutureBuilder<_Lamina?>(
       future: future,
       builder: (context, snapshot) {
-        final path = snapshot.data?.assetPath;
-        if (path == null) return _fallback();
+        final lamina = snapshot.data;
+        if (lamina == null) return _fallback();
         return _HistoricalPlate(
-          assetPath: path,
+          assetPath: lamina.assetPath,
+          raster: lamina.raster,
           mood: widget.mood,
           size: widget.size,
           progress: widget.progress,
@@ -110,6 +139,7 @@ class _MateriaSpecimenState extends State<MateriaSpecimen> {
 class _HistoricalPlate extends StatelessWidget {
   const _HistoricalPlate({
     required this.assetPath,
+    required this.raster,
     required this.mood,
     required this.size,
     required this.progress,
@@ -118,6 +148,12 @@ class _HistoricalPlate extends StatelessWidget {
   });
 
   final String assetPath;
+
+  /// Una lamina WebP ya viene virada a la tinta de ARCANUM desde el pipeline;
+  /// un SVG es un trazo sin color que la pantalla tiñe con el humor de la
+  /// pieza. Por eso el colorFilter solo se aplica al segundo.
+  final bool raster;
+
   final ArcanumMood mood;
   final double size;
   final double progress;
@@ -139,16 +175,26 @@ class _HistoricalPlate extends StatelessWidget {
           clipper: _PlateRevealClipper(t),
           child: Opacity(
             opacity: Curves.easeOut.transform(t),
-            child: SvgPicture.asset(
-              assetPath,
-              width: size,
-              height: size,
-              fit: BoxFit.contain,
-              alignment: Alignment.center,
-              colorFilter: ColorFilter.mode(ink, BlendMode.srcIn),
-              semanticsLabel: semanticLabel,
-              errorBuilder: (_, _, _) => fallback,
-            ),
+            child: raster
+                ? Image.asset(
+                    assetPath,
+                    width: size,
+                    height: size,
+                    fit: BoxFit.contain,
+                    alignment: Alignment.center,
+                    semanticLabel: semanticLabel,
+                    errorBuilder: (_, _, _) => fallback,
+                  )
+                : SvgPicture.asset(
+                    assetPath,
+                    width: size,
+                    height: size,
+                    fit: BoxFit.contain,
+                    alignment: Alignment.center,
+                    colorFilter: ColorFilter.mode(ink, BlendMode.srcIn),
+                    semanticsLabel: semanticLabel,
+                    errorBuilder: (_, _, _) => fallback,
+                  ),
           ),
         ),
       ),
