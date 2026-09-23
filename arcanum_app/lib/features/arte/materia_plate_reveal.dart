@@ -155,6 +155,9 @@ class MateriaPlateReveal extends StatefulWidget {
     required this.plate,
     required this.mood,
     required this.size,
+    this.alto,
+    this.fit = BoxFit.contain,
+    this.alignment = Alignment.center,
     this.element,
     this.revelar = true,
     this.semanticLabel,
@@ -162,7 +165,22 @@ class MateriaPlateReveal extends StatefulWidget {
 
   final MateriaPlate plate;
   final ArcanumMood mood;
+
+  /// Ancho de la caja. Sin [alto] la caja es cuadrada, como en la ficha.
   final double size;
+
+  /// Alto de la caja cuando no es cuadrada -- la tarjeta del catalogo pide
+  /// una banda apaisada, no un cuadrado.
+  final double? alto;
+
+  /// `contain` respeta la plancha entera; `cover` la lleva a sangre y recorta.
+  /// La tarjeta usa `cover` y la ficha `contain`, a proposito: en la rejilla
+  /// manda el reconocimiento y en la ficha manda la obra.
+  final BoxFit fit;
+
+  /// Donde se ancla el recorte. Las botanicas llevan la figura en el tercio
+  /// alto, asi que en `cover` se ancla arriba y no al centro.
+  final Alignment alignment;
 
   /// El elemento de la pieza, que elige la familia del revelado.
   final String? element;
@@ -296,8 +314,9 @@ class _MateriaPlateRevealState extends State<MateriaPlateReveal>
   Widget build(BuildContext context) {
     final lado = widget.size;
     return RepaintBoundary(
-      child: SizedBox.square(
-        dimension: lado,
+      child: SizedBox(
+        width: lado,
+        height: widget.alto ?? lado,
         child: Semantics(
           label: widget.semanticLabel,
           image: true,
@@ -334,8 +353,8 @@ class _MateriaPlateRevealState extends State<MateriaPlateReveal>
   /// dibujadas a 102 decodifica cuatro veces mas pixeles de los que pinta.
   Widget _cara(String asset, double lado) => Image.asset(
     asset,
-    fit: BoxFit.contain,
-    alignment: Alignment.center,
+    fit: widget.fit,
+    alignment: widget.alignment,
     cacheWidth: (lado * MediaQuery.devicePixelRatioOf(context)).round(),
     excludeFromSemantics: true,
     gaplessPlayback: true,
@@ -357,12 +376,18 @@ class MateriaPlateThumb extends StatefulWidget {
     required this.mood,
     required this.size,
     required this.respaldo,
+    this.alto,
+    this.fit = BoxFit.contain,
+    this.alignment = Alignment.center,
     this.semanticLabel,
   });
 
   final String slug;
   final ArcanumMood mood;
   final double size;
+  final double? alto;
+  final BoxFit fit;
+  final Alignment alignment;
   final Widget respaldo;
   final String? semanticLabel;
 
@@ -404,8 +429,120 @@ class _MateriaPlateThumbState extends State<MateriaPlateThumb> {
       plate: plate,
       mood: widget.mood,
       size: widget.size,
+      alto: widget.alto,
+      fit: widget.fit,
+      alignment: widget.alignment,
       revelar: false,
       semanticLabel: widget.semanticLabel,
+    );
+  }
+}
+
+/// La franja de arriba de una tarjeta del catalogo, con la lamina dentro.
+///
+/// CUANTO SITIO SE LLEVA, Y POR QUE NO ES FIJO
+///
+/// La primera version daba el 64 % a todas y se midio despues: las botanicas
+/// perdian la mitad de la plancha (45-54 % visible) mientras los mapas de Bayer
+/// entraban casi enteros (92 %). No era un caso raro -- 27 de las 39 piezas con
+/// lamina son hierbas, asi que el catalogo entero se veia cortado.
+///
+/// La causa es que una franja apaisada no puede contener una plancha vertical:
+/// `cover` tira lo que sobra. Asi que la franja se adapta a la lamina:
+///
+///   plancha muy vertical (>= 1,6)  ->  78 %
+///   plancha algo vertical (>= 1,15) ->  72 %
+///   plancha apaisada               ->  64 %
+///
+/// Mover el anclaje no era alternativa: decide QUE mitad se ve, no cuanta.
+class MateriaPlateBanda extends StatelessWidget {
+  const MateriaPlateBanda({
+    super.key,
+    required this.slug,
+    required this.mood,
+    required this.ancho,
+    required this.altoCelda,
+    required this.respaldo,
+    this.semanticLabel,
+  });
+
+  final String slug;
+  final ArcanumMood mood;
+  final double ancho;
+  final double altoCelda;
+
+  /// Lo que se pinta cuando la pieza no tiene lamina comprobada: su silueta,
+  /// centrada y sin ir a sangre, porque un trazo no es una plancha.
+  final Widget respaldo;
+
+  final String? semanticLabel;
+
+  /// Las tres proporciones. Fuera de la clase para que se puedan leer de un
+  /// vistazo y para que un test las compruebe sin montar la pantalla.
+  static const double franjaApaisada = 0.64;
+  static const double franjaVertical = 0.72;
+  static const double franjaMuyVertical = 0.78;
+
+  static double franjaPara(double? relacion) {
+    if (relacion == null) return franjaApaisada;
+    if (relacion >= 1.6) return franjaMuyVertical;
+    if (relacion >= 1.15) return franjaVertical;
+    return franjaApaisada;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final plates = MateriaPlates.instance;
+    return FutureBuilder<void>(
+      // El manifest se carga una vez y queda cacheado: a partir de la primera
+      // tarjeta esto resuelve en el mismo frame.
+      future: plates.isLoaded ? null : plates.ensureLoaded(),
+      builder: (context, _) {
+        final plate = plates.isLoaded ? plates.resolve(slug) : null;
+        final alto = altoCelda * franjaPara(plate?.relacion);
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          child: SizedBox(
+            height: alto,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (plate == null)
+                  Center(child: respaldo)
+                else
+                  MateriaPlateReveal(
+                    plate: plate,
+                    mood: mood,
+                    size: ancho,
+                    alto: alto,
+                    fit: BoxFit.cover,
+                    // La figura de una plancha botanica vive en el tercio
+                    // alto; anclarla al centro le corta la flor.
+                    alignment: const Alignment(0, -0.34),
+                    revelar: false,
+                    semanticLabel: semanticLabel,
+                  ),
+                // El degradado que cose la lamina con la tarjeta. Sin el, el
+                // recorte acaba en un canto recto y parece una foto pegada.
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        mood.edge.withValues(alpha: 0.10),
+                        mood.edge,
+                      ],
+                      stops: const [0.44, 0.78, 1],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

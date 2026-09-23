@@ -24,6 +24,7 @@ class MateriaPlate {
     required this.obra,
     required this.source,
     required this.license,
+    required this.px,
     this.autor,
   });
 
@@ -40,7 +41,20 @@ class MateriaPlate {
   final String obra;
   final String source;
   final String license;
+
+  /// Ancho y alto de la lamina empaquetada. No es decoracion: la tarjeta
+  /// necesita saber si la plancha es vertical o apaisada ANTES de decidir
+  /// cuanto sitio darle, y el manifest es el unico que lo sabe sin abrir la
+  /// imagen.
+  final List<int> px;
+
   final String? autor;
+
+  /// Alto partido por ancho. Una botanica ronda 1,7; un mapa celeste de Bayer,
+  /// 0,77.
+  double get relacion => px.length == 2 && px.first > 0
+      ? px.last / px.first
+      : 1;
 
   String get entonadoPath => 'assets/$entonado';
   String get grabadoPath => 'assets/$grabado';
@@ -63,6 +77,7 @@ class MateriaPlate {
         obra: (j['obra'] ?? '') as String,
         source: (j['source'] ?? '') as String,
         license: (j['license'] ?? 'public-domain') as String,
+        px: ((j['px'] as List?) ?? const [1, 1]).cast<int>(),
         autor: j['autor'] as String?,
       );
 }
