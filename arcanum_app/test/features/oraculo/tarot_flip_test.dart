@@ -32,8 +32,11 @@ Widget _app(
   bool disableAnimations = false,
   bool pulseHint = false,
   bool active = false,
+  int focusEpoch = 0,
+  TarotCara initialCara = TarotCara.dorso,
   VoidCallback? onHintShown,
   VoidCallback? onToggle,
+  ValueChanged<TarotCara>? onCaraChanged,
 }) => MaterialApp(
   home: MediaQuery(
     data: MediaQueryData(disableAnimations: disableAnimations),
@@ -43,7 +46,10 @@ Widget _app(
           card: card,
           index: 0,
           active: active,
+          focusEpoch: focusEpoch,
+          initialCara: initialCara,
           onToggle: onToggle ?? () {},
+          onCaraChanged: onCaraChanged,
           pulseHint: pulseHint,
           onHintShown: onHintShown,
         ),
@@ -213,6 +219,129 @@ void main() {
 
     await _reposo(tester);
     expect(tester.binding.hasScheduledFrame, isFalse);
+  });
+
+  testWidgets('reenfocar la carta activa vuelve a disparar un acento visible', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(mayor, active: true, initialCara: TarotCara.vectorial),
+    );
+    await _reposo(tester);
+
+    await tester.pumpWidget(
+      _app(
+        mayor,
+        active: true,
+        initialCara: TarotCara.vectorial,
+        focusEpoch: 1,
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.byKey(const ValueKey('tarot-effect-flash')), findsOneWidget);
+    await _reposo(tester);
+  });
+
+  testWidgets('cada palo pinta su efecto durante el asentamiento', (
+    tester,
+  ) async {
+    final casos = <({Map<String, dynamic> carta, int flipMs, Key efecto})>[
+      (carta: mayor, flipMs: 700, efecto: const ValueKey('tarot-effect-flash')),
+      (
+        carta: _carta(
+          name: 'As de Bastos',
+          slug: 'as-de-bastos',
+          suit: 'bastos',
+          number: 1,
+        ),
+        flipMs: 250,
+        efecto: const ValueKey('tarot-effect-mote-0'),
+      ),
+      (
+        carta: _carta(
+          name: 'Tres de Copas',
+          slug: 'tres-de-copas',
+          suit: 'copas',
+          number: 3,
+        ),
+        flipMs: 430,
+        efecto: const ValueKey('tarot-effect-sweep'),
+      ),
+      (
+        carta: _carta(
+          name: 'Dos de Espadas',
+          slug: 'dos-de-espadas',
+          suit: 'espadas',
+          number: 2,
+        ),
+        flipMs: 200,
+        efecto: const ValueKey('tarot-effect-cut'),
+      ),
+    ];
+
+    for (final caso in casos) {
+      await tester.pumpWidget(_app(caso.carta));
+      await _reposo(tester);
+      await tester.tap(_naipe);
+      await tester.pump();
+      await tester.pump(Duration(milliseconds: caso.flipMs));
+      await tester.pump(const Duration(milliseconds: 1));
+      await tester.pump(const Duration(milliseconds: 120));
+      expect(
+        find.byKey(caso.efecto),
+        findsOneWidget,
+        reason: '${caso.carta['name']} no pinta su efecto al asentarse',
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+    }
+  });
+
+  testWidgets('Oros se aplasta con una amplitud materialmente visible', (
+    tester,
+  ) async {
+    final oros = _carta(name: 'Rey de Oros', slug: 'rey-de-oros', suit: 'oros');
+    await tester.pumpWidget(_app(oros));
+    await _reposo(tester);
+    await tester.tap(_naipe);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 1));
+
+    final finder = find.byKey(const ValueKey('tarot-motion-0'));
+    final landed = tester
+        .widget<Transform>(finder)
+        .transform
+        .getMaxScaleOnAxis();
+    await tester.pump(const Duration(milliseconds: 130));
+    final squashed = tester
+        .widget<Transform>(finder)
+        .transform
+        .getMaxScaleOnAxis();
+
+    expect(landed - squashed, greaterThan(0.025));
+    await _reposo(tester);
+  });
+
+  testWidgets('la miniatura de tirada refleja dorso, vectorial y RWS', (
+    tester,
+  ) async {
+    Future<void> pumpFace(TarotCara cara) => tester.pumpWidget(
+      MaterialApp(
+        home: Center(
+          child: TarotTiradaMiniatura(card: mayor, cara: cara, width: 58),
+        ),
+      ),
+    );
+
+    await pumpFace(TarotCara.dorso);
+    expect(find.byType(Image), findsNothing);
+
+    await pumpFace(TarotCara.vectorial);
+    expect(find.byType(Image), findsNothing);
+
+    await pumpFace(TarotCara.rws);
+    expect(find.byType(Image), findsOneWidget);
   });
 
   testWidgets('diez toques en cadena no dejan nada colgando', (tester) async {

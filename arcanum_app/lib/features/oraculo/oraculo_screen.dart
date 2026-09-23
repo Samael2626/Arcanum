@@ -183,6 +183,8 @@ class _OracleViewState extends ConsumerState<_OracleView> {
   // y guarda cuál carta corona el viewport (solo una activa a la vez).
   int _drawNonce = 0;
   int _activeCard = 0;
+  List<TarotCara> _cardFaces = const [];
+  List<int> _cardFocusEpochs = const [];
 
   // Scroll + anclas por carta para el mini-panel sticky y el jump-to.
   final _scroll = ScrollController();
@@ -243,7 +245,10 @@ class _OracleViewState extends ConsumerState<_OracleView> {
         alignment: 0.08,
       );
     }
-    setState(() => _activeCard = i);
+    setState(() {
+      _activeCard = i;
+      if (_cardFocusEpochs.length > i) _cardFocusEpochs[i]++;
+    });
   }
 
   /// Las tiradas que sirve la via elegida.
@@ -271,6 +276,8 @@ class _OracleViewState extends ConsumerState<_OracleView> {
       _iaReply = null;
       _iaContentRef = null;
       _cardKeys = const [];
+      _cardFaces = const [];
+      _cardFocusEpochs = const [];
       _showSticky = false;
     });
   }
@@ -321,6 +328,8 @@ class _OracleViewState extends ConsumerState<_OracleView> {
         _drawNonce++;
         _activeCard = 0;
         _cardKeys = List.generate(cards.length, (_) => GlobalKey());
+        _cardFaces = List.filled(cards.length, TarotCara.dorso);
+        _cardFocusEpochs = List.filled(cards.length, 0);
         _showSticky = false;
       });
     } catch (error) {
@@ -338,6 +347,8 @@ class _OracleViewState extends ConsumerState<_OracleView> {
           _cards = null;
           _sessionId = null;
           _readingId = null;
+          _cardFaces = const [];
+          _cardFocusEpochs = const [];
           _drawError = isCreditsRequired(error)
               ? 'Saldo insuficiente. Puedes comprar créditos.'
               : oracleErrorMessage(error);
@@ -555,11 +566,24 @@ class _OracleViewState extends ConsumerState<_OracleView> {
               child: Column(
                 children: [
                   TarotCardView(
-                    key: ValueKey('$_drawNonce-$i'),
+                    key: ValueKey(
+                      '$_drawNonce-${_cards![i]['slug'] ?? _cards![i]['name'] ?? i}',
+                    ),
                     card: _cards![i],
                     index: i,
                     active: _activeCard == i,
                     onToggle: () => _jumpTo(i),
+                    focusEpoch: _cardFocusEpochs.length > i
+                        ? _cardFocusEpochs[i]
+                        : 0,
+                    initialCara: _cardFaces.length > i
+                        ? _cardFaces[i]
+                        : TarotCara.dorso,
+                    onCaraChanged: (cara) {
+                      if (!mounted || _cardFaces.length <= i) return;
+                      if (_cardFaces[i] == cara) return;
+                      setState(() => _cardFaces[i] = cara);
+                    },
                     // La pista del gesto la decide la PANTALLA, que si conoce
                     // Riverpod: el naipe solo la obedece. Y solo la primera
                     // carta de la tirada la ensena -- tres ojos latiendo a la
@@ -666,8 +690,9 @@ class _OracleViewState extends ConsumerState<_OracleView> {
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: GestureDetector(
             onTap: () => _jumpTo(i),
-            child: TarotNaipe(
+            child: TarotTiradaMiniatura(
               card: cards[i],
+              cara: _cardFaces.length > i ? _cardFaces[i] : TarotCara.dorso,
               width: miniW,
               reversed: cards[i]['drawn_upright'] == false,
               active: _activeCard == i,

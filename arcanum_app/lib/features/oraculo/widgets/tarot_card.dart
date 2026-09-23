@@ -1401,6 +1401,84 @@ class TarotNaipe extends StatelessWidget {
 
 // ── Bloque de lectura: naipe animado (deal + volteo por palo + tilt) ───────
 
+/// Miniatura estatica exclusiva de una tirada. Refleja la cara persistida de
+/// la carta grande sin dar comportamiento de volteo a [TarotNaipe].
+class TarotTiradaMiniatura extends StatelessWidget {
+  const TarotTiradaMiniatura({
+    super.key,
+    required this.card,
+    required this.cara,
+    required this.width,
+    this.reversed = false,
+    this.active = false,
+  });
+
+  final Map<String, dynamic> card;
+  final TarotCara cara;
+  final double width;
+  final bool reversed;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    if (cara == TarotCara.vectorial) {
+      return TarotNaipe(
+        card: card,
+        width: width,
+        reversed: reversed,
+        active: active,
+      );
+    }
+
+    final height = width * 1.6;
+    final radius = width * 0.10;
+    final face = TarotFace.resolve(card);
+    Widget content;
+    if (cara == TarotCara.rws && face.rwsAsset != null) {
+      content = Image.asset(
+        face.rwsAsset!,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        cacheWidth: (width * MediaQuery.devicePixelRatioOf(context)).round(),
+        filterQuality: FilterQuality.medium,
+      );
+      if (reversed) {
+        content = Transform.rotate(angle: math.pi, child: content);
+      }
+    } else {
+      content = const CustomPaint(painter: _TarotBackPainter());
+    }
+
+    return RepaintBoundary(
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(radius),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.45),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+            if (active)
+              BoxShadow(
+                color: ArcanumColors.gold.withValues(alpha: 0.35),
+                blurRadius: 16,
+                spreadRadius: 1,
+              ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(radius),
+          child: content,
+        ),
+      ),
+    );
+  }
+}
+
 /// Como se voltea cada familia de cartas.
 ///
 /// El palo no es decoracion: cada elemento se mueve como se mueve su materia,
@@ -1426,10 +1504,10 @@ class _FlipSpec {
   /// cero frames programados, que es lo que exige el test de rendimiento.
   final int settleMs;
 
-  /// Escala de mas al asentarse (Mayores: 1.0 -> 1.03 -> 1.0).
+  /// Escala de mas al asentarse (Mayores: 1.0 -> 1.055 -> 1.0).
   final double overshoot;
 
-  /// Escala de menos al asentarse (Oros: 1.0 -> 0.98 -> 1.0).
+  /// Escala de menos al asentarse (Oros: 1.0 -> 0.955 -> 1.0).
   final double squash;
 
   /// Franja de luz dorada al pasar por el canto.
@@ -1476,7 +1554,7 @@ class _FlipSpec {
     flipMs: 700,
     curve: Curves.easeInOutCubic,
     settleMs: 1500, // lo marca el halo, que es lo ultimo en apagarse
-    overshoot: 0.03,
+    overshoot: 0.055,
     flash: true,
     halo: true,
   );
@@ -1508,8 +1586,8 @@ class _FlipSpec {
     flipMs: 500, // la mas lenta despues de los Mayores
     curve: Curves.easeInOut,
     settleMs: 460,
-    squash: 0.02,
-    shadowSpread: 14,
+    squash: 0.045,
+    shadowSpread: 22,
   );
 
   static const _llano = _FlipSpec(
@@ -1583,6 +1661,9 @@ class TarotCardView extends StatefulWidget {
   final int index;
   final bool active;
   final VoidCallback onToggle;
+  final TarotCara initialCara;
+  final ValueChanged<TarotCara>? onCaraChanged;
+  final int focusEpoch;
 
   /// Cuando es `true`, el ojo pulsa un par de veces tras abrirse para ensenar
   /// que la carta se toca. Lo decide la pantalla leyendo la preferencia.
@@ -1597,6 +1678,9 @@ class TarotCardView extends StatefulWidget {
     required this.index,
     required this.active,
     required this.onToggle,
+    this.initialCara = TarotCara.dorso,
+    this.onCaraChanged,
+    this.focusEpoch = 0,
     this.pulseHint = false,
     this.onHintShown,
   });
@@ -1622,8 +1706,8 @@ class _TarotCardViewState extends State<TarotCardView>
   /// dos sitios donde afinar lo mismo. La duracion se encoge y las ventanas de
   /// cada efecto se encogen CON ella, asi que ninguna constante cambia de
   /// sitio.
-  static const double _acentoTiempo = 0.45;
-  static const double _acentoFuerza = 0.5;
+  static const double _acentoTiempo = 0.60;
+  static const double _acentoFuerza = 0.72;
 
   late final AnimationController _deal;
   late final AnimationController _flip;
@@ -1648,8 +1732,8 @@ class _TarotCardViewState extends State<TarotCardView>
 
   /// La cara a la que se va, y la que se deja atras. El giro siempre lleva de
   /// una a otra: `_flip` va de 0 a 1 UNA VEZ POR TOQUE y se reinicia.
-  TarotCara _cara = TarotCara.dorso;
-  TarotCara _previa = TarotCara.dorso;
+  late TarotCara _cara;
+  late TarotCara _previa;
 
   late final TarotFace _face = TarotFace.resolve(widget.card);
   late final TarotFlipStyle _style = _FlipSpec.styleOf(_face);
@@ -1681,6 +1765,8 @@ class _TarotCardViewState extends State<TarotCardView>
   @override
   void initState() {
     super.initState();
+    _cara = widget.initialCara;
+    _previa = widget.initialCara;
     _deal = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 460),
@@ -1702,6 +1788,8 @@ class _TarotCardViewState extends State<TarotCardView>
       duration: const Duration(milliseconds: _pulseMs),
     );
 
+    if (_cara != TarotCara.dorso) _flip.value = 1;
+
     _flip.addStatusListener(_onFlipStatus);
     _pulse.addStatusListener(_onPulseStatus);
 
@@ -1717,12 +1805,20 @@ class _TarotCardViewState extends State<TarotCardView>
   @override
   void didUpdateWidget(covariant TarotCardView old) {
     super.didUpdateWidget(old);
-    if (widget.active && !old.active) {
+    if (!_flip.isAnimating &&
+        old.initialCara != widget.initialCara &&
+        _cara != widget.initialCara) {
+      _cara = widget.initialCara;
+      _previa = widget.initialCara;
+      _flip.value = _cara == TarotCara.dorso ? 0 : 1;
+    }
+    final becameActive = widget.active && !old.active;
+    if (becameActive) {
       _engage.forward();
-      _acentuar();
     } else if (!widget.active && old.active) {
       if (!_hovering && !_pressing) _engage.reverse();
     }
+    if (widget.focusEpoch != old.focusEpoch || becameActive) _acentuar();
   }
 
   /// Un acento: "esta es la carta activa ahora".
@@ -1812,6 +1908,7 @@ class _TarotCardViewState extends State<TarotCardView>
       _previa = _cara;
       _cara = siguiente;
     });
+    widget.onCaraChanged?.call(siguiente);
 
     if (_reducedMotion) {
       // Preferencia de movimiento reducido: la carta CAMBIA de cara, no se
@@ -1980,7 +2077,9 @@ class _TarotCardViewState extends State<TarotCardView>
     //
     // Con volteo mandan el canto y el filo del giro; sin el, la misma subida y
     // bajada de la tanda corta. Una expresion, los dos gestos.
-    final pulso = acento ? _bump(_settle.value) : 0.0;
+    // El remate vive tambien DESPUES del giro. Antes el corte de Espadas y
+    // el flash se agotaban dentro del flip, donde el ojo no los separa.
+    final pulso = _bump(_settle.value);
     final motorFlash = math.max(crossing, pulso);
     final motorCorte = math.max(
       fe > 0.5 && !acento ? 1 - (fe - 0.5) / 0.5 : 0.0,
@@ -2013,7 +2112,7 @@ class _TarotCardViewState extends State<TarotCardView>
     // deja de ser un temblor.
     final tremorMs = settleMs / _escala;
     final tremor = _spec.tremor
-        ? 0.035 *
+        ? 0.060 *
               _magnitud *
               math.sin(tremorMs / 28) *
               math.exp(-tremorMs / 140)
@@ -2049,12 +2148,13 @@ class _TarotCardViewState extends State<TarotCardView>
     // desenfoque sobre el contenido: la sombra de una caja no lee lo que hay
     // detras y no fuerza `saveLayer`. Esa es la unica forma barata de hacerlo.
     final halo = _spec.halo
-        ? 0.30 * _magnitud * (1 - _settle.value) * landed
+        ? 0.52 * _magnitud * (1 - _settle.value) * landed
         : 0.0;
 
     return Opacity(
       opacity: opacity,
       child: Transform(
+        key: ValueKey('tarot-motion-${widget.index}'),
         alignment: Alignment.center,
         transform: matrix,
         child: Container(
@@ -2105,6 +2205,7 @@ class _TarotCardViewState extends State<TarotCardView>
                 // shader: `arcanum_resin.dart` tampoco lo es.
                 if (_spec.sweep && landed > 0)
                   CustomPaint(
+                    key: const ValueKey('tarot-effect-sweep'),
                     size: const Size(_w, _h),
                     painter: _SweepPainter(
                       progress: _window(settleMs, 300),
@@ -2118,6 +2219,7 @@ class _TarotCardViewState extends State<TarotCardView>
                 // (100 ms de los 200 del volteo).
                 if (_spec.cut && motorCorte > 0.01)
                   CustomPaint(
+                    key: const ValueKey('tarot-effect-cut'),
                     size: const Size(_w, _h),
                     painter: _CutPainter(motorCorte * _magnitud),
                   ),
@@ -2127,6 +2229,7 @@ class _TarotCardViewState extends State<TarotCardView>
                 // instante en vez de repartirla por todo el giro.
                 if (_spec.flash && motorFlash > 0.05)
                   Positioned.fill(
+                    key: const ValueKey('tarot-effect-flash'),
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -2269,10 +2372,11 @@ class _TarotCardViewState extends State<TarotCardView>
       motes.add(
         Positioned(
           left: _w * seeds[i],
-          bottom: 6 + 28 * u * _magnitud,
+          bottom: 6 + 40 * u * _magnitud,
           child: Container(
-            width: 3,
-            height: 3,
+            key: ValueKey('tarot-effect-mote-$i'),
+            width: 4,
+            height: 4,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: ArcanumColors.gold.withValues(
@@ -2400,7 +2504,7 @@ class _SweepPainter extends CustomPainter {
         colors: [
           const Color(0x00000000),
           ArcanumColors.ivory.withValues(
-            alpha: 0.28 * fuerza * _bump(progress),
+            alpha: 0.50 * fuerza * _bump(progress),
           ),
           const Color(0x00000000),
         ],
@@ -2426,7 +2530,7 @@ class _CutPainter extends CustomPainter {
     if (alpha <= 0.01) return;
     final paint = Paint()
       ..color = ArcanumColors.ivory.withValues(alpha: alpha.clamp(0.0, 1.0))
-      ..strokeWidth = 1
+      ..strokeWidth = 2
       ..isAntiAlias = true;
     canvas.drawLine(Offset.zero, Offset(size.width, size.height), paint);
   }
