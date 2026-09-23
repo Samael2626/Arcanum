@@ -190,11 +190,43 @@ class _MateriaPlateRevealState extends State<MateriaPlateReveal>
       _RevealSpec.todas[RevealElement.from(element)]!;
 
   bool _listas = false;
+  bool _cargando = false;
+  bool _carasListas = false;
+  bool _reveladoIniciado = false;
+  Animation<double>? _routeAnimation;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_listas) _precargar();
+    final routeAnimation = ModalRoute.of(context)?.animation;
+    if (!identical(routeAnimation, _routeAnimation)) {
+      _routeAnimation?.removeStatusListener(_onRouteStatus);
+      _routeAnimation = routeAnimation;
+      _routeAnimation?.addStatusListener(_onRouteStatus);
+    }
+    if (!_listas && !_cargando) _precargar();
+    _intentarRevelado();
+  }
+
+  void _onRouteStatus(AnimationStatus status) {
+    if (status == AnimationStatus.completed) _intentarRevelado();
+  }
+
+  void _intentarRevelado() {
+    if (!mounted || !widget.revelar || !_carasListas || _reveladoIniciado) {
+      return;
+    }
+    final routeAnimation = _routeAnimation;
+    if (routeAnimation != null &&
+        routeAnimation.status != AnimationStatus.completed) {
+      return;
+    }
+    _reveladoIniciado = true;
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+      _c.value = 1;
+      return;
+    }
+    _c.forward(from: 0);
   }
 
   /// Las dos caras en memoria ANTES de empezar.
@@ -204,14 +236,21 @@ class _MateriaPlateRevealState extends State<MateriaPlateReveal>
   /// grabado ni cara entonada, solo el hueco. Un WebP de 440 px tarda poco,
   /// pero poco no es nada, y justo cae donde mas se nota -- al abrir la hoja.
   Future<void> _precargar() async {
+    _cargando = true;
     final entonada = AssetImage(widget.plate.entonadoPath);
     final grabado = AssetImage(widget.plate.grabadoPath);
     await precacheImage(entonada, context);
     if (!mounted) return;
     setState(() => _listas = true);
-    if (!widget.revelar) return;
+    if (!widget.revelar) {
+      _cargando = false;
+      return;
+    }
     await precacheImage(grabado, context);
-    if (mounted) _c.forward();
+    if (!mounted) return;
+    _cargando = false;
+    _carasListas = true;
+    _intentarRevelado();
   }
 
   @override
@@ -228,17 +267,27 @@ class _MateriaPlateRevealState extends State<MateriaPlateReveal>
     }
     if (widget.plate.slug != old.plate.slug) {
       _listas = false;
+      _cargando = false;
+      _carasListas = false;
+      _reveladoIniciado = false;
       _c.value = 0;
       _precargar();
       return;
     }
     if (widget.revelar != old.revelar) {
-      widget.revelar ? _c.forward() : _c.reverse();
+      if (widget.revelar) {
+        _reveladoIniciado = false;
+        _carasListas ? _intentarRevelado() : _precargar();
+      } else {
+        _reveladoIniciado = false;
+        _c.reverse();
+      }
     }
   }
 
   @override
   void dispose() {
+    _routeAnimation?.removeStatusListener(_onRouteStatus);
     _c.dispose();
     super.dispose();
   }
