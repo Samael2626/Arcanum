@@ -1,0 +1,19 @@
+;Name:Agrimonia eupatoria
+
+;Family:Rosaceae
+
+Original book source:
+Prof. Dr. Otto Wilhelm Thomé ''Flora von Deutschland, &Ouml;sterreich und der Schweiz''
+1885, Gera, Germany
+
+Permission granted to use under GFDL by Kurt Stueber
+
+Source: [http://www.biolib.de www.biolib.de]
+
+{{Creator:Walther Otto Müller}}
+
+{{PD-scan|PD-old-auto-1923|deathyear=1887}}
+
+[[Category:Thomé, Flora von Deutschland (original)|{{Str right|{{PAGENAME}}|13}}]]
+[[Category:Agrimonia eupatoria - botanical illustrations]]
+[[Category:Media missing infobox template]]

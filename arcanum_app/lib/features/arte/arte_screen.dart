@@ -14,6 +14,7 @@ import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/gold_button.dart';
 import 'materia_lore.dart';
+import 'materia_plate_reveal.dart';
 import 'materia_specimen.dart';
 
 const _filters = <(String?, String)>[
@@ -462,6 +463,10 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
 }
 
 // ── Placa de correspondencia ───────────────────────────────────────────────
+/// La relacion de la celda en la rejilla. Vive aqui porque la tarjeta necesita
+/// saber su propio alto para repartirlo: el `LayoutBuilder` solo le da el ancho.
+const double _relacionTarjeta = 0.80;
+
 class _MateriaCard extends StatelessWidget {
   final Map<String, dynamic> item;
   final VoidCallback onTap;
@@ -525,29 +530,69 @@ class _MateriaCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 26),
-                      child: Text(
-                        (materiaTypeEs[type] ?? type).toUpperCase(),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: ArcanumText.label(),
+              // LA LAMINA MANDA, Y SE LLEVA LA FRANJA DE ARRIBA A SANGRE.
+              //
+              // Antes iba a 102 px centrada, con el mismo sitio que el icono
+              // de una botella: un grabado de 1887 y un trazo generico pesaban
+              // igual en la rejilla. Ahora ocupa la franja alta entera y se
+              // funde con el fondo por un degradado, de modo que la pieza se
+              // reconoce ANTES de leer su nombre.
+              //
+              // Las piezas sin lamina no pueden ir a sangre -- su silueta es
+              // un trazo, no una plancha -- y se quedan centradas en la misma
+              // franja. Que se note el hueco es correcto: dice la verdad sobre
+              // que repertorio esta terminado y cual no.
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: IgnorePointer(
+                  child: LayoutBuilder(
+                    builder: (context, caja) => MateriaPlateBanda(
+                      slug: slug,
+                      mood: mood,
+                      ancho: caja.maxWidth,
+                      altoCelda: caja.maxWidth / _relacionTarjeta,
+                      semanticLabel: item['name'] as String,
+                      respaldo: MateriaSpecimen(
+                        slug: slug,
+                        type: type,
+                        mood: mood,
+                        size: 96,
+                        strokeWidth: 1.55,
+                        compact: true,
+                        semanticLabel: item['name'] as String,
                       ),
                     ),
-                    const Spacer(),
-                    MateriaSpecimen(
-                      slug: slug,
-                      type: type,
-                      mood: mood,
-                      size: 102,
-                      strokeWidth: 1.55,
-                      compact: true,
-                      semanticLabel: item['name'] as String,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
+                child: Column(
+                  children: [
+                    // El rotulo cae SOBRE la lamina, asi que se lee con una
+                    // banda detras. En Aries el cielo de Bayer es casi blanco
+                    // y sin ella el texto desaparecia -- visto en el mockup
+                    // antes de escribir esto.
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: mood.edge.withValues(alpha: 0.62),
+                        borderRadius: BorderRadius.circular(9),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 3,
+                        ),
+                        child: Text(
+                          (materiaTypeEs[type] ?? type).toUpperCase(),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: ArcanumText.label(),
+                        ),
+                      ),
                     ),
                     const Spacer(),
                     Text(

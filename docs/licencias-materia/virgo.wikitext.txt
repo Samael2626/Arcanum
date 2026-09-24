@@ -1,0 +1,18 @@
+=={{int:filedesc}}==
+{{Information
+|description={{en|1=Johann Bayer - Virgo
+https://www.raremaps.com/gallery/detail/30844op/virgo-stars-heightened-in-gold-bayer}}
+|date=1603
+|source=Raremaps.com
+|author={{Creator:Johann Bayer}}
+
+|permission=
+|other versions=
+}}
+
+=={{int:license-header}}==
+{{PD-old-70-1923}}
+
+[[Category:1603 celestial charts by Johann Bayer]]
+[[Category:Maps from Barry Lawrence Ruderman Antique Maps Inc. (Raremaps.com)]]
+[[Category:Virgo (constellation) in art]]

@@ -1,0 +1,15 @@
+{{Information
+|Description=
+{{de|Arabischer Gummibaum. A blühender Zweig, nat. Grösse; 1 Blüthe, vergrössert; 2 dieselbe im Längsschnitt, desgl.; 3 geöffnete
+Hülse, nat. Grösse; 4 u. 5 Samen von verschiedenen Seiten, desgl.}}
+{{la|Acacia senegal.}}
+{{ru|Акация сенегальская. A — цветущая ветвь; 1 — цветок; 2 — то же в продольном разрезе; 3 — вскрытая оболочка плода; 4 и 5 — семя с разных сторон.}}
+|Date=1897
+|Source=[http://pharm1.pharmazie.uni-greifswald.de/allgemei/koehler/koeh-eng.htm List of Koehler Images]
+|Author=Franz Eugen Köhler, ''Köhler's Medizinal-Pflanzen''
+|Permission={{PD-old}}
+}}
+
+[[Category:Köhlers Medizinal-Pflanzen/Thumbsize]]
+[[Category:Trees in Senegal]]
+[[Category:Senegalia senegal - botanical illustrations]]

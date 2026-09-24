@@ -1,0 +1,14 @@
+== {{int:filedesc}} ==
+{{Information
+|Description=schéma de l''''Ocimum basilicum'''
+|Source=Extrait du livre ''Fleurs plantes et fruits'', 1903
+|Date=2007-03-16
+|Author=remi.mahel
+|Permission={{PD-old}}
+|other_versions={{SVG|biology}}
+}}
+
+== {{int:license-header}} ==
+{{PD-old}}
+
+[[Category:Ocimum basilicum - botanical illustrations]]

@@ -1,0 +1,47 @@
+== {{int:filedesc}} ==
+{{BHL
+| title = De historia stirpium commentarii insignes : maximis impensis et uigiliis elaborati, adiectis earundem uiuis plusquam quingentis imaginibus, nunquam antea ad naturae imitationem artificiosius effictis & expressis / <U+01C2>c Leonharto Fuchsio medico hac nostra aetate longè clarissimo, autore. Regiones peregrinas pleriq[ue], alij alias, sumptu ingenti, studio indefesso, nec sine discrimine uirae nonnunquam, adierunt, ut simplicium materiae cognoscendae facultatem compararent sibi: eam tibi materiam uniuersam summo & impensarum & temporis compendio, procul discrimine omni, tanquam in uiuo iucundissimoq́[ue] uiridario, magna cum uoluptate, hinc cognoscere licebit. Accessit ijs succincta admodum uocum difficilium & obscurarum passim in hoc opere occurrentium explicatio. Vnà cum quadruplici indice, quorum primus quidem stirpium nomenclaturas Graecas, alter Latinas, tertius officinis seplasiariorum & herbarijs usitatas, quartus Germanicas continebit.
+| source = https://www.flickr.com/photos/biodivlibrary/9367776086
+| description = <br>
+MANDRAGORA <br>
+MAS, <br>
+$Ktatttnmmnfe,
+| pageid = 41534503
+| itemid = 129744
+| titleid = 63882
+| pagenumbers = Page 530
+| pagetypes = Illustration
+| volume = 
+| pageurl = https://www.biodiversitylibrary.org/page/41534503
+| date = 1542
+| DOI = 10.5962/bhl.title.63882
+| author = Fuchs, Leonhart; Füllmaurer, Heinrich; Meyer, Albrecht; Specklin, Veit Rudolph
+| names = NameFound:Mandragora mas NameConfirmed:Mandragora mas NameBankID:10803553
+| permissions = {{Biodiversity Heritage Library}}
+| other_versions =
+| other_fields ={{Information field|name=Flickr sets|value={{flatlist|
+*De historia stirpium commentarii insignes : maximis impensis et uigiliis elaborati, adiectis earundem uiuis plusquam quingentis imaginibus, nunquam antea ad naturae imitationem artificiosius effictis & expressis
+}}}}{{Information field|name=Flickr tags|value={{flatlist|
+*Botany
+*Botany, Medical
+*Early works to 1800
+*Herbals
+*Pictorial works
+*Plants
+*Pre-Linnean works
+*Smithsonian Libraries
+*bhl:page 41534503
+*dc:identifier https://www.biodiversitylibrary.org/page/41534503
+*botany, medical
+*pre-linnean works
+*smithsonian libraries
+}}}}{{Information field|name=Flickr posted date|value={{ISOdate|1=2013-07-25}}}}
+}}
+
+== {{int:license-header}} ==
+
+{{PD-scan|PD-old-70-1923}}
+
+[[Category:De historia stirpium commentarii insignes]]
+[[Category:Photos uploaded from Flickr by Fæ using a script]]
+[[Category:Files from the Biodiversity Heritage Library (released as Attribution-NonCommercial-ShareAlike)]]

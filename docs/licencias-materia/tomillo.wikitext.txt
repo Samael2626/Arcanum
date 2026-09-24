@@ -1,0 +1,15 @@
+;Name:Thymus serpyllum
+
+;Family:Lamiaceae
+
+Original book source:
+Prof. Dr. Otto Wilhelm Thomé ''Flora von Deutschland, &Ouml;sterreich und der Schweiz''
+1885, Gera, Germany
+
+Source: [http://www.biolib.de www.biolib.de]
+
+{{PD-scan|PD-old-auto-1923|deathyear=1925}}
+
+[[Category:Thomé, Flora von Deutschland]]
+[[Category:Thymus serpyllum - botanical illustrations]]
+[[Category:Media missing infobox template]]

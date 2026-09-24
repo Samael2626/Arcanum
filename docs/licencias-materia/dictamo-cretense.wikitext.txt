@@ -1,0 +1,14 @@
+== {{int:filedesc}} ==
+{{Information
+|Description={{de|1=Diptam-Dost (Origanum dictamnus), auch Kretischer Diptam, Kretischer Bergtee, Dittam, Diktam oder Diktamnos genannt.}}{{en|1=Illustration of ''Origanum dictamnus''}}
+|Source= The botanical magazine vol. 9-10 tab. 298 (http://www.botanicus.org/page/471231)
+{{fr|1=Illustration de dictame de Crète par William Curtis}}
+|Date= 1795
+|Author= {{Creator:William Curtis}}
+|Permission=
+}}
+
+== {{int:license-header}} ==
+{{PD-Art|PD-old-auto-expired|deathyear=1799}}
+
+[[Category:Origanum dictamnus - botanical illustrations]]

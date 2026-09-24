@@ -1,0 +1,22 @@
+<!-- Please, don't replace this image with "cleaned" or lower resolution versions. -->
+== {{int:filedesc}} ==
+{{Information
+|Description= 
+{{fr|1=Planche botanique n° I-72 de l'"Atlas des Plantes médicinales de Köhler en images réalistes avec brèves notes explicatives" consacrée à l'[http://www.ubio.org/browser/details.php?namebankID=2645295 aconit].}}
+
+{{de|'''Eisenhut''' (Aconitum napellus)<br/>
+Abbildung aus Hermann Adolf Köhler: "Köhlers Medizinal-Pflanzen in naturgetreuen Abbildungen und kurz erläuterndem Texte"}}
+|Source=
+http://caliban.mpiz-koeln.mpg.de/koehler (index)<br/>
+http://caliban.mpipz.mpg.de/koehler/ACONITUM.jpg (image)
+|Date= 1887
+|Author=  [[:de:Hermann Köhler (Mediziner)|Hermann Adolf Köhler]] (1834 - 1879)
+|Permission=
+|other_versions=
+}}
+
+== {{int:license-header}} ==
+{{PD-old-70}}
+
+[[Category:Köhlers Medizinal-Pflanzen/Set 2]]
+[[Category:Aconitum napellus - botanical illustrations]]

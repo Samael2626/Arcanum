@@ -1,0 +1,18 @@
+=={{int:filedesc}}==
+{{LargeImage}}
+{{Information
+|description={{en|1=Taurus - Johann Bayer}}
+|date=1603
+|source=https://www.raremaps.com/gallery/detail/68476/taurus-stars-heightened-in-gold-bayer
+|author=Johann Bayer
+|permission=
+|other versions=
+}}
+
+=={{int:license-header}}==
+{{PD-Art|PD-old-100-expired}}
+
+[[Category:1603 celestial charts by Johann Bayer]]
+[[Category:Taurus (constellation) in art]]
+[[Category:Maps from Barry Lawrence Ruderman Antique Maps Inc. (Raremaps.com)]]
+[[Category:Images from Barry Lawrence Ruderman Antique Maps Inc.]]

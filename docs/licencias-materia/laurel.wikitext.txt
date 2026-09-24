@@ -1,0 +1,20 @@
+== {{int:filedesc}} ==
+{{Information
+|Description=''Laurus nobilis''
+|Date=1885
+|Source=''Flora von Deutschland, &Ouml;sterreich und der Schweiz'' - [http://www.biolib.de www.biolib.de]
+|Author={{creator:Otto Wilhelm Thomé}}
+|Permission=
+|other versions=
+<gallery>
+Illustration Laurus nobilis1.jpg
+</gallery>
+}}
+
+
+
+== {{int:license-header}} ==
+{{PD-scan|PD-old-auto-1923|deathyear=1925}}
+
+[[Category:Thomé, Flora von Deutschland]]
+[[Category:Laurus nobilis - botanical illustrations]]

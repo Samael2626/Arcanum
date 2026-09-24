@@ -1,0 +1,1358 @@
+{
+ "ruda": {
+  "slug_catalogo": "ruda",
+  "nombre": "Ruda",
+  "tipo": "herb",
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Ruta_graveolens0.jpg",
+  "image_file": "File:Illustration Ruta graveolens0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/46/Illustration_Ruta_graveolens0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-scan|PD-old-auto-1923|deathyear=1925"
+  ],
+  "license_categories": [
+   "PD-old-100-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "",
+  "date_work": "",
+  "source_px": [
+   1399,
+   2283
+  ],
+  "source_bytes": 761148,
+  "sha1_source": "6cfb1639b3e50ff1db760dde0f99bee513b58dc7",
+  "evidencia": "docs/licencias-materia/ruda.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/ruda.webp",
+  "asset_entonado": "materia/entonado/ruda.webp",
+  "asset_px": [
+   440,
+   718
+  ],
+  "entonado_invertido": true
+ },
+ "verbena": {
+  "slug_catalogo": "verbena",
+  "nombre": "Verbena",
+  "tipo": "herb",
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Verbena_officinalis0.jpg",
+  "image_file": "File:Illustration Verbena officinalis0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/6/6d/Illustration_Verbena_officinalis0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-scan|PD-old-auto-1923|deathyear=1925"
+  ],
+  "license_categories": [
+   "PD-old-100-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "",
+  "date_work": "",
+  "source_px": [
+   1385,
+   2402
+  ],
+  "source_bytes": 1762515,
+  "sha1_source": "a31555c99741c3c3565a8183d2e4ff0831125d45",
+  "evidencia": "docs/licencias-materia/verbena.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/verbena.webp",
+  "asset_entonado": "materia/entonado/verbena.webp",
+  "asset_px": [
+   440,
+   763
+  ],
+  "entonado_invertido": true
+ },
+ "belladona": {
+  "slug_catalogo": "belladona",
+  "nombre": "Belladona",
+  "tipo": "herb",
+  "obra": "Köhler's Medizinal-Pflanzen (1887)",
+  "source": "https://commons.wikimedia.org/wiki/File:Atropa_belladonna_(K%C3%B6hler).jpg",
+  "image_file": "File:Atropa belladonna (Köhler).jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/95/Atropa_belladonna_%28K%C3%B6hler%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-100"
+  ],
+  "license_categories": [
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Hermann Adolf Köhler (1834 - 1879)",
+  "date_work": "printed 1887",
+  "source_px": [
+   1901,
+   2207
+  ],
+  "source_bytes": 1067461,
+  "sha1_source": "b87f6bbef232cba918935d045941540574b598c1",
+  "evidencia": "docs/licencias-materia/belladona.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/belladona.webp",
+  "asset_entonado": "materia/entonado/belladona.webp",
+  "asset_px": [
+   440,
+   511
+  ],
+  "entonado_invertido": true
+ },
+ "mandragora": {
+  "slug_catalogo": "mandragora",
+  "nombre": "Mandrágora",
+  "tipo": "herb",
+  "obra": "Fuchs, De Historia Stirpium (1543) — woodcut",
+  "source": "https://commons.wikimedia.org/wiki/File:De_historia_stirpium_commentarii_insignes_(Page_530)_(9367776086).jpg",
+  "image_file": "File:De historia stirpium commentarii insignes (Page 530) (9367776086).jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/eb/De_historia_stirpium_commentarii_insignes_%28Page_530%29_%289367776086%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-scan|PD-old-70-1923"
+  ],
+  "license_categories": [
+   "PD-old-70-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Fuchs, Leonhart; Füllmaurer, Heinrich; Meyer, Albrecht; Specklin, Veit Rudolph",
+  "date_work": "1542",
+  "source_px": [
+   1375,
+   2367
+  ],
+  "source_bytes": 597902,
+  "sha1_source": "ed2ea4fc344a6c82906c97fd8e2ce848be70c1d7",
+  "evidencia": "docs/licencias-materia/mandragora.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/mandragora.webp",
+  "asset_entonado": "materia/entonado/mandragora.webp",
+  "asset_px": [
+   440,
+   757
+  ],
+  "entonado_invertido": true
+ },
+ "ajenjo": {
+  "slug_catalogo": "ajenjo",
+  "nombre": "Ajenjo",
+  "tipo": "herb",
+  "obra": "Köhler's Medizinal-Pflanzen (1887)",
+  "source": "https://commons.wikimedia.org/wiki/File:Artemisia_absinthium_(K%C3%B6hler).jpg",
+  "image_file": "File:Artemisia absinthium (Köhler).jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Artemisia_absinthium_%28K%C3%B6hler%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-100"
+  ],
+  "license_categories": [
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Hermann Adolf Köhler (1834 - 1879)",
+  "date_work": "printed 1887",
+  "source_px": [
+   1803,
+   2243
+  ],
+  "source_bytes": 1254539,
+  "sha1_source": "9c26500b5f0034fc279a66e8b59e999d82cd2888",
+  "evidencia": "docs/licencias-materia/ajenjo.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/ajenjo.webp",
+  "asset_entonado": "materia/entonado/ajenjo.webp",
+  "asset_px": [
+   440,
+   547
+  ],
+  "entonado_invertido": true
+ },
+ "hiperico": {
+  "slug_catalogo": "hiperico",
+  "nombre": "Hipérico",
+  "tipo": "herb",
+  "obra": "Sturm, Deutschlands Flora (1796)",
+  "source": "https://commons.wikimedia.org/wiki/File:Hypericum_perforatum_(Sturm_06,_plate_060)_clean.jpg",
+  "image_file": "File:Hypericum perforatum (Sturm 06, plate 060) clean.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Hypericum_perforatum_%28Sturm_06%2C_plate_060%29_clean.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-100"
+  ],
+  "license_categories": [
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Johann Georg Sturm (Painter: Jacob Sturm )",
+  "date_work": "1796",
+  "source_px": [
+   2058,
+   3084
+  ],
+  "source_bytes": 3398231,
+  "sha1_source": "7bd5b0b22766ebc748eeef4ab73a1e0ebc05cccf",
+  "evidencia": "docs/licencias-materia/hiperico.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/hiperico.webp",
+  "asset_entonado": "materia/entonado/hiperico.webp",
+  "asset_px": [
+   440,
+   659
+  ],
+  "entonado_invertido": true
+ },
+ "laurel": {
+  "slug_catalogo": "laurel",
+  "nombre": "Laurel",
+  "tipo": "herb",
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Laurus_nobilis0.jpg",
+  "image_file": "File:Illustration Laurus nobilis0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Illustration_Laurus_nobilis0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-scan|PD-old-auto-1923|deathyear=1925"
+  ],
+  "license_categories": [
+   "PD-old-100-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Otto Wilhelm Thomé",
+  "date_work": "1885",
+  "source_px": [
+   1497,
+   2332
+  ],
+  "source_bytes": 822681,
+  "sha1_source": "4c9abe0d1d3578fc5153aaa7c319ca61521fc67c",
+  "evidencia": "docs/licencias-materia/laurel.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/laurel.webp",
+  "asset_entonado": "materia/entonado/laurel.webp",
+  "asset_px": [
+   440,
+   685
+  ],
+  "entonado_invertido": true
+ },
+ "hisopo": {
+  "slug_catalogo": "hisopo",
+  "nombre": "Hisopo",
+  "tipo": "herb",
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Hyssopus_officinalis0.jpg",
+  "image_file": "File:Illustration Hyssopus officinalis0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/c/c6/Illustration_Hyssopus_officinalis0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-scan|PD-old-auto-1923|deathyear=1925"
+  ],
+  "license_categories": [
+   "PD-old-100-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "User:Topjabot",
+  "date_work": "",
+  "source_px": [
+   1344,
+   2374
+  ],
+  "source_bytes": 618465,
+  "sha1_source": "31ee32751d1ef4a74269180616324194e7b71793",
+  "evidencia": "docs/licencias-materia/hisopo.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/hisopo.webp",
+  "asset_entonado": "materia/entonado/hisopo.webp",
+  "asset_px": [
+   440,
+   777
+  ],
+  "entonado_invertido": true
+ },
+ "milenrama": {
+  "slug_catalogo": "milenrama",
+  "nombre": "Milenrama",
+  "tipo": "herb",
+  "obra": "Köhler's Medizinal-Pflanzen (1887)",
+  "source": "https://commons.wikimedia.org/wiki/File:Achillea_millefolium_(K%C3%B6hler).jpg",
+  "image_file": "File:Achillea millefolium (Köhler).jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/a/a8/Achillea_millefolium_%28K%C3%B6hler%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70"
+  ],
+  "license_categories": [
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "de:Franz Eugen Köhler",
+  "date_work": "14 January 2011 (upload date)",
+  "source_px": [
+   1791,
+   2316
+  ],
+  "source_bytes": 1207854,
+  "sha1_source": "1cbefa8dc5cea79eed8cacd1dd7ddce94e35b992",
+  "evidencia": "docs/licencias-materia/milenrama.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/milenrama.webp",
+  "asset_entonado": "materia/entonado/milenrama.webp",
+  "asset_px": [
+   440,
+   569
+  ],
+  "entonado_invertido": true
+ },
+ "dictamo-cretense": {
+  "slug_catalogo": "dictamo-cretense",
+  "nombre": "Díctamo Cretense",
+  "tipo": "herb",
+  "obra": "Public-domain botanical illustration (pre-1900), Wikimedia Commons",
+  "source": "https://commons.wikimedia.org/wiki/File:Origanum_dictamnus.jpg",
+  "image_file": "File:Origanum dictamnus.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/9a/Origanum_dictamnus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-Art|PD-old-auto-expired|deathyear=1799"
+  ],
+  "license_categories": [
+   "PD-old-100-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "William Curtis",
+  "date_work": "1795",
+  "source_px": [
+   559,
+   1000
+  ],
+  "source_bytes": 69181,
+  "sha1_source": "fa553e2595f8540b78979fa4fc34fd15ba762a3f",
+  "evidencia": "docs/licencias-materia/dictamo-cretense.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/dictamo-cretense.webp",
+  "asset_entonado": "materia/entonado/dictamo-cretense.webp",
+  "asset_px": [
+   440,
+   787
+  ],
+  "entonado_invertido": true
+ },
+ "valeriana": {
+  "slug_catalogo": "valeriana",
+  "nombre": "Valeriana",
+  "tipo": "herb",
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Valeriana_officinalis0.jpg",
+  "image_file": "File:Illustration Valeriana officinalis0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f5/Illustration_Valeriana_officinalis0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-scan|PD-old-auto-1923|deathyear=1925"
+  ],
+  "license_categories": [
+   "PD-old-100-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "",
+  "date_work": "",
+  "source_px": [
+   1476,
+   2444
+  ],
+  "source_bytes": 840542,
+  "sha1_source": "d81d0a9ca22ccdef92d1513d34cd7b74f409de4b",
+  "evidencia": "docs/licencias-materia/valeriana.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/valeriana.webp",
+  "asset_entonado": "materia/entonado/valeriana.webp",
+  "asset_px": [
+   440,
+   729
+  ],
+  "entonado_invertido": true
+ },
+ "menta-piperita": {
+  "slug_catalogo": "menta-piperita",
+  "nombre": "Menta",
+  "tipo": "herb",
+  "obra": "Köhler's Medizinal-Pflanzen (1887)",
+  "source": "https://commons.wikimedia.org/wiki/File:K%C3%B6hler%27s_Medizinal-Pflanzen_in_naturgetreuen_Abbildungen_mit_kurz_erl%C3%A4uterndem_Texte_(Plate_67)_BHL303700.jpg",
+  "image_file": "File:Köhler's Medizinal-Pflanzen in naturgetreuen Abbildungen mit kurz erläuterndem Texte (Plate 67) BHL303700.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/c/cc/K%C3%B6hler%27s_Medizinal-Pflanzen_in_naturgetreuen_Abbildungen_mit_kurz_erl%C3%A4uterndem_Texte_%28Plate_67%29_BHL303700.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-scan|PD-old-70-1923"
+  ],
+  "license_categories": [
+   "PD-old-70-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Brandt, Wilhelm; Gürke, M.; Köhler, F. E.; Pabst, G.; Schellenberg, G.; Vogtherr, Max.",
+  "date_work": "1887",
+  "source_px": [
+   2797,
+   3967
+  ],
+  "source_bytes": 1217053,
+  "sha1_source": "9edbcf6706cd58338d39ed4645157ba13a7ac6a1",
+  "evidencia": "docs/licencias-materia/menta-piperita.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/menta-piperita.webp",
+  "asset_entonado": "materia/entonado/menta-piperita.webp",
+  "asset_px": [
+   440,
+   624
+  ],
+  "entonado_invertido": true
+ },
+ "tomillo": {
+  "slug_catalogo": "tomillo",
+  "nombre": "Tomillo",
+  "tipo": "herb",
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Thymus_serpyllum0.jpg",
+  "image_file": "File:Illustration Thymus serpyllum0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/39/Illustration_Thymus_serpyllum0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-scan|PD-old-auto-1923|deathyear=1925"
+  ],
+  "license_categories": [
+   "PD-old-100-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "",
+  "date_work": "",
+  "source_px": [
+   1511,
+   2437
+  ],
+  "source_bytes": 778976,
+  "sha1_source": "bd2af3d2e16031642bf4faeab324b56dbc8ca5e4",
+  "evidencia": "docs/licencias-materia/tomillo.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/tomillo.webp",
+  "asset_entonado": "materia/entonado/tomillo.webp",
+  "asset_px": [
+   440,
+   710
+  ],
+  "entonado_invertido": true
+ },
+ "mejorana": {
+  "slug_catalogo": "mejorana",
+  "nombre": "Mejorana",
+  "tipo": "herb",
+  "obra": "Vietz, Icones Plantarum Medico-Oeconomico-Technologicarum (1800), Tab. 122",
+  "source": "https://commons.wikimedia.org/wiki/File:Icones_plantarum_medico-oeconomico-technologicarum_cum_earum_fructus_ususque_descriptione_%3D_(Tab._122)_(8096970445).jpg",
+  "image_file": "File:Icones plantarum medico-oeconomico-technologicarum cum earum fructus ususque descriptione = (Tab. 122) (8096970445).jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/c/ce/Icones_plantarum_medico-oeconomico-technologicarum_cum_earum_fructus_ususque_descriptione_%3D_%28Tab._122%29_%288096970445%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-scan|PD-old-70-1923"
+  ],
+  "license_categories": [
+   "PD-old-70-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Albrecht, Ignatz.; Ederschen, Joseph.; Kendl, Joseph Lorenz.; Schalbaecher, Jos.; Vietz, Ferdinand Bernhard",
+  "date_work": "1804",
+  "source_px": [
+   1355,
+   1748
+  ],
+  "source_bytes": 457606,
+  "sha1_source": "20298df77a78b86ce199e65dad9e94d94d852b5c",
+  "evidencia": "docs/licencias-materia/mejorana.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/mejorana.webp",
+  "asset_entonado": "materia/entonado/mejorana.webp",
+  "asset_px": [
+   440,
+   568
+  ],
+  "entonado_invertido": true
+ },
+ "agrimonia": {
+  "slug_catalogo": "agrimonia",
+  "nombre": "Agrimonia",
+  "tipo": "herb",
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Agrimonia_eupatoria0.jpg",
+  "image_file": "File:Illustration Agrimonia eupatoria0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Illustration_Agrimonia_eupatoria0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-scan|PD-old-auto-1923|deathyear=1887"
+  ],
+  "license_categories": [
+   "PD-old-100-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "",
+  "date_work": "",
+  "source_px": [
+   1468,
+   2416
+  ],
+  "source_bytes": 777169,
+  "sha1_source": "5216bf41e226f253d09958e52c20884879dae95a",
+  "evidencia": "docs/licencias-materia/agrimonia.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/agrimonia.webp",
+  "asset_entonado": "materia/entonado/agrimonia.webp",
+  "asset_px": [
+   440,
+   724
+  ],
+  "entonado_invertido": true
+ },
+ "celidonia": {
+  "slug_catalogo": "celidonia",
+  "nombre": "Celidonia",
+  "tipo": "herb",
+  "obra": "Köhler's Medizinal-Pflanzen (1887)",
+  "source": "https://commons.wikimedia.org/wiki/File:Chelidonium_majus_(K%C3%B6hler).jpg",
+  "image_file": "File:Chelidonium majus (Köhler).jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/8/88/Chelidonium_majus_%28K%C3%B6hler%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-100"
+  ],
+  "license_categories": [
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Hermann Adolf Köhler (1834 - 1879)",
+  "date_work": "printed 1887",
+  "source_px": [
+   1500,
+   2004
+  ],
+  "source_bytes": 445980,
+  "sha1_source": "fd05ae3fb23439b4426fb0e76f02d79c282bf03f",
+  "evidencia": "docs/licencias-materia/celidonia.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/celidonia.webp",
+  "asset_entonado": "materia/entonado/celidonia.webp",
+  "asset_px": [
+   440,
+   588
+  ],
+  "entonado_invertido": true
+ },
+ "digital": {
+  "slug_catalogo": "digital",
+  "nombre": "Digital",
+  "tipo": "herb",
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Digitalis_purpurea0.jpg",
+  "image_file": "File:Illustration Digitalis purpurea0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/7/71/Illustration_Digitalis_purpurea0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-scan|PD-old-auto-1923|deathyear=1925"
+  ],
+  "license_categories": [
+   "PD-old-100-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Prof. Dr. Otto Wilhelm Thomé",
+  "date_work": "1885",
+  "source_px": [
+   1441,
+   2443
+  ],
+  "source_bytes": 892794,
+  "sha1_source": "68943fba650d78ad5d2d730c83825f92d25c45b4",
+  "evidencia": "docs/licencias-materia/digital.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/digital.webp",
+  "asset_entonado": "materia/entonado/digital.webp",
+  "asset_px": [
+   440,
+   746
+  ],
+  "entonado_invertido": true
+ },
+ "beleno": {
+  "slug_catalogo": "beleño",
+  "nombre": "Beleño Negro",
+  "tipo": "herb",
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Hyoscyamus_niger0.jpg",
+  "image_file": "File:Illustration Hyoscyamus niger0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Illustration_Hyoscyamus_niger0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-scan|PD-old-auto-1923|deathyear=1925"
+  ],
+  "license_categories": [
+   "PD-old-100-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "",
+  "date_work": "",
+  "source_px": [
+   1480,
+   2360
+  ],
+  "source_bytes": 3978796,
+  "sha1_source": "d5c5b6a16eef4da327fcd8bc5d7c09688c8feb20",
+  "evidencia": "docs/licencias-materia/beleno.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/beleno.webp",
+  "asset_entonado": "materia/entonado/beleno.webp",
+  "asset_px": [
+   440,
+   702
+  ],
+  "entonado_invertido": true
+ },
+ "acacia": {
+  "slug_catalogo": "acacia",
+  "nombre": "Acacia",
+  "tipo": "herb",
+  "obra": "Köhler's Medizinal-Pflanzen (1887)",
+  "source": "https://commons.wikimedia.org/wiki/File:Acacia_senegal_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-004.jpg",
+  "image_file": "File:Acacia senegal - Köhler–s Medizinal-Pflanzen-004.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/ed/Acacia_senegal_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-004.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old"
+  ],
+  "license_categories": [
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Franz Eugen Köhler, Köhler's Medizinal-Pflanzen",
+  "date_work": "1897",
+  "source_px": [
+   403,
+   593
+  ],
+  "source_bytes": 34658,
+  "sha1_source": "8f3e011d7deef8b87d4f54573d71ae5149b73181",
+  "evidencia": "docs/licencias-materia/acacia.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/acacia.webp",
+  "asset_entonado": "materia/entonado/acacia.webp",
+  "asset_px": [
+   440,
+   647
+  ],
+  "entonado_invertido": true
+ },
+ "enebro": {
+  "slug_catalogo": "enebro",
+  "nombre": "Enebro",
+  "tipo": "herb",
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Juniperus_communis0.jpg",
+  "image_file": "File:Illustration Juniperus communis0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/23/Illustration_Juniperus_communis0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-scan|PD-old-auto-1923|deathyear=1925"
+  ],
+  "license_categories": [
+   "PD-old-100-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "",
+  "date_work": "",
+  "source_px": [
+   1448,
+   2415
+  ],
+  "source_bytes": 1062192,
+  "sha1_source": "b922452a8e450efa3b1fc8cba8d0e953da32121c",
+  "evidencia": "docs/licencias-materia/enebro.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/enebro.webp",
+  "asset_entonado": "materia/entonado/enebro.webp",
+  "asset_px": [
+   440,
+   734
+  ],
+  "entonado_invertido": true
+ },
+ "angelica": {
+  "slug_catalogo": "angélica",
+  "nombre": "Angélica",
+  "tipo": "herb",
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Angelica_archangelica0.jpg",
+  "image_file": "File:Illustration Angelica archangelica0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/d6/Illustration_Angelica_archangelica0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-scan|PD-old-auto-1923|deathyear=1925"
+  ],
+  "license_categories": [
+   "PD-old-100-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "",
+  "date_work": "",
+  "source_px": [
+   1400,
+   2263
+  ],
+  "source_bytes": 1244046,
+  "sha1_source": "e61220a70650c1f3d2560fa598f391509c1cb377",
+  "evidencia": "docs/licencias-materia/angelica.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/angelica.webp",
+  "asset_entonado": "materia/entonado/angelica.webp",
+  "asset_px": [
+   440,
+   711
+  ],
+  "entonado_invertido": true
+ },
+ "calamo-aromatico": {
+  "slug_catalogo": "calamo-aromatico",
+  "nombre": "Cálamo Aromático",
+  "tipo": "herb",
+  "obra": "Köhler's Medizinal-Pflanzen (1887)",
+  "source": "https://commons.wikimedia.org/wiki/File:Acorus_calamus_(K%C3%B6hler).jpg",
+  "image_file": "File:Acorus calamus (Köhler).jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/b0/Acorus_calamus_%28K%C3%B6hler%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70",
+   "PD-old-80"
+  ],
+  "license_categories": [
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Hermann Adolf Köhler (1834 - 1879)",
+  "date_work": "printed 1887",
+  "source_px": [
+   1476,
+   2000
+  ],
+  "source_bytes": 456755,
+  "sha1_source": "e5becdf0d7d45dcf9410c4f39ac06b094a4dfc1b",
+  "evidencia": "docs/licencias-materia/calamo-aromatico.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/calamo-aromatico.webp",
+  "asset_entonado": "materia/entonado/calamo-aromatico.webp",
+  "asset_px": [
+   440,
+   596
+  ],
+  "entonado_invertido": true
+ },
+ "trebol-rojo": {
+  "slug_catalogo": "trébol-rojo",
+  "nombre": "Trébol Rojo",
+  "tipo": "herb",
+  "obra": "Flora Batava (1800–1934)",
+  "source": "https://commons.wikimedia.org/wiki/File:Trifolium_pratense_%E2%80%94_Flora_Batava_%E2%80%94_Volume_v5.jpg",
+  "image_file": "File:Trifolium pratense — Flora Batava — Volume v5.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/42/Trifolium_pratense_%E2%80%94_Flora_Batava_%E2%80%94_Volume_v5.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "(por expansion de la plantilla de obra: PD-old-100-expired; Public Domain Mark 1.0)"
+  ],
+  "license_categories": [
+   "PD-old-100-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Jan Kops",
+  "date_work": "",
+  "source_px": [
+   1660,
+   2468
+  ],
+  "source_bytes": 513417,
+  "sha1_source": "edc5930a26b6987dcfd2f110bda8cf79fc6ecf05",
+  "evidencia": "docs/licencias-materia/trebol-rojo.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/trebol-rojo.webp",
+  "asset_entonado": "materia/entonado/trebol-rojo.webp",
+  "asset_px": [
+   440,
+   654
+  ],
+  "entonado_invertido": true
+ },
+ "muerdago": {
+  "slug_catalogo": "muérdago",
+  "nombre": "Muérdago",
+  "tipo": "herb",
+  "obra": "Thomé, Flora von Deutschland, Österreich und der Schweiz (1885)",
+  "source": "https://commons.wikimedia.org/wiki/File:Illustration_Viscum_album0.jpg",
+  "image_file": "File:Illustration Viscum album0.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/b1/Illustration_Viscum_album0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-scan|PD-old-auto-1923|deathyear=1925"
+  ],
+  "license_categories": [
+   "PD-old-100-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "",
+  "date_work": "",
+  "source_px": [
+   1538,
+   2360
+  ],
+  "source_bytes": 731995,
+  "sha1_source": "89a0157342a485fbce83a902075f7221d0918314",
+  "evidencia": "docs/licencias-materia/muerdago.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/muerdago.webp",
+  "asset_entonado": "materia/entonado/muerdago.webp",
+  "asset_px": [
+   440,
+   675
+  ],
+  "entonado_invertido": true
+ },
+ "nuez-moscada": {
+  "slug_catalogo": "nuez-moscada",
+  "nombre": "Nuez Moscada",
+  "tipo": "herb",
+  "obra": "Köhler's Medizinal-Pflanzen (1887)",
+  "source": "https://commons.wikimedia.org/wiki/File:Myristica_fragrans_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-097.jpg",
+  "image_file": "File:Myristica fragrans - Köhler–s Medizinal-Pflanzen-097.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/24/Myristica_fragrans_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-097.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old"
+  ],
+  "license_categories": [
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Franz Eugen Köhler, Köhler's Medizinal-Pflanzen",
+  "date_work": "1897",
+  "source_px": [
+   445,
+   592
+  ],
+  "source_bytes": 162646,
+  "sha1_source": "de1136d2122e922c1e137ed046d5071b5b6723fd",
+  "evidencia": "docs/licencias-materia/nuez-moscada.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/nuez-moscada.webp",
+  "asset_entonado": "materia/entonado/nuez-moscada.webp",
+  "asset_px": [
+   440,
+   585
+  ],
+  "entonado_invertido": true
+ },
+ "albahaca": {
+  "slug_catalogo": "albahaca",
+  "nombre": "Albahaca",
+  "tipo": "herb",
+  "obra": "Public-domain botanical illustration (pre-1900), Wikimedia Commons",
+  "source": "https://commons.wikimedia.org/wiki/File:Ocimum_Basilicum.jpg",
+  "image_file": "File:Ocimum Basilicum.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/7/78/Ocimum_Basilicum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old"
+  ],
+  "license_categories": [
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "remi.mahel",
+  "date_work": "2007-03-16",
+  "source_px": [
+   1374,
+   1857
+  ],
+  "source_bytes": 358770,
+  "sha1_source": "de499f89f9f68d2a5bd8d427458e1fc5cf32a643",
+  "evidencia": "docs/licencias-materia/albahaca.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/albahaca.webp",
+  "asset_entonado": "materia/entonado/albahaca.webp",
+  "asset_px": [
+   440,
+   595
+  ],
+  "entonado_invertido": true
+ },
+ "aconito": {
+  "slug_catalogo": "acónito",
+  "nombre": "Acónito",
+  "tipo": "herb",
+  "obra": "Köhler's Medizinal-Pflanzen (1887)",
+  "source": "https://commons.wikimedia.org/wiki/File:Aconitum_napellus_(K%C3%B6hler).jpg",
+  "image_file": "File:Aconitum napellus (Köhler).jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/b6/Aconitum_napellus_%28K%C3%B6hler%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70"
+  ],
+  "license_categories": [
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Hermann Adolf Köhler (1834 - 1879)",
+  "date_work": "1887",
+  "source_px": [
+   1498,
+   2031
+  ],
+  "source_bytes": 681979,
+  "sha1_source": "fe89516d9c990f1b19c138816c153846bc3cfd46",
+  "evidencia": "docs/licencias-materia/aconito.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/aconito.webp",
+  "asset_entonado": "materia/entonado/aconito.webp",
+  "asset_px": [
+   440,
+   597
+  ],
+  "entonado_invertido": true
+ },
+ "aries": {
+  "slug_catalogo": "signo-aries",
+  "nombre": "Aries",
+  "tipo": "sign",
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Aries.jpg",
+  "image_file": "File:Johann Bayer - Aries.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Johann_Bayer_-_Aries.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-1923"
+  ],
+  "license_categories": [
+   "PD-old-70-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Johann Bayer",
+  "date_work": "1603",
+  "source_px": [
+   3204,
+   2434
+  ],
+  "source_bytes": 1220780,
+  "sha1_source": "adf14401f7da7f54ebd8994c568410b1112fd00d",
+  "evidencia": "docs/licencias-materia/aries.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/aries.webp",
+  "asset_entonado": "materia/entonado/aries.webp",
+  "asset_px": [
+   440,
+   334
+  ],
+  "entonado_invertido": false
+ },
+ "tauro": {
+  "slug_catalogo": "signo-tauro",
+  "nombre": "Tauro",
+  "tipo": "sign",
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Taurus_-_Johann_Bayer.jpg",
+  "image_file": "File:Taurus - Johann Bayer.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/3b/Taurus_-_Johann_Bayer.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-Art|PD-old-100-expired"
+  ],
+  "license_categories": [
+   "PD-old-100-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Johann Bayer",
+  "date_work": "1603",
+  "source_px": [
+   10265,
+   7752
+  ],
+  "source_bytes": 18241194,
+  "sha1_source": "9bb42401465d4b20c21f3ba4ae9560db78b73ba5",
+  "evidencia": "docs/licencias-materia/tauro.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/tauro.webp",
+  "asset_entonado": "materia/entonado/tauro.webp",
+  "asset_px": [
+   440,
+   332
+  ],
+  "entonado_invertido": false
+ },
+ "geminis": {
+  "slug_catalogo": "signo-géminis",
+  "nombre": "Géminis",
+  "tipo": "sign",
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Gemini.jpg",
+  "image_file": "File:Johann Bayer - Gemini.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Johann_Bayer_-_Gemini.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-1923"
+  ],
+  "license_categories": [
+   "PD-old-70-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Johann Bayer",
+  "date_work": "1603",
+  "source_px": [
+   3217,
+   2418
+  ],
+  "source_bytes": 1249527,
+  "sha1_source": "a7baab7f057567ce8ab73fcae0c6a5bd2dd70290",
+  "evidencia": "docs/licencias-materia/geminis.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/geminis.webp",
+  "asset_entonado": "materia/entonado/geminis.webp",
+  "asset_px": [
+   440,
+   331
+  ],
+  "entonado_invertido": false
+ },
+ "cancer": {
+  "slug_catalogo": "signo-cáncer",
+  "nombre": "Cáncer",
+  "tipo": "sign",
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Cancer.jpg",
+  "image_file": "File:Johann Bayer - Cancer.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/a/a5/Johann_Bayer_-_Cancer.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-1923"
+  ],
+  "license_categories": [
+   "PD-old-70-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Johann Bayer",
+  "date_work": "1603",
+  "source_px": [
+   3218,
+   2422
+  ],
+  "source_bytes": 1084352,
+  "sha1_source": "4e682cc0b2c4982308f0ce1952da28c604d42f82",
+  "evidencia": "docs/licencias-materia/cancer.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/cancer.webp",
+  "asset_entonado": "materia/entonado/cancer.webp",
+  "asset_px": [
+   440,
+   331
+  ],
+  "entonado_invertido": false
+ },
+ "leo": {
+  "slug_catalogo": "signo-leo",
+  "nombre": "Leo",
+  "tipo": "sign",
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Leo.jpg",
+  "image_file": "File:Johann Bayer - Leo.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Johann_Bayer_-_Leo.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-1923"
+  ],
+  "license_categories": [
+   "PD-old-70-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Johann Bayer",
+  "date_work": "1603",
+  "source_px": [
+   3169,
+   2456
+  ],
+  "source_bytes": 1179311,
+  "sha1_source": "dc79e8fce1dc49bbb3d6d373c2cbfcb512d18e52",
+  "evidencia": "docs/licencias-materia/leo.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/leo.webp",
+  "asset_entonado": "materia/entonado/leo.webp",
+  "asset_px": [
+   440,
+   341
+  ],
+  "entonado_invertido": false
+ },
+ "virgo": {
+  "slug_catalogo": "signo-virgo",
+  "nombre": "Virgo",
+  "tipo": "sign",
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Virgo.jpg",
+  "image_file": "File:Johann Bayer - Virgo.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/8/8c/Johann_Bayer_-_Virgo.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-1923"
+  ],
+  "license_categories": [
+   "PD-old-70-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Johann Bayer",
+  "date_work": "1603",
+  "source_px": [
+   2379,
+   3201
+  ],
+  "source_bytes": 1204437,
+  "sha1_source": "f53c986596f8dab25e50e90a925695231058da85",
+  "evidencia": "docs/licencias-materia/virgo.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/virgo.webp",
+  "asset_entonado": "materia/entonado/virgo.webp",
+  "asset_px": [
+   440,
+   592
+  ],
+  "entonado_invertido": false
+ },
+ "libra": {
+  "slug_catalogo": "signo-libra",
+  "nombre": "Libra",
+  "tipo": "sign",
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Libra.jpg",
+  "image_file": "File:Johann Bayer - Libra.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/7/75/Johann_Bayer_-_Libra.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-1923"
+  ],
+  "license_categories": [
+   "PD-old-70-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Johann Bayer",
+  "date_work": "1603",
+  "source_px": [
+   3222,
+   2449
+  ],
+  "source_bytes": 1063428,
+  "sha1_source": "17213edc8b629fa5e26fc558696205faf20aa3ec",
+  "evidencia": "docs/licencias-materia/libra.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/libra.webp",
+  "asset_entonado": "materia/entonado/libra.webp",
+  "asset_px": [
+   440,
+   334
+  ],
+  "entonado_invertido": false
+ },
+ "escorpio": {
+  "slug_catalogo": "signo-escorpio",
+  "nombre": "Escorpio",
+  "tipo": "sign",
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Scorpio.jpg",
+  "image_file": "File:Johann Bayer - Scorpio.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/0/06/Johann_Bayer_-_Scorpio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-1923"
+  ],
+  "license_categories": [
+   "PD-old-70-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Johann Bayer",
+  "date_work": "1603",
+  "source_px": [
+   3191,
+   2500
+  ],
+  "source_bytes": 1218926,
+  "sha1_source": "481dfd08bf551ffc77c1c76ec5923cbcc48d9ffb",
+  "evidencia": "docs/licencias-materia/escorpio.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/escorpio.webp",
+  "asset_entonado": "materia/entonado/escorpio.webp",
+  "asset_px": [
+   440,
+   345
+  ],
+  "entonado_invertido": false
+ },
+ "sagitario": {
+  "slug_catalogo": "signo-sagitario",
+  "nombre": "Sagitario",
+  "tipo": "sign",
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Sagittarius.jpg",
+  "image_file": "File:Johann Bayer - Sagittarius.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/e1/Johann_Bayer_-_Sagittarius.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-1923"
+  ],
+  "license_categories": [
+   "PD-old-70-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Johann Bayer",
+  "date_work": "1603",
+  "source_px": [
+   3217,
+   2489
+  ],
+  "source_bytes": 1296566,
+  "sha1_source": "96edffe1e62771ea9f5ab19d4bdd720f668b0c56",
+  "evidencia": "docs/licencias-materia/sagitario.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/sagitario.webp",
+  "asset_entonado": "materia/entonado/sagitario.webp",
+  "asset_px": [
+   440,
+   340
+  ],
+  "entonado_invertido": false
+ },
+ "capricornio": {
+  "slug_catalogo": "signo-capricornio",
+  "nombre": "Capricornio",
+  "tipo": "sign",
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Capricorn.jpg",
+  "image_file": "File:Johann Bayer - Capricorn.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Johann_Bayer_-_Capricorn.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-1923"
+  ],
+  "license_categories": [
+   "PD-old-70-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Johann Bayer",
+  "date_work": "1603",
+  "source_px": [
+   3253,
+   2496
+  ],
+  "source_bytes": 1343711,
+  "sha1_source": "5d8eea0a5c20b73bee1b36b0891f2ba2dd608d45",
+  "evidencia": "docs/licencias-materia/capricornio.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/capricornio.webp",
+  "asset_entonado": "materia/entonado/capricornio.webp",
+  "asset_px": [
+   440,
+   338
+  ],
+  "entonado_invertido": false
+ },
+ "acuario": {
+  "slug_catalogo": "signo-acuario",
+  "nombre": "Acuario",
+  "tipo": "sign",
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Aquarius.jpg",
+  "image_file": "File:Johann Bayer - Aquarius.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/33/Johann_Bayer_-_Aquarius.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-1923"
+  ],
+  "license_categories": [
+   "PD-old-70-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Johann Bayer",
+  "date_work": "1603",
+  "source_px": [
+   3222,
+   2419
+  ],
+  "source_bytes": 1161852,
+  "sha1_source": "8130cb10466c7fc38f48656a8b2224220156bc35",
+  "evidencia": "docs/licencias-materia/acuario.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/acuario.webp",
+  "asset_entonado": "materia/entonado/acuario.webp",
+  "asset_px": [
+   440,
+   330
+  ],
+  "entonado_invertido": false
+ },
+ "piscis": {
+  "slug_catalogo": "signo-piscis",
+  "nombre": "Piscis",
+  "tipo": "sign",
+  "obra": "Johann Bayer, Uranometria (Augsburgo, 1603), lamina coloreada a mano",
+  "source": "https://commons.wikimedia.org/wiki/File:Johann_Bayer_-_Pisces.jpg",
+  "image_file": "File:Johann Bayer - Pisces.jpg",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/36/Johann_Bayer_-_Pisces.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "license": "public-domain",
+  "license_templates": [
+   "PD-old-70-1923"
+  ],
+  "license_categories": [
+   "PD-old-70-expired",
+   "Public Domain Mark 1.0"
+  ],
+  "license_short": "Public domain",
+  "author": "Johann Bayer",
+  "date_work": "1603",
+  "source_px": [
+   3215,
+   2416
+  ],
+  "source_bytes": 1138105,
+  "sha1_source": "612036852cdcb979b4eb97ffe2fbb7fb631e688f",
+  "evidencia": "docs/licencias-materia/piscis.wikitext.txt",
+  "status": "verificado",
+  "asset_grabado": "materia/grabado/piscis.webp",
+  "asset_entonado": "materia/entonado/piscis.webp",
+  "asset_px": [
+   440,
+   331
+  ],
+  "entonado_invertido": false
+ }
+}

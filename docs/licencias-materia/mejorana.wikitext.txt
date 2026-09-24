@@ -1,0 +1,48 @@
+== {{int:filedesc}} ==
+{{BHL
+| title = Icones plantarum medico-oeconomico-technologicarum cum earum fructus ususque descriptione =Abbildungen aller medizinisch-ökonomisch-technologischen Gewächse mit der Beschreibung ihres Gebrauches und Nutzens.
+| source = https://www.flickr.com/photos/biodivlibrary/8096970445
+| description = Origanum majorana 
+{{fr|1=[[Origanum majorana|Marjolaine]]
+}}
+| pageid = 6209261
+| itemid = 28890
+| titleid = 6465
+| pagenumbers = Tab. 122
+| pagetypes = Illustration
+| volume = 2
+| pageurl = https://www.biodiversitylibrary.org/page/6209261
+| date = 1804
+| DOI = 10.5962/bhl.title.6465
+| author = Albrecht, Ignatz.; Ederschen, Joseph.; Kendl, Joseph Lorenz.; Schalbaecher, Jos.; Vietz, Ferdinand Bernhard
+| names = 
+| permissions = {{Biodiversity Heritage Library}}
+| other_versions =
+| other_fields ={{Information field|name=Flickr sets|value={{flatlist|
+*Icones plantarum medico-oeconomico-technologicarum cum earum fructus ususque descriptione =Abbildungen aller medizinisch-ökonomisch-technologischen Gewächse mit der Beschreibung ihres Gebrauches und Nutzens. 1804
+}}}}{{Information field|name=Flickr tags|value={{flatlist|
+*Botany
+*Botany, Medical
+*Medicinal plants
+*Pictorial works
+*Missouri Botanical Garden, Peter H. Raven Library
+*bhl:page 6209261
+*dc:identifier https://www.biodiversitylibrary.org/page/6209261
+*botany, medical
+*missouri botanical garden, peter h. raven library
+}}}}{{Information field|name=Flickr posted date|value={{ISOdate|1=2012-10-17}}}}
+}}
+
+
+== {{int:license-header}} ==
+
+{{CC-BY-2.0}}
+{{User:FlickreviewR/reviewed-pass|BioDivLibrary|https://flickr.com/photos/61021753@N02/8096970445|2015-09-09 06:50:57|cc-by-2.0|}}
+{{PD-scan|PD-old-70-1923}}
+
+
+
+
+[[Category:Icones Plantarum Medico-Oeconomico-Technologicarum]]
+[[Category:Photos uploaded from Flickr by Fæ using a script]]
+[[Category:Origanum majorana - botanical illustrations]]
