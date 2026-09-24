@@ -9,17 +9,28 @@ Borrador tecnico para cargar en Play Console. El formulario lo firma Samuel: la
 responsabilidad de que coincida con el binario es del desarrollador, no de esta
 tabla.
 
-> **Lo primero: el envio se hace SIN anuncios.**
-> `ReleaseConfig.adsEnabled` viene de `bool.fromEnvironment('ADS_ENABLED')`, que
-> vale `false` salvo que se compile pasandolo, y `main.dart:29` solo inicializa
-> `MobileAds` dentro de ese `if`. El build de lanzamiento **no carga el SDK de
-> anuncios ni recoge Ad ID**.
+> **Lo primero: la app NO LLEVA SDK de anuncios.** Desde la 1.0.5.
 >
-> Declarar recogida de datos publicitarios que no ocurre es una discrepancia de
-> Data safety igual de sancionable que omitir una que si ocurre. Las filas de
-> anuncios de abajo van marcadas `NO APLICA HOY` y **solo se activan en el mismo
-> envio en que se active `ADS_ENABLED`** — que a su vez exige implementar UMP
-> antes (ver bloqueos).
+> Antes esto se apoyaba en una bandera: `ADS_ENABLED` valia `false` y `main.dart`
+> solo inicializaba `MobileAds` dentro de ese `if`. **Eso no bastaba.**
+> `MobileAdsInitProvider` es un ContentProvider del propio SDK y arranca antes
+> que Dart, asi que el SDK viajaba dentro del AAB con la bandera apagada. Se
+> quito `google_mobile_ads` del pubspec.
+>
+> Comprobado sobre el AAB 1.0.5+13, leyendo su manifiesto — no deducido del
+> codigo. Estan **AUSENTES**: `MobileAdsInitProvider`, `AdActivity`, `AdService`,
+> `com.google.android.gms.ads.APPLICATION_ID`,
+> `com.google.android.gms.permission.AD_ID` y
+> `android.permission.ACCESS_ADSERVICES_AD_ID`. Cero entradas de
+> `android/gms/ads` en el binario.
+>
+> **Consecuencia para el formulario:** la fila de **ID de dispositivo /
+> publicidad se puede quitar**, no solo marcar como no aplicable. Ya no hay
+> permiso de Ad ID que defender. Declarar recogida que no ocurre es una
+> discrepancia igual de sancionable que omitir una que si ocurre.
+>
+> Si algun dia vuelven los anuncios: primero UMP, despues el SDK, y entonces
+> estas filas vuelven en el MISMO envio.
 
 ## Respuestas base
 
@@ -96,10 +107,11 @@ dispositivo. No hay permisos peligrosos en el manifiesto para ninguno de ellos.
    responsable declarado en la politica.
 7. Documentar el plazo de retencion de los backups de PostgreSQL en Railway. La
    politica promete borrado; un backup que sobrevive meses lo contradice.
-8. **No activar `ADS_ENABLED` sin UMP.** `main.dart` lleva el TODO puesto. Si se
-   activa, hay que rehacer las tres filas tachadas de la tabla y volver a enviar
-   el formulario. Gradle solo exige `ADMOB_APP_ID` cuando `ADS_ENABLED=true`:
-   el build de lanzamiento sale sin anuncios y sin esa credencial.
+8. **No volver a meter `google_mobile_ads` sin UMP.** La bandera `ADS_ENABLED`
+   ya no existe: se quito el SDK entero en la 1.0.5 porque su ContentProvider
+   arrancaba antes que Dart y la bandera no lo frenaba. Hay un test que falla si
+   el SDK reaparece (`test/android_admob_config_test.dart`). Si vuelve, hay que
+   rehacer las filas de publicidad de la tabla y reenviar el formulario.
 9. **`display_name` viaja a Groq** (`oracle_context.py:118`). Declarado en la
    politica publicada y en el dialogo de consentimiento. Al marcar el formulario,
    el nombre cuenta como dato personal COMPARTIDO, no solo recogido.

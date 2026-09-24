@@ -63,15 +63,44 @@ Cuando la sesión de código entregue checklist confirmando:
 ## Decisiones tomadas (no re-preguntar)
 
 - Ubicación precisa sin GPS. Grimorio no compartido. Sin "Actividad en la app". Defender, no "corregir".
-- Sin anuncios en el release (adsEnabled=false).
+- Sin anuncios en el release. Desde la 1.0.5 **sin SDK de anuncios**: ver abajo.
 
-## Pendiente ANTES DE PRODUCCION — el SDK de AdMob viaja sin usarse
+## RESUELTO el 24-sep-2026 — el SDK de AdMob ya no viaja
+
+**Se eligio la opcion (b) de las dos que planteaba este bloque: sacar el SDK.**
+`google_mobile_ads` esta fuera del `pubspec.yaml` desde la 1.0.5.
+
+Comprobado sobre el AAB 1.0.5+13, leyendo su manifiesto igual que se leyo el del
+1.0.0+7. Donde antes habia seis PRESENTE ahora hay seis AUSENTE:
+
+```
+com.google.android.gms.ads.MobileAdsInitProvider     AUSENTE
+com.google.android.gms.ads.AdActivity                AUSENTE
+com.google.android.gms.ads.AdService                 AUSENTE
+com.google.android.gms.ads.APPLICATION_ID            AUSENTE
+com.google.android.gms.permission.AD_ID              AUSENTE
+android.permission.ACCESS_ADSERVICES_AD_ID           AUSENTE
+```
+
+Y cero entradas de `android/gms/ads` dentro del bundle.
+
+**Lo que habilita, tal como lo anticipaba la opcion (b):** se puede **quitar la
+fila de ID de dispositivo de Data Safety**, no solo declararla a la defensiva. El
+"NO COMPROBADO" de mas abajo —si el provider llegaba a leer el Ad ID sin que
+nadie llamara a `initialize()`— deja de importar: no hay provider.
+
+La casilla "Contiene anuncios" de `play-ficha.md` se queda en **No**.
+
+El texto original del bloque se conserva debajo porque explica POR QUE la bandera
+no bastaba, que es lo que hay que recordar si alguien propone devolver el SDK.
+
+### El hecho que lo motivo (historico, AAB 1.0.0+7)
 
 No bloquea la prueba cerrada. La declaracion conservadora del Ad ID en la
 seccion 2 de `play-ficha.md` es correcta y suficiente para esta pasada. Esto se
 decide antes de subir a **produccion**, no ahora.
 
-### El hecho, ya comprobado (no volver a extraerlo)
+#### El manifiesto de entonces
 
 `google_mobile_ads: ^9.0.0` esta en `arcanum_app/pubspec.yaml:52`, pero
 `MobileAds.instance.initialize()` esta detras de `ReleaseConfig.adsEnabled`
@@ -100,7 +129,7 @@ se declara y se queda.
 **NO COMPROBADO:** que el provider llegue a leer el Ad ID sin que nadie llame a
 `initialize()`. No se midio. Declarar de mas es el lado seguro del error.
 
-### La decision, antes de produccion
+### Las dos salidas que habia (se tomo la b)
 
 - **(a) Anuncios de verdad.** Implementar el consentimiento UMP —hoy es un
   `TODO(compliance)` en `main.dart:36`, ver el bloque "Gap abierto: consentimiento
