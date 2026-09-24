@@ -1,53 +1,14 @@
 import 'package:arcanum_app/core/config/release_config.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// Los cuatro casos de anuncios se fueron con el SDK en la 1.0.5. Probaban que
+/// las unidades de AdMob solo se exigieran con `ADS_ENABLED=true`; sin
+/// `google_mobile_ads` no hay unidad que exigir, y la guardia contra volver a
+/// meterlo vive en `test/android_admob_config_test.dart`.
 void main() {
   test('release rechaza RevenueCat sin API key', () {
     expect(
-      () => ReleaseConfig.validateForStartup(
-        releaseMode: true,
-        apiKey: '',
-        rewardedAndroid: 'rewarded_id',
-        interstitialAndroid: 'interstitial_id',
-      ),
-      throwsStateError,
-    );
-  });
-
-  test(
-    'release rechaza unidades AdMob ausentes cuando los anuncios estan activos',
-    () {
-      expect(
-        () => ReleaseConfig.validateForStartup(
-          releaseMode: true,
-          apiKey: 'public_sdk_key',
-          ads: true,
-        ),
-        throwsStateError,
-      );
-    },
-  );
-
-  test('con anuncios apagados no se exigen unidades AdMob', () {
-    // Los anuncios estan apagados hasta que exista el UMP: exigir sus
-    // credenciales impediria arrancar un release que no las necesita.
-    expect(
-      () => ReleaseConfig.validateForStartup(
-        releaseMode: true,
-        apiKey: 'public_sdk_key',
-        ads: false,
-      ),
-      returnsNormally,
-    );
-  });
-
-  test('RevenueCat se exige aunque los anuncios esten apagados', () {
-    expect(
-      () => ReleaseConfig.validateForStartup(
-        releaseMode: true,
-        apiKey: '',
-        ads: false,
-      ),
+      () => ReleaseConfig.validateForStartup(releaseMode: true, apiKey: ''),
       throwsStateError,
     );
   });
@@ -57,9 +18,6 @@ void main() {
       () => ReleaseConfig.validateForStartup(
         releaseMode: true,
         apiKey: 'public_sdk_key',
-        rewardedAndroid: 'rewarded_id',
-        interstitialAndroid: 'interstitial_id',
-        ads: true,
       ),
       returnsNormally,
     );

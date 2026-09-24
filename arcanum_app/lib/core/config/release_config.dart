@@ -2,12 +2,6 @@ import 'package:flutter/foundation.dart';
 
 abstract final class ReleaseConfig {
   static const revenueCatApiKey = String.fromEnvironment('REVENUECAT_API_KEY');
-  static const admobRewardedAndroid = String.fromEnvironment(
-    'ADMOB_REWARDED_ANDROID',
-  );
-  static const admobInterstitialAndroid = String.fromEnvironment(
-    'ADMOB_INTERSTITIAL_ANDROID',
-  );
   // Las tres apuntan a lo que GitHub Pages sirve DE VERDAD: la rama
   // `gh-pages`, en la raiz, con ficheros `.html` generados por Jekyll. Antes
   // apuntaban a `/privacy/` y `/account-deletion/`, que devuelven 404: la app
@@ -27,26 +21,21 @@ abstract final class ReleaseConfig {
 
   static bool get revenueCatEnabled => revenueCatApiKey.trim().isNotEmpty;
 
-  /// Los anuncios estan apagados por defecto hasta que exista el consentimiento
-  /// UMP, asi que sus unidades solo se exigen cuando ADS_ENABLED esta activo.
-  /// Pedirlas siempre obligaria a inyectar credenciales que la app no usa.
-  static const adsEnabled = bool.fromEnvironment('ADS_ENABLED');
-
+  /// SIN ANUNCIOS desde la 1.0.5. `google_mobile_ads` se saco del pubspec: no
+  /// bastaba con apagarlo por bandera, porque `MobileAdsInitProvider` es un
+  /// ContentProvider que arranca ANTES que Dart, asi que el SDK viajaba dentro
+  /// del AAB y recogia datos aunque `ADS_ENABLED` fuera false. La alternativa
+  /// era implementar el consentimiento UMP para una via de ingreso que no
+  /// estaba dando ninguno.
+  ///
+  /// Si algun dia vuelven: primero UMP, despues el SDK. En ese orden.
   static void validateForStartup({
     bool releaseMode = kReleaseMode,
     String apiKey = revenueCatApiKey,
-    String rewardedAndroid = admobRewardedAndroid,
-    String interstitialAndroid = admobInterstitialAndroid,
-    bool ads = adsEnabled,
   }) {
     if (!releaseMode) return;
 
-    final missing = <String>[
-      if (apiKey.trim().isEmpty) 'REVENUECAT_API_KEY',
-      if (ads && rewardedAndroid.trim().isEmpty) 'ADMOB_REWARDED_ANDROID',
-      if (ads && interstitialAndroid.trim().isEmpty)
-        'ADMOB_INTERSTITIAL_ANDROID',
-    ];
+    final missing = <String>[if (apiKey.trim().isEmpty) 'REVENUECAT_API_KEY'];
     if (missing.isNotEmpty) {
       throw StateError(
         'Configuración release ausente: ${missing.join(', ')}. '
