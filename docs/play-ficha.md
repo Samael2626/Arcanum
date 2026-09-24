@@ -200,7 +200,9 @@ Sacado de los modelos de `arcanum-api`, no de memoria.
 > hay que volver a estas dos frases y a las de las páginas legales.
 
 > **Anthropic no está en uso**, pese al nombre del archivo `claude_service.py`. El
-> único proveedor de IA es Groq (`_GROQ_MODEL = "llama-3.3-70b-versatile"`). Si algún
+> único proveedor de IA es Groq (modelo `openai/gpt-oss-120b`, que sale de
+> `settings.ORACLE_MODEL_FREE` / `ORACLE_MODEL_PREMIUM`, no de una constante en
+> el código). Si algún
 > día vuelve a entrar, es una fila nueva de terceros.
 
 > **La ubicación es PRECISA aunque no se lea el GPS.** El manifiesto declara

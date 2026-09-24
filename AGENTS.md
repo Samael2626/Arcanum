@@ -4,8 +4,10 @@
 - Flutter + Riverpod (mobile), Firebase (frontend)
 - FastAPI + PostgreSQL (backend en Railway)
 - RevenueCat (pagos)
-- Groq `llama-3.3-70b-versatile` (oracle y horoscopo IA). NO es la Claude API,
-  pese a que el fichero se llame `claude_service.py`
+- Groq `openai/gpt-oss-120b` (oracle y horoscopo IA). NO es la Claude API,
+  pese a que el fichero se llame `claude_service.py`. El nombre del modelo NO se
+  escribe en el codigo: sale de `ORACLE_MODEL_FREE` / `ORACLE_MODEL_PREMIUM` en
+  `arcanum-api/app/core/config.py`. Ver "Groq: modelo, limites y coste" abajo
 - AES-256 (grimorio cifrado)
 - Supabase (base de datos)
 
@@ -38,7 +40,7 @@ Monorepo con `arcanum_app/` (Flutter) y `arcanum-api/` (FastAPI).
 
 ## Modulos core
 - Grimorio (cifrado AES-256, notas personales)
-- Oracle (Claude API, respuestas con contexto usuario)
+- Oracle (Groq gpt-oss-120b, respuestas con contexto usuario)
 - Tarot (78 cartas, multiples tiradas)
 - Sigilos (generador con paradigma chaos magic)
 - Calendario astral (efemerides, aspectos, lunares)
@@ -89,6 +91,68 @@ figure como sitio web del desarrollador en la ficha de Play. Google exige que se
 publico, con HTTPS de certificado valido y disponible siempre. Un XAMPP local no
 sirve: escucha en localhost, su certificado es autofirmado y se cae al apagar el
 equipo, y ahi AdMob revoca la verificacion.
+
+## Groq: modelo, limites y coste
+
+El modelo vivo en produccion es **`openai/gpt-oss-120b`**, para oraculo y para
+horoscopo. Sale de `arcanum-api/app/core/config.py:48-49`:
+
+```python
+ORACLE_MODEL_FREE: str = "openai/gpt-oss-120b"
+ORACLE_MODEL_PREMIUM: str = "openai/gpt-oss-120b"
+```
+
+Comprobado el 24/09/2026: **ninguna variable de Railway pisa esos dos valores**,
+asi que lo que corre es el default del codigo. Gratis y premium usan el MISMO
+modelo; la diferencia entre planes no esta en el modelo.
+
+**El nombre del modelo no se escribe en el codigo de servicio.** Entra por
+parametro desde `settings`. Hay un test que lo vigila
+(`tests_unit/test_oracle_output_guard.py`) porque una constante hardcodeada ya
+tumbo produccion con un 404 una vez.
+
+### `llama-3.3-70b-versatile` ya no se usa
+
+Fue el modelo anterior. Lo que esta **comprobado** hoy:
+
+- Nuestra clave recibe `404 model_not_found` al pedirlo.
+- En el catalogo de Groq figura como Production/Enterprise, con "Contact Sales".
+- **No** aparece en la lista de modelos permitidos de nuestra organizacion.
+
+Lo que **NO** esta comprobado: que Groq lo retirase el 2026-08-16. Esa fecha sale
+de blogs de terceros y la pagina oficial de deprecaciones no lo lista. Para
+nosotros el efecto practico es el mismo (no hay acceso), pero no es lo mismo
+"retirado del catalogo" que "movido a Enterprise". No repetir la fecha como hecho.
+
+### Limites de cuota (consola de Groq, 24/09/2026)
+
+Leidos en Organization Limits para `openai/gpt-oss-120b`, y **confirmados por la
+cabecera `x-ratelimit-limit-tokens` de una llamada real**:
+
+| Limite | Valor |
+|---|---|
+| Peticiones / minuto | 30 |
+| Peticiones / dia | 1.000 |
+| Tokens / minuto | **8.000** |
+| Tokens / dia | 200.000 |
+
+Los **8.000 TPM son de `gpt-oss-120b`**, no una herencia de Llama. La cuenta esta
+en plan gratuito: la consola sigue ofreciendo "On Developer plan, you get higher
+limits".
+
+El techo que aprieta es TPM, no RPM: una tirada de Cruz Celta ronda los 2.300
+tokens, asi que 8.000 TPM son ~3 lecturas por minuto aunque el limite de
+peticiones permita 30.
+
+### Precio (docs oficiales de Groq, 24/09/2026)
+
+- Entrada: **$0.15 por millon de tokens**
+- Salida: **$0.60 por millon de tokens**
+
+Coste estimado de una Cruz Celta: **~$0.003**. **NO MEDIDA** — es aritmetica sobre
+el recuento de tokens, no una factura desglosada por lectura.
+
+Gasto real: **$0.16 en 30 dias**. El coste de IA no es hoy un problema de margen.
 
 ## Tests
 

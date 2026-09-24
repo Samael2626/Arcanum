@@ -207,7 +207,7 @@ FastAPI + SQLAlchemy        API, Python 3.12
 PostgreSQL (Supabase)       datos
 Redis                       rate limiting y sesiones
 Swiss Ephemeris             calculo astronomico
-Groq llama-3.3-70b          oraculo y horoscopo
+Groq gpt-oss-120b           oraculo y horoscopo
 RevenueCat                  suscripciones
 Google AdMob                anuncios bonificados
 Railway                     despliegue del backend
