@@ -101,7 +101,7 @@ void showTarotCardSheet(BuildContext context, Map<String, dynamic> card) {
                   ),
                 ),
                 const SizedBox(height: 18),
-                Center(child: TarotNaipe(card: card, width: 170)),
+                Center(child: _NaipeDeLaFicha(card: card)),
                 const SizedBox(height: 18),
                 Center(
                   child: Text(
@@ -388,4 +388,150 @@ class _TarotCatalogState extends ConsumerState<TarotCatalog> {
       },
     );
   }
+}
+
+/// El naipe de la ficha de estudio, con el grabado de 1909 a un toque.
+///
+/// POR QUE AQUI Y NO EN LA REJILLA
+///
+/// La rejilla de Aprender es un `GridView.builder`: perezoso, monta doce o
+/// quince celdas y destruye las que salen de pantalla. Darle el gesto ahi
+/// obligaria a guardar la cara de las 78 FUERA de la celda, porque si vive
+/// dentro el scroll la borra -- que es exactamente el fallo que se cazo en la
+/// tirada, multiplicado por 78 y en la pantalla donde mas se hace scroll. Y
+/// aun resuelto, un catalogo con cartas a medio voltear segun lo que tocaste
+/// antes no es un catalogo, es ruido.
+///
+/// En la ficha no hay nada de eso: una sola carta, un solo controlador, y el
+/// estado muere con la hoja. No hay nada que persistir ni que perder.
+class _NaipeDeLaFicha extends StatefulWidget {
+  const _NaipeDeLaFicha({required this.card});
+
+  final Map<String, dynamic> card;
+
+  @override
+  State<_NaipeDeLaFicha> createState() => _NaipeDeLaFichaState();
+}
+
+class _NaipeDeLaFichaState extends State<_NaipeDeLaFicha>
+    with SingleTickerProviderStateMixin {
+  static const double _ancho = 170;
+  static const Duration _giro = Duration(milliseconds: 620);
+
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: _giro,
+  );
+  late final Animation<double> _t = CurvedAnimation(
+    parent: _c,
+    curve: Curves.easeInOutCubic,
+  );
+
+  bool _grabado = false;
+
+  bool get _reducido => MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+
+  /// Si ya se paso el canto del giro. Hasta los 90 grados la carta sigue
+  /// ensenando la cara de antes, y el rotulo de debajo tiene que creerselo.
+  bool get _cruzado => _t.value >= 0.5;
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  void _voltear(String? lamina) {
+    if (lamina == null || _c.isAnimating) return;
+    setState(() => _grabado = !_grabado);
+    if (_reducido) {
+      // Sin movimiento la carta CAMBIA de cara, no gira.
+      _c.value = _grabado ? 1 : 0;
+      return;
+    }
+    _grabado ? _c.forward(from: 0) : _c.reverse(from: 1);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final face = TarotFace.resolve(widget.card);
+    final lamina = face.rwsAsset;
+    final alto = _ancho * 1.6;
+
+    return Column(
+      children: [
+        Semantics(
+          button: lamina != null,
+          label: lamina == null
+              ? null
+              : (_grabado
+                    ? 'Volver al trazo de ARCANUM'
+                    : 'Ver el grabado de 1909'),
+          excludeSemantics: lamina != null,
+          child: GestureDetector(
+            // Con llave propia: dentro de la hoja hay mas de un gesto y el
+            // de la carta tiene que poder senalarse sin contar por orden.
+            key: const ValueKey('ficha-naipe'),
+            onTap: () => _voltear(lamina),
+            child: AnimatedBuilder(
+              animation: _t,
+              builder: (context, _) {
+                final angulo = _t.value * math.pi;
+                final cara = _cruzado && lamina != null
+                    ? _lamina(lamina, alto)
+                    : TarotNaipe(card: widget.card, width: _ancho);
+                return Transform(
+                  alignment: Alignment.center,
+                  transform: Matrix4.identity()
+                    ..setEntry(3, 2, 0.0019)
+                    ..rotateY(angulo),
+                  child: _cruzado
+                      // Pasado el canto la cara viaja girada mas de 90 grados
+                      // y saldria en espejo: se le deshace aqui.
+                      ? Transform(
+                          alignment: Alignment.center,
+                          transform: Matrix4.identity()..rotateY(math.pi),
+                          child: cara,
+                        )
+                      : cara,
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        // La invitacion, que es lo que hace el gesto descubrible. Sin ella el
+        // toque existe y nadie lo encuentra.
+        if (lamina != null)
+          AnimatedBuilder(
+            animation: _t,
+            builder: (context, _) => Text(
+              _cruzado
+                  ? 'Grabado de 1909 · toca para volver'
+                  : 'Toca la carta para ver el grabado de 1909',
+              textAlign: TextAlign.center,
+              style: ArcanumText.body(
+                12.5,
+                color: ArcanumColors.ivoryMuted,
+                italic: true,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _lamina(String asset, double alto) => ClipRRect(
+    borderRadius: BorderRadius.circular(_ancho * 0.10),
+    child: Image.asset(
+      asset,
+      width: _ancho,
+      height: alto,
+      fit: BoxFit.cover,
+      cacheWidth: (_ancho * MediaQuery.devicePixelRatioOf(context)).round(),
+      filterQuality: FilterQuality.medium,
+      // Un slug sin lamina no es un error: la carta se queda en su trazo.
+      errorBuilder: (_, _, _) => TarotNaipe(card: widget.card, width: _ancho),
+    ),
+  );
 }

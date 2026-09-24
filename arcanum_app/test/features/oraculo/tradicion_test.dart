@@ -13,6 +13,7 @@ import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/core/theme/arcanum_theme.dart';
 import 'package:arcanum_app/features/oraculo/oraculo_screen.dart';
 import 'package:dio/dio.dart';
+import 'package:arcanum_app/features/oraculo/widgets/tarot_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -152,6 +153,23 @@ void main() {
 
     expect(api.clavesClasicas, hasLength(1));
     expect(api.llamadasAlOraculo, 0, reason: 'la vía clásica no toca la IA');
+
+    // Las cartas llegan BOCA ABAJO y cada una se voltea al tocarla: el
+    // significado no existe en pantalla hasta que se descubre la carta.
+    expect(
+      find.text('El salto que todavía no sabe dónde cae.'),
+      findsNothing,
+      reason: 'una carta sin voltear no puede estar contando lo que dice',
+    );
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(TarotCardView),
+            matching: find.byType(GestureDetector),
+          )
+          .first,
+    );
+    await tester.pumpAndSettle();
     expect(
       find.text('El salto que todavía no sabe dónde cae.'),
       findsOneWidget,

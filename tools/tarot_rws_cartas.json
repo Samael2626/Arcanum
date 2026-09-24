@@ -1,0 +1,1094 @@
+[
+ {
+  "slug": "el-loco",
+  "arcana": "major",
+  "suit": null,
+  "number": 0,
+  "fichero": "File:RWS Tarot 00 Fool.jpg",
+  "nombre_en": "Fool",
+  "sha1": "a707c0123b59fd2420b05645e9d3d16b74235b42",
+  "bytes": 1177006,
+  "px": [
+   1144,
+   1919
+  ]
+ },
+ {
+  "slug": "el-mago",
+  "arcana": "major",
+  "suit": null,
+  "number": 1,
+  "fichero": "File:RWS Tarot 01 Magician.jpg",
+  "nombre_en": "Magician",
+  "sha1": "d24df085c3c22da8cd7f88c0f2a4256c6ae50fda",
+  "bytes": 800458,
+  "px": [
+   1108,
+   1920
+  ]
+ },
+ {
+  "slug": "la-sacerdotisa",
+  "arcana": "major",
+  "suit": null,
+  "number": 2,
+  "fichero": "File:RWS Tarot 02 High Priestess.jpg",
+  "nombre_en": "High Priestess",
+  "sha1": "bb96b30d13035c34a06006ea4aca8ab9a5a98506",
+  "bytes": 884438,
+  "px": [
+   1117,
+   1919
+  ]
+ },
+ {
+  "slug": "la-emperatriz",
+  "arcana": "major",
+  "suit": null,
+  "number": 3,
+  "fichero": "File:RWS Tarot 03 Empress.jpg",
+  "nombre_en": "Empress",
+  "sha1": "0c04891e42d51937390049994de8ac8867b201a1",
+  "bytes": 949129,
+  "px": [
+   1123,
+   1920
+  ]
+ },
+ {
+  "slug": "el-emperador",
+  "arcana": "major",
+  "suit": null,
+  "number": 4,
+  "fichero": "File:RWS Tarot 04 Emperor.jpg",
+  "nombre_en": "Emperor",
+  "sha1": "3fc0742d9a9199a226641a86b099df9540cfc3a3",
+  "bytes": 938373,
+  "px": [
+   1117,
+   1919
+  ]
+ },
+ {
+  "slug": "el-hierofante",
+  "arcana": "major",
+  "suit": null,
+  "number": 5,
+  "fichero": "File:RWS Tarot 05 Hierophant.jpg",
+  "nombre_en": "Hierophant",
+  "sha1": "1e7b864bcaf4c672d8fdf17e2abf7379326949c4",
+  "bytes": 900561,
+  "px": [
+   1114,
+   1919
+  ]
+ },
+ {
+  "slug": "los-enamorados",
+  "arcana": "major",
+  "suit": null,
+  "number": 6,
+  "fichero": "File:RWS Tarot 06 Lovers.jpg",
+  "nombre_en": "Lovers",
+  "sha1": "1c18b372fc4658948f2d1e9770b2aa87a2e4ac02",
+  "bytes": 995290,
+  "px": [
+   1122,
+   1920
+  ]
+ },
+ {
+  "slug": "el-carro",
+  "arcana": "major",
+  "suit": null,
+  "number": 7,
+  "fichero": "File:RWS Tarot 07 Chariot.jpg",
+  "nombre_en": "Chariot",
+  "sha1": "8a93a2130017d32a7e8f9612d0874b5b1b41f83d",
+  "bytes": 859575,
+  "px": [
+   1111,
+   1919
+  ]
+ },
+ {
+  "slug": "la-fuerza",
+  "arcana": "major",
+  "suit": null,
+  "number": 8,
+  "fichero": "File:RWS Tarot 08 Strength.jpg",
+  "nombre_en": "Strength",
+  "sha1": "16baefeee43cee6b285838d27af690a0cf7e9db6",
+  "bytes": 806480,
+  "px": [
+   1114,
+   1919
+  ]
+ },
+ {
+  "slug": "el-ermitano",
+  "arcana": "major",
+  "suit": null,
+  "number": 9,
+  "fichero": "File:RWS Tarot 09 Hermit.jpg",
+  "nombre_en": "Hermit",
+  "sha1": "106bf91c47522063c78d60ab412c53064541f617",
+  "bytes": 735989,
+  "px": [
+   1123,
+   1920
+  ]
+ },
+ {
+  "slug": "la-rueda",
+  "arcana": "major",
+  "suit": null,
+  "number": 10,
+  "fichero": "File:RWS Tarot 10 Wheel of Fortune.jpg",
+  "nombre_en": "Wheel of Fortune",
+  "sha1": "0758555fa3b5960fb631cba01879f3be0260a278",
+  "bytes": 1155837,
+  "px": [
+   1104,
+   1920
+  ]
+ },
+ {
+  "slug": "la-justicia",
+  "arcana": "major",
+  "suit": null,
+  "number": 11,
+  "fichero": "File:RWS Tarot 11 Justice.jpg",
+  "nombre_en": "Justice",
+  "sha1": "16404e646dac8b8f5de4841b9259065059a04f71",
+  "bytes": 893399,
+  "px": [
+   1114,
+   1919
+  ]
+ },
+ {
+  "slug": "el-colgado",
+  "arcana": "major",
+  "suit": null,
+  "number": 12,
+  "fichero": "File:RWS Tarot 12 Hanged Man.jpg",
+  "nombre_en": "Hanged Man",
+  "sha1": "41d2398a09087cc2936fcc70fcde7d92552331fd",
+  "bytes": 1138974,
+  "px": [
+   1092,
+   1920
+  ]
+ },
+ {
+  "slug": "la-muerte",
+  "arcana": "major",
+  "suit": null,
+  "number": 13,
+  "fichero": "File:RWS Tarot 13 Death.jpg",
+  "nombre_en": "Death",
+  "sha1": "a49bfe7b626af084f33a67dbb22c001718f80a80",
+  "bytes": 922316,
+  "px": [
+   1111,
+   1919
+  ]
+ },
+ {
+  "slug": "la-templanza",
+  "arcana": "major",
+  "suit": null,
+  "number": 14,
+  "fichero": "File:RWS Tarot 14 Temperance.jpg",
+  "nombre_en": "Temperance",
+  "sha1": "2d9eb7320f00cbf6d9e7ae334853ff7185a6b769",
+  "bytes": 957655,
+  "px": [
+   1106,
+   1920
+  ]
+ },
+ {
+  "slug": "el-diablo",
+  "arcana": "major",
+  "suit": null,
+  "number": 15,
+  "fichero": "File:RWS Tarot 15 Devil.jpg",
+  "nombre_en": "Devil",
+  "sha1": "fc1d9242a524d82317fc45b27ef9e93af550b082",
+  "bytes": 779014,
+  "px": [
+   1090,
+   1920
+  ]
+ },
+ {
+  "slug": "la-torre",
+  "arcana": "major",
+  "suit": null,
+  "number": 16,
+  "fichero": "File:RWS Tarot 16 Tower.jpg",
+  "nombre_en": "Tower",
+  "sha1": "c9da59cdde2b85b49c9e0ce67a6a08c7893ca926",
+  "bytes": 758728,
+  "px": [
+   1109,
+   1920
+  ]
+ },
+ {
+  "slug": "la-estrella",
+  "arcana": "major",
+  "suit": null,
+  "number": 17,
+  "fichero": "File:RWS Tarot 17 Star.jpg",
+  "nombre_en": "Star",
+  "sha1": "e220037a9310a12abd5733711810b4497a23ef77",
+  "bytes": 852520,
+  "px": [
+   1114,
+   1919
+  ]
+ },
+ {
+  "slug": "la-luna",
+  "arcana": "major",
+  "suit": null,
+  "number": 18,
+  "fichero": "File:RWS Tarot 18 Moon.jpg",
+  "nombre_en": "Moon",
+  "sha1": "e85cd51cdb95ef3b46284c0c317f72414b4ef30e",
+  "bytes": 859000,
+  "px": [
+   1111,
+   1919
+  ]
+ },
+ {
+  "slug": "el-sol",
+  "arcana": "major",
+  "suit": null,
+  "number": 19,
+  "fichero": "File:RWS Tarot 19 Sun.jpg",
+  "nombre_en": "Sun",
+  "sha1": "c12879caebe972e194e81743e5925c5b8c5607d8",
+  "bytes": 935619,
+  "px": [
+   1114,
+   1919
+  ]
+ },
+ {
+  "slug": "el-juicio",
+  "arcana": "major",
+  "suit": null,
+  "number": 20,
+  "fichero": "File:RWS Tarot 20 Judgement.jpg",
+  "nombre_en": "Judgement",
+  "sha1": "19f6e9aae7c8169c75946e3eeb2b517cb295eb53",
+  "bytes": 934640,
+  "px": [
+   1115,
+   1920
+  ]
+ },
+ {
+  "slug": "el-mundo",
+  "arcana": "major",
+  "suit": null,
+  "number": 21,
+  "fichero": "File:RWS Tarot 21 World.jpg",
+  "nombre_en": "World",
+  "sha1": "5b41b2ebeffac2fea5348b2607479a4ee0fd99b8",
+  "bytes": 1171390,
+  "px": [
+   1112,
+   1920
+  ]
+ },
+ {
+  "slug": "as-de-bastos",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 1,
+  "fichero": "File:Wands01.jpg",
+  "nombre_en": "Ace of Wands",
+  "sha1": "87dcc6561605687ecd2bcd672f3157ad6b1eaaae",
+  "bytes": 849701,
+  "px": [
+   1106,
+   1920
+  ]
+ },
+ {
+  "slug": "dos-de-bastos",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 2,
+  "fichero": "File:Wands02.jpg",
+  "nombre_en": "Two of Wands",
+  "sha1": "224cd7b4b1512574f77dfbeca6f64ec30eb779e1",
+  "bytes": 847840,
+  "px": [
+   1115,
+   1920
+  ]
+ },
+ {
+  "slug": "tres-de-bastos",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 3,
+  "fichero": "File:Wands03.jpg",
+  "nombre_en": "Three of Wands",
+  "sha1": "8b18d992a00b65f783f1ce95930ea7a6d7771eab",
+  "bytes": 939010,
+  "px": [
+   1103,
+   1920
+  ]
+ },
+ {
+  "slug": "cuatro-de-bastos",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 4,
+  "fichero": "File:Wands04.jpg",
+  "nombre_en": "Four of Wands",
+  "sha1": "d938100eabd3e515789eac05dcebb2d7749d57df",
+  "bytes": 797257,
+  "px": [
+   1108,
+   1920
+  ]
+ },
+ {
+  "slug": "cinco-de-bastos",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 5,
+  "fichero": "File:Wands05.jpg",
+  "nombre_en": "Five of Wands",
+  "sha1": "480db3a9788df55659a554252e6f305e55f35720",
+  "bytes": 843454,
+  "px": [
+   1108,
+   1920
+  ]
+ },
+ {
+  "slug": "seis-de-bastos",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 6,
+  "fichero": "File:Wands06.jpg",
+  "nombre_en": "Six of Wands",
+  "sha1": "a06a540821876a1693ac1856cbf017bc8b011dbf",
+  "bytes": 878047,
+  "px": [
+   1118,
+   1920
+  ]
+ },
+ {
+  "slug": "siete-de-bastos",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 7,
+  "fichero": "File:Wands07.jpg",
+  "nombre_en": "Seven of Wands",
+  "sha1": "d63a45b166eda1dc993268f78a760a86f7c52209",
+  "bytes": 762723,
+  "px": [
+   1109,
+   1920
+  ]
+ },
+ {
+  "slug": "ocho-de-bastos",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 8,
+  "fichero": "File:Wands08.jpg",
+  "nombre_en": "Eight of Wands",
+  "sha1": "ee83d049b8fa4f4fd378f0f69b58fc4c25b4ab8b",
+  "bytes": 767846,
+  "px": [
+   1115,
+   1920
+  ]
+ },
+ {
+  "slug": "nueve-de-bastos",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 9,
+  "fichero": "File:Wands09.jpg",
+  "nombre_en": "Nine of Wands",
+  "sha1": "3715a212b70ecc95737b6b1ea5ee360332624218",
+  "bytes": 883412,
+  "px": [
+   1114,
+   1919
+  ]
+ },
+ {
+  "slug": "diez-de-bastos",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 10,
+  "fichero": "File:Wands10.jpg",
+  "nombre_en": "Ten of Wands",
+  "sha1": "7931b8e703b4fe520ffd4bda5da49d8087c1e3ca",
+  "bytes": 822089,
+  "px": [
+   1101,
+   1920
+  ]
+ },
+ {
+  "slug": "sota-de-bastos",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 11,
+  "fichero": "File:Wands11.jpg",
+  "nombre_en": "Page of Wands",
+  "sha1": "0b898179e4d32aed7a57f583083fe9c699c9481e",
+  "bytes": 951740,
+  "px": [
+   1109,
+   1920
+  ]
+ },
+ {
+  "slug": "caballero-de-bastos",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 12,
+  "fichero": "File:Wands12.jpg",
+  "nombre_en": "Knight of Wands",
+  "sha1": "0260e923a92c43ed4943ce475a05eb03f0086cf4",
+  "bytes": 988758,
+  "px": [
+   1115,
+   1920
+  ]
+ },
+ {
+  "slug": "reina-de-bastos",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 13,
+  "fichero": "File:Wands13.jpg",
+  "nombre_en": "Queen of Wands",
+  "sha1": "011c387bbdebeca12b308bda5555a7c024705e75",
+  "bytes": 971970,
+  "px": [
+   1118,
+   1920
+  ]
+ },
+ {
+  "slug": "rey-de-bastos",
+  "arcana": "minor",
+  "suit": "bastos",
+  "number": 14,
+  "fichero": "File:Wands14.jpg",
+  "nombre_en": "King of Wands",
+  "sha1": "d181026328ff20bd53162d74806a97a138925822",
+  "bytes": 984389,
+  "px": [
+   1104,
+   1920
+  ]
+ },
+ {
+  "slug": "as-de-copas",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 1,
+  "fichero": "File:Cups01.jpg",
+  "nombre_en": "Ace of Cups",
+  "sha1": "d9aaeedc3e15d2983cabcf1a63135039070864e7",
+  "bytes": 923080,
+  "px": [
+   1112,
+   1920
+  ]
+ },
+ {
+  "slug": "dos-de-copas",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 2,
+  "fichero": "File:Cups02.jpg",
+  "nombre_en": "Two of Cups",
+  "sha1": "31ff6179cff02fcdb6a292ec4d15e66e4727bd55",
+  "bytes": 1138042,
+  "px": [
+   1109,
+   1920
+  ]
+ },
+ {
+  "slug": "tres-de-copas",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 3,
+  "fichero": "File:Cups03.jpg",
+  "nombre_en": "Three of Cups",
+  "sha1": "8644f8f839d1e7c785ce4cd28c0a7553b40f29ca",
+  "bytes": 1153303,
+  "px": [
+   1117,
+   1919
+  ]
+ },
+ {
+  "slug": "cuatro-de-copas",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 4,
+  "fichero": "File:Cups04.jpg",
+  "nombre_en": "Four of Cups",
+  "sha1": "aced20aeeb9b69215ea5df106bb3ccc9710b2f8a",
+  "bytes": 804378,
+  "px": [
+   1118,
+   1920
+  ]
+ },
+ {
+  "slug": "cinco-de-copas",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 5,
+  "fichero": "File:Cups05.jpg",
+  "nombre_en": "Five of Cups",
+  "sha1": "28d89b259fcfccce0336557e2f691244304475ae",
+  "bytes": 702301,
+  "px": [
+   1121,
+   1920
+  ]
+ },
+ {
+  "slug": "seis-de-copas",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 6,
+  "fichero": "File:Cups06.jpg",
+  "nombre_en": "Six of Cups",
+  "sha1": "0c98185dbc9c36f1383b576e20b154e254e02a83",
+  "bytes": 984386,
+  "px": [
+   1115,
+   1920
+  ]
+ },
+ {
+  "slug": "siete-de-copas",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 7,
+  "fichero": "File:Cups07.jpg",
+  "nombre_en": "Seven of Cups",
+  "sha1": "46cddf039c6cdbb73062ec02d9b46305a1c68c7e",
+  "bytes": 808227,
+  "px": [
+   1109,
+   1920
+  ]
+ },
+ {
+  "slug": "ocho-de-copas",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 8,
+  "fichero": "File:Cups08.jpg",
+  "nombre_en": "Eight of Cups",
+  "sha1": "89419f820aa82cb855cd705c97741f439a2ef757",
+  "bytes": 829918,
+  "px": [
+   1114,
+   1919
+  ]
+ },
+ {
+  "slug": "nueve-de-copas",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 9,
+  "fichero": "File:Cups09.jpg",
+  "nombre_en": "Nine of Cups",
+  "sha1": "d06b79c496232ae7a12e8c1bd034b37b5580202e",
+  "bytes": 824525,
+  "px": [
+   1114,
+   1919
+  ]
+ },
+ {
+  "slug": "diez-de-copas",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 10,
+  "fichero": "File:Cups10.jpg",
+  "nombre_en": "Ten of Cups",
+  "sha1": "29c49649940bac0a8c0dff6e1cb651f60e1b47af",
+  "bytes": 955053,
+  "px": [
+   1109,
+   1920
+  ]
+ },
+ {
+  "slug": "sota-de-copas",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 11,
+  "fichero": "File:Cups11.jpg",
+  "nombre_en": "Page of Cups",
+  "sha1": "ef5138a1d6bea70661665547298e79364754ee90",
+  "bytes": 943695,
+  "px": [
+   1115,
+   1920
+  ]
+ },
+ {
+  "slug": "caballero-de-copas",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 12,
+  "fichero": "File:Cups12.jpg",
+  "nombre_en": "Knight of Cups",
+  "sha1": "bfcbc0b7014f2041b38eb76cb7b7e253d21ad3aa",
+  "bytes": 908276,
+  "px": [
+   1109,
+   1920
+  ]
+ },
+ {
+  "slug": "reina-de-copas",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 13,
+  "fichero": "File:Cups13.jpg",
+  "nombre_en": "Queen of Cups",
+  "sha1": "69b68cee5e7e09e624a53169aed26035ab04143e",
+  "bytes": 866465,
+  "px": [
+   1114,
+   1919
+  ]
+ },
+ {
+  "slug": "rey-de-copas",
+  "arcana": "minor",
+  "suit": "copas",
+  "number": 14,
+  "fichero": "File:Cups14.jpg",
+  "nombre_en": "King of Cups",
+  "sha1": "a78389417bbcbc09e8fdeddec49332938cf48a86",
+  "bytes": 903180,
+  "px": [
+   1121,
+   1920
+  ]
+ },
+ {
+  "slug": "as-de-espadas",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 1,
+  "fichero": "File:Swords01.jpg",
+  "nombre_en": "Ace of Swords",
+  "sha1": "8ec8b145cc670007aeb8020ce7940d9ba0ab40fe",
+  "bytes": 850219,
+  "px": [
+   1109,
+   1920
+  ]
+ },
+ {
+  "slug": "dos-de-espadas",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 2,
+  "fichero": "File:Swords02.jpg",
+  "nombre_en": "Two of Swords",
+  "sha1": "303a13183017cca280fe5a79ddc513b00277a8b5",
+  "bytes": 810433,
+  "px": [
+   1121,
+   1920
+  ]
+ },
+ {
+  "slug": "tres-de-espadas",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 3,
+  "fichero": "File:Swords03.jpg",
+  "nombre_en": "Three of Swords",
+  "sha1": "a4490aa4f6e1751adc47a40b2860a41c1fb4c810",
+  "bytes": 725080,
+  "px": [
+   1103,
+   1920
+  ]
+ },
+ {
+  "slug": "cuatro-de-espadas",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 4,
+  "fichero": "File:Swords04.jpg",
+  "nombre_en": "Four of Swords",
+  "sha1": "0f50aad1a018ab09ea2d3223c5175ff988688128",
+  "bytes": 854971,
+  "px": [
+   1117,
+   1919
+  ]
+ },
+ {
+  "slug": "cinco-de-espadas",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 5,
+  "fichero": "File:Swords05.jpg",
+  "nombre_en": "Five of Swords",
+  "sha1": "b92b4bdb92b8b8262979440366c4d7c37b9ed152",
+  "bytes": 889221,
+  "px": [
+   1109,
+   1920
+  ]
+ },
+ {
+  "slug": "seis-de-espadas",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 6,
+  "fichero": "File:Swords06.jpg",
+  "nombre_en": "Six of Swords",
+  "sha1": "295ec146bc425729ec5c7be675fd6ce3bd94c628",
+  "bytes": 935341,
+  "px": [
+   1111,
+   1919
+  ]
+ },
+ {
+  "slug": "siete-de-espadas",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 7,
+  "fichero": "File:Swords07.jpg",
+  "nombre_en": "Seven of Swords",
+  "sha1": "4bb5e8567295b28c2d4956b33a0d26a83d52a2f8",
+  "bytes": 794393,
+  "px": [
+   1114,
+   1919
+  ]
+ },
+ {
+  "slug": "ocho-de-espadas",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 8,
+  "fichero": "File:Swords08.jpg",
+  "nombre_en": "Eight of Swords",
+  "sha1": "668676cf4f43fb66c4d13641dc1cbd9bcf692bf0",
+  "bytes": 894497,
+  "px": [
+   1114,
+   1919
+  ]
+ },
+ {
+  "slug": "nueve-de-espadas",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 9,
+  "fichero": "File:Swords09.jpg",
+  "nombre_en": "Nine of Swords",
+  "sha1": "eb3289e1366812310982a0d865910599d94154b1",
+  "bytes": 789057,
+  "px": [
+   1114,
+   1919
+  ]
+ },
+ {
+  "slug": "diez-de-espadas",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 10,
+  "fichero": "File:Swords10.jpg",
+  "nombre_en": "Ten of Swords",
+  "sha1": "589beb4b5e987e11b3e298b7a02a27de9bc424b6",
+  "bytes": 730530,
+  "px": [
+   1107,
+   1920
+  ]
+ },
+ {
+  "slug": "sota-de-espadas",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 11,
+  "fichero": "File:Swords11.jpg",
+  "nombre_en": "Page of Swords",
+  "sha1": "a4aabf1894b6fc513a0e115b63e0b762be391b73",
+  "bytes": 872818,
+  "px": [
+   1108,
+   1920
+  ]
+ },
+ {
+  "slug": "caballero-de-espadas",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 12,
+  "fichero": "File:Swords12.jpg",
+  "nombre_en": "Knight of Swords",
+  "sha1": "4c0d208cc07285f28587db0d3f89a6a1af62ac5b",
+  "bytes": 852095,
+  "px": [
+   1112,
+   1920
+  ]
+ },
+ {
+  "slug": "reina-de-espadas",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 13,
+  "fichero": "File:Swords13.jpg",
+  "nombre_en": "Queen of Swords",
+  "sha1": "e4b59f06e66bc3643d5b1a2876638af8b046e4f0",
+  "bytes": 817537,
+  "px": [
+   1104,
+   1920
+  ]
+ },
+ {
+  "slug": "rey-de-espadas",
+  "arcana": "minor",
+  "suit": "espadas",
+  "number": 14,
+  "fichero": "File:Swords14.jpg",
+  "nombre_en": "King of Swords",
+  "sha1": "69a4d993f44ecef40a8b4c4bfb5452770290130d",
+  "bytes": 932596,
+  "px": [
+   1117,
+   1919
+  ]
+ },
+ {
+  "slug": "as-de-oros",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 1,
+  "fichero": "File:Pents01.jpg",
+  "nombre_en": "Ace of Pentacles",
+  "sha1": "3d4f8dc21e8892cd5fadbd3c748358c8984856c6",
+  "bytes": 864022,
+  "px": [
+   1109,
+   1920
+  ]
+ },
+ {
+  "slug": "dos-de-oros",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 2,
+  "fichero": "File:Pents02.jpg",
+  "nombre_en": "Two of Pentacles",
+  "sha1": "4924c94b5553a2aff65a932f066391b47e7db517",
+  "bytes": 918042,
+  "px": [
+   1112,
+   1920
+  ]
+ },
+ {
+  "slug": "tres-de-oros",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 3,
+  "fichero": "File:Pents03.jpg",
+  "nombre_en": "Three of Pentacles",
+  "sha1": "ca857869e950b28e912b0a585f597d7f68112fae",
+  "bytes": 889863,
+  "px": [
+   1117,
+   1919
+  ]
+ },
+ {
+  "slug": "cuatro-de-oros",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 4,
+  "fichero": "File:Pents04.jpg",
+  "nombre_en": "Four of Pentacles",
+  "sha1": "4d9da9f40f497226ae0777923c9a38796adbe0c1",
+  "bytes": 811275,
+  "px": [
+   1110,
+   1920
+  ]
+ },
+ {
+  "slug": "cinco-de-oros",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 5,
+  "fichero": "File:Pents05.jpg",
+  "nombre_en": "Five of Pentacles",
+  "sha1": "cbe62be71c1a110125dd55887843ce04c3827976",
+  "bytes": 899969,
+  "px": [
+   1112,
+   1920
+  ]
+ },
+ {
+  "slug": "seis-de-oros",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 6,
+  "fichero": "File:Pents06.jpg",
+  "nombre_en": "Six of Pentacles",
+  "sha1": "cdbc8cabea9dbe863673891f6c19cd9a8310b258",
+  "bytes": 871487,
+  "px": [
+   1109,
+   1920
+  ]
+ },
+ {
+  "slug": "siete-de-oros",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 7,
+  "fichero": "File:Pents07.jpg",
+  "nombre_en": "Seven of Pentacles",
+  "sha1": "c9caaba37d822b79b329f31e7db4f13d8fd2fd9b",
+  "bytes": 935784,
+  "px": [
+   1114,
+   1919
+  ]
+ },
+ {
+  "slug": "ocho-de-oros",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 8,
+  "fichero": "File:Pents08.jpg",
+  "nombre_en": "Eight of Pentacles",
+  "sha1": "7ee1f241af3bb05d2bd81c07f2a4cd2291cc60ba",
+  "bytes": 889064,
+  "px": [
+   1117,
+   1920
+  ]
+ },
+ {
+  "slug": "nueve-de-oros",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 9,
+  "fichero": "File:Pents09.jpg",
+  "nombre_en": "Nine of Pentacles",
+  "sha1": "2fd48ca167699b1e51985338711e191e23613827",
+  "bytes": 853539,
+  "px": [
+   1108,
+   1920
+  ]
+ },
+ {
+  "slug": "diez-de-oros",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 10,
+  "fichero": "File:Pents10.jpg",
+  "nombre_en": "Ten of Pentacles",
+  "sha1": "af975248f5a406aef38a97bc58348468b3292de6",
+  "bytes": 963926,
+  "px": [
+   1115,
+   1920
+  ]
+ },
+ {
+  "slug": "sota-de-oros",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 11,
+  "fichero": "File:Pents11.jpg",
+  "nombre_en": "Page of Pentacles",
+  "sha1": "1f8c81e2972b400c31558dfccfb13c88a0a54dc4",
+  "bytes": 766976,
+  "px": [
+   1112,
+   1920
+  ]
+ },
+ {
+  "slug": "caballero-de-oros",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 12,
+  "fichero": "File:Pents12.jpg",
+  "nombre_en": "Knight of Pentacles",
+  "sha1": "4b71c7b41acda1e05bb507de542e58da16c5b41c",
+  "bytes": 709002,
+  "px": [
+   1111,
+   1919
+  ]
+ },
+ {
+  "slug": "reina-de-oros",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 13,
+  "fichero": "File:Pents13.jpg",
+  "nombre_en": "Queen of Pentacles",
+  "sha1": "0788c5de3edff7cfb9c94795e7ef96368a636f48",
+  "bytes": 1198823,
+  "px": [
+   1109,
+   1920
+  ]
+ },
+ {
+  "slug": "rey-de-oros",
+  "arcana": "minor",
+  "suit": "oros",
+  "number": 14,
+  "fichero": "File:Pents14.jpg",
+  "nombre_en": "King of Pentacles",
+  "sha1": "084fe9710bbd671f793ace7f11fb4c9ec5661900",
+  "bytes": 821927,
+  "px": [
+   1107,
+   1920
+  ]
+ }
+]
