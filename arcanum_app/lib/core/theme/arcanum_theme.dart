@@ -77,31 +77,6 @@ ThemeData buildArcanumTheme() {
       bodyColor: ArcanumColors.ivory,
       displayColor: ArcanumColors.ivory,
     ),
-    navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: ArcanumColors.surface,
-      indicatorColor: ArcanumColors.gold.withValues(alpha: 0.16),
-      elevation: 0,
-      labelTextStyle: WidgetStateProperty.resolveWith(
-        (states) => TextStyle(
-          fontFamily: 'Crimson Pro',
-          fontFamilyFallback: kGlyphFallback,
-          fontSize: 12,
-          letterSpacing: 0.5,
-          color: states.contains(WidgetState.selected)
-              ? ArcanumColors.gold
-              : ArcanumColors.ivoryMuted,
-        ),
-      ),
-      iconTheme: WidgetStateProperty.resolveWith(
-        (states) => IconThemeData(
-          color: states.contains(WidgetState.selected)
-              ? ArcanumColors.gold
-              : ArcanumColors.ivoryMuted,
-          size: 24,
-        ),
-      ),
-    ),
-
     // ── Los dos selectores del onboarding ────────────────────────────────
     //
     // Salían con el morado y el vino POR DEFECTO de Material 3, que es el

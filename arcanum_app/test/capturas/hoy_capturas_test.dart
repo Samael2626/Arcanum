@@ -359,11 +359,20 @@ Future<void> _montarApp(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// Abre el cajon por la hamburguesa. Desde el 21-sep-2026 no hay barra abajo:
+/// toda seccion cuesta dos toques y este es el primero.
+Future<void> _abrirCajon(WidgetTester tester) async {
+  await tester.tap(find.byIcon(Icons.menu));
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.pump(const Duration(milliseconds: 400));
+}
+
 /// El sello ya NO esta en Hoy: desde el 12-sep-2026 la lectura vive solo en la
-/// pestana Horoscopo, porque estaba montada en las dos y eran dos instancias
+/// seccion Horoscopo, porque estaba montada en las dos y eran dos instancias
 /// con estado propio. Estas capturas retratan esa pantalla.
 Future<void> _montarHoroscopo(WidgetTester tester) async {
   await _montarApp(tester);
+  await _abrirCajon(tester);
   await tester.tap(find.text('Horóscopo'));
   await tester.pumpAndSettle();
 }
@@ -484,26 +493,21 @@ void main() {
     await _retratar(tester, '05-texto-abierto');
   });
 
-  testWidgets('06 la barra de abajo, con el horoscopo ya como pestaña', (
-    tester,
-  ) async {
+  testWidgets('06 el cajón, con el horoscopo ya como sección', (tester) async {
     await _montarApp(tester);
-    await _retratar(tester, '06-barra-pestanas');
+    await _abrirCajon(tester);
+    await _retratar(tester, '06-cajon-secciones');
   });
 
-  testWidgets('07 la pantalla del horoscopo, con su pestaña marcada', (
+  testWidgets('07 la pantalla del horoscopo, con su fila marcada', (
     tester,
   ) async {
-    await _montarApp(tester);
-    await tester.tap(find.text('Horóscopo'));
-    await tester.pumpAndSettle();
+    await _montarHoroscopo(tester);
     await _retratar(tester, '07-horoscopo');
   });
 
   testWidgets('08 el historial, desplegado', (tester) async {
-    await _montarApp(tester);
-    await tester.tap(find.text('Horóscopo'));
-    await tester.pumpAndSettle();
+    await _montarHoroscopo(tester);
     // El boton vive al final de la lista y `ListView` no construye lo que no
     // se ve: hay que bajar hasta el, no basta con `ensureVisible`.
     await tester.scrollUntilVisible(
@@ -524,9 +528,7 @@ void main() {
   });
 
   testWidgets('09 la agenda de la semana', (tester) async {
-    await _montarApp(tester);
-    await tester.tap(find.text('Horóscopo'));
-    await tester.pumpAndSettle();
+    await _montarHoroscopo(tester);
     await tester.scrollUntilVisible(
       find.text('LO QUE VIENE'),
       300,
