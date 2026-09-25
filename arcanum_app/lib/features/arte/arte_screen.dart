@@ -355,36 +355,29 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
     await quota.recordUsage('materia');
   }
 
-  /// INALCANZABLE HOY. Comprobado el 24-sep-2026: no existe cupo de Materia.
+  /// CODIGO MUERTO, y por decision tomada: Materia/Saber es **gratis e
+  /// ilimitado en todos los planes** (Samuel, 24-sep-2026).
   ///
-  /// `QuotaService.canPerform` devuelve `true` siempre —es un stub, como toda
-  /// la clase— y en el backend solo `astral` y `oracle` pasan por
-  /// `UsageService`; Materia no tiene reserva ni límite diario. Así que esta
-  /// hoja no se ha mostrado nunca, y el anuncio recompensado que vivía aquí
-  /// tampoco: era una salida a una puerta que no se cierra.
+  /// No es que el cupo este sin implementar a la espera de encenderlo. Es que no
+  /// se va a encender: se cobra la IA —lo que cuesta dinero por uso— y no el
+  /// contenido fijo, que esta escrito una vez y servirlo no cuesta nada. El
+  /// paywall ya dice la verdad cuando anuncia «Saber, sin limite» en el plan
+  /// gratuito.
   ///
-  /// NO se borra: cuando Materia entre en `UsageService` esto es exactamente lo
-  /// que hará falta. Queda escrito para que nadie vuelva a razonar sobre esta
-  /// pantalla como si la viera alguien.
+  /// Estado tecnico que lo confirma: `QuotaService.canPerform` devuelve `true`
+  /// siempre —es un stub, como toda la clase— y en el backend solo `astral` y
+  /// `oracle` pasan por `UsageService`. Materia nunca tuvo reserva ni limite, asi
+  /// que esta hoja no se ha mostrado jamas, y el anuncio recompensado que vivia
+  /// aqui tampoco: era una salida a una puerta que no se cierra.
   ///
-  /// OJO AL IMPLEMENTAR EL CUPO: el paywall promete «Saber, sin límite» en el
-  /// plan gratuito, y Materia vive dentro de Saber. Visto en el teléfono el
-  /// 24-sep-2026, forzando esta hoja con un parche local. Si se enciende el cupo
-  /// tal cual, la app se contradice en dos pantallas seguidas y encima cobra por
-  /// lo que la anterior regala. Antes de encenderlo hay que decidir cuál de las
-  /// dos frases es la verdadera y cambiar la otra.
+  /// **Se borra en la 1.1.** Se deja en la 1.0.5 solo para no meter un borrado de
+  /// UI en una rama que ya estaba cerrada y verificada en el telefono.
   ///
-  /// La única salida al cupo agotado es Premium, desde la 1.0.5.
+  /// La contradiccion que se vio el 24-sep entre esta hoja y el paywall queda
+  /// resuelta por la decision, no por el codigo: manda el paywall.
   ///
-  /// Antes se ofrecía primero un anuncio recompensado —un minuto en vez de
-  /// dinero— y era la salida buena para quien todavía no sabe si esto le sirve.
-  /// Cayó con el SDK de AdMob, no por diseño: ver `ReleaseConfig`.
-  ///
-  /// Queda pendiente reponer una salida que no cueste dinero, porque pedir la
-  /// suscripción justo al agotarse el cupo es pedirla en el peor momento.
-  ///
-  /// Ya no recibe el ítem: lo necesitaba para abrir su ficha después del
-  /// anuncio. Sin esa vía, la hoja no sabe nada del ítem que la abrió.
+  /// Antes ofrecia primero un anuncio recompensado. Cayo con el SDK de AdMob:
+  /// ver `ReleaseConfig`.
   void _showQuotaExceeded() {
     showModalBottomSheet(
       context: context,
