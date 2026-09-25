@@ -367,6 +367,13 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
   /// que hará falta. Queda escrito para que nadie vuelva a razonar sobre esta
   /// pantalla como si la viera alguien.
   ///
+  /// OJO AL IMPLEMENTAR EL CUPO: el paywall promete «Saber, sin límite» en el
+  /// plan gratuito, y Materia vive dentro de Saber. Visto en el teléfono el
+  /// 24-sep-2026, forzando esta hoja con un parche local. Si se enciende el cupo
+  /// tal cual, la app se contradice en dos pantallas seguidas y encima cobra por
+  /// lo que la anterior regala. Antes de encenderlo hay que decidir cuál de las
+  /// dos frases es la verdadera y cambiar la otra.
+  ///
   /// La única salida al cupo agotado es Premium, desde la 1.0.5.
   ///
   /// Antes se ofrecía primero un anuncio recompensado —un minuto en vez de
