@@ -162,7 +162,10 @@ class BloqueSaldoOraculo extends ConsumerWidget {
     return Semantics(
       button: true,
       label: cupo == null
-          ? 'Abrir la tienda de créditos'
+          ? estado == null
+                ? 'Abrir la tienda de créditos'
+                : 'Tienes ${estado.creditos} créditos. Primero se gasta tu cupo '
+                      'diario; después, uno por lectura. Abrir la tienda.'
           : cupo.siguienteGastaCredito
           ? 'Tienes ${estado!.creditos} créditos. Esta lectura gasta uno. '
                 'Abrir la tienda.'
@@ -241,10 +244,14 @@ class _Coste extends StatelessWidget {
         style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
       );
     }
-    // Sin cupo conocido se ensena el saldo y punto. Callar el coste es correcto;
-    // inventarlo, no.
+    // SIN CUPO CONOCIDO se explica la REGLA, no el estado de hoy.
+    //
+    // Pasa cuando `/credits/usage/today` no responde y el saldo llego por la via
+    // de respaldo. Decir "gasta 1" seria afirmar algo que no se sabe, y callar
+    // del todo dejaria la cifra sin explicar. La frase general es cierta
+    // siempre: primero el cupo, y cuando se acaba, creditos.
     final coste = cupo == null
-        ? ''
+        ? ' · primero tu cupo diario; después, 1 por lectura'
         : cupo!.siguienteGastaCredito
         ? ' · esta lectura gasta 1'
         : ' · esta lectura entra en tu cupo de hoy';

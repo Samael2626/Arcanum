@@ -94,7 +94,7 @@ class EstadoSaldo {
 /// `AsyncNotifier` y no `FutureProvider` por [tras Comprar]: hace falta poder
 /// reintentar desde fuera manteniendo el valor anterior en pantalla.
 class SaldoNotifier extends AsyncNotifier<EstadoSaldo> {
-  /// Esperas entre reintentos tras una compra. Suman ~7 s.
+  /// Esperas entre reintentos tras una compra. Suman ~30 s.
   ///
   /// EL WEBHOOK TARDA. Los creditos los concede el backend cuando RevenueCat le
   /// avisa, no cuando la tienda de Google dice que la compra fue bien, asi que
@@ -102,20 +102,51 @@ class SaldoNotifier extends AsyncNotifier<EstadoSaldo> {
   /// no entro. Quien acaba de pagar y ve el mismo numero da por hecho que
   /// perdio el dinero.
   ///
-  /// Creciente y corta: si a los siete segundos no ha llegado, esperar mas en
-  /// una pantalla bloqueada es peor que decirlo y ofrecer actualizar.
+  /// LOS 30 s NO ESTAN MEDIDOS. Se busco el retardo real en la base de
+  /// produccion el 25-sep-2026 y **no hay ni un evento**: `revenuecat_events`
+  /// esta vacia, nadie ha comprado todavia. Asi que este reparto es un techo
+  /// prudente, no un dato.
+  ///
+  /// Cuando haya compras de verdad, la consulta que lo mide es
+  /// `received_at - occurred_at_ms` sobre `revenuecat_events`, y entonces esto
+  /// se ajusta al p90 observado en vez de a una suposicion.
+  ///
+  /// Creciente: los primeros reintentos son baratos y cubren el caso rapido;
+  /// los ultimos espacian para no castigar la bateria ni el servidor si el
+  /// webhook se esta demorando de verdad.
   static const esperas = [
     Duration(seconds: 1),
     Duration(seconds: 2),
     Duration(seconds: 4),
+    Duration(seconds: 8),
+    Duration(seconds: 15),
   ];
 
   @override
   Future<EstadoSaldo> build() => _leer();
 
+  /// Pide el estado, y si el endpoint del cupo falla se conforma con el saldo.
+  ///
+  /// DEGRADA, NO SE APAGA. `/credits/usage/today` es nuevo: un backend mas viejo
+  /// que esta app responde 404, y entonces quedarse en "Saldo no disponible"
+  /// esconderia un saldo que `/credits/balance` sabe perfectamente. Se pierde
+  /// solo lo que de verdad no se puede saber -- cuanto cupo queda --, y el
+  /// bloque lo nota porque `acciones` viene vacio: entonces explica la regla en
+  /// general en vez de afirmar lo que cuesta esta lectura.
+  ///
+  /// Si tambien falla el saldo, ahi si se propaga el error: no hay nada que
+  /// ensenar y inventarlo seria peor.
   Future<EstadoSaldo> _leer() async {
-    final json = await ref.read(arcanumApiProvider).usageToday();
-    return EstadoSaldo.deJson(json);
+    final api = ref.read(arcanumApiProvider);
+    try {
+      return EstadoSaldo.deJson(await api.usageToday());
+    } catch (_) {
+      final soloSaldo = await api.creditsBalance();
+      return EstadoSaldo(
+        creditos: (soloSaldo['balance'] as num?)?.toInt() ?? 0,
+        acciones: const {},
+      );
+    }
   }
 
   /// Vuelve a preguntar, dejando a la vista lo que ya habia.
