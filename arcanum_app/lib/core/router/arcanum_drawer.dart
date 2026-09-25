@@ -99,9 +99,18 @@ class ArcanumDrawer extends StatelessWidget {
                     ),
                     // El saldo, ARRIBA. Es lo unico de aqui que antes no se
                     // podia ver sin chocar antes con un 402, asi que va donde
-                    // se mira primero. Lo que desplaza esta contado en la nota
-                    // de la 1.0.6: a 360 dp el cajon ya scrolleaba antes de
-                    // esto, y lo que baja del pliegue es "Privacidad y datos".
+                    // se mira primero.
+                    //
+                    // QUE DESPLAZA, MEDIDO EN EL TELEFONO (OnePlus GN2200, que
+                    // es 360x800 dp justos) el 25-sep-2026: NADA se cae del
+                    // pliegue. Con el bloque puesto, el cajon entero -- las
+                    // cinco secciones y las tres de la cuenta -- termina a los
+                    // 443 dp de los 800 que hay. Sobra la mitad.
+                    //
+                    // El bloque mide ~92 dp. La siguiente pieza que se anada
+                    // aqui arriba tiene ~357 dp antes de empujar "Privacidad y
+                    // datos" fuera, que es la ultima fila y por tanto la que
+                    // caeria primero.
                     const BloqueSaldoCajon(),
                     for (var i = 0; i < arcanumSections.length; i++)
                       _FilaSeccion(

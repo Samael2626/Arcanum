@@ -104,11 +104,13 @@ void main() {
     await abrirCajon(t);
     // 2 · tocarla
     //
-    // HAY QUE DESPLAZAR PARA LLEGAR, desde que el bloque de saldo ocupa la
-    // cabecera del cajon (1.0.6). No son tres toques: el cajon ya scrolleaba
-    // antes en pantallas cortas, y desplazar no cuenta como toque. Pero queda
-    // escrito que Privacidad es la fila que se cae del pliegue la proxima vez
-    // que alguien anada algo aqui arriba.
+    // HAY QUE DESPLAZAR PARA LLEGAR, pero SOLO EN EL TEST: el viewport por
+    // defecto de flutter_test es 800x600, mas corto que cualquier telefono.
+    //
+    // En el aparato de verdad no hace falta. Medido en el OnePlus (360x800 dp)
+    // el 25-sep-2026 con el bloque de saldo ya puesto: el cajon entero termina
+    // a los 443 dp y cabe de sobra. Siguen siendo DOS toques, que es lo que
+    // este test defiende.
     await t.ensureVisible(find.text('Privacidad y datos'));
     await t.pumpAndSettle();
     await t.tap(find.text('Privacidad y datos'));

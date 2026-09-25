@@ -16,7 +16,6 @@
 library;
 
 import 'package:arcanum_app/core/monetization/saldo.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SaldoFalso extends SaldoNotifier {
   SaldoFalso({this.creditos = 0, this.gastaCredito = false});

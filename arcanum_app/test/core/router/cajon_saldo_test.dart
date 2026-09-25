@@ -7,7 +7,6 @@
 library;
 
 import 'package:arcanum_app/core/api/arcanum_api.dart';
-import 'package:arcanum_app/core/monetization/saldo.dart';
 import 'package:arcanum_app/shared/widgets/bloque_saldo.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
