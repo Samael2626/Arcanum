@@ -1,9 +1,13 @@
+import 'package:arcanum_app/core/monetization/saldo.dart';
 import 'package:arcanum_app/core/content/sections.dart';
 import 'package:arcanum_app/core/router/arcanum_drawer.dart';
 import 'package:arcanum_app/core/theme/arcanum_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../apoyo/saldo_falso.dart';
 
 /// El cajon: TODA la navegacion desde el 21-sep-2026.
 ///
@@ -52,7 +56,14 @@ void main() {
           ),
       ],
     );
-    await t.pumpWidget(MaterialApp.router(routerConfig: router));
+    // ProviderScope: desde la 1.0.6 el cajon lleva el bloque de saldo, que es
+    // un ConsumerWidget. Sin scope no monta, y con uno vacio pediria por red.
+    await t.pumpWidget(
+      ProviderScope(
+        overrides: [saldoProvider.overrideWith(() => SaldoFalso(creditos: 3))],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
     await t.pumpAndSettle();
     return router;
   }
@@ -92,6 +103,14 @@ void main() {
     // 1 · abrir el cajon
     await abrirCajon(t);
     // 2 · tocarla
+    //
+    // HAY QUE DESPLAZAR PARA LLEGAR, desde que el bloque de saldo ocupa la
+    // cabecera del cajon (1.0.6). No son tres toques: el cajon ya scrolleaba
+    // antes en pantallas cortas, y desplazar no cuenta como toque. Pero queda
+    // escrito que Privacidad es la fila que se cae del pliegue la proxima vez
+    // que alguien anada algo aqui arriba.
+    await t.ensureVisible(find.text('Privacidad y datos'));
+    await t.pumpAndSettle();
     await t.tap(find.text('Privacidad y datos'));
     await t.pumpAndSettle();
 

@@ -8,6 +8,7 @@
 // Lo nuevo es la puerta: el selector de intérprete. Se prueba que existe, que
 // cambia de endpoint de verdad, y que al volver no deja puesta una tirada que
 // la otra vía no sabe leer.
+import 'package:arcanum_app/core/monetization/saldo.dart';
 import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/core/theme/arcanum_theme.dart';
@@ -17,6 +18,7 @@ import 'package:arcanum_app/features/oraculo/widgets/tarot_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../apoyo/saldo_falso.dart';
 
 class _Auth extends AuthNotifier {
   @override
@@ -81,6 +83,7 @@ Future<void> _abrir(WidgetTester tester, _Api api) async {
     ProviderScope(
       overrides: [
         arcanumApiProvider.overrideWithValue(api),
+        saldoProvider.overrideWith(() => SaldoFalso(creditos: 3)),
         authProvider.overrideWith(_Auth.new),
       ],
       child: MaterialApp(
@@ -161,13 +164,21 @@ void main() {
       findsNothing,
       reason: 'una carta sin voltear no puede estar contando lo que dice',
     );
-    await tester.tap(
-      find
-          .descendant(
-            of: find.byType(TarotCardView),
-            matching: find.byType(GestureDetector),
-          )
-          .first,
+    // El bloque de saldo (1.0.6) ocupa la cabecera del Oraculo, asi que la
+    // carta y su significado caen mas abajo que antes: hay que desplazar para
+    // alcanzarlos. Sin esto el `tap` cae fuera de pantalla y no dispara nada.
+    final naipe = find
+        .descendant(
+          of: find.byType(TarotCardView),
+          matching: find.byType(GestureDetector),
+        )
+        .first;
+    await tester.ensureVisible(naipe);
+    await tester.pumpAndSettle();
+    await tester.tap(naipe);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.text('El salto que todavía no sabe dónde cae.'),
     );
     await tester.pumpAndSettle();
     expect(
