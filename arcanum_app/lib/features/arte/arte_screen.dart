@@ -334,7 +334,7 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
     final quota = ref.read(quotaServiceProvider);
     final canView = await quota.canPerform('materia', tier);
     if (!canView) {
-      if (mounted) _showQuotaExceeded(item);
+      if (mounted) _showQuotaExceeded();
       return;
     }
 
@@ -355,6 +355,18 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
     await quota.recordUsage('materia');
   }
 
+  /// INALCANZABLE HOY. Comprobado el 24-sep-2026: no existe cupo de Materia.
+  ///
+  /// `QuotaService.canPerform` devuelve `true` siempre —es un stub, como toda
+  /// la clase— y en el backend solo `astral` y `oracle` pasan por
+  /// `UsageService`; Materia no tiene reserva ni límite diario. Así que esta
+  /// hoja no se ha mostrado nunca, y el anuncio recompensado que vivía aquí
+  /// tampoco: era una salida a una puerta que no se cierra.
+  ///
+  /// NO se borra: cuando Materia entre en `UsageService` esto es exactamente lo
+  /// que hará falta. Queda escrito para que nadie vuelva a razonar sobre esta
+  /// pantalla como si la viera alguien.
+  ///
   /// La única salida al cupo agotado es Premium, desde la 1.0.5.
   ///
   /// Antes se ofrecía primero un anuncio recompensado —un minuto en vez de
@@ -363,7 +375,10 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
   ///
   /// Queda pendiente reponer una salida que no cueste dinero, porque pedir la
   /// suscripción justo al agotarse el cupo es pedirla en el peor momento.
-  void _showQuotaExceeded(Map<String, dynamic> item) {
+  ///
+  /// Ya no recibe el ítem: lo necesitaba para abrir su ficha después del
+  /// anuncio. Sin esa vía, la hoja no sabe nada del ítem que la abrió.
+  void _showQuotaExceeded() {
     showModalBottomSheet(
       context: context,
       backgroundColor: ArcanumColors.surface,

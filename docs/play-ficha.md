@@ -271,24 +271,30 @@ así que aquí va **el fondo**, no un guion literal.
 **Público objetivo:** 18+. Coherente con la edad mínima de la política de
 privacidad, y evita de raíz la política de familias.
 
-**¿Contiene anuncios?** **No.** Este build no muestra ni un anuncio:
-`MobileAds.instance.initialize()` está detrás de `ReleaseConfig.adsEnabled`
-(`main.dart:35`), que es `bool.fromEnvironment('ADS_ENABLED')` sin valor por
-defecto, y el AAB 1.0.0+7 se compiló sin esa bandera. Marcar "Sí" pondría el
-distintivo "Contiene anuncios" en una ficha cuya app no los tiene.
+**¿Contiene anuncios?** **No.** Desde la 1.0.5 la app **no lleva SDK de
+anuncios**: `google_mobile_ads` esta fuera del `pubspec.yaml`. Antes esta
+respuesta se apoyaba en la bandera `ADS_ENABLED`, que ya no existe — y que no
+bastaba, porque el `ContentProvider` del SDK arrancaba antes que Dart.
 
-> **Esto NO contradice la fila de ID de dispositivo de la sección 2.** Son dos
-> preguntas distintas: aquí Play pregunta si la app **muestra** anuncios; allí,
-> si **recoge** el identificador de publicidad. El SDK de AdMob viaja en el
-> binario y su `ContentProvider` de auto-arranque **sí está declarado** en el
-> manifiesto del AAB —comprobado: `com.google.android.gms.ads.MobileAdsInitProvider`,
-> más los permisos `AD_ID` y `ACCESS_ADSERVICES_AD_ID`—, así que la fila del
-> Ad ID se queda declarada. Es el caso contrario al de Analytics, donde el
-> registrador estaba **ausente**: ahí el SDK no arranca y aquí sí puede.
+Comprobado en el manifiesto del AAB 1.0.5+13: `MobileAdsInitProvider`,
+`AdActivity`, `AdService`, `ads.APPLICATION_ID`, `permission.AD_ID` y
+`ACCESS_ADSERVICES_AD_ID` estan los seis **AUSENTES**.
 
-> **Cuando se activen los anuncios hay que volver a esta casilla.** Al compilar
-> con `ADS_ENABLED=true` la respuesta pasa a "Sí", y antes hay que implementar
-> UMP (`TODO(compliance)` en `main.dart:36`).
+> **Esto NO permite quitar todavia la fila de ID de dispositivo de la seccion 2.**
+> Son dos preguntas distintas —aqui Play pregunta si la app **muestra** anuncios,
+> alli si **recoge** el identificador de publicidad— y, sobre todo, la seccion 2
+> describe *"the sum of your app's data collection and sharing across all its
+> versions currently distributed on Google Play"*
+> ([fuente](https://support.google.com/googleplay/android-developer/answer/10787469)).
+>
+> La **1.0.4 si lleva el SDK** y es la que corre en la prueba cerrada, que NO
+> esta exenta (solo lo esta el track de pruebas internas). Mientras las dos
+> versiones convivan, la fila del Ad ID **se queda**. Se quita cuando la 1.0.4
+> deje de estar activa en todos los tracks.
+
+> **Si algun dia vuelven los anuncios:** primero el consentimiento UMP, despues
+> el SDK, y entonces esta casilla pasa a "Si". En ese orden, que es el que no se
+> siguio la primera vez.
 
 ---
 
