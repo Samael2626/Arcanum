@@ -166,6 +166,38 @@ MIGRATION_TEST_DATABASE_URL  postgresql://postgres:test@localhost:55434/arcanum_
 Sin ellas la suite **no falla: salta 172 tests en silencio** y parece verde. Ojo
 a la contrasena, que no es la misma en las dos.
 
+### Que contenedor es cada uno
+
+Los nombres enganan, asi que van escritos: **el que se llama `-svc-test` es el de
+MIGRACIONES**, no el de la suite.
+
+| Contenedor | Puerto | Base | Para que |
+|---|---|---|---|
+| `arcanum-test-db` | **5434** | `arcanum_test` | la suite entera (`TEST_DATABASE_URL`) |
+| `arcanum-svc-test` | **55434** | `arcanum_migration_test` | solo migraciones (`MIGRATION_TEST_DATABASE_URL`) |
+
+Se levantan con:
+
+```
+docker start arcanum-test-db arcanum-svc-test
+```
+
+> **`arcanum-migration-test` es un duplicado OBSOLETO. No lo levantes.**
+> Publica el mismo puerto 55434 que `arcanum-svc-test`, asi que arrancarlo falla
+> con `Bind for 0.0.0.0:55434 failed: port is already allocated` — o peor, si
+> gana la carrera, la suite de migraciones acaba hablando con una base vacia que
+> nadie ha migrado. Se deja ahi a proposito, sin borrar, pero no se usa.
+
+Comprobar que estan sirviendo lo que se espera, antes de fiarse de un verde:
+
+```
+docker exec arcanum-test-db psql -U postgres -lqt   | cut -d'|' -f1
+docker exec arcanum-svc-test psql -U postgres -lqt  | cut -d'|' -f1
+```
+
+Referencia de una pasada buena (25-sep-2026): **1020 pasan, 1 saltado**. Si ves
+~172 saltados, las bases no estan conectadas y ese verde no vale.
+
 Si la base de migraciones trae un `alembic_version` sin tablas (resto de un
 `downgrade` a medias), resetearla y volver a migrar:
 
