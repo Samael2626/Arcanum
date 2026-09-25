@@ -24,13 +24,44 @@ tabla.
 > `android.permission.ACCESS_ADSERVICES_AD_ID`. Cero entradas de
 > `android/gms/ads` en el binario.
 >
-> **Consecuencia para el formulario:** la fila de **ID de dispositivo /
-> publicidad se puede quitar**, no solo marcar como no aplicable. Ya no hay
-> permiso de Ad ID que defender. Declarar recogida que no ocurre es una
-> discrepancia igual de sancionable que omitir una que si ocurre.
+> **Consecuencia para el formulario: NINGUNA todavia.** La fila de ID de
+> publicidad **se queda** mientras la 1.0.4 siga distribuida. Ver el bloque de
+> abajo: el formulario no describe la version nueva, describe la SUMA de todas.
 >
 > Si algun dia vuelven los anuncios: primero UMP, despues el SDK, y entonces
 > estas filas vuelven en el MISMO envio.
+
+> [!danger] COMPROBADO — el formulario cubre TODAS las versiones distribuidas
+> Fuente: [Provide information for Google Play's Data safety section](https://support.google.com/googleplay/android-developer/answer/10787469),
+> leida el 24-sep-2026. Literal:
+>
+> > "Your Data safety section describes the sum of your app's data collection and
+> > sharing across all its versions currently distributed on Google Play."
+>
+> Y: *"if any of the collection, uses, or linkages are present in **any version**
+> of the app presently distributed on Google Play, anywhere in the world, you must
+> indicate such on the form."*
+>
+> Solo hay una excepcion, y no nos sirve: *"Apps that are exclusively active on
+> this track do not need to complete the declaration"* — y ese track es el de
+> pruebas **internas**. La prueba **cerrada** NO esta exenta.
+>
+> **Por tanto la fila del ID de publicidad se quita cuando la 1.0.4 deje de estar
+> activa en TODOS los tracks, no cuando se publique la 1.0.5.** La 1.0.4 lleva el
+> SDK de AdMob dentro y hoy es la que corre en la prueba cerrada. Mientras las
+> dos convivan, el formulario tiene que describir la suma, y la suma incluye el
+> Ad ID.
+>
+> Quitarla antes seria el mismo error que declarar de mas, con el signo cambiado:
+> una declaracion que no cubre una version viva.
+>
+> **NO COMPROBADO:** que exista una frase de Google que diga explicitamente
+> "puedes retirar una declaracion cuando retires el SDK". No la hay en esta
+> pagina. La conclusion de arriba es deduccion directa de la frase de la suma
+> — solida, pero deduccion.
+>
+> Secuencia correcta: publicar 1.0.5 → esperar a que 1.0.4 no quede activa en
+> ningun track → **entonces** editar el formulario.
 
 ## Respuestas base
 

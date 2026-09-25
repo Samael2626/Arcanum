@@ -84,10 +84,22 @@ android.permission.ACCESS_ADSERVICES_AD_ID           AUSENTE
 
 Y cero entradas de `android/gms/ads` dentro del bundle.
 
-**Lo que habilita, tal como lo anticipaba la opcion (b):** se puede **quitar la
-fila de ID de dispositivo de Data Safety**, no solo declararla a la defensiva. El
-"NO COMPROBADO" de mas abajo —si el provider llegaba a leer el Ad ID sin que
-nadie llamara a `initialize()`— deja de importar: no hay provider.
+**Lo que habilita, y CUANDO.** La opcion (b) anticipaba que se podria quitar la
+fila de ID de dispositivo de Data Safety. Es cierto, pero **no todavia**:
+
+> El formulario describe *"the sum of your app's data collection and sharing
+> across all its versions currently distributed on Google Play"*
+> ([fuente](https://support.google.com/googleplay/android-developer/answer/10787469),
+> 24-sep-2026). Solo el track de pruebas **internas** esta exento; el de prueba
+> **cerrada** no.
+
+La 1.0.4 lleva el SDK dentro y es la que corre hoy en la prueba cerrada. Mientras
+siga activa en cualquier track, la fila del Ad ID **se queda**. Se quita cuando
+la 1.0.4 deje de estar activa en TODOS los tracks, no cuando se publique la 1.0.5.
+
+El "NO COMPROBADO" de mas abajo —si el provider llegaba a leer el Ad ID sin que
+nadie llamara a `initialize()`— sigue importando por lo mismo: describe a la 1.0.4,
+que sigue viva.
 
 La casilla "Contiene anuncios" de `play-ficha.md` se queda en **No**.
 
