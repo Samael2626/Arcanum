@@ -9,6 +9,7 @@
 // Se monta la app ENTERA por el router y no una pantalla suelta, porque lo que
 // se prueba vive en la carcasa: un test que montara `HoroscopoScreen` a pelo
 // pasaría aunque no hubiera forma de llegar a ella.
+import 'package:arcanum_app/core/monetization/saldo.dart';
 import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/core/content/sections.dart';
@@ -22,6 +23,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../apoyo/saldo_falso.dart';
 
 class _AuthDePrueba extends AuthNotifier {
   @override
@@ -132,6 +134,7 @@ Future<void> _montar(WidgetTester tester) async {
   final contenedor = ProviderContainer(
     overrides: [
       arcanumApiProvider.overrideWithValue(_ApiMuda()),
+      saldoProvider.overrideWith(() => SaldoFalso(creditos: 3)),
       authProvider.overrideWith(_AuthDePrueba.new),
     ],
   );

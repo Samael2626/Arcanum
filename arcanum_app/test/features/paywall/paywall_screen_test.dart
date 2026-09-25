@@ -1,8 +1,10 @@
+import 'package:arcanum_app/core/monetization/saldo.dart';
 import 'package:arcanum_app/core/monetization/monetization_service.dart';
 import 'package:arcanum_app/features/paywall/paywall_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../apoyo/saldo_falso.dart';
 
 /// Monta el paywall con los precios que devolveria la tienda.
 Future<void> _montar(
@@ -20,6 +22,7 @@ Future<void> _montar(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        saldoProvider.overrideWith(() => SaldoFalso(creditos: 3)),
         storePricesProvider.overrideWith((ref) async => precios),
         descuentoAnualProvider.overrideWith((ref) async => ahorro),
       ],

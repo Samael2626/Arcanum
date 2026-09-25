@@ -1,11 +1,15 @@
 import 'dart:io';
 
 import 'package:arcanum_app/core/content/sections.dart';
+import 'package:arcanum_app/core/monetization/saldo.dart';
 import 'package:arcanum_app/core/router/arcanum_drawer.dart';
 import 'package:arcanum_app/core/theme/arcanum_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../apoyo/saldo_falso.dart';
 
 /// Los dos tiradores de la esquina superior: la hamburguesa y el avatar.
 ///
@@ -73,7 +77,13 @@ void main() {
           GoRoute(path: r, builder: (c, s) => const Scaffold()),
       ],
     );
-    await t.pumpWidget(MaterialApp.router(routerConfig: router));
+    // ProviderScope: el cajon lleva el bloque de saldo desde la 1.0.6.
+    await t.pumpWidget(
+      ProviderScope(
+        overrides: [saldoProvider.overrideWith(() => SaldoFalso(creditos: 3))],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
     await t.pumpAndSettle();
 
     for (final tirador in ['hamburguesa', 'avatar']) {

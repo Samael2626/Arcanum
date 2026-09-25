@@ -1,9 +1,13 @@
+import 'package:arcanum_app/core/monetization/saldo.dart';
 import 'package:arcanum_app/core/content/sections.dart';
 import 'package:arcanum_app/core/router/arcanum_drawer.dart';
 import 'package:arcanum_app/core/theme/arcanum_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../apoyo/saldo_falso.dart';
 
 /// El cajon: TODA la navegacion desde el 21-sep-2026.
 ///
@@ -52,7 +56,14 @@ void main() {
           ),
       ],
     );
-    await t.pumpWidget(MaterialApp.router(routerConfig: router));
+    // ProviderScope: desde la 1.0.6 el cajon lleva el bloque de saldo, que es
+    // un ConsumerWidget. Sin scope no monta, y con uno vacio pediria por red.
+    await t.pumpWidget(
+      ProviderScope(
+        overrides: [saldoProvider.overrideWith(() => SaldoFalso(creditos: 3))],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
     await t.pumpAndSettle();
     return router;
   }
@@ -92,6 +103,16 @@ void main() {
     // 1 · abrir el cajon
     await abrirCajon(t);
     // 2 · tocarla
+    //
+    // HAY QUE DESPLAZAR PARA LLEGAR, pero SOLO EN EL TEST: el viewport por
+    // defecto de flutter_test es 800x600, mas corto que cualquier telefono.
+    //
+    // En el aparato de verdad no hace falta. Medido en el OnePlus (360x800 dp)
+    // el 25-sep-2026 con el bloque de saldo ya puesto: el cajon entero termina
+    // a los 443 dp y cabe de sobra. Siguen siendo DOS toques, que es lo que
+    // este test defiende.
+    await t.ensureVisible(find.text('Privacidad y datos'));
+    await t.pumpAndSettle();
     await t.tap(find.text('Privacidad y datos'));
     await t.pumpAndSettle();
 

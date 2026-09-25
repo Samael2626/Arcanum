@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../content/sections.dart';
 import '../../shared/widgets/arcanum_card.dart';
+import '../../shared/widgets/bloque_saldo.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_resin.dart';
 import '../../shared/widgets/arcanum_toggle.dart';
@@ -96,6 +97,21 @@ class ArcanumDrawer extends StatelessWidget {
                       padding: EdgeInsets.fromLTRB(20, 22, 20, 14),
                       child: SectionLabel('ARCANUM'),
                     ),
+                    // El saldo, ARRIBA. Es lo unico de aqui que antes no se
+                    // podia ver sin chocar antes con un 402, asi que va donde
+                    // se mira primero.
+                    //
+                    // QUE DESPLAZA, MEDIDO EN EL TELEFONO (OnePlus GN2200, que
+                    // es 360x800 dp justos) el 25-sep-2026: NADA se cae del
+                    // pliegue. Con el bloque puesto, el cajon entero -- las
+                    // cinco secciones y las tres de la cuenta -- termina a los
+                    // 443 dp de los 800 que hay. Sobra la mitad.
+                    //
+                    // El bloque mide ~92 dp. La siguiente pieza que se anada
+                    // aqui arriba tiene ~357 dp antes de empujar "Privacidad y
+                    // datos" fuera, que es la ultima fila y por tanto la que
+                    // caeria primero.
+                    const BloqueSaldoCajon(),
                     for (var i = 0; i < arcanumSections.length; i++)
                       _FilaSeccion(
                         seccion: arcanumSections[i],
