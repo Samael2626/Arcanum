@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../content/sections.dart';
 import '../../shared/widgets/arcanum_card.dart';
+import '../../shared/widgets/bloque_saldo.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_resin.dart';
 import '../../shared/widgets/arcanum_toggle.dart';
@@ -96,6 +97,12 @@ class ArcanumDrawer extends StatelessWidget {
                       padding: EdgeInsets.fromLTRB(20, 22, 20, 14),
                       child: SectionLabel('ARCANUM'),
                     ),
+                    // El saldo, ARRIBA. Es lo unico de aqui que antes no se
+                    // podia ver sin chocar antes con un 402, asi que va donde
+                    // se mira primero. Lo que desplaza esta contado en la nota
+                    // de la 1.0.6: a 360 dp el cajon ya scrolleaba antes de
+                    // esto, y lo que baja del pliegue es "Privacidad y datos".
+                    const BloqueSaldoCajon(),
                     for (var i = 0; i < arcanumSections.length; i++)
                       _FilaSeccion(
                         seccion: arcanumSections[i],

@@ -4,6 +4,7 @@ import '../../shared/widgets/arcanum_toggle.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/monetization/monetization_service.dart';
+import '../../core/monetization/saldo.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/gold_button.dart';
@@ -50,6 +51,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
               children: [
                 const SizedBox(height: 12),
+                // El saldo, ARRIBA del todo. Desde la 1.0.6 a esta pantalla se
+                // llega a proposito desde el cajon, no solo rebotado por un
+                // 402: quien entra queriendo comprar creditos tiene que ver
+                // cuantos tiene antes de que se le ofrezca una suscripcion.
+                const _SaldoActual(),
+                const SizedBox(height: 16),
                 // Header
                 const Text(
                   '✦',
@@ -570,9 +577,8 @@ class _ConsumiblesSheet extends ConsumerWidget {
 
   Future<void> _comprar(BuildContext context, String productId) async {
     Navigator.of(context).pop();
-    final service = ProviderScope.containerOf(
-      parentContext,
-    ).read(monetizationServiceProvider);
+    final contenedor = ProviderScope.containerOf(parentContext);
+    final service = contenedor.read(monetizationServiceProvider);
     final resultado = await service.purchaseProduct(productId);
     // La hoja ya esta cerrada, asi que el aviso va sobre la pantalla de abajo.
     // Cancelar no se comenta; fallar sin decir nada dejaba al usuario creyendo
@@ -583,7 +589,27 @@ class _ConsumiblesSheet extends ConsumerWidget {
           content: Text('No se pudo completar la compra. Inténtalo de nuevo.'),
         ),
       );
+      return;
     }
+    if (resultado != PurchaseOutcome.comprada) return;
+
+    // LOS CREDITOS NO LLEGAN AL VOLVER DE LA TIENDA. Los concede el backend
+    // cuando RevenueCat le avisa por webhook, asi que preguntar una sola vez
+    // lee el saldo viejo y parece que la compra no entro. `trasComprar`
+    // reintenta unos segundos; si aun no ha subido lo dice, sin dar la compra
+    // por perdida -- puede seguir en camino.
+    final subio = await contenedor.read(saldoProvider.notifier).trasComprar();
+    if (!parentContext.mounted) return;
+    ScaffoldMessenger.of(parentContext).showSnackBar(
+      SnackBar(
+        content: Text(
+          subio
+              ? 'Listo. Tus créditos ya están disponibles.'
+              : 'La compra se hizo. Los créditos pueden tardar unos segundos '
+                    'en aparecer.',
+        ),
+      ),
+    );
   }
 }
 
@@ -642,6 +668,77 @@ class _ConsumableTile extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// El saldo al entrar en la tienda.
+///
+/// Sin esto, la unica forma de ver cuantos creditos tenias era el SnackBar que
+/// soltaba `abrirPaywallDeCreditos` al rebotar de un 402 -- y desaparecia solo.
+class _SaldoActual extends ConsumerWidget {
+  const _SaldoActual();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final estado = ref.watch(saldoProvider).value;
+    if (estado == null) return const SizedBox.shrink();
+    return Container(
+      key: const Key('saldo-paywall'),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ArcanumColors.gold.withValues(alpha: 0.38)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'TU SALDO',
+                  style: ArcanumText.body(
+                    10,
+                    color: ArcanumColors.goldLabel,
+                  ).copyWith(letterSpacing: 2.2),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      '${estado.creditos}',
+                      style: ArcanumText.heading(
+                        30,
+                        color: ArcanumColors.goldLight,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      estado.creditos == 1 ? 'crédito' : 'créditos',
+                      style: ArcanumText.body(
+                        14,
+                        color: ArcanumColors.ivoryMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Text(
+            'Ninguno expira',
+            style: ArcanumText.body(
+              12,
+              color: ArcanumColors.ivoryMuted,
+              italic: true,
+            ),
+          ),
+        ],
       ),
     );
   }

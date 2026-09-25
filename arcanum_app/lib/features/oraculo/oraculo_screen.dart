@@ -9,6 +9,7 @@ import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/creditos.dart';
+import '../../shared/widgets/bloque_saldo.dart';
 import '../../shared/titulo_book_t.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/arcanum_toggle.dart';
@@ -430,6 +431,11 @@ class _OracleViewState extends ConsumerState<_OracleView> {
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
       children: [
         const SizedBox(height: 8),
+        // ENCIMA del selector, no debajo del boton: se mira antes de elegir,
+        // que es cuando importa saber si esto cuesta. El coste lo dice el
+        // servidor; aqui no se escribe ningun numero fijo.
+        const BloqueSaldoOraculo(accion: 'tarot'),
+        const SizedBox(height: 16),
         _SelectorDeInterprete(
           valor: _interprete,
           onChanged: _cambiarInterprete,

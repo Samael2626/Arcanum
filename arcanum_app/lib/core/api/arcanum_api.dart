@@ -396,6 +396,18 @@ class ArcanumApi {
     return res.data as Map<String, dynamic>;
   }
 
+  /// Saldo Y cupo del dia, por accion.
+  ///
+  /// Hace falta para poder decir si la proxima lectura sale del cupo gratuito o
+  /// descuenta un credito: con el saldo solo, la app no puede distinguirlo y
+  /// acaba anunciando un coste que es falso mientras quede cupo.
+  ///
+  /// Solo lectura: no reserva ni cobra.
+  Future<Map<String, dynamic>> usageToday() async {
+    final res = await _dio.get('/credits/usage/today');
+    return res.data as Map<String, dynamic>;
+  }
+
   // ── Geocoding (onboarding: lugar de nacimiento real) ─────────────────────
 
   /// Resuelve país+ciudad a lat/lon/timezone reales (Nominatim + timezonefinder,
