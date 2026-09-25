@@ -2,108 +2,61 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// App ID de prueba oficial de Google para desarrollo. No factura impresiones.
-const _testAppId = 'ca-app-pub-3940256099942544~3347511713';
-
+/// Guardia contra la REINTRODUCCION de AdMob, no contra su mala configuracion.
+///
+/// Este fichero comprobaba lo contrario: que el App ID estuviera bien resuelto
+/// en Gradle y declarado en el manifiesto. Desde la 1.0.5 no hay SDK que
+/// configurar, y el motivo no fue estetico:
+///
+/// `MobileAdsInitProvider` es un ContentProvider declarado por el propio SDK.
+/// Arranca ANTES que Dart, asi que la bandera `ADS_ENABLED=false` NO lo
+/// detenia: el SDK viajaba dentro del AAB e inicializaba igual. Para enviar a
+/// produccion habia dos salidas, implementar el consentimiento UMP o sacar el
+/// SDK, y la via de ingreso por anuncios no estaba dando ninguno.
+///
+/// Por eso el test se invierte. Volver a meter `google_mobile_ads` sin UMP es
+/// exactamente el fallo que se acaba de arreglar, y tiene que costar un test
+/// rojo en vez de un envio rechazado.
 void main() {
-  group('AdMob application id', () {
-    // Sin este meta-data, MobileAdsInitProvider aborta el arranque con
-    // "IllegalStateException: Missing application ID" y la app no abre.
-    test('el manifiesto declara APPLICATION_ID con placeholder', () {
+  group('sin AdMob', () {
+    test('el pubspec no declara google_mobile_ads', () {
+      final pubspec = File('pubspec.yaml').readAsStringSync();
+      expect(
+        pubspec,
+        isNot(contains('google_mobile_ads')),
+        reason: 'sin UMP el SDK no puede volver: se inicializa antes que Dart',
+      );
+    });
+
+    test('nada en lib/ importa el SDK ni nombra una unidad de anuncio', () {
+      final ofensores = <String>[];
+      for (final f in Directory('lib').listSync(recursive: true)) {
+        if (f is! File || !f.path.endsWith('.dart')) continue;
+        final src = f.readAsStringSync();
+        if (src.contains('package:google_mobile_ads') ||
+            src.contains('ca-app-pub-')) {
+          ofensores.add(f.path);
+        }
+      }
+      expect(ofensores, isEmpty);
+    });
+
+    test('el manifiesto no declara el APPLICATION_ID de ads', () {
       final manifest = File(
         'android/app/src/main/AndroidManifest.xml',
       ).readAsStringSync();
-
-      expect(
-        manifest,
-        contains('com.google.android.gms.ads.APPLICATION_ID'),
-        reason: 'sin el meta-data, la app muere al arrancar',
-      );
-      expect(
-        manifest,
-        contains(r'android:value="${admobApplicationId}"'),
-        reason: 'el valor lo inyecta Gradle, no se escribe a mano',
-      );
-      // El ID no puede vivir en el manifiesto: se filtraria en cada clon.
-      expect(manifest, isNot(contains('ca-app-pub-')));
+      // Sin SDK, este meta-data apuntaria a un placeholder que Gradle ya no
+      // define, y el build fallaria al fusionar el manifiesto.
+      expect(manifest, isNot(contains('com.google.android.gms.ads')));
+      expect(manifest, isNot(contains(r'${admobApplicationId}')));
     });
 
-    test('gradle resuelve el id: prueba en debug, entorno en release', () {
+    test('gradle no inyecta el placeholder ni exige la credencial', () {
       final gradle = File('android/app/build.gradle').readAsStringSync();
-
-      expect(gradle, contains('manifestPlaceholders["admobApplicationId"]'));
-      expect(gradle, contains("System.getenv(\"ADMOB_APP_ID\")"));
-      expect(
-        gradle,
-        contains(_testAppId),
-        reason: 'debug debe usar el App ID de prueba de Google',
-      );
-      // Falla cerrado, pero solo cuando el build LLEVA anuncios.
-      //
-      // Antes abortaba cualquier release sin ADMOB_APP_ID. El binario de
-      // lanzamiento sale sin anuncios (ADS_ENABLED es false por defecto y
-      // main.dart solo inicializa MobileAds dentro de ese if), asi que el
-      // guardia bloqueaba el envio por una credencial que ese APK no lee.
-      expect(gradle, contains('ADMOB_APP_ID ausente con ADS_ENABLED=true'));
-      expect(gradle, contains('System.getenv("ADS_ENABLED")'));
-      expect(
-        RegExp(
-          r'releaseRequested\s*&&\s*adsEnabled\s*&&\s*!admobApplicationId',
-        ).hasMatch(gradle),
-        isTrue,
-        reason:
-            'con anuncios activos, el release sin ADMOB_APP_ID debe abortar',
-      );
-      // El unico ca-app-pub del repositorio es el de prueba.
-      final ids = RegExp(
-        r'ca-app-pub-[0-9]+~[0-9]+',
-      ).allMatches(gradle).map((m) => m.group(0)).toSet();
-      expect(ids, {_testAppId});
-    });
-
-    test('el APK debug ya construido lleva el id de prueba', () {
-      // Solo corre si hay APK: no dispara un build de 2 minutos en cada suite.
-      final apk = File('build/app/outputs/flutter-apk/app-debug.apk');
-      if (!apk.existsSync()) {
-        return;
-      }
-      final aapt = _findAapt2();
-      if (aapt == null) {
-        return;
-      }
-      final dump = Process.runSync(aapt, [
-        'dump',
-        'xmltree',
-        apk.path,
-        '--file',
-        'AndroidManifest.xml',
-      ]);
-      final out = '${dump.stdout}';
-      expect(out, contains('com.google.android.gms.ads.APPLICATION_ID'));
-      expect(out, contains(_testAppId));
-      expect(
-        out,
-        isNot(contains(r'${admobApplicationId}')),
-        reason: 'el placeholder debe quedar resuelto en el APK',
-      );
+      expect(gradle, isNot(contains('manifestPlaceholders["admobApplicationId"]')));
+      expect(gradle, isNot(contains('ADMOB_APP_ID')));
+      // Ni el de prueba de Google: si no hay SDK, no hay ID de ninguna clase.
+      expect(gradle, isNot(contains('ca-app-pub-')));
     });
   });
-}
-
-String? _findAapt2() {
-  final home =
-      Platform.environment['ANDROID_HOME'] ??
-      Platform.environment['ANDROID_SDK_ROOT'];
-  if (home == null) return null;
-  final buildTools = Directory('$home/build-tools');
-  if (!buildTools.existsSync()) return null;
-  final versions = buildTools.listSync().whereType<Directory>().toList()
-    ..sort((a, b) => a.path.compareTo(b.path));
-  for (final dir in versions.reversed) {
-    for (final name in ['aapt2.exe', 'aapt2']) {
-      final candidate = File('${dir.path}/$name');
-      if (candidate.existsSync()) return candidate.path;
-    }
-  }
-  return null;
 }

@@ -20,6 +20,8 @@ import '../../../core/api/arcanum_api.dart';
 import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
 import '../../../shared/astro_symbols.dart';
+import '../../../shared/widgets/ai_output.dart';
+import '../../../shared/widgets/prosa_generada.dart';
 import '../../hoy/sky_today_state.dart';
 
 class HistorialHoroscopo extends ConsumerStatefulWidget {
@@ -287,6 +289,7 @@ class _DiaArchivado extends StatelessWidget {
   Widget build(BuildContext context) {
     final sky = (dia['sky'] as Map?)?.cast<String, dynamic>() ?? const {};
     final titular = _titular(sky);
+    final texto = (dia['text'] as String?)?.trim() ?? '';
     return Theme(
       // El divisor propio del ExpansionTile duplicaría el filete de la sección.
       data: Theme.of(context).copyWith(
@@ -309,9 +312,19 @@ class _DiaArchivado extends StatelessWidget {
                 style: ArcanumText.body(12, color: ArcanumColors.ivoryMuted),
               ),
         children: [
-          Text(
-            (dia['text'] as String?)?.trim() ?? '',
-            style: ArcanumText.body(14),
+          // El archivo pinta texto GENERADO, igual que el de hoy, y por tanto
+          // arrastra las mismas dos obligaciones: el aviso del art. 50 del AI
+          // Act y el boton de reportar que Google Play exige literalmente
+          // dentro de la app. Aqui se pintaba en crudo con un `Text`, asi que
+          // una lectura de hace tres dias no se podia denunciar.
+          //
+          // Que el de hoy ya lo cumpla no cubre esto: la persona que abre el
+          // archivo puede no haber pasado por la tarjeta de hoy en esta
+          // sesion, y es justo el texto viejo el que se lee sin contexto.
+          AiOutput(
+            text: texto,
+            surface: 'horoscopo',
+            child: ProsaGenerada(texto),
           ),
         ],
       ),

@@ -3,7 +3,10 @@
 //   - que una lectura vieja, sin los campos que el motor aprendió después,
 //     se pinta igual en vez de romper la lista
 //   - que un fallo de red no escupe la traza
+//   - que el texto archivado sale envuelto en AiOutput, con su aviso de IA y su
+//     boton de reportar: es texto generado igual que el de hoy
 import 'package:arcanum_app/core/api/arcanum_api.dart';
+import 'package:arcanum_app/shared/widgets/ai_output.dart';
 import 'package:arcanum_app/features/horoscopo/widgets/historial_horoscopo.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -130,6 +133,41 @@ void main() {
     await tester.tap(find.text('1 de agosto'));
     await tester.pumpAndSettle();
     expect(find.text('De cuando el motor sabía menos.'), findsOneWidget);
+  });
+
+  // El archivo pinta texto que escribio un modelo, asi que arrastra las mismas
+  // dos obligaciones que la tarjeta de hoy: el aviso del art. 50 del AI Act y el
+  // boton de reportar, que Google Play exige DENTRO de la app. Aqui se pintaba
+  // con un Text llano, o sea que una lectura de hace tres dias no se podia
+  // denunciar: no habia por donde.
+  testWidgets('el texto archivado lleva aviso de IA y boton de reportar', (
+    tester,
+  ) async {
+    resetDisclosureForTest();
+    await _montar(tester, [_vieja]);
+    await tester.tap(find.text('Ver días anteriores'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('1 de agosto'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AiOutput), findsOneWidget);
+    // Primera vez en la sesion: manda el aviso largo, que es lo que pide el
+    // art. 50(5) al hablar de la primera exposicion.
+    expect(find.textContaining('inteligencia artificial'), findsOneWidget);
+    expect(find.text('Reportar'), findsOneWidget);
+  });
+
+  testWidgets('a partir de la segunda vez el aviso va en corto', (tester) async {
+    resetDisclosureForTest();
+    // Se gasta la primera exposicion antes de montar el archivo.
+    final _ = AiOutput;
+    await _montar(tester, [_vieja]);
+    await tester.tap(find.text('Ver días anteriores'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('1 de agosto'));
+    await tester.pumpAndSettle();
+    // El corto esta siempre; es el largo el que sale una sola vez.
+    expect(find.text(kAiDisclosureShort), findsOneWidget);
   });
 
   testWidgets('sin días guardados lo dice, sin parecer un fallo', (

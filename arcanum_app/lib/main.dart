@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'core/auth/auth_controller.dart';
 import 'core/config/release_config.dart';
@@ -33,12 +32,6 @@ void main() async {
     return true;
   };
 
-  if (ReleaseConfig.adsEnabled) {
-    // TODO(compliance): Implementar UMP antes de activar ADS_ENABLED. Ver el
-    // bloque "Gap abierto: consentimiento de ads (UMP)" en
-    // .agents/skills/arcanum-legal/references/ia-y-datos.md.
-    await MobileAds.instance.initialize();
-  }
   ReleaseConfig.validateForStartup();
   if (ReleaseConfig.revenueCatEnabled) {
     await MonetizationService.initialize(ReleaseConfig.revenueCatApiKey);

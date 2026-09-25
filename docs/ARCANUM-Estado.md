@@ -9,7 +9,7 @@ nota: "Reconstruido desde memoria tras perder el vault F:. Fuente de verdad ahor
 # ARCANUM — Estado del Proyecto (índice maestro)
 
 App móvil premium de magia/ocultismo serio (iOS/Android). **Flutter + FastAPI + Swiss Ephemeris
-local + Groq (llama-3.3-70b-versatile).** Freemium ($9.99/mes · $79.99/año). Código: `D:\Proyectos\Arcanum`,
+local + Groq (`openai/gpt-oss-120b`).** Freemium ($9.99/mes · $79.99/año). Código: `D:\Proyectos\Arcanum`,
 backend en GitHub `github.com/Samael2626/Arcanum`.
 
 Docs del proyecto (este repo): [[ARCANUM-Semana3-Flutter]] · [[ARCANUM-Mejoras-y-Retos]] ·
@@ -21,7 +21,7 @@ Docs del proyecto (este repo): [[ARCANUM-Semana3-Flutter]] · [[ARCANUM-Mejoras-
   *AstroVisor descartado* (API caída/dependencia externa frágil).
 - **Mobile:** Flutter 3.44 (SDK en `D:\flutter`), tema "Grimorio Vivo", GoRouter, google_fonts.
   Target dev = web/Edge; mismo código a móvil después.
-- **Pagos:** RevenueCat · **IA:** Groq (`llama-3.3-70b-versatile`) · **Media:** Cloudflare R2.
+- **Pagos:** RevenueCat · **IA:** Groq (`openai/gpt-oss-120b`) · **Media:** Cloudflare R2.
 
 ## Semana 1 — Backend auth/seguridad ✅ (en GitHub, master)
 FastAPI, 8 modelos, JWT (access 15min + refresh 30d con rotación), endpoints auth/users.

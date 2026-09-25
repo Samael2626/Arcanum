@@ -141,8 +141,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   //    profundas"              ORACLE_MODEL_PREMIUM son hoy
                   //                            el MISMO modelo.
                   //
-                  // Tambien se fue "Sin anuncios": con ADS_ENABLED en false
-                  // nadie ve anuncios, asi que no distingue un plan del otro.
+                  // Tambien se fue "Sin anuncios": desde la 1.0.5 la app no
+                  // lleva SDK de anuncios, asi que nadie los ve en ningun plan.
                   //
                   // Y NO se pone "creditos incluidos": el webhook solo concede
                   // creditos en compras de consumible (revenuecat.py:172). No

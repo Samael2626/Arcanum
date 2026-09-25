@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../core/api/arcanum_api.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/monetization/monetization_service.dart';
-import '../../core/monetization/ads_service.dart';
 import '../../core/monetization/quota_service.dart';
 import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
@@ -335,7 +334,7 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
     final quota = ref.read(quotaServiceProvider);
     final canView = await quota.canPerform('materia', tier);
     if (!canView) {
-      if (mounted) _showQuotaExceeded(item);
+      if (mounted) _showQuotaExceeded();
       return;
     }
 
@@ -356,19 +355,30 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
     await quota.recordUsage('materia');
   }
 
-  /// Ofrece salidas al cupo agotado, en este orden: el anuncio si lo hay, y
-  /// Premium siempre.
+  /// CODIGO MUERTO, y por decision tomada: Materia/Saber es **gratis e
+  /// ilimitado en todos los planes** (Samuel, 24-sep-2026).
   ///
-  /// El anuncio va PRIMERO porque es lo que resuelve hoy, y porque cuesta un
-  /// minuto en vez de dinero. No compite con la suscripción: quien acaba de
-  /// quedarse sin cupo todavía no sabe si esto le sirve, y pedirle una
-  /// suscripción en ese momento es pedirla en el peor momento posible.
+  /// No es que el cupo este sin implementar a la espera de encenderlo. Es que no
+  /// se va a encender: se cobra la IA —lo que cuesta dinero por uso— y no el
+  /// contenido fijo, que esta escrito una vez y servirlo no cuesta nada. El
+  /// paywall ya dice la verdad cuando anuncia «Saber, sin limite» en el plan
+  /// gratuito.
   ///
-  /// Solo se ofrece si hay un anuncio CARGADO. Un botón que promete un anuncio
-  /// y luego no lo tiene es peor que no ofrecer nada.
-  void _showQuotaExceeded(Map<String, dynamic> item) {
-    final ads = ref.read(adsServiceProvider);
-    final hayAnuncio = ads.listo;
+  /// Estado tecnico que lo confirma: `QuotaService.canPerform` devuelve `true`
+  /// siempre —es un stub, como toda la clase— y en el backend solo `astral` y
+  /// `oracle` pasan por `UsageService`. Materia nunca tuvo reserva ni limite, asi
+  /// que esta hoja no se ha mostrado jamas, y el anuncio recompensado que vivia
+  /// aqui tampoco: era una salida a una puerta que no se cierra.
+  ///
+  /// **Se borra en la 1.1.** Se deja en la 1.0.5 solo para no meter un borrado de
+  /// UI en una rama que ya estaba cerrada y verificada en el telefono.
+  ///
+  /// La contradiccion que se vio el 24-sep entre esta hoja y el paywall queda
+  /// resuelta por la decision, no por el codigo: manda el paywall.
+  ///
+  /// Antes ofrecia primero un anuncio recompensado. Cayo con el SDK de AdMob:
+  /// ver `ReleaseConfig`.
+  void _showQuotaExceeded() {
     showModalBottomSheet(
       context: context,
       backgroundColor: ArcanumColors.surface,
@@ -388,39 +398,18 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
             Text('Cupo diario agotado', style: ArcanumText.heading(22)),
             const SizedBox(height: 8),
             Text(
-              hayAnuncio
-                  ? 'Has visto todas las correspondencias de materia de hoy. '
-                        'Puedes ganar una más viendo un anuncio.'
-                  : 'Has visto todas las correspondencias de materia de hoy.',
+              'Has visto todas las correspondencias de materia de hoy.',
               textAlign: TextAlign.center,
               style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
             ),
             const SizedBox(height: 20),
-            if (hayAnuncio) ...[
-              GoldButton(
-                key: const Key('materia-ver-anuncio'),
-                label: 'Ver un anuncio y seguir',
-                onPressed: () => _anuncioPorUnaMas(ctx, item),
-              ),
-              const SizedBox(height: 10),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(ctx).pop();
-                  context.push('/paywall');
-                },
-                child: Text(
-                  'Quitar el límite con Premium',
-                  style: ArcanumText.body(14, color: ArcanumColors.gold),
-                ),
-              ),
-            ] else
-              GoldButton(
-                label: 'Desbloquear con Premium',
-                onPressed: () {
-                  Navigator.of(ctx).pop();
-                  context.push('/paywall');
-                },
-              ),
+            GoldButton(
+              label: 'Desbloquear con Premium',
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                context.push('/paywall');
+              },
+            ),
             const SizedBox(height: 10),
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
@@ -433,32 +422,6 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
         ),
       ),
     );
-  }
-
-  /// Muestra el anuncio y, SOLO si se completó, concede el cupo y abre la ficha.
-  ///
-  /// `showRewarded` devuelve false cuando la persona cierra el anuncio antes de
-  /// tiempo o cuando falla al mostrarse. En los dos casos no se concede nada:
-  /// regalar el cupo igualmente convertiría el anuncio en un trámite y, sobre
-  /// todo, dejaría de ser cierto lo que dice el botón.
-  Future<void> _anuncioPorUnaMas(
-    BuildContext ctx,
-    Map<String, dynamic> item,
-  ) async {
-    Navigator.of(ctx).pop();
-    final visto = await ref.read(adsServiceProvider).showRewarded();
-    if (!mounted) return;
-    if (!visto) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('El anuncio no se completó. No se ha usado tu cupo.'),
-        ),
-      );
-      return;
-    }
-    await ref.read(quotaServiceProvider).grantBonus('materia');
-    if (!mounted) return;
-    _openDetail(item);
   }
 }
 
