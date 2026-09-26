@@ -51,15 +51,33 @@ class Settings(BaseSettings):
     CLAUDE_TEMPERATURE: float = 0.6
     CLAUDE_TIMEOUT_SECONDS: int = 30
     ORACLE_FREE_DAILY: int = 1
-    ORACLE_PREMIUM_DAILY: int = 20
+    # 10 y no 20 desde el 26-sep-2026: ver la nota del cupo de Groq mas abajo.
+    ORACLE_PREMIUM_DAILY: int = 10
 
     # Tarot
     TAROT_FREE_DAILY: int = 1
-    TAROT_PREMIUM_DAILY: int = 50
+    TAROT_PREMIUM_DAILY: int = 10
 
     # Cielos (transits)
     CIELOS_FREE_DAILY: int = 3
-    CIELOS_PREMIUM_DAILY: int = 50
+    CIELOS_PREMIUM_DAILY: int = 10
+
+    # LOS TOPES PREMIUM LOS FIJA GROQ, NO EL PRODUCTO.
+    #
+    # El plan gratuito de Groq da 200.000 tokens al DIA para toda la app. Una
+    # lectura ronda los 2.300, asi que son ~85 al dia entre todos los usuarios.
+    #
+    # Con los topes viejos (50 tarot + 20 oraculo) UN SOLO suscriptor podia
+    # gastar ~115.000 tokens/dia: mas de la mitad del cupo de la app entera. Dos
+    # suscriptores activos la dejaban seca antes del mediodia, y lo que ve la
+    # gente entonces es un 429.
+    #
+    # Con 10/10/10 el tope por suscriptor baja a ~69.000 y caben ~4 al maximo.
+    # No es un limite de producto: es lo que aguanta la cuenta. Sube cuando se
+    # active la facturacion de Groq, que Samuel dispara con la PRIMERA venta.
+    #
+    # Si se tocan estos numeros hay que tocar tambien el paywall, que los
+    # anuncia escritos a mano. `scripts/check_limites_paywall.py` lo vigila.
 
     # Horoscopo diario. No lo limita este numero sino la clave de idempotencia,
     # que lleva la fecha LOCAL de la persona: como mucho una generacion por dia.

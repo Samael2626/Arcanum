@@ -39,6 +39,17 @@ REGLAS = [
     ("ORACLE_PREMIUM_DAILY", r"'(\d+) lecturas del or[áa]culo / d[ií]a'"),
     ("TAROT_FREE_DAILY", r"'(\d+) tirada de tarot / d[ií]a'"),
     ("ORACLE_FREE_DAILY", r"'(\d+) lectura del or[áa]culo / d[ií]a'"),
+    # Cielos (transitos) NO se anuncia hoy con cifra: el paywall dice "Carta
+    # natal y transitos", sin numero, asi que este patron no casa y el guardian
+    # lo deja pasar -- callar es legitimo, mentir no.
+    #
+    # Va puesto igual porque el dia que alguien escriba "50 transitos / dia" en
+    # la pantalla, que es justo el descuido que este script existe para cazar,
+    # ya habra quien lo compare contra config.py. Se anadio al bajar los topes
+    # premium a 10/10/10, cuando CIELOS_PREMIUM_DAILY paso de 50 a 10 y se vio
+    # que nadie lo vigilaba.
+    ("CIELOS_PREMIUM_DAILY", r"'(\d+) tr[áa]nsitos / d[ía]a'"),
+    ("CIELOS_FREE_DAILY", r"'(\d+) tr[áa]nsito / d[ía]a'"),
 ]
 
 
