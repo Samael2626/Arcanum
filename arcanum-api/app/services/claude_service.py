@@ -15,6 +15,7 @@ desarrollo.
 from __future__ import annotations
 
 import logging
+import re
 import unicodedata
 from typing import Optional
 
@@ -214,9 +215,17 @@ _ESPACIOS_RAROS = str.maketrans({
 })
 
 
+# El modelo negrita a mano lo que cree importante: "forma una **cuadratura**".
+# En la app eso son dos asteriscos impresos, porque el texto se pinta como texto
+# y no como markdown. No es un defecto de voz y no merece un reintento -- que
+# cuesta una llamada entera del cupo de 8.000 tokens por minuto --: se quita en
+# el borde, igual que los espacios raros.
+_ENFASIS = re.compile(r"(\*{1,3}|_{2,3})(?=\S)(.+?)(?<=\S)\1", re.DOTALL)
+
+
 def _limpia_espacios(texto: str) -> str:
-    """Normaliza los espacios exoticos del modelo al espacio de toda la vida."""
-    return texto.translate(_ESPACIOS_RAROS)
+    """Normaliza los espacios exoticos y borra el marcado que se veria crudo."""
+    return _ENFASIS.sub(r"\2", texto.translate(_ESPACIOS_RAROS))
 
 
 def _stamp_safety(diag: dict, content: str) -> None:

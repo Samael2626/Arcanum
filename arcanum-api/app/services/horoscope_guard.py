@@ -275,6 +275,82 @@ def frases_copiadas(texto: str, datos: str) -> list[str]:
     return fuera
 
 
+# LO QUE SONABA A CLASE, Y QUE EL PROMPT NO CONSIGUE SOLO (25-sep-2026)
+#
+# El prompt ya prohibe las dos cosas de aqui abajo. Medido contra el modelo real
+# sobre el mismo cielo, recaia en una de cada dos corridas -- el mismo patron
+# que ya obligo a comprobar "energia" en vez de pedirla. Asi que se comprueba.
+
+# LA GEOMETRIA. Cuantos signos separan a dos cuerpos, que elementos se tocan y
+# de quien es el signo opuesto van en el bloque de datos para que el modelo SEPA
+# por que el aspecto dice lo que dice. Escribirlo es el andamio a la vista.
+_GEOMETRIA = re.compile(
+    r"\b(?:"
+    r"(?:dos|tres|cuatro|cinco|seis|\d+)\s+signos"
+    r"|del mismo elemento|de elementos distintos|mismo modo de obrar"
+    r"|el signo opuesto|signo contrario al suyo"
+    r")\b"
+)
+
+# LA GLOSA DE MANUAL. No es la explicacion lo que se marca -- el prompt la pide,
+# barata --, es su LARGO. "un sextil, que es ayuda de lejos" son 21 caracteres y
+# es justo lo que se quiere; "una cuadratura, que es la figura de dos fuerzas
+# que tiran del mismo asunto desde angulos distintos y ninguno cede" son 101 y
+# es la definicion del diccionario pegada al nombre.
+MAXIMA_GLOSA = 55
+VENTANA_GLOSA = 25
+
+_GLOSABLES: tuple[str, ...] = (
+    "cuadratura", "trigono", "sextil", "oposicion", "conjuncion",
+    "exilio", "caida", "detrimento", "exaltacion", "domicilio",
+    "aplicativo", "separativo",
+)
+
+_MARCAS_DE_GLOSA: tuple[str, ...] = (
+    "que es", "que forman", "que hacen", "es la figura", "figura de",
+    "es decir", "o sea", "significa", "que consiste", ", que", "--",
+)
+
+
+def geometria_escrita(texto: str) -> list[str]:
+    """El andamio del calculo, copiado al texto."""
+    return sorted({m.group(0) for m in _GEOMETRIA.finditer(_plano(texto))})
+
+
+def glosas_de_manual(texto: str) -> list[str]:
+    """Terminos con la definicion entera colgada del nombre.
+
+    Se mide de la marca de glosa al fin de la oracion. Si cabe en
+    MAXIMA_GLOSA caracteres, es el pago barato que el prompt pide y no se
+    marca.
+    """
+    plano = _plano(texto)
+    fuera = []
+    for termino in _GLOSABLES:
+        pos = plano.find(termino)
+        if pos < 0:
+            continue
+        tras = pos + len(termino)
+        ventana = plano[tras:tras + VENTANA_GLOSA]
+        marca = min((ventana.find(m) for m in _MARCAS_DE_GLOSA
+                     if m in ventana), default=-1)
+        if marca < 0:
+            continue
+        ini = tras + marca
+        # el corte se busca pasada la marca: la coma de "cuadratura, que es..."
+        # forma parte de la marca y no es el final de la glosa.
+        arranque = ini + max(len(m) for m in _MARCAS_DE_GLOSA
+                             if plano.startswith(m, ini))
+        fin = len(plano)
+        for corte in _FIN_DE_ORACION + ",;":
+            c = plano.find(corte, arranque)
+            if c >= 0:
+                fin = min(fin, c)
+        if fin - arranque > MAXIMA_GLOSA:
+            fuera.append(f"{termino} ({fin - arranque} caracteres de definicion)")
+    return fuera
+
+
 def materia_prestada(texto: str, datos: str) -> list[str]:
     """Metal, planta, piedra o color de un cuerpo que hoy no estaba en juego.
 
@@ -346,6 +422,21 @@ def defectos(texto: str, datos: str) -> list[str]:
         partes.append(
             f"copiaste literal del bloque de datos ({muestra}). Los datos son "
             "lo que hay que saber; como se dice lo pones tu")
+
+    geometria = geometria_escrita(texto)
+    if geometria:
+        partes.append(
+            "escribiste la geometria del calculo (" + ", ".join(geometria)
+            + "). Eso esta en los datos para que TU sepas que dice el aspecto, "
+              "no para escribirlo: di lo que sale de ahi, no de donde sale")
+
+    glosas = glosas_de_manual(texto)
+    if glosas:
+        partes.append(
+            "colgaste la definicion entera del nombre (" + ", ".join(glosas)
+            + "). El termino se paga en media frase y con tus palabras; el "
+              "sentido de la figura se dice ACTUANDO, con los cuerpos de "
+              "sujeto -- \"Venus tira de tu Venus, y ninguna afloja\"")
 
     prestada = materia_prestada(texto, datos)
     if prestada:

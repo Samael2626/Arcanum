@@ -217,12 +217,17 @@ def test_las_vetadas_del_guard_son_las_del_prompt():
 # como eso si se puede mirar con una funcion pura, se comprueba en vez de
 # pedirse.
 
+# La glosa de la cuadratura se acorto el 25-sep-2026. Este fixture traia la
+# definicion entera colgada del nombre -- "cuadratura, la figura de dos que
+# empujan desde angulos distintos y ninguno cede" --, que es justo lo que
+# `glosas_de_manual` vino a marcar. Lo que el test de abajo protege es la
+# JORNADA, no la glosa, y con la glosa larga dentro ya no podia distinguir una
+# cosa de la otra.
 JORNADA = (
     "Saturno se mide con tu Júpiter desde hace meses, y hoy la Luna cruza tu "
-    "Marte en cuadratura, la figura de dos que empujan desde ángulos "
-    "distintos y ninguno cede: vas a encontrarte más fricción de la que "
-    "esperabas en algo que dabas por cerrado, y tendrás que decidir con menos "
-    "margen del que te gustaría. La tentación será imponerte."
+    "Marte en cuadratura, y ninguno cede: vas a encontrarte más fricción de la "
+    "que esperabas en algo que dabas por cerrado, y tendrás que decidir con "
+    "menos margen del que te gustaría. La tentación será imponerte."
 )
 
 PROMESA = (
@@ -350,3 +355,60 @@ def test_la_asesoria_se_mira_por_oracion():
              "viejas. Duerme antes de contestar, y deja para mañana lo que "
              "no arde.")
     assert hg.asesoria_real(texto) == []
+
+
+# ── 25-sep-2026: lo que sonaba a clase, comprobado y no pedido ───────────────
+# Samuel: "muy tecnico, le quita la magia". El prompt ya prohibia las dos cosas
+# de abajo; medido contra el modelo real, recaia en una de cada dos corridas.
+# Mismo patron que "energia": lo determinista se comprueba.
+
+def test_la_geometria_del_calculo_no_se_escribe():
+    """El andamio va en los datos, para que el modelo SEPA, no para copiarlo."""
+    for frase in ("los separan cuatro signos del mismo elemento",
+                  "está en exilio porque el signo opuesto pertenece a otro",
+                  "tres signos que comparten el mismo modo de obrar"):
+        assert hg.geometria_escrita(frase), frase
+        assert any("geometria" in d for d in hg.defectos(frase, DATOS_REAL))
+
+
+def test_hablar_de_signos_sin_contar_no_es_geometria():
+    """Nombrar el signo de un cuerpo es obligatorio: no puede marcarse."""
+    for frase in ("Venus atraviesa Escorpio y tira de tu Venus natal en Acuario",
+                  "el Nodo Norte avanza por Acuario",
+                  "la cuadratura aprieta y ninguno cede"):
+        assert hg.geometria_escrita(frase) == [], frase
+
+
+def test_la_definicion_entera_colgada_del_nombre_se_cae():
+    """No se marca que explique: se marca el LARGO de la explicacion."""
+    for frase in (
+        "Venus forma una cuadratura, que es la figura de dos fuerzas que tiran "
+        "del mismo asunto desde ángulos distintos y ninguno cede",
+        "Venus forma una cuadratura -- dos que tiran del mismo asunto desde "
+        "ángulos distintos y ninguno cede -- con tu Venus natal",
+        "Al estar en exilio, es decir fuera de su casa y trabajando con lo "
+        "prestado porque nada allí le obedece, Venus aprieta",
+    ):
+        assert hg.glosas_de_manual(frase), frase
+        assert any("definicion entera" in d for d in hg.defectos(frase, DATOS_REAL))
+
+
+def test_el_pago_barato_del_termino_si_pasa():
+    """El prompt PIDE explicar en media frase: marcarlo seria castigar la obediencia."""
+    for frase in ("hay un sextil, que es ayuda de lejos, y el día se abre",
+                  "en exilio, o sea en casa ajena, trabaja con lo prestado",
+                  "el trígono deja pasar sin que nada se frene"):
+        assert hg.glosas_de_manual(frase) == [], frase
+
+
+def test_el_prompt_va_a_juego_con_los_dos_detectores():
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    assert "LA GEOMETRIA NO SE ESCRIBE" in P
+    assert "APOSICIONES DE MANUAL" in P
+
+
+def test_el_cierre_pide_un_gesto_hacible_no_un_dato_de_museo():
+    """Recuperado del prompt del 17-ago, que era lo que daba la magia."""
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    assert "HACIBLE HOY Y CON EL CUERPO" in P
+    assert "como constatacion" not in P
