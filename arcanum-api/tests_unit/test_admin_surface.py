@@ -41,9 +41,22 @@ def test_ninguna_ruta_admin_acepta_una_url_de_base_por_parametro():
 ])
 def test_admin_exige_token(metodo, ruta):
     r = getattr(client, metodo)(ruta)
-    # 403 sin token valido, o 503 si la administracion esta deshabilitada.
-    # Lo que NO puede es ejecutarse.
-    assert r.status_code in (403, 503), r.status_code
+    # DESDE EL 26-sep-2026 el default es 404, no 403.
+    #
+    # Las rutas de migracion estan apagadas salvo que ADMIN_MIGRATIONS_ENABLED
+    # sea true, y `require_migrations_enabled` se evalua ANTES que el token: con
+    # la bandera en false ni se mira la cabecera. Un 403 confirmaria que la ruta
+    # existe, que es justo lo que se quiso dejar de decir.
+    #
+    # 403/503 siguen valiendo por si el entorno la trae encendida. Lo que este
+    # test defiende es lo de siempre: que NO se ejecute sin token.
+    assert r.status_code in (404, 403, 503), r.status_code
+
+    # Y con la bandera apagada, que es el default, tiene que ser 404 clavado.
+    from app.core.config import settings
+
+    if not settings.ADMIN_MIGRATIONS_ENABLED:
+        assert r.status_code == 404, r.status_code
 
 
 def test_la_proteccion_esta_declarada_en_el_router_y_no_en_el_cuerpo():

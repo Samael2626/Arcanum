@@ -106,6 +106,17 @@ from fastapi import Header, HTTPException, status
 from app.core.config import settings
 
 
+def require_migrations_enabled() -> None:
+    """404 si las rutas de migracion estan apagadas, que es el caso normal.
+
+    Va ANTES del token a proposito: quien no deberia estar aqui no llega ni a
+    saber si su cabecera valia. Un 403 dice "existe, pero no puedes"; un 404
+    dice lo mismo que diria cualquier ruta inventada.
+    """
+    if not settings.ADMIN_MIGRATIONS_ENABLED:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not Found")
+
+
 def verify_admin_token(x_admin_token: str = Header(None)) -> None:
     """Valida el token sin comparaciones sensibles al tiempo."""
     if settings.ADMIN_TOKEN is None:

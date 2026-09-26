@@ -32,6 +32,23 @@ class Settings(BaseSettings):
 
     # Admin (migraciones on-demand, endpoints admin)
     ADMIN_TOKEN: Optional[str] = None
+
+    # Las rutas de migracion de /admin responden 404 salvo que esto sea true.
+    #
+    # POR QUE APAGADAS POR DEFECTO. Produccion NO las necesita: `start.sh` corre
+    # `alembic upgrade head` en cada arranque, con RUN_MIGRATIONS que vale
+    # "true" si nadie la toca. O sea que /admin/migrate hace, a mano y por HTTP,
+    # lo que el contenedor ya hizo solo al levantarse.
+    #
+    # Lo que si aportaban era superficie: dos rutas que ejecutan DDL contra la
+    # base de produccion, alcanzables desde internet con una sola cabecera. El
+    # token es fuerte y se compara en tiempo constante, pero la puerta mas
+    # segura es la que no esta.
+    #
+    # 404 y no 403: un 403 confirma que la ruta existe, y eso ya es informacion.
+    # Para encenderlas un rato --una migracion que hay que forzar a mano-- se
+    # pone ADMIN_MIGRATIONS_ENABLED=true, se hace, y se quita.
+    ADMIN_MIGRATIONS_ENABLED: bool = False
     RUN_STARTUP_MIGRATIONS: bool = False
     RUN_STARTUP_SEEDS: bool = False
 
