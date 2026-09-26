@@ -317,7 +317,7 @@ def geometria_escrita(texto: str) -> list[str]:
     return sorted({m.group(0) for m in _GEOMETRIA.finditer(_plano(texto))})
 
 
-def glosas_de_manual(texto: str) -> list[str]:
+def glosas_de_manual(texto: str, glosables: tuple[str, ...] | None = None) -> list[str]:
     """Terminos con la definicion entera colgada del nombre.
 
     Se mide de la marca de glosa al fin de la oracion. Si cabe en
@@ -326,7 +326,7 @@ def glosas_de_manual(texto: str) -> list[str]:
     """
     plano = _plano(texto)
     fuera = []
-    for termino in _GLOSABLES:
+    for termino in (glosables or _GLOSABLES):
         pos = plano.find(termino)
         if pos < 0:
             continue

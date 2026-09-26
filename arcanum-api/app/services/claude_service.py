@@ -25,6 +25,7 @@ from groq import Groq, RateLimitError
 from app.core.config import settings
 from app.services import safety
 from app.services import horoscope_guard as hg
+from app.services import oracle_guard as og
 from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT
 from app.services.oracle_prompt import get_oracle_system_prompt
 
@@ -368,17 +369,21 @@ def generate_reading(context: str, model: str, question: Optional[str] = None,
     expected = expected_cards or []
 
     def notice(missing: list[str], flaws: list[str]) -> str:
-        return (
-            f"Tu versión anterior omitió: {'; '.join(_term_key(c) for c in missing)}. "
-            f"Produce una lectura COMPLETA e INTEGRADA que cubra las "
-            f"{len(expected)} posiciones en orden, sin omitir ninguna."
-        )
+        return og.aviso([_term_key(c) for c in missing], flaws,
+                        obligatorios=[_term_key(c) for c in expected])
+
+    # El Oraculo paso meses SIN esta linea, y es la ruta que se cobra: el
+    # horoscopo comprobaba siete cosas y una lectura de tarot ninguna. Medido el
+    # 25-sep-2026 con una tirada real: escribio "energia" tres veces, hablo de
+    # "el consultante" y cerro con un ritual de siete pasos. Nada lo paro.
+    def checks(texto: str, user_msg: str) -> list[str]:
+        return og.defectos(texto, user_msg)
 
     return _generate_with_coverage(
         client, model, get_oracle_system_prompt(),
         _build_user_message(context, question, tarot),
         _max_tokens_for(card_count), _temperature_for(card_count),
-        expected, notice,
+        expected, notice, extra_checks=checks,
     )
 
 
