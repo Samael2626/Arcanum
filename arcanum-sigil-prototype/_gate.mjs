@@ -130,6 +130,43 @@ const withBorder = (await snap()).svg;
 check('borde capa on/off', !noBorder.includes('data-layer="border"') && withBorder.includes('data-layer="border"'));
 await page.selectOption('#selBorder', 'none');
 
+// 9b) Marco ritual: estrella 5-9 puntas, inscripcion y estampas (capas a mano)
+await page.click('#subStar summary');
+await page.check('#chkStar');
+for (const n of [5, 6, 7, 8, 9]) {
+  await page.selectOption('#selStarPoints', String(n));
+  const st = await page.evaluate(() => {
+    const s = buildSVG(), g = s.match(/<g data-layer="star"[\s\S]*?<\/g>/);
+    return { det: s === buildSVG(), paths: g ? (g[0].match(/<path/g) || []).length : 0 };
+  });
+  check(`estrella ${n} puntas`, st.det && st.paths === n + 1, `${st.paths - 1} acordes`);
+  if ([5, 7, 9].includes(n)) await shot(`star-${n}`);
+}
+await page.uncheck('#chkStarChords');
+check('estrella sin acordes', (await page.evaluate(() => (buildSVG().match(/<g data-layer="star"[\s\S]*?<\/g>/)[0].match(/<path/g) || []).length)) === 1);
+await page.check('#chkStarChords');
+await page.click('#subIns summary');
+await page.check('#chkInscription');
+await page.fill('#insText', 'VOLUNTAS');
+const insN = await page.evaluate(() => (buildSVG().match(/<g data-layer="inscription"[\s\S]*?<\/g>/)[0].match(/<text/g) || []).length);
+check('inscripcion 8 letras', insN === 8, insN + '');
+await page.click('#subStamps summary');
+await page.click('.stamp-btn >> nth=3');
+await page.click('#btnStamp');
+const box = await page.locator('#canvas').boundingBox();
+await page.mouse.click(box.x + box.width * .15, box.y + box.height * .15);
+await page.click('#btnStamp');
+const stamps = await page.evaluate(() => ({ n: state.stamps.length, svg: buildSVG().includes('data-layer="stamps"'), sel: state.sel }));
+check('estampa colocada sin tocar letras', stamps.n === 1 && stamps.svg, `n=${stamps.n}`);
+await shot('marco-completo');
+await page.evaluate(() => localStorage.clear());
+await page.click('#btnSave');
+await page.uncheck('#chkStar'); await page.uncheck('#chkInscription'); await page.click('#btnClearStamps');
+await page.evaluate(() => restoreState(readGallery()[0].state));
+const back = await page.evaluate(() => ({ star: state.star.enabled && state.star.points === 9, ins: state.inscription.text, stamps: state.stamps.length, ui: document.getElementById('chkStar').checked }));
+check('galeria recupera estrella, inscripcion y estampas', back.star && back.ins === 'VOLUNTAS' && back.stamps === 1 && back.ui);
+await page.uncheck('#chkStar'); await page.uncheck('#chkInscription'); await page.click('#btnClearStamps');
+
 // 10) Miniatura 80x80 con tinta suficiente
 const ink = await page.evaluate(() => {
   const d = document.getElementById('previewCanvas').getContext('2d').getImageData(0, 0, 80, 80).data;

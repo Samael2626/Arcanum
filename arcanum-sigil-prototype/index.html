@@ -58,6 +58,13 @@ textarea:focus,input[type=text]:focus,select:focus{border-color:var(--gold)}
 .chip.sel small{color:#2a1d05}
 .chip.absorbed{opacity:.55}
 .chip.weak small{color:#d0674f}
+.sub{border:1px solid var(--border);border-radius:5px;margin:6px 0;padding:0 6px}
+.sub>summary{color:var(--gold);cursor:pointer;font-size:.7rem;letter-spacing:1px;list-style:none;min-height:34px;display:flex;align-items:center;text-transform:uppercase}
+.sub>summary::-webkit-details-marker{display:none}
+.sub[open]{padding-bottom:6px}
+.stamp-grid{display:grid;gap:3px;grid-template-columns:repeat(5,1fr);margin:4px 0}
+.stamp-btn{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--dim);cursor:pointer;font-size:1.05rem;min-height:36px}
+.stamp-btn.active{border-color:var(--gold);color:var(--gold)}
 .preview{align-items:center;display:flex;gap:8px;margin-top:6px}
 .preview canvas{border:1px solid var(--border);height:80px;width:80px}
 .preview span{color:var(--dim);font-size:.66rem;line-height:1.35}
@@ -186,6 +193,32 @@ textarea:focus,input[type=text]:focus,select:focus{border-color:var(--gold)}
         <div class="field"><label for="selTerminals">Terminales</label>
           <select id="selTerminals"><option value="none" selected>Ninguno</option><option value="dot">Punto</option><option value="bar">Barra</option></select></div>
         <label class="check" title="Colorea cada letra para ver de dónde sale cada trazo"><input type="checkbox" id="chkColors">Colorear letras</label>
+        <details class="sub" id="subStar">
+          <summary>Estrella ritual</summary>
+          <label class="check"><input type="checkbox" id="chkStar">Mostrar estrella</label>
+          <div class="field"><label for="selStarPoints">Puntas</label>
+            <select id="selStarPoints"><option value="5" selected>5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option></select></div>
+          <div class="field"><label for="rngStarScale">Escala</label><input type="range" id="rngStarScale" min="70" max="105" value="95"><span class="val" id="starScaleVal">95%</span></div>
+          <div class="field"><label for="rngStarRot">Rotación</label><input type="range" id="rngStarRot" min="0" max="360" value="0"><span class="val" id="starRotVal">0°</span></div>
+          <div class="field"><label for="rngStarInner">Interior</label><input type="range" id="rngStarInner" min="30" max="80" value="50"><span class="val" id="starInnerVal">50%</span></div>
+          <div class="field"><label for="rngStarThick">Grosor</label><input type="range" id="rngStarThick" min="10" max="60" value="25"><span class="val" id="starThickVal">2.5</span></div>
+          <div class="field"><label for="rngStarOpacity">Opacidad</label><input type="range" id="rngStarOpacity" min="10" max="100" value="80"><span class="val" id="starOpacityVal">80%</span></div>
+          <label class="check" title="Líneas internas del polígono estrellado (pentagrama, heptagrama, eneagrama…)"><input type="checkbox" id="chkStarChords" checked>Acordes internos</label>
+        </details>
+        <details class="sub" id="subIns">
+          <summary>Inscripción</summary>
+          <label class="check"><input type="checkbox" id="chkInscription">Mostrar inscripción</label>
+          <input type="text" id="insText" maxlength="42" placeholder="Lema, nombre o frase">
+          <div class="field"><label for="selInsPos">Posición</label>
+            <select id="selInsPos"><option value="upperArc" selected>Arco superior</option><option value="lowerArc">Arco inferior</option><option value="top">Arriba</option><option value="bottom">Abajo</option></select></div>
+          <div class="field"><label for="rngInsSize">Tamaño</label><input type="range" id="rngInsSize" min="12" max="40" value="22"><span class="val" id="insSizeVal">22</span></div>
+          <div class="field"><label for="rngInsSpacing">Espaciado</label><input type="range" id="rngInsSpacing" min="0" max="20" value="4"><span class="val" id="insSpacingVal">4</span></div>
+        </details>
+        <details class="sub" id="subStamps">
+          <summary>Estampas</summary>
+          <div class="stamp-grid" id="stampGrid"></div>
+          <div class="row"><button class="btn-dim" id="btnStamp" title="Con el modo activo, toca el lienzo para estampar">Estampar</button><button class="btn-dim" id="btnClearStamps">Borrar estampas</button></div>
+        </details>
         <div class="preview"><canvas id="previewCanvas" width="80" height="80"></canvas><span>Miniatura 80×80:<br>la silueta debe leerse</span></div>
       </div>
     </details>
@@ -524,6 +557,11 @@ const state = {
   terminals: 'none',
   colors: false,
   transparent: false,
+  star: { enabled: false, points: 5, scale: 95, rotation: 0, inner: 50, thickness: 25, opacity: 80, chords: true },
+  inscription: { enabled: false, text: '', pos: 'upperArc', size: 22, spacing: 4 },
+  stamps: [],
+  stampSym: '♄︎',
+  stampMode: false,
   view: null,
   dragging: null,
   rosa: { name: '', mapping: [], resolved: [], gematria: 0, diagram: true }
@@ -588,7 +626,9 @@ function fitView() {
   }
   if (!isFinite(x0)) return { cx: 0, cy: 0, k: CORE_R, oy: 0 };
   const f = BORDER_FIT[state.border];
-  return { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, k: CORE_R * f.k / (Math.max(x1 - x0, y1 - y0, .5) / 2), oy: f.oy };
+  // con estrella, el sigilo cabe en su hueco interior
+  const kf = state.star.enabled ? Math.min(f.k, STAR_CORE_FIT) : f.k;
+  return { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, k: CORE_R * kf /(Math.max(x1 - x0, y1 - y0, .5) / 2), oy: f.oy };
 }
 const toCanvas = p => ({ x: C + (p.x - state.view.cx) * state.view.k, y: C + state.view.oy + (p.y - state.view.cy) * state.view.k });
 const toWorld = (x, y) => ({ x: (x - C) / state.view.k + state.view.cx, y: (y - C - state.view.oy) / state.view.k + state.view.cy });
@@ -639,6 +679,91 @@ function borderGeom() {
   return null;
 }
 
+// ── Marco ritual: estrella, inscripcion, estampas ───────────────
+// Capas independientes que el usuario activa a mano. No derivan de
+// las letras ni entran en su procedencia.
+const STAR_R = 345, STAR_CORE_FIT = .72;
+// Paso del poligono estrellado {n/k}: el mas agudo que sigue siendo estrella
+const STAR_STEP = { 5: 2, 6: 2, 7: 3, 8: 3, 9: 4 };
+function starGeom() {
+  const p = state.star, n = p.points;
+  const outer = STAR_R * p.scale / 100;
+  const inner = Math.max(outer * p.inner / 100, CORE_R * STAR_CORE_FIT * 1.1);
+  const a0 = rad(p.rotation) - Math.PI / 2;
+  const pts = [];
+  for (let i = 0; i < n * 2; i++) {
+    const a = a0 + i * Math.PI / n, r = i % 2 ? inner : outer;
+    pts.push([C + Math.cos(a) * r, C + Math.sin(a) * r]);
+  }
+  const tips = pts.filter((_, i) => !(i % 2));
+  const chords = p.chords ? tips.map((t, k) => [t, tips[(k + STAR_STEP[n]) % n]]) : [];
+  return { pts, chords };
+}
+function inscriptionGeom() {
+  const p = state.inscription, txt = [...p.text.trim().toUpperCase()];
+  if (!txt.length) return [];
+  const adv = p.size * .62 + p.spacing;
+  if (p.pos === 'top' || p.pos === 'bottom') {
+    const y = p.pos === 'top' ? p.size * 1.1 : SIZE - p.size * 1.1, x0 = C - (txt.length - 1) * adv / 2;
+    return txt.map((ch, i) => ({ ch, x: x0 + i * adv, y, rot: 0 }));
+  }
+  const R = STAR_R + p.size * .9, arc = Math.min(2.4, txt.length * adv / R), lower = p.pos === 'lowerArc';
+  return txt.map((ch, i) => {
+    const t = txt.length === 1 ? .5 : i / (txt.length - 1);
+    // arco inferior: se lee de izquierda a derecha
+    const a = lower ? Math.PI / 2 + arc / 2 - arc * t : -Math.PI / 2 - arc / 2 + arc * t;
+    return { ch, x: C + Math.cos(a) * R, y: C + Math.sin(a) * R, rot: lower ? a - Math.PI / 2 : a + Math.PI / 2 };
+  });
+}
+// U+FE0E: glifo de texto, no emoji
+const STAMP_SYMS = ['♄', '♃', '♂', '☉', '♀', '☿', '☽', '✦', '✧', '◎'].map(s => s + '︎');
+
+function paintFrame(ctx, th, lw) {
+  if (state.star.enabled) {
+    const g = starGeom(), p = state.star;
+    ctx.save();
+    ctx.strokeStyle = th.frame; ctx.globalAlpha = p.opacity / 100; ctx.lineWidth = p.thickness / 10 * (lw / LINE_W);
+    ctx.beginPath(); ctx.moveTo(...g.pts[0]); g.pts.slice(1).forEach(q => ctx.lineTo(...q)); ctx.closePath(); ctx.stroke();
+    ctx.globalAlpha = p.opacity / 180; ctx.lineWidth /= 2;
+    g.chords.forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); });
+    ctx.restore();
+  }
+  if (state.inscription.enabled) {
+    ctx.save();
+    ctx.fillStyle = th.frame; ctx.font = state.inscription.size + 'px Georgia, serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (const c of inscriptionGeom()) { ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.rot); ctx.fillText(c.ch, 0, 0); ctx.restore(); }
+    ctx.restore();
+  }
+}
+function paintStamps(ctx, th) {
+  ctx.save();
+  ctx.fillStyle = th.frame; ctx.font = '30px "Segoe UI Symbol", serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  state.stamps.forEach(s => ctx.fillText(s.sym, s.x, s.y));
+  ctx.restore();
+}
+function frameSVG(th) {
+  const out = [];
+  if (state.star.enabled) {
+    const g = starGeom(), p = state.star, w = p.thickness / 10;
+    out.push(`<g data-layer="star" fill="none" stroke="${th.frame}" stroke-linejoin="round">`);
+    out.push(`<path d="M ${g.pts.map(q => f2(q[0]) + ' ' + f2(q[1])).join(' L ')} Z" stroke-width="${f2(w)}" opacity="${f2(p.opacity / 100)}"/>`);
+    g.chords.forEach(([a, b]) => out.push(`<path d="M ${f2(a[0])} ${f2(a[1])} L ${f2(b[0])} ${f2(b[1])}" stroke-width="${f2(w / 2)}" opacity="${f2(p.opacity / 180)}"/>`));
+    out.push('</g>');
+  }
+  if (state.inscription.enabled && state.inscription.text.trim()) {
+    out.push(`<g data-layer="inscription" fill="${th.frame}" font-family="Georgia, serif" font-size="${state.inscription.size}" text-anchor="middle" dominant-baseline="middle">`);
+    inscriptionGeom().forEach(c => out.push(`<text transform="translate(${f2(c.x)} ${f2(c.y)}) rotate(${f2(c.rot * 180 / Math.PI)})">${esc(c.ch)}</text>`));
+    out.push('</g>');
+  }
+  return out.join('');
+}
+function stampsSVG(th) {
+  if (!state.stamps.length) return '';
+  return `<g data-layer="stamps" fill="${th.frame}" font-family="Segoe UI Symbol, serif" font-size="30" text-anchor="middle" dominant-baseline="middle">` +
+    state.stamps.map(s => `<text x="${f2(s.x)}" y="${f2(s.y)}">${esc(s.sym)}</text>`).join('') + '</g>';
+}
+
 function strokePrim(ctx, p) {
   ctx.beginPath();
   if (p.t === 'L') {
@@ -671,6 +796,7 @@ function paint(ctx, opt) {
     else { ctx.moveTo(...bg.pts[0]); bg.pts.slice(1).forEach(q => ctx.lineTo(...q)); ctx.closePath(); }
     ctx.stroke();
   }
+  paintFrame(ctx, th, lw);
 
   const visible = state.prims.filter(p => !p.hidden);
   const hl = opt.interactive ? state.sel : null;
@@ -708,6 +834,7 @@ function paint(ctx, opt) {
       else { const h = lw * 1.8; ctx.moveTo(q.x - e.ty * h, q.y + e.tx * h); ctx.lineTo(q.x + e.ty * h, q.y - e.tx * h); ctx.stroke(); }
     }
   }
+  paintStamps(ctx, th);
 }
 
 const canvas = $('canvas'), ctx = canvas.getContext('2d');
@@ -746,6 +873,7 @@ function buildSVG() {
     out.push(bg.t === 'circle' ? `<circle cx="${C}" cy="${C}" r="${bg.r}"/>` : `<path d="M ${bg.pts.map(q => f2(q[0]) + ' ' + f2(q[1])).join(' L ')} Z"/>`);
     out.push('</g>');
   }
+  out.push(frameSVG(th));
   const visible = state.prims.filter(p => !p.hidden);
   out.push(`<g data-layer="core" fill="none" stroke="${th.ink}" stroke-width="${LINE_W}" stroke-linecap="round" stroke-linejoin="round">`);
   visible.forEach(p => out.push(`<path d="${primPath(p)}"/>`));
@@ -759,6 +887,7 @@ function buildSVG() {
     }
     out.push('</g>');
   }
+  out.push(stampsSVG(th));
   out.push('</svg>');
   return out.join('');
 }
@@ -933,6 +1062,7 @@ function primAt(pt, pool) {
 canvas.addEventListener('pointerdown', e => {
   if (state.family !== 'letters' || !state.prims.length) return;
   const pt = canvasPoint(e);
+  if (state.stampMode) { state.stamps.push({ x: pt.x, y: pt.y, sym: state.stampSym }); render(); return; }
   if (state.hideMode) { const p = primAt(pt, state.prims); if (p) toggleHidden(p.key); return; }
   const p = primAt(pt, state.prims.filter(q => !q.hidden));
   if (!p || !p.units.length) { state.sel = null; render(); return; }
@@ -1005,11 +1135,17 @@ function captureState() {
   return JSON.parse(JSON.stringify({
     intention: state.intention, method: state.method, mode: state.mode, overlap: state.overlap, absorb: state.absorb,
     users: Object.fromEntries(state.letters.map(l => [l.ch, l.user])), hidden: state.hidden, decisions: state.decisions,
-    theme: state.theme, border: state.border, terminals: state.terminals
+    theme: state.theme, border: state.border, terminals: state.terminals,
+    star: state.star, inscription: state.inscription, stamps: state.stamps
   }));
 }
 function restoreState(s) {
   Object.assign(state, { method: s.method, mode: s.mode, overlap: s.overlap, absorb: s.absorb, theme: s.theme, border: s.border, terminals: s.terminals });
+  if (s.star) {
+    Object.assign(state.star, s.star);
+    Object.assign(state.inscription, s.inscription);
+    state.stamps = s.stamps.map(x => ({ ...x }));
+  }
   $('intention').value = s.intention;
   state.intention = '';
   syncControls();
@@ -1072,7 +1208,7 @@ function startGnosis() {
 }
 function forgetSigil() {
   closeGnosis();
-  Object.assign(state, { intention: '', reduction: null, letters: [], extra: [], prims: [], hidden: [], decisions: [], sel: null });
+  Object.assign(state, { intention: '', reduction: null, letters: [], extra: [], prims: [], hidden: [], decisions: [], sel: null, stamps: [] });
   $('intention').value = ''; $('reductionBox').textContent = '—';
   render();
   showToast('Soltado. No lo busques.');
@@ -1110,6 +1246,18 @@ function syncControls() {
   $('selTheme').value = state.theme; $('selBorder').value = state.border; $('selTerminals').value = state.terminals;
   $('chkColors').checked = state.colors; $('chkTransparent').checked = state.transparent;
   $('btnHideMode').classList.toggle('on', state.hideMode);
+  const st = state.star, ins = state.inscription;
+  $('chkStar').checked = st.enabled; $('selStarPoints').value = String(st.points); $('chkStarChords').checked = st.chords;
+  $('rngStarScale').value = st.scale; $('starScaleVal').textContent = st.scale + '%';
+  $('rngStarRot').value = st.rotation; $('starRotVal').textContent = st.rotation + '°';
+  $('rngStarInner').value = st.inner; $('starInnerVal').textContent = st.inner + '%';
+  $('rngStarThick').value = st.thickness; $('starThickVal').textContent = (st.thickness / 10).toFixed(1);
+  $('rngStarOpacity').value = st.opacity; $('starOpacityVal').textContent = st.opacity + '%';
+  $('chkInscription').checked = ins.enabled; $('insText').value = ins.text; $('selInsPos').value = ins.pos;
+  $('rngInsSize').value = ins.size; $('insSizeVal').textContent = ins.size;
+  $('rngInsSpacing').value = ins.spacing; $('insSpacingVal').textContent = ins.spacing;
+  $('btnStamp').classList.toggle('on', state.stampMode);
+  document.querySelectorAll('.stamp-btn').forEach(b => b.classList.toggle('active', b.dataset.s === state.stampSym));
 }
 const regenerate = () => { if (state.reduction) { applyLayout(); renderReduction(); } };
 
@@ -1157,8 +1305,33 @@ $('chkRosaDiagram').addEventListener('change', e => { state.rosa.diagram = e.tar
 $('panelToggle').addEventListener('click', e => { const open = $('controlPanel').classList.toggle('open'); e.currentTarget.setAttribute('aria-expanded', String(open)); });
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate();
-  if (e.key === 'Escape') { closeGnosis(); toggleGallery(false); $('provModal').classList.remove('open'); state.hideMode = false; syncControls(); render(); }
+  if (e.key === 'Escape') { closeGnosis(); toggleGallery(false); $('provModal').classList.remove('open'); state.hideMode = false; state.stampMode = false; syncControls(); render(); }
 });
+
+// Marco ritual
+const refit = () => { if (state.prims.length) state.view = fitView(); render(); };
+const bindRange = (id, obj, key) => $(id).addEventListener('input', e => { obj[key] = Number(e.target.value); syncControls(); render(); });
+$('chkStar').addEventListener('change', e => { state.star.enabled = e.target.checked; refit(); });
+$('selStarPoints').addEventListener('change', e => { state.star.points = Number(e.target.value); render(); });
+$('chkStarChords').addEventListener('change', e => { state.star.chords = e.target.checked; render(); });
+bindRange('rngStarScale', state.star, 'scale');
+bindRange('rngStarRot', state.star, 'rotation');
+bindRange('rngStarInner', state.star, 'inner');
+bindRange('rngStarThick', state.star, 'thickness');
+bindRange('rngStarOpacity', state.star, 'opacity');
+$('chkInscription').addEventListener('change', e => { state.inscription.enabled = e.target.checked; render(); });
+$('insText').addEventListener('input', e => { state.inscription.text = e.target.value; render(); });
+$('selInsPos').addEventListener('change', e => { state.inscription.pos = e.target.value; render(); });
+bindRange('rngInsSize', state.inscription, 'size');
+bindRange('rngInsSpacing', state.inscription, 'spacing');
+STAMP_SYMS.forEach(sym => {
+  const b = document.createElement('button');
+  b.className = 'stamp-btn'; b.dataset.s = sym; b.textContent = sym;
+  b.addEventListener('click', () => { state.stampSym = sym; syncControls(); });
+  $('stampGrid').append(b);
+});
+$('btnStamp').addEventListener('click', () => { state.stampMode = !state.stampMode; state.hideMode = false; syncControls(); showToast(state.stampMode ? 'Toca el lienzo para estampar' : 'Estampar desactivado'); });
+$('btnClearStamps').addEventListener('click', () => { state.stamps = []; state.stampMode = false; syncControls(); render(); });
 
 let toastTimer;
 function showToast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 1900); }
