@@ -150,13 +150,33 @@ await page.check('#chkInscription');
 await page.fill('#insText', 'VOLUNTAS');
 const insN = await page.evaluate(() => (buildSVG().match(/<g data-layer="inscription"[\s\S]*?<\/g>/)[0].match(/<text/g) || []).length);
 check('inscripcion 8 letras', insN === 8, insN + '');
-await page.click('#subStamps summary');
-await page.click('.stamp-btn >> nth=3');
-await page.click('#btnStamp');
+// Simbolos arcanos: catalogo, colocar, arrastrar, escalar, quitar
+const cat = await page.evaluate(() => ({
+  groups: document.querySelectorAll('#stampCatalog .stamp-group').length,
+  btns: document.querySelectorAll('#stampCatalog .stamp-btn').length,
+  named: [...document.querySelectorAll('#stampCatalog .stamp-btn')].every(b => b.title),
+  modern: /[♅♆♇]/.test(document.getElementById('stampCatalog').textContent)
+}));
+check('catalogo de simbolos por grupos con nombre', cat.groups === 6 && cat.btns >= 39 && cat.named, `${cat.groups} grupos, ${cat.btns} simbolos`);
+check('solo planetas clasicos', !cat.modern);
+await page.click('.stamp-btn[title="Júpiter"]');
 const box = await page.locator('#canvas').boundingBox();
-await page.mouse.click(box.x + box.width * .15, box.y + box.height * .15);
+const at = (fx, fy) => [box.x + box.width * fx, box.y + box.height * fy];
+await page.mouse.click(...at(.15, .15));
 await page.click('#btnStamp');
-const stamps = await page.evaluate(() => ({ n: state.stamps.length, svg: buildSVG().includes('data-layer="stamps"'), sel: state.sel }));
+let st1 = await page.evaluate(() => ({ n: state.stamps.length, sym: state.stamps[0] && state.stamps[0].sym, svg: buildSVG().includes('data-layer="stamps"'), info: document.getElementById('stampInfo').textContent }));
+check('jupiter colocado', st1.n === 1 && st1.sym.startsWith('♃') && st1.svg && /Júpiter/.test(st1.info), st1.info);
+await page.mouse.move(...at(.15, .15)); await page.mouse.down(); await page.mouse.move(...at(.85, .2), { steps: 5 }); await page.mouse.up();
+const moved = await page.evaluate(() => ({ x: state.stamps[0].x, n: state.stamps.length }));
+check('arrastrar simbolo lo mueve', moved.x > 600 && moved.n === 1, `x=${moved.x.toFixed(0)}`);
+await page.click('#btnStampBigger');
+check('ampliar simbolo', await page.evaluate(() => state.stamps[0].size > STAMP_SIZE && buildSVG().includes(`font-size="${state.stamps[0].size}"`)));
+await page.click('#btnStampDelete');
+check('quitar simbolo', await page.evaluate(() => state.stamps.length === 0 && !buildSVG().includes('data-layer="stamps"')));
+await page.click('.stamp-btn[title="Saturno"]');
+await page.mouse.click(...at(.15, .15));
+await page.click('#btnStamp');
+const stamps = await page.evaluate(() => ({ n: state.stamps.length, svg: buildSVG().includes('data-layer="stamps"') }));
 check('estampa colocada sin tocar letras', stamps.n === 1 && stamps.svg, `n=${stamps.n}`);
 await shot('marco-completo');
 await page.evaluate(() => localStorage.clear());

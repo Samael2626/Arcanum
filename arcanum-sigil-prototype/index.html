@@ -62,8 +62,9 @@ textarea:focus,input[type=text]:focus,select:focus{border-color:var(--gold)}
 .sub>summary{color:var(--gold);cursor:pointer;font-size:.7rem;letter-spacing:1px;list-style:none;min-height:34px;display:flex;align-items:center;text-transform:uppercase}
 .sub>summary::-webkit-details-marker{display:none}
 .sub[open]{padding-bottom:6px}
-.stamp-grid{display:grid;gap:3px;grid-template-columns:repeat(5,1fr);margin:4px 0}
-.stamp-btn{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--dim);cursor:pointer;font-size:1.05rem;min-height:36px}
+.stamp-group{color:var(--dim);font-size:.62rem;letter-spacing:1px;margin:6px 0 2px;text-transform:uppercase}
+.stamp-grid{display:grid;gap:3px;grid-template-columns:repeat(6,1fr);margin:2px 0}
+.stamp-btn{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--dim);cursor:pointer;font-family:'Segoe UI Symbol',serif;font-size:1.1rem;min-height:38px}
 .stamp-btn.active{border-color:var(--gold);color:var(--gold)}
 .preview{align-items:center;display:flex;gap:8px;margin-top:6px}
 .preview canvas{border:1px solid var(--border);height:80px;width:80px}
@@ -184,7 +185,25 @@ textarea:focus,input[type=text]:focus,select:focus{border-color:var(--gold)}
     </details>
 
     <details class="step" open>
-      <summary><span class="step-num">5</span><span class="step-title">Presentación</span></summary>
+      <summary><span class="step-num">5</span><span class="step-title">Símbolos arcanos</span></summary>
+      <div class="step-body">
+        <p class="helper">Elige un símbolo, activa «Colocar» y toca el lienzo. Toca un símbolo ya puesto para moverlo, cambiar su tamaño o quitarlo.</p>
+        <div id="stampCatalog"></div>
+        <div class="row">
+          <button class="btn" id="btnStamp" title="Con el modo activo, cada toque en el lienzo coloca el símbolo elegido">Colocar</button>
+          <button class="btn-dim" id="btnClearStamps">Quitar todos</button>
+        </div>
+        <div class="info" id="stampInfo">Ningún símbolo seleccionado.</div>
+        <div class="row">
+          <button class="btn-dim" id="btnStampSmaller" title="Reducir símbolo">−</button>
+          <button class="btn-dim" id="btnStampBigger" title="Ampliar símbolo">+</button>
+          <button class="btn-dim" id="btnStampDelete">Quitar</button>
+        </div>
+      </div>
+    </details>
+
+    <details class="step" open>
+      <summary><span class="step-num">6</span><span class="step-title">Presentación</span></summary>
       <div class="step-body">
         <div class="field"><label for="selTheme">Tinta</label>
           <select id="selTheme"><option value="build" selected>Construcción (papel)</option><option value="present">Presentación (oro)</option></select></div>
@@ -214,17 +233,12 @@ textarea:focus,input[type=text]:focus,select:focus{border-color:var(--gold)}
           <div class="field"><label for="rngInsSize">Tamaño</label><input type="range" id="rngInsSize" min="12" max="40" value="22"><span class="val" id="insSizeVal">22</span></div>
           <div class="field"><label for="rngInsSpacing">Espaciado</label><input type="range" id="rngInsSpacing" min="0" max="20" value="4"><span class="val" id="insSpacingVal">4</span></div>
         </details>
-        <details class="sub" id="subStamps">
-          <summary>Estampas</summary>
-          <div class="stamp-grid" id="stampGrid"></div>
-          <div class="row"><button class="btn-dim" id="btnStamp" title="Con el modo activo, toca el lienzo para estampar">Estampar</button><button class="btn-dim" id="btnClearStamps">Borrar estampas</button></div>
-        </details>
         <div class="preview"><canvas id="previewCanvas" width="80" height="80"></canvas><span>Miniatura 80×80:<br>la silueta debe leerse</span></div>
       </div>
     </details>
 
     <details class="step" open>
-      <summary><span class="step-num">6</span><span class="step-title">Cargar y guardar</span></summary>
+      <summary><span class="step-num">7</span><span class="step-title">Cargar y guardar</span></summary>
       <div class="step-body">
         <div class="row">
           <button class="btn" id="btnCharge">Cargar</button>
@@ -562,6 +576,7 @@ const state = {
   stamps: [],
   stampSym: '♄︎',
   stampMode: false,
+  stampSel: -1,
   view: null,
   dragging: null,
   rosa: { name: '', mapping: [], resolved: [], gematria: 0, diagram: true }
@@ -715,8 +730,18 @@ function inscriptionGeom() {
     return { ch, x: C + Math.cos(a) * R, y: C + Math.sin(a) * R, rot: lower ? a - Math.PI / 2 : a + Math.PI / 2 };
   });
 }
-// U+FE0E: glifo de texto, no emoji
-const STAMP_SYMS = ['♄', '♃', '♂', '☉', '♀', '☿', '☽', '✦', '✧', '◎'].map(s => s + '︎');
+// Simbolos arcanos. Solo los 7 planetas clasicos, como el resto de
+// ARCANUM (orden caldeo). U+FE0E fuerza glifo de texto, no emoji.
+const STAMP_CATALOG = [
+  ['Planetas', [['♄', 'Saturno'], ['♃', 'Júpiter'], ['♂', 'Marte'], ['☉', 'Sol'], ['♀', 'Venus'], ['☿', 'Mercurio'], ['☽', 'Luna']]],
+  ['Zodiaco', [['♈', 'Aries'], ['♉', 'Tauro'], ['♊', 'Géminis'], ['♋', 'Cáncer'], ['♌', 'Leo'], ['♍', 'Virgo'], ['♎', 'Libra'], ['♏', 'Escorpio'], ['♐', 'Sagitario'], ['♑', 'Capricornio'], ['♒', 'Acuario'], ['♓', 'Piscis']]],
+  ['Elementos', [['🜂', 'Fuego'], ['🜄', 'Agua'], ['🜁', 'Aire'], ['🜃', 'Tierra']]],
+  ['Principios alquímicos', [['🜍', 'Azufre'], ['☿', 'Mercurio'], ['🜔', 'Sal']]],
+  ['Nodos y aspectos', [['☊', 'Nodo norte'], ['☋', 'Nodo sur'], ['☌', 'Conjunción'], ['☍', 'Oposición'], ['△', 'Trígono'], ['□', 'Cuadratura'], ['⚹', 'Sextil']]],
+  ['Signos', [['✦', 'Estrella'], ['✧', 'Estrella abierta'], ['◎', 'Círculo doble'], ['⊕', 'Cruz en círculo'], ['✠', 'Cruz patada'], ['☥', 'Anj']]]
+].map(([group, items]) => [group, items.map(([s, name]) => ({ sym: s + '︎', name }))]);
+const STAMP_NAMES = Object.fromEntries(STAMP_CATALOG.flatMap(([, items]) => items.map(i => [i.sym, i.name])));
+const STAMP_SIZE = 56;
 
 function paintFrame(ctx, th, lw) {
   if (state.star.enabled) {
@@ -736,11 +761,25 @@ function paintFrame(ctx, th, lw) {
     ctx.restore();
   }
 }
-function paintStamps(ctx, th) {
+function paintStamps(ctx, th, interactive) {
   ctx.save();
-  ctx.fillStyle = th.frame; ctx.font = '30px "Segoe UI Symbol", serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  state.stamps.forEach(s => ctx.fillText(s.sym, s.x, s.y));
+  ctx.fillStyle = th.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  state.stamps.forEach((s, i) => {
+    ctx.font = `${s.size || STAMP_SIZE}px "Segoe UI Symbol", serif`;
+    ctx.fillText(s.sym, s.x, s.y);
+    if (interactive && i === state.stampSel) {
+      ctx.save(); ctx.strokeStyle = th.accent; ctx.lineWidth = 2; ctx.setLineDash([6, 6]);
+      ctx.beginPath(); ctx.arc(s.x, s.y, (s.size || STAMP_SIZE) * .72, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    }
+  });
   ctx.restore();
+}
+function stampAt(pt) {
+  for (let i = state.stamps.length - 1; i >= 0; i--) {
+    const s = state.stamps[i];
+    if (Math.hypot(pt.x - s.x, pt.y - s.y) < Math.max(24, (s.size || STAMP_SIZE) * .7)) return i;
+  }
+  return -1;
 }
 function frameSVG(th) {
   const out = [];
@@ -760,8 +799,8 @@ function frameSVG(th) {
 }
 function stampsSVG(th) {
   if (!state.stamps.length) return '';
-  return `<g data-layer="stamps" fill="${th.frame}" font-family="Segoe UI Symbol, serif" font-size="30" text-anchor="middle" dominant-baseline="middle">` +
-    state.stamps.map(s => `<text x="${f2(s.x)}" y="${f2(s.y)}">${esc(s.sym)}</text>`).join('') + '</g>';
+  return `<g data-layer="stamps" fill="${th.ink}" font-family="Segoe UI Symbol, serif" text-anchor="middle" dominant-baseline="middle">` +
+    state.stamps.map(s => `<text x="${f2(s.x)}" y="${f2(s.y)}" font-size="${s.size || STAMP_SIZE}">${esc(s.sym)}</text>`).join('') + '</g>';
 }
 
 function strokePrim(ctx, p) {
@@ -834,12 +873,17 @@ function paint(ctx, opt) {
       else { const h = lw * 1.8; ctx.moveTo(q.x - e.ty * h, q.y + e.tx * h); ctx.lineTo(q.x + e.ty * h, q.y - e.tx * h); ctx.stroke(); }
     }
   }
-  paintStamps(ctx, th);
+  paintStamps(ctx, th, opt.interactive);
 }
 
 const canvas = $('canvas'), ctx = canvas.getContext('2d');
 const previewCtx = $('previewCanvas').getContext('2d');
+function updateStampInfo() {
+  const ss = state.stamps[state.stampSel];
+  $('stampInfo').textContent = ss ? `${ss.sym} ${STAMP_NAMES[ss.sym] || ''} · ${ss.size || STAMP_SIZE}px · arrástralo para moverlo` : `${state.stamps.length} símbolo(s) colocados. Ninguno seleccionado.`;
+}
 function render() {
+  updateStampInfo();
   paint(ctx, { size: SIZE, theme: state.theme, interactive: true });
   paint(previewCtx, { size: 80, theme: state.theme });
   renderChips();
@@ -1062,7 +1106,21 @@ function primAt(pt, pool) {
 canvas.addEventListener('pointerdown', e => {
   if (state.family !== 'letters' || !state.prims.length) return;
   const pt = canvasPoint(e);
-  if (state.stampMode) { state.stamps.push({ x: pt.x, y: pt.y, sym: state.stampSym }); render(); return; }
+  // los simbolos estan encima: se tocan antes que las letras
+  const si = stampAt(pt);
+  if (si >= 0) {
+    const s = state.stamps[si];
+    state.stampSel = si; state.sel = null;
+    state.stampDrag = { s, ox: pt.x - s.x, oy: pt.y - s.y };
+    canvas.setPointerCapture(e.pointerId);
+    render(); return;
+  }
+  if (state.stampMode) {
+    state.stamps.push({ x: pt.x, y: pt.y, sym: state.stampSym, size: STAMP_SIZE });
+    state.stampSel = state.stamps.length - 1;
+    render(); return;
+  }
+  state.stampSel = -1;
   if (state.hideMode) { const p = primAt(pt, state.prims); if (p) toggleHidden(p.key); return; }
   const p = primAt(pt, state.prims.filter(q => !q.hidden));
   if (!p || !p.units.length) { state.sel = null; render(); return; }
@@ -1077,6 +1135,8 @@ canvas.addEventListener('pointerdown', e => {
   render();
 });
 canvas.addEventListener('pointermove', e => {
+  const sd = state.stampDrag;
+  if (sd) { const pt = canvasPoint(e); sd.s.x = pt.x - sd.ox; sd.s.y = pt.y - sd.oy; render(); return; }
   const d = state.dragging;
   if (!d) return;
   const pt = canvasPoint(e), w = toWorld(pt.x, pt.y);
@@ -1086,6 +1146,7 @@ canvas.addEventListener('pointermove', e => {
   rebuild();
 });
 canvas.addEventListener('pointerup', () => {
+  state.stampDrag = null;
   const d = state.dragging;
   if (!d) return;
   state.dragging = null;
@@ -1145,6 +1206,7 @@ function restoreState(s) {
     Object.assign(state.star, s.star);
     Object.assign(state.inscription, s.inscription);
     state.stamps = s.stamps.map(x => ({ ...x }));
+    state.stampSel = -1;
   }
   $('intention').value = s.intention;
   state.intention = '';
@@ -1208,7 +1270,7 @@ function startGnosis() {
 }
 function forgetSigil() {
   closeGnosis();
-  Object.assign(state, { intention: '', reduction: null, letters: [], extra: [], prims: [], hidden: [], decisions: [], sel: null, stamps: [] });
+  Object.assign(state, { intention: '', reduction: null, letters: [], extra: [], prims: [], hidden: [], decisions: [], sel: null, stamps: [], stampSel: -1 });
   $('intention').value = ''; $('reductionBox').textContent = '—';
   render();
   showToast('Soltado. No lo busques.');
@@ -1256,7 +1318,7 @@ function syncControls() {
   $('chkInscription').checked = ins.enabled; $('insText').value = ins.text; $('selInsPos').value = ins.pos;
   $('rngInsSize').value = ins.size; $('insSizeVal').textContent = ins.size;
   $('rngInsSpacing').value = ins.spacing; $('insSpacingVal').textContent = ins.spacing;
-  $('btnStamp').classList.toggle('on', state.stampMode);
+  $('btnStamp').textContent = state.stampMode ? 'Colocando ' + state.stampSym : 'Colocar';
   document.querySelectorAll('.stamp-btn').forEach(b => b.classList.toggle('active', b.dataset.s === state.stampSym));
 }
 const regenerate = () => { if (state.reduction) { applyLayout(); renderReduction(); } };
@@ -1305,6 +1367,7 @@ $('chkRosaDiagram').addEventListener('change', e => { state.rosa.diagram = e.tar
 $('panelToggle').addEventListener('click', e => { const open = $('controlPanel').classList.toggle('open'); e.currentTarget.setAttribute('aria-expanded', String(open)); });
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate();
+  if ((e.key === 'Delete' || e.key === 'Backspace') && state.stampSel >= 0 && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT') deleteStamp();
   if (e.key === 'Escape') { closeGnosis(); toggleGallery(false); $('provModal').classList.remove('open'); state.hideMode = false; state.stampMode = false; syncControls(); render(); }
 });
 
@@ -1324,14 +1387,30 @@ $('insText').addEventListener('input', e => { state.inscription.text = e.target.
 $('selInsPos').addEventListener('change', e => { state.inscription.pos = e.target.value; render(); });
 bindRange('rngInsSize', state.inscription, 'size');
 bindRange('rngInsSpacing', state.inscription, 'spacing');
-STAMP_SYMS.forEach(sym => {
-  const b = document.createElement('button');
-  b.className = 'stamp-btn'; b.dataset.s = sym; b.textContent = sym;
-  b.addEventListener('click', () => { state.stampSym = sym; syncControls(); });
-  $('stampGrid').append(b);
-});
-$('btnStamp').addEventListener('click', () => { state.stampMode = !state.stampMode; state.hideMode = false; syncControls(); showToast(state.stampMode ? 'Toca el lienzo para estampar' : 'Estampar desactivado'); });
-$('btnClearStamps').addEventListener('click', () => { state.stamps = []; state.stampMode = false; syncControls(); render(); });
+// Simbolos arcanos
+for (const [group, items] of STAMP_CATALOG) {
+  const h = document.createElement('div'); h.className = 'stamp-group'; h.textContent = group;
+  const grid = document.createElement('div'); grid.className = 'stamp-grid';
+  for (const it of items) {
+    const b = document.createElement('button');
+    b.className = 'stamp-btn'; b.dataset.s = it.sym; b.textContent = it.sym; b.title = it.name; b.setAttribute('aria-label', it.name);
+    // elegir un simbolo deja listo el modo colocar
+    b.addEventListener('click', () => { state.stampSym = it.sym; state.stampMode = true; state.hideMode = false; syncControls(); showToast(it.name + ': toca el lienzo para colocarlo'); });
+    grid.append(b);
+  }
+  $('stampCatalog').append(h, grid);
+}
+function editStamp(fn) {
+  const s = state.stamps[state.stampSel];
+  if (!s) { showToast('Toca primero un símbolo en el lienzo'); return; }
+  fn(s); syncControls(); render();
+}
+function deleteStamp() { editStamp(() => { state.stamps.splice(state.stampSel, 1); state.stampSel = -1; }); }
+$('btnStamp').addEventListener('click', () => { state.stampMode = !state.stampMode; state.hideMode = false; syncControls(); showToast(state.stampMode ? 'Toca el lienzo para colocar' : 'Colocar desactivado'); });
+$('btnClearStamps').addEventListener('click', () => { state.stamps = []; state.stampSel = -1; state.stampMode = false; syncControls(); render(); });
+$('btnStampSmaller').addEventListener('click', () => editStamp(s => { s.size = Math.max(18, Math.round((s.size || STAMP_SIZE) / 1.2)); }));
+$('btnStampBigger').addEventListener('click', () => editStamp(s => { s.size = Math.min(160, Math.round((s.size || STAMP_SIZE) * 1.2)); }));
+$('btnStampDelete').addEventListener('click', deleteStamp);
 
 let toastTimer;
 function showToast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 1900); }
