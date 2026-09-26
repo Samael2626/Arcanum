@@ -49,6 +49,22 @@ TIRADA = [("Pasado", "ocho-de-oros", True),
           ("Presente", "cinco-de-copas", False),
           ("Futuro", "dos-de-espadas", True)]
 
+# La Cruz Celta es OTRO formato, no la misma tirada con mas cartas: diez
+# posiciones tientan al modelo a escribir diez parrafos de ficha y a perder la
+# pregunta por el camino. Se mide aparte porque ahi es donde se rompe.
+TIRADA_CRUZ = [
+    ("Situación actual", "ocho-de-oros", True),
+    ("El desafío", "cinco-de-copas", False),
+    ("Fundamento (raíz)", "dos-de-espadas", True),
+    ("Pasado reciente", "tres-de-bastos", True),
+    ("Lo que corona (posible futuro)", "la-estrella", True),
+    ("Futuro inmediato", "caballero-de-bastos", True),
+    ("Tu actitud", "cuatro-de-copas", True),
+    ("Entorno e influencias", "diez-de-oros", False),
+    ("Esperanzas y miedos", "la-luna", True),
+    ("Resultado", "el-mundo", True),
+]
+
 RAYA = "=" * 72
 
 
@@ -95,7 +111,7 @@ def horoscopo(veces: int, ver_datos: bool) -> None:
             print(texto if d.get("available") else f"NO DISPONIBLE: {d}")
 
 
-def _tirada_real() -> str:
+def _tirada_real(tirada=None, spread: str = "three_card") -> str:
     """La tirada se arma con los significados REALES del catalogo editorial.
 
     Inventarlos aqui haria que el texto se juzgara contra un contenido que la app
@@ -115,7 +131,7 @@ def _tirada_real() -> str:
             catalogo.update({c["slug"]: c for c in json.load(fh)})
 
     cartas = []
-    for pos, slug, derecha in TIRADA:
+    for pos, slug, derecha in (tirada or TIRADA):
         c = catalogo.get(slug)
         if c is None:
             raise SystemExit(f"{slug} no esta en el catalogo; revisa el slug.")
@@ -132,11 +148,11 @@ def _tirada_real() -> str:
         })
 
     sesion = SimpleNamespace(cards_drawn={"cards": cartas},
-                             spread_type="three_card", system="tarot")
+                             spread_type=spread, system="tarot")
     return oc.build_tarot_context(sesion), [c["name_es"] for c in cartas]
 
 
-def oraculo(veces: int, ver_datos: bool) -> None:
+def oraculo(veces: int, ver_datos: bool, cruz: bool = False) -> None:
     from app.core.config import settings
     from app.services import claude_service as cs
     from app.services import natal_chart_engine as nce
@@ -155,9 +171,11 @@ def oraculo(veces: int, ver_datos: bool) -> None:
                             calculated_at=nac)
 
     ctx = oc.build_oracle_context(usuario, carta)
-    tarot_txt, esperadas = _tirada_real()
+    tirada = TIRADA_CRUZ if cruz else TIRADA
+    spread = "celtic_cross" if cruz else "three_card"
+    tarot_txt, esperadas = _tirada_real(tirada, spread)
 
-    _cabecera("ORACULO — carta falsa 1993-05-04, Bogota")
+    _cabecera(f"ORACULO {spread} ({len(esperadas)} cartas) — carta falsa 1993-05-04, Bogota")
     if ver_datos:
         print(ctx)
         print()
@@ -180,6 +198,8 @@ def main() -> int:
     p.add_argument("que", choices=("horoscopo", "oraculo", "ambos"))
     p.add_argument("--veces", type=int, default=1,
                    help="corridas por carta; 3 para ver si un fallo es constante")
+    p.add_argument("--cruz", action="store_true",
+                   help="Oraculo en Cruz Celta (10 posiciones) en vez de 3 cartas")
     p.add_argument("--datos", action="store_true",
                    help="imprime tambien el bloque de datos que recibe el modelo")
     args = p.parse_args()
@@ -191,7 +211,7 @@ def main() -> int:
     if args.que in ("horoscopo", "ambos"):
         horoscopo(args.veces, args.datos)
     if args.que in ("oraculo", "ambos"):
-        oraculo(args.veces, args.datos)
+        oraculo(args.veces, args.datos, args.cruz)
     return 0
 
 
