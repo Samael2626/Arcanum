@@ -55,6 +55,55 @@ Para una muestra rapida, `scripts/muestra_voz.py` de esta skill (ver abajo).
 
 ---
 
+### MEDIDO EL 26-SEP: EL PROMPT VIVO DEL ORACULO NO ES EL DEL CATALOGO
+
+No es que commitear en Arcanum-datos no cambie la app -- eso ya estaba escrito.
+Es que los dos textos **ya se han separado**, y el vivo es el viejo:
+
+| | catalogo `prompts/oracle_system.txt` | Railway (produccion) |
+|---|---|---|
+| tamano | 10.061 chars | **6.242 chars** |
+| "energia" vetada | 1 | **0** |
+| "vibracion" vetada | 2 | **0** |
+| "conseguiras" vetada | 1 | **0** |
+| el cierre como "gesto" | 3 | **0** |
+
+`oracle_guard` castiga vocabulario vetado, promesas de resultado y tercera
+persona. **El prompt vivo no contiene ninguna de esas reglas**, y ademas usa
+"consultante" dos veces, que es justo lo que `tercera_persona` marca. Cada
+lectura de produccion que dice "energia" paga un reintento por una regla que al
+modelo nunca se le dijo.
+
+> **No se ensancha el guard hasta reconciliar los dos prompts.** Ensancharlo hoy
+> solo sube el gasto de cupo en produccion. Esta pendiente anadir "alcanzaras" y
+> "vas a alcanzar" a `PROMESAS_DE_RESULTADO` -- salieron sin marcar en la Cruz
+> Celta medida --, y espera por esto.
+
+Para leerlo hace falta `railway variables --service Arcanum-Code --json`. Con
+`--kv` **no vale**: corta el valor en el primer salto de linea y parece que el
+prompt son 80 caracteres.
+
+Y la trampa de medicion que se lleva media hora: en local `.env` no define
+`ORACLE_SYSTEM_PROMPT`, asi que `muestra_voz.py oraculo` mide el **catalogo**.
+Lo que sale en esa pantalla no es lo que sirve la app.
+
+### MEDIDO EL 26-SEP: LA CRUZ CELTA PIERDE LA PREGUNTA
+
+Primera medida de las diez posiciones (`muestra_voz.py oraculo --cruz`), contra
+el prompt del catalogo, que es el bueno de los dos. Una corrida, no tres:
+
+- Salieron **diez fichas con el nombre de la posicion por delante**, una por
+  carta. No es una respuesta, es un catalogo. La forma que funciona en tres
+  cartas no sobrevive al cambio de formato.
+- **No responde la pregunta.** La roza ("recorte de ingresos", "mas alla del
+  salario") y nunca aterriza en lo que se vino a consultar.
+- Se colo la doctrina en crudo: "tierra fria y seca", "aire calido y humedo",
+  "la hora de Saturno". El horoscopo lo tiene prohibido; el Oraculo no.
+- `retry=True` y **"energia" seguia dentro despues del reintento**.
+- Dos promesas sin marcar: "**alcanzaras** una conclusion" y "**el logro sera**
+  la sintesis". `alcanzaras` no esta en `PROMESAS_DE_RESULTADO`.
+- Lo unico que aguanto el cambio de formato fue el cierre: un gesto, una frase.
+
 ## EL BUCLE
 
 1. **Reproducir.** Generar el texto real. Si Samuel dice que algo no se
