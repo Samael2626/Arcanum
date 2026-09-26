@@ -252,6 +252,27 @@ Texto de la corrida limpia, sin reintento:
 > mezclarse no hay distancia que los separe y el impulso que nace es corto,
 > trabaja con lo que le falta y no con su fuerza plena."
 
+### DECIDIDO POR SAMUEL EL 26-SEP: EL CUERPO DEL HOROSCOPO SE QUEDA COMO ESTA
+
+Vistos los seis textos enteros, Samuel eligio el ACTUAL "por mucho". La receta
+de abajo queda MEDIDA Y NO APLICADA, a proposito. No se implementa.
+
+Lo que gana el actual es el ritmo: dos parrafos cortos, imagen primero, y se lee
+de un vistazo. Lo que la variante hacia mejor --precision, nada de acertijos--
+no compensaba que el texto creciera entre 1,3 y 2,3 veces.
+
+**Lo que NO queda resuelto, y hay que tenerlo presente al elegir esto:** el
+actual es la forma que se queda sin red anti-generico, porque `expected_terms`
+se satisface con la nota al pie. La carta B de esa corrida --"el tiron que hoy
+se siente en tus decisiones aprieta con fuerza"-- vale para cualquiera y el
+guard la aprobo sin un defecto. Elegir esta voz es elegir tambien eso, hasta
+que se ponga otra red.
+
+Lo unico que sigue pendiente de decidir aqui es si la cobertura se mide contra
+el cuerpo (punto 1 de la receta), que se puede hacer SIN cambiar la voz: no
+obliga a nombrar con oficio, solo deja de dar por buena una nota al pie como
+prueba de que el texto habla de algo.
+
 ### La receta medida, para cuando se implemente
 
 1. `expected_terms` se comprueba contra el CUERPO (`_cuerpo_y_nota`), no contra
