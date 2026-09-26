@@ -218,6 +218,58 @@ mas bonito).
 
 ---
 
+## RESUELTO EL 26-SEP: LA RED ERA EXIGIR EL NOMBRE, NO PROHIBIRLO
+
+Cinco corridas contra Groq con las mismas tres cartas. El resumen, porque la
+conclusion no era la que se esperaba:
+
+| variante | que se cambio | resultado |
+|---|---|---|
+| actual (V3) | -- | 2 de 3 genericas, 1 copio definiciones |
+| V2 con el guard viejo | solo el prompt | **prueba invalida**: el guard seguia vetando el nombre |
+| V2 con el nombre permitido | prompt + guard | **acertijos en 3 de 3** |
+| V2 + cobertura en el CUERPO | + `expected_terms` sobre el cuerpo | 3 de 3 nombran con oficio |
+| lo mismo, sin vetar "natal" | -- | **1 de 3 limpia sin reintento** |
+
+**El error de diagnostico, escrito para no repetirlo:** se probo V2 cambiando el
+prompt y dejando `jerga_en_el_cuerpo` como estaba. Con el guard vetando el
+nombre, el modelo elige entre obedecer al prompt y comerse un reintento, o
+esquivar el nombre con una perifrasis. Elige la perifrasis, y la prueba mide el
+guard, no la variante. **Prompt y guard se cambian a la vez o no se mide nada.**
+
+**Y el hallazgo:** permitir el nombre no basta. Con los nombres permitidos el
+modelo SIGUE sin usarlos --"el que corta, que obra con lo que se separa por
+fuerza" por Marte, "consagra el cobre a la hora de la hermosura" por Venus--,
+porque lee el oficio como SUSTITUTO del nombre. Lo que lo arregla es la otra
+mitad: `expected_terms` medido contra el CUERPO en vez de contra el texto
+entero. Entonces el nombre es obligatorio donde importa y deja de hacer falta
+prohibirlo, que era lo que fabricaba el acertijo.
+
+Texto de la corrida limpia, sin reintento:
+
+> "El dia se siente como una hoja afilada que se arrima a la piel. Marte, que
+> lleva la contienda y el corte, se funde con tu Sol natal en Cancer; al
+> mezclarse no hay distancia que los separe y el impulso que nace es corto,
+> trabaja con lo que le falta y no con su fuerza plena."
+
+### La receta medida, para cuando se implemente
+
+1. `expected_terms` se comprueba contra el CUERPO (`_cuerpo_y_nota`), no contra
+   el texto entero. Sin esto no funciona nada de lo demas.
+2. `_NOMBRES_VETADOS_EN_EL_CUERPO` se queda SOLO con las figuras --cuadratura,
+   trigono, sextil, oposicion, conjuncion, quincuncio-- mas orbe, decanato y
+   efemeride. Fuera los planetas, fuera los signos, y **fuera "natal"**: "tu
+   Luna natal" es castellano corriente y vetarlo costaba un reintento en las
+   tres cartas.
+3. El prompt presenta cada cuerpo por su oficio la primera vez que aparece, y
+   dice que el nombre va EN EL CUERPO (esto ultimo falta: es por lo que 2 de 3
+   aun reintentan, el primer intento lo omite).
+4. La nota, por codigo. En estas corridas se degrado sola ("Luna Llena,
+   Saturno, Marte", sin etiquetas), que es el argumento que faltaba.
+
+Pendiente medido y NO resuelto: `materia_prestada` sigue colandose (salio
+"cobre, que es de Venus, que hoy no sale" entregado en el texto final).
+
 ## LA DECISION ABIERTA (26-sep-2026)
 
 Se probaron tres formas con el mismo cielo. Samuel eligio V3 y luego se midio que
@@ -241,7 +293,20 @@ anti-generico** y hay que poner otra en su sitio.
 
 ## COMO SE MIDE
 
-`scripts/muestra_voz.py` de esta skill genera el texto real. Tres cartas
+`scripts/banco_voz.py` prueba VARIANTES sin tocar el repo: parchea el prompt,
+el guard y los bloques de datos en memoria.
+
+```bash
+cd arcanum-api && set -a; . ./.env; set +a
+python ../.claude/skills/arcanum-voz/scripts/banco_voz.py horoscopo --cartas ABC     --prompt variante.txt --v2guard --cuerpo --pausa 75
+python ../.claude/skills/arcanum-voz/scripts/banco_voz.py oraculo --limpio --cruz
+```
+
+`--pausa 75` no es capricho: una llamada de horoscopo pide 6.200 tokens y el
+plan gratuito da 8.000 POR MINUTO, asi que dos seguidas rebotan por TPM aunque
+sobre cupo diario. Con 35 segundos rebota; con 75 no.
+
+`scripts/muestra_voz.py` genera el texto real con lo que hay vigente. Tres cartas
 distintas para el horoscopo, o una tirada con carta falsa para el Oraculo:
 
 ```bash
