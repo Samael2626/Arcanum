@@ -136,6 +136,29 @@ cabecera `x-ratelimit-limit-tokens` de una llamada real**:
 | Tokens / minuto | **8.000** |
 | Tokens / dia | 200.000 |
 
+### ESTOS LIMITES SON DE LA ORGANIZACION, NO DE CADA CLAVE
+
+Comprobado el 26-sep-2026. La clave de Railway y la de `arcanum-api/.env` son
+**distintas**, asi que parece que medir en local no toca produccion. Es falso:
+**las dos gastan de la MISMA bolsa.** El 429 lo dice con todas las letras:
+
+```
+Rate limit reached ... in organization org_01kcasg60df51t87qxpwrzqhja
+on tokens per day (TPD): Limit 200000, Used 196346
+```
+
+Y se confirmo con dos llamadas de 1 token: el contador de peticiones iba en 991,
+una llamada con la clave de PRODUCCION lo dejo en 990, y la siguiente con la de
+desarrollo leyo 989. Un solo contador para las dos.
+
+> **Medir la voz le quita cupo al usuario que paga.** Ese dia el TPD se agoto a
+> media tarde y al Oraculo de produccion le quedaban ~3.600 tokens: una Cruz
+> Celta y se acababa. Las corridas de `muestra_voz.py` se hacen con un
+> presupuesto fijado ANTES y en horas de poco uso, nunca "a ver que sale".
+
+El TPD (200.000) no viaja en las cabeceras: `x-ratelimit-remaining-tokens` es el
+del MINUTO. El diario solo se ve cuando ya reboto, en el cuerpo del 429.
+
 Los **8.000 TPM son de `gpt-oss-120b`**, no una herencia de Llama. La cuenta esta
 en plan gratuito: la consola sigue ofreciendo "On Developer plan, you get higher
 limits".
