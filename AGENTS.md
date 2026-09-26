@@ -151,10 +151,28 @@ Y se confirmo con dos llamadas de 1 token: el contador de peticiones iba en 991,
 una llamada con la clave de PRODUCCION lo dejo en 990, y la siguiente con la de
 desarrollo leyo 989. Un solo contador para las dos.
 
-> **Medir la voz le quita cupo al usuario que paga.** Ese dia el TPD se agoto a
-> media tarde y al Oraculo de produccion le quedaban ~3.600 tokens: una Cruz
-> Celta y se acababa. Las corridas de `muestra_voz.py` se hacen con un
-> presupuesto fijado ANTES y en horas de poco uso, nunca "a ver que sale".
+> **Medir la voz le quita cupo al usuario que paga.** Las corridas de
+> `muestra_voz.py` se hacen con un presupuesto fijado ANTES y en horas de poco
+> uso, nunca "a ver que sale".
+
+### PERO EL QUE SE COME EL CUPO ES EL TRAFICO REAL, NO LA MEDICION
+
+Medido el 26-sep-2026, y corrige lo que se penso primero. Ese dia el TPD se
+agoto, pero el reparto no era el que parecia:
+
+- Al saltar el PRIMER 429 iban **196.346** tokens gastados, y de esos la sesion
+  de medicion llevaba **~13.000**. Los otros ~183.000 son trafico de la app.
+- Despues, durante **30 minutos en los que la medicion no consiguio colocar ni
+  una llamada** (12 intentos, todos rebotados), el contador subio igualmente de
+  195.391 a **199.668**. Eso lo gastaron los usuarios.
+- Al final del dia no pasaba ni una peticion de 1.000 tokens: quedaban ~330.
+
+> **Consecuencia que importa: el Oraculo de produccion se queda a oscuras al
+> final del dia, por si solo.** Una lectura de tres cartas ronda los 3.500
+> tokens y una Cruz Celta los 4.600; con el cupo lleno, los dos devuelven 429 y
+> el usuario ve "El oraculo esta saturado". Con la prueba cerrada de Play
+> corriendo, 200.000 TPD del plan gratuito se quedan cortos. No es un problema
+> de disciplina al medir: es el techo del plan.
 
 El TPD (200.000) no viaja en las cabeceras: `x-ratelimit-remaining-tokens` es el
 del MINUTO. El diario solo se ve cuando ya reboto, en el cuerpo del 429.
