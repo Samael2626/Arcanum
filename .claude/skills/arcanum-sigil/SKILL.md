@@ -59,6 +59,24 @@ Mostrar entrada, normalización, regla, unidades descartadas y resultado.
 
 No usar `ao` ni “A‑O Principle” como doctrina Spare. No hay respaldo primario verificado con ese nombre y procedimiento; solo podría volver con autor, edición y página, etiquetado correctamente.
 
+## Letras reconocibles (v3, decisión del 26-sep-2026)
+
+Las letras reducidas son el material, no una semilla de azar. Frater U∴D∴,
+*Practical Sigil Magic*, cap. 2 (método de la palabra) [OM]: *"as simple as
+possible with the various letters recognizable (even with slight difficulty)"*.
+Los sigilos salen de la *fusión y estilización* de letras (Spare).
+
+- Cada letra se dibuja con su forma real (capital de trazo único sobre caja común).
+- Los trazos que coinciden se comparten y guardan todas sus letras.
+- Letra gemela (giro/reflejo de otra ya presente, p. ej. W = M invertida): no se
+  repite; se declara en la procedencia.
+- Tres composiciones, de menos a más legible: **Fusión** (Spare/U∴D∴, misma caja),
+  **Bloque** (una celda por letra, bordes compartidos) y **Cruz** (monograma
+  KAROLVS, 769 [HP]: vocales al centro, consonantes en los brazos).
+- Cada letra muestra su % visible; ocultar trazos lo baja y el usuario lo ve.
+- Rechazado: bandas, tótems o motivos derivados por hash de la letra. Si no se
+  puede leer la letra, no es este motor.
+
 ## Gramática visual v1
 
 Resultado = grafo determinista de primitivas SVG:
@@ -131,6 +149,8 @@ Si falla trazabilidad, miniatura, redibujo o separación, no entregar.
 
 - Austin Osman Spare, *The Book of Pleasure*: sigilos y Alfabeto del Deseo [OM].
 - Phillip Cooper, *Basic Sigil Magic*: iniciales, superposición y simplicidad [OM].
+- Frater U∴D∴, *Practical Sigil Magic*, cap. 2: método de la palabra, letras reconocibles, M/W/E [OM].
+- Monograma KAROLVS de Carlomagno (desde 769): cruz de consonantes, vocales al centro [HP].
 - Agrippa, *Three Books of Occult Philosophy*, II.22: kameas [HP].
 - Golden Dawn, documentos de Rosa-Cruz: coordenadas de letras [OM].
 - Claves de Salomón, *Lemegeton* y diarios de Dee: repertorios prescritos [HP].
