@@ -136,9 +136,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   subtitle: 'La experiencia completa',
                   price: precios[ProductIds.premiumAnnual] ?? '',
                   // Los numeros salen de config.py y no de la intencion:
-                  // TAROT_PREMIUM_DAILY 50, ORACLE_PREMIUM_DAILY 20,
-                  // HOROSCOPE_PREMIUM_EVERY_DAYS 1. Se cayeron tres renglones
-                  // que no resistian la comprobacion:
+                  // TAROT_PREMIUM_DAILY 10, ORACLE_PREMIUM_DAILY 10,
+                  // HOROSCOPE_PREMIUM_EVERY_DAYS 1. Bajaron de 50 y 20 el
+                  // 26-sep-2026, y no por producto: al tope viejo UN solo
+                  // suscriptor se comia mas de la mitad de los 200.000 tokens
+                  // diarios que da el plan gratuito de Groq a TODA la app.
+                  //
+                  // Se cayeron tres renglones que no resistian la comprobacion:
                   //
                   //   "7 dias gratis"          no hay oferta de prueba en la
                   //                            tienda; vuelve cuando la haya.
@@ -156,8 +160,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   // hay ni un grant en RENEWAL, asi que un suscriptor recibe
                   // CERO creditos. Cuando exista ese grant, este renglon.
                   features: const [
-                    '50 tiradas de tarot / día',
-                    '20 lecturas del oráculo / día',
+                    '10 tiradas de tarot / día',
+                    '10 lecturas del oráculo / día',
                     'Tu horóscopo, cada día',
                   ],
                   accent: ArcanumColors.gold,
