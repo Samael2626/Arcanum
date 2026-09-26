@@ -375,13 +375,88 @@ def materia_prestada(texto: str, datos: str) -> list[str]:
     return fuera
 
 
-def defectos(texto: str, datos: str) -> list[str]:
+# ── LA NOTA AL PIE (26-sep-2026) ─────────────────────────────────────────────
+#
+# Decidido con testers delante: el cuerpo del texto no lleva NINGUN nombre y los
+# datos van al final, en una linea. "Venus atraviesa Escorpio y tira de tu
+# Jupiter natal en Acuario" no lo entiende nadie que no sepa astrologia, y era
+# la PRIMERA oracion. Peor: el sistema la obligaba, porque `expected_terms`
+# reintenta si los cuerpos no aparecen, asi que el modelo abria siempre por ahi.
+#
+# Ahora los cuerpos siguen siendo obligatorios -- pero en la nota, que es donde
+# se pueden comprobar sin que estorben a quien no los necesita.
+MARCA_NOTA = "el cielo de hoy:"
+
+# Lo que no puede aparecer ANTES de la nota. Los planetas y los signos por su
+# nombre, y las figuras. No entran los nombres de las fases lunares ("luna
+# llena") a proposito: eso lo entiende cualquiera y ya se decia antes.
+_NOMBRES_VETADOS_EN_EL_CUERPO: tuple[str, ...] = (
+    "mercurio", "venus", "marte", "jupiter", "saturno", "urano", "neptuno",
+    "pluton", "nodo norte", "nodo sur", "ascendente",
+    "aries", "tauro", "geminis", "cancer", "leo", "virgo", "libra",
+    "escorpio", "sagitario", "capricornio", "acuario", "piscis",
+    "cuadratura", "trigono", "sextil", "oposicion", "conjuncion", "quincuncio",
+    "natal", "efemeride", "orbe", "decanato",
+)
+
+
+def _cuerpo_y_nota(texto: str) -> tuple[str, str]:
+    """Parte el texto por la marca de la nota. Sin nota, la nota es vacia."""
+    plano = _plano(texto)
+    corte = plano.rfind(MARCA_NOTA)
+    if corte < 0:
+        return plano, ""
+    return plano[:corte], plano[corte:]
+
+
+def falta_la_nota(texto: str) -> bool:
+    """Sin nota no hay donde comprobar el cielo, y el texto queda a medias."""
+    return MARCA_NOTA not in _plano(texto)
+
+
+def jerga_en_el_cuerpo(texto: str) -> list[str]:
+    """Nombres de planeta, signo o figura antes de la nota.
+
+    El Sol y la Luna NO se vetan por su nombre: son palabras corrientes del
+    castellano -- "la luz del sol", "la luna llena" -- y vetarlas obligaria al
+    modelo a perifrasis absurdas. Lo que se veta de ellos es su forma tecnica,
+    que ya cae por "natal".
+    """
+    cuerpo, _ = _cuerpo_y_nota(texto)
+    return sorted({n for n in _NOMBRES_VETADOS_EN_EL_CUERPO
+                   if re.search(r"\b" + re.escape(n) + r"\b", cuerpo)})
+
+
+def defectos(texto: str, datos: str, *, forma: bool = True) -> list[str]:
     """Todo lo que hay que rehacer, en frases que puedan ir en el aviso.
 
     Devuelve una lista vacia cuando el texto esta bien, que es lo que deja al
     llamador decidir si hace falta reintentar.
+
+    `forma=False` deja fuera las dos comprobaciones que solo tienen sentido
+    sobre un texto COMPLETO -- que la nota exista y que el cuerpo no nombre --,
+    y existe porque el resto se puede juzgar frase a frase. Sin este interruptor
+    los tests que miden una sola oracion se llevaban "te falta la nota" en cada
+    uno: verdad inutil sobre un fragmento que nunca iba a tener nota. En
+    produccion se llama SIEMPRE con la forma puesta, que es el default.
     """
     partes: list[str] = []
+
+    # La forma primero: sin nota, o con los nombres en el cuerpo, el texto no
+    # es el que se decidio servir, aunque todo lo demas este bien.
+    if forma and falta_la_nota(texto):
+        partes.append(
+            "te falta la nota final. La ULTIMA linea, sola, empieza por \"El "
+            "cielo de hoy:\" y lista los dos cuerpos con sus signos, la figura, "
+            "la fase lunar y el regente, sin explicar nada")
+
+    jerga = jerga_en_el_cuerpo(texto) if forma else []
+    if jerga:
+        partes.append(
+            "nombraste " + ", ".join(jerga) + " en el cuerpo del texto. Ahi no "
+            "entra ningun nombre de planeta, signo ni figura: se dice lo que "
+            "HACEN -- lo que tira y no cede, lo que deja pasar, lo que trabaja "
+            "con lo prestado --, y los nombres van en la nota del final")
 
     # Primero la frontera, que es la unica de estas que no es de estilo.
     promesas = promesas_de_resultado(texto)

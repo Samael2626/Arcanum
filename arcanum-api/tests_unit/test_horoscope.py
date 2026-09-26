@@ -120,22 +120,50 @@ class _FakeGroq:
         )
 
 
-def test_un_texto_que_nombra_su_transito_no_reintenta(monkeypatch):
-    cliente = _FakeGroq("Saturno aprieta sobre tu Sol natal y pide oficio.")
+# Desde el 26-sep-2026 los cuerpos se nombran en la NOTA, no en el cuerpo del
+# texto. El fixture de antes -- "Saturno aprieta sobre tu Sol natal" -- era
+# exactamente lo que los testers no entendian, y hoy se lleva un reintento por
+# nombrar en el cuerpo. La cobertura se cumple igual: los nombres siguen ahi,
+# una linea mas abajo.
+BIEN_FORMADO = (
+    # Sin materia en el cierre: el bloque de datos de este test es la cadena
+    # "cielo", asi que cualquier metal o planta se marcaria como materia de un
+    # cuerpo que no esta en juego. Eso se prueba en su propio test, no aqui.
+    "Hoy algo pesa y no afloja, y lo que hagas pide oficio y no prisa. "
+    "Lima hoy lo que llevas tiempo serrando y deja para manana lo que no arde." + chr(10) +
+    "El cielo de hoy: Saturno cuadratura Sol natal, Luna Llena."
+)
+
+
+def test_un_texto_que_nombra_su_transito_en_la_nota_no_reintenta(monkeypatch):
+    cliente = _FakeGroq(BIEN_FORMADO)
     monkeypatch.setattr(cs, "_get_client", lambda: cliente)
 
     texto, diag = cs.generate_horoscope("cielo", ["Saturno", "Sol"])
 
-    assert diag["retried"] is False
+    assert diag["retried"] is False, diag.get("flaws_first")
     assert cliente.llamadas == 1
     assert "Saturno" in texto
+
+
+def test_nombrar_en_el_cuerpo_dispara_el_reintento(monkeypatch):
+    """La forma vieja, que es la que los testers no entendian."""
+    viejo = "Saturno aprieta sobre tu Sol natal y pide oficio."
+    cliente = _FakeGroq(viejo, BIEN_FORMADO)
+    monkeypatch.setattr(cs, "_get_client", lambda: cliente)
+
+    _texto, diag = cs.generate_horoscope("cielo", ["Saturno", "Sol"])
+
+    assert diag["retried"] is True
+    assert any("en el cuerpo del texto" in f for f in diag["flaws_first"])
+    assert diag["flaws_final"] == []
 
 
 def test_un_horoscopo_generico_dispara_el_reintento(monkeypatch):
     # La red tiene que PESCAR, no solo pasar: este texto podria ser de
     # cualquiera, y es exactamente lo que no se quiere publicar.
     generico = "Hoy es un dia de cambios. Confia en el universo."
-    cliente = _FakeGroq(generico, "Saturno cuadra tu Sol natal: hay que sostener.")
+    cliente = _FakeGroq(generico, BIEN_FORMADO)
     monkeypatch.setattr(cs, "_get_client", lambda: cliente)
 
     texto, diag = cs.generate_horoscope("cielo", ["Saturno", "Sol"])

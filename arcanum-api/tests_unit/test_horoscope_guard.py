@@ -178,19 +178,31 @@ def test_el_texto_real_del_modelo_da_varios_defectos():
     juicio de estilo, y esta guarda solo hace comprobaciones deterministas: lo
     que no se puede mirar con una funcion pura se queda en el prompt.
     """
-    fallos = hg.defectos(REAL_MALO, DATOS_REAL)
+    fallos = hg.defectos(REAL_MALO, DATOS_REAL, forma=False)
     assert len(fallos) == 2, fallos
     assert any("energia" in f for f in fallos)
     assert any("copiaste literal" in f for f in fallos)
 
 
+def test_el_texto_viejo_tambien_falla_por_su_forma():
+    """El mismo REAL_MALO, ahora juzgado entero.
+
+    Se mira aparte del test de arriba a proposito: alli se comprueba el estilo
+    frase a frase, y aqui la forma que se decidio el 26-sep. Son dos cosas y
+    mezclarlas hacia imposible saber cual se rompio.
+    """
+    fallos = hg.defectos(REAL_MALO, DATOS_REAL)
+    assert any("falta la nota" in f for f in fallos)
+    assert any("en el cuerpo del texto" in f for f in fallos)
+
+
 def test_el_texto_bueno_no_da_ninguno():
-    assert hg.defectos(BUENO, DATOS_REAL) == []
+    assert hg.defectos(BUENO, DATOS_REAL, forma=False) == []
 
 
 def test_el_aviso_junta_cobertura_y_defectos_en_uno_solo():
     """Un solo aviso = un solo reintento = dos llamadas como techo."""
-    defectos = hg.defectos(REAL_MALO, DATOS_REAL) + hg.defectos(
+    defectos = hg.defectos(REAL_MALO, DATOS_REAL, forma=False) + hg.defectos(
         "Venus dispone de lo suyo y el dia va de pactos.", DATOS_REAL)
     aviso = hg.aviso(["Venus"], defectos)
     assert "no nombraste: Venus" in aviso
@@ -200,7 +212,7 @@ def test_el_aviso_junta_cobertura_y_defectos_en_uno_solo():
 
 def test_sin_nada_que_avisar_no_se_pide_reintento():
     """`defectos` vacío es lo que deja al llamador no gastar la segunda llamada."""
-    assert hg.defectos(BUENO, DATOS_REAL) == [] and hg.palabras_vetadas(BUENO) == []
+    assert hg.defectos(BUENO, DATOS_REAL, forma=False) == [] and hg.palabras_vetadas(BUENO) == []
 
 
 def test_las_vetadas_del_guard_son_las_del_prompt():
@@ -243,14 +255,14 @@ def test_hablar_de_la_jornada_ya_no_se_marca():
     puerta de atras.
     """
     assert hg.promesas_de_resultado(JORNADA) == []
-    assert hg.defectos(JORNADA, DATOS_REAL) == []
+    assert hg.defectos(JORNADA, DATOS_REAL, forma=False) == []
 
 
 def test_la_promesa_de_resultado_si_se_marca():
     marcadas = hg.promesas_de_resultado(PROMESA)
     assert "conseguiras" in marcadas
     assert "te ira bien" in marcadas
-    assert any("resultado cerrado" in d for d in hg.defectos(PROMESA, DATOS_REAL))
+    assert any("resultado cerrado" in d for d in hg.defectos(PROMESA, DATOS_REAL, forma=False))
 
 
 def test_las_promesas_del_guard_estan_vetadas_en_el_prompt():
@@ -294,11 +306,11 @@ def test_la_guarda_de_ordenes_ya_no_existe():
 
 def test_el_imperativo_ya_no_se_marca():
     """Lo que se vino a permitir: decirle a quien lee que haga algo."""
-    assert hg.defectos(ORDEN, DATOS_REAL) == []
+    assert hg.defectos(ORDEN, DATOS_REAL, forma=False) == []
     for frase in ("aprovecha para limar", "consagra el estaño de Júpiter",
                   "habla hoy con quien dejaste a medias",
                   "no firmes todavía"):
-        assert hg.defectos(frase, DATOS_REAL) == [], frase
+        assert hg.defectos(frase, DATOS_REAL, forma=False) == [], frase
 
 
 def test_aflojar_la_orden_no_aflojo_la_promesa():
@@ -307,7 +319,7 @@ def test_aflojar_la_orden_no_aflojo_la_promesa():
     Mandar no es prometer: lo primero no se comprueba mañana, lo segundo sí.
     Si una vuelta futura arrastra la promesa detrás de la orden, cae aquí.
     """
-    assert hg.defectos("cierra ese asunto hoy", DATOS_REAL) == []
+    assert hg.defectos("cierra ese asunto hoy", DATOS_REAL, forma=False) == []
     assert "conseguiras" in hg.promesas_de_resultado(
         "cierra ese asunto hoy y conseguirás por fin cerrarlo")
     assert hg.promesas_de_resultado(PROMESA)
@@ -329,7 +341,7 @@ def test_el_consejo_profesional_se_marca():
                   "pide el préstamo hoy",
                   "demanda judicial: no la pongas todavia"):
         assert hg.asesoria_real(frase), frase
-        assert any("consejo real" in d for d in hg.defectos(frase, DATOS_REAL))
+        assert any("consejo real" in d for d in hg.defectos(frase, DATOS_REAL, forma=False))
 
 
 def test_el_registro_cotidiano_no_es_asesoria():
@@ -368,7 +380,7 @@ def test_la_geometria_del_calculo_no_se_escribe():
                   "está en exilio porque el signo opuesto pertenece a otro",
                   "tres signos que comparten el mismo modo de obrar"):
         assert hg.geometria_escrita(frase), frase
-        assert any("geometria" in d for d in hg.defectos(frase, DATOS_REAL))
+        assert any("geometria" in d for d in hg.defectos(frase, DATOS_REAL, forma=False))
 
 
 def test_hablar_de_signos_sin_contar_no_es_geometria():
@@ -390,7 +402,7 @@ def test_la_definicion_entera_colgada_del_nombre_se_cae():
         "prestado porque nada allí le obedece, Venus aprieta",
     ):
         assert hg.glosas_de_manual(frase), frase
-        assert any("definicion entera" in d for d in hg.defectos(frase, DATOS_REAL))
+        assert any("definicion entera" in d for d in hg.defectos(frase, DATOS_REAL, forma=False))
 
 
 def test_el_pago_barato_del_termino_si_pasa():
@@ -412,3 +424,66 @@ def test_el_cierre_pide_un_gesto_hacible_no_un_dato_de_museo():
     from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
     assert "HACIBLE HOY Y CON EL CUERPO" in P
     assert "como constatacion" not in P
+
+
+# ── La nota al pie (26-sep-2026) ─────────────────────────────────────────────
+# Decidido con testers delante: "Venus atraviesa Escorpio y tira de tu Jupiter
+# natal en Acuario" no lo entiende nadie, y era la PRIMERA oracion. El cuerpo va
+# en castellano y los nombres al final, donde se pueden comprobar sin estorbar.
+
+CUERPO_LLANO = (
+    "Hoy el roce entre lo que deseas y lo que te ofrecen no cede, y cualquier "
+    "acuerdo que firmes llevará el sello de lo prestado. Lima lo que llevas "
+    "tiempo serrando, y enciende una vela verde al anochecer.\n"
+    "El cielo de hoy: Venus en Escorpio cuadratura Júpiter natal en Acuario, "
+    "Nodo Norte en Acuario trígono Luna natal en Géminis, Luna Llena, Saturno "
+    "regente."
+)
+
+
+def test_el_cuerpo_llano_con_su_nota_pasa_limpio():
+    assert hg.falta_la_nota(CUERPO_LLANO) is False
+    assert hg.jerga_en_el_cuerpo(CUERPO_LLANO) == []
+    assert hg.defectos(CUERPO_LLANO, DATOS_REAL) == []
+
+
+def test_los_nombres_de_la_nota_no_cuentan_como_jerga():
+    """Toda la jerga del ejemplo esta DESPUES de la marca, y ahi es donde va."""
+    cuerpo, nota = hg._cuerpo_y_nota(CUERPO_LLANO)
+    assert "venus" in nota and "venus" not in cuerpo
+    assert "cuadratura" in nota
+
+
+def test_nombrar_en_el_cuerpo_se_cae():
+    texto = ("Venus atraviesa Escorpio y tira de tu Júpiter natal en Acuario; la "
+             "cuadratura aprieta y ninguno cede.\n"
+             "El cielo de hoy: Venus en Escorpio cuadratura Júpiter natal.")
+    marcados = hg.jerga_en_el_cuerpo(texto)
+    for n in ("venus", "escorpio", "jupiter", "acuario", "cuadratura", "natal"):
+        assert n in marcados, n
+    assert any("en el cuerpo del texto" in d for d in hg.defectos(texto, DATOS_REAL))
+
+
+def test_sin_nota_el_texto_esta_a_medias():
+    suelto = "Hoy algo aprieta y no afloja, y lo que firmes será con lo prestado."
+    assert hg.falta_la_nota(suelto) is True
+    assert any("falta la nota" in d for d in hg.defectos(suelto, DATOS_REAL))
+
+
+def test_el_sol_y_la_luna_siguen_siendo_palabras_del_castellano():
+    """Vetarlas por su nombre forzaria perifrasis absurdas.
+
+    "la luna llena" y "la luz del sol" las entiende cualquiera, y es justo el
+    registro que se quiere. Lo tecnico de ellos cae por "natal".
+    """
+    llano = ("La luna llena ilumina lo que ya estaba en marcha y el sol calienta "
+             "lo que hoy se afina.\nEl cielo de hoy: Luna Llena.")
+    assert hg.jerga_en_el_cuerpo(llano) == []
+
+
+def test_el_prompt_pide_la_nota_con_la_misma_marca_que_vigila_el_guard():
+    """Si el prompt y la guarda no usan la MISMA frase, todo reintenta siempre."""
+    from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT as P
+    assert "El cielo de hoy:" in P
+    assert hg.MARCA_NOTA == "el cielo de hoy:"
+    assert "EN EL CUERPO NO SE NOMBRA NADA" in P
