@@ -199,6 +199,63 @@ es justo por ahi por donde se cruza, asi que pasa de pedirse a comprobarse:
 oracion.
 
 ===============================================================================
+25-SEP-2026: SONABA A CLASE, NO A LECTURA
+===============================================================================
+
+Samuel: "el horoscopo da respuestas muy tecnicas, le quita la magia". Medido
+contra el cielo real del dia, tenia razon, y la culpa no era del modelo sino
+de este archivo: dos reglas suyas fabricaban el manual.
+
+1. "CADA TERMINO SE PAGA con su significado en la misma frase" se cumplia
+   pegando la glosa ENTERA que traen los datos, en aposicion: "una
+   cuadratura, que es la figura de dos fuerzas que tiran del mismo asunto
+   desde angulos distintos y ninguno cede". Un parrafo de tres oraciones
+   gastaba dos en definir.
+2. "Los datos traen el PORQUE ... Usalo" mandaba escribir la geometria --
+   cuantos signos separan, que elementos se tocan --. Eso es el andamio del
+   calculo: sirve para que el modelo sepa de donde sale el sentido, no para
+   salir impreso.
+
+Ahora el termino se paga BARATO (media frase, palabras propias), la geometria
+esta prohibida por escrito, la aposicion de manual tambien, y hay una cuota:
+UNA oracion explica por parrafo, el resto dice el cielo. De propina se cerro
+un invento que salia solo -- "tu Venus en Acuario, el sector que habla de lo
+que posees", significado de casa que nadie le dio.
+
+Comprobado con dos corridas reales antes y despues, mismo cielo y mismo
+modelo. `tests_unit` sigue verde: 814 pasan, 1 saltado.
+
+===============================================================================
+25-SEP-2026: SONABA A CLASE, NO A LECTURA
+===============================================================================
+
+Samuel: "esta dando respuestas muy tecnicas, le quita la magia". Medido con
+`scripts/comparar_voz_horoscopo.py` sobre un cielo real, el texto gastaba dos
+tercios en glosario: la figura definida entre guiones, la dignidad con su
+razon completa ("porque el signo opuesto pertenece a otro y alli nada le
+obedece") y la geometria escrita tal cual ("los separan cuatro signos del
+mismo elemento").
+
+No era desobediencia: era el prompt. Pedia pagar CADA termino con su
+significado, permitia DOS por parrafo, y encima mandaba USAR el porque
+geometrico que los datos traen glosado. El modelo hacia exactamente eso, y lo
+que queda tras explicarlo todo ya no es una lectura.
+
+Cuatro cambios, y ninguno quita precision:
+
+1. El termino se paga BARATO: media frase, propia, no la glosa de los datos.
+2. UNO por parrafo, no dos, y como mucho UNA oracion explicativa por parrafo.
+3. La geometria pasa de obligatoria a PROHIBIDA en el texto. Sigue en los
+   datos, que es donde sirve: el modelo la necesita para saber que dice el
+   aspecto, no para escribirla.
+4. Prohibidas las aposiciones de manual ("una cuadratura, que es la figura
+   de..."). El sentido se dice actuando, con los cuerpos de sujeto.
+
+Y se prohibio inventar de que trata una casa o un signo cuando los datos no lo
+traen: el texto medido se saco "tu Venus en Acuario, el sector que habla de lo
+que posees", que no es un dato sino un relleno con forma de dato.
+
+===============================================================================
 LO QUE NO SE ARREGLA PIDIENDOLO
 ===============================================================================
 
@@ -224,16 +281,29 @@ nunca condescendiente. En espanol.
 Es la regla que mas se incumple, y por eso va primera. Quien lee puede no haber
 abierto un libro de astrologia en su vida.
 
-- CADA TERMINO SE PAGA EN EL ACTO: la primera vez que aparece va con su
-  significado en la MISMA frase y en palabras corrientes, y no se repite: "un
-  sextil, que es la figura de los que se ayudan de lejos"; "tu casa 2, el
-  sector que habla de lo que posees".
-- COMO MUCHO DOS terminos de oficio por parrafo, contando la figura. Con tres,
-  la frase es un examen.
+- CADA TERMINO SE PAGA EN EL ACTO, y se paga BARATO: media frase, palabras
+  corrientes, tuyas. "un sextil, que es ayuda de lejos"; "en exilio, o sea en
+  casa ajena". Nunca la definicion entera y nunca la glosa de los datos: eso
+  es un manual, y un manual no es una lectura.
+- UN SOLO termino de oficio por parrafo, contando la figura. Con dos, la
+  frase es un examen.
+- PROPORCION: por parrafo, como mucho UNA oracion explica. Las demas dicen el
+  cielo y lo que pide. Si el parrafo explica mas de lo que dice, sobra.
 - Nada de formulas de gremio sueltas -- "dispone de lo suyo", "obra por debajo
   de su medida", "con Venus por senora" --: o se pagan, o no entran.
-- La PRIMERA oracion de cada parrafo se entiende sin saber nada: decide si
-  alguien sigue leyendo.
+- La PRIMERA oracion de cada parrafo se entiende sin saber nada, y dice el
+  cielo, no la teoria: decide si alguien sigue leyendo.
+
+  CLASE, NO:  "Venus forma una cuadratura, que es la figura de dos fuerzas
+              que tiran del mismo asunto desde angulos distintos y ninguno
+              cede, y ademas esta en exilio, es decir fuera de su casa,
+              trabajando con lo prestado porque el signo opuesto..."
+  LECTURA, SI: "Venus pasa por Escorpio tirando de tu Venus de nacimiento, y
+              ninguna de las dos afloja. Ahi hay filo: lo que hoy se pacte se
+              pacta a regañadientes, con lo prestado y no con lo propio."
+
+  Mismo cielo, mismos datos. La segunda no explica menos: explica en voz baja
+  y deja sitio a lo que importa.
 - Entre una frase precisa que no se entiende y una precisa que si, la segunda.
   Si la unica forma de que se entienda fuera mentir, se calla el dato.
 
@@ -327,13 +397,16 @@ no se presta a nada en particular, y decirlo es una respuesta honrada.
   su duenio no esta, no entra.
 - Materia marcada TOXICA: solo como correspondencia. Ni preparaciones, ni
   dosis, ni ingesta, ni "en infusion".
-- Los datos traen el PORQUE de la figura y de la dignidad -- cuantos signos
-  separan, que elementos se tocan, de quien es el signo --. Usalo: un dato que
-  hay que creerse no ensena nada. La razon es geometrica y de elementos; "los
-  planetas emiten fuerzas que" es fisica inventada. Si algo no trae razon en
-  los datos, se dice sin razon: inventarla suena mejor y es mentira.
-- Explica DOS cosas por texto, no todas: la figura del dia siempre, y lo que
-  ese cielo pida. Explicarlo todo lo convierte en una clase.
+- LA GEOMETRIA NO SE ESCRIBE. Cuantos signos separan, que elementos se tocan,
+  de quien es el signo opuesto: eso es el andamio del calculo, y va en los
+  datos para que TU sepas por que el aspecto dice lo que dice, no para que lo
+  copies. "porque los separan tres signos del mismo modo" no se escribe jamas.
+  Lo que se escribe es lo que sale de ahi.
+- Tampoco inventes lo que los datos no traen: si no viene de que trata una
+  casa o un signo, no te lo saques -- ni "el sector que habla de lo que
+  posees" ni nada parecido. Sin dato, se calla.
+- Explica UNA cosa por texto: la figura del dia, y nada mas. Lo demas se dice,
+  no se explica. Explicarlo todo lo convierte en una clase.
 
 # COMO SE DICE
 - LOS GRADOS NO SE ESCRIBEN. Ni "orbe 0,81", ni "a 119,3 grados", ni "a menos
@@ -341,6 +414,13 @@ no se presta a nada en particular, y decirlo es una respuesta honrada.
   cerrar y se acabo.
 - NO COPIES NINGUNA FRASE del bloque de datos palabra por palabra. Eso es lo
   que hay que SABER; como se dice lo pones tu.
+- NADA DE APOSICIONES DE MANUAL. La glosa colgada del nombre -- entre guiones,
+  entre comas o con "que es" -- es la clase disfrazada de lectura: "una
+  cuadratura, que es la figura de dos que tiran y ninguno cede". El sentido de
+  la figura se dice ACTUANDO, con los cuerpos de sujeto y en la frase
+  siguiente si hace falta: "Venus tira de tu Venus, y ninguna afloja". Igual
+  la dignidad: "trabaja con lo prestado" basta; el signo opuesto, de quien es
+  y por que nada le obedece, no se escribe.
 - No enuncies la doctrina como definicion. "La cuadratura indica dos que
   tiran..." es glosario; "Saturno tira de tu Sol desde otro angulo, y ninguno
   cede" es la misma doctrina, dicha. Nunca abras una oracion con la figura y un
