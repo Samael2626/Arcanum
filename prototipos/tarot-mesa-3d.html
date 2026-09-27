@@ -63,7 +63,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
   box-shadow:0 1px 2px rgba(0,0,0,.6)}
 .face.back{background-size:100% 100%;}
 .face.front{transform:rotateY(180deg);background:#efe6d2}
-.face.front img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.face.front img{width:100%;height:100%;object-fit:contain;object-position:center;display:block;pointer-events:none;background:#e7dcc4}
 .face.front img.rev{transform:rotate(180deg)}
 .fx{position:absolute;inset:0;pointer-events:none;opacity:0}
 .mote{position:absolute;width:5px;height:5px;border-radius:50%;background:#FAD26A;box-shadow:0 0 6px #EDAE30;bottom:6px}
@@ -85,10 +85,8 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
 .pile-badge{position:absolute;right:-14px;top:-14px;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
   transform:translateZ(80px);background:var(--gold-light);border:2px solid #fff2bd;color:#1b1208;
   font-family:var(--display);font-size:22px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.65)}
+.pile-badge[hidden]{display:none}
 
-.bar{padding:8px 12px calc(env(safe-area-inset-bottom,0px) + 10px);border-top:1px solid var(--line);background:var(--surface)}
-.bar>.act{display:block;width:min(100%,420px);margin:0 auto}
-.bar-scroll{overflow-x:auto;scrollbar-width:none}
 .actions{display:flex;gap:6px;max-width:640px;margin:0 auto}
 .act{flex:1 1 0;background:none;border:1px solid var(--line);border-radius:10px;min-height:48px;padding:6px 4px;cursor:pointer;
   font-family:var(--display);font-weight:600;font-size:16px;color:var(--gold-light);white-space:nowrap}
@@ -98,24 +96,29 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
 
 .radial{position:fixed;inset:0;z-index:50;pointer-events:none}
 .radial .disk{position:fixed;transform:translate(-50%,-50%) scale(.76);border-radius:50%;
-  background:radial-gradient(circle,rgba(15,12,18,.98) 0 25%,rgba(18,15,22,.94) 26% 59%,rgba(8,7,11,.78) 60% 72%,transparent 73%);
-  border:1px solid rgba(201,168,76,.3);box-shadow:0 18px 70px rgba(0,0,0,.7);opacity:0;transition:transform .18s ease-out,opacity .18s}
+  background:radial-gradient(circle,rgba(12,11,17,.72) 0 24%,rgba(18,17,24,.58) 25% 59%,rgba(7,7,11,.38) 60% 72%,transparent 73%);
+  border:1px solid rgba(201,168,76,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 22px 80px rgba(0,0,0,.62);
+  backdrop-filter:blur(14px) saturate(.82);-webkit-backdrop-filter:blur(14px) saturate(.82);
+  opacity:0;transition:transform .18s ease-out,opacity .18s}
 .radial.open .disk{transform:translate(-50%,-50%) scale(1);opacity:1}
 .rbtn,.rclose{position:fixed;pointer-events:auto;transform:translate(-50%,-50%);border-radius:50%;cursor:pointer;color:var(--gold-light)}
-.rbtn{width:76px;height:76px;padding:8px 5px;display:grid;grid-template-rows:30px auto;place-items:center;background:rgba(28,23,31,.98);
-  border:1px solid var(--line);box-shadow:0 8px 20px rgba(0,0,0,.55);font:600 12px/1.05 var(--display);
+.rbtn{width:76px;height:76px;padding:8px 5px;display:grid;grid-template-rows:30px auto;place-items:center;
+  background:linear-gradient(145deg,rgba(43,41,50,.7),rgba(13,13,19,.5));border:1px solid rgba(201,168,76,.38);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.11),0 9px 24px rgba(0,0,0,.5);
+  backdrop-filter:blur(12px) saturate(1.08);-webkit-backdrop-filter:blur(12px) saturate(1.08);font:600 12px/1.05 var(--display);
   opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.2);
   transition:transform .22s cubic-bezier(.2,.8,.2,1),opacity .16s;transition-delay:calc(var(--i) * 18ms)}
 .radial.open .rbtn{opacity:1;transform:translate(-50%,-50%) scale(1)}
 .rbtn svg{width:29px;height:29px;overflow:visible}
 .rbtn svg.thumb{width:58px;height:31px}
 .rbtn span{max-width:68px;overflow-wrap:anywhere}
-.rbtn[aria-current="true"]{border-color:var(--gold);background:rgba(100,72,25,.95);box-shadow:0 0 0 2px rgba(201,168,76,.25),0 8px 20px rgba(0,0,0,.55)}
+.rbtn[aria-current="true"]{border-color:var(--gold);background:linear-gradient(145deg,rgba(120,91,38,.7),rgba(45,35,20,.58));box-shadow:0 0 0 2px rgba(201,168,76,.2),0 8px 20px rgba(0,0,0,.55)}
 .rbtn:disabled{opacity:.24;cursor:default}
 .rbtn:not(:disabled):active{background:rgba(201,168,76,.25)}
 .rbtn:focus-visible,.rclose:focus-visible{outline:2px solid var(--gold-light);outline-offset:3px}
-.rclose{width:52px;height:52px;display:grid;place-items:center;background:#16121b;border:1px solid var(--line);
-  box-shadow:0 7px 22px rgba(0,0,0,.6)}
+.rclose{width:52px;height:52px;display:grid;place-items:center;background:rgba(18,17,24,.58);border:1px solid rgba(201,168,76,.34);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 7px 22px rgba(0,0,0,.5);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .rclose svg{width:22px;height:22px}
 .rtitle{position:fixed;z-index:1;transform:translate(-50%,-50%);width:132px;text-align:center;color:var(--gold);
   font:600 12px/1.15 var(--display);letter-spacing:.08em;text-transform:uppercase;pointer-events:none}
@@ -186,10 +189,6 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
     </div>
   </div>
 </main>
-
-<nav class="bar" id="bar" hidden>
-  <button class="act" id="ctx"></button>
-</nav>
 
 <div class="toast" id="toast" style="opacity:0"></div>
 
@@ -509,9 +508,9 @@ const readyToRead = () => !!spread && !busy && !busyCard.size && spread.pos.ever
 const cardsOut = () => tableCards().length > 0;
 const pileName = d => d === active ? d.def.name : 'Montón';
 
-// ================= UI: estado, guia, boton de contexto =================
+// ================= UI: estado y guia contextual =================
 const $ = id => document.getElementById(id);
-const statusEl = $('status'), guideEl = $('guide'), toastEl = $('toast'), interpEl = $('interp'), barEl = $('bar'), ctxEl = $('ctx');
+const statusEl = $('status'), guideEl = $('guide'), toastEl = $('toast'), interpEl = $('interp');
 let toastT = 0;
 function toast(msg){ toastEl.textContent = msg; toastEl.style.opacity = 1; clearTimeout(toastT); toastT = setTimeout(() => toastEl.style.opacity = 0, 2600); }
 function refresh(){
@@ -520,24 +519,16 @@ function refresh(){
     : 'Ningún mazo en juego';
   let g = '';
   if (!active) g = 'Arrastra un mazo del estante al paño';
-  else if (union) g = `Toca los montones de abajo arriba (${union.length}/${piles.length}), o pulsa Unir automático`;
-  else if (fan) g = spread ? 'Arrastra cartas del abanico a la tirada, o tócalas' : 'Arrastra cartas del abanico al paño';
-  else if (piles.length > 1) g = 'Cada montón se toca por separado · arrastra uno sobre otro, o pulsa Unir';
+  else if (union) g = `Toca los montones de abajo arriba (${union.length}/${piles.length}) · toca el paño para cancelar`;
+  else if (fan) g = spread ? 'Toca o arrastra una carta · mantén pulsado para Juntar' : 'Toca o arrastra una carta · mantén pulsado para Juntar';
+  else if (piles.length > 1) g = 'Toca un montón y elige Unir · o arrástralo sobre otro';
   else if (!spread) g = 'Toca el mazo para barajar, cortar o elegir tirada';
   else {
     const empty = spread.pos.length - tableCards().filter(c => c.slot !== null).length;
     const down = tableCards().filter(c => !c.up).length;
-    g = empty ? `Toca el mazo y pulsa Sacar, o extiéndelo · faltan ${empty}` : down ? 'Toca una carta para ver sus opciones, o pulsa Desvelar' : 'Pulsa Interpretación, en el centro del paño';
+    g = empty ? `Toca el mazo y elige Sacar, o extiéndelo · faltan ${empty}` : down ? 'Toca una carta para desvelarla o desvelar todas' : 'Pulsa Interpretación, en el centro del paño';
   }
   guideEl.textContent = g;
-  // un solo boton abajo, y solo cuando hay un paso claro
-  let mode = null;
-  if (fan) mode = ['fan', 'Juntar'];
-  else if (union) mode = ['auto', 'Unir automático'];
-  else if (piles.length > 1) mode = ['union', 'Unir'];
-  else if (spread && hidden().length && spread.pos.every((_, i) => cardAt(i))) mode = ['reveal', 'Desvelar'];
-  barEl.hidden = !mode;
-  if (mode){ ctxEl.dataset.a = mode[0]; ctxEl.textContent = mode[1]; ctxEl.disabled = busy; }
   interpEl.hidden = !readyToRead();
   decks.forEach(d => d.el.classList.toggle('glow', d === active && piles.length === 1 && !fan && !cardsOut() && server.state.startsWith('sin')));
 }
@@ -693,7 +684,9 @@ function freeSpot(near){
 function autoCut(d){
   const spot = freeSpot(d), p = beginCut(d);
   busy = true;
-  moveTo(p, { lift: 50 }, 160, ease.out, 0, () => moveTo(p, { x: spot.x, y: spot.y, lift: 0 }, 360, ease.inOut, 0, () => { busy = false; p.z = 1; refresh(); }));
+  moveTo(p, { lift: 50 }, 160, ease.out, 0, () => moveTo(p, { x: spot.x, y: spot.y, lift: 0 }, 360, ease.inOut, 0, () => {
+    busy = false; p.z = 1; refresh(); toast('Corte hecho. Toca un montón y elige Unir, o arrástralo sobre otro.');
+  }));
 }
 function dropPile(p){ piles = piles.filter(q => q !== p); p.remove(); }
 // apila `list` (de abajo arriba) en la posicion del primero; el servidor lo convierte en un solo monton
@@ -711,17 +704,22 @@ async function stack(list){
   keeper.x = at.x; keeper.y = at.y; keeper.rot = at.rot; keeper.z = 1; keeper.setCount(server.count(keeper.pid)); keeper.render();
   union = null; busy = false; refresh();
 }
-function mergePair(top, below){ stack([below, top]).then(() => toast(piles.length > 1 ? 'Montones unidos' : 'Mazo entero de nuevo')); }
+async function mergePair(top, below){
+  if (fan && (fan.pile === top || fan.pile === below)) await closeFan(260);
+  await stack([below, top]);
+  toast(piles.length > 1 ? 'Montones unidos' : 'Mazo entero de nuevo');
+}
 function startUnion(){ union = []; piles.forEach(p => p.badge.hidden = true); refresh(); }
 function pickUnion(p){
   if (union.includes(p)) return;
   union.push(p); p.badge.textContent = union.length; p.badge.hidden = false; refresh();
   if (union.length === piles.length) stack(union).then(() => toast('Unidos en el orden que elegiste'));
 }
-function autoUnion(){
+async function autoUnion(){
+  if (fan) await closeFan(260);
   // corte clasico: lo que quedo abajo pasa arriba
   const list = [...piles.filter(p => p !== active).reverse(), active];
-  stack(list).then(() => toast('Unidos: lo de abajo pasa arriba'));
+  await stack(list); toast('Unidos: lo de abajo pasa arriba');
 }
 function cancelUnion(){ if (!union) return; union = null; piles.forEach(p => p.badge.hidden = true); refresh(); }
 
@@ -768,6 +766,8 @@ const ICON = {
   riffle: '<path d="M4 5h6M4 9h6M4 13h6M14 11h6M14 15h6M14 19h6"/><path d="M10 7l4 6"/>',
   over: '<rect x="4" y="12" width="16" height="8" rx="1.5"/><path d="M12 10V3M8.5 6.5 12 3l3.5 3.5"/>',
   wash: '<path d="M12 12a2 2 0 1 1 2-2 5 5 0 1 1-5-5 8 8 0 1 1-6 7"/>',
+  union: '<path d="M4 6h6l3 4h7M4 18h6l3-4h7"/><path d="m17 7 3 3-3 3"/>',
+  order: '<rect x="4" y="4" width="11" height="8" rx="1.5"/><rect x="9" y="12" width="11" height="8" rx="1.5"/>',
 };
 const svgIcon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
 let menuEl = null, menuFor = null, menuClosedAt = 0;
@@ -803,13 +803,18 @@ function radial(anchor, title, items, onPick){
 }
 const posLabel = c => c.slot !== null && spread ? `${c.slot + 1} · ${spread.pos[c.slot][3]}` : c.aside ? 'Apartada' : 'Fuera de la tirada';
 function openCardRadial(c){
-  radial(c, c.up ? c.data.name : posLabel(c), [
+  const items = [
     c.up ? { id: 'read', label: 'Leer', icon: 'read' } : { id: 'reveal', label: 'Desvelar', icon: 'reveal' },
     { id: 'turn', label: 'Girar', icon: 'turn' },
     { id: 'collect', label: 'Recoger', icon: 'collect' },
     { id: 'aside', label: 'Sacar', icon: 'aside', off: c.aside },
-  ], a => {
+  ];
+  if (spread && hidden().length > 1 && spread.pos.every((_, i) => cardAt(i))) {
+    items.push({ id: 'reveal-all', label: 'Desvelar todas', icon: 'reveal' });
+  }
+  radial(c, c.up ? c.data.name : posLabel(c), items, a => {
     if (a === 'reveal') flip(c, 0, -1);
+    else if (a === 'reveal-all') revealAll();
     else if (a === 'read') openReading(c);
     else if (a === 'collect') collectOne(c);
     else if (a === 'aside') setAside(c);
@@ -818,20 +823,45 @@ function openCardRadial(c){
 }
 function openDeckRadial(d){
   const n = server.count(d.pid), few = n < 4;
-  radial(d, `${pileName(d)} · ${n}`, [
+  const items = [
     { id: 'shuffle', label: 'Barajar', icon: 'shuffle', off: few },
     { id: 'cut', label: 'Cortar', icon: 'cut', off: few },
     { id: 'fan', label: 'Extender', icon: 'fan', off: !n },
     { id: 'deal', label: 'Sacar', icon: 'deal', off: !n },
     { id: 'collect', label: 'Recoger', icon: 'collect', off: !cardsOut() },
     { id: 'spread', label: 'Tirada', icon: 'spread' },
-  ], a => {
+  ];
+  if (piles.length > 1) items.push({ id: 'union', label: 'Unir', icon: 'union' });
+  radial(d, `${pileName(d)} · ${n}`, items, a => {
     if (a === 'shuffle') openShuffleRadial(d);
     else if (a === 'cut') autoCut(d);
     else if (a === 'fan') autoFan(d);
     else if (a === 'deal') deal(d);
     else if (a === 'collect') collect(d);
     else if (a === 'spread') openSpreadRadial(d);
+    else if (a === 'union') openUnionRadial(d);
+  });
+}
+function openUnionRadial(d){
+  radial(d, 'Unir montones', [
+    { id: 'order', label: 'Elegir orden', icon: 'order' },
+    { id: 'auto', label: 'Automático', icon: 'union' },
+  ], a => {
+    if (a === 'order') startUnion();
+    else if (a === 'auto') autoUnion();
+  });
+}
+function openFanRadial(c){
+  const d = fan && fan.pile;
+  if (!d) return;
+  radial(c, 'Abanico', [
+    { id: 'take', label: 'Sacar', icon: 'deal' },
+    { id: 'gather', label: 'Juntar', icon: 'collect' },
+    { id: 'shuffle', label: 'Barajar', icon: 'shuffle' },
+  ], a => {
+    if (a === 'take') tap(c, {});
+    else if (a === 'gather') closeFan();
+    else if (a === 'shuffle') closeFan(260).then(() => openShuffleRadial(d));
   });
 }
 function openShuffleRadial(d){
@@ -933,15 +963,6 @@ function showReading(q){
     <div class="mt">Aquí respondería el motor elegido: Tradición, con textos fijos, u Oráculo, con IA.</div>`, null, 'wide tall');
 }
 
-// ================= boton de contexto =================
-ctxEl.addEventListener('click', () => {
-  if (ctxEl.disabled) return;
-  const a = ctxEl.dataset.a;
-  if (a === 'fan') closeFan();
-  else if (a === 'union') startUnion();
-  else if (a === 'auto') autoUnion();
-  else if (a === 'reveal') revealAll();
-});
 function setView(top){
   cam.tTheta = top ? 0 : 38;
   $('v-top').setAttribute('aria-pressed', top); $('v-tilt').setAttribute('aria-pressed', !top);
@@ -970,7 +991,13 @@ scene.addEventListener('pointerdown', e => {
       g.off = { x: pl.x - p.x, y: pl.y - p.y }; g.piece = pl; if (navigator.vibrate) navigator.vibrate(12);
     }, 450);
   }
-  if (piece.kind === 'card' && !busyCard.has(piece)) g.corner = !piece.up && piece.fanPos === null && Math.abs(L.x) > piece.hw * .45 && Math.abs(L.y) > piece.hh * .55 ? Math.sign(L.x) : 0;
+  if (piece.kind === 'card' && !busyCard.has(piece)){
+    if (piece.fanPos !== null) g.lp = setTimeout(() => {
+      if (!g || g.mode !== 'pending' || g.piece !== piece) return;
+      g.mode = 'fan-menu'; openFanRadial(piece); if (navigator.vibrate) navigator.vibrate(12);
+    }, 450);
+    else g.corner = !piece.up && Math.abs(L.x) > piece.hw * .45 && Math.abs(L.y) > piece.hh * .55 ? Math.sign(L.x) : 0;
+  }
 });
 scene.addEventListener('pointermove', e => {
   if (!pointers.has(e.pointerId)) return;
