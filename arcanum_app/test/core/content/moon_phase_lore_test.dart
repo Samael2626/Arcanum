@@ -65,6 +65,42 @@ void main() {
       }
     });
 
+    test('ninguna practica se repite en dos fases', () {
+      // ESTE ES EL TEST QUE FALTABA, y su ausencia dio confianza falsa: la
+      // primera version de las ocho fichas pasaba todo lo de arriba y aun asi
+      // "Luna Nueva" y "Menguante" mandaban las dos ayunar y descansar, y
+      // "Cuarto Menguante" y "Menguante" decian las dos "destierro". Dos
+      // fichas que mandan lo mismo son una ficha y una de relleno.
+      //
+      // Se vigilan CONCEPTOS, no palabras sueltas: lo que no puede repetirse
+      // es la practica, y la misma practica se escribe de varias maneras.
+      const conceptos = <String, String>{
+        'ayuno': r'ayun',
+        'descanso': r'descans|retiro|dormir',
+        'destierro': r'destierr|desterrar',
+        'corte': r'\bcorta\b|\bcorte\b|rompe el h',
+        'barrido': r'barre|barrido|ba.o de sal',
+        'siembra': r'siembra|sembrar',
+        'primer paso': r'primer paso',
+        'talismanes': r'talisman',
+        'adivinacion': r'adivina',
+      };
+
+      conceptos.forEach((nombre, patron) {
+        final re = RegExp(patron, caseSensitive: false);
+        final fases = moonPhaseLore.entries
+            .where((e) => re.hasMatch(_plano('${e.value.practica} ${e.value.favorece}')))
+            .map((e) => e.key)
+            .toList();
+        expect(
+          fases.length,
+          lessThanOrEqualTo(1),
+          reason: 'la practica "$nombre" sale en ${fases.join(", ")}; '
+              'si dos fases mandan lo mismo, una de las dos sobra',
+        );
+      });
+    });
+
     test('un slug desconocido devuelve null y no una ficha de relleno', () {
       // Quien pinta el termino tiene que poder decidir NO subrayarlo.
       expect(moonPhaseLoreOf('blue_moon'), isNull);
@@ -72,4 +108,16 @@ void main() {
       expect(moonPhaseLoreOf('full'), isNotNull);
     });
   });
+}
+
+/// Minusculas y sin acentos, para que "baño" y "bano" cuenten igual.
+String _plano(String s) {
+  const conAcento = 'áéíóúüñÁÉÍÓÚÜÑ';
+  const sinAcento = 'aeiouunAEIOUUN';
+  final b = StringBuffer();
+  for (final c in s.toLowerCase().split('')) {
+    final i = conAcento.indexOf(c);
+    b.write(i < 0 ? c : sinAcento[i]);
+  }
+  return b.toString();
 }

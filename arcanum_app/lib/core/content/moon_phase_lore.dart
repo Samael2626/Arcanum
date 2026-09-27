@@ -59,12 +59,17 @@ const Map<String, MoonPhaseLore> moonPhaseLore = {
         'Es el comienzo antes del comienzo, la semilla todavía bajo tierra. Lo '
         'que se decide aquí no se ve, y por eso nadie lo discute todavía — '
         'tampoco tú.',
+    // El ayuno y el retiro NO van aqui, aunque la tentacion sea ponerlos: son
+    // de la menguante, que es la fase que vacia. La nueva es el giro, y lo
+    // unico que pasa en ella es que se siembra. Al darle tambien el ayuno se
+    // quedaba sin nada propio y sonaba a una menguante mas (medido el
+    // 26-sep-2026 comparando las ocho fichas entre si).
     practica:
-        'Siembra la intención y cállatela. Se empieza lo que aún no tiene '
-        'forma, y no se enseña ni se somete a juicio: una intención contada el '
-        'primer día se gasta en contarla. No es día de cerrar tratos ni de '
-        'exhibir nada.',
-    favorece: 'sembrar intención, empezar en privado, ayuno, retiro',
+        'Siembra la intención y cállatela. Aquí se empieza lo que todavía no '
+        'tiene forma, y no se enseña ni se somete a juicio: una intención '
+        'contada el primer día se gasta en contarla. Lo que nace hoy nace sin '
+        'testigos.',
+    favorece: 'sembrar intención, empezar en privado, guardar silencio',
   ),
   'waxing_crescent': MoonPhaseLore(
     titulo: 'Creciente',
@@ -140,11 +145,15 @@ const Map<String, MoonPhaseLore> moonPhaseLore = {
         'contraria que en cuarto creciente.\n\n'
         'Es el corte del ciclo. En cuarto creciente se decidía seguir; aquí se '
         'decide dejar, y cuesta lo mismo.',
+    // Aqui va EL CORTE y solo el corte: un acto decidido, contra algo
+    // concreto, que encuentra resistencia. Lo que viene despues --barrer lo
+    // que quedo-- es de la menguante. Las dos decian "destierro" y esa palabra
+    // repetida borraba la diferencia entre cortar y recoger.
     practica:
         'Corta lo que ya no. Rompe el hábito, cierra la cuenta, termina la '
-        'conversación que llevas meses aplazando. El destierro hecho aquí no '
+        'conversación que llevas meses aplazando. El corte hecho aquí no '
         'necesita fuerza: va a favor de la corriente.',
-    favorece: 'cortar, desterrar, romper hábitos, cerrar cuentas',
+    favorece: 'cortar, romper hábitos, cerrar cuentas, terminar',
   ),
   'waning_crescent': MoonPhaseLore(
     titulo: 'Menguante',
@@ -153,11 +162,14 @@ const Map<String, MoonPhaseLore> moonPhaseLore = {
         'nada, y a punto de no haber nada.\n\n'
         'Es el descanso antes de la Luna Nueva. El ciclo ya dio lo que tenía '
         'que dar y lo único que queda por hacer es dejar sitio.',
+    // El barrido, que es lo que queda DESPUES del corte del cuarto menguante:
+    // sin destinatario, sin decision y sin esfuerzo. Aqui si viven el ayuno y
+    // el descanso, que es de donde se los quito a la Luna Nueva.
     practica:
-        'Limpia y descansa. Barrido, baño de sal, ayuno, tirar lo que no se '
-        'usa. No se empieza nada: lo que arranque estos días arranca sin luz '
-        'que lo sostenga.',
-    favorece: 'limpieza, destierro, descanso, vaciar',
+        'Barre lo que quedó: la casa, los cajones, un baño de sal, el ayuno si '
+        'lo llevas. No hay nada que decidir — eso ya pasó hace unos días, y '
+        'esto es recoger los restos y dormir.',
+    favorece: 'barrido, ayuno, descanso, vaciar',
   ),
 };
 
