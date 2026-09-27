@@ -152,7 +152,11 @@ Si falla trazabilidad, miniatura, redibujo o separación, no entregar.
 - Frater U∴D∴, *Practical Sigil Magic*, cap. 2: método de la palabra, letras reconocibles, M/W/E [OM].
 - Monograma KAROLVS de Carlomagno (desde 769): K izquierda, R arriba, L abajo, S derecha; vocales al centro [HP]. Diploma: Commons `Karldergrossesignatur.svg`.
 - Casos de prueba fijos (gate): U∴D∴ `THISMYWOBANERGF`; Cooper `IDANP` con la I en el asta de la D; láminas de Mathers (Metatron, Elohim, Netzach ×6).
-- Agrippa, *Three Books of Occult Philosophy*, II.22: kameas [HP].
+- Agrippa, *Three Books of Occult Philosophy*, II.22: kameas [HP]. Motor implementado (26-27 sep 2026):
+  - Tablas transcritas de las láminas (ed. 1651, Peterson) y verificadas mágicas por código. Erratas de esa edición: Luna f1c8 «45» → 54; Kedemel «157» → 175; Bne Seraphim בסי → בני.
+  - Agrippa cuenta las finales de 500 a 900 (Bne Seraphim 1252, Schedbarschemoth 3321 solo cuadran así).
+  - Agrippa NO explica el trazado («el buscador sabio lo descubrirá»): el recorrido es [RC]. Sus caracteres llevan círculo en ambos extremos y horquilla al repasar.
+  - Reducción calibrada con sus 15 figuras [AR]: Aiq Bekar hasta 6×6 (Barzabel, Sorath), quitar ceros desde 7×7 (Kedemel, Tiriel, Taftartarat, Hasmodai). 8 figuras coinciden, 6 en estructura, Grafiel no sale con ningún método: se avisa, no se fuerza. Malkah be-Tarshishim excluido: ninguna grafía probada da su 3321.
 - Golden Dawn, documentos de Rosa-Cruz: coordenadas de letras [OM].
   - Mathers, manuscrito F *Sigils from the Rose*: círculo inicial; quiebro u onda en letras iguales seguidas; lazo donde la línea pasa por una letra del nombre (Resh en Metatron). El texto no habla de marca final, pero **sus figuras (Metatron, Elohim) acaban en barra corta**: va activada. Mirar las láminas, no solo el texto. Figuras: tarrdaniel.com `images/Manuscripts/Sigil_Metatron_Elohim.gif` y `Rose_Cross_22_Letters.gif`.
   - Lámina *Tracing for Netzach* (`images/Manuscripts/Sigil_Netzach.gif`): **una palabra = un sigilo**; Nogah es נגה. El lazo también marca una letra del nombre **aún no visitada** por la que pasa un trazo (Haniel), pero no la primera ni la última ni una ya visitada (Hagiel, Tzabaoth). Regla calibrada con 8 láminas: hipótesis, no ley.

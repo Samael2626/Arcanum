@@ -399,6 +399,64 @@ await page.evaluate(() => restoreState(readGallery()[0].state));
 await page.waitForTimeout(80);
 check('galeria restaura el mismo signo', (await snap()).svg === saved);
 
+// 13b) Kamea: tablas y nombres de Agrippa (lib. II, cap. 22)
+await page.click('#famKamea');
+const km = await page.evaluate(() => {
+  const magic = KAMEAS.map(k => {
+    const t = k.rows, n = t.length, m = n * (n * n + 1) / 2;
+    const ok = t.every(r => r.reduce((a, b) => a + b) === m)
+      && t[0].every((_, j) => t.reduce((a, r) => a + r[j], 0) === m)
+      && t.reduce((a, r, i) => a + r[i], 0) === m && t.reduce((a, r, i) => a + r[n - 1 - i], 0) === m
+      && JSON.stringify(t.flat().sort((a, b) => a - b)) === JSON.stringify([...Array(n * n)].map((_, i) => i + 1));
+    return k.id + ':' + (ok ? 'ok' : 'FALLA');
+  });
+  const sums = KAMEAS.flatMap(k => k.names.map(n => [n[1], [...n[2]].reduce((a, ch) => a + kameaValue(ch), 0), n[3]]));
+  return { magic, bad: sums.filter(([, got, want]) => got !== want), moon: KAMEA_BY_ID.moon.rows[0][7], n: sums.length };
+});
+check('kamea: las 7 tablas son cuadrados magicos', km.magic.every(x => x.endsWith(':ok')), km.magic.join(' '));
+check('kamea: Luna fila 1 col 8 = 54 (errata "45" corregida)', km.moon === 54);
+check(`kamea: los ${km.n} nombres suman lo que imprime Agrippa (finales 500-900)`, km.bad.length === 0, km.bad.map(b => b.join('=')).join(' '));
+
+// Reduccion "Como Agrippa": reproduce sus figuras (Aiq Bekar hasta 6x6, ceros desde 7x7)
+async function kcells(planet, he) {
+  await page.selectOption('#selKameaPlanet', planet);
+  await page.fill('#kameaHebrew', he);
+  return page.evaluate(() => state.kamea.words.map(w => w.map(s => s.cell).join(',')).join(' | '));
+}
+const KCASES = [
+  ['mars', 'Barzabel', 'ברצבאל', '2,2,9,2,1,3'],
+  ['sun', 'Sorath', 'סורת', '6,6,2,4'],
+  ['venus', 'Kedemel', 'קדמאל', '10,4,40,1,30'],
+  ['mercury', 'Tiriel', 'טיריאל', '9,10,20,10,1,30'],
+  ['mercury', 'Taftartarat', 'תפתרתרת', '40,8,40,20,40,20,40'],
+  ['moon', 'Hasmodai', 'חשמודאי', '8,30,40,6,4,1,10']
+];
+for (const [pl, la, he, want] of KCASES) {
+  const got = await kcells(pl, he);
+  check(`kamea como Agrippa: ${la}`, got === want, got);
+}
+// Trazo al estilo de sus caracteres
+const kshape = async (pl, he) => { await kcells(pl, he); return page.evaluate(() => { const s = buildSVG(); return { det: s === buildSVG(), starts: (s.match(/data-mark="start"/g) || []).length, endCircle: /data-mark="end" d="M [^"]* A /.test(s), repeat: (s.match(/data-mark="repeat"/g) || []).length, hairpin: / C /.test((s.match(/data-mark="line" d="([^"]+)"/) || [])[1] || ''), core: s.includes('data-layer="core"') }; }); };
+const agiel = await kshape('saturn', 'אגיאל');
+check('kamea Agiel: horquilla, circulo en ambos extremos, determinista', agiel.hairpin && agiel.starts === 1 && agiel.endCircle && agiel.det && !agiel.core);
+const sor = await kshape('sun', 'סורת');
+check('kamea Sorath: gancho de la casilla 6 repetida al inicio', sor.repeat === 1);
+await page.selectOption('#selKameaEnds', 'gd');
+check('kamea: extremos al estilo Aurora Dorada (barra)', await page.evaluate(() => !/data-mark="end" d="M [^"]* A /.test(buildSVG())));
+await page.selectOption('#selKameaEnds', 'agrippa');
+const presets = await page.evaluate(() => { const out = {}; for (const k of KAMEAS) { document.getElementById('selKameaPlanet').value = k.id; document.getElementById('selKameaPlanet').dispatchEvent(new Event('change')); out[k.id] = document.querySelectorAll('#kameaPresets button').length; } return out; });
+check('kamea: botones con los nombres de Agrippa por planeta', Object.values(presets).every(n => n >= 2), JSON.stringify(presets));
+await page.selectOption('#selKameaPlanet', 'mars');
+await page.click('#kameaPresets button >> nth=0');
+check('kamea Grafiel: la app avisa de que su figura no se reproduce', await page.evaluate(() => /no sale de esta tabla/.test(document.getElementById('kameaBox').innerText)));
+await page.click('#btnKameaProv');
+const kprov = await page.evaluate(() => document.getElementById('provBody').innerText + '\n' + document.getElementById('kameaBox').innerText);
+await page.click('#btnProvClose');
+const mk = kprov.match(/\[(HP|OM|RC|AR)\]|\b(the|with|of the|shall|wise searcher)\b/i);
+check('kamea: procedencia en espanol', !mk, mk ? 'encontrado: ' + mk[0] : '');
+await page.click('#famLetters');
+
+
 // 14) Todo el texto visible en espanol: sin codigos internos ni citas en ingles
 // (el original en ingles solo puede vivir en tooltips)
 const ENGLISH = /\[(HP|OM|RC|AR)\]|\b(the|with|of the|from the|Sigils|Pleasure|Practical|Basic Sigil|Lamen\.svg|Mispar|noose|crook|recognizable|pattee|botonnee)\b/i;
