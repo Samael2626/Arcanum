@@ -26,7 +26,19 @@ def test_build_oracle_context_menciona_astros():
     assert "ascendente" in low
     assert "luna" in low
     assert "hora planetaria" in low
-    assert "tránsitos" in low
+
+    # El transito sigue estando, con otro encabezado: desde el 27-sep-2026 el
+    # bloque se llama "Lo que el cielo le esta haciendo hoy" y los aspectos van
+    # dichos por lo que HACEN, no por su nombre. La intencion del test no
+    # cambia --que el contexto traiga el transito--, solo su literal.
+    assert "lo que el cielo le está haciendo hoy" in low
+
+    # Y lo que se vino a arreglar: el volcado en ingles que el modelo copiaba
+    # palabra por palabra en las lecturas ("la oposicion actual del Sol a tu
+    # Venus natal"). Si alguno de estos vuelve al contexto, vuelve el manual.
+    for crudo in ("opposition", "conjunction", "square natal", "sextile",
+                  "aspectos natales destacados"):
+        assert crudo not in low, f"vuelve el volcado en crudo: {crudo}"
 
 
 def test_build_oracle_context_fallback_sin_coordenadas():

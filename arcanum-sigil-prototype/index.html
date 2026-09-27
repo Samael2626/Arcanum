@@ -1072,6 +1072,9 @@ function updateStampInfo() {
   $('stampInfo').textContent = ss ? `${ss.sym} ${STAMP_NAMES[ss.sym] || ''} · ${ss.size || STAMP_SIZE}px · arrástralo para moverlo` : `${state.stamps.length} símbolo(s) colocados. Ninguno seleccionado.`;
 }
 function render() {
+  // el encuadre se deriva siempre del estado (borde, estrella, trazos): nunca
+  // queda uno viejo. Solo se congela mientras se arrastra una letra.
+  if (state.family === 'letters' && state.prims.length && !state.dragging) state.view = fitView();
   updateStampInfo();
   paint(ctx, { size: SIZE, theme: state.theme, interactive: true });
   paint(previewCtx, { size: 80, theme: state.theme });
@@ -1737,7 +1740,15 @@ function generate() {
   if (!text) { showToast('Escribe una intención'); return; }
   const r = reduce(text, state.method);
   const units = r.units.filter(ch => GLYPHS[ch]);
-  if (units.length < 1) { showToast('La intención no tiene letras latinas'); return; }
+  if (units.length < 1) {
+    // sin letras no hay sigilo: nunca se deja el anterior en pantalla como si fuera este
+    Object.assign(state, { intention: text, reduction: r, letters: [], extra: [], prims: [], hidden: [], decisions: [], sel: null });
+    const why = r.cleaned ? 'La regla elegida no deja ninguna letra. Prueba otra reducción.' : 'La intención no tiene letras latinas.';
+    $('reductionBox').innerHTML = `<div class="line"><b>Intención</b><span>${esc(text)}</span></div><div class="line"><b>Resultado</b><span>${why}</span></div>`;
+    render();
+    showToast(why);
+    return;
+  }
   const prev = state.intention === text ? Object.fromEntries(state.letters.map(l => [l.ch, l.user])) : {};
   if (state.intention !== text) { state.hidden = []; state.decisions = []; state.endStyles = {}; }
   state.intention = text;
