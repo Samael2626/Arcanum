@@ -318,6 +318,44 @@ await page.evaluate(() => restoreState(readGallery()[0].state));
 await page.waitForTimeout(80);
 check('galeria restaura el mismo signo', (await snap()).svg === saved);
 
+// 14) Todo el texto visible en espanol: sin codigos internos ni citas en ingles
+// (el original en ingles solo puede vivir en tooltips)
+const ENGLISH = /\[(HP|OM|RC|AR)\]|\b(the|with|of the|from the|Sigils|Pleasure|Practical|Basic Sigil|Lamen\.svg|Mispar|noose|crook|recognizable|pattee|botonnee)\b/i;
+async function visibleText() {
+  await page.click('#btnProvenance').catch(() => {});
+  await page.waitForTimeout(80);
+  const t = await page.evaluate(() => [document.getElementById('provBody'), document.getElementById('reductionBox'), document.getElementById('rosaBox'), document.getElementById('controlPanel')].map(e => e.innerText).join('\n'));
+  await page.click('#btnProvClose').catch(() => {});
+  return t;
+}
+await forge('HACIA EL HORIZONTE', 'cross');
+await page.click('#btnTermPick');
+await page.click('.term-btn[data-t="pattee"]');
+const endPx2 = await page.evaluate(() => {
+  const e = freeEnds(state.prims.filter(p => !p.hidden))[0], q = toCanvas(e), r = canvas.getBoundingClientRect();
+  return { x: r.left + q.x / SIZE * r.width, y: r.top + q.y / SIZE * r.height };
+});
+await page.mouse.click(endPx2.x, endPx2.y);
+await page.click('#btnTermPick');
+const tLetters = await visibleText();
+const m1 = tLetters.match(ENGLISH);
+check('procedencia de letras en espanol', !m1, m1 ? 'encontrado: ' + m1[0] : '');
+await page.click('#famRosa');
+await page.fill('#rosaName', 'Metatron');
+await page.click('#btnRosaGenerate');
+await page.click('#btnRosaProv');
+await page.waitForTimeout(80);
+const tRosa = await page.evaluate(() => document.getElementById('provBody').innerText + '\n' + document.getElementById('rosaBox').innerText);
+await shot('prov-rosa');
+await page.click('#btnProvClose');
+const m2 = tRosa.match(ENGLISH);
+check('procedencia de la Rosa en espanol', !m2, m2 ? 'encontrado: ' + m2[0] : '');
+const origs = await page.evaluate(() => [...document.querySelectorAll('#provBody q')].every(q => q.title.startsWith('Original en inglés')));
+check('citas con original en tooltip', origs);
+const termTitles = await page.evaluate(() => [...document.querySelectorAll('.term-btn')].map(b => b.title).join(' | '));
+check('tooltips de remates sin codigos', !/\[/.test(termTitles), termTitles.slice(0, 60));
+await page.click('#famLetters');
+
 check('sin errores de pagina', errors.length === 0, errors.slice(0, 2).join(' | '));
 await browser.close();
 const fails = results.filter(x => !x.ok).length;

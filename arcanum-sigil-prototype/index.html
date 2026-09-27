@@ -106,6 +106,12 @@ textarea:focus,input[type=text]:focus,select:focus{border-color:var(--gold)}
 .gnosis-timer{font-size:1.7rem;font-variant-numeric:tabular-nums;letter-spacing:4px;margin:6px}
 .btn-forget{opacity:.45;pointer-events:none}
 .btn-forget.ready{opacity:1;pointer-events:auto}
+.tag{border:1px solid #6f5a1e;border-radius:10px;color:var(--gold);cursor:help;display:inline-block;font-size:.6rem;font-style:normal;letter-spacing:.4px;line-height:1.5;padding:0 7px;vertical-align:1px;white-space:nowrap}
+.tag-om{border-color:#4a4f7a;color:#a9b2e0}
+.tag-rc{border-color:#6b3a3a;color:#d9a0a0}
+.tag-ar{border-color:#3d5e4a;color:#9fcfb0}
+q{cursor:help;font-style:italic;quotes:"«" "»"}
+.note{color:var(--dim);font-size:.68rem;margin-top:8px}
 .toast{background:var(--gold);border-radius:20px;bottom:30px;color:#0c0b0f;font-size:.8rem;left:50%;opacity:0;padding:6px 16px;pointer-events:none;position:fixed;transform:translateX(-50%);transition:opacity .2s;z-index:500}
 .toast.show{opacity:1}
 .mobile-toggle{display:none}
@@ -273,13 +279,13 @@ textarea:focus,input[type=text]:focus,select:focus{border-color:var(--gold)}
     <details class="step" open>
       <summary><span class="step-num">✜</span><span class="step-title">Rosa-Cruz</span></summary>
       <div class="step-body">
-        <p class="helper">El nombre se escribe en hebreo y se une letra a letra sobre la Rosa del Lamen de la Golden Dawn. Es un sistema de coordenadas, no una reducción al estilo de Spare.</p>
+        <p class="helper">El nombre se escribe en hebreo y se une letra a letra sobre la Rosa del Lamen de la Aurora Dorada (Golden Dawn). Es un sistema de coordenadas, no una reducción al estilo de Spare.</p>
         <input type="text" id="rosaName" maxlength="32" placeholder="Nombre en latín o en hebreo. Ej.: Metatron">
         <div class="field"><label for="selTranslit">Transliteración</label>
           <select id="selTranslit"><option value="consonantal" selected>Consonántica (como se escribe)</option><option value="full">Letra a letra (con vocales)</option></select></div>
         <div class="row"><button class="btn" id="btnRosaGenerate">Transliterar y trazar</button></div>
         <div class="field"><label for="rosaHebrew">Hebreo</label><input type="text" id="rosaHebrew" dir="rtl" lang="he" maxlength="40" placeholder="מטטרון"></div>
-        <p class="helper">Puedes corregir el hebreo a mano: el trazo se actualiza al momento.</p>
+        <p class="helper">Puedes corregir el hebreo a mano y el trazo se actualiza. Si el nombre tiene grafía hebrea tradicional, escríbela aquí: Samuel es שמואל y Miguel es מיכאל.</p>
         <label class="check"><input type="checkbox" id="chkRosaDiagram" checked>Mostrar la Rosa</label>
         <label class="check" title="El manuscrito F no la prescribe"><input type="checkbox" id="chkRosaEndBar">Barra final (convención moderna)</label>
         <div class="info" id="rosaBox">—</div>
@@ -340,6 +346,19 @@ const SIZE = 800, C = SIZE / 2, CORE_R = 250, EPS = 0.012;
 const $ = id => document.getElementById(id);
 const rad = d => d * Math.PI / 180;
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c]));
+// Procedencia en lenguaje llano: el codigo interno no se muestra
+const TAG_INFO = {
+  HP: ['Fuente histórica', 'Documentado en manuscritos, monedas o ediciones antiguas.'],
+  OM: ['Ocultismo moderno', 'Autor moderno identificable (siglos XIX y XX).'],
+  RC: ['Reconstrucción', 'Reconstrucción actual: útil, pero sin una fuente directa.'],
+  AR: ['Decisión de ARCANUM', 'Elección de diseño de la app, no de una fuente.']
+};
+const badge = tag => tag.split('/').map(t => `<span class="tag tag-${t.toLowerCase()}" title="${TAG_INFO[t][1]}">${TAG_INFO[t][0]}</span>`).join(' ');
+const tagText = tag => tag.split('/').map(t => TAG_INFO[t][0]).join(' y ');
+// Escapa el texto y convierte [HP] [OM] [RC] [AR] en etiquetas legibles
+const withBadges = t => esc(t).replace(/\[(HP|OM|RC|AR)\]/g, (_, k) => badge(k));
+// Cita traducida al espanol; el original en ingles queda en el tooltip
+const cita = (es, en) => `<q title="Original en inglés: ${esc(en)}">${es}</q>`;
 
 // ── Capitales de trazo unico ────────────────────────────────────
 // Caja 1x1, y hacia abajo. L = segmento; A = arco con angulos en
@@ -1066,12 +1085,12 @@ const ROSE_RINGS = [
   { id: 'simple', label: 'Simples', r: 261, r0: 224, r1: 298, start: -90, step: -30, letters: ['ה', 'ו', 'ז', 'ח', 'ט', 'י', 'ל', 'נ', 'ס', 'ע', 'צ', 'ק'] }
 ];
 const ROSE_INFO = {
-  'א': ['Aleph', 'Aire', ''], 'מ': ['Mem', 'Agua', ''], 'ש': ['Shin', 'Fuego', ''],
-  'ב': ['Beth', 'Mercurio', '☿'], 'ג': ['Gimel', 'Luna', '☽'], 'ד': ['Daleth', 'Venus', '♀'], 'כ': ['Kaph', 'Júpiter', '♃'],
-  'פ': ['Peh', 'Marte', '♂'], 'ר': ['Resh', 'Sol', '☉'], 'ת': ['Tav', 'Saturno', '♄'],
-  'ה': ['Heh', 'Aries', '♈'], 'ו': ['Vav', 'Tauro', '♉'], 'ז': ['Zayin', 'Géminis', '♊'], 'ח': ['Cheth', 'Cáncer', '♋'],
-  'ט': ['Teth', 'Leo', '♌'], 'י': ['Yod', 'Virgo', '♍'], 'ל': ['Lamed', 'Libra', '♎'], 'נ': ['Nun', 'Escorpio', '♏'],
-  'ס': ['Samekh', 'Sagitario', '♐'], 'ע': ['Ayin', 'Capricornio', '♑'], 'צ': ['Tzaddi', 'Acuario', '♒'], 'ק': ['Qoph', 'Piscis', '♓']
+  'א': ['Álef', 'Aire', ''], 'מ': ['Mem', 'Agua', ''], 'ש': ['Shin', 'Fuego', ''],
+  'ב': ['Bet', 'Mercurio', '☿'], 'ג': ['Guímel', 'Luna', '☽'], 'ד': ['Dálet', 'Venus', '♀'], 'כ': ['Kaf', 'Júpiter', '♃'],
+  'פ': ['Pe', 'Marte', '♂'], 'ר': ['Resh', 'Sol', '☉'], 'ת': ['Tav', 'Saturno', '♄'],
+  'ה': ['He', 'Aries', '♈'], 'ו': ['Vav', 'Tauro', '♉'], 'ז': ['Zain', 'Géminis', '♊'], 'ח': ['Jet', 'Cáncer', '♋'],
+  'ט': ['Tet', 'Leo', '♌'], 'י': ['Yod', 'Virgo', '♍'], 'ל': ['Lámed', 'Libra', '♎'], 'נ': ['Nun', 'Escorpio', '♏'],
+  'ס': ['Sámej', 'Sagitario', '♐'], 'ע': ['Ayin', 'Capricornio', '♑'], 'צ': ['Tsadi', 'Acuario', '♒'], 'ק': ['Qof', 'Piscis', '♓']
 };
 const roseLabel = he => { const [, corr, sym] = ROSE_INFO[he]; return sym ? sym + '︎' : corr; };
 const PETALS = Object.fromEntries(ROSE_RINGS.flatMap(ring => ring.letters.map((he, i) => {
@@ -1083,8 +1102,8 @@ const PETALS = Object.fromEntries(ROSE_RINGS.flatMap(ring => ring.letters.map((h
 // Ambas son reconstruccion [RC]: la Golden Dawn trabaja con nombres ya
 // escritos en hebreo. Por eso el resultado es editable a mano.
 const TRANSLIT = {
-  consonantal: { label: 'Consonántica', rule: 'Como se escribe el hebreo: vocal inicial = Aleph (Yod si es i); a y e interiores no se escriben; i = Yod; o, u = Vav; a final = Heh. Letras dobles latinas se escriben una vez. Finales (ך ם ן ף ץ) al acabar la palabra.' },
-  full: { label: 'Letra a letra', rule: 'Cada letra latina, vocales incluidas, con su letra hebrea: a = Aleph, e/i/y = Yod, o = Ayin, u = Vav.' }
+  consonantal: { label: 'Consonántica', rule: 'Como se escribe el hebreo: vocal inicial = Álef (Yod si es i); a y e interiores no se escriben; i = Yod; o, u = Vav; a final = He. Letras dobles latinas se escriben una vez. Finales (ך ם ן ף ץ) al acabar la palabra.' },
+  full: { label: 'Letra a letra', rule: 'Cada letra latina, vocales incluidas, con su letra hebrea: a = Álef, e/i/y = Yod, o = Ayin, u = Vav.' }
 };
 const LAT_CONS = { sh: 'ש', ch: 'ח', th: 'ת', tz: 'צ', ts: 'צ', ph: 'פ', b: 'ב', c: 'כ', d: 'ד', f: 'פ', g: 'ג', h: 'ה', j: 'י', k: 'כ', l: 'ל', m: 'מ', n: 'נ', p: 'פ', q: 'ק', r: 'ר', s: 'ס', t: 'ט', v: 'ו', w: 'ו', x: 'כס', z: 'ז' };
 const LAT_FULL_VOWELS = { a: 'א', e: 'י', i: 'י', y: 'י', o: 'ע', u: 'ו' };
@@ -1253,16 +1272,16 @@ function rosaTraceFromHebrew() {
   const letters = [...ro.hebrew].filter(ch => ch !== ' ');
   const marks = [];
   if (ro.trace.length) marks.push(`círculo en ${ro.trace[0].he} (inicio)`);
-  ro.trace.filter(v => v.crook).forEach(v => marks.push(`quiebro en ${v.he}: ${ROSE_INFO[v.he][0]} ${v.repeat} veces seguidas`));
-  ro.trace.filter(v => v.noose).forEach(v => marks.push(`lazo en ${v.he}: la línea pasa casi recta (giro de ${v.turn.toFixed(1)}°)`));
+  ro.trace.filter(v => v.crook).forEach(v => marks.push(`quiebro en ${v.he} (${ROSE_INFO[v.he][0]}, ${v.repeat} veces seguidas)`));
+  ro.trace.filter(v => v.noose).forEach(v => marks.push(`lazo en ${v.he} (${ROSE_INFO[v.he][0]}): la línea pasa casi recta, gira ${v.turn.toFixed(1)}°`));
   const tokens = ro.tokens && ro.tokensFor === ro.hebrew ? ro.tokens : null;
   $('rosaBox').innerHTML =
     (ro.name ? `<div class="line"><b>Nombre</b><span>${esc(ro.name)}</span></div>` : '') +
-    (tokens ? `<div class="line"><b>Regla</b><span>${esc(TRANSLIT[ro.method].label)} [RC]: ${esc(TRANSLIT[ro.method].rule)}</span></div>` +
+    (tokens ? `<div class="line"><b>Regla</b><span>${esc(TRANSLIT[ro.method].label)} ${badge('RC')}: ${esc(TRANSLIT[ro.method].rule)}</span></div>` +
       `<div class="line"><b>Letras</b><span>${tokens.filter(t => t.latin !== ' ').map(t => `${esc(t.latin)}→${t.he || '∅'}${t.note ? ' <i>(' + esc(t.note) + ')</i>' : ''}`).join(' · ')}</span></div>` : '<div class="line"><b>Origen</b><span>Hebreo escrito o corregido a mano.</span></div>') +
     `<div class="line"><b>Hebreo</b><span dir="rtl" lang="he">${esc(ro.hebrew) || '—'}</span></div>` +
     `<div class="line"><b>Recorrido</b><span>${ro.trace.map(v => `${v.he} ${ROSE_INFO[v.he][1]}`).join(' → ') || '—'}</span></div>` +
-    `<div class="line"><b>Gematría</b><span>${g.std} (Mispar Hechrachi)` + (g.gadol !== g.std ? ` · ${g.gadol} con finales de 500 a 900 (Mispar Gadol)` : '') + `</span></div>` +
+    `<div class="line"><b>Gematría</b><span>${g.std} <span title="En hebreo: Mispar Hechrachi">(estándar)</span>` + (g.gadol !== g.std ? ` · ${g.gadol} <span title="En hebreo: Mispar Gadol">(mayor: las letras finales valen de 500 a 900)</span>` : '') + `</span></div>` +
     `<div class="line"><b>Marcas</b><span>${marks.join('; ') || '—'}.</span></div>` +
     `<div class="line"><b>Letras</b><span>${letters.length}</span></div>`;
   render();
@@ -1282,17 +1301,18 @@ function rosaGenerate() {
 function rosaProvenance() {
   const ro = state.rosa, g = gematria(ro.hebrew);
   return `<h3>Rosa-Cruz</h3><p>${esc(ro.name || '—')} → <span dir="rtl" lang="he">${esc(ro.hebrew || '—')}</span> · gematría ${g.std}</p>` +
-    '<h3>Cómo se traza (manuscrito F)</h3><ol>' +
-    '<li>Círculo en la letra inicial: <i>«commence with a circle at the point of the initial letter on the Rose»</i>.</li>' +
+    '<h3>Cómo se traza (manuscrito F de Mathers)</h3><ol>' +
+    `<li>Círculo en la letra inicial: ${cita('comienza con un círculo en el lugar de la letra inicial sobre la Rosa', 'commence with a circle at the point of the initial letter on the Rose')}.</li>` +
     '<li>Línea desde ese círculo hasta la siguiente letra, y así hasta acabar el nombre.</li>' +
-    '<li>Dos letras iguales seguidas: <i>«a crook or wave in the line at that point»</i>.</li>' +
-    '<li>Letra del nombre por la que la línea pasa hacia otra (Resh en Metatron): <i>«a noose in the line at that point»</i>. Aquí, cuando el giro es menor de 15° [AR].</li>' +
-    '<li>El manuscrito no prescribe marca final. La barra final es una convención moderna opcional [RC].</li></ol>' +
+    `<li>Dos letras iguales seguidas: ${cita('un quiebro u onda en la línea en ese punto', 'a crook or wave in the line at that point')}.</li>` +
+    `<li>Letra del nombre por la que la línea pasa hacia otra, como Resh en Metatron: ${cita('un lazo en la línea en ese punto', 'a noose in the line at that point')}. Aquí se marca cuando la línea gira menos de 15°. ${badge('AR')}</li>` +
+    `<li>El manuscrito no pide ninguna marca al final. La barra final es una costumbre moderna y va desactivada. ${badge('RC')}</li></ol>` +
     '<h3>Fuentes</h3><ul>' +
-    '<li>G.H. Frater D.D.C.F. (Mathers), manuscrito F, <i>Sigils from the Rose</i> [OM].</li>' +
-    '<li>Golden Dawn, grado 5=6, <i>The Rose Cross Lamen</i>: madres; dobles Peh, Resh, Beth, Daleth, Gimel, Tav, Kaph; zodiaco con Heh arriba [OM].</li>' +
-    '<li>Wikimedia Commons, <i>Rose_Cross_Lamen.svg</i>: posiciones y sentido de los tres anillos.</li>' +
-    '<li>Transliteración latín → hebreo: reconstrucción del prototipo [RC]; por eso el hebreo es editable.</li></ul>';
+    `<li>Mathers (firmaba G.H. Frater D.D.C.F.), manuscrito F, <i title="Título original: Sigils from the Rose">Sigilos de la Rosa</i>. ${badge('OM')}</li>` +
+    `<li>Aurora Dorada (Golden Dawn), grado 5=6, <i title="Título original: The Rose Cross Lamen">El Lamen de la Rosa-Cruz</i>: las tres madres; las siete dobles en el orden Pe, Resh, Bet, Dálet, Guímel, Tav y Kaf; el zodiaco con He arriba. ${badge('OM')}</li>` +
+    '<li>Dibujo del Lamen de la Rosa-Cruz en Wikimedia Commons: posición y sentido de los tres anillos.</li>' +
+    `<li>Paso del latín al hebreo: reconstrucción de este taller; por eso el hebreo se puede corregir. ${badge('RC')}</li></ul>` +
+    '<p class="note">Títulos y citas traducidos del inglés: pasa el ratón por encima para ver el original.</p>';
 }
 
 // ── Generar ─────────────────────────────────────────────────────
@@ -1319,7 +1339,7 @@ function renderReduction() {
   $('reductionBox').innerHTML =
     `<div class="line"><b>Intención</b><span>${esc(r.original)}</span></div>` +
     `<div class="line"><b>Letras</b><span>${esc(r.cleaned)}</span></div>` +
-    `<div class="line"><b>Regla</b><span>${esc(r.rule)}</span></div>` +
+    `<div class="line"><b>Regla</b><span>${withBadges(r.rule)}</span></div>` +
     `<div class="line"><b>Quedan</b><span>${r.units.join(' ')}</span></div>` +
     (twins.length ? `<div class="line"><b>Gemelas</b><span>${twins.map(l => `${l.ch} está en ${l.twin.by} (${l.twin.how})`).join('; ')}</span></div>` : '');
 }
@@ -1379,7 +1399,7 @@ canvas.addEventListener('pointerdown', e => {
     if (e) {
       const cur = state.endStyles[e.key] || state.terminals;
       state.endStyles[e.key] = cur === state.termBrush ? 'none' : state.termBrush;
-      state.decisions.push({ type: 'remate ' + state.endStyles[e.key] });
+      state.decisions.push({ type: 'remate: ' + TERMINALS.find(t => t.id === state.endStyles[e.key]).name.toLowerCase() });
       render();
     }
     return;
@@ -1438,7 +1458,7 @@ function showProvenance() {
   const r = state.reduction;
   if (!r) { body.innerHTML = '<p>Forja primero un sigilo.</p>'; $('provModal').classList.add('open'); return; }
   const m = MODES[state.mode];
-  let html = `<h3>Reducción [${r.tag}]</h3><p><b>${esc(r.label)}</b>: ${esc(r.rule)}</p><p>${esc(r.original)} → ${r.units.join(' ')}</p>`;
+  let html = `<h3>Reducción</h3><p><b>${esc(r.label)}</b> ${badge(r.tag)}: ${withBadges(r.rule)}</p><p>${esc(r.original)} → ${r.units.join(' ')}</p>`;
   html += `<h3>Letras</h3><ul>`;
   for (const l of state.letters) {
     if (l.twin) { html += `<li><b>${l.ch}</b>: no se dibuja; es ${l.twin.by} con ${l.twin.how} (Frater U∴D∴, M como W invertida).</li>`; continue; }
@@ -1448,14 +1468,14 @@ function showProvenance() {
   html += '</ul>';
   const shared = state.prims.filter(p => p.units.length > 1).length, struct = state.prims.filter(p => !p.units.length).length;
   html += `<h3>Trazos</h3><p>${state.prims.length} trazos: ${shared} compartidos entre letras` + (struct ? `, ${struct} de la cruz (composición)` : '') + `, ${state.prims.filter(p => p.hidden).length} ocultos por decisión tuya.</p>`;
-  html += `<h3>Composición: ${m.label} [${m.tag}]</h3><p>${m.help}</p><h3>Cómo trazarlo a mano</h3><ol>${m.hand.map(s => `<li>${s}</li>`).join('')}</ol>`;
+  html += `<h3>Composición: ${m.label}</h3><p>${m.help} ${badge(m.tag)}</p><h3>Cómo trazarlo a mano</h3><ol>${m.hand.map(s => `<li>${s}</li>`).join('')}</ol>`;
   if (state.decisions.length) html += `<h3>Decisiones tuyas</h3><p>${state.decisions.map(d => d.type + (d.ch ? ' ' + d.ch : '')).join(' · ')}</p>`;
   html += '<h3>Fuentes</h3><ul>' +
-    '<li>Austin Osman Spare, <i>The Book of Pleasure</i> (1913): sigilo por fusión de letras [OM].</li>' +
-    '<li>Frater U∴D∴, <i>Practical Sigil Magic</i>, cap. 2, método de la palabra: tachar repetidas, fundir y estilizar, «as simple as possible with the various letters recognizable (even with slight difficulty)» [OM].</li>' +
-    '<li>Phillip Cooper, <i>Basic Sigil Magic</i>: iniciales únicas, superposición, borde opcional [OM].</li>' +
-    '<li>Monograma KAROLVS de Carlomagno (desde 769): consonantes en la cruz, vocales al centro [HP]. Modelo de la composición en cruz.</li></ul>' +
-    '<p style="color:var(--dim);font-size:.66rem;margin-top:8px">La procedencia se muestra aquí y nunca se exporta al SVG.</p>';
+    `<li>Austin Osman Spare, <i title="Título original: The Book of Pleasure">El libro del placer</i> (1913): el sigilo nace de fundir letras. ${badge('OM')}</li>` +
+    `<li>Frater U∴D∴, <i title="Título original: Practical Sigil Magic">Magia práctica de sigilos</i>, cap. 2, método de la palabra: se tachan las letras repetidas y las que quedan se funden y estilizan, ${cita('tan simple como sea posible, con las distintas letras reconocibles (aunque cueste un poco)', 'as simple as possible with the various letters recognizable (even with slight difficulty)')}. ${badge('OM')}</li>` +
+    `<li>Phillip Cooper, <i>Magia básica de sigilos</i>: iniciales únicas, superposición y borde opcional. ${badge('OM')}</li>` +
+    `<li>Monograma KAROLVS de Carlomagno (desde 769): consonantes en la cruz y vocales en el centro. Es el modelo de la composición en cruz. ${badge('HP')}</li></ul>` +
+    '<p class="note">Títulos y citas traducidos del inglés: pasa el ratón por encima para ver el original. La procedencia nunca se exporta al SVG.</p>';
   body.innerHTML = html;
   $('provModal').classList.add('open');
 }
@@ -1625,7 +1645,7 @@ $('selBorder').addEventListener('change', e => { state.border = e.target.value; 
 // Terminales: cada boton muestra su remate dibujado con la misma geometria
 for (const t of TERMINALS) {
   const b = document.createElement('button');
-  b.className = 'term-btn'; b.dataset.t = t.id; b.title = t.name + (t.tag ? ` [${t.tag}]` : '');
+  b.className = 'term-btn'; b.dataset.t = t.id; b.title = t.name + (t.tag ? ' · ' + tagText(t.tag) : '');
   const shapes = terminalShapes({ x: 8, y: 20 }, { x: 1, y: 0 }, t.id, 7.5)
     .map(sh => sh.fill ? `<path d="${sh.d}" fill="currentColor"/>` : `<path d="${sh.d}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>`).join('');
   b.innerHTML = `<svg viewBox="0 0 40 40" style="color:var(--gold)"><path d="M 1 20 L 8 20" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>${shapes}</svg><span>${t.name}</span>`;
