@@ -19,7 +19,7 @@ canvas#canvas{display:block;height:auto;touch-action:none;width:100%}
 .fam-select{display:grid;gap:4px;grid-template-columns:1fr 1fr;margin-bottom:6px}
 .fam-btn{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--dim);cursor:pointer;font-family:var(--font);font-size:.72rem;min-height:36px;padding:4px}
 .fam-btn.active{background:var(--gold);border-color:var(--gold);color:#0c0b0f;font-weight:600}
-.fam-btn.locked{cursor:not-allowed;opacity:.5}
+.fam-btn.locked{cursor:not-allowed;font-style:italic;opacity:.5}
 .step{border:1px solid var(--border);border-radius:6px;margin:8px 0}
 .step>summary{align-items:center;background:linear-gradient(180deg,rgba(75,16,28,.28),transparent);cursor:pointer;display:flex;gap:8px;list-style:none;padding:8px}
 .step>summary::-webkit-details-marker{display:none}
@@ -136,7 +136,7 @@ q{cursor:help;font-style:italic;quotes:"«" "»"}
     <button class="fam-btn active" id="famLetters" title="Sigilo personal: la intención reducida a letras que se funden">Sigilo de letras</button>
     <button class="fam-btn" id="famRosa" title="Motor separado: nombre transliterado al hebreo sobre la Rosa de 22 pétalos">Rosa-Cruz</button>
     <button class="fam-btn" id="famKamea" title="Cuadrado mágico del planeta (Agrippa): el nombre se traza de número en número">Kamea</button>
-    <button class="fam-btn locked" title="Catálogo documentado por manuscrito. No se genera">Sello histórico 🔒</button>
+    <button class="fam-btn locked" title="Catálogo de sellos reproducidos de su fuente (manuscrito, edición y página). No se genera: está en preparación">Sello histórico · pronto</button>
   </div>
 
   <section id="lettersPanel">
@@ -1792,6 +1792,7 @@ function kameaProvenance() {
     '<li>Luna, fila 1, columna 8: pone «45», que ya está en la fila 9 y deja la fila en 360. El único número que falta es 54.</li>' +
     '<li>Kedemel: pone «157», pero קדמאל suma 175, que es la línea de Venus.</li>' +
     '<li>Bne Serafim: la transcripción trae בסי; solo בני da el 1252 impreso.</li></ul>' +
+    '<h3>Grafiel, sin reproducir</h3><p>Su figura en Agrippa es un circuito cerrado de cinco vértices. גראפיאל pasa dos veces por el Álef y no puede dibujar eso; un Grafiel sin el segundo Álef (ג ר א פ י ל) sí daría cinco vértices cerrados, pero ninguna orientación de la tabla reproduce la forma. Queda como indicio, no como regla.</p>' +
     '<h3>Nombre que no se incluye</h3><p>La inteligencia de las inteligencias de la Luna, <i>Malkah be-Tarshishim…</i>, llega corrupta en Agrippa (Donald Tyson propuso una restauración en su edición anotada). Cinco grafías hebreas distintas suman su 3321; sin la fuente que decide entre ellas, el taller no elige ninguna.</p>' +
     `<p class="note">Láminas originales: <a href="${AGRIPPA_URL}" target="_blank" rel="noopener" style="color:var(--gold)">Agrippa, libro II, cap. 22 (Esoteric Archives)</a>.</p>`;
 }
@@ -2189,7 +2190,7 @@ $('selKameaEnds').addEventListener('change', e => { state.kamea.ends = e.target.
 $('chkKameaGrid').addEventListener('change', e => { state.kamea.grid = e.target.checked; render(); });
 $('btnKameaProv').addEventListener('click', showProvenance);
 $('btnKameaSVG').addEventListener('click', exportSVG);
-document.querySelectorAll('.fam-btn.locked').forEach(b => b.addEventListener('click', () => showToast('Motor histórico separado: todavía no disponible')));
+document.querySelectorAll('.fam-btn.locked').forEach(b => b.addEventListener('click', () => showToast('Sello histórico: catálogo con fuente, en preparación')));
 $('btnRosaGenerate').addEventListener('click', rosaGenerate);
 $('chkRosaDiagram').addEventListener('change', e => { state.rosa.diagram = e.target.checked; render(); });
 $('chkRosaEndBar').addEventListener('change', e => { state.rosa.endBar = e.target.checked; render(); });
