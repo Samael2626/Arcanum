@@ -246,23 +246,62 @@ check('sin hebreo en sigilo de letras', !(await snap()).svg.match(/[\u0590-\u05F
 
 // 12) Rosa-Cruz: motor separado
 await page.click('#famRosa');
-await page.fill('#rosaName', 'VOLUNTAS');
+// Disposicion del Lamen (documento 5=6 + SVG de Commons)
+const lay = await page.evaluate(() => {
+  const q = he => { const p = PETALS[he]; return { x: Math.round(p.x - C), y: Math.round(p.y - C) }; };
+  return { aleph: q('א'), shin: q('ש'), mem: q('מ'), peh: q('פ'), kaph: q('כ'), daleth: q('ד'), heh: q('ה'), vav: q('ו'), lamed: q('ל'), qoph: q('ק'), n: Object.keys(PETALS).length };
+});
+check('rosa: 22 petalos', lay.n === 22);
+check('rosa: madres (Aleph arriba, Shin abajo-der, Mem abajo-izq)', lay.aleph.x === 0 && lay.aleph.y < 0 && lay.shin.x > 0 && lay.shin.y > 0 && lay.mem.x < 0 && lay.mem.y > 0);
+check('rosa: dobles (Peh arriba-izq, Kaph arriba-der, Daleth abajo)', lay.peh.x < 0 && lay.peh.y < 0 && lay.kaph.x > 0 && lay.kaph.y < 0 && lay.peh.x === -lay.kaph.x && lay.daleth.x === 0 && lay.daleth.y > 0);
+check('rosa: zodiaco antihorario (Heh arriba, Vav a su izq, Qoph a su der, Lamed abajo)', lay.heh.x === 0 && lay.heh.y < 0 && lay.vav.x < 0 && lay.qoph.x > 0 && lay.lamed.x === 0 && lay.lamed.y > 0);
+
+// Metatron: el ejemplo del propio manuscrito F
+await page.selectOption('#selTranslit', 'consonantal');
+await page.fill('#rosaName', 'Metatron');
 await page.click('#btnRosaGenerate');
-await page.waitForTimeout(120);
-const rosa = await page.evaluate(() => {
+const met = await page.evaluate(() => {
   const s = buildSVG();
   return {
-    n: state.rosa.resolved.length, det: s === buildSVG(), rose: s.includes('data-layer="rose"'), core: s.includes('data-layer="core"'),
-    marks: s.includes('data-mark="start"') && s.includes('data-mark="end"'), heb: (s.match(/[\u0590-\u05FF]/g) || []).length,
-    gem: /Gematría\s*232/.test(document.getElementById('rosaBox').textContent)
+    heb: document.getElementById('rosaHebrew').value, g: gematria(state.rosa.hebrew),
+    crooks: state.rosa.trace.filter(v => v.crook).map(v => v.he).join(''), nooses: state.rosa.trace.filter(v => v.noose).map(v => v.he + ':' + v.turn.toFixed(1)).join(','),
+    det: s === buildSVG(), start: (s.match(/data-mark="start"/g) || []).length, end: s.includes('data-mark="end"'),
+    line: s.includes('data-mark="line"'), noosePath: (s.match(/data-mark="noose"/g) || []).length, core: s.includes('data-layer="core"'),
+    heb22: (s.match(/[א-ת]/g) || []).length
   };
 });
-check('rosa-cruz: 8 letras de VOLUNTAS', rosa.n === 8, rosa.n + '');
-check('rosa-cruz: gematria 232', rosa.gem);
-check('rosa-cruz: determinista, marcas inicio/fin', rosa.det && rosa.rose && rosa.marks);
-check('rosa-cruz: sin mezcla con sigilo de letras', !rosa.core);
-check('rosa-cruz: diagrama de 22 letras', rosa.heb >= 22, rosa.heb + '');
-await shot('rosa');
+check('metatron: transliteracion consonantica = מטטרון', met.heb === 'מטטרון', met.heb);
+check('metatron: gematria 314', met.g.std === 314, met.g.std + ' / gadol ' + met.g.gadol);
+check('metatron: quiebro en Teth (dos seguidas)', met.crooks === 'ט', met.crooks);
+check('metatron: lazo en Resh, giro < 3 grados', /^ר:[0-2]\.\d$/.test(met.nooses), met.nooses);
+check('metatron: circulo inicial, sin barra final por defecto', met.start === 1 && !met.end && met.line && met.noosePath === 1);
+check('rosa: determinista, diagrama con 22 letras, sin mezcla', met.det && met.heb22 >= 22 && !met.core);
+await shot('rosa-metatron');
+await page.check('#chkRosaEndBar');
+check('barra final opcional', await page.evaluate(() => buildSVG().includes('data-mark="end"')));
+await page.uncheck('#chkRosaEndBar');
+
+// Hebreo directo y editable
+await page.fill('#rosaName', 'שדי');
+await page.click('#btnRosaGenerate');
+check('hebreo directo: שדי = 314', await page.evaluate(() => gematria(state.rosa.hebrew).std === 314 && state.rosa.trace.length === 3));
+await page.fill('#rosaHebrew', 'שד');
+check('hebreo editable retraza', await page.evaluate(() => state.rosa.trace.length === 2));
+
+// ARCANUM: finales y dos gematrias
+await page.fill('#rosaName', 'Arcanum');
+await page.click('#btnRosaGenerate');
+const arc = await page.evaluate(() => ({ heb: state.rosa.hebrew, g: gematria(state.rosa.hebrew) }));
+check('arcanum consonantico = ארכנום, 317 / gadol 877', arc.heb === 'ארכנום' && arc.g.std === 317 && arc.g.gadol === 877, `${arc.heb} ${arc.g.std}/${arc.g.gadol}`);
+await shot('rosa-arcanum');
+
+// Letra a letra conserva el comportamiento anterior
+await page.selectOption('#selTranslit', 'full');
+await page.fill('#rosaName', 'VOLUNTAS');
+await page.click('#btnRosaGenerate');
+const vol = await page.evaluate(() => ({ n: [...state.rosa.hebrew].length, g: gematria(state.rosa.hebrew).std }));
+check('letra a letra: VOLUNTAS 8 letras, 232', vol.n === 8 && vol.g === 232, `${vol.n} ${vol.g}`);
+await page.selectOption('#selTranslit', 'consonantal');
 await page.click('#famLetters');
 await page.waitForTimeout(80);
 check('vuelta a letras', (await snap()).svg.includes('data-layer="core"'));

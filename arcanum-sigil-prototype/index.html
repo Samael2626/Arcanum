@@ -273,12 +273,17 @@ textarea:focus,input[type=text]:focus,select:focus{border-color:var(--gold)}
     <details class="step" open>
       <summary><span class="step-num">✜</span><span class="step-title">Rosa-Cruz</span></summary>
       <div class="step-body">
-        <p class="helper">Translitera un nombre al hebreo y une sus letras sobre la Rosa de 22 pétalos. Sistema de coordenadas: no es una reducción al estilo de Spare.</p>
-        <input type="text" id="rosaName" maxlength="20" placeholder="Ej.: VOLUNTAS">
+        <p class="helper">El nombre se escribe en hebreo y se une letra a letra sobre la Rosa del Lamen de la Golden Dawn. Es un sistema de coordenadas, no una reducción al estilo de Spare.</p>
+        <input type="text" id="rosaName" maxlength="32" placeholder="Nombre en latín o en hebreo. Ej.: Metatron">
+        <div class="field"><label for="selTranslit">Transliteración</label>
+          <select id="selTranslit"><option value="consonantal" selected>Consonántica (como se escribe)</option><option value="full">Letra a letra (con vocales)</option></select></div>
         <div class="row"><button class="btn" id="btnRosaGenerate">Transliterar y trazar</button></div>
-        <label class="check"><input type="checkbox" id="chkRosaDiagram" checked>Mostrar diagrama de letras</label>
+        <div class="field"><label for="rosaHebrew">Hebreo</label><input type="text" id="rosaHebrew" dir="rtl" lang="he" maxlength="40" placeholder="מטטרון"></div>
+        <p class="helper">Puedes corregir el hebreo a mano: el trazo se actualiza al momento.</p>
+        <label class="check"><input type="checkbox" id="chkRosaDiagram" checked>Mostrar la Rosa</label>
+        <label class="check" title="El manuscrito F no la prescribe"><input type="checkbox" id="chkRosaEndBar">Barra final (convención moderna)</label>
         <div class="info" id="rosaBox">—</div>
-        <div class="row"><button class="btn-dim" id="btnRosaSVG">SVG</button></div>
+        <div class="row"><button class="btn-dim" id="btnRosaProv">Procedencia</button><button class="btn-dim" id="btnRosaSVG">SVG</button></div>
       </div>
     </details>
   </section>
@@ -597,7 +602,7 @@ const state = {
   stampSel: -1,
   view: null,
   dragging: null,
-  rosa: { name: '', mapping: [], resolved: [], gematria: 0, diagram: true }
+  rosa: { name: '', method: 'consonantal', tokens: null, tokensFor: '', hebrew: '', trace: [], diagram: true, endBar: false }
 };
 const newUser = () => ({ dx: 0, dy: 0, ds: 1, drot: 0, fx: false, fy: false });
 
@@ -1036,96 +1041,258 @@ function buildSVG() {
 }
 
 // ── Rosa-Cruz: motor separado ───────────────────────────────────
-// Golden Dawn, Rose Cross Lamen: 22 petalos = 3 madres (elementos) +
-// 7 dobles (planetas) + 12 simples (signos). Coordenadas alfabeticas:
-// se une el nombre letra a letra. Nunca se mezcla con el sigilo de
-// letras latinas.
-const HEBREW_VALUES = { 'א': 1, 'ב': 2, 'ג': 3, 'ד': 4, 'ה': 5, 'ו': 6, 'ז': 7, 'ח': 8, 'ט': 9, 'י': 10, 'כ': 20, 'ל': 30, 'מ': 40, 'נ': 50, 'ס': 60, 'ע': 70, 'פ': 80, 'צ': 90, 'ק': 100, 'ר': 200, 'ש': 300, 'ת': 400 };
-const LATIN_TO_HEBREW = { a: 'א', b: 'ב', c: 'כ', g: 'ג', d: 'ד', h: 'ה', v: 'ו', w: 'ו', u: 'ו', z: 'ז', ch: 'ח', t: 'ט', i: 'י', y: 'י', j: 'י', e: 'י', f: 'פ', k: 'כ', l: 'ל', m: 'מ', n: 'נ', s: 'ס', o: 'ע', p: 'פ', tz: 'צ', q: 'ק', r: 'ר', sh: 'ש', th: 'ת' };
-const ROSE = {
-  element: ['א', 'מ', 'ש'],
-  planet: ['ר', 'ג', 'ת', 'כ', 'פ', 'ד', 'ב'],
-  sign: ['ה', 'ו', 'ז', 'ח', 'ט', 'י', 'ל', 'נ', 'ס', 'ע', 'צ', 'ק']
+// Fuentes (verificadas el 26-sep-2026):
+//  [OM] Mathers (G.H. Frater D.D.C.F.), manuscrito F "Sigils from the
+//       Rose": circulo en la letra inicial y linea de letra en letra; dos
+//       letras iguales seguidas = quiebro u onda; letra del nombre por la
+//       que la linea pasa (Resh en Metatron) = lazo. No prescribe marca final.
+//  [OM] Documento 5=6 "The Rose Cross Lamen": madres; dobles en el orden
+//       Peh Resh Beth Daleth Gimel Tav Kaph; zodiaco con Heh arriba.
+//  Wikimedia Commons, Rose_Cross_Lamen.svg: posiciones y sentido
+//       antihorario. Coincide con las listas: en Metatron, Teth-Resh-Vav
+//       quedan casi en linea (giro de ~1 grado), por eso el lazo en Resh.
+// Nunca se mezcla con el sigilo de letras latinas.
+const HEB_VALUE = { 'א': 1, 'ב': 2, 'ג': 3, 'ד': 4, 'ה': 5, 'ו': 6, 'ז': 7, 'ח': 8, 'ט': 9, 'י': 10, 'כ': 20, 'ל': 30, 'מ': 40, 'נ': 50, 'ס': 60, 'ע': 70, 'פ': 80, 'צ': 90, 'ק': 100, 'ר': 200, 'ש': 300, 'ת': 400 };
+const FINAL_TO_BASE = { 'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ' };
+const BASE_TO_FINAL = Object.fromEntries(Object.entries(FINAL_TO_BASE).map(([f, b]) => [b, f]));
+const GADOL_FINAL = { 'ך': 500, 'ם': 600, 'ן': 700, 'ף': 800, 'ץ': 900 };
+const baseLetter = ch => FINAL_TO_BASE[ch] || ch;
+
+// Anillos en orden de lectura: angulo de la primera letra y paso
+// (negativo = antihorario en pantalla, como en el Lamen)
+const ROSE_RINGS = [
+  { id: 'mother', label: 'Madres', r: 105, r0: 62, r1: 148, start: -90, step: -120, letters: ['א', 'מ', 'ש'] },
+  { id: 'double', label: 'Dobles', r: 186, r0: 148, r1: 224, start: -90 - 360 / 14, step: -360 / 7, letters: ['פ', 'ר', 'ב', 'ד', 'ג', 'ת', 'כ'] },
+  { id: 'simple', label: 'Simples', r: 261, r0: 224, r1: 298, start: -90, step: -30, letters: ['ה', 'ו', 'ז', 'ח', 'ט', 'י', 'ל', 'נ', 'ס', 'ע', 'צ', 'ק'] }
+];
+const ROSE_INFO = {
+  'א': ['Aleph', 'Aire', ''], 'מ': ['Mem', 'Agua', ''], 'ש': ['Shin', 'Fuego', ''],
+  'ב': ['Beth', 'Mercurio', '☿'], 'ג': ['Gimel', 'Luna', '☽'], 'ד': ['Daleth', 'Venus', '♀'], 'כ': ['Kaph', 'Júpiter', '♃'],
+  'פ': ['Peh', 'Marte', '♂'], 'ר': ['Resh', 'Sol', '☉'], 'ת': ['Tav', 'Saturno', '♄'],
+  'ה': ['Heh', 'Aries', '♈'], 'ו': ['Vav', 'Tauro', '♉'], 'ז': ['Zayin', 'Géminis', '♊'], 'ח': ['Cheth', 'Cáncer', '♋'],
+  'ט': ['Teth', 'Leo', '♌'], 'י': ['Yod', 'Virgo', '♍'], 'ל': ['Lamed', 'Libra', '♎'], 'נ': ['Nun', 'Escorpio', '♏'],
+  'ס': ['Samekh', 'Sagitario', '♐'], 'ע': ['Ayin', 'Capricornio', '♑'], 'צ': ['Tzaddi', 'Acuario', '♒'], 'ק': ['Qoph', 'Piscis', '♓']
 };
-const ROSE_LABELS = { 'א': 'Aire', 'מ': 'Agua', 'ש': 'Fuego', 'ר': '☉', 'ג': '☽', 'ת': '♄', 'כ': '♃', 'פ': '♂', 'ד': '♀', 'ב': '☿', 'ה': '♈', 'ו': '♉', 'ז': '♊', 'ח': '♋', 'ט': '♌', 'י': '♍', 'ל': '♎', 'נ': '♏', 'ס': '♐', 'ע': '♑', 'צ': '♒', 'ק': '♓' };
-// U+FE0E fuerza glifo de texto: sin el, los signos salen como emoji
-for (const k in ROSE_LABELS) if (ROSE_LABELS[k].length === 1) ROSE_LABELS[k] += '︎';
-const ROSE_RINGS = { element: 108, planet: 186, sign: 260 };
-function roseLayout() {
-  const items = [];
-  for (const [ring, arr] of Object.entries(ROSE)) arr.forEach((he, i) => {
-    const a = -Math.PI / 2 + i * 2 * Math.PI / arr.length;
-    items.push({ he, ring, x: C + Math.cos(a) * ROSE_RINGS[ring], y: C + Math.sin(a) * ROSE_RINGS[ring] });
-  });
-  return items;
-}
-function transliterate(name) {
-  const norm = name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-  const keys = Object.keys(LATIN_TO_HEBREW).sort((a, b) => b.length - a.length);
-  const byHe = Object.fromEntries(roseLayout().map(L0 => [L0.he, L0]));
-  const mapping = [], resolved = [];
-  for (let i = 0; i < norm.length;) {
-    const k = keys.find(k0 => norm.startsWith(k0, i));
-    if (!k) { mapping.push({ latin: norm[i], he: null }); i++; continue; }
-    const he = LATIN_TO_HEBREW[k], pos = byHe[he];
-    mapping.push({ latin: k, he });
-    if (pos) resolved.push({ latin: k, he, x: pos.x, y: pos.y });
+const roseLabel = he => { const [, corr, sym] = ROSE_INFO[he]; return sym ? sym + '︎' : corr; };
+const PETALS = Object.fromEntries(ROSE_RINGS.flatMap(ring => ring.letters.map((he, i) => {
+  const a = ring.start + ring.step * i;
+  return [he, { he, ring, a, x: C + Math.cos(rad(a)) * ring.r, y: C + Math.sin(rad(a)) * ring.r }];
+})));
+
+// ── Transliteracion latin -> hebreo ─────────────────────────────
+// Ambas son reconstruccion [RC]: la Golden Dawn trabaja con nombres ya
+// escritos en hebreo. Por eso el resultado es editable a mano.
+const TRANSLIT = {
+  consonantal: { label: 'Consonántica', rule: 'Como se escribe el hebreo: vocal inicial = Aleph (Yod si es i); a y e interiores no se escriben; i = Yod; o, u = Vav; a final = Heh. Letras dobles latinas se escriben una vez. Finales (ך ם ן ף ץ) al acabar la palabra.' },
+  full: { label: 'Letra a letra', rule: 'Cada letra latina, vocales incluidas, con su letra hebrea: a = Aleph, e/i/y = Yod, o = Ayin, u = Vav.' }
+};
+const LAT_CONS = { sh: 'ש', ch: 'ח', th: 'ת', tz: 'צ', ts: 'צ', ph: 'פ', b: 'ב', c: 'כ', d: 'ד', f: 'פ', g: 'ג', h: 'ה', j: 'י', k: 'כ', l: 'ל', m: 'מ', n: 'נ', p: 'פ', q: 'ק', r: 'ר', s: 'ס', t: 'ט', v: 'ו', w: 'ו', x: 'כס', z: 'ז' };
+const LAT_FULL_VOWELS = { a: 'א', e: 'י', i: 'י', y: 'י', o: 'ע', u: 'ו' };
+const LAT_KEYS = Object.keys(LAT_CONS).sort((a, b) => b.length - a.length);
+const isVowel = c => 'aeiouy'.includes(c);
+
+function translitWord(word, method) {
+  let w = word;
+  if (method === 'consonantal') w = w.replace(/([b-df-hj-np-tv-z])\1+/g, '$1');
+  const out = [];
+  for (let i = 0; i < w.length;) {
+    const c = w[i], first = i === 0, last = i === w.length - 1;
+    if (isVowel(c)) {
+      let he = '', note = '';
+      if (method === 'full') he = LAT_FULL_VOWELS[c];
+      else if (first) { he = c === 'i' || c === 'y' ? 'י' : 'א'; note = 'vocal inicial'; }
+      else if (c === 'i' || c === 'y') he = 'י';
+      else if (c === 'o' || c === 'u') he = 'ו';
+      else if (c === 'a' && last) { he = 'ה'; note = 'a final'; }
+      else note = 'vocal no escrita';
+      out.push({ latin: c, he, note });
+      i++; continue;
+    }
+    const k = LAT_KEYS.find(k0 => w.startsWith(k0, i));
+    if (!k) { out.push({ latin: c, he: '', note: 'sin correspondencia' }); i++; continue; }
+    let he = LAT_CONS[k];
+    // c suave ante e/i suena s
+    if (k === 'c' && method === 'consonantal' && 'ei'.includes(w[i + 1] || '')) he = 'ס';
+    out.push({ latin: k, he, note: '' });
     i += k.length;
   }
-  const gematria = mapping.reduce((s, m) => s + (HEBREW_VALUES[m.he] || 0), 0);
-  return { mapping, resolved, gematria };
+  // forma final en la ultima letra escrita
+  for (let j = out.length - 1; j >= 0; j--) {
+    if (!out[j].he) continue;
+    const hs = [...out[j].he], lastHe = hs[hs.length - 1];
+    if (BASE_TO_FINAL[lastHe]) { hs[hs.length - 1] = BASE_TO_FINAL[lastHe]; out[j].he = hs.join(''); out[j].note = (out[j].note ? out[j].note + ', ' : '') + 'forma final'; }
+    break;
+  }
+  return out;
 }
+function transliterate(name, method) {
+  const words = name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().split(/[^a-z]+/).filter(Boolean);
+  const tokens = words.flatMap((w, i) => [...(i ? [{ latin: ' ', he: ' ', note: '' }] : []), ...translitWord(w, method)]);
+  return { tokens, hebrew: tokens.map(t => t.he).join('') };
+}
+const hasHebrew = s => /[א-ת]/.test(s);
+const cleanHebrew = s => s.replace(/[֑-ׇ]/g, '').replace(/[^א-ת ]/g, '').replace(/\s+/g, ' ').trim();
+
+function gematria(heb) {
+  let std = 0, gadol = 0;
+  for (const ch of heb) {
+    const v = HEB_VALUE[baseLetter(ch)];
+    if (!v) continue;
+    std += v; gadol += GADOL_FINAL[ch] || v;
+  }
+  return { std, gadol };
+}
+
+// ── Trazo segun el manuscrito F ─────────────────────────────────
+const NOOSE_MAX_TURN = 15;   // grados: por debajo, la linea "pasa" recta
+function roseTrace(heb) {
+  const verts = [];
+  for (const ch of heb) {
+    const b = baseLetter(ch);
+    if (!PETALS[b]) continue;
+    const last = verts[verts.length - 1];
+    if (last && last.he === b) { last.repeat++; continue; }
+    verts.push({ ...PETALS[b], ch, repeat: 1 });
+  }
+  const dirs = verts.slice(1).map((v, i) => {
+    const dx = v.x - verts[i].x, dy = v.y - verts[i].y, l = Math.hypot(dx, dy) || 1;
+    return { x: dx / l, y: dy / l };
+  });
+  verts.forEach((v, i) => {
+    v.inDir = dirs[i - 1] || null; v.outDir = dirs[i] || null;
+    v.turn = v.inDir && v.outDir ? Math.abs(Math.atan2(v.inDir.x * v.outDir.y - v.inDir.y * v.outDir.x, v.inDir.x * v.outDir.x + v.inDir.y * v.outDir.y)) * 180 / Math.PI : null;
+    v.noose = v.turn !== null && v.turn < NOOSE_MAX_TURN;
+    v.crook = v.repeat > 1;
+  });
+  return verts;
+}
+
+// Geometria unica del sello (canvas y SVG la comparten)
+const START_R = 13, NOOSE_R = 7, CROOK_L = 30, CROOK_A = 12;
+function roseSigilShapes(verts, endBar) {
+  if (!verts.length) return [];
+  const P = (p, d, t, n = 0) => [p.x + d.x * t - d.y * n, p.y + d.y * t + d.x * n];
+  const pt = v => f2(v[0]) + ' ' + f2(v[1]);
+  const shapes = [{ mark: 'start', d: `M ${f2(verts[0].x + START_R)} ${f2(verts[0].y)} A ${START_R} ${START_R} 0 1 0 ${f2(verts[0].x - START_R)} ${f2(verts[0].y)} A ${START_R} ${START_R} 0 1 0 ${f2(verts[0].x + START_R)} ${f2(verts[0].y)} Z` }];
+  if (verts.length > 1 || verts[0].crook) {
+    const v0 = verts[0], d0 = v0.outDir || { x: 1, y: 0 };
+    // la linea sale del borde del circulo inicial
+    let d = `M ${pt(P(v0, d0, START_R))}`;
+    // letra inicial repetida: quiebro justo al salir
+    if (v0.crook) d += ` C ${pt(P(v0, d0, START_R + CROOK_L / 3, CROOK_A))} ${pt(P(v0, d0, START_R + 2 * CROOK_L / 3, -CROOK_A))} ${pt(P(v0, d0, START_R + CROOK_L))}`;
+    for (let i = 1; i < verts.length; i++) {
+      const v = verts[i], di = v.inDir;
+      if (v.crook) {
+        // quiebro (onda) en la linea al llegar a la letra repetida
+        d += ` L ${pt(P(v, di, -CROOK_L))} C ${pt(P(v, di, -2 * CROOK_L / 3, CROOK_A))} ${pt(P(v, di, -CROOK_L / 3, -CROOK_A))} ${pt([v.x, v.y])}`;
+      } else d += ` L ${pt([v.x, v.y])}`;
+    }
+    shapes.push({ mark: 'line', d });
+  }
+  verts.forEach(v => {
+    if (!v.noose) return;
+    const n = [v.x - v.inDir.y * NOOSE_R, v.y + v.inDir.x * NOOSE_R];
+    shapes.push({ mark: 'noose', d: `M ${f2(n[0] + NOOSE_R)} ${f2(n[1])} A ${NOOSE_R} ${NOOSE_R} 0 1 0 ${f2(n[0] - NOOSE_R)} ${f2(n[1])} A ${NOOSE_R} ${NOOSE_R} 0 1 0 ${f2(n[0] + NOOSE_R)} ${f2(n[1])} Z` });
+  });
+  if (endBar && verts.length > 1) {
+    const e = verts[verts.length - 1], de = e.inDir;
+    shapes.push({ mark: 'end', d: `M ${pt(P(e, de, 0, -10))} L ${pt(P(e, de, 0, 10))}` });
+  }
+  return shapes;
+}
+// Petalos del diagrama: cuna entre radios y separadores entre letras
+function petalPath(p) {
+  const h = Math.abs(p.ring.step) / 2, a0 = rad(p.a - h), a1 = rad(p.a + h), { r0, r1 } = p.ring;
+  const at = (r, a) => f2(C + Math.cos(a) * r) + ' ' + f2(C + Math.sin(a) * r);
+  const large = h * 2 > 180 ? 1 : 0;
+  return `M ${at(r0, a0)} L ${at(r1, a0)} A ${r1} ${r1} 0 ${large} 1 ${at(r1, a1)} L ${at(r0, a1)} A ${r0} ${r0} 0 ${large} 0 ${at(r0, a0)} Z`;
+}
+function roseDiagram(used) {
+  return Object.values(PETALS).map(p => ({ he: p.he, d: petalPath(p), used: used.has(p.he), x: p.x, y: p.y, label: roseLabel(p.he) }));
+}
+
 function paintRose(ctx, th) {
-  if (state.rosa.diagram) {
-    ctx.strokeStyle = th.faint; ctx.lineWidth = 1.4;
-    Object.values(ROSE_RINGS).forEach(r => { ctx.beginPath(); ctx.arc(C, C, r, 0, Math.PI * 2); ctx.stroke(); });
+  const ro = state.rosa, used = new Set(ro.trace.map(v => v.he));
+  if (ro.diagram) {
+    ctx.lineWidth = 1.2;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    for (const L0 of roseLayout()) {
-      ctx.fillStyle = th.ink; ctx.font = '18px "Segoe UI", "Arial Hebrew", serif'; ctx.fillText(L0.he, L0.x, L0.y);
-      ctx.fillStyle = th.frame; ctx.font = '10px Georgia, serif'; ctx.fillText(ROSE_LABELS[L0.he], L0.x, L0.y + 17);
+    for (const p of roseDiagram(used)) {
+      const path = new Path2D(p.d);
+      if (p.used) { ctx.fillStyle = th.faint; ctx.fill(path); }
+      ctx.strokeStyle = th.faint; ctx.stroke(path);
+      ctx.fillStyle = th.ink; ctx.font = '20px "Segoe UI", "Arial Hebrew", serif'; ctx.fillText(p.he, p.x, p.y - 4);
+      ctx.fillStyle = th.frame; ctx.font = '11px "Segoe UI Symbol", Georgia, serif'; ctx.fillText(p.label, p.x, p.y + 15);
     }
   }
-  const pts = state.rosa.resolved;
-  if (pts.length < 2) return;
-  ctx.strokeStyle = th.accent; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); pts.slice(1).forEach(q => ctx.lineTo(q.x, q.y)); ctx.stroke();
-  ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(pts[0].x, pts[0].y, 12, 0, Math.PI * 2); ctx.stroke();
-  const e = pts[pts.length - 1];
-  ctx.beginPath(); ctx.moveTo(e.x - 9, e.y); ctx.lineTo(e.x + 9, e.y); ctx.stroke();
+  ctx.strokeStyle = th.accent; ctx.lineWidth = 3.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (const s of roseSigilShapes(ro.trace, ro.endBar)) { ctx.lineWidth = s.mark === 'line' ? 3.2 : 2.4; ctx.stroke(new Path2D(s.d)); }
 }
 function roseSVG(th) {
-  const out = ['<g data-layer="rose">'];
-  if (state.rosa.diagram) {
-    Object.values(ROSE_RINGS).forEach(r => out.push(`<circle cx="${C}" cy="${C}" r="${r}" fill="none" stroke="${th.faint}" stroke-width="1.4"/>`));
-    for (const L0 of roseLayout()) {
-      out.push(`<text x="${f2(L0.x)}" y="${f2(L0.y)}" text-anchor="middle" dominant-baseline="middle" font-family="Arial Hebrew, serif" font-size="18" fill="${th.ink}">${L0.he}</text>`);
-      out.push(`<text x="${f2(L0.x)}" y="${f2(L0.y + 17)}" text-anchor="middle" dominant-baseline="middle" font-family="Georgia, serif" font-size="10" fill="${th.frame}">${ROSE_LABELS[L0.he]}</text>`);
+  const ro = state.rosa, used = new Set(ro.trace.map(v => v.he)), out = [];
+  if (ro.diagram) {
+    out.push(`<g data-layer="rose-diagram" stroke="${th.faint}" stroke-width="1.2">`);
+    for (const p of roseDiagram(used)) {
+      out.push(`<path d="${p.d}" fill="${p.used ? th.faint : 'none'}"/>`);
+      out.push(`<text x="${f2(p.x)}" y="${f2(p.y - 4)}" stroke="none" text-anchor="middle" dominant-baseline="middle" font-family="Arial Hebrew, Segoe UI, serif" font-size="20" fill="${th.ink}">${p.he}</text>`);
+      out.push(`<text x="${f2(p.x)}" y="${f2(p.y + 15)}" stroke="none" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI Symbol, Georgia, serif" font-size="11" fill="${th.frame}">${esc(p.label)}</text>`);
     }
+    out.push('</g>');
   }
-  const pts = state.rosa.resolved;
-  if (pts.length >= 2) {
-    out.push(`<path d="M ${pts.map(q => f2(q.x) + ' ' + f2(q.y)).join(' L ')}" fill="none" stroke="${th.accent}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`);
-    out.push(`<circle data-mark="start" cx="${f2(pts[0].x)}" cy="${f2(pts[0].y)}" r="12" fill="none" stroke="${th.accent}" stroke-width="2"/>`);
-    const e = pts[pts.length - 1];
-    out.push(`<path data-mark="end" d="M ${f2(e.x - 9)} ${f2(e.y)} L ${f2(e.x + 9)} ${f2(e.y)}" stroke="${th.accent}" stroke-width="2"/>`);
-  }
+  out.push(`<g data-layer="rose" fill="none" stroke="${th.accent}" stroke-linecap="round" stroke-linejoin="round">`);
+  for (const s of roseSigilShapes(ro.trace, ro.endBar)) out.push(`<path data-mark="${s.mark}" d="${s.d}" stroke-width="${s.mark === 'line' ? 3.2 : 2.4}"/>`);
   out.push('</g>');
   return out.join('');
 }
-function rosaGenerate() {
-  const name = $('rosaName').value.trim();
-  if (!name) { showToast('Escribe un nombre'); return; }
-  const r = transliterate(name);
-  Object.assign(state.rosa, { name, ...r });
-  const omitted = r.mapping.filter(m => !m.he).map(m => m.latin).join(' ');
+
+// Traza desde el campo hebreo (editable) y rellena la explicacion
+function rosaTraceFromHebrew() {
+  const ro = state.rosa;
+  ro.hebrew = cleanHebrew($('rosaHebrew').value);
+  ro.trace = roseTrace(ro.hebrew);
+  const g = gematria(ro.hebrew);
+  const letters = [...ro.hebrew].filter(ch => ch !== ' ');
+  const marks = [];
+  if (ro.trace.length) marks.push(`círculo en ${ro.trace[0].he} (inicio)`);
+  ro.trace.filter(v => v.crook).forEach(v => marks.push(`quiebro en ${v.he}: ${ROSE_INFO[v.he][0]} ${v.repeat} veces seguidas`));
+  ro.trace.filter(v => v.noose).forEach(v => marks.push(`lazo en ${v.he}: la línea pasa casi recta (giro de ${v.turn.toFixed(1)}°)`));
+  const tokens = ro.tokens && ro.tokensFor === ro.hebrew ? ro.tokens : null;
   $('rosaBox').innerHTML =
-    `<div class="line"><b>Nombre</b><span>${esc(name)}</span></div>` +
-    `<div class="line"><b>Hebreo</b><span>${r.mapping.filter(m => m.he).map(m => m.he).join(' ') || '—'}</span></div>` +
-    (omitted ? `<div class="line"><b>Omitidas</b><span>${esc(omitted)}</span></div>` : '') +
-    `<div class="line"><b>Gematría</b><span>${r.gematria}</span></div>` +
-    `<div class="line"><b>Regla</b><span>Se une el nombre letra a letra sobre la Rosa: círculo en la primera, barra en la última. Golden Dawn [OM]; diagrama del prototipo [RC].</span></div>`;
+    (ro.name ? `<div class="line"><b>Nombre</b><span>${esc(ro.name)}</span></div>` : '') +
+    (tokens ? `<div class="line"><b>Regla</b><span>${esc(TRANSLIT[ro.method].label)} [RC]: ${esc(TRANSLIT[ro.method].rule)}</span></div>` +
+      `<div class="line"><b>Letras</b><span>${tokens.filter(t => t.latin !== ' ').map(t => `${esc(t.latin)}→${t.he || '∅'}${t.note ? ' <i>(' + esc(t.note) + ')</i>' : ''}`).join(' · ')}</span></div>` : '<div class="line"><b>Origen</b><span>Hebreo escrito o corregido a mano.</span></div>') +
+    `<div class="line"><b>Hebreo</b><span dir="rtl" lang="he">${esc(ro.hebrew) || '—'}</span></div>` +
+    `<div class="line"><b>Recorrido</b><span>${ro.trace.map(v => `${v.he} ${ROSE_INFO[v.he][1]}`).join(' → ') || '—'}</span></div>` +
+    `<div class="line"><b>Gematría</b><span>${g.std} (Mispar Hechrachi)` + (g.gadol !== g.std ? ` · ${g.gadol} con finales de 500 a 900 (Mispar Gadol)` : '') + `</span></div>` +
+    `<div class="line"><b>Marcas</b><span>${marks.join('; ') || '—'}.</span></div>` +
+    `<div class="line"><b>Letras</b><span>${letters.length}</span></div>`;
   render();
+}
+function rosaGenerate() {
+  const ro = state.rosa, name = $('rosaName').value.trim();
+  if (!name) { showToast('Escribe un nombre'); return; }
+  ro.name = name; ro.method = $('selTranslit').value;
+  if (hasHebrew(name)) { ro.tokens = null; $('rosaHebrew').value = cleanHebrew(name); }
+  else {
+    const t = transliterate(name, ro.method);
+    ro.tokens = t.tokens; ro.tokensFor = cleanHebrew(t.hebrew);
+    $('rosaHebrew').value = t.hebrew;
+  }
+  rosaTraceFromHebrew();
+}
+function rosaProvenance() {
+  const ro = state.rosa, g = gematria(ro.hebrew);
+  return `<h3>Rosa-Cruz</h3><p>${esc(ro.name || '—')} → <span dir="rtl" lang="he">${esc(ro.hebrew || '—')}</span> · gematría ${g.std}</p>` +
+    '<h3>Cómo se traza (manuscrito F)</h3><ol>' +
+    '<li>Círculo en la letra inicial: <i>«commence with a circle at the point of the initial letter on the Rose»</i>.</li>' +
+    '<li>Línea desde ese círculo hasta la siguiente letra, y así hasta acabar el nombre.</li>' +
+    '<li>Dos letras iguales seguidas: <i>«a crook or wave in the line at that point»</i>.</li>' +
+    '<li>Letra del nombre por la que la línea pasa hacia otra (Resh en Metatron): <i>«a noose in the line at that point»</i>. Aquí, cuando el giro es menor de 15° [AR].</li>' +
+    '<li>El manuscrito no prescribe marca final. La barra final es una convención moderna opcional [RC].</li></ol>' +
+    '<h3>Fuentes</h3><ul>' +
+    '<li>G.H. Frater D.D.C.F. (Mathers), manuscrito F, <i>Sigils from the Rose</i> [OM].</li>' +
+    '<li>Golden Dawn, grado 5=6, <i>The Rose Cross Lamen</i>: madres; dobles Peh, Resh, Beth, Daleth, Gimel, Tav, Kaph; zodiaco con Heh arriba [OM].</li>' +
+    '<li>Wikimedia Commons, <i>Rose_Cross_Lamen.svg</i>: posiciones y sentido de los tres anillos.</li>' +
+    '<li>Transliteración latín → hebreo: reconstrucción del prototipo [RC]; por eso el hebreo es editable.</li></ul>';
 }
 
 // ── Generar ─────────────────────────────────────────────────────
@@ -1267,13 +1434,7 @@ canvas.addEventListener('pointerup', () => {
 // ── Procedencia ─────────────────────────────────────────────────
 function showProvenance() {
   const body = $('provBody');
-  if (state.family === 'rosa') {
-    const ro = state.rosa;
-    body.innerHTML = `<h3>Rosa-Cruz</h3><p>${esc(ro.name || '—')} → ${ro.mapping.filter(m => m.he).map(m => m.he).join(' ')} · gematría ${ro.gematria}</p>` +
-      '<p>Golden Dawn, Rose Cross Lamen: 3 madres, 7 dobles, 12 simples [OM]. Diagrama y transliteración del prototipo [RC].</p>';
-    $('provModal').classList.add('open');
-    return;
-  }
+  if (state.family === 'rosa') { body.innerHTML = rosaProvenance(); $('provModal').classList.add('open'); return; }
   const r = state.reduction;
   if (!r) { body.innerHTML = '<p>Forja primero un sigilo.</p>'; $('provModal').classList.add('open'); return; }
   const m = MODES[state.mode];
@@ -1392,7 +1553,7 @@ function forgetSigil() {
 // ── Exportar ────────────────────────────────────────────────────
 function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); }
 function exportSVG() {
-  const ready = state.family === 'rosa' ? state.rosa.resolved.length : state.prims.length;
+  const ready = state.family === 'rosa' ? state.rosa.trace.length : state.prims.length;
   if (!ready) { showToast('Forja primero un sigilo'); return; }
   download(new Blob([buildSVG()], { type: 'image/svg+xml' }), state.family === 'rosa' ? 'rosa-cruz.svg' : 'sigilo.svg');
 }
@@ -1408,7 +1569,7 @@ function setFamily(f) {
   $('famRosa').classList.toggle('active', f === 'rosa');
   $('lettersPanel').hidden = f !== 'letters';
   $('rosaPanel').hidden = f !== 'rosa';
-  if (f === 'rosa' && $('rosaName').value.trim() && !state.rosa.resolved.length) rosaGenerate();
+  if (f === 'rosa' && $('rosaName').value.trim() && !state.rosa.trace.length) rosaGenerate();
   render();
 }
 function syncControls() {
@@ -1503,6 +1664,11 @@ $('famRosa').addEventListener('click', () => setFamily('rosa'));
 document.querySelectorAll('.fam-btn.locked').forEach(b => b.addEventListener('click', () => showToast('Motor histórico separado: todavía no disponible')));
 $('btnRosaGenerate').addEventListener('click', rosaGenerate);
 $('chkRosaDiagram').addEventListener('change', e => { state.rosa.diagram = e.target.checked; render(); });
+$('chkRosaEndBar').addEventListener('change', e => { state.rosa.endBar = e.target.checked; render(); });
+$('rosaHebrew').addEventListener('input', rosaTraceFromHebrew);
+$('selTranslit').addEventListener('change', () => { if ($('rosaName').value.trim()) rosaGenerate(); });
+$('rosaName').addEventListener('keydown', e => { if (e.key === 'Enter') rosaGenerate(); });
+$('btnRosaProv').addEventListener('click', showProvenance);
 $('panelToggle').addEventListener('click', e => { const open = $('controlPanel').classList.toggle('open'); e.currentTarget.setAttribute('aria-expanded', String(open)); });
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate();
