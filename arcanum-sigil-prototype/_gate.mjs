@@ -187,6 +187,51 @@ const back = await page.evaluate(() => ({ star: state.star.enabled && state.star
 check('galeria recupera estrella, inscripcion y estampas', back.star && back.ins === 'VOLUNTAS' && back.stamps === 1 && back.ui);
 await page.uncheck('#chkStar'); await page.uncheck('#chkInscription'); await page.click('#btnClearStamps');
 
+// 9c) Terminales: catalogo, remate general y uno a uno
+await forge('MI PRACTICA MANTIENE ENFOQUE SERENO', 'fusion');
+const termIds = await page.evaluate(() => TERMINALS.map(t => t.id).filter(id => id !== 'none'));
+check('catalogo de remates', termIds.length >= 13, termIds.join(','));
+const freeN = await page.evaluate(() => freeEnds(state.prims.filter(p => !p.hidden)).length);
+for (const id of termIds) {
+  await page.click(`.term-btn[data-t="${id}"]`);
+  const t = await page.evaluate(() => {
+    const s = buildSVG(), g = s.match(/<g data-layer="terminals"[\s\S]*?<\/g>/);
+    return { det: s === buildSVG(), groups: terminalList(state.prims.filter(p => !p.hidden)).length, paths: g ? (g[0].match(/<path/g) || []).length : 0, nan: /NaN/.test(s) };
+  });
+  check(`remate ${id}`, t.det && !t.nan && t.groups === freeN && t.paths >= freeN, `${t.groups} puntas, ${t.paths} paths`);
+  if (['pattee', 'ring', 'trident', 'star'].includes(id)) await shot(`term-${id}`);
+}
+const pat = await page.evaluate(() => {
+  state.terminals = 'pattee'; render();
+  const t = terminalList(state.prims.filter(p => !p.hidden))[0];
+  return { arms: t.shapes.length, filled: t.shapes.every(s => s.fill) };
+});
+check('cruz patada: 4 brazos rellenos', pat.arms === 4 && pat.filled);
+await page.click('#btnTermClear');
+check('quitar todos los remates', await page.evaluate(() => !buildSVG().includes('data-layer="terminals"')));
+// uno a uno: una sola punta con cruz patada, como el ejemplo
+await page.click('#btnTermPick');
+await page.click('.term-btn[data-t="pattee"]');
+const endPx = await page.evaluate(() => {
+  const e = freeEnds(state.prims.filter(p => !p.hidden))[0], q = toCanvas(e), r = canvas.getBoundingClientRect();
+  return { x: r.left + q.x / SIZE * r.width, y: r.top + q.y / SIZE * r.height };
+});
+await page.mouse.click(endPx.x, endPx.y);
+let one = await page.evaluate(() => terminalList(state.prims.filter(p => !p.hidden)).map(t => t.style));
+check('uno a uno: una sola punta', one.length === 1 && one[0] === 'pattee', one.join(','));
+await shot('term-uno');
+await page.mouse.click(endPx.x, endPx.y);
+one = await page.evaluate(() => terminalList(state.prims.filter(p => !p.hidden)).length);
+check('uno a uno: segundo toque lo quita', one === 0);
+await page.mouse.click(endPx.x, endPx.y);
+await page.click('#btnTermPick');
+await page.evaluate(() => localStorage.clear());
+await page.click('#btnSave');
+await page.click('#btnTermClear');
+await page.evaluate(() => restoreState(readGallery()[0].state));
+check('galeria recupera remates por punta', await page.evaluate(() => terminalList(state.prims.filter(p => !p.hidden)).length === 1));
+await page.click('#btnTermClear');
+
 // 10) Miniatura 80x80 con tinta suficiente
 const ink = await page.evaluate(() => {
   const d = document.getElementById('previewCanvas').getContext('2d').getImageData(0, 0, 80, 80).data;

@@ -62,6 +62,12 @@ textarea:focus,input[type=text]:focus,select:focus{border-color:var(--gold)}
 .sub>summary{color:var(--gold);cursor:pointer;font-size:.7rem;letter-spacing:1px;list-style:none;min-height:34px;display:flex;align-items:center;text-transform:uppercase}
 .sub>summary::-webkit-details-marker{display:none}
 .sub[open]{padding-bottom:6px}
+.term-grid{display:grid;gap:3px;grid-template-columns:repeat(4,1fr);margin:4px 0}
+.term-btn{align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:4px;cursor:pointer;display:flex;flex-direction:column;min-height:52px;padding:2px}
+.term-btn svg{height:30px;width:30px}
+.term-btn span{color:var(--dim);font-family:var(--font);font-size:.54rem;line-height:1.1}
+.term-btn.active{border-color:var(--gold)}
+.term-btn.active span{color:var(--gold)}
 .stamp-group{color:var(--dim);font-size:.62rem;letter-spacing:1px;margin:6px 0 2px;text-transform:uppercase}
 .stamp-grid{display:grid;gap:3px;grid-template-columns:repeat(6,1fr);margin:2px 0}
 .stamp-btn{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--dim);cursor:pointer;font-family:'Segoe UI Symbol',serif;font-size:1.1rem;min-height:38px}
@@ -209,8 +215,16 @@ textarea:focus,input[type=text]:focus,select:focus{border-color:var(--gold)}
           <select id="selTheme"><option value="build" selected>Construcción (papel)</option><option value="present">Presentación (oro)</option></select></div>
         <div class="field"><label for="selBorder">Borde</label>
           <select id="selBorder"><option value="none" selected>Sin borde</option><option value="circle">Círculo</option><option value="square">Cuadrado</option><option value="triangle">Triángulo</option></select></div>
-        <div class="field"><label for="selTerminals">Terminales</label>
-          <select id="selTerminals"><option value="none" selected>Ninguno</option><option value="dot">Punto</option><option value="bar">Barra</option></select></div>
+        <details class="sub" id="subTerminals" open>
+          <summary>Terminales</summary>
+          <p class="helper">Remate en la punta de cada trazo libre. Elige uno para todos, o activa «Uno a uno» y toca las puntas que quieras.</p>
+          <div class="term-grid" id="termGrid"></div>
+          <div class="field"><label for="rngTermScale">Tamaño</label><input type="range" id="rngTermScale" min="50" max="220" value="100"><span class="val" id="termScaleVal">100%</span></div>
+          <div class="row">
+            <button class="btn-dim" id="btnTermPick" title="Toca una punta para ponerle el remate elegido; tócala otra vez para quitárselo">Uno a uno</button>
+            <button class="btn-dim" id="btnTermClear">Quitar todos</button>
+          </div>
+        </details>
         <label class="check" title="Colorea cada letra para ver de dónde sale cada trazo"><input type="checkbox" id="chkColors">Colorear letras</label>
         <details class="sub" id="subStar">
           <summary>Estrella ritual</summary>
@@ -568,7 +582,11 @@ const state = {
   hideMode: false,
   theme: 'build',
   border: 'none',
-  terminals: 'none',
+  terminals: 'none',   // remate general
+  termBrush: 'dot',    // remate que se pone en modo uno a uno
+  termScale: 100,
+  endStyles: {},       // extremo (clave geometrica) -> remate propio
+  termPick: false,
   colors: false,
   transparent: false,
   star: { enabled: false, points: 5, scale: 95, rotation: 0, inner: 50, thickness: 25, opacity: 80, chords: true },
@@ -659,13 +677,94 @@ function distToPrim(pt, p) {
   if (((ang - p.a0) % 360 + 360) % 360 <= p.a1 - p.a0) return Math.abs(Math.hypot(pt.x - p.c.x, pt.y - p.c.y) - p.r);
   return Math.min(...primEnds(p).map(e => Math.hypot(pt.x - e.x, pt.y - e.y)));
 }
+// Extremos con direccion hacia fuera (ox, oy): el remate crece desde
+// la punta del trazo, no a traves de el.
 function primEnds(p) {
+  const end = (x, y, ox, oy) => ({ x, y, ox, oy, key: r2(x) + ',' + r2(y) });
   if (p.t === 'L') {
     const d = Math.hypot(p.b.x - p.a.x, p.b.y - p.a.y) || 1, ux = (p.b.x - p.a.x) / d, uy = (p.b.y - p.a.y) / d;
-    return [{ x: p.a.x, y: p.a.y, tx: ux, ty: uy }, { x: p.b.x, y: p.b.y, tx: ux, ty: uy }];
+    return [end(p.a.x, p.a.y, -ux, -uy), end(p.b.x, p.b.y, ux, uy)];
   }
   if (p.a1 - p.a0 >= 359.5) return [];
-  return [p.a0, p.a1].map(a => ({ x: p.c.x + Math.cos(rad(a)) * p.r, y: p.c.y + Math.sin(rad(a)) * p.r, tx: -Math.sin(rad(a)), ty: Math.cos(rad(a)) }));
+  const at = a => [p.c.x + Math.cos(rad(a)) * p.r, p.c.y + Math.sin(rad(a)) * p.r];
+  return [end(...at(p.a0), Math.sin(rad(p.a0)), -Math.cos(rad(p.a0))), end(...at(p.a1), -Math.sin(rad(p.a1)), Math.cos(rad(p.a1)))];
+}
+
+// ── Terminales (remates de trazo) ───────────────────────────────
+// [HP] anillo: rasgo mas comun en los sellos de la Goetia, heredero de
+// los "caracteres con anteojos" medievales. Cruz y cruz patada: 17 % de
+// terminales en el analisis de los 72 sellos (nota Motor-Alquimia-Goetica).
+// El resto es repertorio visual sin fuente primaria concreta [AR].
+const TERMINALS = [
+  { id: 'none', name: 'Ninguno' },
+  { id: 'dot', name: 'Punto', tag: 'OM' },
+  { id: 'ring', name: 'Anillo', tag: 'HP' },
+  { id: 'bar', name: 'Barra', tag: 'HP' },
+  { id: 'cross', name: 'Cruz', tag: 'HP' },
+  { id: 'pattee', name: 'Cruz patada', tag: 'HP' },
+  { id: 'botonnee', name: 'Cruz botonada', tag: 'AR' },
+  { id: 'arrow', name: 'Flecha', tag: 'AR' },
+  { id: 'point', name: 'Punta', tag: 'AR' },
+  { id: 'lance', name: 'Lanza', tag: 'AR' },
+  { id: 'trident', name: 'Tridente', tag: 'AR' },
+  { id: 'crescent', name: 'Media luna', tag: 'AR' },
+  { id: 'star', name: 'Estrella', tag: 'AR' },
+  { id: 'hook', name: 'Gancho', tag: 'AR' }
+];
+// Geometria de un remate en coordenadas de lienzo: q = punta, o = hacia
+// fuera, s = tamano. Devuelve paths SVG; fill = relleno o solo trazo.
+// Canvas los pinta con Path2D, asi ambas salidas son identicas.
+function terminalShapes(q, o, style, s) {
+  const n = { x: -o.y, y: o.x };
+  const P = (a, b = 0) => [q.x + o.x * a + n.x * b, q.y + o.y * a + n.y * b];
+  const pt = v => f2(v[0]) + ' ' + f2(v[1]);
+  const poly = (pts, close = true) => 'M ' + pts.map(pt).join(' L ') + (close ? ' Z' : '');
+  const circle = (c, r) => `M ${f2(c[0] + r)} ${f2(c[1])} A ${f2(r)} ${f2(r)} 0 1 0 ${f2(c[0] - r)} ${f2(c[1])} A ${f2(r)} ${f2(r)} 0 1 0 ${f2(c[0] + r)} ${f2(c[1])} Z`;
+  const line = (a, b) => ({ d: poly([a, b], false), fill: false });
+  switch (style) {
+    case 'dot': return [{ d: circle(P(0), s * .55), fill: true }];
+    case 'ring': return [{ d: circle(P(s * .6), s * .6), fill: false }];
+    case 'bar': return [line(P(0, -s), P(0, s))];
+    case 'cross': return [line(P(0), P(s * 1.8)), line(P(s * .9, -s * .9), P(s * .9, s * .9))];
+    case 'pattee': {
+      // cuatro brazos que se ensanchan hacia fuera; el brazo trasero toca la punta
+      const L = s * 1.05, c = s * 1.05, w0 = s * .14, w1 = s * .95;
+      return [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([a, b]) => {
+        const Q = (t, w) => P(c + a * t - b * w, b * t + a * w);
+        return { d: poly([Q(0, -w0), Q(L, -w1 / 2), Q(L, w1 / 2), Q(0, w0)]), fill: true };
+      });
+    }
+    case 'botonnee': return [line(P(0), P(s * 1.6)), line(P(s * .8, -s * .8), P(s * .8, s * .8)),
+      { d: circle(P(s * 1.75), s * .28), fill: true }, { d: circle(P(s * .8, -s * .95), s * .28), fill: true }, { d: circle(P(s * .8, s * .95), s * .28), fill: true }];
+    case 'arrow': return [line(P(0), P(s * 1.2)), { d: poly([P(s * .35, -s * .75), P(s * 1.2), P(s * .35, s * .75)], false), fill: false }];
+    case 'point': return [{ d: poly([P(-s * .1, -s * .7), P(s * 1.2), P(-s * .1, s * .7)]), fill: true }];
+    case 'lance': return [{ d: poly([P(0), P(s * .7, -s * .45), P(s * 1.7), P(s * .7, s * .45)]), fill: true }];
+    case 'trident': return [line(P(0), P(s * 1.5)), { d: poly([P(s * 1.3, -s * .85), P(s * .45, -s * .85), P(s * .45, s * .85), P(s * 1.3, s * .85)], false), fill: false }];
+    case 'crescent': return [{ d: `M ${pt(P(s * .9, s * .9))} C ${pt(P(-s * .3, s * .9))} ${pt(P(-s * .3, -s * .9))} ${pt(P(s * .9, -s * .9))}`, fill: false }];
+    case 'star': {
+      // estrella de 5 puntas con una punta apuntando al trazo
+      const c = P(s * 1.05), pts = [];
+      const base = Math.atan2(-o.y, -o.x);
+      for (let i = 0; i < 10; i++) {
+        const r = i % 2 ? s * .42 : s * 1.05, a = base + i * Math.PI / 5;
+        pts.push([c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * r]);
+      }
+      return [{ d: poly(pts), fill: true }];
+    }
+    case 'hook': return [{ d: `M ${pt(P(0))} C ${pt(P(s * 1.3))} ${pt(P(s * 1.5, s * 1.2))} ${pt(P(s * .5, s * 1.1))}`, fill: false }];
+    default: return [];
+  }
+}
+// Remates de todos los extremos libres: estilo por extremo o el general
+function terminalList(visible) {
+  const s = LINE_W * 3 * state.termScale / 100;
+  const out = [];
+  for (const e of freeEnds(visible)) {
+    const style = state.endStyles[e.key] || state.terminals;
+    if (style === 'none') continue;
+    out.push({ e, style, shapes: terminalShapes(toCanvas(e), { x: e.ox, y: e.oy }, style, s) });
+  }
+  return out;
 }
 // Los brazos de la cruz son composicion: no llevan terminales
 function freeEnds(visible) {
@@ -864,14 +963,15 @@ function paint(ctx, opt) {
     if (l) { ctx.strokeStyle = th.accent; ctx.lineWidth = lw * 1.15; l.own.forEach(p => strokePrim(ctx, p)); }
   }
 
-  if (state.terminals !== 'none') {
-    ctx.fillStyle = th.ink; ctx.strokeStyle = th.ink; ctx.lineWidth = lw * .8;
-    for (const e of freeEnds(visible)) {
-      const q = toCanvas(e);
-      ctx.beginPath();
-      if (state.terminals === 'dot') { ctx.arc(q.x, q.y, lw * 1.3, 0, Math.PI * 2); ctx.fill(); }
-      else { const h = lw * 1.8; ctx.moveTo(q.x - e.ty * h, q.y + e.tx * h); ctx.lineTo(q.x + e.ty * h, q.y - e.tx * h); ctx.stroke(); }
-    }
+  ctx.fillStyle = th.ink; ctx.strokeStyle = th.ink; ctx.lineWidth = lw * .8;
+  for (const t of terminalList(visible)) {
+    for (const sh of t.shapes) { const p2 = new Path2D(sh.d); if (sh.fill) ctx.fill(p2); else ctx.stroke(p2); }
+  }
+  if (opt.interactive && state.termPick) {
+    // en modo uno a uno se marcan los extremos libres que se pueden tocar
+    ctx.save(); ctx.strokeStyle = th.accent; ctx.lineWidth = 2; ctx.setLineDash([4, 4]);
+    for (const e of freeEnds(visible)) { const q = toCanvas(e); ctx.beginPath(); ctx.arc(q.x, q.y, 14, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.restore();
   }
   paintStamps(ctx, th, opt.interactive);
 }
@@ -922,12 +1022,11 @@ function buildSVG() {
   out.push(`<g data-layer="core" fill="none" stroke="${th.ink}" stroke-width="${LINE_W}" stroke-linecap="round" stroke-linejoin="round">`);
   visible.forEach(p => out.push(`<path d="${primPath(p)}"/>`));
   out.push('</g>');
-  if (state.terminals !== 'none') {
-    out.push(`<g data-layer="terminals" fill="${th.ink}" stroke="${th.ink}" stroke-width="${f2(LINE_W * .8)}" stroke-linecap="round">`);
-    for (const e of freeEnds(visible)) {
-      const q = toCanvas(e);
-      if (state.terminals === 'dot') out.push(`<circle cx="${f2(q.x)}" cy="${f2(q.y)}" r="${f2(LINE_W * 1.3)}" stroke="none"/>`);
-      else { const h = LINE_W * 1.8; out.push(`<path d="M ${f2(q.x - e.ty * h)} ${f2(q.y + e.tx * h)} L ${f2(q.x + e.ty * h)} ${f2(q.y - e.tx * h)}"/>`); }
+  const terms = terminalList(visible);
+  if (terms.length) {
+    out.push(`<g data-layer="terminals" stroke-width="${f2(LINE_W * .8)}" stroke-linecap="round" stroke-linejoin="round">`);
+    for (const t of terms) for (const sh of t.shapes) {
+      out.push(sh.fill ? `<path d="${sh.d}" fill="${th.ink}"/>` : `<path d="${sh.d}" fill="none" stroke="${th.ink}"/>`);
     }
     out.push('</g>');
   }
@@ -1037,7 +1136,7 @@ function generate() {
   const units = r.units.filter(ch => GLYPHS[ch]);
   if (units.length < 1) { showToast('La intención no tiene letras latinas'); return; }
   const prev = state.intention === text ? Object.fromEntries(state.letters.map(l => [l.ch, l.user])) : {};
-  if (state.intention !== text) { state.hidden = []; state.decisions = []; }
+  if (state.intention !== text) { state.hidden = []; state.decisions = []; state.endStyles = {}; }
   state.intention = text;
   state.reduction = r;
   state.letters = units.map(ch => ({ ch, user: prev[ch] || newUser() }));
@@ -1106,6 +1205,18 @@ function primAt(pt, pool) {
 canvas.addEventListener('pointerdown', e => {
   if (state.family !== 'letters' || !state.prims.length) return;
   const pt = canvasPoint(e);
+  if (state.termPick) {
+    const w = toWorld(pt.x, pt.y), tol = 22 / state.view.k;
+    const ends = freeEnds(state.prims.filter(p => !p.hidden));
+    const e = ends.reduce((b, x) => { const d = Math.hypot(x.x - w.x, x.y - w.y); return d < tol && (!b || d < b.d) ? { ...x, d } : b; }, null);
+    if (e) {
+      const cur = state.endStyles[e.key] || state.terminals;
+      state.endStyles[e.key] = cur === state.termBrush ? 'none' : state.termBrush;
+      state.decisions.push({ type: 'remate ' + state.endStyles[e.key] });
+      render();
+    }
+    return;
+  }
   // los simbolos estan encima: se tocan antes que las letras
   const si = stampAt(pt);
   if (si >= 0) {
@@ -1197,11 +1308,12 @@ function captureState() {
     intention: state.intention, method: state.method, mode: state.mode, overlap: state.overlap, absorb: state.absorb,
     users: Object.fromEntries(state.letters.map(l => [l.ch, l.user])), hidden: state.hidden, decisions: state.decisions,
     theme: state.theme, border: state.border, terminals: state.terminals,
+    termScale: state.termScale, endStyles: state.endStyles,
     star: state.star, inscription: state.inscription, stamps: state.stamps
   }));
 }
 function restoreState(s) {
-  Object.assign(state, { method: s.method, mode: s.mode, overlap: s.overlap, absorb: s.absorb, theme: s.theme, border: s.border, terminals: s.terminals });
+  Object.assign(state, { method: s.method, mode: s.mode, overlap: s.overlap, absorb: s.absorb, theme: s.theme, border: s.border, terminals: s.terminals, termScale: s.termScale || 100, endStyles: { ...(s.endStyles || {}) } });
   if (s.star) {
     Object.assign(state.star, s.star);
     Object.assign(state.inscription, s.inscription);
@@ -1214,6 +1326,7 @@ function restoreState(s) {
   generate();
   state.letters.forEach(l => { if (s.users[l.ch]) l.user = s.users[l.ch]; });
   state.hidden = [...s.hidden]; state.decisions = [...s.decisions];
+  state.endStyles = { ...(s.endStyles || {}) };
   rebuild();
 }
 function saveSigil() {
@@ -1305,7 +1418,12 @@ function syncControls() {
   $('modeHelp').textContent = MODES[state.mode].help;
   $('overlapRow').style.display = state.mode === 'block' ? 'flex' : 'none';
   $('rngOverlap').value = Math.round(state.overlap * 100); $('overlapVal').textContent = Math.round(state.overlap * 100) + '%';
-  $('selTheme').value = state.theme; $('selBorder').value = state.border; $('selTerminals').value = state.terminals;
+  $('selTheme').value = state.theme; $('selBorder').value = state.border;
+  // en uno a uno se resalta el pincel; si no, el remate general
+  const termOn = state.termPick ? state.termBrush : state.terminals;
+  document.querySelectorAll('.term-btn').forEach(b => b.classList.toggle('active', b.dataset.t === termOn));
+  $('btnTermPick').classList.toggle('on', state.termPick);
+  $('rngTermScale').value = state.termScale; $('termScaleVal').textContent = state.termScale + '%';
   $('chkColors').checked = state.colors; $('chkTransparent').checked = state.transparent;
   $('btnHideMode').classList.toggle('on', state.hideMode);
   const st = state.star, ins = state.inscription;
@@ -1340,10 +1458,31 @@ $('btnFlipV').addEventListener('click', () => editSelected(u => { u.fy = !u.fy; 
 $('btnSmaller').addEventListener('click', () => editSelected(u => { u.ds = Math.max(.4, u.ds / 1.15); }, 'escalar'));
 $('btnBigger').addEventListener('click', () => editSelected(u => { u.ds = Math.min(2, u.ds * 1.15); }, 'escalar'));
 $('btnLetterReset').addEventListener('click', () => editSelected(u => Object.assign(u, newUser()), 'restaurar'));
-$('btnHideMode').addEventListener('click', () => { state.hideMode = !state.hideMode; syncControls(); render(); showToast(state.hideMode ? 'Toca un trazo para ocultarlo o recuperarlo' : 'Modo ocultar desactivado'); });
+$('btnHideMode').addEventListener('click', () => { state.hideMode = !state.hideMode; state.stampMode = false; state.termPick = false; syncControls(); render(); showToast(state.hideMode ? 'Toca un trazo para ocultarlo o recuperarlo' : 'Modo ocultar desactivado'); });
 $('selTheme').addEventListener('change', e => { state.theme = e.target.value; render(); });
 $('selBorder').addEventListener('change', e => { state.border = e.target.value; if (state.prims.length) state.view = fitView(); render(); });
-$('selTerminals').addEventListener('change', e => { state.terminals = e.target.value; render(); });
+// Terminales: cada boton muestra su remate dibujado con la misma geometria
+for (const t of TERMINALS) {
+  const b = document.createElement('button');
+  b.className = 'term-btn'; b.dataset.t = t.id; b.title = t.name + (t.tag ? ` [${t.tag}]` : '');
+  const shapes = terminalShapes({ x: 8, y: 20 }, { x: 1, y: 0 }, t.id, 7.5)
+    .map(sh => sh.fill ? `<path d="${sh.d}" fill="currentColor"/>` : `<path d="${sh.d}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>`).join('');
+  b.innerHTML = `<svg viewBox="0 0 40 40" style="color:var(--gold)"><path d="M 1 20 L 8 20" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>${shapes}</svg><span>${t.name}</span>`;
+  b.addEventListener('click', () => {
+    if (state.termPick) { state.termBrush = t.id; showToast(t.name + ': toca las puntas'); }
+    else state.terminals = t.id;
+    syncControls(); render();
+  });
+  $('termGrid').append(b);
+}
+$('rngTermScale').addEventListener('input', e => { state.termScale = Number(e.target.value); syncControls(); render(); });
+$('btnTermPick').addEventListener('click', () => {
+  state.termPick = !state.termPick; state.stampMode = false; state.hideMode = false;
+  if (state.termPick && state.termBrush === 'none') state.termBrush = 'pattee';
+  syncControls(); render();
+  showToast(state.termPick ? 'Elige un remate y toca las puntas marcadas' : 'Uno a uno desactivado');
+});
+$('btnTermClear').addEventListener('click', () => { state.terminals = 'none'; state.endStyles = {}; syncControls(); render(); });
 $('chkColors').addEventListener('change', e => { state.colors = e.target.checked; render(); });
 $('chkTransparent').addEventListener('change', e => { state.transparent = e.target.checked; });
 $('btnCharge').addEventListener('click', openGnosis);
@@ -1368,7 +1507,7 @@ $('panelToggle').addEventListener('click', e => { const open = $('controlPanel')
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate();
   if ((e.key === 'Delete' || e.key === 'Backspace') && state.stampSel >= 0 && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT') deleteStamp();
-  if (e.key === 'Escape') { closeGnosis(); toggleGallery(false); $('provModal').classList.remove('open'); state.hideMode = false; state.stampMode = false; syncControls(); render(); }
+  if (e.key === 'Escape') { closeGnosis(); toggleGallery(false); $('provModal').classList.remove('open'); state.hideMode = false; state.stampMode = false; state.termPick = false; syncControls(); render(); }
 });
 
 // Marco ritual
@@ -1395,7 +1534,7 @@ for (const [group, items] of STAMP_CATALOG) {
     const b = document.createElement('button');
     b.className = 'stamp-btn'; b.dataset.s = it.sym; b.textContent = it.sym; b.title = it.name; b.setAttribute('aria-label', it.name);
     // elegir un simbolo deja listo el modo colocar
-    b.addEventListener('click', () => { state.stampSym = it.sym; state.stampMode = true; state.hideMode = false; syncControls(); showToast(it.name + ': toca el lienzo para colocarlo'); });
+    b.addEventListener('click', () => { state.stampSym = it.sym; state.stampMode = true; state.hideMode = false; state.termPick = false; syncControls(); showToast(it.name + ': toca el lienzo para colocarlo'); });
     grid.append(b);
   }
   $('stampCatalog').append(h, grid);
@@ -1406,7 +1545,7 @@ function editStamp(fn) {
   fn(s); syncControls(); render();
 }
 function deleteStamp() { editStamp(() => { state.stamps.splice(state.stampSel, 1); state.stampSel = -1; }); }
-$('btnStamp').addEventListener('click', () => { state.stampMode = !state.stampMode; state.hideMode = false; syncControls(); showToast(state.stampMode ? 'Toca el lienzo para colocar' : 'Colocar desactivado'); });
+$('btnStamp').addEventListener('click', () => { state.stampMode = !state.stampMode; state.hideMode = false; state.termPick = false; syncControls(); showToast(state.stampMode ? 'Toca el lienzo para colocar' : 'Colocar desactivado'); });
 $('btnClearStamps').addEventListener('click', () => { state.stamps = []; state.stampSel = -1; state.stampMode = false; syncControls(); render(); });
 $('btnStampSmaller').addEventListener('click', () => editStamp(s => { s.size = Math.max(18, Math.round((s.size || STAMP_SIZE) / 1.2)); }));
 $('btnStampBigger').addEventListener('click', () => editStamp(s => { s.size = Math.min(160, Math.round((s.size || STAMP_SIZE) * 1.2)); }));
