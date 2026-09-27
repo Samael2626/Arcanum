@@ -82,6 +82,38 @@ r = await snap();
 check('absorcion desactivable', r.letters.every(l => !l.twin));
 await page.click('#chkAbsorb');
 
+// 4b) Ejemplos reales publicados: la reduccion debe dar lo mismo que la fuente
+// Frater U.D., cap. 2: "the letters which appear more than once are deleted"
+await forge('THIS MY WISH TO OBTAIN THE STRENGTH OF A TIGER', 'fusion', 'unique');
+const ud = await page.evaluate(() => ({ units: state.reduction.units.join(''), w: (state.letters.find(l => l.ch === 'W') || {}).twin }));
+check('U.D.: ejemplo de Spare deja THISMYWOBANERGF', ud.units === 'THISMYWOBANERGF', ud.units);
+check('U.D.: la W se lee en la M (su propio ejemplo)', ud.w && ud.w.by === 'M');
+// Cooper, p. 44: "I DESIRE A NEW PARTNER" -> I D A N P
+await forge('I DESIRE A NEW PARTNER', 'fusion', 'cooper');
+const coop = await page.evaluate(() => ({
+  units: state.reduction.units.join(''),
+  stem: state.prims.some(p => ['I', 'D'].every(u => p.units.includes(u))),
+  centerI: state.prims.some(p => p.units.length === 1 && p.units[0] === 'I'),
+  area: (() => { const v = fitView(); return v.k; })()
+}));
+check('Cooper: I DESIRE A NEW PARTNER deja IDANP', coop.units === 'IDANP', coop.units);
+check('Cooper fig. 4: la I es el asta de la D (encaje compacto)', coop.stem && !coop.centerI);
+await page.uncheck('#chkCompact');
+const loose = await page.evaluate(() => state.prims.some(p => p.units.length === 1 && p.units[0] === 'I'));
+check('sin encaje compacto la I va aparte', loose);
+await page.check('#chkCompact');
+// el encaje nunca ensancha el signo: todos los ejemplos siguen cabiendo en una caja
+for (const t of ['I DESIRE A NEW PARTNER', 'THIS MY WISH TO OBTAIN THE STRENGTH OF A TIGER', 'MI PRACTICA MANTIENE ENFOQUE SERENO']) {
+  await forge(t, 'fusion', t.startsWith('THIS') ? 'unique' : 'cooper');
+  const box = await page.evaluate(() => {
+    let x0 = Infinity, x1 = -Infinity;
+    for (const p of state.prims) for (const q of primPoints(p)) { x0 = Math.min(x0, q.x); x1 = Math.max(x1, q.x); }
+    return x1 - x0;
+  });
+  check(`encaje compacto no ensancha [${t.split(' ').slice(0, 3).join(' ')}]`, box <= 1.001, box.toFixed(2) + ' cajas');
+}
+
+
 // 5) Bloque: cada letra en su celda (sin dos letras en el mismo sitio)
 await forge('SABIDURIA', 'block');
 const cells = await page.evaluate(() => activeLetters().map(l => l.base.tx.toFixed(2) + ',' + l.base.ty.toFixed(2)));
@@ -95,6 +127,8 @@ const cross = await page.evaluate(() => ({
 }));
 check('cruz KAROLVS: vocales al centro', cross.center === 'AOU', cross.center);
 check('cruz: brazos como trazos de composicion', cross.arms === 4, cross.arms + '');
+const kpos = await page.evaluate(() => Object.fromEntries(activeLetters().map(l => [l.ch, [Math.sign(Math.round(l.base.tx * 10)), Math.sign(Math.round(l.base.ty * 10))]])));
+check('cruz como el diploma: K izq, R arriba, L abajo, S der', JSON.stringify([kpos.K, kpos.R, kpos.L, kpos.S]) === JSON.stringify([[-1, 0], [0, -1], [0, 1], [1, 0]]), JSON.stringify(kpos));
 await shot('cross-karolus');
 
 // 7) Edicion por letra: girar cambia el SVG y restaurar lo devuelve
@@ -293,6 +327,40 @@ const elo = await page.evaluate(() => {
 check('elohim: recorrido א ל ה י מ como en la figura (la final ם usa el petalo de מ)', elo.path === 'אלהימ', elo.path);
 check('elohim: ningun trazo tapado (zigzag)', elo.hidden === 0 && elo.shifted === 'ה', `apartado: ${elo.shifted}`);
 await shot('rosa-elohim');
+
+// Lamina "Tracing for Netzach" del manuscrito F: seis sigilos reales.
+// Cada caso fija lo que se ve en la figura original.
+async function traceOf(heb) {
+  await page.fill('#rosaHebrew', heb);
+  return page.evaluate(() => {
+    const s = buildSVG();
+    return {
+      words: state.rosa.words.map(w => w.map(v => v.he).join('')),
+      nooses: state.rosa.trace.filter(v => v.noose).map(v => v.he).join(''),
+      passes: state.rosa.trace.filter(v => v.pass).map(v => v.pass.he).join(''),
+      crooks: state.rosa.trace.filter(v => v.crook).map(v => v.he).join(''),
+      starts: (s.match(/data-mark="start"/g) || []).length, ends: (s.match(/data-mark="end"/g) || []).length,
+      noosePaths: (s.match(/data-mark="noose"/g) || []).length
+    };
+  });
+}
+const NETZACH = [
+  // nombre, hebreo, palabras, lazos de paso, lazos de vertice
+  ['NETZACH', 'נצח', ['נצח'], '', ''],
+  ['YHVH TZABAOTH', 'יהוה צבאות', ['יהוה', 'צבאות'], '', ''],
+  ['HANIEL', 'הניאל', ['הניאל'], 'א', ''],
+  ['ELOHIM', 'אלהים', ['אלהימ'], '', ''],
+  ['NOGAH', 'נגה', ['נגה'], '', ''],
+  ['HAGIEL', 'הגיאל', ['הגיאל'], '', '']
+];
+for (const [name, heb, words, passes, nooses] of NETZACH) {
+  const t = await traceOf(heb);
+  const ok = JSON.stringify(t.words) === JSON.stringify(words) && t.passes === passes && t.nooses === nooses
+    && t.starts === words.length && t.ends === words.length && t.noosePaths === passes.length + nooses.length;
+  check(`lamina Netzach: ${name}`, ok, `palabras=${t.words.join('|')} paso=${t.passes || '-'} lazos=${t.nooses || '-'} circulos=${t.starts} barras=${t.ends}`);
+}
+// Nogah: la lamina tiene 2 trazos (נגה, sin Vav); con Vav serian 3
+check('lamina Netzach: NOGAH con Vav daria otra figura', (await traceOf('נוגה')).words[0].length === 4);
 
 // Hebreo directo y editable
 await page.fill('#rosaName', 'שדי');
