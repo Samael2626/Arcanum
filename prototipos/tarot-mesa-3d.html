@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mesa de tarot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Crimson+Pro:wght@400;500&display=swap">
+<style>
+/* paleta de arcanum_colors.dart */
+:root{
+  color-scheme:dark;
+  --bg:#0A0A0F; --surface:#12121A; --surface-hi:#1C1C28;
+  --gold:#C9A84C; --gold-muted:#8A6E32; --gold-light:#ECD79A;
+  --burgundy:#4A0E1A; --ivory:#F5F0E8; --ivory-muted:#B8B0A0;
+  --line:rgba(201,168,76,.24);
+  --display:"Cormorant Garamond","Garamond","Times New Roman",serif;
+  --body:"Crimson Pro","Georgia",serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ivory);font-family:var(--body);font-size:16px;}
+body{display:grid;grid-template-rows:auto 1fr auto;grid-template-columns:minmax(0,1fr);overflow:hidden;user-select:none;-webkit-user-select:none;}
+button{font:inherit;color:inherit}
+
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 8px;}
+.titles h1{margin:0;font-family:var(--display);font-weight:600;font-size:24px;letter-spacing:.02em;line-height:1.1}
+.status{font-size:14px;color:var(--ivory-muted);min-height:1.3em}
+.status b{color:var(--gold-light);font-weight:500}
+.seg{display:flex;border:1px solid var(--line);border-radius:999px;padding:2px;flex-shrink:0}
+.seg button{background:none;border:0;padding:8px 12px;min-height:40px;border-radius:999px;font-family:var(--display);font-size:15px;font-weight:600;color:var(--ivory-muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:rgba(201,168,76,.16);color:var(--gold-light)}
+
+.scene{position:relative;overflow:hidden;perspective:1000px;touch-action:none;
+  background:radial-gradient(ellipse 70% 60% at 50% 55%, #1d1410 0%, #0e0b0c 55%, var(--bg) 100%);}
+.scene::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 55% 45% at 50% 58%, rgba(255,190,110,.07), transparent 70%),
+             radial-gradient(ellipse 120% 90% at 50% 50%, transparent 55%, rgba(0,0,0,.55));}
+.guide{position:absolute;left:16px;right:16px;top:10px;z-index:5;text-align:center;pointer-events:none;
+  font-family:var(--display);font-style:italic;font-size:17px;color:var(--gold-light);text-shadow:0 1px 8px #000;text-wrap:balance}
+
+.table{position:absolute;left:50%;top:50%;width:600px;height:900px;transform-style:preserve-3d;}
+.wood{position:absolute;inset:0;border-radius:28px;transform:translateZ(0);
+  background:
+    repeating-linear-gradient(88deg, rgba(0,0,0,.0) 0 7px, rgba(0,0,0,.18) 7px 9px, rgba(255,220,170,.03) 9px 16px),
+    linear-gradient(180deg,#2b1a12,#1a0f0a 60%,#140b07);
+  box-shadow:0 0 0 2px #0c0705, inset 0 0 0 3px rgba(201,168,76,.22), inset 0 0 40px rgba(0,0,0,.6);}
+.cloth{position:absolute;left:18px;right:18px;top:172px;bottom:18px;border-radius:16px;transform:translateZ(.2px);
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .5 0'/></filter><rect width='160' height='160' filter='url(%23n)' opacity='.35'/></svg>"),
+    radial-gradient(ellipse 75% 60% at 50% 45%, #5a1422 0%, #3a0b16 55%, #1f050b 100%);
+  box-shadow:inset 0 0 0 2px rgba(201,168,76,.35), inset 0 0 0 9px #22060d, inset 0 0 0 10px rgba(201,168,76,.18), inset 0 0 60px rgba(0,0,0,.55);}
+.cloth svg{position:absolute;left:50%;top:44%;width:420px;height:420px;transform:translate(-50%,-50%);opacity:.14}
+
+.slot{position:absolute;left:0;top:0;width:110px;height:190px;border-radius:8px;border:2px dashed rgba(201,168,76,.42);transform-origin:50% 50%;transition:border-color .15s,box-shadow .15s}
+.slot.hot{border-style:solid;border-color:var(--gold-light);box-shadow:0 0 18px rgba(236,215,154,.45), inset 0 0 18px rgba(236,215,154,.2)}
+.slot i{position:absolute;left:8px;top:6px;font-style:normal;font-family:var(--display);font-weight:600;font-size:30px;color:rgba(201,168,76,.6)}
+.slot-label{position:absolute;left:0;top:0;width:220px;text-align:center;font-family:var(--display);font-size:21px;font-weight:600;color:rgba(236,215,154,.72);white-space:nowrap}
+
+.piece{position:absolute;left:0;top:0;width:110px;height:190px;transform-style:preserve-3d;transform-origin:50% 50%;cursor:grab}
+.flip{position:absolute;inset:0;transform-style:preserve-3d}
+.face{position:absolute;inset:0;border-radius:7px;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  box-shadow:0 1px 2px rgba(0,0,0,.6)}
+.face.back{background-size:100% 100%;}
+.face.front{transform:rotateY(180deg);background:#efe6d2}
+.face.front img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.face.front img.rev{transform:rotate(180deg)}
+.fx{position:absolute;inset:0;pointer-events:none;opacity:0}
+.mote{position:absolute;width:5px;height:5px;border-radius:50%;background:#FAD26A;box-shadow:0 0 6px #EDAE30;bottom:6px}
+.shadow{position:absolute;inset:4px;border-radius:10px;background:rgba(0,0,0,.75);filter:blur(10px);opacity:0;pointer-events:none}
+
+.deck .side{position:absolute;pointer-events:auto}
+.deck .side.s,.deck .side.n{left:0;width:110px;background:repeating-linear-gradient(to bottom,#e9dec4 0 1px,#b39d6c 1px 2px)}
+.deck .side.e,.deck .side.w{top:0;height:190px;background:repeating-linear-gradient(to right,#e9dec4 0 1px,#b39d6c 1px 2px)}
+.deck .side.s{top:190px;transform-origin:50% 0;transform:rotateX(90deg)}
+.deck .side.n{transform-origin:50% 100%}
+.deck .side.e{left:110px;transform-origin:0 50%;transform:rotateY(-90deg)}
+.deck .side.w{transform-origin:100% 50%}
+.deck .top{border:1.5px solid rgba(201,168,76,.55)}
+.deck.glow .top{box-shadow:0 0 0 2px rgba(236,215,154,.55),0 0 22px rgba(236,215,154,.35)}
+.dshadow{position:absolute;inset:-4px;border-radius:12px;background:rgba(0,0,0,.6);filter:blur(9px);transform:translate3d(8px,12px,.1px)}
+.dlabel{position:absolute;left:-90px;right:-90px;top:200px;text-align:center;transform:translateZ(.3px);
+  font-family:var(--display);font-weight:600;font-size:30px;line-height:1.1;color:var(--gold-light)}
+.dlabel small{display:block;font-family:var(--body);font-weight:400;font-size:24px;color:var(--ivory-muted)}
+
+.bar{padding:8px 12px calc(env(safe-area-inset-bottom,0px) + 10px);border-top:1px solid var(--line);background:var(--surface)}
+.bar-scroll{overflow-x:auto;scrollbar-width:none}
+.actions{display:flex;gap:6px;max-width:640px;margin:0 auto}
+.act{flex:1 1 0;background:none;border:1px solid var(--line);border-radius:10px;min-height:48px;padding:6px 4px;cursor:pointer;
+  font-family:var(--display);font-weight:600;font-size:16px;color:var(--gold-light);white-space:nowrap}
+.act:disabled{opacity:.32;cursor:default}
+.act:not(:disabled):active{background:rgba(201,168,76,.14)}
+.act:focus-visible,.seg button:focus-visible,.opt:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+.sheet-wrap{position:fixed;inset:0;z-index:50;display:grid;align-items:end;background:rgba(5,4,6,.62);backdrop-filter:blur(4px)}
+.sheet{background:var(--surface);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 18px);max-height:82vh;overflow:auto;
+  width:100%;max-width:640px;margin:0 auto;animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(24px);opacity:0}}
+.sheet h2{margin:0 0 4px;font-family:var(--display);font-weight:600;font-size:26px}
+.sheet .sub{margin:0 0 14px;color:var(--ivory-muted);font-size:15px}
+.opts{display:grid;gap:8px}
+.opts.grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.opt{display:grid;gap:4px;text-align:left;background:var(--surface-hi);border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;min-height:48px}
+.opt b{font-family:var(--display);font-size:20px;font-weight:600;color:var(--gold-light)}
+.opt span{font-size:14px;color:var(--ivory-muted);line-height:1.35}
+.opt svg{width:100%;height:78px;display:block;margin-bottom:4px}
+.opt[aria-current="true"]{border-color:var(--gold)}
+
+.reading{display:grid;grid-template-columns:minmax(0,150px) 1fr;gap:18px;align-items:start}
+.reading img{width:100%;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.6)}
+.reading img.rev{transform:rotate(180deg)}
+.reading .pos{font-family:var(--display);font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+.reading h3{margin:2px 0 6px;font-family:var(--display);font-weight:600;font-size:30px;line-height:1.05}
+.reading p{margin:0 0 8px;color:var(--ivory-muted);line-height:1.45}
+.close{margin-top:14px;width:100%;flex:none}
+
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 86px);transform:translateX(-50%);z-index:60;max-width:calc(100% - 32px);
+  background:rgba(18,18,26,.96);border:1px solid var(--line);border-radius:10px;padding:10px 16px;font-size:15px;color:var(--gold-light);text-align:center;
+  transition:opacity .25s;pointer-events:none}
+@media (max-width:420px){.reading{grid-template-columns:110px 1fr}.titles h1{font-size:21px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="titles">
+    <h1>Mesa de tarot</h1>
+    <div class="status" id="status">Ningún mazo en juego</div>
+  </div>
+  <div class="seg" role="group" aria-label="Vista">
+    <button id="v-tilt" aria-pressed="true">Inclinada</button>
+    <button id="v-top" aria-pressed="false">Cenital</button>
+  </div>
+</header>
+
+<main class="scene" id="scene">
+  <div class="guide" id="guide"></div>
+  <div class="table" id="table">
+    <div class="wood"></div>
+    <div class="cloth">
+      <svg viewBox="-100 -100 200 200" fill="none" stroke="#C9A84C" stroke-width="1.2">
+        <circle r="96"/><circle r="88"/><circle r="52"/>
+        <path d="M0-88 76 44H-76Z"/><path d="M0 88-76-44H76Z"/>
+        <path d="M0-96V-88M0 96V88M-96 0H-88M96 0H88"/>
+      </svg>
+    </div>
+  </div>
+</main>
+
+<nav class="bar">
+  <div class="bar-scroll">
+    <div class="actions" id="actions">
+      <button class="act" data-a="shuffle">Barajar</button>
+      <button class="act" data-a="cut">Cortar</button>
+      <button class="act" data-a="fan">Extender</button>
+      <button class="act" data-a="spread">Tirada</button>
+      <button class="act" data-a="deal">Sacar</button>
+      <button class="act" data-a="collect">Recoger</button>
+    </div>
+  </div>
+</nav>
+
+<div class="toast" id="toast" style="opacity:0"></div>
+
+<script>
+'use strict';
+// ================= geometria de la mesa (unidades de mesa) =================
+const TW = 600, TH = 900, CW = 110, CH = 190, P = 1000;
+const SHELF_Y = 168;                              // por encima: estante
+const AREA = { x: 36, y: 200, w: 528, h: 470 };   // zona de la tirada
+const DECK_S = .62, FAN_S = .55, FREE_S = .7;
+const HOME_SPOT = { x: 470, y: 782 };             // mazo en juego por defecto
+const FAN_Y = 782;
+const D2R = Math.PI / 180;
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SPEED = reduced ? .5 : 1;
+
+// ================= datos: cartas, mazos, tiradas =================
+const MAJORS = [['el-loco','El Loco'],['el-mago','El Mago'],['la-sacerdotisa','La Sacerdotisa'],['la-emperatriz','La Emperatriz'],
+  ['el-emperador','El Emperador'],['el-hierofante','El Hierofante'],['los-enamorados','Los Enamorados'],['el-carro','El Carro'],
+  ['la-fuerza','La Fuerza'],['el-ermitano','El Ermitaño'],['la-rueda','La Rueda de la Fortuna'],['la-justicia','La Justicia'],
+  ['el-colgado','El Colgado'],['la-muerte','La Muerte'],['la-templanza','La Templanza'],['el-diablo','El Diablo'],
+  ['la-torre','La Torre'],['la-estrella','La Estrella'],['la-luna','La Luna'],['el-sol','El Sol'],['el-juicio','El Juicio'],['el-mundo','El Mundo']];
+const RANKS = [['as','As'],['dos','Dos'],['tres','Tres'],['cuatro','Cuatro'],['cinco','Cinco'],['seis','Seis'],['siete','Siete'],
+  ['ocho','Ocho'],['nueve','Nueve'],['diez','Diez'],['sota','Sota'],['caballero','Caballero'],['reina','Reina'],['rey','Rey']];
+const SUITS = [['bastos','Bastos'],['copas','Copas'],['espadas','Espadas'],['oros','Oros']];
+const ALL = [
+  ...MAJORS.map(([f, n]) => ({ file: f, name: n, major: true })),
+  ...SUITS.flatMap(([s, sn]) => RANKS.map(([r, rn]) => ({ file: `${r}-de-${s}`, name: `${rn} de ${sn}`, suit: s }))),
+];
+const img = c => `../arcanum_app/assets/tarot/${c.file}.webp`;
+
+const svgUri = s => `url("data:image/svg+xml;utf8,${encodeURIComponent(s)}")`;
+const BACK_SOL = svgUri(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 110 190'><defs><radialGradient id='g' cx='50%' cy='50%' r='70%'><stop offset='0' stop-color='#1b2a4c'/><stop offset='1' stop-color='#060a16'/></radialGradient></defs><rect width='110' height='190' fill='url(#g)'/><rect x='6' y='6' width='98' height='178' rx='5' fill='none' stroke='#C9A84C' stroke-width='1.6'/><rect x='10' y='10' width='90' height='170' rx='3' fill='none' stroke='#8A6E32' stroke-width='.6'/><g transform='translate(55 95)' stroke='#C9A84C' fill='none'>${Array.from({length:16},(_,i)=>`<path d='M0 -17 L0 ${i%2?-28:-36}' transform='rotate(${i*22.5})' stroke-width='${i%2?.8:1.3}'/>`).join('')}<circle r='14' stroke-width='1.3'/><circle r='2.5' fill='#C9A84C'/></g><g fill='#8A6E32'><circle cx='55' cy='30' r='1.6'/><circle cx='55' cy='160' r='1.6'/></g></svg>`);
+const BACK_TRIUNFO = svgUri(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 110 190'><defs><radialGradient id='g' cx='50%' cy='50%' r='70%'><stop offset='0' stop-color='#5a1422'/><stop offset='1' stop-color='#1b050a'/></radialGradient></defs><rect width='110' height='190' fill='url(#g)'/><rect x='6' y='6' width='98' height='178' rx='5' fill='none' stroke='#C9A84C' stroke-width='1.6'/><rect x='10' y='10' width='90' height='170' rx='3' fill='none' stroke='#8A6E32' stroke-width='.6'/><g transform='translate(55 95)' stroke='#C9A84C' fill='none' stroke-width='1.2'><circle r='30'/><path d='M0 -26 22.5 13 -22.5 13Z'/><path d='M0 26 -22.5 -13 22.5 -13Z'/><circle r='3' fill='#C9A84C'/></g></svg>`);
+
+const DECKS = [
+  { id: 'rws', name: 'Rider–Waite–Smith', sub: '78 cartas', back: BACK_SOL, cards: ALL, home: { x: 180, y: 84 } },
+  { id: 'mayores', name: 'Arcanos Mayores', sub: '22 triunfos', back: BACK_TRIUNFO, cards: ALL.filter(c => c.major), home: { x: 420, y: 84 } },
+];
+
+// posiciones en fraccion de AREA; lab = 'full' pinta el nombre en el pano, 'num' solo el numero
+const SPREADS = [
+  { id: 'one', name: 'Una carta', desc: 'Lo esencial, sin rodeos.', s: 1, lab: 'full', pos: [[.5,.5,0,'Respuesta','Lo esencial de la pregunta.']] },
+  { id: 'three', name: 'Tres cartas', desc: 'Pasado, presente y futuro.', s: .9, lab: 'full', pos: [
+    [.2,.46,0,'Pasado','Lo que trajo hasta aquí.'],[.5,.46,0,'Presente','Lo que pesa ahora.'],[.8,.46,0,'Futuro','Hacia dónde tiende.']] },
+  { id: 'cross5', name: 'Cruz simple', desc: 'Situación, lo que ayuda y lo que frena.', s: .74, lab: 'num', pos: [
+    [.5,.5,0,'Situación','El centro de la pregunta.'],[.2,.5,0,'Pasado','Lo que queda atrás.'],[.8,.5,0,'Futuro','Lo que se acerca.'],
+    [.5,.14,0,'Lo que ayuda','La fuerza a favor.'],[.5,.86,0,'Lo que frena','La resistencia.']] },
+  { id: 'relation', name: 'Relación', desc: 'Dos personas y lo que hay entre ellas.', s: .74, lab: 'num', pos: [
+    [.18,.3,0,'Tú','Cómo llegas a la relación.'],[.82,.3,0,'La otra persona','Cómo llega la otra parte.'],
+    [.5,.16,0,'Lo que os une','El vínculo.'],[.5,.52,0,'Lo que os separa','La tensión.'],[.5,.87,0,'Hacia dónde va','La tendencia.']] },
+  { id: 'horseshoe', name: 'Herradura', desc: 'Siete cartas en arco: del pasado al desenlace.', s: .64, lab: 'num', pos: [
+    [.08,.8,-8,'Pasado','Lo que dejó huella.'],[.14,.46,-5,'Presente','La situación de hoy.'],[.29,.17,-2,'Futuro próximo','Lo que llega pronto.'],
+    [.5,.08,0,'Consejo','Lo que conviene hacer.'],[.71,.17,2,'Entorno','Las personas y el ambiente.'],[.86,.46,5,'Obstáculos','Lo que se interpone.'],[.92,.8,8,'Desenlace','Hacia dónde va.']] },
+  { id: 'celtic', name: 'Cruz Celta', desc: 'La tirada clásica de diez cartas.', s: .56, lab: 'num', pos: [
+    [.34,.5,0,'Presente','Lo que ocupa tu momento.'],[.34,.5,90,'Lo que cruza','El desafío inmediato.'],[.34,.8,0,'Fundamento','La raíz de la situación.'],
+    [.13,.5,0,'Pasado reciente','Lo que se está yendo.'],[.34,.2,0,'Corona','Lo mejor que puede salir.'],[.55,.5,0,'Futuro próximo','Lo que se acerca.'],
+    [.86,.87,0,'Tú','Tu actitud.'],[.86,.62,0,'Entorno','Lo que te rodea.'],[.86,.38,0,'Esperanzas y temores','Lo que deseas o temes.'],[.86,.13,0,'Desenlace','Hacia dónde tiende todo.']] },
+  { id: 'year', name: 'Rueda del año', desc: 'Una carta por mes.', s: .46, lab: 'num',
+    pos: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+      .map((m, i) => { const a = -Math.PI/2 + i * Math.PI / 6; return [.5 + Math.cos(a) * .4, .5 + Math.sin(a) * .41, 0, m, `Lo que trae ${m.toLowerCase()}.`]; }) },
+];
+
+// ================= servidor simulado: baraja y decide; el cliente solo elige posiciones =================
+const rand = n => { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; };
+const server = {
+  deck: null, order: [], rev: new Map(), drawn: [], state: 'sin barajar',
+  open(deck){ this.deck = deck; this.order = deck.cards.map((_, i) => i); this.rev = new Map(); this.drawn = []; this.state = 'sin barajar'; },
+  live(){ return this.order.filter(v => v !== null); },
+  count(){ return this.live().length; },
+  top(){ return this.order.findIndex(v => v !== null); },
+  shuffle(style){
+    const a = this.live();
+    for (let i = a.length - 1; i > 0; i--){ const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; }
+    this.order = a; a.forEach(id => this.rev.set(id, rand(2) === 1)); this.state = `barajado · ${style}`;
+  },
+  cut(n, lowerOnTop){ const a = this.live(); this.order = lowerOnTop ? a.slice(n).concat(a.slice(0, n)) : a; if (lowerOnTop) this.state = 'cortado'; },
+  take(pos){ const id = this.order[pos]; this.order[pos] = null; this.drawn.push(id); return { card: this.deck.cards[id], reversed: !!this.rev.get(id) }; },
+  gather(){ this.order = this.live().concat(this.drawn); this.drawn = []; this.state = 'recogido · sin barajar'; },
+};
+
+// ================= camara =================
+const scene = document.getElementById('scene'), table = document.getElementById('table');
+const cam = { theta: 38, tTheta: 38, k: 1, oy: 0, zoom: 1, tZoom: 1, panX: 0, panY: 0, tPanX: 0, tPanY: 0 };
+function fitCam(){
+  const r = scene.getBoundingClientRect(), th = cam.theta * D2R, s = Math.sin(th), c = Math.cos(th);
+  let k = 1;
+  for (let i = 0; i < 5; i++){
+    const A = k * TH / 2, bottom = A * c * P / (P - A * s), top = A * c * P / (P + A * s);
+    const kh = k * (r.height - 70) / (bottom + top), kw = (r.width - 24) / (TW * P / (P - A * s));
+    k = Math.min(kh, kw, 1.5);
+  }
+  const A = k * TH / 2;
+  // la mesa arranca justo bajo la guia; el hueco sobrante queda abajo, no arriba
+  cam.k = k; cam.oy = A * c * P / (P + A * s) - r.height / 2 + 56;
+}
+function applyCam(){
+  const K = cam.k * cam.zoom, ox = cam.panX, oy = cam.panY + cam.oy;
+  scene.style.perspectiveOrigin = `calc(50% + ${ox}px) calc(50% + ${oy}px)`;
+  table.style.transform = `translate(${ox}px, ${oy}px) translate(-50%, -50%) scale3d(${K}, ${K}, ${K}) rotateX(${cam.theta}deg)`;
+}
+function toTable(cx, cy){
+  const r = scene.getBoundingClientRect();
+  const sx = cx - (r.left + r.width / 2 + cam.panX), sy = cy - (r.top + r.height / 2 + cam.panY + cam.oy);
+  const th = cam.theta * D2R, s = Math.sin(th), c = Math.cos(th), K = cam.k * cam.zoom;
+  const y = sy * P / (K * (c * P + sy * s)), x = sx * (P - K * y * s) / (K * P);
+  return { x: x + TW / 2, y: y + TH / 2 };
+}
+function clampPan(){
+  const r = scene.getBoundingClientRect(), mx = (cam.zoom - 1) * r.width / 2 + 10, my = (cam.zoom - 1) * r.height / 2 + 10;
+  cam.panX = Math.max(-mx, Math.min(mx, cam.panX)); cam.panY = Math.max(-my, Math.min(my, cam.panY));
+}
+
+// ================= tweens =================
+const tweens = new Set();
+const ease = {
+  linear: t => t,
+  out: t => 1 - Math.pow(1 - t, 3),
+  inOut: t => -(Math.cos(Math.PI * t) - 1) / 2,
+  inOutCubic: t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
+  outBack: t => { const c1 = 1.70158; return 1 + (c1 + 1) * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); },
+};
+const bump = t => Math.sin(Math.PI * Math.max(0, Math.min(1, t)));
+function tween(ms, fn, done, e = ease.out, delay = 0){
+  const tw = { t0: performance.now() + delay, ms: Math.max(1, ms * SPEED), fn, done, e };
+  tweens.add(tw); return tw;
+}
+function moveTo(p, to, ms = 380, e = ease.out, delay = 0, done){
+  const from = {}; for (const k in to) from[k] = p[k];
+  return tween(ms, v => { for (const k in to) p[k] = from[k] + (to[k] - from[k]) * v; p.render(); }, done, e, delay);
+}
+const wait = ms => new Promise(r => tween(ms, () => {}, r, ease.linear));
+
+// ================= piezas =================
+const pieces = new Map(); let uid = 0, zTop = 2;
+class Piece {
+  constructor(kind){
+    this.id = String(++uid); this.kind = kind;
+    this.x = 0; this.y = 0; this.z = 1; this.lift = 0; this.rot = 0; this.sc = 1; this.tx = 0; this.ty = 0;
+    this.el = document.createElement('div'); this.el.className = 'piece ' + kind; this.el.dataset.id = this.id;
+    pieces.set(this.id, this); table.appendChild(this.el);
+  }
+  get hw(){ return CW * this.sc / 2; } get hh(){ return CH * this.sc / 2; }
+  local(p){ const dx = p.x - this.x, dy = p.y - this.y, a = -this.rot * D2R; return { x: dx * Math.cos(a) - dy * Math.sin(a), y: dx * Math.sin(a) + dy * Math.cos(a) }; }
+  toFront(){ this.z = (zTop += .6); }
+  render(){
+    this.el.style.transform = `translate3d(${this.x - CW / 2}px, ${this.y - CH / 2}px, ${this.z + this.lift}px) rotateZ(${this.rot}deg) rotateX(${this.tx}deg) rotateY(${this.ty}deg) scale(${this.sc})`;
+  }
+  remove(){ this.el.remove(); pieces.delete(this.id); }
+}
+
+class Card extends Piece {
+  constructor(deck){
+    super('card');
+    this.deck = deck; this.data = null; this.reversed = false; this.angle = 0; this.diag = 0; this.trem = 0; this.settle = 1;
+    this.slot = null; this.fanPos = null; this.proxy = false;
+    this.el.innerHTML = `<div class="shadow"></div><div class="flip"><div class="face back"></div><div class="face front"><img alt="" draggable="false"><div class="fx"></div></div></div>`;
+    this.flipEl = this.el.querySelector('.flip'); this.shadowEl = this.el.querySelector('.shadow');
+    this.el.querySelector('.back').style.backgroundImage = deck.back;
+    this.front = this.el.querySelector('.front'); this.fx = this.el.querySelector('.fx');
+  }
+  get up(){ return Math.abs(this.angle) >= 179; }
+  reveal(info){
+    this.data = info.card; this.reversed = info.reversed;
+    const im = this.el.querySelector('img'); im.src = img(info.card); im.alt = info.card.name; im.classList.toggle('rev', info.reversed);
+  }
+  get style(){ return !this.data ? 'llano' : this.data.major ? 'mayor' : this.data.suit; }
+  render(){
+    super.render();
+    this.flipEl.style.transform = `rotateZ(${this.diag + this.trem}deg) rotateY(${this.angle}deg) scale(${this.settle})`;
+    const L = this.lift;
+    this.shadowEl.style.opacity = Math.min(1, L / 24) * .6;
+    this.shadowEl.style.transform = `translate3d(${L * .25}px, ${L * .4}px, ${-(this.z + L) + .15}px)`;
+  }
+}
+
+class Deck extends Piece {
+  constructor(def){
+    super('deck');
+    this.def = def; this.count = def.cards.length; this.sc = DECK_S; this.home = def.home;
+    this.el.innerHTML = `<div class="dshadow"></div><div class="side s"></div><div class="side n"></div><div class="side e"></div><div class="side w"></div>
+      <div class="face back top"></div><div class="dlabel">${def.name}<small>${def.sub}</small></div>`;
+    this.el.querySelector('.top').style.backgroundImage = def.back;
+    this.sides = [...this.el.querySelectorAll('.side')]; this.topEl = this.el.querySelector('.top'); this.label = this.el.querySelector('.dlabel');
+    this.setCount(this.count);
+  }
+  get thick(){ return Math.max(1.5, this.count * .62); }
+  setCount(n){
+    this.count = n; const t = this.thick;
+    this.el.style.visibility = n > 0 ? '' : 'hidden';
+    const [s, nn, e, w] = this.sides;
+    s.style.height = nn.style.height = t + 'px'; e.style.width = w.style.width = t + 'px';
+    nn.style.top = -t + 'px'; nn.style.transform = 'rotateX(-90deg)';
+    w.style.left = -t + 'px'; w.style.transform = 'rotateY(90deg)';
+    this.topEl.style.transform = `translateZ(${t}px)`;
+  }
+}
+
+// ================= estado de la mesa =================
+const decks = DECKS.map(d => { const k = new Deck(d); k.x = d.home.x; k.y = d.home.y; k.render(); return k; });
+let active = null, spread = null, fan = null, cutState = null, busy = false;
+const slotEls = [];
+const tableCards = () => [...pieces.values()].filter(p => p.kind === 'card' && !p.proxy && p.fanPos === null);
+const cardsOut = () => tableCards().length > 0;
+
+// ================= UI: estado, guia, toast =================
+const $ = id => document.getElementById(id);
+const statusEl = $('status'), guideEl = $('guide'), toastEl = $('toast');
+let toastT = 0;
+function toast(msg){ toastEl.textContent = msg; toastEl.style.opacity = 1; clearTimeout(toastT); toastT = setTimeout(() => toastEl.style.opacity = 0, 2600); }
+function refresh(){
+  statusEl.innerHTML = active ? `<b>${active.def.name}</b> · ${server.count()} en el mazo · ${server.state}` : 'Ningún mazo en juego';
+  let g = '';
+  if (!active) g = 'Arrastra un mazo del estante al paño';
+  else if (cutState) g = 'Toca el montón que irá encima';
+  else if (fan) g = spread ? 'Arrastra cartas del abanico a la tirada, o tócalas' : 'Arrastra cartas del abanico al paño';
+  else if (!spread) g = 'Baraja, córtalo o elige una tirada';
+  else {
+    const empty = spread.pos.length - tableCards().filter(c => c.slot !== null).length;
+    const down = tableCards().filter(c => !c.up).length;
+    g = empty ? `Extiende el mazo o pulsa Sacar · faltan ${empty}` : down ? 'Toca una carta para voltearla, o levántala por una esquina' : 'Toca una carta para leerla';
+  }
+  guideEl.textContent = g;
+  const on = !!active && !busy && !cutState;
+  for (const b of document.querySelectorAll('.act')){
+    const a = b.dataset.a;
+    b.disabled = !on || (a === 'deal' && !server.count()) || (a === 'collect' && !cardsOut() && !fan) || ((a === 'cut' || a === 'shuffle') && server.count() < 4);
+    if (a === 'spread') b.disabled = busy || !!cutState;
+    if (a === 'fan') b.textContent = fan ? 'Juntar' : 'Extender';
+  }
+  decks.forEach(d => d.el.classList.toggle('glow', d === active && !fan && !cutState && !cardsOut() && server.state.startsWith('sin')));
+}
+
+// ================= mazos: estante y juego =================
+function activate(d){
+  active = d; server.open(d.def); d.label.style.opacity = 0; refresh();
+  toast(`${d.def.name} en juego. Tira del canto para extenderlo; mantenlo pulsado para cortarlo.`);
+}
+function sendHome(d){ d.label.style.opacity = 1; moveTo(d, { x: d.home.x, y: d.home.y, rot: 0, lift: 0 }, 420); }
+function dropDeck(d, from){
+  const onShelf = d.y < SHELF_Y;
+  const locked = cardsOut() || fan || cutState;
+  if (onShelf){
+    if (d === active){
+      if (locked){ toast('Recoge las cartas antes de guardar el mazo'); return moveTo(d, { x: from.x, y: from.y, lift: 0 }, 380); }
+      active = null; spread && clearSpread(); refresh();
+    }
+    return sendHome(d);
+  }
+  if (d !== active){
+    if (active && locked){ toast('Recoge las cartas antes de cambiar de mazo'); return sendHome(d); }
+    if (active) sendHome(active);
+    activate(d);
+  }
+  moveTo(d, { x: clamp(d.x, 70, TW - 70), y: clamp(d.y, SHELF_Y + 70, TH - 70), lift: 0, tx: 0, ty: 0 }, 260);
+}
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+// ================= tiradas =================
+function slotPos(sp, i){ const [fx, fy, r] = sp.pos[i]; return { x: AREA.x + fx * AREA.w, y: AREA.y + fy * AREA.h, rot: r }; }
+function clearSpread(){ slotEls.splice(0).forEach(e => e.remove()); tableCards().forEach(c => c.slot = null); spread = null; }
+function applySpread(sp){
+  slotEls.splice(0).forEach(e => e.remove());
+  spread = sp;
+  sp.pos.forEach((p, i) => {
+    const s = slotPos(sp, i), el = document.createElement('div');
+    el.className = 'slot'; el.innerHTML = sp.lab === 'num' ? `<i>${i + 1}</i>` : '';
+    el.style.transform = `translate3d(${s.x - CW / 2}px, ${s.y - CH / 2}px, .5px) rotateZ(${s.rot}deg) scale(${sp.s})`;
+    table.appendChild(el); slotEls.push(el);
+    if (sp.lab === 'full'){
+      const l = document.createElement('div'); l.className = 'slot-label'; l.textContent = p[3];
+      l.style.transform = `translate3d(${s.x - 110}px, ${s.y + CH * sp.s / 2 + 10}px, .5px)`;
+      table.appendChild(l); slotEls.push(l);
+    }
+  });
+  // las cartas colocadas conservan su numero de posicion; las que sobran quedan libres
+  tableCards().forEach(c => {
+    if (c.slot === null) return;
+    if (c.slot >= sp.pos.length){ c.slot = null; return; }
+    const s = slotPos(sp, c.slot); moveTo(c, { x: s.x, y: s.y, rot: s.rot, sc: sp.s }, 420);
+  });
+  refresh();
+}
+function nearestSlot(p, except){
+  if (!spread) return -1;
+  let best = -1, bd = Infinity;
+  spread.pos.forEach((_, i) => { const s = slotPos(spread, i), d = Math.hypot(p.x - s.x, p.y - s.y); if (d < bd){ bd = d; best = i; } });
+  return bd < Math.max(46, CH * spread.s * .55) ? best : -1;
+}
+const cardAt = i => tableCards().find(c => c.slot === i);
+function hotSlot(i){ slotEls.forEach(e => e.classList && e.classList.remove('hot')); if (i >= 0) slotEls.filter(e => e.classList.contains('slot'))[i].classList.add('hot'); }
+function place(c, i, ms = 360, delay = 0){
+  const s = slotPos(spread, i); c.slot = i; c.toFront();
+  return new Promise(r => moveTo(c, { x: s.x, y: s.y, rot: s.rot, sc: spread.s, lift: 0, tx: 0, ty: 0 }, ms, ease.out, delay, r));
+}
+function dropCard(c, origin){
+  const i = nearestSlot(c, c);
+  hotSlot(-1);
+  if (i >= 0){
+    const other = cardAt(i);
+    if (other && other !== c){
+      if (origin.slot !== null) place(other, origin.slot);
+      else { other.slot = null; moveTo(other, { x: origin.x, y: origin.y, rot: origin.rot, sc: spread.s }, 360); }
+    }
+    place(c, i); toast(`${i + 1} · ${spread.pos[i][3]}`);
+  } else {
+    c.slot = null; c.toFront();
+    moveTo(c, { lift: 0, tx: 0, ty: 0, x: clamp(c.x, 40, TW - 40), y: clamp(c.y, 40, TH - 40), sc: spread ? spread.s : FREE_S }, 260);
+    if (spread) toast('Fuera de la tirada: no cuenta para la lectura');
+  }
+  refresh();
+}
+
+// ================= volteo por palo (valores de _FlipSpec en tarot_card.dart) =================
+const FLIP = {
+  mayor:   { ms: 700, e: ease.inOutCubic, settle: 1500, over: .055, flash: 1, halo: 1 },
+  bastos:  { ms: 250, e: ease.inOut, settle: 420, tremor: 1, motes: 1 },
+  copas:   { ms: 430, e: ease.outBack, settle: 620, sweep: 1 },
+  espadas: { ms: 200, e: ease.inOut, settle: 300, diag: .26, cut: 1 },
+  oros:    { ms: 500, e: ease.inOut, settle: 460, squash: .045, spread: 22 },
+  llano:   { ms: 620, e: ease.outBack, settle: 300 },
+};
+function flip(c, from = 0, dir = -1){
+  const sp = FLIP[c.style]; busyCard.add(c);
+  const start = from, end = 180 * dir, left = Math.abs(end - start) / 180;
+  if (sp.flash) setTimeout(() => fxFlash(c), sp.ms * left * .4 * SPEED);
+  tween(sp.ms * Math.max(.25, left), v => {
+    c.angle = start + (end - start) * v;
+    c.diag = (sp.diag || 0) / D2R * bump(Math.abs(c.angle) / 180);
+    c.render();
+  }, () => { c.angle = end; c.diag = 0; c.render(); settleFx(c, sp); }, sp.e);
+}
+const busyCard = new Set();
+function settleFx(c, sp){
+  const f = c.front;
+  if (sp.halo) f.animate([{ boxShadow: '0 0 28px 6px rgba(237,174,48,.75)' }, { boxShadow: '0 0 0 0 rgba(237,174,48,0)' }], { duration: sp.settle * SPEED, easing: 'ease-out' });
+  if (sp.spread) f.animate([{ boxShadow: `0 0 ${sp.spread}px ${sp.spread / 3}px rgba(0,0,0,.8)` }, { boxShadow: '0 1px 2px rgba(0,0,0,.6)' }], { duration: sp.settle * SPEED, easing: 'ease-out' });
+  if (sp.sweep){ c.fx.style.background = 'linear-gradient(115deg, transparent 35%, rgba(200,230,255,.55) 50%, transparent 65%)';
+    c.fx.animate([{ opacity: 0, transform: 'translateX(-70%)' }, { opacity: 1, offset: .3 }, { opacity: 0, transform: 'translateX(70%)' }], { duration: sp.settle * SPEED, easing: 'ease-in-out' }); }
+  if (sp.cut){ c.fx.style.background = 'linear-gradient(60deg, transparent calc(50% - 1px), rgba(255,255,255,.95) 50%, transparent calc(50% + 1px))';
+    c.fx.animate([{ opacity: 0 }, { opacity: 1, offset: .2 }, { opacity: 0 }], { duration: sp.settle * SPEED }); }
+  if (sp.motes) for (let i = 0; i < 7; i++){
+    const m = document.createElement('div'); m.className = 'mote'; m.style.left = (12 + Math.random() * 80) + '%'; f.appendChild(m);
+    m.animate([{ transform: 'translateY(0)', opacity: 1 }, { transform: `translateY(-${60 + Math.random() * 70}px)`, opacity: 0 }], { duration: (500 + Math.random() * 400) * SPEED, easing: 'ease-out' }).onfinish = () => m.remove();
+  }
+  tween(sp.settle, (v, u) => {
+    const ms = u * sp.settle;
+    c.settle = 1 + ((sp.over || 0) - (sp.squash || 0)) * bump(Math.min(1, ms / 260));
+    c.trem = sp.tremor ? 3.4 * Math.sin(ms / 28) * Math.exp(-ms / 140) : 0;
+    c.render();
+  }, () => { c.settle = 1; c.trem = 0; c.render(); busyCard.delete(c); refresh(); }, ease.linear);
+}
+function fxFlash(c){
+  c.fx.style.background = 'linear-gradient(100deg, transparent 30%, rgba(250,210,106,.85) 50%, transparent 70%)';
+  c.fx.animate([{ opacity: 0, transform: 'translateX(-60%)' }, { opacity: 1, offset: .4 }, { opacity: 0, transform: 'translateX(60%)' }], { duration: 520 * SPEED, easing: 'ease-out' });
+}
+// ================= abanico =================
+function openFan(){
+  if (!active || !server.count()) return;
+  const d = active;
+  const cards = [];
+  server.order.forEach((id, pos) => {
+    if (id === null) return;
+    const c = new Card(d.def); c.fanPos = pos; c.sc = FAN_S; c.x = d.x; c.y = d.y; c.rot = d.rot; c.z = 1 + d.thick; c.render(); cards.push(c);
+  });
+  d.setCount(0);
+  fan = { cards, start: { x: d.x, y: d.y } };
+  refresh();
+  return fan;
+}
+function layoutFan(end){
+  const { cards, start } = fan, n = cards.length;
+  const dx = end.x - start.x, dy = end.y - start.y, len = Math.hypot(dx, dy) || 1, ang = Math.atan2(dy, dx);
+  const px = -dy / len, py = dx / len;
+  cards.forEach((c, i) => {
+    const t = n > 1 ? i / (n - 1) : 0, sag = Math.sin(Math.PI * t) * len * .07;
+    c.x = start.x + dx * t + px * sag; c.y = start.y + dy * t + py * sag;
+    c.rot = ang / D2R + (dx < 0 ? 180 : 0); c.z = 1 + i * .12; c.lift = 0; c.render();
+  });
+  fan.len = len;
+}
+function autoFan(){
+  const d = active; if (!openFan()) return;
+  const endX = d.x > TW / 2 ? 58 : TW - 58, sx = d.x, sy = d.y;
+  fan.start = { x: sx, y: FAN_Y }; busy = true; refresh();
+  moveTo(d, { y: FAN_Y }, 1);
+  tween(780, v => layoutFan({ x: sx + (endX - sx) * v, y: FAN_Y }), () => { busy = false; refresh(); }, ease.out);
+}
+function closeFan(ms = 460){
+  if (!fan) return Promise.resolve();
+  const d = active, list = fan.cards; fan = null; busy = true; refresh();
+  return new Promise(r => {
+    list.forEach((c, i) => moveTo(c, { x: d.x, y: d.y, rot: d.rot, lift: 0 }, ms, ease.inOut, (list.length - i) * 4, i === 0 ? () => {
+      list.forEach(k => k.remove()); d.setCount(server.count()); busy = false; refresh(); r();
+    } : null));
+  });
+}
+function takeFromFan(c){
+  fan.cards.splice(fan.cards.indexOf(c), 1);
+  c.reveal(server.take(c.fanPos)); c.fanPos = null;
+  if (!fan.cards.length) fan = null;
+}
+
+// ================= barajar: la animacion es teatro; el orden lo fija el servidor =================
+function proxies(n){
+  const d = active, out = [];
+  for (let i = 0; i < n; i++){ const c = new Card(d.def); c.proxy = true; c.sc = DECK_S; c.x = d.x; c.y = d.y; c.rot = d.rot; c.z = 1 + d.thick + i * .6; c.render(); out.push(c); }
+  return out;
+}
+async function shuffle(style){
+  if (fan) await closeFan(300);
+  const d = active; busy = true; refresh();
+  const full = d.count; d.setCount(Math.max(2, Math.round(full * .25)));
+  const w = CW * DECK_S;
+  if (style === 'Cascada'){
+    const ps = proxies(14);
+    ps.forEach((c, i) => moveTo(c, { x: d.x + (i < 7 ? -1 : 1) * w * .62, rot: d.rot + (i < 7 ? -7 : 7), lift: 6 + (i % 7) }, 320, ease.out, 0));
+    await wait(360);
+    const order = [0,7,1,8,2,9,3,10,4,11,5,12,6,13];
+    order.forEach((k, j) => { const c = ps[k]; moveTo(c, { x: d.x, rot: d.rot, lift: 0, z: 1 + d.thick + j * .6 }, 150, ease.inOut, j * 45); });
+    await wait(14 * 45 + 200);
+    ps.forEach(c => c.remove());
+  } else if (style === 'Por encima'){
+    const ps = proxies(12);
+    for (let round = 0; round < 4; round++){
+      const chunk = ps.slice(0, 3);
+      chunk.forEach((c, i) => moveTo(c, { y: d.y - CH * DECK_S * .7, lift: 60 + i }, 170, ease.out));
+      await wait(190);
+      ps.push(...ps.splice(0, 3));
+      ps.forEach((c, j) => { c.z = 1 + d.thick + j * .6; c.render(); });
+      chunk.forEach(c => moveTo(c, { y: d.y, lift: 0 }, 150, ease.inOut));
+      await wait(170);
+    }
+    ps.forEach(c => c.remove());
+  } else {
+    const ps = proxies(18), cx = d.x, cy = clamp(d.y, SHELF_Y + 190, TH - 190);
+    ps.forEach(c => { c.base = { a: Math.random() * Math.PI * 2, r: 70 + Math.random() * 110, rot: Math.random() * 360 }; c.z = 1 + Math.random() * 6; });
+    await new Promise(r => tween(reduced ? 500 : 1700, (v, u) => {
+      ps.forEach(c => {
+        const spreadOut = bump(Math.min(1, u * 1.15)), a = c.base.a + u * Math.PI * 1.6;
+        c.x = cx + Math.cos(a) * c.base.r * spreadOut + (d.x - cx) * (1 - spreadOut);
+        c.y = cy + Math.sin(a) * c.base.r * .8 * spreadOut + (d.y - cy) * (1 - spreadOut);
+        c.rot = d.rot + (c.base.rot + u * 140) * spreadOut; c.render();
+      });
+    }, r, ease.linear));
+    ps.forEach(c => c.remove());
+  }
+  server.shuffle(style.toLowerCase());
+  d.setCount(server.count()); busy = false; refresh();
+  toast('Barajado. El servidor fija el orden; tú eliges qué posiciones sacar.');
+}
+
+// ================= cortar =================
+function beginCut(){
+  const d = active, n = server.count();
+  const k = Math.round(n * (.3 + Math.random() * .4));
+  const pile = new Deck(d.def); pile.label.remove(); pile.sc = DECK_S; pile.home = null;
+  pile.x = d.x; pile.y = d.y; pile.rot = d.rot; pile.z = 1 + (n - k) * .62; pile.setCount(k); pile.render();
+  d.setCount(n - k);
+  cutState = { pile, deck: d, k, stage: 'drag' };
+  refresh();
+  return pile;
+}
+function endCutDrag(){
+  const { pile, deck } = cutState;
+  if (Math.hypot(pile.x - deck.x, pile.y - deck.y) < CW * DECK_S * .9){
+    cancelCut(); return;
+  }
+  pile.z = 1; moveTo(pile, { lift: 0, tx: 0, ty: 0 }, 200);
+  cutState.stage = 'choose'; refresh();
+}
+function cancelCut(){
+  const { pile, deck } = cutState;
+  moveTo(pile, { x: deck.x, y: deck.y, lift: 0 }, 240, ease.out, 0, () => { pile.remove(); deck.setCount(server.count()); cutState = null; refresh(); });
+}
+function autoCut(){
+  const d = active, pile = beginCut();
+  const tx = clamp(d.x + (d.x > TW / 2 ? -1 : 1) * CW * DECK_S * 1.9, 70, TW - 70);
+  busy = true;
+  moveTo(pile, { lift: 50 }, 160, ease.out, 0, () => moveTo(pile, { x: tx, lift: 0 }, 360, ease.inOut, 0, () => { busy = false; pile.z = 1; cutState.stage = 'choose'; refresh(); }));
+}
+function chooseTop(p){
+  const { pile, deck, k } = cutState;
+  const lowerOnTop = p === deck;          // el mazo es la mitad de abajo
+  const mover = p, base = p === deck ? pile : deck, target = { x: base.x, y: base.y };
+  busy = true; cutState.stage = 'merge'; refresh();
+  mover.z = 1 + base.thick;
+  moveTo(mover, { lift: 70 }, 180, ease.out, 0, () => moveTo(mover, { x: target.x, y: target.y, lift: 0 }, 340, ease.inOut, 0, () => {
+    server.cut(k, lowerOnTop);
+    deck.x = target.x; deck.y = target.y; deck.z = 1; deck.setCount(server.count()); deck.render();
+    pile.remove(); cutState = null; busy = false; refresh();
+    toast(lowerOnTop ? `Cortado: ${server.count() - k} cartas de abajo pasan arriba` : 'El montón de arriba vuelve arriba: el orden no cambia');
+  }));
+}
+
+// ================= sacar y recoger =================
+async function deal(){
+  if (!spread){ openSpreadSheet(deal); return; }
+  const empty = spread.pos.map((_, i) => i).filter(i => !cardAt(i));
+  if (!empty.length){ toast('La tirada ya está completa'); return; }
+  busy = true; refresh();
+  const d = active;
+  const jobs = [];
+  for (const [j, i] of empty.entries()){
+    const pos = server.top(); if (pos < 0) break;
+    let c = fan && fan.cards.find(k => k.fanPos === pos);
+    if (c) takeFromFan(c);
+    else { c = new Card(d.def); c.sc = DECK_S; c.x = d.x; c.y = d.y; c.rot = d.rot; c.z = 1 + d.thick; c.reveal(server.take(pos)); d.setCount(server.count()); c.render(); }
+    c.lift = 30; jobs.push(place(c, i, 420, j * 110));
+  }
+  await Promise.all(jobs);
+  if (!fan) active.setCount(server.count());
+  busy = false; refresh();
+}
+async function collect(){
+  if (fan) await closeFan(360);
+  const d = active, list = tableCards();
+  busy = true; refresh();
+  await Promise.all(list.map((c, i) => new Promise(r => moveTo(c, { x: d.x, y: d.y, rot: d.rot, sc: DECK_S, lift: 0 }, 420, ease.inOut, i * 30, r))));
+  list.forEach(c => c.remove());
+  server.gather(); d.setCount(server.count()); busy = false; refresh();
+}
+
+// ================= lectura =================
+function openReading(c){
+  const pos = c.slot !== null && spread ? spread.pos[c.slot] : null;
+  sheet(`<div class="reading">
+    <img src="${img(c.data)}" alt="${c.data.name}" class="${c.reversed ? 'rev' : ''}">
+    <div>
+      <div class="pos">${pos ? `${c.slot + 1} · ${pos[3]}` : 'Fuera de la tirada'}</div>
+      <h3>${c.data.name}</h3>
+      <p>${c.reversed ? 'Invertida' : 'Al derecho'}${c.data.major ? ' · Arcano Mayor' : ''}</p>
+      <p>${pos ? pos[4] : 'Esta carta no entra en la lectura: arrástrala a una posición para que cuente.'}</p>
+      <p style="font-size:14px">La interpretación la daría el motor elegido (Tradición u Oráculo).</p>
+    </div></div><button class="act close" data-close>Cerrar</button>`);
+}
+
+// ================= hojas =================
+let sheetEl = null;
+function sheet(html, onPick){
+  closeSheet();
+  sheetEl = document.createElement('div'); sheetEl.className = 'sheet-wrap';
+  sheetEl.innerHTML = `<div class="sheet" role="dialog">${html}</div>`;
+  sheetEl.addEventListener('click', e => {
+    if (e.target === sheetEl || e.target.closest('[data-close]')) return closeSheet();
+    const o = e.target.closest('[data-pick]'); if (o){ const v = o.dataset.pick; closeSheet(); onPick && onPick(v); }
+  });
+  document.body.appendChild(sheetEl);
+}
+function closeSheet(){ sheetEl && sheetEl.remove(); sheetEl = null; }
+function spreadThumb(sp){
+  const r = sp.pos.map((p, i) => { const x = p[0] * 150, y = p[1] * 70, w = 16 * sp.s + 6, h = w * 1.7;
+    return `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="2" transform="rotate(${p[2]} ${x} ${y})" fill="#2a1016" stroke="#C9A84C" stroke-width="1"/>`; }).join('');
+  return `<svg viewBox="-12 -16 174 102">${r}</svg>`;
+}
+function openSpreadSheet(then){
+  sheet(`<h2>Tirada</h2><p class="sub">Los huecos aparecen en el paño. Las cartas ya puestas conservan su número.</p>
+    <div class="opts grid">${SPREADS.map(s => `<button class="opt" data-pick="${s.id}" aria-current="${spread && spread.id === s.id}">${spreadThumb(s)}<b>${s.name}</b><span>${s.pos.length} ${s.pos.length > 1 ? 'cartas' : 'carta'} · ${s.desc}</span></button>`).join('')}</div>`,
+    id => { applySpread(SPREADS.find(s => s.id === id)); then && then(); });
+}
+function openShuffleSheet(){
+  sheet(`<h2>Barajar</h2><p class="sub">Cualquiera deja un orden nuevo, que fija el servidor. Cambia el gesto, no el azar.</p>
+    <div class="opts">
+      <button class="opt" data-pick="Cascada"><b>Cascada</b><span>El mazo se parte en dos mitades que se entrelazan.</span></button>
+      <button class="opt" data-pick="Por encima"><b>Por encima</b><span>Bloques del fondo pasan arriba, una y otra vez.</span></button>
+      <button class="opt" data-pick="Sobre el paño"><b>Sobre el paño</b><span>Las cartas se extienden y se revuelven con la mano.</span></button>
+    </div>`, shuffle);
+}
+
+// ================= acciones de la barra =================
+$('actions').addEventListener('click', e => {
+  const b = e.target.closest('.act'); if (!b || b.disabled) return;
+  const a = b.dataset.a;
+  if (a === 'shuffle') openShuffleSheet();
+  else if (a === 'cut'){ if (fan) return toast('Junta el abanico antes de cortar'); autoCut(); }
+  else if (a === 'fan') fan ? closeFan() : autoFan();
+  else if (a === 'spread') openSpreadSheet();
+  else if (a === 'deal') deal();
+  else if (a === 'collect') collect();
+});
+function setView(top){
+  cam.tTheta = top ? 0 : 38;
+  $('v-top').setAttribute('aria-pressed', top); $('v-tilt').setAttribute('aria-pressed', !top);
+}
+$('v-tilt').onclick = () => setView(false);
+$('v-top').onclick = () => setView(true);
+
+// ================= gestos =================
+const pointers = new Map(); let g = null, pinch = null, lastTap = { t: 0, x: 0, y: 0 };
+scene.addEventListener('pointerdown', e => {
+  if (e.button > 0) return;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  scene.setPointerCapture(e.pointerId);
+  if (pointers.size === 2){ if (g) endGesture(true); startPinch(); return; }
+  if (pointers.size > 2) return;
+  const el = e.target.closest('.piece'), piece = el && pieces.get(el.dataset.id);
+  const p = toTable(e.clientX, e.clientY);
+  g = { id: e.pointerId, piece, sx: e.clientX, sy: e.clientY, p0: p, last: p, mode: 'pending' };
+  if (!piece || busy || (piece.proxy)) { if (piece) g.piece = null; return; }
+  const L = piece.local(p);
+  if (piece.kind === 'deck' && piece === active && !cutState && !fan){
+    g.edge = Math.abs(L.x) > piece.hw * .5;
+    g.lp = setTimeout(() => { if (g && g.mode === 'pending' && g.piece === active){ g.mode = 'cut'; const pl = beginCut(); pl.lift = 40; pl.render(); g.off = { x: pl.x - p.x, y: pl.y - p.y }; g.piece = pl; if (navigator.vibrate) navigator.vibrate(12); } }, 450);
+  }
+  if (piece.kind === 'card' && !busyCard.has(piece)) g.corner = !piece.up && piece.fanPos === null && Math.abs(L.x) > piece.hw * .45 && Math.abs(L.y) > piece.hh * .55 ? Math.sign(L.x) : 0;
+});
+scene.addEventListener('pointermove', e => {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch) return movePinch();
+  if (!g || g.id !== e.pointerId) return;
+  const p = toTable(e.clientX, e.clientY), moved = Math.hypot(e.clientX - g.sx, e.clientY - g.sy);
+  if (g.mode === 'pending'){
+    if (moved < 7) return;
+    clearTimeout(g.lp);
+    const pc = g.piece;
+    if (!pc) g.mode = cam.zoom > 1.02 ? 'pan' : 'none';
+    else if (pc.kind === 'deck'){
+      if (cutState && cutState.stage === 'choose') g.mode = 'none';
+      else if (pc === active && g.edge && !fan && !cutState) { g.mode = 'fan'; openFan(); }
+      else if (pc === active && (fan || cutState)) g.mode = 'none';
+      else { g.mode = 'move'; g.from = { x: pc.x, y: pc.y }; }
+    } else if (pc.kind === 'card'){
+      if (busyCard.has(pc)) g.mode = 'none';
+      else if (g.corner && !pc.up && pc.data){ g.mode = 'peel'; g.lx0 = pc.local(p).x; }
+      else {
+        g.mode = 'move';
+        if (pc.fanPos !== null){ takeFromFan(pc); g.from = { x: pc.x, y: pc.y, rot: pc.rot, slot: null }; }
+        else g.from = { x: pc.x, y: pc.y, rot: pc.rot, slot: pc.slot };
+        pc.slot = null;
+      }
+    }
+    if (g.piece && (g.mode === 'move' || g.mode === 'cut')){
+      g.off = g.off || { x: g.piece.x - p.x, y: g.piece.y - p.y };
+      if (g.piece.kind === 'card') g.piece.toFront();
+      moveTo(g.piece, { lift: 64 }, 140);
+    }
+    refresh();
+  }
+  const pc = g.piece;
+  if (g.mode === 'move' || g.mode === 'cut'){
+    const vx = p.x - g.last.x, vy = p.y - g.last.y;
+    pc.x = p.x + g.off.x; pc.y = p.y + g.off.y;
+    pc.ty = clamp(pc.ty * .6 + vx * 1.1, -16, 16); pc.tx = clamp(pc.tx * .6 - vy * 1.1, -16, 16); pc.render();
+    if (pc.kind === 'card') { const i = nearestSlot(pc); hotSlot(i); if (i >= 0) guideEl.textContent = `${i + 1} · ${spread.pos[i][3]} — ${spread.pos[i][4]}`; }
+  } else if (g.mode === 'fan'){
+    layoutFan(p);
+  } else if (g.mode === 'peel'){
+    const L = pc.local(p), prog = clamp(-(L.x - g.lx0) * g.corner / (pc.hw * 2), 0, 1);
+    pc.angle = prog * 180 * g.corner * -1; pc.lift = bump(prog) * 26; pc.render();
+  } else if (g.mode === 'pan'){
+    cam.panX += e.clientX - (g.px ?? g.sx); cam.panY += e.clientY - (g.py ?? g.sy); g.px = e.clientX; g.py = e.clientY; clampPan(); cam.tPanX = cam.panX; cam.tPanY = cam.panY; applyCam();
+  }
+  g.last = p;
+});
+const up = e => {
+  pointers.delete(e.pointerId);
+  if (pinch){ if (pointers.size < 2) pinch = null; return; }
+  if (!g || g.id !== e.pointerId) return;
+  endGesture(false, e);
+};
+scene.addEventListener('pointerup', up);
+scene.addEventListener('pointercancel', e => { pointers.delete(e.pointerId); if (g && g.id === e.pointerId) endGesture(true); });
+
+function endGesture(cancel, e){
+  const G = g; g = null; if (!G) return;
+  clearTimeout(G.lp);
+  const pc = G.piece;
+  if (G.mode === 'pending' && !cancel) return tap(pc, e);
+  if (G.mode === 'move'){
+    pc.tx = pc.ty = 0;
+    if (pc.kind === 'deck') dropDeck(pc, G.from);
+    else dropCard(pc, G.from);
+  } else if (G.mode === 'cut'){
+    endCutDrag();
+  } else if (G.mode === 'fan'){
+    if (!fan || fan.len < 90) closeFan(260);
+    refresh();
+  } else if (G.mode === 'peel'){
+    const a = Math.abs(pc.angle), dir = Math.sign(pc.angle) || -1;
+    if (a > 90) flip(pc, pc.angle, dir);
+    else tween(180, v => { pc.angle = pc.angle * (1 - v); pc.lift *= (1 - v); pc.render(); }, () => { pc.angle = 0; pc.lift = 0; pc.render(); });
+    moveTo(pc, { lift: 0 }, 200);
+  }
+  refresh();
+}
+function tap(pc, e){
+  if (!pc){
+    const now = performance.now();
+    if (now - lastTap.t < 320 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 30){
+      const r = scene.getBoundingClientRect();
+      if (cam.tZoom > 1.02){ cam.tZoom = 1; cam.tPanX = 0; cam.tPanY = 0; }
+      else { cam.tZoom = 2.1; cam.tPanX = -(e.clientX - r.left - r.width / 2) * 1.1; cam.tPanY = -(e.clientY - r.top - r.height / 2) * 1.1; }
+      lastTap.t = 0; return;
+    }
+    lastTap = { t: now, x: e.clientX, y: e.clientY }; return;
+  }
+  if (busy) return;
+  if (pc.kind === 'deck'){
+    if (cutState && cutState.stage === 'choose' && (pc === cutState.deck || pc === cutState.pile)) return chooseTop(pc);
+    if (pc !== active){
+      if (active && (cardsOut() || fan || cutState)) return toast('Recoge las cartas antes de cambiar de mazo');
+      if (active) sendHome(active);
+      activate(pc); return moveTo(pc, { x: HOME_SPOT.x, y: HOME_SPOT.y }, 520, ease.inOut);
+    }
+    return toast('Tira del canto para extenderlo · mantenlo pulsado para cortarlo · arrástralo para moverlo');
+  }
+  if (pc.kind === 'card'){
+    if (busyCard.has(pc)) return;
+    if (pc.fanPos !== null){
+      takeFromFan(pc);
+      const empty = spread ? spread.pos.map((_, i) => i).find(i => !cardAt(i)) : undefined;
+      if (empty !== undefined){ pc.lift = 30; place(pc, empty).then(refresh); }
+      else { pc.slot = null; pc.toFront(); moveTo(pc, { y: pc.y - 150, sc: spread ? spread.s : FREE_S, rot: pc.rot + (Math.random() * 10 - 5) }, 360); }
+      return refresh();
+    }
+    if (!pc.up) return flip(pc, 0, -1);
+    openReading(pc);
+  }
+}
+function startPinch(){
+  const [a, b] = [...pointers.values()];
+  pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y), z0: cam.zoom, m0: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, p0: { x: cam.panX, y: cam.panY } };
+}
+function movePinch(){
+  const [a, b] = [...pointers.values()]; if (!b) return;
+  const d = Math.hypot(a.x - b.x, a.y - b.y), m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  cam.zoom = cam.tZoom = clamp(pinch.z0 * d / pinch.d0, 1, 2.6);
+  cam.panX = pinch.p0.x + (m.x - pinch.m0.x); cam.panY = pinch.p0.y + (m.y - pinch.m0.y); clampPan();
+  cam.tPanX = cam.panX; cam.tPanY = cam.panY; applyCam();
+}
+scene.addEventListener('wheel', e => {
+  e.preventDefault();
+  cam.tZoom = clamp(cam.tZoom * (e.deltaY < 0 ? 1.12 : 1 / 1.12), 1, 2.6);
+  const r = scene.getBoundingClientRect(), mx = (cam.tZoom - 1) * r.width / 2, my = (cam.tZoom - 1) * r.height / 2;
+  cam.tPanX = clamp(cam.tPanX, -mx, mx); cam.tPanY = clamp(cam.tPanY, -my, my);
+}, { passive: false });
+
+// ================= bucle =================
+function frame(now){
+  for (const tw of tweens){
+    if (now < tw.t0) continue;
+    const u = Math.min(1, (now - tw.t0) / tw.ms);
+    if (tw.fn) tw.fn(tw.e(u), u);
+    if (u >= 1){ tweens.delete(tw); tw.done && tw.done(); }
+  }
+  let camMoved = false;
+  if (Math.abs(cam.tTheta - cam.theta) > .01){ cam.theta += (cam.tTheta - cam.theta) * .12; fitCam(); camMoved = true; }
+  if (!pinch && Math.abs(cam.tZoom - cam.zoom) > .001){ cam.zoom += (cam.tZoom - cam.zoom) * .18; camMoved = true; }
+  if (!pinch && (Math.abs(cam.tPanX - cam.panX) > .3 || Math.abs(cam.tPanY - cam.panY) > .3)){
+    cam.panX += (cam.tPanX - cam.panX) * .18; cam.panY += (cam.tPanY - cam.panY) * .18; clampPan(); camMoved = true;
+  }
+  if (camMoved) applyCam();
+  requestAnimationFrame(frame);
+}
+new ResizeObserver(() => { fitCam(); clampPan(); applyCam(); }).observe(scene);
+fitCam(); applyCam(); refresh();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
