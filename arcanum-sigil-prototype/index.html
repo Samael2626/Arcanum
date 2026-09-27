@@ -294,7 +294,7 @@ q{cursor:help;font-style:italic;quotes:"«" "»"}
           <select id="selKameaReduce"><option value="agrippa" selected>Como Agrippa</option><option value="zeros">Quitar ceros</option><option value="aiq">Aiq Bekar</option></select></div>
         <div class="field"><label for="selKameaEnds">Extremos</label>
           <select id="selKameaEnds"><option value="agrippa" selected>Dos círculos (Agrippa)</option><option value="gd">Círculo y barra (Aurora Dorada)</option></select></div>
-        <label class="check"><input type="checkbox" id="chkKameaGrid" checked>Mostrar la tabla</label>
+        <label class="check" title="Con la tabla visible se ve la construcción; sin ella, el carácter como en las láminas de Agrippa"><input type="checkbox" id="chkKameaGrid">Mostrar la tabla (construcción)</label>
         <div class="info" id="kameaBox">—</div>
         <div class="row"><button class="btn-dim" id="btnKameaProv">Procedencia</button><button class="btn-dim" id="btnKameaSVG">SVG</button></div>
       </div>
@@ -653,7 +653,7 @@ function layoutLetters(active, mode, overlap) {
 // ── Estado ──────────────────────────────────────────────────────
 const state = {
   family: 'letters',
-  kamea: { planet: 'saturn', reduce: 'agrippa', ends: 'agrippa', grid: true, hebrew: '', words: [] },
+  kamea: { planet: 'saturn', reduce: 'agrippa', ends: 'agrippa', grid: false, hebrew: '', words: [] },
   intention: '',
   method: 'cooper',
   reduction: null,
@@ -1211,9 +1211,20 @@ function translitWord(word, method) {
   }
   return out;
 }
+// Nombres de origen hebreo: se escriben con su grafia original (Biblia
+// hebrea), no sonido a sonido. Samuel es שמואל (1 S 1:20), no סמול.
+const HEBREW_NAMES = {
+  samuel: 'שמואל', miguel: 'מיכאל', gabriel: 'גבריאל', rafael: 'רפאל', daniel: 'דניאל', david: 'דוד',
+  jose: 'יוסף', maria: 'מרים', miriam: 'מרים', juan: 'יוחנן', ana: 'חנה', sara: 'שרה', elias: 'אליהו',
+  adan: 'אדם', eva: 'חוה', isabel: 'אלישבע', elisabet: 'אלישבע', jacob: 'יעקב', jacobo: 'יעקב',
+  isaias: 'ישעיהו', jeremias: 'ירמיהו', salomon: 'שלמה', abraham: 'אברהם', isaac: 'יצחק', moises: 'משה',
+  josue: 'יהושע', natanael: 'נתנאל', manuel: 'עמנואל', emanuel: 'עמנואל', matias: 'מתתיהו', mateo: 'מתתיהו',
+  rut: 'רות', ester: 'אסתר', debora: 'דבורה', judit: 'יהודית', simon: 'שמעון', benjamin: 'בנימין', jonas: 'יונה'
+};
 function transliterate(name, method) {
   const words = name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().split(/[^a-z]+/).filter(Boolean);
-  const tokens = words.flatMap((w, i) => [...(i ? [{ latin: ' ', he: ' ', note: '' }] : []), ...translitWord(w, method)]);
+  const tokens = words.flatMap((w, i) => [...(i ? [{ latin: ' ', he: ' ', note: '' }] : []),
+    ...(method === 'consonantal' && HEBREW_NAMES[w] ? [{ latin: w, he: HEBREW_NAMES[w], note: 'nombre bíblico: grafía hebrea original' }] : translitWord(w, method))]);
   return { tokens, hebrew: tokens.map(t => t.he).join('') };
 }
 const hasHebrew = s => /[א-ת]/.test(s);
@@ -1534,8 +1545,27 @@ function kameaTrace(heb, k, method) {
 // Trazo al estilo de los caracteres de Agrippa: circulo en ambos extremos;
 // si el trazo vuelve por una linea ya dibujada, va en paralelo y el giro
 // se redondea en horquilla (Inteligencias de Saturno y Jupiter).
-const KAMEA_LANE = 14, KAMEA_END_R = 9;
-function kameaShapes(steps, ends) {
+// Medidas: finas sobre la tabla (construccion); en lamina, tinta gruesa y
+// circulos marcados, como los caracteres grabados de Agrippa
+const kameaLook = grid => grid ? { line: 3.2, mark: 2.4, lane: 14, endR: 9 } : { line: 10, mark: 7, lane: 22, endR: 16 };
+// En lamina el caracter llena el cuadro, como en el libro: misma forma,
+// escalada y centrada (la tabla sigue siendo la referencia exacta)
+function kameaFit(words) {
+  // varias palabras: una columna por palabra, de derecha a izquierda como
+  // se lee el hebreo (lamina de la Luna: Schedbarschemoth a la derecha)
+  const n = words.filter(w => w.length).length || 1, colW = 470 / n;
+  let col = 0;
+  return words.map(ws => {
+    if (!ws.length) return ws;
+    const xs = ws.map(q => q.x), ys = ws.map(q => q.y);
+    const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+    const w = x1 - x0, h = y1 - y0;
+    const k = Math.min(w ? (colW - (n > 1 ? 40 : 0)) / w : Infinity, h ? 430 / h : Infinity, 3);
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, ox = C + 235 - colW * (col++ + .5);
+    return ws.map(q => ({ ...q, x: ox + (q.x - cx) * k, y: C + 8 + (q.y - cy) * k }));
+  });
+}
+function kameaShapes(steps, ends, look) {
   // letras seguidas en la misma casilla: un solo vertice con repeticion
   const verts = [];
   for (const s of steps) {
@@ -1546,7 +1576,7 @@ function kameaShapes(steps, ends) {
   const shapes = [];
   const circle = (x, y, r) => `M ${f2(x + r)} ${f2(y)} A ${r} ${r} 0 1 0 ${f2(x - r)} ${f2(y)} A ${r} ${r} 0 1 0 ${f2(x + r)} ${f2(y)} Z`;
   if (!verts.length) return shapes;
-  if (verts.length === 1) { shapes.push({ mark: 'start', d: circle(verts[0].x, verts[0].y, KAMEA_END_R) }); return shapes; }
+  if (verts.length === 1) { shapes.push({ mark: 'start', d: circle(verts[0].x, verts[0].y, look.endR) }); return shapes; }
   // cada segmento va en su carril: tantos carriles como veces se repasa la misma linea
   const segs = [];
   for (let i = 0; i < verts.length - 1; i++) {
@@ -1554,34 +1584,33 @@ function kameaShapes(steps, ends) {
     const lane = segs.filter(s => segmentsOverlap(s.a, s.b, a, b)).length;
     const dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy) || 1, ux = dx / l, uy = dy / l;
     // carril a la izquierda del sentido de avance
-    const ox = -uy * lane * KAMEA_LANE, oy = ux * lane * KAMEA_LANE;
+    const ox = -uy * lane * look.lane, oy = ux * lane * look.lane;
     segs.push({ a, b, ux, uy, A: { x: a.x + ox, y: a.y + oy }, B: { x: b.x + ox, y: b.y + oy } });
   }
   const pt = p => f2(p.x) + ' ' + f2(p.y);
   const first = segs[0], last = segs[segs.length - 1];
   // la linea sale del borde del circulo inicial
-  const S = { x: first.A.x + first.ux * KAMEA_END_R, y: first.A.y + first.uy * KAMEA_END_R };
+  const S = { x: first.A.x + first.ux * look.endR, y: first.A.y + first.uy * look.endR };
   let d = `M ${pt(S)}`;
   segs.forEach((s, i) => {
     const next = segs[i + 1];
     const isLast = !next;
-    const E = isLast && ends === 'agrippa' ? { x: s.B.x - s.ux * KAMEA_END_R, y: s.B.y - s.uy * KAMEA_END_R } : s.B;
+    const E = isLast && ends === 'agrippa' ? { x: s.B.x - s.ux * look.endR, y: s.B.y - s.uy * look.endR } : s.B;
     if (!next) { d += ` L ${pt(E)}`; return; }
     const reverse = s.ux * next.ux + s.uy * next.uy < -0.97;
     if (reverse) {
       // horquilla: se frena antes del vertice y gira en curva al carril de vuelta
-      const k = KAMEA_LANE * .9;
+      const k = look.lane * .9;
       const P = { x: s.B.x - s.ux * k, y: s.B.y - s.uy * k };
       const Q = { x: next.A.x + next.ux * k, y: next.A.y + next.uy * k };
       d += ` L ${pt(P)} C ${pt({ x: P.x + s.ux * k * 1.4, y: P.y + s.uy * k * 1.4 })} ${pt({ x: Q.x - next.ux * k * 1.4, y: Q.y - next.uy * k * 1.4 })} ${pt(Q)}`;
     } else {
       d += ` L ${pt(s.B)}`;
-      if (Math.hypot(next.A.x - s.B.x, next.A.y - s.B.y) > .5) d += ` L ${pt(next.A)}`;
     }
   });
   shapes.push({ mark: 'line', d });
-  shapes.push({ mark: 'start', d: circle(first.A.x, first.A.y, KAMEA_END_R) });
-  if (ends === 'agrippa') shapes.push({ mark: 'end', d: circle(last.B.x, last.B.y, KAMEA_END_R) });
+  shapes.push({ mark: 'start', d: circle(first.A.x, first.A.y, look.endR) });
+  if (ends === 'agrippa') shapes.push({ mark: 'end', d: circle(last.B.x, last.B.y, look.endR) });
   else {
     const n = { x: -last.uy * 11, y: last.ux * 11 };
     shapes.push({ mark: 'end', d: `M ${pt({ x: last.B.x + n.x, y: last.B.y + n.y })} L ${pt({ x: last.B.x - n.x, y: last.B.y - n.y })}` });
@@ -1608,8 +1637,15 @@ function paintKamea(ctx, th) {
       ctx.fillStyle = th.frame; ctx.fillText(v, p.x, p.y);
     }
   }
-  ctx.strokeStyle = th.accent; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  for (const w of km.words) for (const s of kameaShapes(w, km.ends)) { ctx.lineWidth = s.mark === 'line' ? 3.2 : 2.4; ctx.stroke(new Path2D(s.d)); }
+  const wd = kameaLook(km.grid), words = km.grid ? km.words : kameaFit(km.words);
+  ctx.strokeStyle = km.grid ? th.accent : th.ink; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (const w of words) for (const s of kameaShapes(w, km.ends, wd)) { ctx.lineWidth = s.mark === 'line' ? wd.line : wd.mark; ctx.stroke(new Path2D(s.d)); }
+  const cap = kameaCaption();
+  if (cap && !km.grid) {
+    ctx.fillStyle = th.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.font = 'italic 26px Georgia, serif'; ctx.fillText(cap.title, C, 72);
+    ctx.font = '17px Georgia, serif'; ctx.fillStyle = th.frame; ctx.fillText(cap.sub, C, SIZE - 44);
+  }
 }
 function kameaSVG(th) {
   const km = state.kamea, k = KAMEA_BY_ID[km.planet], g = kameaGeom(k), out = [];
@@ -1622,14 +1658,25 @@ function kameaSVG(th) {
     }
     out.push('</g>');
   }
-  out.push(`<g data-layer="kamea" fill="none" stroke="${th.accent}" stroke-linecap="round" stroke-linejoin="round">`);
-  km.words.forEach((w, i) => {
+  const wd = kameaLook(km.grid), words = km.grid ? km.words : kameaFit(km.words);
+  out.push(`<g data-layer="kamea" fill="none" stroke="${km.grid ? th.accent : th.ink}" stroke-linecap="round" stroke-linejoin="round">`);
+  words.forEach((w, i) => {
     out.push(`<g data-word="${i + 1}">`);
-    for (const s of kameaShapes(w, km.ends)) out.push(`<path data-mark="${s.mark}" d="${s.d}" stroke-width="${s.mark === 'line' ? 3.2 : 2.4}"/>`);
+    for (const s of kameaShapes(w, km.ends, wd)) out.push(`<path data-mark="${s.mark}" d="${s.d}" stroke-width="${s.mark === 'line' ? wd.line : wd.mark}"/>`);
     out.push('</g>');
   });
   out.push('</g>');
+  const cap = kameaCaption();
+  if (cap && !km.grid) out.push(`<g data-layer="caption" fill="${th.ink}" text-anchor="middle" font-family="Georgia, serif"><text x="${C}" y="72" font-size="26" font-style="italic">${esc(cap.title)}</text><text x="${C}" y="${SIZE - 44}" font-size="17" fill="${th.frame}">${esc(cap.sub)}</text></g>`);
   return out.join('');
+}
+// Rotulo de lamina, como en Agrippa ("Of the Spirit of Saturn")
+function kameaCaption() {
+  const km = state.kamea, k = KAMEA_BY_ID[km.planet];
+  if (!km.hebrew) return null;
+  const preset = k.names.find(n => n[2] === km.hebrew);
+  const name = preset ? preset[1] : ($('kameaName').value.trim() || km.hebrew);
+  return { title: name, sub: preset ? `${preset[0]} de ${k.name}` : `Sobre la tabla de ${k.name}` };
 }
 
 function kameaTraceFromHebrew() {

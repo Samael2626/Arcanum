@@ -449,6 +449,17 @@ check('kamea: botones con los nombres de Agrippa por planeta', Object.values(pre
 await page.selectOption('#selKameaPlanet', 'mars');
 await page.click('#kameaPresets button >> nth=0');
 check('kamea Grafiel: la app avisa de que su figura no se reproduce', await page.evaluate(() => /no sale de esta tabla/.test(document.getElementById('kameaBox').innerText)));
+// Nombres biblicos con su grafia original y vista de lamina
+await page.selectOption('#selKameaPlanet', 'saturn');
+await page.fill('#kameaName', 'Samuel');
+await page.click('#btnKameaGenerate');
+const sam = await page.evaluate(() => ({ he: state.kamea.hebrew, cells: state.kamea.words[0].map(s => s.cell).join(','), svg: buildSVG() }));
+check('kamea: Samuel se escribe שמואל (1 S 1:20), no סמול', sam.he === 'שמואל' && sam.cells === '3,4,6,1,3', `${sam.he} ${sam.cells}`);
+check('kamea: vista de lamina por defecto (sin tabla, con rotulo)', !sam.svg.includes('data-layer="kamea-grid"') && sam.svg.includes('data-layer="caption"'));
+await page.selectOption('#selKameaPlanet', 'moon');
+await page.click('#kameaPresets button >> nth=1');
+const rtl = await page.evaluate(() => { const w = kameaFit(state.kamea.words).map(ws => ws.reduce((a, q) => a + q.x, 0) / ws.length); return w; });
+check('kamea: varias palabras de derecha a izquierda (Schedbarschemoth a la derecha)', rtl.length === 2 && rtl[0] > rtl[1], rtl.map(x => x.toFixed(0)).join(' > '));
 await page.click('#btnKameaProv');
 const kprov = await page.evaluate(() => document.getElementById('provBody').innerText + '\n' + document.getElementById('kameaBox').innerText);
 await page.click('#btnProvClose');
