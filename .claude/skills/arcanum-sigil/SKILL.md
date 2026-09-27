@@ -153,7 +153,7 @@ Si falla trazabilidad, miniatura, redibujo o separación, no entregar.
 - Monograma KAROLVS de Carlomagno (desde 769): cruz de consonantes, vocales al centro [HP].
 - Agrippa, *Three Books of Occult Philosophy*, II.22: kameas [HP].
 - Golden Dawn, documentos de Rosa-Cruz: coordenadas de letras [OM].
-  - Mathers, manuscrito F *Sigils from the Rose*: círculo inicial; quiebro u onda en letras iguales seguidas; lazo donde la línea pasa por una letra del nombre (Resh en Metatron). **No prescribe marca final.**
+  - Mathers, manuscrito F *Sigils from the Rose*: círculo inicial; quiebro u onda en letras iguales seguidas; lazo donde la línea pasa por una letra del nombre (Resh en Metatron). El texto no habla de marca final, pero **sus figuras (Metatron, Elohim) acaban en barra corta**: va activada. Mirar las láminas, no solo el texto. Figuras: tarrdaniel.com `images/Manuscripts/Sigil_Metatron_Elohim.gif` y `Rose_Cross_22_Letters.gif`.
   - Documento 5=6 *The Rose Cross Lamen* + SVG de Commons: madres א arriba, ש abajo-der, מ abajo-izq; dobles פ ר ב ד ג ת כ con פ arriba-izq; zodiaco ה arriba, antihorario. Prueba: en Metatron, Teth-Resh-Vav quedan en línea (giro ~1°).
 - Claves de Salomón, *Lemegeton* y diarios de Dee: repertorios prescritos [HP].
 - Runología académica e investigación del Instituto Árni Magnússon: runas y galdrastafir [HP/investigación].

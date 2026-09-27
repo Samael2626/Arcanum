@@ -274,12 +274,25 @@ check('metatron: transliteracion consonantica = מטטרון', met.heb === 'מט
 check('metatron: gematria 314', met.g.std === 314, met.g.std + ' / gadol ' + met.g.gadol);
 check('metatron: quiebro en Teth (dos seguidas)', met.crooks === 'ט', met.crooks);
 check('metatron: lazo en Resh, giro < 3 grados', /^ר:[0-2]\.\d$/.test(met.nooses), met.nooses);
-check('metatron: circulo inicial, sin barra final por defecto', met.start === 1 && !met.end && met.line && met.noosePath === 1);
+check('metatron: circulo inicial y barra final por defecto (figura del manuscrito)', met.start === 1 && met.end && met.line && met.noosePath === 1);
 check('rosa: determinista, diagrama con 22 letras, sin mezcla', met.det && met.heb22 >= 22 && !met.core);
 await shot('rosa-metatron');
-await page.check('#chkRosaEndBar');
-check('barra final opcional', await page.evaluate(() => buildSVG().includes('data-mark="end"')));
+check('metatron: ningun trazo apartado', await page.evaluate(() => !state.rosa.trace.some(v => v.shifted)));
 await page.uncheck('#chkRosaEndBar');
+check('barra final desactivable', await page.evaluate(() => !buildSVG().includes('data-mark="end"')));
+await page.check('#chkRosaEndBar');
+// Elohim, segunda figura del manuscrito: Alef, Lamed y He comparten eje;
+// el original lo dibuja en zigzag, asi que ningun trazo puede quedar tapado
+await page.fill('#rosaHebrew', 'אלהים');
+const elo = await page.evaluate(() => {
+  const t = state.rosa.trace;
+  let hidden = 0;
+  for (let k = 1; k < t.length - 1; k++) for (let j = 0; j < k; j++) if (segmentsOverlap(t[j], t[j + 1], t[k], t[k + 1])) hidden++;
+  return { path: t.map(v => v.he).join(''), shifted: t.filter(v => v.shifted).map(v => v.he).join(''), hidden };
+});
+check('elohim: recorrido א ל ה י מ como en la figura (la final ם usa el petalo de מ)', elo.path === 'אלהימ', elo.path);
+check('elohim: ningun trazo tapado (zigzag)', elo.hidden === 0 && elo.shifted === 'ה', `apartado: ${elo.shifted}`);
+await shot('rosa-elohim');
 
 // Hebreo directo y editable
 await page.fill('#rosaName', 'שדי');

@@ -287,7 +287,7 @@ q{cursor:help;font-style:italic;quotes:"«" "»"}
         <div class="field"><label for="rosaHebrew">Hebreo</label><input type="text" id="rosaHebrew" dir="rtl" lang="he" maxlength="40" placeholder="מטטרון"></div>
         <p class="helper">Puedes corregir el hebreo a mano y el trazo se actualiza. Si el nombre tiene grafía hebrea tradicional, escríbela aquí: Samuel es שמואל y Miguel es מיכאל.</p>
         <label class="check"><input type="checkbox" id="chkRosaDiagram" checked>Mostrar la Rosa</label>
-        <label class="check" title="El manuscrito F no la prescribe"><input type="checkbox" id="chkRosaEndBar">Barra final (convención moderna)</label>
+        <label class="check" title="El texto del manuscrito F no la menciona, pero sus figuras de Metatron y Elohim terminan en una barra corta"><input type="checkbox" id="chkRosaEndBar" checked>Barra final (como en las figuras del manuscrito)</label>
         <div class="info" id="rosaBox">—</div>
         <div class="row"><button class="btn-dim" id="btnRosaProv">Procedencia</button><button class="btn-dim" id="btnRosaSVG">SVG</button></div>
       </div>
@@ -621,7 +621,7 @@ const state = {
   stampSel: -1,
   view: null,
   dragging: null,
-  rosa: { name: '', method: 'consonantal', tokens: null, tokensFor: '', hebrew: '', trace: [], diagram: true, endBar: false }
+  rosa: { name: '', method: 'consonantal', tokens: null, tokensFor: '', hebrew: '', trace: [], diagram: true, endBar: true }
 };
 const newUser = () => ({ dx: 0, dy: 0, ds: 1, drot: 0, fx: false, fy: false });
 
@@ -1064,7 +1064,8 @@ function buildSVG() {
 //  [OM] Mathers (G.H. Frater D.D.C.F.), manuscrito F "Sigils from the
 //       Rose": circulo en la letra inicial y linea de letra en letra; dos
 //       letras iguales seguidas = quiebro u onda; letra del nombre por la
-//       que la linea pasa (Resh en Metatron) = lazo. No prescribe marca final.
+//       que la linea pasa (Resh en Metatron) = lazo. El texto no habla de
+//       marca final, pero sus figuras (Metatron, Elohim) acaban en barra corta.
 //  [OM] Documento 5=6 "The Rose Cross Lamen": madres; dobles en el orden
 //       Peh Resh Beth Daleth Gimel Tav Kaph; zodiaco con Heh arriba.
 //  Wikimedia Commons, Rose_Cross_Lamen.svg: posiciones y sentido
@@ -1164,6 +1165,17 @@ function gematria(heb) {
 
 // ── Trazo segun el manuscrito F ─────────────────────────────────
 const NOOSE_MAX_TURN = 15;   // grados: por debajo, la linea "pasa" recta
+const OVERLAP_SHIFT = 20;    // px que se aparta un trazo que repasa otro
+// Dos segmentos casi colineales que se solapan: uno esconderia al otro
+function segmentsOverlap(c, d, a, b) {
+  const dx = d.x - c.x, dy = d.y - c.y, l = Math.hypot(dx, dy);
+  if (l < 1) return false;
+  const ux = dx / l, uy = dy / l;
+  const off = p => Math.abs((p.x - c.x) * uy - (p.y - c.y) * ux);
+  if (off(a) > 4 || off(b) > 4) return false;
+  const t = p => (p.x - c.x) * ux + (p.y - c.y) * uy;
+  return Math.min(Math.max(t(a), t(b)), l) - Math.max(Math.min(t(a), t(b)), 0) > 10;
+}
 function roseTrace(heb) {
   const verts = [];
   for (const ch of heb) {
@@ -1172,6 +1184,17 @@ function roseTrace(heb) {
     const last = verts[verts.length - 1];
     if (last && last.he === b) { last.repeat++; continue; }
     verts.push({ ...PETALS[b], ch, repeat: 1 });
+  }
+  // Un trazo que repasa otro ya dibujado se separa un poco, como en las
+  // figuras del manuscrito (Elohim: Alef, Lamed y He comparten eje y el
+  // original los dibuja en zigzag). Sin esto la linea queda escondida.
+  for (let k = 1; k < verts.length - 1; k++) {
+    const a = verts[k], b = verts[k + 1];
+    const hides = verts.slice(0, k).some((c, j) => segmentsOverlap(c, verts[j + 1], a, b));
+    if (!hides) continue;
+    const dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy) || 1;
+    b.x += -dy / l * OVERLAP_SHIFT; b.y += dx / l * OVERLAP_SHIFT;
+    b.shifted = true;
   }
   const dirs = verts.slice(1).map((v, i) => {
     const dx = v.x - verts[i].x, dy = v.y - verts[i].y, l = Math.hypot(dx, dy) || 1;
@@ -1274,6 +1297,8 @@ function rosaTraceFromHebrew() {
   if (ro.trace.length) marks.push(`círculo en ${ro.trace[0].he} (inicio)`);
   ro.trace.filter(v => v.crook).forEach(v => marks.push(`quiebro en ${v.he} (${ROSE_INFO[v.he][0]}, ${v.repeat} veces seguidas)`));
   ro.trace.filter(v => v.noose).forEach(v => marks.push(`lazo en ${v.he} (${ROSE_INFO[v.he][0]}): la línea pasa casi recta, gira ${v.turn.toFixed(1)}°`));
+  ro.trace.filter(v => v.shifted).forEach(v => marks.push(`trazo hacia ${v.he} (${ROSE_INFO[v.he][0]}) apartado para no tapar otro`));
+  if (ro.endBar && ro.trace.length > 1) marks.push(`barra en ${ro.trace[ro.trace.length - 1].he} (final)`);
   const tokens = ro.tokens && ro.tokensFor === ro.hebrew ? ro.tokens : null;
   $('rosaBox').innerHTML =
     (ro.name ? `<div class="line"><b>Nombre</b><span>${esc(ro.name)}</span></div>` : '') +
@@ -1306,7 +1331,8 @@ function rosaProvenance() {
     '<li>Línea desde ese círculo hasta la siguiente letra, y así hasta acabar el nombre.</li>' +
     `<li>Dos letras iguales seguidas: ${cita('un quiebro u onda en la línea en ese punto', 'a crook or wave in the line at that point')}.</li>` +
     `<li>Letra del nombre por la que la línea pasa hacia otra, como Resh en Metatron: ${cita('un lazo en la línea en ese punto', 'a noose in the line at that point')}. Aquí se marca cuando la línea gira menos de 15°. ${badge('AR')}</li>` +
-    `<li>El manuscrito no pide ninguna marca al final. La barra final es una costumbre moderna y va desactivada. ${badge('RC')}</li></ol>` +
+    `<li>Final: el texto no menciona ninguna marca, pero las figuras del propio manuscrito (Metatron y Elohim) terminan en una barra corta. Va activada. ${badge('OM')}</li>` +
+    `<li>Si un trazo repasa una línea ya dibujada, se aparta un poco para que se vea, como en la figura de Elohim del manuscrito. ${badge('AR')}</li></ol>` +
     '<h3>Fuentes</h3><ul>' +
     `<li>Mathers (firmaba G.H. Frater D.D.C.F.), manuscrito F, <i title="Título original: Sigils from the Rose">Sigilos de la Rosa</i>. ${badge('OM')}</li>` +
     `<li>Aurora Dorada (Golden Dawn), grado 5=6, <i title="Título original: The Rose Cross Lamen">El Lamen de la Rosa-Cruz</i>: las tres madres; las siete dobles en el orden Pe, Resh, Bet, Dálet, Guímel, Tav y Kaf; el zodiaco con He arriba. ${badge('OM')}</li>` +
