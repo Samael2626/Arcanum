@@ -92,27 +92,6 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
 .act:not(:disabled):active{background:rgba(201,168,76,.14)}
 .act:focus-visible,.seg button:focus-visible,.opt:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 
-.sheet-wrap{position:fixed;inset:0;z-index:50;display:grid;align-items:end;background:rgba(5,4,6,.62);backdrop-filter:blur(4px)}
-.sheet{background:var(--surface);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 18px);max-height:82vh;overflow:auto;
-  width:100%;max-width:640px;margin:0 auto;animation:up .22s ease-out}
-@keyframes up{from{transform:translateY(24px);opacity:0}}
-.sheet h2{margin:0 0 4px;font-family:var(--display);font-weight:600;font-size:26px}
-.sheet .sub{margin:0 0 14px;color:var(--ivory-muted);font-size:15px}
-.opts{display:grid;gap:8px}
-.opts.grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
-.opt{display:grid;gap:4px;text-align:left;background:var(--surface-hi);border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;min-height:48px}
-.opt b{font-family:var(--display);font-size:20px;font-weight:600;color:var(--gold-light)}
-.opt span{font-size:14px;color:var(--ivory-muted);line-height:1.35}
-.opt svg{width:100%;height:78px;display:block;margin-bottom:4px}
-.opt[aria-current="true"]{border-color:var(--gold)}
-
-.reading{display:grid;grid-template-columns:minmax(0,150px) 1fr;gap:18px;align-items:start}
-.reading img{width:100%;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.6)}
-.reading img.rev{transform:rotate(180deg)}
-.reading .pos{font-family:var(--display);font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
-.reading h3{margin:2px 0 6px;font-family:var(--display);font-weight:600;font-size:30px;line-height:1.05}
-.reading p{margin:0 0 8px;color:var(--ivory-muted);line-height:1.45}
-.close{margin-top:14px;width:100%;flex:none}
 
 .menu{position:fixed;z-index:40;display:grid;gap:6px;padding:10px;min-width:260px;background:rgba(18,18,26,.97);border:1px solid var(--line);border-radius:14px;
   box-shadow:0 14px 40px rgba(0,0,0,.6);animation:pop .14s ease-out}
@@ -121,16 +100,27 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
 .menu .mh{font-family:var(--display);font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);padding:0 4px}
 .menu .mrow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .menu .act{font-size:16px;padding:6px 8px}
+.menu{max-width:calc(100vw - 16px)}
+.menu.wide{width:min(400px,calc(100vw - 16px))}
+.menu.tall{max-height:min(68vh,560px);overflow:auto}
+.menu .mrow.three{grid-template-columns:repeat(3,1fr)}
+.menu .act.wrap{white-space:normal;line-height:1.1}
+.menu .rd{font-family:var(--display);font-size:24px;font-weight:600;line-height:1.1;padding:0 4px}
+.menu .rd small{font-family:var(--body);font-size:15px;font-weight:400;color:var(--ivory-muted)}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.act.sp{display:grid;gap:2px;justify-items:center;padding:6px 4px;white-space:normal;font-size:14px;line-height:1.1}
+.act.sp svg{width:100%;height:34px}
+.act.sp[aria-current="true"]{border-color:var(--gold);background:rgba(201,168,76,.12)}
 .interp{position:absolute;left:0;top:0;z-index:4;transform:translate(-50%,-50%);min-height:52px;padding:10px 22px;border-radius:999px;cursor:pointer;
   font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:.04em;color:#1a0f06;
   background:radial-gradient(circle at 50% 35%,#F2DFA0,#C9A84C 70%,#8A6E32);border:1px solid #ECD79A;
   box-shadow:0 0 0 4px rgba(10,10,15,.55),0 0 28px rgba(237,174,48,.55);animation:breathe 2.4s ease-in-out infinite}
 @keyframes breathe{50%{box-shadow:0 0 0 4px rgba(10,10,15,.55),0 0 44px rgba(237,174,48,.8)}}
-.q{width:100%;min-height:96px;resize:vertical;background:var(--bg);color:var(--ivory);border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit;font-size:17px;margin-bottom:12px}
+.q{width:100%;min-height:72px;resize:vertical;background:var(--bg);color:var(--ivory);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:17px}
 .q:focus{outline:2px solid var(--gold);outline-offset:1px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .act.primary{background:rgba(201,168,76,.18);border-color:var(--gold)}
-.lect{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px}
+.lect{list-style:none;margin:0;padding:0 4px;display:grid;gap:8px}
 .lect li{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:baseline;border-top:1px solid var(--line);padding-top:8px}
 .lect li i{font-style:normal;font-family:var(--display);font-weight:600;font-size:20px;color:var(--gold)}
 .lect li b{font-weight:500}
@@ -139,7 +129,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 86px);transform:translateX(-50%);z-index:60;max-width:calc(100% - 32px);
   background:rgba(18,18,26,.96);border:1px solid var(--line);border-radius:10px;padding:10px 16px;font-size:15px;color:var(--gold-light);text-align:center;
   transition:opacity .25s;pointer-events:none}
-@media (max-width:420px){.reading{grid-template-columns:110px 1fr}.titles h1{font-size:21px}}
+@media (max-width:420px){.titles h1{font-size:21px}}
 </style>
 </head>
 <body>
@@ -687,7 +677,7 @@ function chooseTop(p){
 
 // ================= sacar y recoger =================
 async function deal(){
-  if (!spread){ openSpreadSheet(deal); return; }
+  if (!spread){ openSpreadMenu(document.querySelector('[data-a=deal]'), deal); return; }
   const empty = spread.pos.map((_, i) => i).filter(i => !cardAt(i));
   if (!empty.length){ toast('La tirada ya está completa'); return; }
   busy = true; refresh();
@@ -713,39 +703,38 @@ async function collect(){
   server.gather(); d.setCount(server.count()); busy = false; refresh();
 }
 
-// ================= lectura =================
-function openReading(c){
-  const pos = c.slot !== null && spread ? spread.pos[c.slot] : null;
-  sheet(`<div class="reading">
-    <img src="${img(c.data)}" alt="${c.data.name}" class="${c.reversed ? 'rev' : ''}">
-    <div>
-      <div class="pos">${pos ? `${c.slot + 1} · ${pos[3]}` : 'Fuera de la tirada'}</div>
-      <h3>${c.data.name}</h3>
-      <p>${c.reversed ? 'Invertida' : 'Al derecho'}${c.data.major ? ' · Arcano Mayor' : ''}</p>
-      <p>${pos ? pos[4] : 'Esta carta no entra en la lectura: arrástrala a una posición para que cuente.'}</p>
-      <p style="font-size:14px">La interpretación la daría el motor elegido (Tradición u Oráculo).</p>
-    </div></div><button class="act close" data-close>Cerrar</button>`);
-}
-
-// ================= panel de carta =================
+// ================= paneles: todo se abre junto a lo que se toca =================
 let menuEl = null, menuFor = null, menuClosedAt = 0;
-function showMenu(piece, html, onAction){
-  closeMenu(); menuFor = piece;
-  menuEl = document.createElement('div'); menuEl.className = 'menu'; menuEl.setAttribute('role', 'menu'); menuEl.innerHTML = html;
-  document.body.appendChild(menuEl);
-  const r = (piece.kind === 'deck' ? piece.topEl : piece.el).getBoundingClientRect(), m = menuEl.getBoundingClientRect();
+const anchorRect = a => (a.kind === 'deck' ? a.topEl : a.el || a).getBoundingClientRect();
+function showMenu(anchor, html, onAction, cls = ''){
+  closeMenu(); menuFor = anchor; toastEl.style.opacity = 0;
+  menuEl = document.createElement('div'); menuEl.className = 'menu ' + cls; menuEl.setAttribute('role', 'dialog'); menuEl.innerHTML = html;
+  document.body.appendChild(menuEl); placeMenu();
+  menuEl.addEventListener('click', e => {
+    const b = e.target.closest('[data-m]'); if (!b || b.disabled) return;
+    const t = menuEl.querySelector('textarea'), txt = t ? t.value.trim() : '';
+    closeMenu(); onAction && onAction(b.dataset.m, txt);
+  });
+  const f = menuEl.querySelector('textarea, .act:not(:disabled)'); f && f.focus({ preventScroll: true });
+}
+function placeMenu(){
+  if (!menuEl) return;
+  // offsetWidth/Height: el tamano real, sin la escala de la animacion de entrada
+  const r = anchorRect(menuFor), m = { width: menuEl.offsetWidth, height: menuEl.offsetHeight };
   let top = r.top - m.height - 10; if (top < 8) top = r.bottom + 10;
   menuEl.style.left = clamp(r.left + r.width / 2 - m.width / 2, 8, innerWidth - m.width - 8) + 'px';
   menuEl.style.top = clamp(top, 8, innerHeight - m.height - 8) + 'px';
-  menuEl.addEventListener('click', e => {
-    const b = e.target.closest('[data-m]'); if (!b || b.disabled) return;
-    closeMenu(); onAction(b.dataset.m);
-  });
-  const first = menuEl.querySelector('.act:not(:disabled)'); first && first.focus({ preventScroll: true });
 }
+function closeMenu(){ if (!menuEl) return; menuEl.remove(); menuEl = null; menuClosedAt = performance.now(); }
+// un segundo toque sobre lo mismo cierra el panel en vez de reabrirlo
+const justClosed = a => menuFor === a && performance.now() - menuClosedAt < 250;
+document.addEventListener('pointerdown', e => { if (menuEl && !menuEl.contains(e.target)) closeMenu(); }, true);
+addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+addEventListener('resize', placeMenu);   // el teclado del movil no debe cerrar la pregunta
+
+const posLabel = c => c.slot !== null && spread ? `${c.slot + 1} · ${spread.pos[c.slot][3]}` : c.aside ? 'Apartada' : 'Fuera de la tirada';
 function openMenu(c){
-  const pos = c.slot !== null && spread ? `${c.slot + 1} · ${spread.pos[c.slot][3]}` : c.aside ? 'Apartada' : 'Fuera de la tirada';
-  showMenu(c, `<div class="mh">${pos}${c.up ? ' · ' + c.data.name : ''}</div><div class="mrow">
+  showMenu(c, `<div class="mh">${posLabel(c)}${c.up ? ' · ' + c.data.name : ''}</div><div class="mrow">
     ${c.up ? '<button class="act" data-m="read">Leer</button>' : '<button class="act" data-m="reveal">Desvelar</button>'}
     <button class="act" data-m="collect">Recoger</button><button class="act" data-m="aside" ${c.aside ? 'disabled' : ''}>Sacar</button><button class="act" data-m="turn">Girar</button></div>`,
     a => {
@@ -756,6 +745,12 @@ function openMenu(c){
       else if (a === 'turn') turn(c);
     });
 }
+function openReading(c){
+  const pos = c.slot !== null && spread ? spread.pos[c.slot] : null;
+  showMenu(c, `<div class="mh">${posLabel(c)}</div>
+    <div class="rd">${c.data.name}<br><small>${c.reversed ? 'Invertida' : 'Al derecho'}${c.data.major ? ' · Arcano Mayor' : ''}</small></div>
+    <div class="mt">${pos ? pos[4] : 'No entra en la lectura: arrástrala a una posición para que cuente.'}</div>`);
+}
 function openDeckMenu(d){
   const n = server.count(), few = n < 4;
   showMenu(d, `<div class="mh">${d.def.name} · ${n}</div><div class="mrow">
@@ -763,15 +758,26 @@ function openDeckMenu(d){
     <button class="act" data-m="fan" ${n ? '' : 'disabled'}>Extender</button><button class="act" data-m="collect" ${cardsOut() ? '' : 'disabled'}>Recoger</button></div>
     <div class="mt">También con gestos: tira del canto para extender, mantén pulsado para cortar.</div>`,
     a => {
-      if (a === 'shuffle') openShuffleSheet();
+      if (a === 'shuffle') openShuffleMenu(d);
       else if (a === 'cut') autoCut();
       else if (a === 'fan') autoFan();
       else if (a === 'collect') collect();
     });
 }
-function closeMenu(){ if (!menuEl) return; menuEl.remove(); menuEl = null; menuClosedAt = performance.now(); }
-addEventListener('keydown', e => { if (e.key === 'Escape'){ closeMenu(); closeSheet(); } });
-addEventListener('resize', closeMenu);
+function openShuffleMenu(d){
+  showMenu(d, `<div class="mh">Barajar</div><div class="mrow three">
+    <button class="act" data-m="Cascada">Cascada</button><button class="act" data-m="Por encima">Por encima</button><button class="act wrap" data-m="Sobre el paño">Sobre el paño</button></div>`, shuffle);
+}
+function spreadThumb(sp){
+  const r = sp.pos.map(p => { const x = p[0] * 150, y = p[1] * 70, w = 16 * sp.s + 6, h = w * 1.7;
+    return `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="2" transform="rotate(${p[2]} ${x} ${y})" fill="#2a1016" stroke="#C9A84C" stroke-width="1.4"/>`; }).join('');
+  return `<svg viewBox="-12 -16 174 102" aria-hidden="true">${r}</svg>`;
+}
+function openSpreadMenu(anchor, then){
+  showMenu(anchor, `<div class="mh">Tirada</div><div class="sgrid">${SPREADS.map(sp =>
+    `<button class="act sp" data-m="${sp.id}" aria-current="${!!spread && spread.id === sp.id}">${spreadThumb(sp)}<span>${sp.name}</span></button>`).join('')}</div>`,
+    id => { applySpread(SPREADS.find(sp => sp.id === id)); then && then(); }, 'wide');
+}
 
 // Girar: media vuelta sobre el pano. Cambia el sentido en que se leera la carta.
 function turn(c){
@@ -812,64 +818,27 @@ function tableToScreen(x, y){
   return { x: r.width / 2 + cam.panX + K * (x - TW / 2) * f, y: r.height / 2 + cam.panY + cam.oy + K * yy * c * f };
 }
 interpEl.addEventListener('click', () => {
-  sheet(`<h2>Interpretación</h2><p class="sub">Puedes hacer una pregunta o dejar que la tirada hable sola.</p>
-    <textarea class="q" id="q" maxlength="300" placeholder="¿Qué quieres preguntar?"></textarea>
-    <div class="two"><button class="act" data-pick="skip">Sin pregunta</button><button class="act primary" data-pick="ask">Interpretar</button></div>`,
-    (v, q) => showReading(v === 'ask' ? q : ''));
-  setTimeout(() => { const q = $('q'); q && q.focus(); }, 60);
+  if (justClosed(interpEl)) return;
+  showMenu(interpEl, `<div class="mh">Interpretación</div>
+    <textarea class="q" maxlength="300" placeholder="¿Qué quieres preguntar? (opcional)" aria-label="Pregunta"></textarea>
+    <div class="two"><button class="act" data-m="skip">Sin pregunta</button><button class="act primary" data-m="ask">Interpretar</button></div>`,
+    (v, q) => showReading(v === 'ask' ? q : ''), 'wide');
 });
 function showReading(q){
   const esc = t => t.replace(/[<>&"]/g, ch => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[ch]));
   const rows = spread.pos.map((p, i) => { const c = cardAt(i);
     return `<li><i>${i + 1}</i><div><b>${c.data.name}</b>${c.reversed ? ' · invertida' : ''}<span>${p[3]}: ${p[4]}</span></div></li>`; }).join('');
-  sheet(`<h2>${spread.name}</h2><p class="sub">${q ? `«${esc(q)}»` : 'Sin pregunta'}</p><ul class="lect">${rows}</ul>
-    <p class="sub">Aquí respondería el motor elegido: Tradición, con textos fijos, u Oráculo, con IA.</p>
-    <button class="act close" data-close>Cerrar</button>`);
-}
-
-// ================= hojas =================
-let sheetEl = null;
-function sheet(html, onPick){
-  closeSheet();
-  sheetEl = document.createElement('div'); sheetEl.className = 'sheet-wrap';
-  sheetEl.innerHTML = `<div class="sheet" role="dialog">${html}</div>`;
-  sheetEl.addEventListener('click', e => {
-    if (e.target === sheetEl || e.target.closest('[data-close]')) return closeSheet();
-    const o = e.target.closest('[data-pick]');
-    if (o){ const v = o.dataset.pick, q = sheetEl.querySelector('textarea'), txt = q ? q.value.trim() : ''; closeSheet(); onPick && onPick(v, txt); }
-  });
-  document.body.appendChild(sheetEl);
-}
-function closeSheet(){ sheetEl && sheetEl.remove(); sheetEl = null; }
-function spreadThumb(sp){
-  const r = sp.pos.map((p, i) => { const x = p[0] * 150, y = p[1] * 70, w = 16 * sp.s + 6, h = w * 1.7;
-    return `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="2" transform="rotate(${p[2]} ${x} ${y})" fill="#2a1016" stroke="#C9A84C" stroke-width="1"/>`; }).join('');
-  return `<svg viewBox="-12 -16 174 102">${r}</svg>`;
-}
-function openSpreadSheet(then){
-  sheet(`<h2>Tirada</h2><p class="sub">Los huecos aparecen en el paño. Las cartas ya puestas conservan su número.</p>
-    <div class="opts grid">${SPREADS.map(s => `<button class="opt" data-pick="${s.id}" aria-current="${spread && spread.id === s.id}">${spreadThumb(s)}<b>${s.name}</b><span>${s.pos.length} ${s.pos.length > 1 ? 'cartas' : 'carta'} · ${s.desc}</span></button>`).join('')}</div>`,
-    id => { applySpread(SPREADS.find(s => s.id === id)); then && then(); });
-}
-function openShuffleSheet(){
-  sheet(`<h2>Barajar</h2><p class="sub">Cualquiera deja un orden nuevo, que fija el servidor. Cambia el gesto, no el azar.</p>
-    <div class="opts">
-      <button class="opt" data-pick="Cascada"><b>Cascada</b><span>El mazo se parte en dos mitades que se entrelazan.</span></button>
-      <button class="opt" data-pick="Por encima"><b>Por encima</b><span>Bloques del fondo pasan arriba, una y otra vez.</span></button>
-      <button class="opt" data-pick="Sobre el paño"><b>Sobre el paño</b><span>Las cartas se extienden y se revuelven con la mano.</span></button>
-    </div>`, shuffle);
+  showMenu(interpEl, `<div class="mh">${spread.name}</div><div class="mt">${q ? `«${esc(q)}»` : 'Sin pregunta'}</div><ul class="lect">${rows}</ul>
+    <div class="mt">Aquí respondería el motor elegido: Tradición, con textos fijos, u Oráculo, con IA.</div>`, null, 'wide tall');
 }
 
 // ================= acciones de la barra =================
 $('actions').addEventListener('click', e => {
-  const b = e.target.closest('.act'); if (!b || b.disabled) return;
+  const b = e.target.closest('.act'); if (!b || b.disabled || justClosed(b)) return;
   const a = b.dataset.a;
-  if (a === 'shuffle') openShuffleSheet();
-  else if (a === 'cut'){ if (fan) return toast('Junta el abanico antes de cortar'); autoCut(); }
-  else if (a === 'fan') fan ? closeFan() : autoFan();
-  else if (a === 'spread') openSpreadSheet();
+  if (a === 'fan') fan ? closeFan() : autoFan();
+  else if (a === 'spread') openSpreadMenu(b);
   else if (a === 'deal') b.dataset.mode === 'reveal' ? revealAll() : deal();
-  else if (a === 'collect') collect();
 });
 function setView(top){
   cam.tTheta = top ? 0 : 38;
@@ -997,7 +966,7 @@ function tap(pc, e){
       if (active) sendHome(active);
       activate(pc); return moveTo(pc, { x: HOME_SPOT.x, y: HOME_SPOT.y }, 520, ease.inOut);
     }
-    if (menuFor === pc && performance.now() - menuClosedAt < 250) return;
+    if (justClosed(pc)) return;
     return openDeckMenu(pc);
   }
   if (pc.kind === 'card'){
@@ -1009,7 +978,7 @@ function tap(pc, e){
       else { pc.slot = null; pc.toFront(); moveTo(pc, { y: pc.y - 150, sc: spread ? spread.s : FREE_S, rot: pc.rot + (Math.random() * 10 - 5) }, 360); }
       return refresh();
     }
-    if (menuFor === pc && performance.now() - menuClosedAt < 250) return;   // segundo toque cierra
+    if (justClosed(pc)) return;
     openMenu(pc);
   }
 }
