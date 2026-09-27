@@ -82,8 +82,12 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
 .dlabel{position:absolute;left:-90px;right:-90px;top:200px;text-align:center;transform:translateZ(.3px);
   font-family:var(--display);font-weight:600;font-size:30px;line-height:1.1;color:var(--gold-light)}
 .dlabel small{display:block;font-family:var(--body);font-weight:400;font-size:24px;color:var(--ivory-muted)}
+.pile-badge{position:absolute;right:-14px;top:-14px;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  transform:translateZ(80px);background:var(--gold-light);border:2px solid #fff2bd;color:#1b1208;
+  font-family:var(--display);font-size:22px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.65)}
 
 .bar{padding:8px 12px calc(env(safe-area-inset-bottom,0px) + 10px);border-top:1px solid var(--line);background:var(--surface)}
+.bar>.act{display:block;width:min(100%,420px);margin:0 auto}
 .bar-scroll{overflow-x:auto;scrollbar-width:none}
 .actions{display:flex;gap:6px;max-width:640px;margin:0 auto}
 .act{flex:1 1 0;background:none;border:1px solid var(--line);border-radius:10px;min-height:48px;padding:6px 4px;cursor:pointer;
@@ -92,6 +96,29 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
 .act:not(:disabled):active{background:rgba(201,168,76,.14)}
 .act:focus-visible,.seg button:focus-visible,.opt:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 
+.radial{position:fixed;inset:0;z-index:50;pointer-events:none}
+.radial .disk{position:fixed;transform:translate(-50%,-50%) scale(.76);border-radius:50%;
+  background:radial-gradient(circle,rgba(15,12,18,.98) 0 25%,rgba(18,15,22,.94) 26% 59%,rgba(8,7,11,.78) 60% 72%,transparent 73%);
+  border:1px solid rgba(201,168,76,.3);box-shadow:0 18px 70px rgba(0,0,0,.7);opacity:0;transition:transform .18s ease-out,opacity .18s}
+.radial.open .disk{transform:translate(-50%,-50%) scale(1);opacity:1}
+.rbtn,.rclose{position:fixed;pointer-events:auto;transform:translate(-50%,-50%);border-radius:50%;cursor:pointer;color:var(--gold-light)}
+.rbtn{width:76px;height:76px;padding:8px 5px;display:grid;grid-template-rows:30px auto;place-items:center;background:rgba(28,23,31,.98);
+  border:1px solid var(--line);box-shadow:0 8px 20px rgba(0,0,0,.55);font:600 12px/1.05 var(--display);
+  opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.2);
+  transition:transform .22s cubic-bezier(.2,.8,.2,1),opacity .16s;transition-delay:calc(var(--i) * 18ms)}
+.radial.open .rbtn{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.rbtn svg{width:29px;height:29px;overflow:visible}
+.rbtn svg.thumb{width:58px;height:31px}
+.rbtn span{max-width:68px;overflow-wrap:anywhere}
+.rbtn[aria-current="true"]{border-color:var(--gold);background:rgba(100,72,25,.95);box-shadow:0 0 0 2px rgba(201,168,76,.25),0 8px 20px rgba(0,0,0,.55)}
+.rbtn:disabled{opacity:.24;cursor:default}
+.rbtn:not(:disabled):active{background:rgba(201,168,76,.25)}
+.rbtn:focus-visible,.rclose:focus-visible{outline:2px solid var(--gold-light);outline-offset:3px}
+.rclose{width:52px;height:52px;display:grid;place-items:center;background:#16121b;border:1px solid var(--line);
+  box-shadow:0 7px 22px rgba(0,0,0,.6)}
+.rclose svg{width:22px;height:22px}
+.rtitle{position:fixed;z-index:1;transform:translate(-50%,-50%);width:132px;text-align:center;color:var(--gold);
+  font:600 12px/1.15 var(--display);letter-spacing:.08em;text-transform:uppercase;pointer-events:none}
 
 .menu{position:fixed;z-index:40;display:grid;gap:6px;padding:10px;min-width:260px;background:rgba(18,18,26,.97);border:1px solid var(--line);border-radius:14px;
   box-shadow:0 14px 40px rgba(0,0,0,.6);animation:pop .14s ease-out}
@@ -160,14 +187,8 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
   </div>
 </main>
 
-<nav class="bar">
-  <div class="bar-scroll">
-    <div class="actions" id="actions">
-      <button class="act" data-a="spread">Tirada</button>
-      <button class="act" data-a="fan" hidden>Juntar</button>
-      <button class="act" data-a="deal">Sacar</button>
-    </div>
-  </div>
+<nav class="bar" id="bar" hidden>
+  <button class="act" id="ctx"></button>
 </nav>
 
 <div class="toast" id="toast" style="opacity:0"></div>
@@ -231,25 +252,6 @@ const SPREADS = [
     pos: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
       .map((m, i) => { const a = -Math.PI/2 + i * Math.PI / 6; return [.5 + Math.cos(a) * .4, .5 + Math.sin(a) * .41, 0, m, `Lo que trae ${m.toLowerCase()}.`]; }) },
 ];
-
-// ================= servidor simulado: baraja y decide; el cliente solo elige posiciones =================
-const rand = n => { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; };
-const server = {
-  deck: null, order: [], rev: new Map(), drawn: [], state: 'sin barajar',
-  open(deck){ this.deck = deck; this.order = deck.cards.map((_, i) => i); this.rev = new Map(); this.drawn = []; this.state = 'sin barajar'; },
-  live(){ return this.order.filter(v => v !== null); },
-  count(){ return this.live().length; },
-  top(){ return this.order.findIndex(v => v !== null); },
-  shuffle(style){
-    const a = this.live();
-    for (let i = a.length - 1; i > 0; i--){ const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; }
-    this.order = a; a.forEach(id => this.rev.set(id, rand(2) === 1)); this.state = `barajado · ${style}`;
-  },
-  cut(n, lowerOnTop){ const a = this.live(); this.order = lowerOnTop ? a.slice(n).concat(a.slice(0, n)) : a; if (lowerOnTop) this.state = 'cortado'; },
-  take(pos){ const id = this.order[pos]; this.order[pos] = null; this.drawn.push(id); return { id, card: this.deck.cards[id], reversed: !!this.rev.get(id) }; },
-  giveBack(id){ this.drawn = this.drawn.filter(v => v !== id); this.order.push(id); },
-  gather(){ this.order = this.live().concat(this.drawn); this.drawn = []; this.state = 'recogido · sin barajar'; },
-};
 
 // ================= camara =================
 const scene = document.getElementById('scene'), table = document.getElementById('table');
@@ -351,9 +353,9 @@ class Deck extends Piece {
     super('deck');
     this.def = def; this.count = def.cards.length; this.sc = DECK_S; this.home = def.home;
     this.el.innerHTML = `<div class="dshadow"></div><div class="side s"></div><div class="side n"></div><div class="side e"></div><div class="side w"></div>
-      <div class="face back top"></div><div class="dlabel">${def.name}<small>${def.sub}</small></div>`;
+      <div class="face back top"></div><div class="pile-badge" hidden></div><div class="dlabel">${def.name}<small>${def.sub}</small></div>`;
     this.el.querySelector('.top').style.backgroundImage = def.back;
-    this.sides = [...this.el.querySelectorAll('.side')]; this.topEl = this.el.querySelector('.top'); this.label = this.el.querySelector('.dlabel');
+    this.sides = [...this.el.querySelectorAll('.side')]; this.topEl = this.el.querySelector('.top'); this.label = this.el.querySelector('.dlabel'); this.badge = this.el.querySelector('.pile-badge');
     this.setCount(this.count);
   }
   get thick(){ return Math.max(1.5, this.count * .62); }
@@ -368,74 +370,6 @@ class Deck extends Piece {
   }
 }
 
-// ================= estado de la mesa =================
-const decks = DECKS.map(d => { const k = new Deck(d); k.x = d.home.x; k.y = d.home.y; k.render(); return k; });
-let active = null, spread = null, fan = null, cutState = null, busy = false;
-const slotEls = [];
-const tableCards = () => [...pieces.values()].filter(p => p.kind === 'card' && !p.proxy && p.fanPos === null);
-const hidden = () => tableCards().filter(c => !c.aside && !c.up && !busyCard.has(c));
-const readyToRead = () => !!spread && !busy && !busyCard.size && spread.pos.every((_, i) => { const c = cardAt(i); return c && c.up; });
-const cardsOut = () => tableCards().length > 0;
-
-// ================= UI: estado, guia, toast =================
-const $ = id => document.getElementById(id);
-const statusEl = $('status'), guideEl = $('guide'), toastEl = $('toast'), interpEl = $('interp');
-let toastT = 0;
-function toast(msg){ toastEl.textContent = msg; toastEl.style.opacity = 1; clearTimeout(toastT); toastT = setTimeout(() => toastEl.style.opacity = 0, 2600); }
-function refresh(){
-  statusEl.innerHTML = active ? `<b>${active.def.name}</b> · ${server.count()} en el mazo · ${server.state}` : 'Ningún mazo en juego';
-  let g = '';
-  if (!active) g = 'Arrastra un mazo del estante al paño';
-  else if (cutState) g = 'Toca el montón que irá encima';
-  else if (fan) g = spread ? 'Arrastra cartas del abanico a la tirada, o tócalas' : 'Arrastra cartas del abanico al paño';
-  else if (!spread) g = 'Toca el mazo para barajarlo, o elige una tirada';
-  else {
-    const empty = spread.pos.length - tableCards().filter(c => c.slot !== null).length;
-    const down = tableCards().filter(c => !c.up).length;
-    g = empty ? `Extiende el mazo o pulsa Sacar · faltan ${empty}` : down ? 'Toca una carta para ver sus opciones, o pulsa Desvelar' : 'Pulsa Interpretación, en el centro del paño';
-  }
-  guideEl.textContent = g;
-  const on = !!active && !busy && !cutState;
-  for (const b of document.querySelectorAll('.act')){
-    const a = b.dataset.a;
-    b.disabled = !on || (a === 'deal' && !server.count()) || (a === 'collect' && !cardsOut() && !fan) || ((a === 'cut' || a === 'shuffle') && server.count() < 4);
-    if (a === 'spread') b.disabled = busy || !!cutState;
-    if (a === 'fan') b.hidden = !fan;
-    if (a === 'deal'){
-      // Sacar mientras falten huecos; Desvelar en cuanto la tirada este puesta
-      const reveal = hidden().length > 0 && (!spread || spread.pos.every((_, i) => cardAt(i)) || !server.count());
-      b.dataset.mode = reveal ? 'reveal' : 'deal'; b.textContent = reveal ? 'Desvelar' : 'Sacar';
-      if (reveal) b.disabled = busy || !!cutState;
-    }
-  }
-  interpEl.hidden = !readyToRead();
-  decks.forEach(d => d.el.classList.toggle('glow', d === active && !fan && !cutState && !cardsOut() && server.state.startsWith('sin')));
-}
-
-// ================= mazos: estante y juego =================
-function activate(d){
-  active = d; server.open(d.def); d.label.style.opacity = 0; refresh();
-  toast(`${d.def.name} en juego. Tócalo para barajar, cortar o extender.`);
-}
-function sendHome(d){ d.label.style.opacity = 1; moveTo(d, { x: d.home.x, y: d.home.y, rot: 0, lift: 0 }, 420); }
-function dropDeck(d, from){
-  const onShelf = d.y < SHELF_Y;
-  const locked = cardsOut() || fan || cutState;
-  if (onShelf){
-    if (d === active){
-      if (locked){ toast('Recoge las cartas antes de guardar el mazo'); return moveTo(d, { x: from.x, y: from.y, lift: 0 }, 380); }
-      active = null; spread && clearSpread(); refresh();
-    }
-    return sendHome(d);
-  }
-  if (d !== active){
-    if (active && locked){ toast('Recoge las cartas antes de cambiar de mazo'); return sendHome(d); }
-    if (active) sendHome(active);
-    activate(d);
-  }
-  moveTo(d, { x: clamp(d.x, 70, TW - 70), y: clamp(d.y, SHELF_Y + 70, TH - 70), lift: 0, tx: 0, ty: 0 }, 260);
-}
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 // ================= tiradas =================
 function slotPos(sp, i){ const [fx, fy, r] = sp.pos[i]; return { x: AREA.x + fx * AREA.w, y: AREA.y + fy * AREA.h, rot: r }; }
@@ -536,17 +470,113 @@ function fxFlash(c){
   c.fx.style.background = 'linear-gradient(100deg, transparent 30%, rgba(250,210,106,.85) 50%, transparent 70%)';
   c.fx.animate([{ opacity: 0, transform: 'translateX(-60%)' }, { opacity: 1, offset: .4 }, { opacity: 0, transform: 'translateX(60%)' }], { duration: 520 * SPEED, easing: 'ease-out' });
 }
-// ================= abanico =================
-function openFan(){
-  if (!active || !server.count()) return;
-  const d = active;
-  const cards = [];
-  server.order.forEach((id, pos) => {
-    if (id === null) return;
-    const c = new Card(d.def); c.fanPos = pos; c.sc = FAN_S; c.x = d.x; c.y = d.y; c.rot = d.rot; c.z = 1 + d.thick; c.render(); cards.push(c);
+
+
+// ================= servidor simulado: baraja y decide; el cliente solo elige posiciones =================
+// Guarda el mazo como montones independientes: cortar crea uno nuevo, unir los apila.
+const rand = n => { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; };
+const server = {
+  deck: null, piles: new Map(), rev: new Map(), drawn: [], state: 'sin barajar', seq: 0,
+  open(deck){ this.deck = deck; this.piles = new Map([['p0', deck.cards.map((_, i) => i)]]); this.rev = new Map(); this.drawn = []; this.state = 'sin barajar'; this.seq = 0; return 'p0'; },
+  live(pid){ return (this.piles.get(pid) || []).filter(v => v !== null); },
+  count(pid){ return this.live(pid).length; },
+  total(){ let n = 0; for (const k of this.piles.keys()) n += this.count(k); return n; },
+  top(pid){ return this.piles.get(pid).findIndex(v => v !== null); },
+  // posiciones vivas del monton, estables mientras el abanico este abierto
+  slots(pid){ return this.piles.get(pid).flatMap((v, i) => v === null ? [] : [i]); },
+  shuffle(pid, style){
+    const a = this.live(pid);
+    for (let i = a.length - 1; i > 0; i--){ const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; }
+    this.piles.set(pid, a); a.forEach(id => this.rev.set(id, rand(2) === 1)); this.state = `barajado · ${style}`;
+  },
+  cut(pid, n){ const a = this.live(pid), np = 'p' + (++this.seq); this.piles.set(np, a.slice(0, n)); this.piles.set(pid, a.slice(n)); this.state = 'cortado'; return np; },
+  merge(topFirst, into){ const all = topFirst.flatMap(p => this.live(p)); topFirst.forEach(p => this.piles.delete(p)); this.piles.set(into, all); },
+  take(pid, pos){ const a = this.piles.get(pid), id = a[pos]; a[pos] = null; this.drawn.push(id); return { id, card: this.deck.cards[id], reversed: !!this.rev.get(id) }; },
+  giveBack(id, pid){ this.drawn = this.drawn.filter(v => v !== id); this.piles.get(pid).push(id); },
+  gather(pid){ this.piles.set(pid, this.live(pid).concat(this.drawn)); this.drawn = []; this.state = 'recogido · sin barajar'; },
+};
+
+
+
+// ================= estado de la mesa =================
+const decks = DECKS.map(d => { const k = new Deck(d); k.x = d.home.x; k.y = d.home.y; k.render(); return k; });
+let active = null, spread = null, fan = null, busy = false, union = null;
+let piles = [];                                   // montones en juego; el primero es el mazo activo
+const slotEls = [];
+const tableCards = () => [...pieces.values()].filter(p => p.kind === 'card' && !p.proxy && p.fanPos === null);
+const hidden = () => tableCards().filter(c => !c.aside && !c.up && !busyCard.has(c));
+const readyToRead = () => !!spread && !busy && !busyCard.size && spread.pos.every((_, i) => { const c = cardAt(i); return c && c.up; });
+const cardsOut = () => tableCards().length > 0;
+const pileName = d => d === active ? d.def.name : 'Montón';
+
+// ================= UI: estado, guia, boton de contexto =================
+const $ = id => document.getElementById(id);
+const statusEl = $('status'), guideEl = $('guide'), toastEl = $('toast'), interpEl = $('interp'), barEl = $('bar'), ctxEl = $('ctx');
+let toastT = 0;
+function toast(msg){ toastEl.textContent = msg; toastEl.style.opacity = 1; clearTimeout(toastT); toastT = setTimeout(() => toastEl.style.opacity = 0, 2600); }
+function refresh(){
+  statusEl.innerHTML = active
+    ? `<b>${active.def.name}</b> · ${server.total()} en el mazo${piles.length > 1 ? ` · ${piles.length} montones` : ''} · ${server.state}`
+    : 'Ningún mazo en juego';
+  let g = '';
+  if (!active) g = 'Arrastra un mazo del estante al paño';
+  else if (union) g = `Toca los montones de abajo arriba (${union.length}/${piles.length}), o pulsa Unir automático`;
+  else if (fan) g = spread ? 'Arrastra cartas del abanico a la tirada, o tócalas' : 'Arrastra cartas del abanico al paño';
+  else if (piles.length > 1) g = 'Cada montón se toca por separado · arrastra uno sobre otro, o pulsa Unir';
+  else if (!spread) g = 'Toca el mazo para barajar, cortar o elegir tirada';
+  else {
+    const empty = spread.pos.length - tableCards().filter(c => c.slot !== null).length;
+    const down = tableCards().filter(c => !c.up).length;
+    g = empty ? `Toca el mazo y pulsa Sacar, o extiéndelo · faltan ${empty}` : down ? 'Toca una carta para ver sus opciones, o pulsa Desvelar' : 'Pulsa Interpretación, en el centro del paño';
+  }
+  guideEl.textContent = g;
+  // un solo boton abajo, y solo cuando hay un paso claro
+  let mode = null;
+  if (fan) mode = ['fan', 'Juntar'];
+  else if (union) mode = ['auto', 'Unir automático'];
+  else if (piles.length > 1) mode = ['union', 'Unir'];
+  else if (spread && hidden().length && spread.pos.every((_, i) => cardAt(i))) mode = ['reveal', 'Desvelar'];
+  barEl.hidden = !mode;
+  if (mode){ ctxEl.dataset.a = mode[0]; ctxEl.textContent = mode[1]; ctxEl.disabled = busy; }
+  interpEl.hidden = !readyToRead();
+  decks.forEach(d => d.el.classList.toggle('glow', d === active && piles.length === 1 && !fan && !cardsOut() && server.state.startsWith('sin')));
+}
+
+// ================= mazos: estante y juego =================
+function activate(d){
+  active = d; d.pid = server.open(d.def); piles = [d]; d.label.style.opacity = 0; d.setCount(server.count(d.pid)); refresh();
+  toast(`${d.def.name} en juego. Tócalo para barajar, cortar o elegir tirada.`);
+}
+function sendHome(d){ d.label.style.opacity = 1; d.setCount(d.def.cards.length); moveTo(d, { x: d.home.x, y: d.home.y, rot: 0, lift: 0 }, 420); }
+const busyTable = () => cardsOut() || fan || piles.length > 1;
+function dropDeck(d, from){
+  const inPlay = piles.includes(d);
+  // unir arrastrando: el monton soltado queda encima del otro
+  const target = inPlay && !fan && !union && piles.find(q => q !== d && Math.hypot(q.x - d.x, q.y - d.y) < CW * DECK_S * .8);
+  if (target) return mergePair(d, target);
+  if (d.y < SHELF_Y){
+    if (d === active && !busyTable()){ active = null; piles = []; spread && clearSpread(); refresh(); return sendHome(d); }
+    if (d === active){ toast('Recoge las cartas y une los montones antes de guardar el mazo'); return moveTo(d, { x: from.x, y: from.y, lift: 0, tx: 0, ty: 0 }, 380); }
+    if (!inPlay) return sendHome(d);
+  }
+  if (!inPlay){
+    if (active && busyTable()){ toast('Recoge las cartas y une los montones antes de cambiar de mazo'); return sendHome(d); }
+    if (active) sendHome(active);
+    activate(d);
+  }
+  moveTo(d, { x: clamp(d.x, 70, TW - 70), y: clamp(d.y, SHELF_Y + 70, TH - 70), lift: 0, tx: 0, ty: 0 }, 260);
+}
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+
+// ================= abanico (de cualquier monton) =================
+function openFan(pile){
+  if (!pile || !server.count(pile.pid)) return null;
+  const cards = server.slots(pile.pid).map(pos => {
+    const c = new Card(pile.def); c.fanPos = pos; c.sc = FAN_S; c.x = pile.x; c.y = pile.y; c.rot = pile.rot; c.z = 1 + pile.thick; c.render(); return c;
   });
-  d.setCount(0);
-  fan = { cards, start: { x: d.x, y: d.y } };
+  pile.setCount(0);
+  fan = { pile, cards, start: { x: pile.x, y: pile.y } };
   refresh();
   return fan;
 }
@@ -561,49 +591,50 @@ function layoutFan(end){
   });
   fan.len = len;
 }
-function autoFan(){
-  const d = active; if (!openFan()) return;
-  const endX = d.x > TW / 2 ? 58 : TW - 58, sx = d.x, sy = d.y;
-  fan.start = { x: sx, y: FAN_Y }; busy = true; refresh();
-  moveTo(d, { y: FAN_Y }, 1);
-  tween(780, v => layoutFan({ x: sx + (endX - sx) * v, y: FAN_Y }), () => { busy = false; refresh(); }, ease.out);
+function autoFan(pile){
+  if (!openFan(pile)) return;
+  const endX = pile.x > TW / 2 ? 58 : TW - 58, sx = pile.x, y = clamp(pile.y, SHELF_Y + 90, FAN_Y);
+  fan.start = { x: sx, y }; busy = true; refresh();
+  pile.y = y; pile.render();
+  tween(780, v => layoutFan({ x: sx + (endX - sx) * v, y }), () => { busy = false; refresh(); }, ease.out);
 }
 function closeFan(ms = 460){
   if (!fan) return Promise.resolve();
-  const d = active, list = fan.cards; fan = null; busy = true; refresh();
+  const d = fan.pile, list = fan.cards; fan = null; busy = true; refresh();
+  if (!list.length){ d.setCount(server.count(d.pid)); busy = false; refresh(); return Promise.resolve(); }
   return new Promise(r => {
     list.forEach((c, i) => moveTo(c, { x: d.x, y: d.y, rot: d.rot, lift: 0 }, ms, ease.inOut, (list.length - i) * 4, i === 0 ? () => {
-      list.forEach(k => k.remove()); d.setCount(server.count()); busy = false; refresh(); r();
+      list.forEach(k => k.remove()); d.setCount(server.count(d.pid)); busy = false; refresh(); r();
     } : null));
   });
 }
 function takeFromFan(c){
   fan.cards.splice(fan.cards.indexOf(c), 1);
-  c.reveal(server.take(c.fanPos)); c.fanPos = null;
-  if (!fan.cards.length) fan = null;
+  c.reveal(server.take(fan.pile.pid, c.fanPos)); c.fanPos = null;
+  if (!fan.cards.length){ fan.pile.setCount(server.count(fan.pile.pid)); fan = null; }
 }
 
 // ================= barajar: la animacion es teatro; el orden lo fija el servidor =================
-function proxies(n){
-  const d = active, out = [];
+function proxies(d, n){
+  const out = [];
   for (let i = 0; i < n; i++){ const c = new Card(d.def); c.proxy = true; c.sc = DECK_S; c.x = d.x; c.y = d.y; c.rot = d.rot; c.z = 1 + d.thick + i * .6; c.render(); out.push(c); }
   return out;
 }
-async function shuffle(style){
-  if (fan) await closeFan(300);
-  const d = active; busy = true; refresh();
+async function shuffle(d, style){
+  if (fan && fan.pile === d) await closeFan(300);
+  busy = true; refresh();
   const full = d.count; d.setCount(Math.max(2, Math.round(full * .25)));
-  const w = CW * DECK_S;
+  const w = CW * DECK_S, few = Math.min(14, Math.max(4, full));
   if (style === 'Cascada'){
-    const ps = proxies(14);
-    ps.forEach((c, i) => moveTo(c, { x: d.x + (i < 7 ? -1 : 1) * w * .62, rot: d.rot + (i < 7 ? -7 : 7), lift: 6 + (i % 7) }, 320, ease.out, 0));
+    const ps = proxies(d, few), h = few >> 1;
+    ps.forEach((c, i) => moveTo(c, { x: d.x + (i < h ? -1 : 1) * w * .62, rot: d.rot + (i < h ? -7 : 7), lift: 6 + (i % h) }, 320, ease.out, 0));
     await wait(360);
-    const order = [0,7,1,8,2,9,3,10,4,11,5,12,6,13];
-    order.forEach((k, j) => { const c = ps[k]; moveTo(c, { x: d.x, rot: d.rot, lift: 0, z: 1 + d.thick + j * .6 }, 150, ease.inOut, j * 45); });
-    await wait(14 * 45 + 200);
+    const order = ps.map((_, j) => j % 2 ? h + (j >> 1) : j >> 1).filter(k => k < ps.length);
+    order.forEach((k, j) => moveTo(ps[k], { x: d.x, rot: d.rot, lift: 0, z: 1 + d.thick + j * .6 }, 150, ease.inOut, j * 45));
+    await wait(order.length * 45 + 200);
     ps.forEach(c => c.remove());
   } else if (style === 'Por encima'){
-    const ps = proxies(12);
+    const ps = proxies(d, Math.min(12, few));
     for (let round = 0; round < 4; round++){
       const chunk = ps.slice(0, 3);
       chunk.forEach((c, i) => moveTo(c, { y: d.y - CH * DECK_S * .7, lift: 60 + i }, 170, ease.out));
@@ -615,101 +646,216 @@ async function shuffle(style){
     }
     ps.forEach(c => c.remove());
   } else {
-    const ps = proxies(18), cx = d.x, cy = clamp(d.y, SHELF_Y + 190, TH - 190);
+    const ps = proxies(d, Math.min(18, few + 4)), cx = d.x, cy = clamp(d.y, SHELF_Y + 190, TH - 190);
     ps.forEach(c => { c.base = { a: Math.random() * Math.PI * 2, r: 70 + Math.random() * 110, rot: Math.random() * 360 }; c.z = 1 + Math.random() * 6; });
     await new Promise(r => tween(reduced ? 500 : 1700, (v, u) => {
       ps.forEach(c => {
-        const spreadOut = bump(Math.min(1, u * 1.15)), a = c.base.a + u * Math.PI * 1.6;
-        c.x = cx + Math.cos(a) * c.base.r * spreadOut + (d.x - cx) * (1 - spreadOut);
-        c.y = cy + Math.sin(a) * c.base.r * .8 * spreadOut + (d.y - cy) * (1 - spreadOut);
-        c.rot = d.rot + (c.base.rot + u * 140) * spreadOut; c.render();
+        const out = bump(Math.min(1, u * 1.15)), a = c.base.a + u * Math.PI * 1.6;
+        c.x = cx + Math.cos(a) * c.base.r * out + (d.x - cx) * (1 - out);
+        c.y = cy + Math.sin(a) * c.base.r * .8 * out + (d.y - cy) * (1 - out);
+        c.rot = d.rot + (c.base.rot + u * 140) * out; c.render();
       });
     }, r, ease.linear));
     ps.forEach(c => c.remove());
   }
-  server.shuffle(style.toLowerCase());
-  d.setCount(server.count()); busy = false; refresh();
-  toast('Barajado. El servidor fija el orden; tú eliges qué posiciones sacar.');
+  server.shuffle(d.pid, style.toLowerCase());
+  d.setCount(server.count(d.pid)); busy = false; refresh();
+  toast(piles.length > 1 ? 'Montón barajado. Los demás no se tocan.' : 'Barajado. El servidor fija el orden; tú eliges qué posiciones sacar.');
 }
 
-// ================= cortar =================
-function beginCut(){
-  const d = active, n = server.count();
-  const k = Math.round(n * (.3 + Math.random() * .4));
-  const pile = new Deck(d.def); pile.label.remove(); pile.sc = DECK_S; pile.home = null;
-  pile.x = d.x; pile.y = d.y; pile.rot = d.rot; pile.z = 1 + (n - k) * .62; pile.setCount(k); pile.render();
-  d.setCount(n - k);
-  cutState = { pile, deck: d, k, stage: 'drag' };
-  refresh();
-  return pile;
+// ================= cortar y unir =================
+function newPile(from, pid, k){
+  const p = new Deck(from.def); p.label.remove(); p.home = null; p.pid = pid;
+  p.x = from.x; p.y = from.y; p.rot = from.rot; p.z = 1 + from.thick; p.setCount(k); p.render();
+  piles.push(p); return p;
 }
-function endCutDrag(){
-  const { pile, deck } = cutState;
-  if (Math.hypot(pile.x - deck.x, pile.y - deck.y) < CW * DECK_S * .9){
-    cancelCut(); return;
+function beginCut(d){
+  const n = server.count(d.pid), k = Math.round(n * (.3 + Math.random() * .4));
+  const p = newPile(d, server.cut(d.pid, k), k);
+  d.setCount(n - k); refresh();
+  return p;
+}
+function endCutDrag(p, d){
+  if (Math.hypot(p.x - d.x, p.y - d.y) < CW * DECK_S * .9){
+    // soltado encima: el corte se deshace y el orden queda como estaba
+    return moveTo(p, { x: d.x, y: d.y, lift: 0 }, 220, ease.out, 0, () => { server.merge([p.pid, d.pid], d.pid); dropPile(p); d.setCount(server.count(d.pid)); refresh(); });
   }
-  pile.z = 1; moveTo(pile, { lift: 0, tx: 0, ty: 0 }, 200);
-  cutState.stage = 'choose'; refresh();
+  p.z = 1; moveTo(p, { lift: 0, tx: 0, ty: 0 }, 200); refresh();
 }
-function cancelCut(){
-  const { pile, deck } = cutState;
-  moveTo(pile, { x: deck.x, y: deck.y, lift: 0 }, 240, ease.out, 0, () => { pile.remove(); deck.setCount(server.count()); cutState = null; refresh(); });
+function freeSpot(near){
+  const w = CW * DECK_S * 1.9;
+  for (const dx of [-w, w, -2 * w, 2 * w]){
+    const x = clamp(near.x + dx, 70, TW - 70), y = near.y;
+    if (piles.every(q => Math.hypot(q.x - x, q.y - y) > CW * DECK_S * 1.2)) return { x, y };
+  }
+  return { x: clamp(near.x, 70, TW - 70), y: clamp(near.y - CH * DECK_S * 1.3, SHELF_Y + 70, TH - 70) };
 }
-function autoCut(){
-  const d = active, pile = beginCut();
-  const tx = clamp(d.x + (d.x > TW / 2 ? -1 : 1) * CW * DECK_S * 1.9, 70, TW - 70);
+function autoCut(d){
+  const spot = freeSpot(d), p = beginCut(d);
   busy = true;
-  moveTo(pile, { lift: 50 }, 160, ease.out, 0, () => moveTo(pile, { x: tx, lift: 0 }, 360, ease.inOut, 0, () => { busy = false; pile.z = 1; cutState.stage = 'choose'; refresh(); }));
+  moveTo(p, { lift: 50 }, 160, ease.out, 0, () => moveTo(p, { x: spot.x, y: spot.y, lift: 0 }, 360, ease.inOut, 0, () => { busy = false; p.z = 1; refresh(); }));
 }
-function chooseTop(p){
-  const { pile, deck, k } = cutState;
-  const lowerOnTop = p === deck;          // el mazo es la mitad de abajo
-  const mover = p, base = p === deck ? pile : deck, target = { x: base.x, y: base.y };
-  busy = true; cutState.stage = 'merge'; refresh();
-  mover.z = 1 + base.thick;
-  moveTo(mover, { lift: 70 }, 180, ease.out, 0, () => moveTo(mover, { x: target.x, y: target.y, lift: 0 }, 340, ease.inOut, 0, () => {
-    server.cut(k, lowerOnTop);
-    deck.x = target.x; deck.y = target.y; deck.z = 1; deck.setCount(server.count()); deck.render();
-    pile.remove(); cutState = null; busy = false; refresh();
-    toast(lowerOnTop ? `Cortado: ${server.count() - k} cartas de abajo pasan arriba` : 'El montón de arriba vuelve arriba: el orden no cambia');
-  }));
+function dropPile(p){ piles = piles.filter(q => q !== p); p.remove(); }
+// apila `list` (de abajo arriba) en la posicion del primero; el servidor lo convierte en un solo monton
+async function stack(list){
+  busy = true; refresh();
+  const base = list[0], keeper = list.includes(active) ? active : base, at = { x: base.x, y: base.y, rot: base.rot };
+  let h = base.thick;
+  for (const p of list.slice(1)){
+    p.z = 1 + h;
+    await new Promise(r => moveTo(p, { lift: 60 }, 150, ease.out, 0, () => moveTo(p, { x: at.x, y: at.y, rot: at.rot, lift: 0 }, 300, ease.inOut, 0, r)));
+    h += p.thick;
+  }
+  server.merge(list.slice().reverse().map(p => p.pid), keeper.pid);
+  list.forEach(p => { if (p !== keeper) dropPile(p); p.badge && (p.badge.hidden = true); });
+  keeper.x = at.x; keeper.y = at.y; keeper.rot = at.rot; keeper.z = 1; keeper.setCount(server.count(keeper.pid)); keeper.render();
+  union = null; busy = false; refresh();
 }
+function mergePair(top, below){ stack([below, top]).then(() => toast(piles.length > 1 ? 'Montones unidos' : 'Mazo entero de nuevo')); }
+function startUnion(){ union = []; piles.forEach(p => p.badge.hidden = true); refresh(); }
+function pickUnion(p){
+  if (union.includes(p)) return;
+  union.push(p); p.badge.textContent = union.length; p.badge.hidden = false; refresh();
+  if (union.length === piles.length) stack(union).then(() => toast('Unidos en el orden que elegiste'));
+}
+function autoUnion(){
+  // corte clasico: lo que quedo abajo pasa arriba
+  const list = [...piles.filter(p => p !== active).reverse(), active];
+  stack(list).then(() => toast('Unidos: lo de abajo pasa arriba'));
+}
+function cancelUnion(){ if (!union) return; union = null; piles.forEach(p => p.badge.hidden = true); refresh(); }
 
 // ================= sacar y recoger =================
-async function deal(){
-  if (!spread){ openSpreadMenu(document.querySelector('[data-a=deal]'), deal); return; }
+async function deal(d){
+  if (!spread) return openSpreadRadial(d, () => deal(d));
   const empty = spread.pos.map((_, i) => i).filter(i => !cardAt(i));
-  if (!empty.length){ toast('La tirada ya está completa'); return; }
+  if (!empty.length) return toast('La tirada ya está completa');
   busy = true; refresh();
-  const d = active;
   const jobs = [];
   for (const [j, i] of empty.entries()){
-    const pos = server.top(); if (pos < 0) break;
-    let c = fan && fan.cards.find(k => k.fanPos === pos);
+    const pos = server.top(d.pid); if (pos < 0) break;
+    let c = fan && fan.pile === d && fan.cards.find(k => k.fanPos === pos);
     if (c) takeFromFan(c);
-    else { c = new Card(d.def); c.sc = DECK_S; c.x = d.x; c.y = d.y; c.rot = d.rot; c.z = 1 + d.thick; c.reveal(server.take(pos)); d.setCount(server.count()); c.render(); }
+    else { c = new Card(d.def); c.sc = DECK_S; c.x = d.x; c.y = d.y; c.rot = d.rot; c.z = 1 + d.thick; c.reveal(server.take(d.pid, pos)); d.setCount(server.count(d.pid)); c.render(); }
     c.lift = 30; jobs.push(place(c, i, 420, j * 110));
   }
   await Promise.all(jobs);
-  if (!fan) active.setCount(server.count());
+  if (!(fan && fan.pile === d)) d.setCount(server.count(d.pid));
   busy = false; refresh();
+  if (empty.length > jobs.length) toast('No quedan cartas en este montón');
 }
-async function collect(){
+async function collect(d){
   if (fan) await closeFan(360);
-  const d = active, list = tableCards();
+  const list = tableCards();
   busy = true; refresh();
   await Promise.all(list.map((c, i) => new Promise(r => moveTo(c, { x: d.x, y: d.y, rot: d.rot, sc: DECK_S, lift: 0 }, 420, ease.inOut, i * 30, r))));
   list.forEach(c => c.remove());
-  server.gather(); d.setCount(server.count()); busy = false; refresh();
+  server.gather(d.pid); d.setCount(server.count(d.pid)); busy = false; refresh();
 }
 
-// ================= paneles: todo se abre junto a lo que se toca =================
+// ================= menus radiales =================
+const ICON = {
+  shuffle: '<path d="M3 7h4l9 10h5M3 17h4l9-10h5"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3"/>',
+  cut: '<rect x="3" y="3" width="10" height="13" rx="1.5"/><rect x="11" y="8" width="10" height="13" rx="1.5"/>',
+  fan: '<path d="M12 21 4 9M12 21 8.5 6M12 21l3.5-15M12 21l8-12"/>',
+  spread: '<rect x="2.5" y="7" width="5.5" height="9" rx="1"/><rect x="9.25" y="4" width="5.5" height="9" rx="1"/><rect x="16" y="7" width="5.5" height="9" rx="1"/>',
+  deal: '<rect x="3" y="6" width="8" height="12" rx="1.5"/><path d="M14 12h7M18 9l3 3-3 3"/>',
+  collect: '<rect x="13" y="6" width="8" height="12" rx="1.5"/><path d="M3 12h7M7 9l3 3-3 3"/>',
+  reveal: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  read: '<path d="M3 5h6a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H3zM21 5h-6a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h7z"/>',
+  turn: '<path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 3.5v5h-5"/>',
+  aside: '<rect x="7" y="11" width="10" height="10" rx="1.5"/><path d="M12 8V2M9 5l3-3 3 3"/>',
+  riffle: '<path d="M4 5h6M4 9h6M4 13h6M14 11h6M14 15h6M14 19h6"/><path d="M10 7l4 6"/>',
+  over: '<rect x="4" y="12" width="16" height="8" rx="1.5"/><path d="M12 10V3M8.5 6.5 12 3l3.5 3.5"/>',
+  wash: '<path d="M12 12a2 2 0 1 1 2-2 5 5 0 1 1-5-5 8 8 0 1 1-6 7"/>',
+};
+const svgIcon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
 let menuEl = null, menuFor = null, menuClosedAt = 0;
 const anchorRect = a => (a.kind === 'deck' ? a.topEl : a.el || a).getBoundingClientRect();
-function showMenu(anchor, html, onAction, cls = ''){
+function closeMenu(){ if (!menuEl) return; menuEl.remove(); menuEl = null; menuClosedAt = performance.now(); }
+// un segundo toque sobre lo mismo cierra el menu en vez de reabrirlo
+const justClosed = a => menuFor === a && performance.now() - menuClosedAt < 250;
+document.addEventListener('pointerdown', e => { if (menuEl && !menuEl.contains(e.target)) closeMenu(); }, true);
+addEventListener('keydown', e => { if (e.key === 'Escape'){ closeMenu(); cancelUnion(); } });
+
+// items: [{ id, label, icon | svg, off, cur }]
+function radial(anchor, title, items, onPick){
+  closeMenu(); menuFor = anchor; toastEl.style.opacity = 0;
+  const r = anchorRect(anchor), n = items.length, R = n > 6 ? 116 : 98, pad = R + 46;
+  const cx = clamp(r.left + r.width / 2, pad, innerWidth - pad), cy = clamp(r.top + r.height / 2, pad - 6, innerHeight - pad - 16);
+  menuEl = document.createElement('div'); menuEl.className = 'radial'; menuEl.setAttribute('role', 'menu'); menuEl.setAttribute('aria-label', title);
+  menuEl.innerHTML = `<div class="disk" style="left:${cx}px;top:${cy}px;width:${(R + 78) * 2}px;height:${(R + 78) * 2}px"></div>
+    <div class="rtitle" style="left:${cx}px;top:${cy - 40}px">${title}</div>
+    <button class="rclose" style="left:${cx}px;top:${cy}px" aria-label="Cerrar">${'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>'}</button>` +
+    items.map((it, i) => {
+      const a = -Math.PI / 2 + i * 2 * Math.PI / n, x = cx + Math.cos(a) * R, y = cy + Math.sin(a) * R;
+      return `<button class="rbtn" role="menuitem" data-m="${it.id}" ${it.off ? 'disabled' : ''} aria-current="${!!it.cur}"
+        style="left:${x}px;top:${y}px;--dx:${cx - x}px;--dy:${cy - y}px;--i:${i}">${it.svg || svgIcon(it.icon)}<span>${it.label}</span></button>`;
+    }).join('');
+  document.body.appendChild(menuEl);
+  requestAnimationFrame(() => menuEl && menuEl.classList.add('open'));
+  menuEl.addEventListener('click', e => {
+    if (e.target.closest('.rclose')) return closeMenu();
+    const b = e.target.closest('[data-m]'); if (!b || b.disabled) return;
+    closeMenu(); onPick(b.dataset.m);
+  });
+  const f = menuEl.querySelector('.rbtn:not(:disabled)'); f && f.focus({ preventScroll: true });
+}
+const posLabel = c => c.slot !== null && spread ? `${c.slot + 1} · ${spread.pos[c.slot][3]}` : c.aside ? 'Apartada' : 'Fuera de la tirada';
+function openCardRadial(c){
+  radial(c, c.up ? c.data.name : posLabel(c), [
+    c.up ? { id: 'read', label: 'Leer', icon: 'read' } : { id: 'reveal', label: 'Desvelar', icon: 'reveal' },
+    { id: 'turn', label: 'Girar', icon: 'turn' },
+    { id: 'collect', label: 'Recoger', icon: 'collect' },
+    { id: 'aside', label: 'Sacar', icon: 'aside', off: c.aside },
+  ], a => {
+    if (a === 'reveal') flip(c, 0, -1);
+    else if (a === 'read') openReading(c);
+    else if (a === 'collect') collectOne(c);
+    else if (a === 'aside') setAside(c);
+    else if (a === 'turn') turn(c);
+  });
+}
+function openDeckRadial(d){
+  const n = server.count(d.pid), few = n < 4;
+  radial(d, `${pileName(d)} · ${n}`, [
+    { id: 'shuffle', label: 'Barajar', icon: 'shuffle', off: few },
+    { id: 'cut', label: 'Cortar', icon: 'cut', off: few },
+    { id: 'fan', label: 'Extender', icon: 'fan', off: !n },
+    { id: 'deal', label: 'Sacar', icon: 'deal', off: !n },
+    { id: 'collect', label: 'Recoger', icon: 'collect', off: !cardsOut() },
+    { id: 'spread', label: 'Tirada', icon: 'spread' },
+  ], a => {
+    if (a === 'shuffle') openShuffleRadial(d);
+    else if (a === 'cut') autoCut(d);
+    else if (a === 'fan') autoFan(d);
+    else if (a === 'deal') deal(d);
+    else if (a === 'collect') collect(d);
+    else if (a === 'spread') openSpreadRadial(d);
+  });
+}
+function openShuffleRadial(d){
+  radial(d, 'Barajar', [
+    { id: 'Cascada', label: 'Cascada', icon: 'riffle' },
+    { id: 'Por encima', label: 'Por encima', icon: 'over' },
+    { id: 'Sobre el paño', label: 'Sobre el paño', icon: 'wash' },
+  ], style => shuffle(d, style));
+}
+function spreadThumb(sp){
+  const r = sp.pos.map(p => { const x = p[0] * 150, y = p[1] * 70, w = 16 * sp.s + 6, h = w * 1.7;
+    return `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="2" transform="rotate(${p[2]} ${x} ${y})" fill="none" stroke="currentColor" stroke-width="5"/>`; }).join('');
+  return `<svg class="thumb" viewBox="-14 -24 178 118" aria-hidden="true">${r}</svg>`;
+}
+function openSpreadRadial(anchor, then){
+  radial(anchor, 'Tirada', SPREADS.map(sp => ({ id: sp.id, label: sp.name, svg: spreadThumb(sp), cur: spread && spread.id === sp.id })),
+    id => { applySpread(SPREADS.find(sp => sp.id === id)); then && then(); });
+}
+
+// ================= paneles de texto: Leer e Interpretacion =================
+function showPanel(anchor, html, onAction, cls = ''){
   closeMenu(); menuFor = anchor; toastEl.style.opacity = 0;
   menuEl = document.createElement('div'); menuEl.className = 'menu ' + cls; menuEl.setAttribute('role', 'dialog'); menuEl.innerHTML = html;
-  document.body.appendChild(menuEl); placeMenu();
+  document.body.appendChild(menuEl); placePanel();
   menuEl.addEventListener('click', e => {
     const b = e.target.closest('[data-m]'); if (!b || b.disabled) return;
     const t = menuEl.querySelector('textarea'), txt = t ? t.value.trim() : '';
@@ -717,68 +863,23 @@ function showMenu(anchor, html, onAction, cls = ''){
   });
   const f = menuEl.querySelector('textarea, .act:not(:disabled)'); f && f.focus({ preventScroll: true });
 }
-function placeMenu(){
-  if (!menuEl) return;
+function placePanel(){
+  if (!menuEl || !menuEl.classList.contains('menu')) return;
   // offsetWidth/Height: el tamano real, sin la escala de la animacion de entrada
   const r = anchorRect(menuFor), m = { width: menuEl.offsetWidth, height: menuEl.offsetHeight };
   let top = r.top - m.height - 10; if (top < 8) top = r.bottom + 10;
   menuEl.style.left = clamp(r.left + r.width / 2 - m.width / 2, 8, innerWidth - m.width - 8) + 'px';
   menuEl.style.top = clamp(top, 8, innerHeight - m.height - 8) + 'px';
 }
-function closeMenu(){ if (!menuEl) return; menuEl.remove(); menuEl = null; menuClosedAt = performance.now(); }
-// un segundo toque sobre lo mismo cierra el panel en vez de reabrirlo
-const justClosed = a => menuFor === a && performance.now() - menuClosedAt < 250;
-document.addEventListener('pointerdown', e => { if (menuEl && !menuEl.contains(e.target)) closeMenu(); }, true);
-addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
-addEventListener('resize', placeMenu);   // el teclado del movil no debe cerrar la pregunta
-
-const posLabel = c => c.slot !== null && spread ? `${c.slot + 1} · ${spread.pos[c.slot][3]}` : c.aside ? 'Apartada' : 'Fuera de la tirada';
-function openMenu(c){
-  showMenu(c, `<div class="mh">${posLabel(c)}${c.up ? ' · ' + c.data.name : ''}</div><div class="mrow">
-    ${c.up ? '<button class="act" data-m="read">Leer</button>' : '<button class="act" data-m="reveal">Desvelar</button>'}
-    <button class="act" data-m="collect">Recoger</button><button class="act" data-m="aside" ${c.aside ? 'disabled' : ''}>Sacar</button><button class="act" data-m="turn">Girar</button></div>`,
-    a => {
-      if (a === 'reveal') flip(c, 0, -1);
-      else if (a === 'read') openReading(c);
-      else if (a === 'collect') collectOne(c);
-      else if (a === 'aside') setAside(c);
-      else if (a === 'turn') turn(c);
-    });
-}
+addEventListener('resize', () => { if (menuEl && menuEl.classList.contains('radial')) closeMenu(); else placePanel(); });
 function openReading(c){
   const pos = c.slot !== null && spread ? spread.pos[c.slot] : null;
-  showMenu(c, `<div class="mh">${posLabel(c)}</div>
+  showPanel(c, `<div class="mh">${posLabel(c)}</div>
     <div class="rd">${c.data.name}<br><small>${c.reversed ? 'Invertida' : 'Al derecho'}${c.data.major ? ' · Arcano Mayor' : ''}</small></div>
     <div class="mt">${pos ? pos[4] : 'No entra en la lectura: arrástrala a una posición para que cuente.'}</div>`);
 }
-function openDeckMenu(d){
-  const n = server.count(), few = n < 4;
-  showMenu(d, `<div class="mh">${d.def.name} · ${n}</div><div class="mrow">
-    <button class="act" data-m="shuffle" ${few ? 'disabled' : ''}>Barajar</button><button class="act" data-m="cut" ${few ? 'disabled' : ''}>Cortar</button>
-    <button class="act" data-m="fan" ${n ? '' : 'disabled'}>Extender</button><button class="act" data-m="collect" ${cardsOut() ? '' : 'disabled'}>Recoger</button></div>
-    <div class="mt">También con gestos: tira del canto para extender, mantén pulsado para cortar.</div>`,
-    a => {
-      if (a === 'shuffle') openShuffleMenu(d);
-      else if (a === 'cut') autoCut();
-      else if (a === 'fan') autoFan();
-      else if (a === 'collect') collect();
-    });
-}
-function openShuffleMenu(d){
-  showMenu(d, `<div class="mh">Barajar</div><div class="mrow three">
-    <button class="act" data-m="Cascada">Cascada</button><button class="act" data-m="Por encima">Por encima</button><button class="act wrap" data-m="Sobre el paño">Sobre el paño</button></div>`, shuffle);
-}
-function spreadThumb(sp){
-  const r = sp.pos.map(p => { const x = p[0] * 150, y = p[1] * 70, w = 16 * sp.s + 6, h = w * 1.7;
-    return `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="2" transform="rotate(${p[2]} ${x} ${y})" fill="#2a1016" stroke="#C9A84C" stroke-width="1.4"/>`; }).join('');
-  return `<svg viewBox="-12 -16 174 102" aria-hidden="true">${r}</svg>`;
-}
-function openSpreadMenu(anchor, then){
-  showMenu(anchor, `<div class="mh">Tirada</div><div class="sgrid">${SPREADS.map(sp =>
-    `<button class="act sp" data-m="${sp.id}" aria-current="${!!spread && spread.id === sp.id}">${spreadThumb(sp)}<span>${sp.name}</span></button>`).join('')}</div>`,
-    id => { applySpread(SPREADS.find(sp => sp.id === id)); then && then(); }, 'wide');
-}
 
+// ================= acciones sobre una carta =================
 // Girar: media vuelta sobre el pano. Cambia el sentido en que se leera la carta.
 function turn(c){
   const r0 = c.rot; busyCard.add(c);
@@ -789,12 +890,12 @@ function turn(c){
     else toast('Girada: se desvelará en el otro sentido');
   }, ease.inOut);
 }
-// Recoger: vuelve al mazo, al fondo
+// Recoger: vuelve al fondo del mazo activo
 function collectOne(c){
   const d = active; busyCard.add(c); c.slot = null;
   moveTo(c, { x: d.x, y: d.y, rot: d.rot, sc: DECK_S, lift: 0 }, 420, ease.inOut, 0, () => {
-    c.remove(); busyCard.delete(c); server.giveBack(c.cid);
-    if (!fan) d.setCount(server.count());
+    c.remove(); busyCard.delete(c); server.giveBack(c.cid, d.pid);
+    if (!(fan && fan.pile === d)) d.setCount(server.count(d.pid));
     refresh(); toast('Devuelta al fondo del mazo');
   });
 }
@@ -819,7 +920,7 @@ function tableToScreen(x, y){
 }
 interpEl.addEventListener('click', () => {
   if (justClosed(interpEl)) return;
-  showMenu(interpEl, `<div class="mh">Interpretación</div>
+  showPanel(interpEl, `<div class="mh">Interpretación</div>
     <textarea class="q" maxlength="300" placeholder="¿Qué quieres preguntar? (opcional)" aria-label="Pregunta"></textarea>
     <div class="two"><button class="act" data-m="skip">Sin pregunta</button><button class="act primary" data-m="ask">Interpretar</button></div>`,
     (v, q) => showReading(v === 'ask' ? q : ''), 'wide');
@@ -828,17 +929,18 @@ function showReading(q){
   const esc = t => t.replace(/[<>&"]/g, ch => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[ch]));
   const rows = spread.pos.map((p, i) => { const c = cardAt(i);
     return `<li><i>${i + 1}</i><div><b>${c.data.name}</b>${c.reversed ? ' · invertida' : ''}<span>${p[3]}: ${p[4]}</span></div></li>`; }).join('');
-  showMenu(interpEl, `<div class="mh">${spread.name}</div><div class="mt">${q ? `«${esc(q)}»` : 'Sin pregunta'}</div><ul class="lect">${rows}</ul>
+  showPanel(interpEl, `<div class="mh">${spread.name}</div><div class="mt">${q ? `«${esc(q)}»` : 'Sin pregunta'}</div><ul class="lect">${rows}</ul>
     <div class="mt">Aquí respondería el motor elegido: Tradición, con textos fijos, u Oráculo, con IA.</div>`, null, 'wide tall');
 }
 
-// ================= acciones de la barra =================
-$('actions').addEventListener('click', e => {
-  const b = e.target.closest('.act'); if (!b || b.disabled || justClosed(b)) return;
-  const a = b.dataset.a;
-  if (a === 'fan') fan ? closeFan() : autoFan();
-  else if (a === 'spread') openSpreadMenu(b);
-  else if (a === 'deal') b.dataset.mode === 'reveal' ? revealAll() : deal();
+// ================= boton de contexto =================
+ctxEl.addEventListener('click', () => {
+  if (ctxEl.disabled) return;
+  const a = ctxEl.dataset.a;
+  if (a === 'fan') closeFan();
+  else if (a === 'union') startUnion();
+  else if (a === 'auto') autoUnion();
+  else if (a === 'reveal') revealAll();
 });
 function setView(top){
   cam.tTheta = top ? 0 : 38;
@@ -851,7 +953,6 @@ $('v-top').onclick = () => setView(true);
 const pointers = new Map(); let g = null, pinch = null, lastTap = { t: 0, x: 0, y: 0 };
 scene.addEventListener('pointerdown', e => {
   if (e.button > 0 || e.target.closest('.interp')) return;   // el boton no debe perder su clic por la captura
-  closeMenu();
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   scene.setPointerCapture(e.pointerId);
   if (pointers.size === 2){ if (g) endGesture(true); startPinch(); return; }
@@ -859,11 +960,15 @@ scene.addEventListener('pointerdown', e => {
   const el = e.target.closest('.piece'), piece = el && pieces.get(el.dataset.id);
   const p = toTable(e.clientX, e.clientY);
   g = { id: e.pointerId, piece, sx: e.clientX, sy: e.clientY, p0: p, last: p, mode: 'pending' };
-  if (!piece || busy || (piece.proxy)) { if (piece) g.piece = null; return; }
+  if (!piece || busy || piece.proxy){ if (piece) g.piece = null; return; }
   const L = piece.local(p);
-  if (piece.kind === 'deck' && piece === active && !cutState && !fan){
+  if (piece.kind === 'deck' && piles.includes(piece) && !fan && !union){
     g.edge = Math.abs(L.x) > piece.hw * .5;
-    g.lp = setTimeout(() => { if (g && g.mode === 'pending' && g.piece === active){ g.mode = 'cut'; const pl = beginCut(); pl.lift = 40; pl.render(); g.off = { x: pl.x - p.x, y: pl.y - p.y }; g.piece = pl; if (navigator.vibrate) navigator.vibrate(12); } }, 450);
+    if (server.count(piece.pid) >= 4) g.lp = setTimeout(() => {
+      if (!g || g.mode !== 'pending' || g.piece !== piece) return;
+      g.mode = 'cut'; g.src = piece; const pl = beginCut(piece); pl.lift = 40; pl.render();
+      g.off = { x: pl.x - p.x, y: pl.y - p.y }; g.piece = pl; if (navigator.vibrate) navigator.vibrate(12);
+    }, 450);
   }
   if (piece.kind === 'card' && !busyCard.has(piece)) g.corner = !piece.up && piece.fanPos === null && Math.abs(L.x) > piece.hw * .45 && Math.abs(L.y) > piece.hh * .55 ? Math.sign(L.x) : 0;
 });
@@ -879,9 +984,9 @@ scene.addEventListener('pointermove', e => {
     const pc = g.piece;
     if (!pc) g.mode = cam.zoom > 1.02 ? 'pan' : 'none';
     else if (pc.kind === 'deck'){
-      if (cutState && cutState.stage === 'choose') g.mode = 'none';
-      else if (pc === active && g.edge && !fan && !cutState) { g.mode = 'fan'; openFan(); }
-      else if (pc === active && (fan || cutState)) g.mode = 'none';
+      const inPlay = piles.includes(pc);
+      if (union || (fan && fan.pile === pc)) g.mode = 'none';
+      else if (inPlay && g.edge && !fan && server.count(pc.pid)){ g.mode = 'fan'; openFan(pc); }
       else { g.mode = 'move'; g.from = { x: pc.x, y: pc.y }; }
     } else if (pc.kind === 'card'){
       if (busyCard.has(pc)) g.mode = 'none';
@@ -893,9 +998,9 @@ scene.addEventListener('pointermove', e => {
         pc.slot = null;
       }
     }
-    if (g.piece && (g.mode === 'move' || g.mode === 'cut')){
-      g.off = g.off || { x: g.piece.x - p.x, y: g.piece.y - p.y };
-      if (g.piece.kind === 'card') g.piece.toFront();
+    if (g.piece && g.mode === 'move'){
+      g.off = { x: g.piece.x - p.x, y: g.piece.y - p.y };
+      if (g.piece.kind === 'card') g.piece.toFront(); else g.piece.z = 1 + 80;
       moveTo(g.piece, { lift: 64 }, 140);
     }
     refresh();
@@ -905,7 +1010,7 @@ scene.addEventListener('pointermove', e => {
     const vx = p.x - g.last.x, vy = p.y - g.last.y;
     pc.x = p.x + g.off.x; pc.y = p.y + g.off.y;
     pc.ty = clamp(pc.ty * .6 + vx * 1.1, -16, 16); pc.tx = clamp(pc.tx * .6 - vy * 1.1, -16, 16); pc.render();
-    if (pc.kind === 'card') { const i = nearestSlot(pc); hotSlot(i); if (i >= 0) guideEl.textContent = `${i + 1} · ${spread.pos[i][3]} — ${spread.pos[i][4]}`; }
+    if (pc.kind === 'card'){ const i = nearestSlot(pc); hotSlot(i); if (i >= 0) guideEl.textContent = `${i + 1} · ${spread.pos[i][3]} — ${spread.pos[i][4]}`; }
   } else if (g.mode === 'fan'){
     layoutFan(p);
   } else if (g.mode === 'peel'){
@@ -932,13 +1037,12 @@ function endGesture(cancel, e){
   if (G.mode === 'pending' && !cancel) return tap(pc, e);
   if (G.mode === 'move'){
     pc.tx = pc.ty = 0;
-    if (pc.kind === 'deck') dropDeck(pc, G.from);
+    if (pc.kind === 'deck'){ pc.z = 1; dropDeck(pc, G.from); }
     else dropCard(pc, G.from);
   } else if (G.mode === 'cut'){
-    endCutDrag();
+    pc.tx = pc.ty = 0; endCutDrag(pc, G.src);
   } else if (G.mode === 'fan'){
     if (!fan || fan.len < 90) closeFan(260);
-    refresh();
   } else if (G.mode === 'peel'){
     const a = Math.abs(pc.angle), dir = Math.sign(pc.angle) || -1;
     if (a > 90) flip(pc, pc.angle, dir);
@@ -949,6 +1053,7 @@ function endGesture(cancel, e){
 }
 function tap(pc, e){
   if (!pc){
+    if (union) return cancelUnion();
     const now = performance.now();
     if (now - lastTap.t < 320 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 30){
       const r = scene.getBoundingClientRect();
@@ -960,14 +1065,14 @@ function tap(pc, e){
   }
   if (busy) return;
   if (pc.kind === 'deck'){
-    if (cutState && cutState.stage === 'choose' && (pc === cutState.deck || pc === cutState.pile)) return chooseTop(pc);
-    if (pc !== active){
-      if (active && (cardsOut() || fan || cutState)) return toast('Recoge las cartas antes de cambiar de mazo');
+    if (!piles.includes(pc)){
+      if (active && busyTable()) return toast('Recoge las cartas y une los montones antes de cambiar de mazo');
       if (active) sendHome(active);
       activate(pc); return moveTo(pc, { x: HOME_SPOT.x, y: HOME_SPOT.y }, 520, ease.inOut);
     }
+    if (union) return pickUnion(pc);
     if (justClosed(pc)) return;
-    return openDeckMenu(pc);
+    return openDeckRadial(pc);
   }
   if (pc.kind === 'card'){
     if (busyCard.has(pc)) return;
@@ -979,7 +1084,7 @@ function tap(pc, e){
       return refresh();
     }
     if (justClosed(pc)) return;
-    openMenu(pc);
+    openCardRadial(pc);
   }
 }
 function startPinch(){
