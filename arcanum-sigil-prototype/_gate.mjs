@@ -362,6 +362,20 @@ for (const [name, heb, words, passes, nooses] of NETZACH) {
 // Nogah: la lamina tiene 2 trazos (נגה, sin Vav); con Vav serian 3
 check('lamina Netzach: NOGAH con Vav daria otra figura', (await traceOf('נוגה')).words[0].length === 4);
 
+// Colores del Lamen (manuscrito F): los de Metatron son los que da Mathers
+await page.check('#chkRosaColors');
+await page.fill('#rosaHebrew', 'מטטרון');
+const col = await page.evaluate(() => {
+  const s = buildSVG();
+  return { names: [...new Set(state.rosa.trace.map(v => v.he))].map(he => ROSE_COLORS[he][0]).join(', '),
+    segs: (s.match(/data-mark="segment"/g) || []).length, grads: (s.match(/<linearGradient/g) || []).length, det: s === buildSVG(),
+    synth: /cidra rojiza/.test(document.getElementById('rosaBox').innerText) };
+});
+check('rosa colores: Metatron = azul profundo, amarillo verdoso, naranja, rojo anaranjado, verde azulado (manuscrito F)',
+  col.names === 'azul profundo, amarillo verdoso, naranja, rojo anaranjado, verde azulado', col.names);
+check('rosa colores: un tramo degradado por paso, determinista, sintesis de Mathers', col.segs === 4 && col.grads === 4 && col.det && col.synth, JSON.stringify(col));
+await page.uncheck('#chkRosaColors');
+
 // Hebreo directo y editable
 await page.fill('#rosaName', 'שדי');
 await page.click('#btnRosaGenerate');

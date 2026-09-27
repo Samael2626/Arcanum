@@ -129,7 +129,7 @@ const res = await page.evaluate(({ SEED, N }) => {
   setFamily('rosa');
   for (let i = 0; i < N; i++) {
     const heb = hebrew(), endBar = rnd() < .8;
-    state.rosa.endBar = endBar;
+    state.rosa.endBar = endBar; state.rosa.colors = rnd() < .5;
     document.getElementById('rosaHebrew').value = heb;
     try { rosaTraceFromHebrew(); } catch (e) { fail('rosa', heb, 'excepcion: ' + e.message); continue; }
     stats.rosa++;
