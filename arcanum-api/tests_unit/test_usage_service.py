@@ -270,3 +270,74 @@ def test_tarot_write_failure_reverses_the_reservation(monkeypatch):
     with pytest.raises(SQLAlchemyError):
         tarot.draw_one(None, user, service, db, "tarot-retry-key")
     assert reversed_operations == [operation]
+
+
+# ── El precio por tamano de tirada (28-sep-2026) ──────────────────────────
+#
+# Hasta hoy toda operacion costaba exactamente un credito, a fuego. Una Cruz
+# Celta son diez cartas y ~2,2 veces el texto de una de tres, y se cobraba
+# igual. Lo que fijan estos tests es la contabilidad del precio variable, que
+# es donde duele equivocarse: cobrar de mas, devolver de menos, o regalar la
+# tirada cara por contar filas en vez de creditos.
+
+
+def test_una_cruz_celta_cobra_su_precio_entero():
+    db = Db(used=1, spent=(7,))
+    reserva = UsageService().reserve(
+        db, uuid4(), "oracle", "celta", {"q": "x"}, 1, cost=3
+    )
+    assert reserva.operation.source == "credit"
+    assert reserva.operation.credits_cost == 3
+    ledger = next(r for r in db.added if r.__class__.__name__ == "CreditLedger")
+    assert ledger.delta == -3, "se cobro un credito por una lectura de tres"
+
+
+def test_el_cupo_se_cuenta_en_creditos_y_no_en_lecturas():
+    # Con un credito gratis al dia, una Cruz Celta NO cabe en el cupo aunque
+    # sea la primera lectura del dia: contar filas la habria regalado.
+    db = Db(used=0, spent=(9,))
+    reserva = UsageService().reserve(
+        db, uuid4(), "oracle", "celta-primera", {"q": "x"}, 1, cost=3
+    )
+    assert reserva.operation.source == "credit"
+
+
+def test_la_tirada_de_tres_si_cabe_en_el_credito_del_dia():
+    db = Db(used=0)
+    reserva = UsageService().reserve(
+        db, uuid4(), "oracle", "tres", {"q": "x"}, 1, cost=1
+    )
+    assert reserva.operation.source == "quota"
+    assert not any(r.__class__.__name__ == "CreditLedger" for r in db.added)
+
+
+def test_sin_saldo_para_el_precio_entero_devuelve_402():
+    # Tener 2 creditos no alcanza para una lectura de 3: no se cobra a medias.
+    db = Db(used=1, spent=None)
+    with pytest.raises(HTTPException) as exc:
+        UsageService().reserve(db, uuid4(), "oracle", "corto", {"q": "x"}, 1, cost=3)
+    assert exc.value.status_code == 402
+    assert not db.added
+
+
+def test_al_fallar_se_devuelve_lo_cobrado_y_no_un_credito():
+    operacion = UsageOperation(
+        user_id=uuid4(),
+        action="oracle",
+        idempotency_key="celta-falla",
+        request_fingerprint="x",
+        state="reserved",
+        source="credit",
+        credits_cost=3,
+    )
+    operacion.id = uuid4()
+    db = Db(persisted=operacion)
+    UsageService().reverse(db, operacion)
+    ledger = next(r for r in db.added if r.__class__.__name__ == "CreditLedger")
+    assert ledger.delta == 3, "se devolvio 1 de los 3 cobrados"
+    assert operacion.state == "reversed"
+
+
+def test_un_coste_invalido_no_pasa_de_aqui():
+    with pytest.raises(ValueError):
+        UsageService().reserve(Db(used=0), uuid4(), "oracle", "k", {}, 1, cost=0)

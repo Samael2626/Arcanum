@@ -22,6 +22,7 @@ from app.api.deps import (
 )
 from app.application.services.tarot_service import TarotService, draw_cards
 from app.application.services.usage_service import UsageService
+from app.domain.reading_cost import coste_en_creditos
 from app.core.config import settings
 from app.core.security import get_current_user
 from app.db.session import get_db
@@ -131,6 +132,10 @@ def ritual_ia(
         expected_cards = [card.get("name") or card.get("slug") or "" for card in cards]
 
     is_premium = current_user.is_premium
+    # El precio sale del tamano de la tirada, no de un numero fijo: una Cruz
+    # Celta son diez cartas y ~2,2 veces el texto de una de tres. Solo lo paga
+    # la INTERPRETACION; sacar las cartas no gasta IA y sigue en `tarot`.
+    coste = coste_en_creditos(card_count)
     reservation = UsageService().reserve(
         db,
         current_user.id,
@@ -138,6 +143,7 @@ def ritual_ia(
         idempotency_key,
         body.model_dump(mode="json"),
         settings.ORACLE_PREMIUM_DAILY if is_premium else settings.ORACLE_FREE_DAILY,
+        cost=coste,
     )
     if reservation.replay:
         return reservation.operation.result

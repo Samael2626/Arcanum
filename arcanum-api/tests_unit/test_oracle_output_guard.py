@@ -448,13 +448,20 @@ def _espia_modelo(monkeypatch):
     return vistos
 
 
-def _espia_limite(monkeypatch):
-    """Devuelve la lista de cupos diarios con los que se llamo a reserve."""
+def _espia_limite(monkeypatch, costes=None):
+    """Devuelve la lista de cupos diarios con los que se llamo a reserve.
+
+    `costes`, si se pasa, recoge ademas el precio en creditos de cada reserva.
+    El parametro `cost` existe desde el 28-sep-2026: si este doble se queda con
+    la firma vieja, revienta con un TypeError que no dice nada del cupo.
+    """
     limites: list[int] = []
     operacion = SimpleNamespace(result=None)
 
-    def _reserve(_self, _db, _uid, _accion, _clave, _payload, daily_limit):
+    def _reserve(_self, _db, _uid, _accion, _clave, _payload, daily_limit, cost=1):
         limites.append(daily_limit)
+        if costes is not None:
+            costes.append(cost)
         return SimpleNamespace(operation=operacion, replay=False)
 
     monkeypatch.setattr(UsageService, "reserve", _reserve)
