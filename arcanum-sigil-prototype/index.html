@@ -157,6 +157,7 @@ q{cursor:help;font-style:italic;quotes:"«" "»"}
     <button class="fam-btn" id="famRosa" title="Motor separado: nombre transliterado al hebreo sobre la Rosa de 22 pétalos">Rosa-Cruz</button>
     <button class="fam-btn" id="famKamea" title="Cuadrado mágico del planeta (Agrippa): el nombre se traza de número en número">Kamea</button>
     <button class="fam-btn" id="famPersonal" title="Tu sigilo montado en formato de sello clásico, con planeta y metal">Sello personal</button>
+    <button class="fam-btn" id="famCompare" title="Un mismo nombre trazado con letras, Rosa-Cruz y Kamea, lado a lado">Comparar</button>
     <button class="fam-btn fam-ref" id="famSeal" title="Sellos de Agrippa y la Goetia reproducidos de su fuente. Irán a Materia; aquí quedan como referencia">Consulta: sellos históricos (irá a Materia)</button>
   </div>
 
@@ -278,6 +279,20 @@ q{cursor:help;font-style:italic;quotes:"«" "»"}
           <button class="btn-dim" id="btnPNG">PNG</button>
         </div>
         <label class="check"><input type="checkbox" id="chkTransparent">Fondo transparente al exportar</label>
+      </div>
+    </details>
+  </section>
+
+  <section id="comparePanel" hidden>
+    <details class="step" open>
+      <summary><span class="step-num">⁂</span><span class="step-title">Comparar</span></summary>
+      <div class="step-body">
+        <p class="helper">El mismo nombre trazado en los tres sistemas del taller, lado a lado. Rellena las tres pestañas con este nombre.</p>
+        <input type="text" id="compareName" maxlength="32" placeholder="Nombre. Ej.: Samuel">
+        <div class="field"><label for="selComparePlanet">Kamea</label><select id="selComparePlanet"><option value="auto" selected>Regente de hoy</option></select></div>
+        <div class="row"><button class="btn" id="btnCompare">Comparar</button></div>
+        <div class="info" id="compareBox">—</div>
+        <div class="row"><button class="btn-dim" id="btnCompareProv">Procedencia</button><button class="btn-dim" id="btnCompareSVG">SVG</button></div>
       </div>
     </details>
   </section>
@@ -701,6 +716,7 @@ function layoutLetters(active, mode, overlap) {
 // ── Estado ──────────────────────────────────────────────────────
 const state = {
   family: 'letters',
+  compare: { name: '', planet: 'sun' },
   personal: { source: 'letters', template: 'goetia', layers: [], name: '', planet: 'auto', view: 'paper', day: new Date().getDay() },
   layers: [],
   layerSel: { letters: null, personal: null },
@@ -1419,6 +1435,7 @@ function paint(ctx, opt) {
   if (state.family === 'kamea') { paintKamea(ctx, th); return; }
   if (state.family === 'seal') { paintSeal(ctx, th); return; }
   if (state.family === 'personal') { paintPersonal(ctx); return; }
+  if (state.family === 'compare') { paintCompare(ctx); return; }
   if (!state.prims.length || !state.view) return;
   const lw = Math.max(LINE_W, 2 / sc);
 
@@ -1509,6 +1526,7 @@ function buildSVG() {
   if (state.family === 'kamea') { out.push(kameaSVG(th)); out.push('</svg>'); return out.join(''); }
   if (state.family === 'seal') { out.push(sealSVG(th)); out.push('</svg>'); return out.join(''); }
   if (state.family === 'personal') return personalSVG() || out.concat('</svg>').join('');
+  if (state.family === 'compare') return compareSVG() || out.concat('</svg>').join('');
   const lay = layoutLayers(state.layers, layerCtx('letters'));
   out.push(layersSVG(lay.parts, th.ink, p => p.L.type !== 'symbol'));
   const visible = state.prims.filter(p => !p.hidden);
@@ -2538,6 +2556,103 @@ function personalProvenance() {
     '<p class="note">El SVG exportado lo declara en su descripción: sello nuevo, no histórico.</p>';
 }
 
+// ── Comparar: el mismo nombre en los tres sistemas ──────────────
+// Ejercicio 6 de la Guia Maestra: trazar un nombre con letras, Rosa-Cruz
+// y Kamea y ver por que son artefactos distintos. Usa los motores tal cual
+// (rellena sus pestanas con el nombre) y compone una lamina.
+function compareGenerate() {
+  const name = $('compareName').value.trim();
+  if (!name) { showToast('Escribe un nombre'); return; }
+  const c = state.compare;
+  c.name = name;
+  c.planet = $('selComparePlanet').value === 'auto' ? DAY_RULER[state.personal.day] : $('selComparePlanet').value;
+  // letras: el nombre entero, letras unicas, en fusion (el metodo de Spare)
+  state.method = 'unique'; state.mode = 'fusion'; state.intention = '';
+  $('intention').value = name; generate();
+  $('rosaName').value = name; rosaGenerate();
+  state.kamea.planet = c.planet; $('selKameaPlanet').value = c.planet; renderKameaPresets();
+  $('kameaName').value = name; kameaGenerate();
+  syncControls();
+  renderCompareInfo();
+  render();
+}
+function compareReady() { return state.prims.length > 0 && state.rosa.trace.length > 0 && state.kamea.words.length > 0; }
+// Cada sigilo en su recuadro, con el mismo trazo de tinta
+function compareSVG() {
+  if (!compareReady()) return null;
+  const c = state.compare, ink = '#1b1612', k = KAMEA_BY_ID[c.planet];
+  const out = [`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SIZE} ${SIZE}" width="${SIZE}" height="${SIZE}">`];
+  out.push(`<title>${esc(`${c.name} en tres sistemas`)}</title><desc>${esc(`El nombre «${c.name}» trazado con el método de la palabra (letras únicas, fusión), sobre la Rosa-Cruz de la Golden Dawn y sobre la kamea de ${k.name} de Agrippa.`)}</desc>`);
+  // mismo grosor de tinta en los tres, se escale como se escale cada uno
+  out.push('<style>.cmp *{vector-effect:non-scaling-stroke;stroke-width:4px}</style>');
+  if (!state.transparent) out.push(`<rect width="${SIZE}" height="${SIZE}" fill="#efe6d2"/>`);
+  const cells = [
+    { src: 'letters', x: 20, y: 60, title: 'Letras (Spare)', sub: state.letters.map(l => l.ch).join(' ') },
+    { src: 'rosa', x: 410, y: 60, title: 'Rosa-Cruz', sub: state.rosa.hebrew },
+    { src: 'kamea', x: 20, y: 440, title: `Kamea de ${k.name}`, sub: state.kamea.words.map(w => w.map(st => st.cell).join('·')).join(' | ') }
+  ];
+  out.push(`<text x="${C}" y="38" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="26" fill="${ink}">${esc(c.name)}</text>`);
+  for (const cell of cells) {
+    const markup = personalSourceMarkup(cell.src), b = measureMarkup(markup);
+    const box = 262, sc = Math.min(box / b.w, box / b.h, 1.6);
+    const cx = cell.x + 185, cy = cell.y + 184;
+    out.push(`<g data-layer="compare-${cell.src}">`);
+    out.push(`<rect x="${cell.x}" y="${cell.y}" width="370" height="370" rx="6" fill="none" stroke="${ink}" stroke-opacity=".18"/>`);
+    out.push(`<g class="cmp" color="${ink}" transform="translate(${f2(cx - (b.x + b.w / 2) * sc)} ${f2(cy - (b.y + b.h / 2) * sc)}) scale(${sc.toFixed(4)})">${markup}</g>`);
+    out.push(`<text x="${cell.x + 185}" y="${cell.y + 350}" text-anchor="middle" font-family="Georgia, serif" font-size="17" fill="${ink}">${esc(cell.title)}</text>`);
+    out.push(`<text x="${cell.x + 185}" y="${cell.y + 22}" text-anchor="middle" font-family="Georgia, Arial Hebrew, serif" font-size="15" fill="${ink}" fill-opacity=".7"${cell.src === 'rosa' ? ' direction="rtl"' : ''}>${esc(cell.sub)}</text>`);
+    out.push('</g>');
+  }
+  // cuarto recuadro: lo que cambia entre sistemas
+  const g = gematria(state.rosa.hebrew);
+  const notes = [
+    `Letras: ${state.letters.length} letras únicas del nombre latino.`,
+    `Hebreo: ${state.rosa.hebrew} (gematría ${g.std}).`,
+    `Rosa-Cruz: ${state.rosa.trace.length} pétalos recorridos.`,
+    `Kamea: ${state.kamea.words.flat().length} casillas de ${k.rows.length}×${k.rows.length}.`,
+    'Mismo nombre, tres artefactos:',
+    'cada sistema cifra otra cosa.'
+  ];
+  out.push(`<g data-layer="compare-notes" font-family="Georgia, serif" font-size="16" fill="${ink}">`);
+  notes.forEach((t, i) => out.push(`<text x="430" y="${490 + i * 34}"${i >= 4 ? ' font-style="italic"' : ''}>${esc(t)}</text>`));
+  out.push('</g></svg>');
+  return out.join('');
+}
+const compareImg = { key: '', img: null };
+function paintCompare(ctx) {
+  const svg = compareSVG();
+  if (!svg) {
+    ctx.fillStyle = '#8a7f72'; ctx.textAlign = 'center'; ctx.font = 'italic 22px Georgia, serif';
+    ctx.fillText('Escribe un nombre y pulsa «Comparar».', C, C);
+    return;
+  }
+  if (compareImg.key !== svg) {
+    const img = new Image();
+    img.onload = () => { compareImg.img = img; render(); };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    compareImg.key = svg;
+  }
+  if (compareImg.img && compareImg.img.complete) ctx.drawImage(compareImg.img, 0, 0, SIZE, SIZE);
+}
+function renderCompareInfo() {
+  const c = state.compare;
+  if (!compareReady()) { $('compareBox').textContent = '—'; return; }
+  const k = KAMEA_BY_ID[c.planet];
+  $('compareBox').innerHTML =
+    `<div class="line"><b>Letras</b><span>Método de la palabra: letras únicas en fusión (${state.letters.map(l => l.ch).join('')}). ${badge('OM')}</span></div>` +
+    `<div class="line"><b>Rosa-Cruz</b><span><bdi lang="he">${esc(state.rosa.hebrew)}</bdi> sobre los 22 pétalos del Lamen. ${badge('OM')}</span></div>` +
+    `<div class="line"><b>Kamea</b><span>La misma grafía hebrea sobre la tabla de ${k.name} de Agrippa. ${badge('HP')}</span></div>` +
+    `<div class="line"><b>Por qué</b><span>Spare trabaja con las letras latinas de tu intención; la Rosa-Cruz y la Kamea, con el nombre en hebreo. Las tres pestañas quedan con este nombre por si quieres seguir en una.</span></div>`;
+}
+function compareProvenance() {
+  return '<h3>El mismo nombre en tres sistemas</h3><p>Ejercicio 6 de la Guía Maestra de sigilos: trazar un nombre con los tres métodos y explicar por qué son artefactos distintos.</p><ul>' +
+    `<li>Letras: método de la palabra, letras únicas y fusión (Spare; Frater U∴D∴). ${badge('OM')}</li>` +
+    `<li>Rosa-Cruz: manuscrito F de Mathers sobre el Lamen de la Golden Dawn. ${badge('OM')}</li>` +
+    `<li>Kamea: tablas planetarias de Agrippa, libro II, cap. 22; el trazado sobre la tabla es reconstrucción. ${badge('HP')} ${badge('RC')}</li>` +
+    `<li>El paso del latín al hebreo es del taller (con grafía bíblica para los nombres que la tienen). ${badge('RC')}</li></ul>` +
+    '<p class="note">Cada motor tiene su propia procedencia en su pestaña.</p>';
+}
+
 // ── Generar ─────────────────────────────────────────────────────
 function generate() {
   const text = $('intention').value.trim();
@@ -2716,6 +2831,7 @@ function showProvenance() {
   if (state.family === 'kamea') { body.innerHTML = kameaProvenance(); $('provModal').classList.add('open'); return; }
   if (state.family === 'seal') { body.innerHTML = sealProvenance(); $('provModal').classList.add('open'); return; }
   if (state.family === 'personal') { body.innerHTML = personalProvenance(); $('provModal').classList.add('open'); return; }
+  if (state.family === 'compare') { body.innerHTML = compareProvenance(); $('provModal').classList.add('open'); return; }
   const r = state.reduction;
   if (!r) { body.innerHTML = '<p>Forja primero un sigilo.</p>'; $('provModal').classList.add('open'); return; }
   const m = MODES[state.mode];
@@ -2833,9 +2949,9 @@ function forgetSigil() {
 // ── Exportar ────────────────────────────────────────────────────
 function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); }
 function exportSVG() {
-  const ready = state.family === 'rosa' ? state.rosa.trace.length : state.family === 'kamea' ? state.kamea.words.length : state.family === 'seal' ? !!SEAL_BY_ID[state.seal.id] : state.family === 'personal' ? personalReady(state.personal.source) : state.prims.length;
+  const ready = state.family === 'rosa' ? state.rosa.trace.length : state.family === 'kamea' ? state.kamea.words.length : state.family === 'seal' ? !!SEAL_BY_ID[state.seal.id] : state.family === 'personal' ? personalReady(state.personal.source) : state.family === 'compare' ? compareReady() : state.prims.length;
   if (!ready) { showToast('Forja primero un sigilo'); return; }
-  download(new Blob([buildSVG()], { type: 'image/svg+xml' }), state.family === 'rosa' ? 'rosa-cruz.svg' : state.family === 'kamea' ? `kamea-${state.kamea.planet}.svg` : state.family === 'seal' ? `agrippa-${state.seal.id}.svg` : state.family === 'personal' ? 'sello-personal.svg' : 'sigilo.svg');
+  download(new Blob([buildSVG()], { type: 'image/svg+xml' }), state.family === 'rosa' ? 'rosa-cruz.svg' : state.family === 'kamea' ? `kamea-${state.kamea.planet}.svg` : state.family === 'seal' ? `agrippa-${state.seal.id}.svg` : state.family === 'personal' ? 'sello-personal.svg' : state.family === 'compare' ? 'comparar.svg' : 'sigilo.svg');
 }
 function exportPNG() {
   if (!state.prims.length) { showToast('Forja primero un sigilo'); return; }
@@ -2850,6 +2966,8 @@ function setFamily(f) {
   $('famKamea').classList.toggle('active', f === 'kamea');
   $('famSeal').classList.toggle('active', f === 'seal');
   $('famPersonal').classList.toggle('active', f === 'personal');
+  $('famCompare').classList.toggle('active', f === 'compare');
+  $('comparePanel').hidden = f !== 'compare';
   $('personalPanel').hidden = f !== 'personal';
   if (f === 'personal') { $('selPersonalPlanet').disabled = state.personal.source === 'kamea'; renderPersonalInfo(); }
   $('sealPanel').hidden = f !== 'seal';
@@ -2946,6 +3064,13 @@ $('famRosa').addEventListener('click', () => setFamily('rosa'));
 $('famKamea').addEventListener('click', () => setFamily('kamea'));
 $('famSeal').addEventListener('click', () => setFamily('seal'));
 $('famPersonal').addEventListener('click', () => setFamily('personal'));
+$('famCompare').addEventListener('click', () => setFamily('compare'));
+KAMEAS.forEach(k => { const o = document.createElement('option'); o.value = k.id; o.textContent = `${k.sym}\uFE0E ${k.name}`; $('selComparePlanet').append(o); });
+$('selComparePlanet').options[0].textContent = `Regente de hoy (${KAMEA_BY_ID[DAY_RULER[state.personal.day]].name})`;
+$('btnCompare').addEventListener('click', compareGenerate);
+$('compareName').addEventListener('keydown', e => { if (e.key === 'Enter') compareGenerate(); });
+$('btnCompareProv').addEventListener('click', showProvenance);
+$('btnCompareSVG').addEventListener('click', exportSVG);
 // Sello personal
 KAMEAS.forEach(k => { const o = document.createElement('option'); o.value = k.id; o.textContent = `${k.sym}\uFE0E ${k.name} (${PLANET_METAL[k.id]})`; $('selPersonalPlanet').append(o); });
 $('selPersonalPlanet').options[0].textContent = `Regente de hoy (${KAMEA_BY_ID[DAY_RULER[state.personal.day]].name})`;

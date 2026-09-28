@@ -631,6 +631,16 @@ await page.evaluate(() => { state.layers = []; addLayer('letters', 'ringHebrew')
 check('letras: anillo en hebreo', await page.evaluate(() => /[א-ת]/.test(buildSVG())));
 await page.evaluate(() => { state.layers = []; layersChanged('letters'); });
 
+// 13e) Comparar: el mismo nombre en los tres sistemas
+await page.click('#famCompare');
+await page.fill('#compareName', 'Samuel');
+await page.selectOption('#selComparePlanet', 'saturn');
+await page.click('#btnCompare');
+const cmpR = await page.evaluate(() => { const s = buildSVG(); return { det: s === buildSVG(), ok: !new DOMParser().parseFromString(s, 'image/svg+xml').querySelector('parsererror'), nan: /NaN|undefined/.test(s), cells: ['letters', 'rosa', 'kamea'].every(c => { const k = s.indexOf(`data-layer="compare-${c}"`); return k >= 0 && s.indexOf('<path', k) > k; }), heb: state.rosa.hebrew === state.kamea.hebrew && state.rosa.hebrew === 'שמואל', letters: state.letters.map(l => l.ch).join(''), planet: state.kamea.planet }; });
+check('comparar: tres sigilos del mismo nombre en una lamina', cmpR.det && cmpR.ok && !cmpR.nan && cmpR.cells, JSON.stringify(cmpR));
+check('comparar: Samuel = SAMUEL en letras y שמואל en Rosa y Kamea (Saturno)', cmpR.heb && cmpR.letters === 'SAMUEL' && cmpR.planet === 'saturn');
+await page.click('#famLetters');
+
 // 14) Todo el texto visible en espanol: sin codigos internos ni citas en ingles
 // (el original en ingles solo puede vivir en tooltips)
 const ENGLISH = /\[(HP|OM|RC|AR)\]|\b(the|with|of the|from the|Sigils|Pleasure|Practical|Basic Sigil|Lamen\.svg|Mispar|noose|crook|recognizable|pattee|botonnee)\b/i;
