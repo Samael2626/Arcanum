@@ -95,7 +95,7 @@ const res = await page.evaluate(({ SEED, N }) => {
     const act = activeLetters();
     for (let e = 0; e < int(1, 6); e++) {
       state.sel = pick(act).ch;
-      const op = pick(['rot', 'flipH', 'flipV', 'big', 'small', 'hide', 'term', 'endTerm', 'stamp', 'star', 'border']);
+      const op = pick(['rot', 'flipH', 'flipV', 'big', 'small', 'hide', 'term', 'endTerm', 'layer', 'layer', 'tweak', 'order']);
       if (op === 'rot') editSelected(u => { u.drot += pick([15, -15, 90]); }, 'girar');
       else if (op === 'flipH') editSelected(u => { u.fx = !u.fx; }, 'reflejar');
       else if (op === 'flipV') editSelected(u => { u.fy = !u.fy; }, 'reflejar');
@@ -104,15 +104,28 @@ const res = await page.evaluate(({ SEED, N }) => {
       else if (op === 'hide' && state.prims.length) toggleHidden(pick(state.prims).key);
       else if (op === 'term') { state.terminals = pick(TERMINALS).id; render(); }
       else if (op === 'endTerm') { const ends = freeEnds(state.prims.filter(p => !p.hidden)); if (ends.length) { state.endStyles[pick(ends).key] = pick(TERMINALS).id; render(); } }
-      else if (op === 'stamp') { state.stamps.push({ x: int(40, 760), y: int(40, 760), sym: pick(STAMP_CATALOG.flatMap(g => g[1])).sym, size: int(20, 120) }); render(); }
-      else if (op === 'star') { state.star.enabled = true; state.star.points = int(5, 9); render(); }
-      else if (op === 'border') { state.border = pick(['none', 'circle', 'square', 'triangle']); state.view = fitView(); render(); }
+      else if (op === 'layer') {
+        // cualquier tipo de capa, con parametros al azar
+        const type = pick(Object.keys(LAYER_TYPES));
+        const extra = type === 'symbol' ? { sym: pick(STAMP_CATALOG.flatMap(g => g[1])).sym, x: int(40, 760), y: int(40, 760), size: int(20, 120) }
+          : type === 'star' ? { points: int(5, 9), shape: pick(['sharp', 'wide']), contain: rnd() < .4, chords: rnd() < .7 }
+          : type === 'inscription' ? { text: latinWord(), pos: pick(['upperArc', 'lowerArc', 'top', 'bottom']) }
+          : type.startsWith('ring') ? { text: rnd() < .5 ? '' : latinWord(), sep: pick(['none', 'dot', 'cross']), symbol: pick(['', 'saturn', 'moon']) } : {};
+        addLayer('letters', type, extra);
+      }
+      else if (op === 'tweak' && state.layers.length) { const L = pick(state.layers); L.scale = int(40, 160); L.rot = int(0, 359); L.dx = int(-60, 60); L.dy = int(-60, 60); L.visible = rnd() < .85; render(); }
+      else if (op === 'order' && state.layers.length > 1) moveLayer('letters', pick(state.layers).id, pick([-1, 1]));
     }
     const tag = `${text} | ${state.mode}`;
     const s1 = buildSVG();
     if (s1 !== buildSVG()) fail('edicion', tag, 'no determinista tras editar');
     if (badNum(s1) || !parses(s1)) fail('edicion', tag, 'SVG roto tras editar');
     if (activeLetters().some(l => l.legible > 1 || l.legible < 0)) fail('edicion', tag, 'legibilidad fuera de 0..1');
+    // el sigilo cabe siempre en el hueco que dejan las capas de marco
+    const lay = layoutLayers(state.layers, layerCtx('letters'));
+    const half = Math.max(...state.prims.flatMap(p => primPoints(p).map(q => Math.max(Math.abs(q.x - state.view.cx), Math.abs(q.y - state.view.cy)))));
+    if (state.view.k * half * Math.SQRT2 > lay.contentR + 1) fail('capas', tag, `el sigilo se sale del hueco (${(state.view.k * half * Math.SQRT2).toFixed(0)} > ${lay.contentR.toFixed(0)})`);
+    if (lay.parts.some(p => p.R && !(p.R > 0))) fail('capas', tag, 'capa con radio no valido');
     // guardar y restaurar debe devolver exactamente el mismo signo
     const saved = JSON.parse(JSON.stringify(captureState()));
     state.intention = ''; document.getElementById('intention').value = 'otra cosa distinta'; generate();
@@ -121,7 +134,7 @@ const res = await page.evaluate(({ SEED, N }) => {
     if (s2 !== s1) fail('galeria', tag, 'restaurar no devuelve el mismo SVG');
     roundtrips++;
     // limpieza para el siguiente caso
-    Object.assign(state, { stamps: [], endStyles: {}, terminals: 'none', border: 'none' }); state.star.enabled = false;
+    Object.assign(state, { layers: [], endStyles: {}, terminals: 'none' }); state.layerSel.letters = null;
   }
   stats.roundtrips = roundtrips;
 

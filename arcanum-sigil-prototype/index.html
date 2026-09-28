@@ -77,6 +77,17 @@ textarea:focus,input[type=text]:focus,select:focus{border-color:var(--gold)}
 .seal-filter{min-height:32px;padding:2px 6px}
 .seal-filter.active{border-color:var(--gold);color:var(--gold)}
 .seal-facsimile{background:#efe6d2;height:100%;inset:0;object-fit:contain;padding:6%;position:absolute;width:100%}
+.layer-list{display:flex;flex-direction:column;gap:3px;margin:6px 0}
+.layer-row{align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:4px;display:flex;gap:4px;padding:2px 4px}
+.layer-row.sel{border-color:var(--gold)}
+.layer-row.off .layer-name{opacity:.45}
+.layer-row .layer-name{cursor:pointer;flex:1;font-size:.74rem;min-height:30px;display:flex;align-items:center}
+.layer-row .btn-dim{min-height:30px;padding:2px 7px}
+.layer-row input{accent-color:var(--gold)}
+.layer-editor{border:1px solid var(--border);border-radius:5px;margin:6px 0;padding:6px}
+.layer-editor h4{color:var(--gold);margin-bottom:4px}
+.layer-editor input[type=text]{margin:3px 0}
+.layer-presets .btn-dim{flex:1 1 22%;padding:4px}
 .stamp-group{color:var(--dim);font-size:.62rem;letter-spacing:1px;margin:6px 0 2px;text-transform:uppercase}
 .stamp-grid{display:grid;gap:3px;grid-template-columns:repeat(6,1fr);margin:2px 0}
 .stamp-btn{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--dim);cursor:pointer;font-family:'Segoe UI Symbol',serif;font-size:1.1rem;min-height:38px}
@@ -226,17 +237,18 @@ q{cursor:help;font-style:italic;quotes:"«" "»"}
     </details>
 
     <details class="step" open>
-      <summary><span class="step-num">6</span><span class="step-title">Presentación</span></summary>
+      <summary><span class="step-num">6</span><span class="step-title">Capas</span></summary>
+      <div class="step-body">
+        <p class="helper">Marcos, anillos, estrellas, inscripciones, rótulos y símbolos apilados. Cada marco se encaja dentro del anterior; con «Tamaño», «Giro» o arrastrándolo en el lienzo puedes hacer que se crucen. Las guías aparecen al arrastrar; mantén Alt para moverlo libre.</p>
+        <div id="layersHost_letters"></div>
+      </div>
+    </details>
+
+    <details class="step" open>
+      <summary><span class="step-num">7</span><span class="step-title">Presentación</span></summary>
       <div class="step-body">
         <div class="field"><label for="selTheme">Tinta</label>
           <select id="selTheme"><option value="build" selected>Construcción (papel)</option><option value="present">Presentación (oro)</option></select></div>
-        <div class="field"><label for="selBorder">Borde</label>
-          <select id="selBorder"><option value="none" selected>Sin borde</option><option value="circle">Círculo</option><option value="square">Cuadrado</option><option value="triangle">Triángulo</option><option value="ringLatin">Anillo con nombre (Goetia)</option><option value="ringHebrew">Anillo en hebreo (pentáculo)</option></select></div>
-        <div id="ringRow" hidden>
-          <input type="text" id="ringText" maxlength="40" placeholder="Texto del anillo (vacío: la intención)">
-          <div class="field"><label for="selRingSep">Separadores</label>
-            <select id="selRingSep"><option value="none">Ninguno</option><option value="dot">Puntos</option><option value="cross">Cruces</option></select></div>
-        </div>
         <details class="sub" id="subTerminals" open>
           <summary>Terminales</summary>
           <p class="helper">Remate en la punta de cada trazo libre. Elige uno para todos, o activa «Uno a uno» y toca las puntas que quieras.</p>
@@ -248,36 +260,12 @@ q{cursor:help;font-style:italic;quotes:"«" "»"}
           </div>
         </details>
         <label class="check" title="Colorea cada letra para ver de dónde sale cada trazo"><input type="checkbox" id="chkColors">Colorear letras</label>
-        <details class="sub" id="subStar">
-          <summary>Estrella ritual</summary>
-          <label class="check"><input type="checkbox" id="chkStar">Mostrar estrella</label>
-          <div class="field"><label for="selStarPoints">Puntas</label>
-            <select id="selStarPoints"><option value="5" selected>5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option></select></div>
-          <div class="field"><label for="rngStarScale">Escala</label><input type="range" id="rngStarScale" min="70" max="105" value="95"><span class="val" id="starScaleVal">95%</span></div>
-          <div class="field"><label for="rngStarRot">Rotación</label><input type="range" id="rngStarRot" min="0" max="360" value="0"><span class="val" id="starRotVal">0°</span></div>
-          <div class="field"><label for="selStarShape">Forma</label>
-            <select id="selStarShape"><option value="sharp" selected>Angulosa (geometría exacta)</option><option value="wide">Ancha (ajustable)</option></select></div>
-          <label class="check" title="Encoge el sigilo para que quepa en el polígono central de la estrella"><input type="checkbox" id="chkStarFit">Sigilo dentro de la estrella</label>
-          <div class="field" id="starInnerRow"><label for="rngStarInner">Interior</label><input type="range" id="rngStarInner" min="30" max="80" value="50"><span class="val" id="starInnerVal">50%</span></div>
-          <div class="field"><label for="rngStarThick">Grosor</label><input type="range" id="rngStarThick" min="10" max="60" value="25"><span class="val" id="starThickVal">2.5</span></div>
-          <div class="field"><label for="rngStarOpacity">Opacidad</label><input type="range" id="rngStarOpacity" min="10" max="100" value="80"><span class="val" id="starOpacityVal">80%</span></div>
-          <label class="check" title="Líneas internas del polígono estrellado (pentagrama, heptagrama, eneagrama…)"><input type="checkbox" id="chkStarChords" checked>Acordes internos</label>
-        </details>
-        <details class="sub" id="subIns">
-          <summary>Inscripción</summary>
-          <label class="check"><input type="checkbox" id="chkInscription">Mostrar inscripción</label>
-          <input type="text" id="insText" maxlength="42" placeholder="Lema, nombre o frase">
-          <div class="field"><label for="selInsPos">Posición</label>
-            <select id="selInsPos"><option value="upperArc" selected>Arco superior</option><option value="lowerArc">Arco inferior</option><option value="top">Arriba</option><option value="bottom">Abajo</option></select></div>
-          <div class="field"><label for="rngInsSize">Tamaño</label><input type="range" id="rngInsSize" min="12" max="40" value="22"><span class="val" id="insSizeVal">22</span></div>
-          <div class="field"><label for="rngInsSpacing">Espaciado</label><input type="range" id="rngInsSpacing" min="0" max="20" value="4"><span class="val" id="insSpacingVal">4</span></div>
-        </details>
         <div class="preview"><canvas id="previewCanvas" width="80" height="80"></canvas><span>Miniatura 80×80:<br>la silueta debe leerse</span></div>
       </div>
     </details>
 
     <details class="step" open>
-      <summary><span class="step-num">7</span><span class="step-title">Cargar y guardar</span></summary>
+      <summary><span class="step-num">8</span><span class="step-title">Cargar y guardar</span></summary>
       <div class="step-body">
         <div class="row">
           <button class="btn" id="btnCharge">Cargar</button>
@@ -301,18 +289,14 @@ q{cursor:help;font-style:italic;quotes:"«" "»"}
         <p class="helper">Tu sigilo, montado con la forma de un sello clásico. Es un sello nuevo y tuyo: el formato imita modelos históricos, pero no es uno de ellos.</p>
         <div class="field"><label for="selPersonalSource">Sigilo de</label>
           <select id="selPersonalSource"><option value="letters" selected>Sigilo de letras</option><option value="rosa">Rosa-Cruz</option><option value="kamea">Kamea</option></select></div>
-        <div class="field"><label for="selPersonalFormat">Formato</label>
-          <select id="selPersonalFormat"><option value="goetia" selected>Goetia (anillo con letras)</option><option value="pentaculo">Pentáculo salomónico (hebreo)</option><option value="agrippa">Lámina de Agrippa (rótulo)</option></select></div>
         <input type="text" id="personalName" maxlength="32" placeholder="Nombre del sello (si lo dejas vacío, el del sigilo)">
         <div class="field"><label for="selPersonalPlanet">Planeta</label>
           <select id="selPersonalPlanet"><option value="auto" selected>Regente de hoy</option></select></div>
         <div class="field"><label for="selPersonalView">Vista</label>
           <select id="selPersonalView"><option value="paper" selected>Papel</option><option value="metal">Grabado en su metal</option></select></div>
-        <label class="check" title="El símbolo del planeta encabeza el anillo"><input type="checkbox" id="chkPersonalSymbol" checked>Símbolo del planeta en el anillo</label>
-        <div class="field"><label for="selPersonalSep">Separadores</label>
-          <select id="selPersonalSep"><option value="none" selected>Ninguno</option><option value="dot">Puntos</option><option value="cross">Cruces</option></select></div>
-        <div class="field"><label for="selPersonalStar">Estrella interior</label>
-          <select id="selPersonalStar"><option value="0" selected>Sin estrella</option><option value="5">5 puntas</option><option value="6">6 puntas</option><option value="7">7 puntas</option><option value="8">8 puntas</option><option value="9">9 puntas</option></select></div>
+        <h4>Capas</h4>
+        <p class="helper">Las plantillas cargan un formato histórico; después puedes añadir, ordenar y cruzar capas.</p>
+        <div id="layersHost_personal"></div>
         <div class="info" id="personalBox">—</div>
         <div class="row"><button class="btn-dim" id="btnPersonalProv">Procedencia</button><button class="btn-dim" id="btnPersonalSVG">SVG</button><button class="btn-dim" id="btnPersonalPNG">PNG</button></div>
       </div>
@@ -717,7 +701,12 @@ function layoutLetters(active, mode, overlap) {
 // ── Estado ──────────────────────────────────────────────────────
 const state = {
   family: 'letters',
-  personal: { source: 'letters', format: 'goetia', name: '', planet: 'auto', view: 'paper', symbol: true, sep: 'none', star: 0, day: new Date().getDay() },
+  personal: { source: 'letters', template: 'goetia', layers: [], name: '', planet: 'auto', view: 'paper', day: new Date().getDay() },
+  layers: [],
+  layerSel: { letters: null, personal: null },
+  magnet: true,
+  grid: 'none',
+  guides: [],
   seal: { collection: 'agrippa1651', filter: 'all', id: 'saturno-sello', view: 'trace' },
   kamea: { planet: 'saturn', reduce: 'agrippa', ends: 'agrippa', grid: false, hebrew: '', words: [] },
   intention: '',
@@ -735,7 +724,6 @@ const state = {
   sel: null,
   hideMode: false,
   theme: 'build',
-  border: 'none',
   terminals: 'none',   // remate general
   termBrush: 'dot',    // remate que se pone en modo uno a uno
   termScale: 100,
@@ -743,14 +731,8 @@ const state = {
   termPick: false,
   colors: false,
   transparent: false,
-  ringText: '',
-  ringSep: 'none',
-  star: { enabled: false, points: 5, shape: 'sharp', fitInside: false, scale: 95, rotation: 0, inner: 50, thickness: 25, opacity: 80, chords: true },
-  inscription: { enabled: false, text: '', pos: 'upperArc', size: 22, spacing: 4 },
-  stamps: [],
   stampSym: '♄︎',
   stampMode: false,
-  stampSel: -1,
   view: null,
   dragging: null,
   rosa: { colors: false, name: '', method: 'consonantal', tokens: null, tokensFor: '', hebrew: '', trace: [], words: [], diagram: true, endBar: true }
@@ -798,7 +780,6 @@ function rebuild() {
 }
 
 // ── Vista: mundo -> lienzo ──────────────────────────────────────
-const BORDER_FIT = { none: { k: 1, oy: 0 }, circle: { k: .88, oy: 0 }, square: { k: .9, oy: 0 }, triangle: { k: .5, oy: 45 }, ringLatin: { k: .68, oy: 0 }, ringHebrew: { k: .66, oy: 0 } };
 function primPoints(p) {
   if (p.t === 'L') return [p.a, p.b];
   const out = [];
@@ -814,15 +795,11 @@ function fitView() {
     x0 = Math.min(x0, q.x); x1 = Math.max(x1, q.x); y0 = Math.min(y0, q.y); y1 = Math.max(y1, q.y);
   }
   if (!isFinite(x0)) return { cx: 0, cy: 0, k: CORE_R, oy: 0 };
-  const f = BORDER_FIT[state.border];
-  // con estrella, el sigilo cabe en su hueco interior
-  let kf = state.star.enabled ? Math.min(f.k, STAR_CORE_FIT) : f.k;
-  if (state.star.enabled && state.star.fitInside) {
-    // el cuadro del sigilo cabe en el poligono interior: apotema / raiz de 2
-    const g = starGeom(), n = state.star.points, rIn = Math.hypot(g.pts[1][0] - C, g.pts[1][1] - C);
-    kf = Math.min(kf, rIn * Math.cos(Math.PI / n) / Math.SQRT2 / CORE_R);
-  }
-  return { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, k: CORE_R * kf /(Math.max(x1 - x0, y1 - y0, .5) / 2), oy: f.oy };
+  // el cuadro del sigilo cabe en el hueco que dejan las capas de marco
+  const contentR = layoutLayers(state.layers, layerCtx('letters')).contentR;
+  // la media diagonal del cuadro (CORE_R * kf * raiz de 2) no pasa del hueco
+  const kf = Math.min(1, contentR * .99 / Math.SQRT2 / CORE_R);
+  return { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, k: CORE_R * kf / (Math.max(x1 - x0, y1 - y0, .5) / 2), oy: 0 };
 }
 const toCanvas = p => ({ x: C + (p.x - state.view.cx) * state.view.k, y: C + state.view.oy + (p.y - state.view.cy) * state.view.k });
 const toWorld = (x, y) => ({ x: (x - C) / state.view.k + state.view.cx, y: (y - C - state.view.oy) / state.view.k + state.view.cy });
@@ -944,105 +921,16 @@ const THEMES = {
 const LETTER_COLORS = ['#1f5fa8', '#c77700', '#2e7d32', '#8e44ad', '#b3261e', '#00838f', '#6d4c41', '#ad1457', '#558b2f', '#283593', '#e64a19', '#00695c'];
 const LINE_W = 7;
 
-// Anillo con texto, como los sellos de la Goetia (latino) y los pentaculos
-// de la Clave de Salomon (hebreo). Una sola geometria para lienzo y SVG.
-const RING_BORDERS = { ringLatin: 'latin', ringHebrew: 'hebrew' };
-const RING_SEPS = { none: null, dot: '·', cross: '✠' };
-function ringParts(kind, text, opt = {}) {
-  const hebrew = kind === 'hebrew';
-  const circles = hebrew ? [[338, 3], [328, 1.5], [258, 3]] : [[334, 4], [262, 4]];
-  let items;
-  if (hebrew) {
-    const heb = hasHebrew(text) ? cleanHebrew(text) : transliterate(text, 'consonantal').hebrew;
-    const words = heb.split(' ').filter(Boolean);
-    const sep = RING_SEPS[opt.sep || 'dot'] || '·';
-    items = words.flatMap((w, i) => [...(i ? [sep] : []), ...w]);
-  } else {
-    const letters = [...text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z]/g, '')];
-    const sep = RING_SEPS[opt.sep || 'none'];
-    items = sep ? letters.flatMap((c, i) => i ? [sep, c] : [c]) : letters;
-  }
-  if (opt.symbol) items = [opt.symbol, ...items];
-  const n = items.length || 1, r = hebrew ? 293 : 298;
-  const size = Math.max(18, Math.min(hebrew ? 34 : 40, (hebrew ? 620 : 700) / n));
-  const dir = hebrew ? -1 : 1;
-  const letters = items.map((ch, i) => {
-    const a = -90 + dir * i * 360 / n;
-    return { ch, x: C + Math.cos(rad(a)) * r, y: C + Math.sin(rad(a)) * r, rot: a + 90, size: /[☉☽☿♀♂♃♄]/.test(ch) ? size * 1.15 : size,
-      font: hebrew && /[\u05D0-\u05EA]/.test(ch) ? 'Arial Hebrew, Segoe UI, serif' : /[☉☽☿♀♂♃♄✠]/.test(ch) ? 'Segoe UI Symbol, serif' : 'Georgia, serif' };
-  });
-  return { circles, letters, innerR: circles[circles.length - 1][0] };
-}
-function ringSVGMarkup(parts, color) {
-  return `<g data-layer="ring" fill="none" stroke="${color}">${parts.circles.map(([r, w]) => `<circle cx="${C}" cy="${C}" r="${r}" stroke-width="${w}"/>`).join('')}</g>` +
-    `<g data-layer="ring-text" fill="${color}">${parts.letters.map(l => `<text transform="translate(${f2(l.x)} ${f2(l.y)}) rotate(${f2(l.rot)})" text-anchor="middle" dominant-baseline="central" font-family="${l.font}" font-size="${f2(l.size)}">${esc(l.ch)}</text>`).join('')}</g>`;
-}
-function paintRing(ctx, parts, color) {
-  ctx.save();
-  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  for (const [r, w] of parts.circles) { ctx.lineWidth = w; ctx.beginPath(); ctx.arc(C, C, r, 0, Math.PI * 2); ctx.stroke(); }
-  for (const l of parts.letters) {
-    ctx.save(); ctx.translate(l.x, l.y); ctx.rotate(rad(l.rot)); ctx.font = `${l.size}px ${l.font}`; ctx.fillText(l.ch, 0, 0); ctx.restore();
-  }
-  ctx.restore();
-}
-// Texto del anillo en Sigilo de letras: el escrito, o la intencion
-const letterRingText = () => (state.ringText || '').trim() || state.intention;
-function letterRing() {
-  const kind = RING_BORDERS[state.border];
-  return kind ? ringParts(kind, letterRingText(), { sep: state.ringSep }) : null;
-}
-
-function borderGeom() {
-  if (state.border === 'circle') return { t: 'circle', r: 335 };
-  if (state.border === 'square') return { t: 'poly', pts: [[70, 70], [730, 70], [730, 730], [70, 730]] };
-  if (state.border === 'triangle') {
-    const R = 360, cy = C + 45;
-    return { t: 'poly', pts: [-90, 30, 150].map(a => [C + Math.cos(rad(a)) * R, cy + Math.sin(rad(a)) * R]) };
-  }
-  return null;
-}
-
-// ── Marco ritual: estrella, inscripcion, estampas ───────────────
-// Capas independientes que el usuario activa a mano. No derivan de
-// las letras ni entran en su procedencia.
-const STAR_R = 345, STAR_CORE_FIT = .72;
-// Paso del poligono estrellado {n/k}: el mas agudo que sigue siendo estrella
+// ── Capas de presentacion ───────────────────────────────────────
+// Circulos, cuadrados, triangulos, anillos con nombre, estrellas,
+// inscripciones, rotulos y simbolos, apilados como capas. Las capas de
+// marco se anidan solas (cada una dentro del hueco de la anterior) y el
+// sigilo va en el hueco final; cada capa tiene ademas su tamano, giro y
+// desplazamiento para cruzarse si se quiere. Una sola geometria (lista de
+// primitivas) sirve al lienzo y al SVG.
 const STAR_STEP = { 5: 2, 6: 2, 7: 3, 8: 3, 9: 4 };
-// Radio interior de la estrella {n/k} exacta: sus lados quedan alineados
-// punta con punta (pentagrama 0,382; hexagrama 0,577...)
+// Radio interior de la estrella {n/k} exacta (pentagrama 0,382...)
 const starRatio = (n, k) => Math.cos(Math.PI * k / n) / Math.cos(Math.PI * (k - 1) / n);
-function starGeom(p = state.star, maxOuter = Infinity) {
-  const n = p.points;
-  // con anillo, la estrella vive dentro del circulo interior
-  const outer = Math.min(STAR_R * p.scale / 100, state.family === 'letters' && RING_BORDERS[state.border] ? 250 : Infinity, maxOuter);
-  const inner = p.shape === 'wide' ? Math.max(outer * p.inner / 100, CORE_R * STAR_CORE_FIT * 1.1) : outer * starRatio(n, STAR_STEP[n]);
-  const a0 = rad(p.rotation) - Math.PI / 2;
-  const pts = [];
-  for (let i = 0; i < n * 2; i++) {
-    const a = a0 + i * Math.PI / n, r = i % 2 ? inner : outer;
-    pts.push([C + Math.cos(a) * r, C + Math.sin(a) * r]);
-  }
-  const tips = pts.filter((_, i) => !(i % 2));
-  const chords = p.chords ? tips.map((t, k) => [t, tips[(k + STAR_STEP[n]) % n]]) : [];
-  return { pts, chords };
-}
-function inscriptionGeom() {
-  const p = state.inscription, txt = [...p.text.trim().toUpperCase()];
-  if (!txt.length) return [];
-  const adv = p.size * .62 + p.spacing;
-  if (p.pos === 'top' || p.pos === 'bottom') {
-    const y = p.pos === 'top' ? p.size * 1.1 : SIZE - p.size * 1.1, x0 = C - (txt.length - 1) * adv / 2;
-    return txt.map((ch, i) => ({ ch, x: x0 + i * adv, y, rot: 0 }));
-  }
-  const R = STAR_R + p.size * .9, arc = Math.min(2.4, txt.length * adv / R), lower = p.pos === 'lowerArc';
-  return txt.map((ch, i) => {
-    const t = txt.length === 1 ? .5 : i / (txt.length - 1);
-    // arco inferior: se lee de izquierda a derecha
-    const a = lower ? Math.PI / 2 + arc / 2 - arc * t : -Math.PI / 2 - arc / 2 + arc * t;
-    return { ch, x: C + Math.cos(a) * R, y: C + Math.sin(a) * R, rot: lower ? a - Math.PI / 2 : a + Math.PI / 2 };
-  });
-}
 // Simbolos arcanos. Solo los 7 planetas clasicos, como el resto de
 // ARCANUM (orden caldeo). U+FE0E fuerza glifo de texto, no emoji.
 const STAMP_CATALOG = [
@@ -1055,65 +943,456 @@ const STAMP_CATALOG = [
 ].map(([group, items]) => [group, items.map(([s, name]) => ({ sym: s + '︎', name }))]);
 const STAMP_NAMES = Object.fromEntries(STAMP_CATALOG.flatMap(([, items]) => items.map(i => [i.sym, i.name])));
 const STAMP_SIZE = 56;
+const RING_SEPS = { none: null, dot: '·', cross: '✠' };
+const PLANET_GLYPH = { saturn: '♄', jupiter: '♃', mars: '♂', sun: '☉', venus: '♀', mercury: '☿', moon: '☽' };
+const SYMBOL_FONT = 'Segoe UI Symbol, serif';
 
-function paintFrame(ctx, th, lw) {
-  if (state.star.enabled) {
-    const g = starGeom(), p = state.star;
-    ctx.save();
-    ctx.strokeStyle = th.frame; ctx.globalAlpha = p.opacity / 100; ctx.lineWidth = p.thickness / 10 * (lw / LINE_W);
-    ctx.beginPath(); ctx.moveTo(...g.pts[0]); g.pts.slice(1).forEach(q => ctx.lineTo(...q)); ctx.closePath(); ctx.stroke();
-    ctx.globalAlpha = p.opacity / 180; ctx.lineWidth /= 2;
-    g.chords.forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); });
-    ctx.restore();
-  }
-  if (state.inscription.enabled) {
-    ctx.save();
-    ctx.fillStyle = th.frame; ctx.font = state.inscription.size + 'px Georgia, serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    for (const c of inscriptionGeom()) { ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.rot); ctx.fillText(c.ch, 0, 0); ctx.restore(); }
-    ctx.restore();
-  }
+const LAYER_TYPES = {
+  circle: { label: 'Círculo', nested: true },
+  square: { label: 'Cuadrado', nested: true },
+  triangle: { label: 'Triángulo', nested: true },
+  ringLatin: { label: 'Anillo latino', nested: true },
+  ringHebrew: { label: 'Anillo hebreo', nested: true },
+  star: { label: 'Estrella', nested: true },
+  inscription: { label: 'Inscripción', nested: true },
+  caption: { label: 'Rótulo', nested: false },
+  symbol: { label: 'Símbolo', nested: false }
+};
+const LAYER_DEFAULTS = {
+  circle: { opacity: 70 }, square: { opacity: 70 }, triangle: { opacity: 70 },
+  ringLatin: { text: '', sep: 'none', symbol: '' },
+  ringHebrew: { text: '', sep: 'dot', symbol: '' },
+  star: { points: 5, shape: 'sharp', inner: 50, chords: true, contain: false, width: 2.5, opacity: 70 },
+  inscription: { text: '', pos: 'upperArc', size: 22, spacing: 4, opacity: 90 },
+  caption: { title: '', sub: '' },
+  symbol: { sym: '♄︎', x: C, y: 120, size: STAMP_SIZE }
+};
+let layerSeq = 0;
+function newLayer(type, extra = {}) {
+  return { id: `c${++layerSeq}`, type, visible: true, scale: 100, rot: 0, dx: 0, dy: 0, width: 3, opacity: 100, ...LAYER_DEFAULTS[type], ...extra };
 }
-function paintStamps(ctx, th, interactive) {
-  ctx.save();
-  ctx.fillStyle = th.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  state.stamps.forEach((s, i) => {
-    ctx.font = `${s.size || STAMP_SIZE}px "Segoe UI Symbol", serif`;
-    ctx.fillText(s.sym, s.x, s.y);
-    if (interactive && i === state.stampSel) {
-      ctx.save(); ctx.strokeStyle = th.accent; ctx.lineWidth = 2; ctx.setLineDash([6, 6]);
-      ctx.beginPath(); ctx.arc(s.x, s.y, (s.size || STAMP_SIZE) * .72, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
-    }
+const isNested = L => LAYER_TYPES[L.type].nested && !(L.type === 'inscription' && (L.pos === 'top' || L.pos === 'bottom'));
+const layersOf = scope => scope === 'personal' ? state.personal.layers : state.layers;
+const layerById = (scope, id) => layersOf(scope).find(L => L.id === id) || null;
+const layerName = L => LAYER_TYPES[L.type].label + (L.type === 'star' ? ` ${L.points}` : L.type === 'symbol' ? ` ${L.sym}` : '');
+
+// Contexto de texto por defecto: la intencion (letras) o el nombre (sello)
+function layerCtx(scope) {
+  if (scope === 'personal') {
+    const planet = personalPlanet(), k = KAMEA_BY_ID[planet];
+    const name = personalName() || 'SIN NOMBRE';
+    return { text: name, planet, title: `Sello de ${name}`, sub: `${k.sym}︎ ${k.name} · ${PLANET_METAL[planet]}` };
+  }
+  return { text: state.intention, planet: null, title: state.intention, sub: '' };
+}
+const rotPt = (x, y, cx, cy, deg) => {
+  const a = rad(deg), c = Math.cos(a), s = Math.sin(a), u = x - cx, v = y - cy;
+  return [cx + u * c - v * s, cy + u * s + v * c];
+};
+function ringSymbol(L, ctx) {
+  if (!L.symbol) return null;
+  const pid = L.symbol === 'auto' ? ctx.planet : L.symbol;
+  return pid && PLANET_GLYPH[pid] ? PLANET_GLYPH[pid] + '︎' : null;
+}
+// Letras repartidas por un circulo, empezando arriba (giro incluido);
+// el hebreo avanza en sentido antihorario porque se lee de derecha a izquierda
+function circleText(items, cx, cy, r, size, dir, rot, fonts, op) {
+  const n = items.length || 1;
+  return items.map((ch, i) => {
+    const a = -90 + rot + dir * i * 360 / n;
+    const sym = /[☉☽☿♀♂♃♄✠]/.test(ch);
+    return { k: 'text', x: cx + Math.cos(rad(a)) * r, y: cy + Math.sin(rad(a)) * r, rot: a + 90, size: sym ? size * 1.15 : size, ch,
+      font: sym ? SYMBOL_FONT : /[א-ת]/.test(ch) ? fonts.heb : fonts.lat, op };
   });
+}
+const LAT_FONTS = { lat: 'Georgia, serif', heb: 'Arial Hebrew, Segoe UI, serif' };
+
+// Geometria de una capa: primitivas, hueco interior y puntos para las guias
+function layerGeom(L, R, ctx) {
+  const cx = C + L.dx, cy = C + L.dy, op = L.opacity / 100, w = L.width;
+  const out = { prims: [], inner: R, center: [cx, cy], vertices: [], radii: [] };
+  const poly = (pts, closed = true, width = w, o = op) => out.prims.push({ k: 'poly', pts, closed, w: width, op: o });
+  switch (L.type) {
+    case 'circle':
+      out.prims.push({ k: 'circle', cx, cy, r: R, w, op });
+      out.inner = R - 14; out.radii.push([cx, cy, R]);
+      break;
+    case 'square': {
+      const h = R / Math.SQRT2, pts = [[-h, -h], [h, -h], [h, h], [-h, h]].map(([x, y]) => rotPt(cx + x, cy + y, cx, cy, L.rot));
+      poly(pts); out.vertices.push(...pts); out.inner = h - 12;
+      break;
+    }
+    case 'triangle': {
+      const pts = [-90, 30, 150].map(a => rotPt(cx + Math.cos(rad(a)) * R, cy + Math.sin(rad(a)) * R, cx, cy, L.rot));
+      poly(pts); out.vertices.push(...pts); out.inner = R / 2 - 10;
+      break;
+    }
+    case 'ringLatin': case 'ringHebrew': {
+      const heb = L.type === 'ringHebrew', s = R / (heb ? 338 : 334), wf = w / 3;
+      const rings = heb ? [[338, 3], [328, 1.5], [258, 3]] : [[334, 4], [262, 4]];
+      for (const [r, ww] of rings) { out.prims.push({ k: 'circle', cx, cy, r: r * s, w: ww * wf, op }); out.radii.push([cx, cy, r * s]); }
+      const text = (L.text || '').trim() || ctx.text || '';
+      let items;
+      if (heb) {
+        const hw = (hasHebrew(text) ? cleanHebrew(text) : transliterate(text, 'consonantal').hebrew).split(' ').filter(Boolean);
+        const sep = RING_SEPS[L.sep] || '·';
+        items = hw.flatMap((wd, i) => [...(i ? [sep] : []), ...wd]);
+      } else {
+        const letters = [...text.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z]/g, '')];
+        const sep = RING_SEPS[L.sep];
+        items = sep ? letters.flatMap((c, i) => i ? [sep, c] : [c]) : letters;
+      }
+      const sym = ringSymbol(L, ctx);
+      if (sym) items = [sym, ...items];
+      const size = Math.max(18, Math.min(heb ? 34 : 40, (heb ? 620 : 700) / (items.length || 1))) * s;
+      const tr = (heb ? 293 : 298) * s;
+      out.prims.push(...circleText(items, cx, cy, tr, size, heb ? -1 : 1, L.rot, LAT_FONTS, op));
+      out.radii.push([cx, cy, tr]);
+      out.inner = (heb ? 258 : 262) * s - 14;
+      break;
+    }
+    case 'star': {
+      const n = L.points, k = STAR_STEP[n];
+      const rIn = L.shape === 'wide' ? R * L.inner / 100 : R * starRatio(n, k);
+      const a0 = rad(L.rot) - Math.PI / 2, pts = [];
+      for (let i = 0; i < n * 2; i++) {
+        const a = a0 + i * Math.PI / n, r = i % 2 ? rIn : R;
+        pts.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]);
+      }
+      poly(pts, true, w, op);
+      const tips = pts.filter((_, i) => !(i % 2));
+      if (L.chords) tips.forEach((t, j) => out.prims.push({ k: 'poly', pts: [t, tips[(j + k) % n]], closed: false, w: w / 2, op: op * .6 }));
+      out.vertices.push(...pts); out.radii.push([cx, cy, R]);
+      // si contiene, lo de dentro cabe en el poligono central; si no, se cruza
+      out.inner = L.contain ? rIn * Math.cos(Math.PI / n) - 6 : R * .72;
+      break;
+    }
+    case 'inscription': {
+      const txt = [...((L.text || '').trim() || ctx.text || '').toUpperCase()];
+      const adv = L.size * .62 + L.spacing;
+      if (L.pos === 'top' || L.pos === 'bottom') {
+        const y = (L.pos === 'top' ? L.size * 1.1 : SIZE - L.size * 1.1) + L.dy, x0 = C + L.dx - (txt.length - 1) * adv / 2;
+        txt.forEach((ch, i) => out.prims.push({ k: 'text', x: x0 + i * adv, y, rot: 0, size: L.size, ch, font: LAT_FONTS.lat, op }));
+        out.center = [C + L.dx, y];
+        break;
+      }
+      const r = R - L.size * .6, arc = Math.min(2.4, txt.length * adv / Math.max(r, 1)), lower = L.pos === 'lowerArc';
+      txt.forEach((ch, i) => {
+        const t = txt.length === 1 ? .5 : i / (txt.length - 1);
+        const a = (lower ? Math.PI / 2 + arc / 2 - arc * t : -Math.PI / 2 - arc / 2 + arc * t) + rad(L.rot);
+        out.prims.push({ k: 'text', x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r, rot: (lower ? a - Math.PI / 2 : a + Math.PI / 2) * 180 / Math.PI, size: L.size, ch, font: LAT_FONTS.lat, op });
+      });
+      out.radii.push([cx, cy, r]);
+      out.inner = R - L.size * 1.4;
+      break;
+    }
+    case 'caption': {
+      const title = (L.title || '').trim() || ctx.title || '', sub = (L.sub || '').trim() || ctx.sub || '';
+      if (title) out.prims.push({ k: 'text', x: C + L.dx, y: 64 + L.dy, rot: 0, size: 28, ch: title, font: 'italic', op });
+      if (sub) out.prims.push({ k: 'text', x: C + L.dx, y: SIZE - 42 + L.dy, rot: 0, size: 17, ch: sub, font: SYMBOL_FONT, op: op * .8 });
+      out.center = [C + L.dx, 64 + L.dy];
+      break;
+    }
+    case 'symbol':
+      out.prims.push({ k: 'text', x: L.x, y: L.y, rot: L.rot, size: L.size, ch: L.sym, font: SYMBOL_FONT, op });
+      out.center = [L.x, L.y];
+      break;
+  }
+  return out;
+}
+// Pila completa: cada marco se encaja en el hueco del anterior
+function layoutLayers(layers, ctx) {
+  let avail = 345;
+  const parts = [];
+  for (const L of layers) {
+    if (!L.visible) continue;
+    if (isNested(L)) {
+      const R = avail * L.scale / 100, g = layerGeom(L, R, ctx);
+      parts.push({ L, g, R });
+      avail = Math.max(24, g.inner);
+    } else parts.push({ L, g: layerGeom(L, 0, ctx) });
+  }
+  // con rotulo, el sigilo deja sitio arriba y abajo
+  if (parts.some(p => p.L.type === 'caption')) avail = Math.min(avail, 285);
+  return { parts, contentR: avail };
+}
+// Render de primitivas: canvas y SVG leen la misma lista
+function paintPrims(ctx, prims, color) {
+  ctx.save(); ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  for (const p of prims) {
+    ctx.globalAlpha = p.op;
+    if (p.k === 'circle') { ctx.lineWidth = p.w; ctx.beginPath(); ctx.arc(p.cx, p.cy, p.r, 0, Math.PI * 2); ctx.stroke(); }
+    else if (p.k === 'poly') { ctx.lineWidth = p.w; ctx.beginPath(); ctx.moveTo(...p.pts[0]); p.pts.slice(1).forEach(q => ctx.lineTo(...q)); if (p.closed) ctx.closePath(); ctx.stroke(); }
+    else {
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(rad(p.rot));
+      const italic = p.font.startsWith('italic');
+      ctx.font = `${italic ? 'italic ' : ''}${p.size}px ${italic ? 'Georgia, serif' : p.font}`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(p.ch, 0, 0); ctx.restore();
+    }
+  }
   ctx.restore();
 }
-function stampAt(pt) {
-  for (let i = state.stamps.length - 1; i >= 0; i--) {
-    const s = state.stamps[i];
-    if (Math.hypot(pt.x - s.x, pt.y - s.y) < Math.max(24, (s.size || STAMP_SIZE) * .7)) return i;
-  }
-  return -1;
+function primsSVG(prims, color) {
+  return prims.map(p => {
+    const o = p.op < 1 ? ` opacity="${f2(p.op)}"` : '';
+    if (p.k === 'circle') return `<circle cx="${f2(p.cx)}" cy="${f2(p.cy)}" r="${f2(p.r)}" fill="none" stroke="${color}" stroke-width="${f2(p.w)}"${o}/>`;
+    if (p.k === 'poly') return `<path d="M ${p.pts.map(q => f2(q[0]) + ' ' + f2(q[1])).join(' L ')}${p.closed ? ' Z' : ''}" fill="none" stroke="${color}" stroke-width="${f2(p.w)}" stroke-linejoin="round" stroke-linecap="round"${o}/>`;
+    const italic = p.font.startsWith('italic');
+    return `<text transform="translate(${f2(p.x)} ${f2(p.y)}) rotate(${f2(p.rot)})" text-anchor="middle" dominant-baseline="central" font-family="${italic ? 'Georgia, serif' : p.font}"${italic ? ' font-style="italic"' : ''} font-size="${f2(p.size)}" fill="${color}"${o}>${esc(p.ch)}</text>`;
+  }).join('');
 }
-function frameSVG(th) {
+const layersSVG = (parts, color, which) => parts.filter(which).map(p => `<g data-layer="${p.L.type}">${primsSVG(p.g.prims, color)}</g>`).join('');
+
+// ── Guias inteligentes (iman) ───────────────────────────────────
+// Al arrastrar, se alinea con el centro, otros elementos, angulos de 15
+// grados, radios de los anillos y vertices. Solo se dibujan las guias que
+// actuan (una o dos): nada fijo que sature. Alt suelta el iman.
+function snapTargets(scope, excludeId) {
+  const pts = [[C, C]], radii = [];
+  const lay = layoutLayers(layersOf(scope), layerCtx(scope));
+  for (const p of lay.parts) {
+    if (p.L.id === excludeId) continue;
+    pts.push(p.g.center, ...p.g.vertices);
+    radii.push(...p.g.radii);
+  }
+  if (scope === 'letters' && state.view) {
+    for (const l of activeLetters()) if (l.base && excludeId !== 'letter:' + l.ch) pts.push(Object.values(toCanvas({ x: l.base.tx + l.user.dx, y: l.base.ty + l.user.dy })));
+    for (const e of freeEnds(state.prims.filter(q => !q.hidden))) { const q = toCanvas(e); pts.push([q.x, q.y]); }
+  }
+  return { pts, radii };
+}
+function snapPoint(pt, scope, excludeId, ev) {
+  state.guides = [];
+  if (!state.magnet || (ev && ev.altKey)) return pt;
+  const r = canvas.getBoundingClientRect(), T = 9 * SIZE / (r.width || SIZE);
+  const { pts, radii } = snapTargets(scope, excludeId);
+  // 1) sobre un punto (vertice, centro): gana a todo
+  let best = null;
+  for (const [x, y] of pts) { const d = Math.hypot(x - pt.x, y - pt.y); if (d < T && (!best || d < best.d)) best = { x, y, d }; }
+  if (best) { state.guides = [{ k: 'point', x: best.x, y: best.y }]; return { x: best.x, y: best.y }; }
+  // 2) alineado en vertical u horizontal con algo
+  let bx = null, by = null;
+  for (const [x, y] of pts) {
+    if (Math.abs(x - pt.x) < T && (!bx || Math.abs(x - pt.x) < bx.d)) bx = { v: x, d: Math.abs(x - pt.x) };
+    if (Math.abs(y - pt.y) < T && (!by || Math.abs(y - pt.y) < by.d)) by = { v: y, d: Math.abs(y - pt.y) };
+  }
+  const out = { x: bx ? bx.v : pt.x, y: by ? by.v : pt.y };
+  if (bx) state.guides.push({ k: 'v', x: bx.v });
+  if (by) state.guides.push({ k: 'h', y: by.v });
+  if (bx || by) return out;
+  // 3) polar: angulo de 15 grados y radio de un anillo
+  const dx = pt.x - C, dy = pt.y - C, rr = Math.hypot(dx, dy);
+  if (rr > 40) {
+    let a = Math.atan2(dy, dx) * 180 / Math.PI;
+    const as = Math.round(a / 15) * 15;
+    let R = rr;
+    const rs = radii.filter(([cx, cy]) => Math.hypot(cx - C, cy - C) < 1).map(q => q[2]).reduce((b, q) => Math.abs(q - rr) < T && (b === null || Math.abs(q - rr) < Math.abs(b - rr)) ? q : b, null);
+    if (rs !== null) { R = rs; state.guides.push({ k: 'circle', r: rs }); }
+    if (Math.abs(rad(as - a)) * rr < T) { a = as; state.guides.push({ k: 'ray', a: as }); }
+    if (state.guides.length) return { x: C + Math.cos(rad(a)) * R, y: C + Math.sin(rad(a)) * R };
+  }
+  return pt;
+}
+// Giro con iman: se pega a multiplos de 15 grados
+const snapAngle = (deg, ev) => (!state.magnet || (ev && ev.altKey)) ? deg : (Math.abs(deg - Math.round(deg / 15) * 15) <= 4 ? Math.round(deg / 15) * 15 : deg);
+function paintGuides(ctx, th) {
+  if (!state.guides.length) return;
+  ctx.save(); ctx.strokeStyle = th.accent; ctx.fillStyle = th.accent; ctx.lineWidth = 1.4; ctx.setLineDash([7, 6]); ctx.globalAlpha = .9;
+  for (const g of state.guides) {
+    ctx.beginPath();
+    if (g.k === 'v') { ctx.moveTo(g.x, 0); ctx.lineTo(g.x, SIZE); }
+    else if (g.k === 'h') { ctx.moveTo(0, g.y); ctx.lineTo(SIZE, g.y); }
+    else if (g.k === 'ray') { ctx.moveTo(C, C); ctx.lineTo(C + Math.cos(rad(g.a)) * 400, C + Math.sin(rad(g.a)) * 400); }
+    else if (g.k === 'circle') ctx.arc(C, C, g.r, 0, Math.PI * 2);
+    else { ctx.setLineDash([]); ctx.arc(g.x, g.y, 7, 0, Math.PI * 2); }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+// Rejilla de ayuda (no se exporta)
+function paintGrid(ctx, th) {
+  if (state.grid === 'none') return;
+  ctx.save(); ctx.strokeStyle = th.faint; ctx.lineWidth = 1; ctx.globalAlpha = .7;
+  if (state.grid === 'polar') {
+    for (let r = 50; r <= 350; r += 50) { ctx.beginPath(); ctx.arc(C, C, r, 0, Math.PI * 2); ctx.stroke(); }
+    for (let a = 0; a < 360; a += 15) { ctx.beginPath(); ctx.moveTo(C, C); ctx.lineTo(C + Math.cos(rad(a)) * 350, C + Math.sin(rad(a)) * 350); ctx.stroke(); }
+  } else {
+    for (let v = 0; v <= SIZE; v += 50) { ctx.beginPath(); ctx.moveTo(v, 0); ctx.lineTo(v, SIZE); ctx.moveTo(0, v); ctx.lineTo(SIZE, v); ctx.stroke(); }
+  }
+  ctx.restore();
+}
+// Marca de la capa seleccionada (solo en pantalla)
+function paintLayerSelection(ctx, th, scope) {
+  const L = layerById(scope, state.layerSel[scope]);
+  if (!L || !L.visible) return;
+  const lay = layoutLayers(layersOf(scope), layerCtx(scope)), p = lay.parts.find(q => q.L.id === L.id);
+  if (!p) return;
+  ctx.save(); ctx.strokeStyle = th.accent; ctx.lineWidth = 2; ctx.setLineDash([4, 5]);
+  if (L.type === 'symbol') { ctx.beginPath(); ctx.arc(L.x, L.y, L.size * .72, 0, Math.PI * 2); ctx.stroke(); }
+  else if (p.R) { ctx.beginPath(); ctx.arc(p.g.center[0], p.g.center[1], p.R + 6, 0, Math.PI * 2); ctx.stroke(); }
+  ctx.restore();
+}
+
+// Toque sobre el lienzo: que capa hay bajo el dedo
+function layerAt(pt, scope) {
+  const lay = layoutLayers(layersOf(scope), layerCtx(scope));
+  for (const p of [...lay.parts].reverse()) {
+    if (p.L.type === 'symbol' && Math.hypot(pt.x - p.L.x, pt.y - p.L.y) < Math.max(24, p.L.size * .7)) return p.L;
+  }
+  for (const p of [...lay.parts].reverse()) {
+    if (p.L.type === 'symbol') continue;
+    const near = p.g.radii.some(([cx, cy, r]) => Math.abs(Math.hypot(pt.x - cx, pt.y - cy) - r) < 12)
+      || p.g.prims.some(q => q.k === 'poly' && q.pts.some((a, i) => { const b = q.pts[(i + 1) % q.pts.length]; if (!q.closed && i === q.pts.length - 1) return false; return distToSegment(pt, { x: a[0], y: a[1] }, { x: b[0], y: b[1] }).d < 10; }))
+      || p.g.prims.some(q => q.k === 'text' && Math.hypot(pt.x - q.x, pt.y - q.y) < q.size * .6);
+    if (near) return p.L;
+  }
+  return null;
+}
+
+// ── Panel de capas (comun a Sigilo de letras y Sello personal) ───
+const LAYER_PRESETS = {
+  goetia: { label: 'Goetia', make: scope => [newLayer('ringLatin', { symbol: scope === 'personal' ? 'auto' : '' })] },
+  pentaculo: { label: 'Pentáculo', make: scope => [newLayer('ringHebrew', { symbol: scope === 'personal' ? 'auto' : '' })] },
+  agrippa: { label: 'Agrippa', make: () => [newLayer('caption')] },
+  vacio: { label: 'Vaciar', make: () => [] }
+};
+function setLayers(scope, list) {
+  if (scope === 'personal') state.personal.layers = list; else state.layers = list;
+}
+function layersChanged(scope) {
+  renderLayerPanel(scope);
+  if (scope === 'personal') renderPersonalInfo();
+  render();
+}
+function addLayer(scope, type, extra = {}) {
+  const L = newLayer(type, extra);
+  // los marcos nuevos entran por dentro de los que ya hay (antes de rotulos y simbolos)
+  const list = layersOf(scope);
+  const idx = LAYER_TYPES[type].nested ? list.filter(isNested).length : list.length;
+  const pos = LAYER_TYPES[type].nested ? list.findIndex((q, i) => !isNested(q) && list.slice(0, i).filter(isNested).length >= idx) : -1;
+  if (pos >= 0) list.splice(pos, 0, L); else list.push(L);
+  state.layerSel[scope] = L.id;
+  layersChanged(scope);
+  return L;
+}
+function moveLayer(scope, id, d) {
+  const list = layersOf(scope), i = list.findIndex(L => L.id === id), j = i + d;
+  if (i < 0 || j < 0 || j >= list.length) return;
+  [list[i], list[j]] = [list[j], list[i]];
+  layersChanged(scope);
+}
+function removeLayer(scope, id) {
+  setLayers(scope, layersOf(scope).filter(L => L.id !== id));
+  if (state.layerSel[scope] === id) state.layerSel[scope] = null;
+  layersChanged(scope);
+}
+const PLANET_OPTS = scope => `<option value="">Sin símbolo</option>${scope === 'personal' ? '<option value="auto">Planeta del sello</option>' : ''}${KAMEAS.map(k => `<option value="${k.id}">${k.sym}︎ ${k.name}</option>`).join('')}`;
+function layerEditorHTML(scope, L) {
+  const f = (label, input) => `<div class="field"><label>${label}</label>${input}</div>`;
+  const rng = (key, min, max, step = 1, suffix = '') => `<input type="range" data-k="${key}" min="${min}" max="${max}" step="${step}" value="${L[key]}"><span class="val">${L[key]}${suffix}</span>`;
+  const sel = (key, opts) => `<select data-k="${key}">${opts.map(([v, t]) => `<option value="${v}"${String(L[key]) === String(v) ? ' selected' : ''}>${t}</option>`).join('')}</select>`;
+  const txt = (key, ph) => `<input type="text" data-k="${key}" maxlength="42" value="${esc(L[key] || '')}" placeholder="${ph}">`;
+  const chk = (key, label, title = '') => `<label class="check" title="${title}"><input type="checkbox" data-k="${key}"${L[key] ? ' checked' : ''}>${label}</label>`;
+  let h = '';
+  if (L.type === 'ringLatin' || L.type === 'ringHebrew') {
+    h += txt('text', scope === 'personal' ? 'Texto (vacío: el nombre del sello)' : 'Texto (vacío: la intención)');
+    h += f('Separadores', sel('sep', [['none', 'Ninguno'], ['dot', 'Puntos'], ['cross', 'Cruces']]));
+    h += f('Símbolo arriba', `<select data-k="symbol">${PLANET_OPTS(scope).replace(`value="${L.symbol}"`, `value="${L.symbol}" selected`)}</select>`);
+  }
+  if (L.type === 'star') {
+    h += f('Puntas', sel('points', [5, 6, 7, 8, 9].map(n => [n, n])));
+    h += f('Forma', sel('shape', [['sharp', 'Angulosa (exacta)'], ['wide', 'Ancha']]));
+    if (L.shape === 'wide') h += f('Interior', rng('inner', 30, 80, 1, '%'));
+    h += chk('chords', 'Acordes internos') + chk('contain', 'Lo de dentro cabe en su centro', 'Encoge lo que va dentro para que quepa en el polígono central');
+  }
+  if (L.type === 'inscription') {
+    h += txt('text', 'Lema, nombre o frase');
+    h += f('Posición', sel('pos', [['upperArc', 'Arco superior'], ['lowerArc', 'Arco inferior'], ['top', 'Arriba'], ['bottom', 'Abajo']]));
+    h += f('Letra', rng('size', 12, 40)) + f('Espaciado', rng('spacing', 0, 20));
+  }
+  if (L.type === 'caption') h += txt('title', 'Título (vacío: automático)') + txt('sub', 'Subtítulo (vacío: automático)');
+  if (L.type === 'symbol') {
+    h += f('Símbolo', `<select data-k="sym">${STAMP_CATALOG.map(([g, items]) => `<optgroup label="${g}">${items.map(i => `<option value="${i.sym}"${i.sym === L.sym ? ' selected' : ''}>${i.sym} ${i.name}</option>`).join('')}</optgroup>`).join('')}</select>`);
+    h += f('Tamaño', rng('size', 18, 160));
+  }
+  if (isNested(L)) h += f('Tamaño', rng('scale', 40, 160, 1, '%'));
+  h += f('Giro', rng('rot', 0, 359, 1, '°'));
+  if (L.type !== 'symbol' && L.type !== 'caption' && L.type !== 'inscription') h += f('Grosor', rng('width', 1, 10, .5));
+  h += f('Opacidad', rng('opacity', 10, 100, 1, '%'));
+  if (L.type !== 'symbol') h += `<div class="row"><button class="btn-dim" data-act="center">Centrar</button></div>`;
+  return h;
+}
+function renderLayerPanel(scope) {
+  const box = $(`layerList_${scope}`);
+  if (!box) return;
+  const list = layersOf(scope), selId = state.layerSel[scope];
+  box.innerHTML = list.length ? '' : '<div class="helper">Sin capas. Añade una o usa una plantilla.</div>';
+  list.forEach((L, i) => {
+    const row = document.createElement('div');
+    row.className = 'layer-row' + (L.id === selId ? ' sel' : '') + (L.visible ? '' : ' off');
+    row.innerHTML = `<input type="checkbox" title="Visible"${L.visible ? ' checked' : ''}><span class="layer-name">${esc(layerName(L))}</span>` +
+      `<button class="btn-dim" data-m="-1" title="Subir (más afuera)"${i ? '' : ' disabled'}>▲</button><button class="btn-dim" data-m="1" title="Bajar (más adentro)"${i < list.length - 1 ? '' : ' disabled'}>▼</button><button class="btn-dim" data-x title="Quitar">✕</button>`;
+    row.querySelector('input').addEventListener('change', e => { L.visible = e.target.checked; layersChanged(scope); });
+    row.querySelector('.layer-name').addEventListener('click', () => { state.layerSel[scope] = L.id === selId ? null : L.id; layersChanged(scope); });
+    row.querySelectorAll('[data-m]').forEach(b => b.addEventListener('click', () => moveLayer(scope, L.id, Number(b.dataset.m))));
+    row.querySelector('[data-x]').addEventListener('click', () => removeLayer(scope, L.id));
+    box.append(row);
+  });
+  const ed = $(`layerEditor_${scope}`), L = layerById(scope, selId);
+  ed.hidden = !L;
+  if (!L) { ed.innerHTML = ''; return; }
+  ed.innerHTML = `<h4>${esc(layerName(L))}</h4>` + layerEditorHTML(scope, L);
+  ed.querySelectorAll('[data-k]').forEach(el => {
+    const k = el.dataset.k, ev = el.type === 'range' || el.type === 'text' ? 'input' : 'change';
+    el.addEventListener(ev, e => {
+      let v = el.type === 'checkbox' ? el.checked : el.type === 'range' ? Number(el.value) : el.value;
+      if (['points', 'size'].includes(k) && el.tagName === 'SELECT') v = Number(v);
+      if (k === 'rot') { v = snapAngle(v, e); el.value = v; }
+      L[k] = v;
+      if (el.type === 'range') el.nextElementSibling.textContent = v + ({ scale: '%', opacity: '%', inner: '%', rot: '°' }[k] || '');
+      // cambiar la forma o la posicion cambia los campos del editor
+      if (['shape', 'pos', 'points', 'sym'].includes(k)) renderLayerPanel(scope);
+      if (scope === 'personal') renderPersonalInfo();
+      render();
+    });
+  });
+  const c = ed.querySelector('[data-act="center"]');
+  if (c) c.addEventListener('click', () => { L.dx = 0; L.dy = 0; layersChanged(scope); });
+}
+function mountLayerPanel(scope, host) {
+  host.innerHTML = `<div class="row layer-presets">${Object.entries(LAYER_PRESETS).map(([k, p]) => `<button class="btn-dim" data-preset="${k}" title="${k === 'vacio' ? 'Quitar todas las capas' : 'Cargar la plantilla ' + p.label + ' (sustituye las capas)'}">${p.label}</button>`).join('')}</div>` +
+    `<div class="layer-list" id="layerList_${scope}"></div>` +
+    `<div class="row"><select id="selAddLayer_${scope}">${Object.entries(LAYER_TYPES).map(([k, t]) => `<option value="${k}">${t.label}</option>`).join('')}</select><button class="btn" id="btnAddLayer_${scope}">Añadir capa</button></div>` +
+    `<div class="layer-editor" id="layerEditor_${scope}" hidden></div>` +
+    `<div class="row"><button class="btn-dim magnet-btn" title="Guías que atraen al arrastrar. Mantén Alt para mover libre">Imán</button>` +
+    `<select class="grid-sel" title="Rejilla de ayuda (no se exporta)"><option value="none">Sin rejilla</option><option value="polar">Rejilla polar</option><option value="square">Rejilla cuadrada</option></select></div>`;
+  host.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => {
+    setLayers(scope, LAYER_PRESETS[b.dataset.preset].make(scope));
+    state.layerSel[scope] = null;
+    if (scope === 'personal') state.personal.template = b.dataset.preset;
+    layersChanged(scope);
+  }));
+  host.querySelector(`#btnAddLayer_${scope}`).addEventListener('click', () => {
+    const type = host.querySelector(`#selAddLayer_${scope}`).value;
+    addLayer(scope, type, type === 'symbol' ? { sym: state.stampSym } : {});
+  });
+  host.querySelector('.magnet-btn').addEventListener('click', () => { state.magnet = !state.magnet; syncLayerTools(); });
+  host.querySelector('.grid-sel').addEventListener('change', e => { state.grid = e.target.value; syncLayerTools(); render(); });
+  renderLayerPanel(scope);
+}
+function syncLayerTools() {
+  document.querySelectorAll('.magnet-btn').forEach(b => { b.classList.toggle('on', state.magnet); b.textContent = state.magnet ? 'Imán: sí' : 'Imán: no'; });
+  document.querySelectorAll('.grid-sel').forEach(s => { s.value = state.grid; });
+}
+// Galeria antigua (borde, estrella, inscripcion, estampas) -> capas
+function legacyLayers(s) {
   const out = [];
-  if (state.star.enabled) {
-    const g = starGeom(), p = state.star, w = p.thickness / 10;
-    out.push(`<g data-layer="star" fill="none" stroke="${th.frame}" stroke-linejoin="round">`);
-    out.push(`<path d="M ${g.pts.map(q => f2(q[0]) + ' ' + f2(q[1])).join(' L ')} Z" stroke-width="${f2(w)}" opacity="${f2(p.opacity / 100)}"/>`);
-    g.chords.forEach(([a, b]) => out.push(`<path d="M ${f2(a[0])} ${f2(a[1])} L ${f2(b[0])} ${f2(b[1])}" stroke-width="${f2(w / 2)}" opacity="${f2(p.opacity / 180)}"/>`));
-    out.push('</g>');
-  }
-  if (state.inscription.enabled && state.inscription.text.trim()) {
-    out.push(`<g data-layer="inscription" fill="${th.frame}" font-family="Georgia, serif" font-size="${state.inscription.size}" text-anchor="middle" dominant-baseline="middle">`);
-    inscriptionGeom().forEach(c => out.push(`<text transform="translate(${f2(c.x)} ${f2(c.y)}) rotate(${f2(c.rot * 180 / Math.PI)})">${esc(c.ch)}</text>`));
-    out.push('</g>');
-  }
-  return out.join('');
-}
-function stampsSVG(th) {
-  if (!state.stamps.length) return '';
-  return `<g data-layer="stamps" fill="${th.ink}" font-family="Segoe UI Symbol, serif" text-anchor="middle" dominant-baseline="middle">` +
-    state.stamps.map(s => `<text x="${f2(s.x)}" y="${f2(s.y)}" font-size="${s.size || STAMP_SIZE}">${esc(s.sym)}</text>`).join('') + '</g>';
+  if (s.border === 'ringLatin' || s.border === 'ringHebrew') out.push(newLayer(s.border, { text: s.ringText || '', sep: s.ringSep || (s.border === 'ringHebrew' ? 'dot' : 'none') }));
+  else if (['circle', 'square', 'triangle'].includes(s.border)) out.push(newLayer(s.border));
+  if (s.star && s.star.enabled) out.push(newLayer('star', { points: s.star.points, shape: s.star.shape || 'wide', inner: s.star.inner, chords: s.star.chords, contain: !!s.star.fitInside, rot: s.star.rotation || 0, opacity: s.star.opacity || 80 }));
+  if (s.inscription && s.inscription.enabled) out.push(newLayer('inscription', { text: s.inscription.text, pos: s.inscription.pos, size: s.inscription.size, spacing: s.inscription.spacing }));
+  (s.stamps || []).forEach(st => out.push(newLayer('symbol', { sym: st.sym, x: st.x, y: st.y, size: st.size || STAMP_SIZE })));
+  return out;
 }
 
 function strokePrim(ctx, p) {
@@ -1143,17 +1422,9 @@ function paint(ctx, opt) {
   if (!state.prims.length || !state.view) return;
   const lw = Math.max(LINE_W, 2 / sc);
 
-  const bg = borderGeom();
-  if (bg) {
-    ctx.strokeStyle = th.frame; ctx.lineWidth = lw * .45;
-    ctx.beginPath();
-    if (bg.t === 'circle') ctx.arc(C, C, bg.r, 0, Math.PI * 2);
-    else { ctx.moveTo(...bg.pts[0]); bg.pts.slice(1).forEach(q => ctx.lineTo(...q)); ctx.closePath(); }
-    ctx.stroke();
-  }
-  const ring = letterRing();
-  if (ring) paintRing(ctx, ring, th.ink);
-  paintFrame(ctx, th, lw);
+  if (opt.interactive) paintGrid(ctx, th);
+  const lay = layoutLayers(state.layers, layerCtx('letters'));
+  for (const p of lay.parts) if (p.L.type !== 'symbol') paintPrims(ctx, p.g.prims, th.ink);
 
   const visible = state.prims.filter(p => !p.hidden);
   const hl = opt.interactive ? state.sel : null;
@@ -1192,14 +1463,16 @@ function paint(ctx, opt) {
     for (const e of freeEnds(visible)) { const q = toCanvas(e); ctx.beginPath(); ctx.arc(q.x, q.y, 14, 0, Math.PI * 2); ctx.stroke(); }
     ctx.restore();
   }
-  paintStamps(ctx, th, opt.interactive);
+  for (const p of lay.parts) if (p.L.type === 'symbol') paintPrims(ctx, p.g.prims, th.ink);
+  if (opt.interactive) { paintLayerSelection(ctx, th, 'letters'); paintGuides(ctx, th); }
 }
 
 const canvas = $('canvas'), ctx = canvas.getContext('2d');
 const previewCtx = $('previewCanvas').getContext('2d');
 function updateStampInfo() {
-  const ss = state.stamps[state.stampSel];
-  $('stampInfo').textContent = ss ? `${ss.sym} ${STAMP_NAMES[ss.sym] || ''} · ${ss.size || STAMP_SIZE}px · arrástralo para moverlo` : `${state.stamps.length} símbolo(s) colocados. Ninguno seleccionado.`;
+  const L = layerById('letters', state.layerSel.letters);
+  const n = state.layers.filter(q => q.type === 'symbol').length;
+  $('stampInfo').textContent = L && L.type === 'symbol' ? `${L.sym} ${STAMP_NAMES[L.sym] || ''} · ${L.size}px · arrástralo para moverlo` : `${n} símbolo(s) colocados. Ninguno seleccionado.`;
 }
 function render() {
   // el encuadre se deriva siempre del estado (borde, estrella, trazos): nunca
@@ -1236,15 +1509,8 @@ function buildSVG() {
   if (state.family === 'kamea') { out.push(kameaSVG(th)); out.push('</svg>'); return out.join(''); }
   if (state.family === 'seal') { out.push(sealSVG(th)); out.push('</svg>'); return out.join(''); }
   if (state.family === 'personal') return personalSVG() || out.concat('</svg>').join('');
-  const bg = borderGeom();
-  if (bg) {
-    out.push(`<g data-layer="border" fill="none" stroke="${th.frame}" stroke-width="${f2(LINE_W * .45)}">`);
-    out.push(bg.t === 'circle' ? `<circle cx="${C}" cy="${C}" r="${bg.r}"/>` : `<path d="M ${bg.pts.map(q => f2(q[0]) + ' ' + f2(q[1])).join(' L ')} Z"/>`);
-    out.push('</g>');
-  }
-  const ring = letterRing();
-  if (ring) out.push(ringSVGMarkup(ring, th.ink));
-  out.push(frameSVG(th));
+  const lay = layoutLayers(state.layers, layerCtx('letters'));
+  out.push(layersSVG(lay.parts, th.ink, p => p.L.type !== 'symbol'));
   const visible = state.prims.filter(p => !p.hidden);
   out.push(`<g data-layer="core" fill="none" stroke="${th.ink}" stroke-width="${LINE_W}" stroke-linecap="round" stroke-linejoin="round">`);
   visible.forEach(p => out.push(`<path d="${primPath(p)}"/>`));
@@ -1257,7 +1523,7 @@ function buildSVG() {
     }
     out.push('</g>');
   }
-  out.push(stampsSVG(th));
+  out.push(layersSVG(lay.parts, th.ink, p => p.L.type === 'symbol'));
   out.push('</svg>');
   return out.join('');
 }
@@ -2193,40 +2459,35 @@ function personalSVG() {
   const metalView = p.view === 'metal';
   const ink = metalView ? '#2b2116' : '#1b1612';
   const name = personalName() || 'SIN NOMBRE';
-  const fmt = p.format;
+  const lay = layoutLayers(p.layers, layerCtx('personal'));
   const out = [`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SIZE} ${SIZE}" width="${SIZE}" height="${SIZE}">`];
   out.push(`<title>${esc(`Sello personal de ${name}`)}</title>`);
-  out.push(`<desc>${esc(`Sello nuevo creado en ARCANUM en formato de ${PERSONAL_FORMATS[fmt].model}. No es un sello histórico. Sigilo: ${PERSONAL_SOURCES[src]}. Planeta: ${k.name}; metal: ${metal} (tabla de metales de la Goetia, p. 48).`)}</desc>`);
+  out.push(`<desc>${esc(`Sello nuevo creado en ARCANUM ${personalFormatText()}. No es un sello histórico. Sigilo: ${PERSONAL_SOURCES[src]}. Planeta: ${k.name}; metal: ${metal} (tabla de metales de la Goetia, p. 48).`)}</desc>`);
   if (!state.transparent) out.push(`<rect width="${SIZE}" height="${SIZE}" fill="${metalView ? '#1a1612' : '#efe6d2'}"/>`);
-  const [light, dark] = METAL_TONE[metal];
-  const ringed = fmt !== 'agrippa';
   if (metalView) {
+    const [light, dark] = METAL_TONE[metal];
+    // la placa sigue al marco exterior: disco si es redondo, lamina si no
+    const outer = lay.parts.find(q => q.R);
     out.push(`<defs><radialGradient id="metal" cx="38%" cy="32%" r="80%"><stop offset="0" stop-color="${light}"/><stop offset="1" stop-color="${dark}"/></radialGradient></defs>`);
-    out.push(ringed ? `<circle cx="${C}" cy="${C}" r="352" fill="url(#metal)"/>` : `<rect x="48" y="48" width="704" height="704" rx="18" fill="url(#metal)"/>`);
+    out.push(outer && ['circle', 'ringLatin', 'ringHebrew'].includes(outer.L.type)
+      ? `<circle cx="${f2(outer.g.center[0])}" cy="${f2(outer.g.center[1])}" r="${f2(outer.R + 18)}" fill="url(#metal)"/>`
+      : `<rect x="48" y="48" width="704" height="704" rx="18" fill="url(#metal)"/>`);
   }
-  let contentR = 300;
-  const symbol = p.symbol ? k.sym : null;
-  // anillo con el nombre (misma geometria que en Sigilo de letras)
-  if (fmt !== 'agrippa') {
-    const ring = ringParts(fmt === 'goetia' ? 'latin' : 'hebrew', name, { sep: p.sep, symbol });
-    out.push(ringSVGMarkup(ring, ink).replace('data-layer="ring-text"', 'data-layer="personal-name"'));
-    contentR = ring.innerR - 30;
-  } else {
-    out.push(`<g data-layer="personal-name" text-anchor="middle" font-family="Georgia, serif" fill="${ink}"><text x="${C}" y="104" font-size="30" font-style="italic">${esc(`Sello de ${name}`)}</text><text x="${C}" y="${SIZE - 86}" font-size="18">${esc(`${k.sym}︎ ${k.name} · ${metal}`)}</text></g>`);
-  }
-  // estrella interior opcional, angulosa y dentro del hueco central
-  if (p.star) {
-    const g = starGeom({ points: p.star, shape: 'sharp', scale: 100, rotation: 0, inner: 50, chords: true }, contentR + 14);
-    out.push(`<g data-layer="personal-star" fill="none" stroke="${ink}" stroke-linejoin="round" opacity=".55"><path d="M ${g.pts.map(q => f2(q[0]) + ' ' + f2(q[1])).join(' L ')} Z" stroke-width="2.2"/>${g.chords.map(([a, c]) => `<path d="M ${f2(a[0])} ${f2(a[1])} L ${f2(c[0])} ${f2(c[1])}" stroke-width="1.2"/>`).join('')}</g>`);
-  }
+  out.push(layersSVG(lay.parts, ink, q => q.L.type !== 'symbol').replace(/data-layer="(ringLatin|ringHebrew|caption)"/g, 'data-layer="personal-name"'));
   // el sigilo, encajado en el hueco central
   const markup = personalSourceMarkup(src);
   const b = measureMarkup(markup);
-  const s = fmt === 'agrippa' ? Math.min(520 / b.w, 460 / b.h, 2.2) : Math.min((2 * contentR) / Math.hypot(b.w, b.h), 2.2);
-  const cy = fmt === 'agrippa' ? C + 4 : C;
-  out.push(`<g data-layer="personal-sigil" color="${ink}" transform="translate(${f2(C - (b.x + b.w / 2) * s)} ${f2(cy - (b.y + b.h / 2) * s)}) scale(${s.toFixed(4)})">${markup}</g>`);
+  const s = Math.min((2 * lay.contentR) / Math.hypot(b.w, b.h), 2.2);
+  out.push(`<g data-layer="personal-sigil" color="${ink}" transform="translate(${f2(C - (b.x + b.w / 2) * s)} ${f2(C - (b.y + b.h / 2) * s)}) scale(${s.toFixed(4)})">${markup}</g>`);
+  out.push(layersSVG(lay.parts, ink, q => q.L.type === 'symbol'));
   out.push('</svg>');
   return out.join('');
+}
+// Descripcion del formato: la plantilla de partida y las capas que quedan
+function personalFormatText() {
+  const p = state.personal, f = PERSONAL_FORMATS[p.template];
+  const names = p.layers.filter(L => L.visible).map(layerName).join(', ') || 'sin capas';
+  return f ? `en formato de ${f.model} (capas: ${names})` : `con capas elegidas por ti (${names})`;
 }
 // En el lienzo se pinta el mismo SVG (una sola geometria para las dos salidas)
 const personalImg = { key: '', img: null };
@@ -2238,38 +2499,40 @@ function paintPersonal(ctx) {
     return;
   }
   if (personalImg.key !== svg) {
-    personalImg.key = svg; personalImg.img = new Image();
-    personalImg.img.onload = () => render();
-    personalImg.img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-    return;
+    const img = new Image();
+    img.onload = () => { personalImg.img = img; render(); };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    personalImg.key = svg;
   }
-  if (personalImg.img.complete && personalImg.img.naturalWidth) ctx.drawImage(personalImg.img, 0, 0, SIZE, SIZE);
+  // mientras carga la nueva, se ve la anterior: arrastrar no parpadea
+  if (personalImg.img && personalImg.img.complete) ctx.drawImage(personalImg.img, 0, 0, SIZE, SIZE);
+  const th = THEMES.build;
+  if (ctx.canvas === canvas) { paintGrid(ctx, th); paintLayerSelection(ctx, th, 'personal'); paintGuides(ctx, th); }
 }
 function renderPersonalInfo() {
-  const p = state.personal, planet = personalPlanet(), k = KAMEA_BY_ID[planet], f = PERSONAL_FORMATS[p.format];
+  const p = state.personal, planet = personalPlanet(), k = KAMEA_BY_ID[planet];
   const ready = personalReady(p.source);
   $('personalBox').innerHTML =
     `<div class="line"><b>Sigilo</b><span>${ready ? `El último que hiciste en ${PERSONAL_SOURCES[p.source]}.` : `Aún no hay sigilo en ${PERSONAL_SOURCES[p.source]}: créalo primero en su pestaña.`}</span></div>` +
-    `<div class="line"><b>Formato</b><span>Imita ${f.model}. ${badge('RC')}</span></div>` +
-    `<div class="line"><b>Planeta</b><span>${k.sym}︎ ${k.name}${p.source === 'kamea' ? ', el de la tabla sobre la que se trazó el sigilo' : p.planet === 'auto' ? `, regente del ${DAY_NAMES[p.day]} (el día en que lo creas)` : ', elegido por ti'}.</span></div>` +
+    `<div class="line"><b>Formato</b><span>${esc(personalFormatText().replace(/^en formato de /, 'Imita '))}. ${badge('RC')}</span></div>` +
+    `<div class="line"><b>Planeta</b><span>${k.sym}\uFE0E ${k.name}${p.source === 'kamea' ? ', el de la tabla sobre la que se trazó el sigilo' : p.planet === 'auto' ? `, regente del ${DAY_NAMES[p.day]} (el día en que lo creas)` : ', elegido por ti'}.</span></div>` +
     `<div class="line"><b>Metal</b><span>${PLANET_METAL[planet]}, según la tabla de metales de los planetas de la Goetia (p. 48). ${badge('HP')}</span></div>` +
     `<div class="line"><b>Qué es</b><span>Un sello nuevo, tuyo, en formato histórico. No es un sello de Salomón ni de Agrippa: esos están en el catálogo de consulta.</span></div>`;
 }
 function personalRefresh() {
   const p = state.personal;
-  p.name = $('personalName').value; p.source = $('selPersonalSource').value; p.format = $('selPersonalFormat').value;
+  p.name = $('personalName').value; p.source = $('selPersonalSource').value;
   p.planet = $('selPersonalPlanet').value; p.view = $('selPersonalView').value;
-  p.symbol = $('chkPersonalSymbol').checked; p.sep = $('selPersonalSep').value; p.star = Number($('selPersonalStar').value);
   $('selPersonalPlanet').disabled = p.source === 'kamea';
   renderPersonalInfo();
   render();
 }
 function personalProvenance() {
-  const p = state.personal, f = PERSONAL_FORMATS[p.format];
+  const p = state.personal;
   return `<h3>Sello personal</h3><p>Sello nuevo creado en el taller a partir de tu sigilo de ${PERSONAL_SOURCES[p.source]}. ${badge('RC')}</p>` +
     '<h3>De dónde sale cada parte</h3><ul>' +
     `<li>La figura central: tu sigilo, tal como lo trazó su motor (con sus propias fuentes, en la procedencia de ese motor).</li>` +
-    `<li>El formato: imita ${f.model}. Es una reconstrucción del aspecto, no una regla del libro.</li>` +
+    `<li>El formato: ${esc(personalFormatText())}. Es una reconstrucción del aspecto, no una regla del libro.</li>` +
     `<li>El metal: la Goetia asigna a cada planeta un metal (Saturno plomo, Júpiter estaño, Marte hierro, Sol oro, Venus cobre, Mercurio mercurio, Luna plata; p. 48). ${badge('HP')}</li>` +
     `<li>El planeta por defecto es el regente del día de la semana en que lo creas (domingo Sol, lunes Luna… sábado Saturno). ${badge('HP')}</li></ul>` +
     '<p class="note">El SVG exportado lo declara en su descripción: sello nuevo, no histórico.</p>';
@@ -2357,66 +2620,93 @@ function primAt(pt, pool) {
   for (const p of pool) { const d = distToPrim(w, p); if (d < bd) { bd = d; best = p; } }
   return best;
 }
+let layerDrag = null;
+const scopeNow = () => state.family === 'personal' ? 'personal' : 'letters';
+function startLayerDrag(scope, L, pt, e) {
+  state.layerSel[scope] = L.id;
+  if (scope === 'letters') state.sel = null;
+  const c = L.type === 'symbol' ? [L.x, L.y] : [C + L.dx, C + L.dy];
+  layerDrag = { scope, L, ox: pt.x - c[0], oy: pt.y - c[1], moved: false };
+  canvas.setPointerCapture(e.pointerId);
+  renderLayerPanel(scope); render();
+}
 canvas.addEventListener('pointerdown', e => {
-  if (state.family !== 'letters' || !state.prims.length) return;
-  const pt = canvasPoint(e);
-  if (state.termPick) {
+  const fam = state.family;
+  if (fam !== 'letters' && fam !== 'personal') return;
+  if (fam === 'letters' && !state.prims.length) return;
+  const scope = scopeNow(), pt = canvasPoint(e);
+  if (fam === 'letters' && state.termPick) {
     const w = toWorld(pt.x, pt.y), tol = 22 / state.view.k;
     const ends = freeEnds(state.prims.filter(p => !p.hidden));
-    const e = ends.reduce((b, x) => { const d = Math.hypot(x.x - w.x, x.y - w.y); return d < tol && (!b || d < b.d) ? { ...x, d } : b; }, null);
-    if (e) {
-      const cur = state.endStyles[e.key] || state.terminals;
-      state.endStyles[e.key] = cur === state.termBrush ? 'none' : state.termBrush;
-      state.decisions.push({ type: 'remate: ' + TERMINALS.find(t => t.id === state.endStyles[e.key]).name.toLowerCase() });
+    const en = ends.reduce((b, x) => { const d = Math.hypot(x.x - w.x, x.y - w.y); return d < tol && (!b || d < b.d) ? { ...x, d } : b; }, null);
+    if (en) {
+      const cur = state.endStyles[en.key] || state.terminals;
+      state.endStyles[en.key] = cur === state.termBrush ? 'none' : state.termBrush;
+      state.decisions.push({ type: 'remate: ' + TERMINALS.find(t => t.id === state.endStyles[en.key]).name.toLowerCase() });
       render();
     }
     return;
   }
-  // los simbolos estan encima: se tocan antes que las letras
-  const si = stampAt(pt);
-  if (si >= 0) {
-    const s = state.stamps[si];
-    state.stampSel = si; state.sel = null;
-    state.stampDrag = { s, ox: pt.x - s.x, oy: pt.y - s.y };
-    canvas.setPointerCapture(e.pointerId);
-    render(); return;
-  }
+  if (fam === 'letters' && state.hideMode) { const p = primAt(pt, state.prims); if (p) toggleHidden(p.key); return; }
   if (state.stampMode) {
-    state.stamps.push({ x: pt.x, y: pt.y, sym: state.stampSym, size: STAMP_SIZE });
-    state.stampSel = state.stamps.length - 1;
-    render(); return;
+    const q = snapPoint(pt, scope, null, e);
+    addLayer(scope, 'symbol', { sym: state.stampSym, x: q.x, y: q.y });
+    state.guides = []; render(); return;
   }
-  state.stampSel = -1;
-  if (state.hideMode) { const p = primAt(pt, state.prims); if (p) toggleHidden(p.key); return; }
-  const p = primAt(pt, state.prims.filter(q => !q.hidden));
-  if (!p || !p.units.length) { state.sel = null; render(); return; }
-  if (!p.units.includes(state.sel)) {
-    const i = p.units.indexOf(state.sel);
-    state.sel = p.units[(i + 1) % p.units.length];
+  // los simbolos estan encima: se tocan antes que las letras
+  const hit = layerAt(pt, scope);
+  if (hit && hit.type === 'symbol') { startLayerDrag(scope, hit, pt, e); return; }
+  if (fam === 'letters') {
+    const p = primAt(pt, state.prims.filter(q => !q.hidden));
+    if (p && p.units.length) {
+      if (!p.units.includes(state.sel)) {
+        const i = p.units.indexOf(state.sel);
+        state.sel = p.units[(i + 1) % p.units.length];
+      }
+      const l = state.letters.find(x => x.ch === state.sel);
+      state.layerSel.letters = null;
+      const c0 = toCanvas({ x: l.base.tx + l.user.dx, y: l.base.ty + l.user.dy });
+      state.dragging = { l, px: pt.x, py: pt.y, c0, dx: l.user.dx, dy: l.user.dy, moved: false };
+      canvas.setPointerCapture(e.pointerId);
+      renderLayerPanel('letters'); render();
+      return;
+    }
   }
-  const l = state.letters.find(x => x.ch === state.sel);
-  const w = toWorld(pt.x, pt.y);
-  state.dragging = { l, x: w.x, y: w.y, dx: l.user.dx, dy: l.user.dy, moved: false };
-  canvas.setPointerCapture(e.pointerId);
-  render();
+  if (hit) { startLayerDrag(scope, hit, pt, e); return; }
+  state.sel = null; state.layerSel[scope] = null;
+  renderLayerPanel(scope); render();
 });
 canvas.addEventListener('pointermove', e => {
-  const sd = state.stampDrag;
-  if (sd) { const pt = canvasPoint(e); sd.s.x = pt.x - sd.ox; sd.s.y = pt.y - sd.oy; render(); return; }
+  const pt = canvasPoint(e);
+  if (layerDrag) {
+    const { L, scope } = layerDrag;
+    const q = snapPoint({ x: pt.x - layerDrag.ox, y: pt.y - layerDrag.oy }, scope, L.id, e);
+    if (L.type === 'symbol') { L.x = q.x; L.y = q.y; } else { L.dx = q.x - C; L.dy = q.y - C; }
+    layerDrag.moved = true;
+    render(); return;
+  }
   const d = state.dragging;
   if (!d) return;
-  const pt = canvasPoint(e), w = toWorld(pt.x, pt.y);
-  d.l.user.dx = d.dx + (w.x - d.x);
-  d.l.user.dy = d.dy + (w.y - d.y);
+  // se mueve el centro de la letra y se alinea con guias
+  const want = { x: d.c0.x + pt.x - d.px, y: d.c0.y + pt.y - d.py };
+  const q = snapPoint(want, 'letters', 'letter:' + d.l.ch, e);
+  d.l.user.dx = d.dx + (q.x - d.c0.x) / state.view.k;
+  d.l.user.dy = d.dy + (q.y - d.c0.y) / state.view.k;
   d.moved = true;
   rebuild();
 });
 canvas.addEventListener('pointerup', () => {
-  state.stampDrag = null;
+  state.guides = [];
+  if (layerDrag) {
+    if (layerDrag.moved) state.decisions.push({ type: 'mover capa' });
+    const sc = layerDrag.scope; layerDrag = null;
+    renderLayerPanel(sc); render(); return;
+  }
   const d = state.dragging;
-  if (!d) return;
+  if (!d) { render(); return; }
   state.dragging = null;
-  if (d.moved) { state.decisions.push({ type: 'mover', ch: d.l.ch }); rebuild(); }
+  if (d.moved) state.decisions.push({ type: 'mover', ch: d.l.ch });
+  rebuild();
 });
 
 // ── Procedencia ─────────────────────────────────────────────────
@@ -2459,20 +2749,17 @@ function captureState() {
   return JSON.parse(JSON.stringify({
     intention: state.intention, method: state.method, mode: state.mode, overlap: state.overlap, absorb: state.absorb,
     users: Object.fromEntries(state.letters.map(l => [l.ch, l.user])), hidden: state.hidden, decisions: state.decisions,
-    theme: state.theme, border: state.border, terminals: state.terminals,
+    theme: state.theme, terminals: state.terminals, layers: state.layers,
     termScale: state.termScale, endStyles: state.endStyles,
-    star: state.star, inscription: state.inscription, stamps: state.stamps, ringText: state.ringText, ringSep: state.ringSep
   }));
 }
 function restoreState(s) {
-  Object.assign(state, { method: s.method, mode: s.mode, overlap: s.overlap, absorb: s.absorb, theme: s.theme, border: s.border, terminals: s.terminals, termScale: s.termScale || 100, endStyles: { ...(s.endStyles || {}) } });
-  if (s.star) {
-    Object.assign(state.star, s.star);
-    state.ringText = s.ringText || ''; state.ringSep = s.ringSep || 'none';
-    Object.assign(state.inscription, s.inscription);
-    state.stamps = s.stamps.map(x => ({ ...x }));
-    state.stampSel = -1;
-  }
+  Object.assign(state, { method: s.method, mode: s.mode, overlap: s.overlap, absorb: s.absorb, theme: s.theme, terminals: s.terminals, termScale: s.termScale || 100, endStyles: { ...(s.endStyles || {}) } });
+  // capas (o, si es un guardado antiguo, su borde, estrella, inscripcion y estampas)
+  state.layers = s.layers ? JSON.parse(JSON.stringify(s.layers)) : legacyLayers(s);
+  layerSeq = Math.max(layerSeq, ...state.layers.map(L => Number(String(L.id).replace(/\D/g, '')) || 0));
+  state.layerSel.letters = null;
+  renderLayerPanel('letters');
   $('intention').value = s.intention;
   state.intention = '';
   syncControls();
@@ -2536,7 +2823,8 @@ function startGnosis() {
 }
 function forgetSigil() {
   closeGnosis();
-  Object.assign(state, { intention: '', reduction: null, letters: [], extra: [], prims: [], hidden: [], decisions: [], sel: null, stamps: [], stampSel: -1 });
+  Object.assign(state, { intention: '', reduction: null, letters: [], extra: [], prims: [], hidden: [], decisions: [], sel: null });
+  state.layers = state.layers.filter(L => L.type !== 'symbol'); renderLayerPanel('letters');
   $('intention').value = ''; $('reductionBox').textContent = '—';
   render();
   showToast('Soltado. No lo busques.');
@@ -2583,7 +2871,7 @@ function syncControls() {
   $('compactRow').style.display = state.mode === 'fusion' ? 'flex' : 'none';
   $('chkCompact').checked = state.compact;
   $('rngOverlap').value = Math.round(state.overlap * 100); $('overlapVal').textContent = Math.round(state.overlap * 100) + '%';
-  $('selTheme').value = state.theme; $('selBorder').value = state.border;
+  $('selTheme').value = state.theme;
   // en uno a uno se resalta el pincel; si no, el remate general
   const termOn = state.termPick ? state.termBrush : state.terminals;
   document.querySelectorAll('.term-btn').forEach(b => b.classList.toggle('active', b.dataset.t === termOn));
@@ -2591,18 +2879,6 @@ function syncControls() {
   $('rngTermScale').value = state.termScale; $('termScaleVal').textContent = state.termScale + '%';
   $('chkColors').checked = state.colors; $('chkTransparent').checked = state.transparent;
   $('btnHideMode').classList.toggle('on', state.hideMode);
-  const st = state.star, ins = state.inscription;
-  $('chkStar').checked = st.enabled; $('selStarShape').value = st.shape; $('chkStarFit').checked = st.fitInside;
-  $('starInnerRow').style.display = st.shape === 'wide' ? 'flex' : 'none';
-  $('ringRow').hidden = !RING_BORDERS[state.border]; $('ringText').value = state.ringText; $('selRingSep').value = state.ringSep; $('selStarPoints').value = String(st.points); $('chkStarChords').checked = st.chords;
-  $('rngStarScale').value = st.scale; $('starScaleVal').textContent = st.scale + '%';
-  $('rngStarRot').value = st.rotation; $('starRotVal').textContent = st.rotation + '°';
-  $('rngStarInner').value = st.inner; $('starInnerVal').textContent = st.inner + '%';
-  $('rngStarThick').value = st.thickness; $('starThickVal').textContent = (st.thickness / 10).toFixed(1);
-  $('rngStarOpacity').value = st.opacity; $('starOpacityVal').textContent = st.opacity + '%';
-  $('chkInscription').checked = ins.enabled; $('insText').value = ins.text; $('selInsPos').value = ins.pos;
-  $('rngInsSize').value = ins.size; $('insSizeVal').textContent = ins.size;
-  $('rngInsSpacing').value = ins.spacing; $('insSpacingVal').textContent = ins.spacing;
   $('btnStamp').textContent = state.stampMode ? 'Colocando ' + state.stampSym : 'Colocar';
   document.querySelectorAll('.stamp-btn').forEach(b => b.classList.toggle('active', b.dataset.s === state.stampSym));
 }
@@ -2628,7 +2904,6 @@ $('btnBigger').addEventListener('click', () => editSelected(u => { u.ds = Math.m
 $('btnLetterReset').addEventListener('click', () => editSelected(u => Object.assign(u, newUser()), 'restaurar'));
 $('btnHideMode').addEventListener('click', () => { state.hideMode = !state.hideMode; state.stampMode = false; state.termPick = false; syncControls(); render(); showToast(state.hideMode ? 'Toca un trazo para ocultarlo o recuperarlo' : 'Modo ocultar desactivado'); });
 $('selTheme').addEventListener('change', e => { state.theme = e.target.value; render(); });
-$('selBorder').addEventListener('change', e => { state.border = e.target.value; $('ringRow').hidden = !RING_BORDERS[state.border]; if (state.prims.length) state.view = fitView(); render(); });
 // Terminales: cada boton muestra su remate dibujado con la misma geometria
 for (const t of TERMINALS) {
   const b = document.createElement('button');
@@ -2674,7 +2949,7 @@ $('famPersonal').addEventListener('click', () => setFamily('personal'));
 // Sello personal
 KAMEAS.forEach(k => { const o = document.createElement('option'); o.value = k.id; o.textContent = `${k.sym}\uFE0E ${k.name} (${PLANET_METAL[k.id]})`; $('selPersonalPlanet').append(o); });
 $('selPersonalPlanet').options[0].textContent = `Regente de hoy (${KAMEA_BY_ID[DAY_RULER[state.personal.day]].name})`;
-['selPersonalSource', 'selPersonalFormat', 'selPersonalPlanet', 'selPersonalView', 'chkPersonalSymbol', 'selPersonalSep', 'selPersonalStar'].forEach(id => $(id).addEventListener('change', personalRefresh));
+['selPersonalSource', 'selPersonalPlanet', 'selPersonalView'].forEach(id => $(id).addEventListener('change', personalRefresh));
 $('personalName').addEventListener('input', personalRefresh);
 $('btnPersonalProv').addEventListener('click', showProvenance);
 $('btnPersonalSVG').addEventListener('click', exportSVG);
@@ -2714,30 +2989,14 @@ $('btnRosaProv').addEventListener('click', showProvenance);
 $('panelToggle').addEventListener('click', e => { const open = $('controlPanel').classList.toggle('open'); e.currentTarget.setAttribute('aria-expanded', String(open)); });
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate();
-  if ((e.key === 'Delete' || e.key === 'Backspace') && state.stampSel >= 0 && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT') deleteStamp();
+  const typing = ['TEXTAREA', 'INPUT', 'SELECT'].includes(document.activeElement.tagName);
+  if ((e.key === 'Delete' || e.key === 'Backspace') && !typing && state.layerSel[scopeNow()]) removeLayer(scopeNow(), state.layerSel[scopeNow()]);
   if (e.key === 'Escape') { closeGnosis(); toggleGallery(false); $('provModal').classList.remove('open'); state.hideMode = false; state.stampMode = false; state.termPick = false; syncControls(); render(); }
 });
 
 // Marco ritual
 const refit = () => { if (state.prims.length) state.view = fitView(); render(); };
 const bindRange = (id, obj, key) => $(id).addEventListener('input', e => { obj[key] = Number(e.target.value); syncControls(); render(); });
-$('chkStar').addEventListener('change', e => { state.star.enabled = e.target.checked; refit(); });
-$('selStarShape').addEventListener('change', e => { state.star.shape = e.target.value; syncControls(); refit(); });
-$('chkStarFit').addEventListener('change', e => { state.star.fitInside = e.target.checked; refit(); });
-$('ringText').addEventListener('input', e => { state.ringText = e.target.value; render(); });
-$('selRingSep').addEventListener('change', e => { state.ringSep = e.target.value; render(); });
-$('selStarPoints').addEventListener('change', e => { state.star.points = Number(e.target.value); render(); });
-$('chkStarChords').addEventListener('change', e => { state.star.chords = e.target.checked; render(); });
-bindRange('rngStarScale', state.star, 'scale');
-bindRange('rngStarRot', state.star, 'rotation');
-bindRange('rngStarInner', state.star, 'inner');
-bindRange('rngStarThick', state.star, 'thickness');
-bindRange('rngStarOpacity', state.star, 'opacity');
-$('chkInscription').addEventListener('change', e => { state.inscription.enabled = e.target.checked; render(); });
-$('insText').addEventListener('input', e => { state.inscription.text = e.target.value; render(); });
-$('selInsPos').addEventListener('change', e => { state.inscription.pos = e.target.value; render(); });
-bindRange('rngInsSize', state.inscription, 'size');
-bindRange('rngInsSpacing', state.inscription, 'spacing');
 // Simbolos arcanos
 for (const [group, items] of STAMP_CATALOG) {
   const h = document.createElement('div'); h.className = 'stamp-group'; h.textContent = group;
@@ -2752,20 +3011,24 @@ for (const [group, items] of STAMP_CATALOG) {
   $('stampCatalog').append(h, grid);
 }
 function editStamp(fn) {
-  const s = state.stamps[state.stampSel];
-  if (!s) { showToast('Toca primero un símbolo en el lienzo'); return; }
-  fn(s); syncControls(); render();
+  const L = layerById('letters', state.layerSel.letters);
+  if (!L || L.type !== 'symbol') { showToast('Toca primero un símbolo en el lienzo'); return; }
+  fn(L); renderLayerPanel('letters'); syncControls(); render();
 }
-function deleteStamp() { editStamp(() => { state.stamps.splice(state.stampSel, 1); state.stampSel = -1; }); }
+function deleteStamp() { const id = state.layerSel.letters; if (id) removeLayer('letters', id); }
 $('btnStamp').addEventListener('click', () => { state.stampMode = !state.stampMode; state.hideMode = false; state.termPick = false; syncControls(); showToast(state.stampMode ? 'Toca el lienzo para colocar' : 'Colocar desactivado'); });
-$('btnClearStamps').addEventListener('click', () => { state.stamps = []; state.stampSel = -1; state.stampMode = false; syncControls(); render(); });
-$('btnStampSmaller').addEventListener('click', () => editStamp(s => { s.size = Math.max(18, Math.round((s.size || STAMP_SIZE) / 1.2)); }));
-$('btnStampBigger').addEventListener('click', () => editStamp(s => { s.size = Math.min(160, Math.round((s.size || STAMP_SIZE) * 1.2)); }));
-$('btnStampDelete').addEventListener('click', deleteStamp);
+$('btnClearStamps').addEventListener('click', () => { state.layers = state.layers.filter(L => L.type !== 'symbol'); state.layerSel.letters = null; state.stampMode = false; syncControls(); layersChanged('letters'); });
+$('btnStampSmaller').addEventListener('click', () => editStamp(L => { L.size = Math.max(18, Math.round(L.size / 1.2)); }));
+$('btnStampBigger').addEventListener('click', () => editStamp(L => { L.size = Math.min(160, Math.round(L.size * 1.2)); }));
+$('btnStampDelete').addEventListener('click', () => { const L = layerById('letters', state.layerSel.letters); if (!L || L.type !== 'symbol') { showToast('Toca primero un símbolo en el lienzo'); return; } deleteStamp(); });
 
 let toastTimer;
 function showToast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 1900); }
 
+state.personal.layers = LAYER_PRESETS.goetia.make('personal');
+mountLayerPanel('letters', $('layersHost_letters'));
+mountLayerPanel('personal', $('layersHost_personal'));
+syncLayerTools();
 syncControls();
 $('intention').value = 'Mi práctica mantiene enfoque sereno';
 generate();

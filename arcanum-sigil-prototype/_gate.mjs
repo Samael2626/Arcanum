@@ -157,34 +157,52 @@ const hid = await page.evaluate(() => {
 });
 check('ocultar trazo baja legibilidad', hid.legible < 1 && hid.inSvg < hid.after, `legible=${hid.legible.toFixed(2)}`);
 
-// 9) Borde (Cooper): capa independiente, solo por decision
+// 9) Capas: marcos anidados, estrellas, inscripcion y simbolos
+const layerSvg = type => page.evaluate(t => (buildSVG().match(new RegExp(`<g data-layer="${t}">[\\s\\S]*?</g>`)) || [''])[0], type);
 const noBorder = (await snap()).svg;
-await page.selectOption('#selBorder', 'circle');
+await page.selectOption('#selAddLayer_letters', 'circle'); await page.click('#btnAddLayer_letters');
 const withBorder = (await snap()).svg;
-check('borde capa on/off', !noBorder.includes('data-layer="border"') && withBorder.includes('data-layer="border"'));
-await page.selectOption('#selBorder', 'none');
-
-// 9b) Marco ritual: estrella 5-9 puntas, inscripcion y estampas (capas a mano)
-await page.click('#subStar summary');
-await page.check('#chkStar');
+check('capa circulo on/off', !noBorder.includes('data-layer="circle"') && withBorder.includes('data-layer="circle"'));
+// varias capas a la vez, cada una dentro de la anterior
+for (const t of ['square', 'triangle', 'ringLatin', 'ringHebrew', 'star', 'inscription']) { await page.selectOption('#selAddLayer_letters', t); await page.click('#btnAddLayer_letters'); }
+const nest = await page.evaluate(() => {
+  const lay = layoutLayers(state.layers, layerCtx('letters'));
+  const Rs = lay.parts.filter(p => p.R).map(p => p.R);
+  return { n: lay.parts.length, down: Rs.every((r, i) => !i || r < Rs[i - 1]), contentR: lay.contentR, last: Rs[Rs.length - 1], det: buildSVG() === buildSVG() };
+});
+check('capas: 7 marcos apilados, cada uno dentro del anterior', nest.n === 7 && nest.down && nest.det, JSON.stringify(nest));
+check('capas: el sigilo cabe en el hueco final', await page.evaluate(() => { const r = layoutLayers(state.layers, layerCtx('letters')).contentR; return state.view.k * Math.SQRT2 * Math.max(...state.prims.flatMap(p => primPoints(p).map(q => Math.max(Math.abs(q.x - state.view.cx), Math.abs(q.y - state.view.cy))))) <= r + 1; }));
+await shot('capas-apiladas');
+// tamano y giro: una capa puede cruzarse con las demas
+const crossL = await page.evaluate(() => { const L = state.layers.find(q => q.type === 'square'); const before = buildSVG(); L.scale = 150; L.rot = 45; render(); return before !== buildSVG(); });
+check('capas: tamano y giro cambian la capa', crossL);
+// orden: subir y bajar
+const order = await page.evaluate(() => { const ids = state.layers.map(L => L.id); moveLayer('letters', ids[1], -1); const ok = state.layers[0].id === ids[1]; moveLayer('letters', ids[1], 1); return ok && state.layers[1].id === ids[1]; });
+check('capas: reordenar sube y baja', order);
+// estrellas de 5 a 9 puntas, angulosa exacta y ancha
+await page.evaluate(() => { state.layers = []; layersChanged('letters'); });
+const starL = await page.evaluate(() => addLayer('letters', 'star').id);
 for (const n of [5, 6, 7, 8, 9]) {
-  await page.selectOption('#selStarPoints', String(n));
-  const st = await page.evaluate(() => {
-    const s = buildSVG(), g = s.match(/<g data-layer="star"[\s\S]*?<\/g>/);
-    return { det: s === buildSVG(), paths: g ? (g[0].match(/<path/g) || []).length : 0 };
-  });
-  check(`estrella ${n} puntas`, st.det && st.paths === n + 1, `${st.paths - 1} acordes`);
+  const st = await page.evaluate(([id, n]) => { const L = layerById('letters', id); L.points = n; render(); const g = (buildSVG().match(/<g data-layer="star">[\s\S]*?<\/g>/) || [''])[0]; const geo = layerGeom(L, 300, layerCtx('letters')); const tips = geo.vertices; return { paths: (g.match(/<path/g) || []).length, ratio: Math.hypot(tips[1][0] - C, tips[1][1] - C) / Math.hypot(tips[0][0] - C, tips[0][1] - C), want: starRatio(n, STAR_STEP[n]) }; }, [starL, n]);
+  check(`estrella ${n} puntas angulosa exacta`, st.paths === n + 1 && Math.abs(st.ratio - st.want) < .002, `${st.paths - 1} acordes, ${st.ratio.toFixed(3)}`);
   if ([5, 7, 9].includes(n)) await shot(`star-${n}`);
 }
-await page.uncheck('#chkStarChords');
-check('estrella sin acordes', (await page.evaluate(() => (buildSVG().match(/<g data-layer="star"[\s\S]*?<\/g>/)[0].match(/<path/g) || []).length)) === 1);
-await page.check('#chkStarChords');
-await page.click('#subIns summary');
-await page.check('#chkInscription');
-await page.fill('#insText', 'VOLUNTAS');
-const insN = await page.evaluate(() => (buildSVG().match(/<g data-layer="inscription"[\s\S]*?<\/g>/)[0].match(/<text/g) || []).length);
+check('estrella de 5 = pentagrama (0,382)', await page.evaluate(id => { const L = layerById('letters', id); L.points = 5; const v = layerGeom(L, 300, layerCtx('letters')).vertices; return Math.abs(Math.hypot(v[1][0] - C, v[1][1] - C) / 300 - .382) < .002; }, starL));
+check('estrella ancha disponible', await page.evaluate(id => { const L = layerById('letters', id); L.shape = 'wide'; const v = layerGeom(L, 300, layerCtx('letters')).vertices; L.shape = 'sharp'; return Math.hypot(v[1][0] - C, v[1][1] - C) / 300 > .45; }, starL));
+check('estrella sin acordes', await page.evaluate(id => { const L = layerById('letters', id); L.chords = false; render(); const n = ((buildSVG().match(/<g data-layer="star">[\s\S]*?<\/g>/) || [''])[0].match(/<path/g) || []).length; L.chords = true; render(); return n === 1; }, starL));
+check('estrella que contiene: el sigilo se encoge a su centro', await page.evaluate(id => { const a = layoutLayers(state.layers, layerCtx('letters')).contentR; const L = layerById('letters', id); L.contain = true; const b = layoutLayers(state.layers, layerCtx('letters')).contentR; L.contain = false; return b < a; }, starL));
+// dos estrellas a la vez (5 y 7)
+await page.evaluate(() => { addLayer('letters', 'star', { points: 7 }); });
+check('capas: dos estrellas superpuestas', await page.evaluate(() => (buildSVG().match(/<g data-layer="star">/g) || []).length === 2));
+// inscripcion y anillos con su propio texto
+await page.evaluate(() => { state.layers = []; addLayer('letters', 'inscription', { text: 'VOLUNTAS' }); });
+const insN = (await layerSvg('inscription')).split('<text').length - 1;
 check('inscripcion 8 letras', insN === 8, insN + '');
-// Simbolos arcanos: catalogo, colocar, arrastrar, escalar, quitar
+await page.evaluate(() => { state.layers = []; addLayer('letters', 'ringLatin', { text: 'LUZ' }); addLayer('letters', 'ringHebrew', { text: 'אור' }); });
+const rings = await page.evaluate(() => { const s = buildSVG(); const g = t => (s.match(new RegExp(`<g data-layer="${t}">[\\s\\S]*?</g>`)) || [''])[0]; return { lat: g('ringLatin').split('<text').length - 1, heb: /[א-ת]/.test(g('ringHebrew')) && !/[A-Z]</.test(g('ringHebrew')) }; });
+check('dos anillos a la vez, cada uno con su texto', rings.lat === 3 && rings.heb, JSON.stringify(rings));
+await page.evaluate(() => { state.layers = []; layersChanged('letters'); });
+// Simbolos arcanos: catalogo, colocar (con iman), arrastrar, escalar, quitar
 const cat = await page.evaluate(() => ({
   groups: document.querySelectorAll('#stampCatalog .stamp-group').length,
   btns: document.querySelectorAll('#stampCatalog .stamp-btn').length,
@@ -193,33 +211,61 @@ const cat = await page.evaluate(() => ({
 }));
 check('catalogo de simbolos por grupos con nombre', cat.groups === 6 && cat.btns >= 39 && cat.named, `${cat.groups} grupos, ${cat.btns} simbolos`);
 check('solo planetas clasicos', !cat.modern);
+const syms = () => page.evaluate(() => state.layers.filter(L => L.type === 'symbol').map(L => ({ sym: L.sym, x: L.x, y: L.y, size: L.size })));
 await page.click('.stamp-btn[title="Júpiter"]');
 const box = await page.locator('#canvas').boundingBox();
 const at = (fx, fy) => [box.x + box.width * fx, box.y + box.height * fy];
 await page.mouse.click(...at(.15, .15));
 await page.click('#btnStamp');
-let st1 = await page.evaluate(() => ({ n: state.stamps.length, sym: state.stamps[0] && state.stamps[0].sym, svg: buildSVG().includes('data-layer="stamps"'), info: document.getElementById('stampInfo').textContent }));
-check('jupiter colocado', st1.n === 1 && st1.sym.startsWith('♃') && st1.svg && /Júpiter/.test(st1.info), st1.info);
+let st1 = await syms();
+const info1 = await page.evaluate(() => document.getElementById('stampInfo').textContent);
+check('jupiter colocado como capa', st1.length === 1 && st1[0].sym.startsWith('♃') && (await page.evaluate(() => buildSVG().includes('data-layer="symbol"'))) && /Júpiter/.test(info1), info1);
 await page.mouse.move(...at(.15, .15)); await page.mouse.down(); await page.mouse.move(...at(.85, .2), { steps: 5 }); await page.mouse.up();
-const moved = await page.evaluate(() => ({ x: state.stamps[0].x, n: state.stamps.length }));
-check('arrastrar simbolo lo mueve', moved.x > 600 && moved.n === 1, `x=${moved.x.toFixed(0)}`);
+st1 = await syms();
+check('arrastrar simbolo lo mueve', st1[0].x > 600 && st1.length === 1, `x=${st1[0].x.toFixed(0)}`);
 await page.click('#btnStampBigger');
-check('ampliar simbolo', await page.evaluate(() => state.stamps[0].size > STAMP_SIZE && buildSVG().includes(`font-size="${state.stamps[0].size}"`)));
+check('ampliar simbolo', await page.evaluate(() => { const L = state.layers.find(q => q.type === 'symbol'); return L.size > STAMP_SIZE && buildSVG().includes(`font-size="${L.size}.00"`); }));
 await page.click('#btnStampDelete');
-check('quitar simbolo', await page.evaluate(() => state.stamps.length === 0 && !buildSVG().includes('data-layer="stamps"')));
+check('quitar simbolo', (await syms()).length === 0 && !(await page.evaluate(() => buildSVG().includes('data-layer="symbol"'))));
+// guias: arrastrado cerca de la vertical del centro, se pega a x = 400
 await page.click('.stamp-btn[title="Saturno"]');
-await page.mouse.click(...at(.15, .15));
+await page.mouse.click(...at(.3, .1));
 await page.click('#btnStamp');
-const stamps = await page.evaluate(() => ({ n: state.stamps.length, svg: buildSVG().includes('data-layer="stamps"') }));
-check('estampa colocada sin tocar letras', stamps.n === 1 && stamps.svg, `n=${stamps.n}`);
+const s0 = (await syms())[0];
+const cx0 = box.x + box.width * s0.x / 800, cy0 = box.y + box.height * s0.y / 800;
+await page.mouse.move(cx0, cy0); await page.mouse.down();
+await page.mouse.move(box.x + box.width * .493, cy0 + 12, { steps: 4 });
+const gd = await page.evaluate(() => state.guides.map(g => g.k).join(','));
+await page.mouse.up();
+const s1 = (await syms())[0];
+check('guias: el simbolo se pega a la vertical del centro', Math.abs(s1.x - 400) < .01 && /v|point/.test(gd), `x=${s1.x.toFixed(2)} guias=${gd}`);
+check('guias: pocas a la vez (no satura)', gd.split(',').filter(Boolean).length <= 2, gd);
+check('guias: desaparecen al soltar', await page.evaluate(() => state.guides.length === 0));
+// con Alt se mueve libre
+await page.mouse.move(box.x + box.width * .5, box.y + box.height * s1.y / 800); await page.mouse.down();
+await page.keyboard.down('Alt');
+await page.mouse.move(box.x + box.width * .507, box.y + box.height * s1.y / 800 + 5, { steps: 3 });
+await page.keyboard.up('Alt');
+await page.mouse.up();
+check('guias: Alt mueve libre (sin pegarse)', await page.evaluate(() => Math.abs(state.layers.find(q => q.type === 'symbol').x - 400) > 2));
+// giro con iman a multiplos de 15
+check('giro con iman: 43 grados se pega a 45', await page.evaluate(() => snapAngle(43) === 45 && snapAngle(37) === 37));
+// rejilla: solo en pantalla, nunca en el SVG
+await page.selectOption('#layersHost_letters .grid-sel', 'polar');
+check('rejilla polar visible y fuera del SVG', await page.evaluate(() => state.grid === 'polar' && !/data-layer="grid"/.test(buildSVG())));
+await page.selectOption('#layersHost_letters .grid-sel', 'none');
 await shot('marco-completo');
+// galeria: guarda y recupera las capas
+await page.evaluate(() => { addLayer('letters', 'star', { points: 9 }); addLayer('letters', 'inscription', { text: 'VOLUNTAS' }); });
 await page.evaluate(() => localStorage.clear());
 await page.click('#btnSave');
-await page.uncheck('#chkStar'); await page.uncheck('#chkInscription'); await page.click('#btnClearStamps');
+await page.evaluate(() => { state.layers = []; layersChanged('letters'); });
 await page.evaluate(() => restoreState(readGallery()[0].state));
-const back = await page.evaluate(() => ({ star: state.star.enabled && state.star.points === 9, ins: state.inscription.text, stamps: state.stamps.length, ui: document.getElementById('chkStar').checked }));
-check('galeria recupera estrella, inscripcion y estampas', back.star && back.ins === 'VOLUNTAS' && back.stamps === 1 && back.ui);
-await page.uncheck('#chkStar'); await page.uncheck('#chkInscription'); await page.click('#btnClearStamps');
+const back = await page.evaluate(() => ({ star: state.layers.some(L => L.type === 'star' && L.points === 9), ins: (state.layers.find(L => L.type === 'inscription') || {}).text, syms: state.layers.filter(L => L.type === 'symbol').length, ui: document.querySelectorAll('#layerList_letters .layer-row').length }));
+check('galeria recupera estrella, inscripcion y simbolos (capas)', back.star && back.ins === 'VOLUNTAS' && back.syms === 1 && back.ui === 3, JSON.stringify(back));
+// guardados antiguos (borde, estrella, estampas) se convierten en capas
+check('galeria antigua se migra a capas', await page.evaluate(() => { const l = legacyLayers({ border: 'circle', star: { enabled: true, points: 7, shape: 'sharp', inner: 50, chords: true }, inscription: { enabled: false }, stamps: [{ sym: '♄︎', x: 100, y: 100, size: 40 }] }); return l.map(L => L.type).join() === 'circle,star,symbol'; }));
+await page.evaluate(() => { state.layers = []; layersChanged('letters'); });
 
 // 9c) Terminales: catalogo, remate general y uno a uno
 await forge('MI PRACTICA MANTIENE ENFOQUE SERENO', 'fusion');
@@ -546,10 +592,10 @@ await forge('Samuel', 'fusion', 'cooper');
 await page.click('#famPersonal');
 const pers = {};
 for (const fmt of ['goetia', 'pentaculo', 'agrippa']) {
-  await page.selectOption('#selPersonalFormat', fmt);
+  await page.click(`#layersHost_personal [data-preset="${fmt}"]`);
   pers[fmt] = await page.evaluate(() => { const s = buildSVG(); return { s, det: s === buildSVG(), ok: !new DOMParser().parseFromString(s, 'image/svg+xml').querySelector('parsererror'), nan: /NaN|undefined/.test(s), texts: (s.match(/<g data-layer="personal-name"[^>]*>[\s\S]*?<\/g>/) || [''])[0].split('<text').length - 1, sigil: /data-layer="personal-sigil"[\s\S]*<path/.test(s), honest: /No es un sello histórico/.test(s) }; });
 }
-check('sello personal: 3 formatos distintos, deterministas y validos', new Set(Object.values(pers).map(x => x.s)).size === 3 && Object.values(pers).every(x => x.det && x.ok && !x.nan && x.sigil));
+check('sello personal: 3 plantillas distintas, deterministas y validas', new Set(Object.values(pers).map(x => x.s)).size === 3 && Object.values(pers).every(x => x.det && x.ok && !x.nan && x.sigil));
 check('sello personal: Goetia con SAMUEL (6 letras) y el simbolo del planeta en el anillo', pers.goetia.texts === 7, pers.goetia.texts + '');
 check('sello personal: pentaculo con el nombre en hebreo (שמואל) y el simbolo', pers.pentaculo.texts === 6 && /[א-ת]/.test(pers.pentaculo.s));
 check('sello personal: el SVG declara que es un sello nuevo, no historico', Object.values(pers).every(x => x.honest));
@@ -563,28 +609,27 @@ await page.selectOption('#selPersonalSource', 'kamea');
 const kp = await page.evaluate(() => ({ planet: personalPlanet(), locked: document.getElementById('selPersonalPlanet').disabled, metal: /metal: hierro/.test(buildSVG()) }));
 check('sello personal: con Kamea el planeta es el de la tabla (Marte, hierro)', kp.planet === 'mars' && kp.locked && kp.metal, JSON.stringify(kp));
 await page.selectOption('#selPersonalSource', 'letters');
-// opciones nuevas: separadores y estrella interior
-await page.selectOption('#selPersonalFormat', 'goetia'); await page.selectOption('#selPersonalSep', 'cross'); await page.selectOption('#selPersonalStar', '7');
-const po = await page.evaluate(() => { const s = buildSVG(); return { cross: (s.match(/>✠</g) || []).length, star: (s.match(/data-layer="personal-star"[\s\S]*?<\/g>/) || [''])[0].split('<path').length - 1 }; });
-check('sello personal: cruces entre letras y estrella de 7 puntas', po.cross === 5 && po.star === 8, JSON.stringify(po));
-await page.selectOption('#selPersonalSep', 'none'); await page.selectOption('#selPersonalStar', '0');
+// capas en el sello: plantilla Goetia + cruces + estrella de 7 + anillo hebreo por dentro
+await page.click('#layersHost_personal [data-preset="goetia"]');
+const po = await page.evaluate(() => {
+  state.personal.layers[0].sep = 'cross';
+  addLayer('personal', 'star', { points: 7 });
+  addLayer('personal', 'ringHebrew');
+  const s = buildSVG();
+  return { cross: (s.match(/>✠</g) || []).length, star: ((s.match(/<g data-layer="star">[\s\S]*?<\/g>/) || [''])[0].match(/<path/g) || []).length, heb: /[א-ת]/.test(s), layers: state.personal.layers.map(L => L.type).join() };
+});
+check('sello personal: capas combinadas (anillo con cruces, estrella de 7, anillo hebreo)', po.cross === 5 && po.star === 8 && po.heb, JSON.stringify(po));
+check('sello personal: la descripcion nombra sus capas', await page.evaluate(() => /capas: Anillo latino, Estrella 7, Anillo hebreo/.test(buildSVG())));
+await page.click('#layersHost_personal [data-preset="goetia"]');
 await page.click('#famLetters');
-// Sigilo de letras: anillo con nombre y estrella angulosa
+// Sigilo de letras: anillos con nombre
 await forge('Amor', 'fusion', 'cooper');
-await page.selectOption('#selBorder', 'ringLatin');
-const lr = await page.evaluate(() => { const s = buildSVG(); return { ring: s.includes('data-layer="ring"'), n: (s.match(/<g data-layer="ring-text"[^>]*>[\s\S]*?<\/g>/) || [''])[0].split('<text').length - 1, row: !document.getElementById('ringRow').hidden }; });
-check('letras: anillo con el nombre (AMOR, 4 letras)', lr.ring && lr.n === 4 && lr.row, JSON.stringify(lr));
-await page.selectOption('#selBorder', 'ringHebrew');
+await page.evaluate(() => { state.layers = []; addLayer('letters', 'ringLatin'); });
+const lr = await page.evaluate(() => { const s = buildSVG(); return { n: (s.match(/<g data-layer="ringLatin">[\s\S]*?<\/g>/) || [''])[0].split('<text').length - 1 }; });
+check('letras: anillo con la intencion (AMOR, 4 letras)', lr.n === 4, JSON.stringify(lr));
+await page.evaluate(() => { state.layers = []; addLayer('letters', 'ringHebrew'); });
 check('letras: anillo en hebreo', await page.evaluate(() => /[א-ת]/.test(buildSVG())));
-await page.selectOption('#selBorder', 'none');
-await page.check('#chkStar');
-await page.selectOption('#selStarPoints', '5');
-const sr = await page.evaluate(() => { const g = starGeom(); const out = Math.hypot(g.pts[0][0] - C, g.pts[0][1] - C), inn = Math.hypot(g.pts[1][0] - C, g.pts[1][1] - C); return inn / out; });
-check('letras: estrella angulosa de 5 puntas = pentagrama exacto (0,382)', Math.abs(sr - 0.382) < 0.002, sr.toFixed(3));
-await page.selectOption('#selStarShape', 'wide');
-check('letras: estrella ancha disponible', await page.evaluate(() => { const g = starGeom(); return Math.hypot(g.pts[1][0] - C, g.pts[1][1] - C) / Math.hypot(g.pts[0][0] - C, g.pts[0][1] - C) > 0.5; }));
-await page.selectOption('#selStarShape', 'sharp');
-await page.uncheck('#chkStar');
+await page.evaluate(() => { state.layers = []; layersChanged('letters'); });
 
 // 14) Todo el texto visible en espanol: sin codigos internos ni citas en ingles
 // (el original en ingles solo puede vivir en tooltips)
