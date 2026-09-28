@@ -41,15 +41,46 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
 
 .table{position:absolute;left:50%;top:50%;width:600px;height:900px;transform-style:preserve-3d;will-change:transform}
 .card.noear .face{box-shadow:none}.card.noear .shadow{display:none}
+body.q1 .card .face{box-shadow:none}
+body.q1 .candlelight{display:none}
+body.q2 .deck .side{background:#d9ccad}
+body.q2 .slot{border-style:solid;border-width:1.5px}
+.guide{display:none!important}
+header{position:relative}
+.help-btn{position:absolute;right:14px;top:calc(env(safe-area-inset-top,0px) + 12px);width:44px;height:44px;border-radius:50%;cursor:pointer;
+  border:1px solid rgba(201,168,76,.45);background:rgba(18,17,24,.8);color:var(--gold-light);font:600 22px/1 var(--display)}
+.help-btn[hidden]{display:none}
+.help{position:absolute;left:12px;right:12px;top:10px;z-index:8;padding:16px 16px 12px;border-radius:16px;
+  background:rgba(14,13,20,.94);border:1px solid rgba(201,168,76,.4);box-shadow:0 18px 50px rgba(0,0,0,.6);animation:pop .2s ease-out}
+.help[hidden]{display:none}
+.help h2{margin:0 0 10px;font:600 22px/1.1 var(--display);color:var(--gold-light)}
+.help ul{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.help li{display:grid;grid-template-columns:96px 1fr;gap:10px;font-size:15px;line-height:1.35;color:var(--ivory-muted)}
+.help li b{font:600 16px/1.2 var(--display);color:var(--gold)}
+.help .row{display:flex;align-items:center;gap:12px;margin-top:12px}
+.help .bar{flex:1;height:3px;border-radius:2px;background:rgba(201,168,76,.18);overflow:hidden}
+.help .bar i{display:block;height:100%;background:var(--gold);transform-origin:left;animation:shrink 40s linear forwards}
+@keyframes shrink{to{transform:scaleX(0)}}
+.help .act{flex:0 0 auto;min-width:120px}
+.embro{position:absolute;left:0;top:0;width:440px;height:440px;pointer-events:none;opacity:0;transition:opacity .9s}
+.embro.ready{opacity:1}
+.embro .hit{position:absolute;left:140px;top:420px;width:160px;height:52px;cursor:pointer}
+.embro.ready .hit{pointer-events:auto}
+.embro svg{width:100%;height:100%;overflow:visible}
+.embro .thread{fill:none;stroke:#d9b45e;stroke-width:2;stroke-dasharray:3 4;opacity:.55}
+.embro.ready .thread{animation:stitch 3.2s ease-in-out infinite}
+@keyframes stitch{50%{opacity:.95}}
+.embro .seal-ring{fill:none;stroke:#f3dc9a;stroke-width:3.2;stroke-linecap:round;stroke-dasharray:1270;stroke-dashoffset:1270;transform:rotate(90deg);transform-origin:220px 220px}
+.embro.sealing .seal-ring{transition:stroke-dashoffset 1.3s linear;stroke-dashoffset:0}
+.embro text{font:italic 600 21px var(--display);fill:#e8c878;letter-spacing:.08em;opacity:.85}
 .fps{position:absolute;right:10px;bottom:10px;z-index:7;font:600 13px/1 ui-monospace,monospace;color:var(--gold-light);background:rgba(10,10,15,.7);padding:5px 8px;border-radius:6px;pointer-events:none}
 .wood{position:absolute;inset:0;border-radius:28px;transform:translateZ(0);
   background:
     repeating-linear-gradient(88deg, rgba(0,0,0,.0) 0 7px, rgba(0,0,0,.18) 7px 9px, rgba(255,220,170,.03) 9px 16px),
     linear-gradient(180deg,#2b1a12,#1a0f0a 60%,#140b07);
   box-shadow:0 0 0 2px #0c0705, inset 0 0 0 3px rgba(201,168,76,.22), inset 0 0 40px rgba(0,0,0,.6);}
-.cloth{position:absolute;left:18px;right:18px;top:172px;bottom:18px;border-radius:16px;transform:translateZ(.2px);
+.cloth{background-size:96px 96px;position:absolute;left:18px;right:18px;top:172px;bottom:18px;border-radius:16px;transform:translateZ(.2px);
   background:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .5 0'/></filter><rect width='160' height='160' filter='url(%23n)' opacity='.35'/></svg>"),
     radial-gradient(ellipse 75% 60% at 50% 45%, #5a1422 0%, #3a0b16 55%, #1f050b 100%);
   box-shadow:inset 0 0 0 2px rgba(201,168,76,.35), inset 0 0 0 9px #22060d, inset 0 0 0 10px rgba(201,168,76,.18), inset 0 0 60px rgba(0,0,0,.55);}
 .cloth svg{position:absolute;left:50%;top:44%;width:420px;height:420px;transform:translate(-50%,-50%);opacity:.14}
@@ -69,7 +100,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
 .face.front img.rev{transform:rotate(180deg)}
 .fx{position:absolute;inset:0;pointer-events:none;opacity:0}
 .mote{position:absolute;width:5px;height:5px;border-radius:50%;background:#FAD26A;box-shadow:0 0 6px #EDAE30;bottom:6px}
-.shadow{position:absolute;inset:4px;border-radius:10px;background:rgba(0,0,0,.75);filter:blur(10px);opacity:0;pointer-events:none}
+.shadow{position:absolute;inset:-8px;border-radius:16px;background:radial-gradient(closest-side,rgba(0,0,0,.7),rgba(0,0,0,0));opacity:0;pointer-events:none}
 
 .deck .side{position:absolute;pointer-events:auto}
 .deck .side.s,.deck .side.n{left:0;width:110px;background:repeating-linear-gradient(to bottom,#e9dec4 0 1px,#b39d6c 1px 2px)}
@@ -80,7 +111,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
 .deck .side.w{transform-origin:100% 50%}
 .deck .top{border:1.5px solid rgba(201,168,76,.55)}
 .deck.glow .top{box-shadow:0 0 0 2px rgba(236,215,154,.55),0 0 22px rgba(236,215,154,.35)}
-.dshadow{position:absolute;inset:-4px;border-radius:12px;background:rgba(0,0,0,.6);filter:blur(9px);transform:translate3d(8px,12px,.1px)}
+.dshadow{position:absolute;inset:-10px;border-radius:16px;background:radial-gradient(closest-side,rgba(0,0,0,.6),rgba(0,0,0,0));transform:translate3d(8px,12px,.1px)}
 .dlabel{position:absolute;left:-90px;right:-90px;top:200px;text-align:center;transform:translateZ(.3px);
   font-family:var(--display);font-weight:600;font-size:30px;line-height:1.1;color:var(--gold-light)}
 .dlabel small{display:block;font-family:var(--body);font-weight:400;font-size:24px;color:var(--ivory-muted)}
@@ -99,8 +130,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
 .radial{position:fixed;inset:0;z-index:50;pointer-events:none}
 .radial .disk{position:fixed;transform:translate(-50%,-50%) scale(.76);border-radius:50%;
   background:radial-gradient(circle,rgba(12,11,17,.72) 0 24%,rgba(18,17,24,.58) 25% 59%,rgba(7,7,11,.38) 60% 72%,transparent 73%);
-  border:1px solid rgba(201,168,76,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 22px 80px rgba(0,0,0,.62);
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(201,168,76,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 22px 80px rgba(0,0,0,.62);;
   opacity:0;transition:transform .18s ease-out,opacity .18s}
 .radial.open .disk{transform:translate(-50%,-50%) scale(1);opacity:1}
 .rbtn,.rclose{position:fixed;pointer-events:auto;transform:translate(-50%,-50%);border-radius:50%;cursor:pointer;color:var(--gold-light)}
@@ -119,8 +149,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
 .rbtn:not(:disabled):active{background:rgba(201,168,76,.25)}
 .rbtn:focus-visible,.rclose:focus-visible{outline:2px solid var(--gold-light);outline-offset:3px}
 .rclose{width:52px;height:52px;display:grid;place-items:center;background:rgba(18,17,24,.58);border:1px solid rgba(201,168,76,.34);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 7px 22px rgba(0,0,0,.5);
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 7px 22px rgba(0,0,0,.5);}
 .rclose svg{width:22px;height:22px}
 .rtitle{position:fixed;z-index:1;transform:translate(-50%,-50%);width:132px;text-align:center;color:var(--gold);
   font:600 12px/1.15 var(--display);letter-spacing:.08em;text-transform:uppercase;pointer-events:none}
@@ -135,8 +164,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
 @keyframes ring{to{stroke-dashoffset:151}}
 .undo-chip{position:fixed;z-index:45;transform:translate(-50%,-100%);display:flex;align-items:center;gap:8px;min-height:48px;padding:8px 16px 8px 12px;
   border-radius:999px;border:1px solid var(--gold);color:var(--gold-light);cursor:pointer;font:600 16px/1 var(--display);
-  background:linear-gradient(145deg,rgba(60,48,26,.85),rgba(18,17,24,.8));box-shadow:0 10px 26px rgba(0,0,0,.55);
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);animation:pop .16s ease-out}
+  background:linear-gradient(145deg,rgba(60,48,26,.85),rgba(18,17,24,.8));box-shadow:0 10px 26px rgba(0,0,0,.55);;animation:pop .16s ease-out}
 .undo-chip svg{width:22px;height:22px}
 .seal{position:absolute;left:0;top:0;width:84px;height:84px;border-radius:50%;cursor:pointer;
   background:radial-gradient(circle at 38% 32%,#9b2a3d,#5a1422 55%,#2a0610);border:3px solid rgba(201,168,76,.75);
@@ -151,7 +179,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
   border:3px solid rgba(236,215,154,.9);box-shadow:0 0 40px rgba(237,174,48,.7),inset 0 0 40px rgba(237,174,48,.45)}
 .card.clar .face{outline:2px solid rgba(236,215,154,.85);box-shadow:0 0 14px rgba(236,215,154,.5)}
 .banner{position:absolute;left:12px;right:12px;top:6px;z-index:6;display:grid;gap:8px;padding:10px 12px;border-radius:14px;
-  background:rgba(18,17,24,.72);border:1px solid var(--line);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  background:rgba(18,17,24,.72);border:1px solid var(--line);}
 .banner[hidden]{display:none}
 .banner p{margin:0;font-size:14px;color:var(--ivory-muted);line-height:1.35}
 .banner b{font-family:var(--display);font-size:17px;color:var(--gold-light);font-weight:600}
@@ -168,7 +196,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
 @keyframes ear{50%{width:16px;height:16px}}
 .pips{position:absolute;left:calc(100% + 5px);top:6px;height:180px;width:18px;display:flex;flex-direction:column;flex-wrap:wrap;align-content:flex-start;gap:2px;
   transform:translateZ(.4px);pointer-events:none}
-.pips i{display:block;width:16px;height:16px;color:#F2DFA0;filter:drop-shadow(0 0 3px rgba(237,174,48,.8))}
+.pips i{display:block;width:16px;height:16px;color:#F7E3A6}
 .pips i svg{width:100%;height:100%;display:block}
 .pips.rev i{transform:rotate(180deg)}
 .pips b{font:700 17px/1 var(--display);color:#F2DFA0;writing-mode:vertical-rl;text-shadow:0 0 6px rgba(237,174,48,.8)}
@@ -199,7 +227,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
   background:radial-gradient(circle,rgba(255,205,125,.5),rgba(255,170,80,.14) 45%,transparent 70%)}
 @keyframes flick{0%,100%{transform:scale(1,1) skewX(0)}30%{transform:scale(.93,1.09) skewX(3deg)}62%{transform:scale(1.05,.94) skewX(-2deg)}}
 @keyframes flick2{50%{opacity:.86}}
-.candlelight{position:absolute;inset:0;border-radius:16px;pointer-events:none;mix-blend-mode:screen;opacity:.86;
+.candlelight{position:absolute;inset:0;border-radius:16px;pointer-events:none;opacity:.6;
   background:radial-gradient(circle at 7% -12%,rgba(255,176,96,.34),transparent 46%),radial-gradient(circle at 93% -12%,rgba(255,176,96,.34),transparent 46%)}
 .fxcanvas{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
 .cflame{position:absolute;left:0;top:0;z-index:3;pointer-events:none}
@@ -250,6 +278,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
     <h1>Mesa de tarot</h1>
     <div class="status" id="status">Ningún mazo en juego</div>
   </div>
+  <button class="help-btn" id="help-btn" aria-label="Cómo se usa la mesa" hidden>?</button>
 </header>
 
 <main class="scene" id="scene">
@@ -258,7 +287,16 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
     <p id="banner-text"></p>
     <div class="two"><button class="act" id="b-back">Volver a mi mesa</button><button class="act primary" id="b-go">Continuar aquí</button></div>
   </div>
-  <button class="interp" id="interp" hidden>Interpretación</button>
+  <div class="help" id="help" role="dialog" aria-label="Cómo se usa la mesa" hidden>
+    <h2>Cómo se usa la mesa</h2>
+    <ul>
+      <li><b>Tocar</b><span>Hace lo evidente: extiende el mazo, desvela una carta de la tirada o devuelve una suelta a su montón.</span></li>
+      <li><b>Mantener</b><span>Abre el menú de lo que tocas. Desliza hasta la opción y suelta.</span></li>
+      <li><b>Arrastrar el tapete</b><span>Gira e inclina la mesa. Pellizca para acercarte.</span></li>
+      <li><b>Esquina</b><span>Levanta la esquina de una carta para voltearla. El doble toque también la desvela.</span></li>
+    </ul>
+    <div class="row"><div class="bar"><i></i></div><button class="act" id="help-ok">Entendido</button></div>
+  </div>
   <canvas class="fxcanvas" id="fxbody"></canvas>
   <canvas class="fxcanvas" id="fx"></canvas>
   <div class="table" id="table">
@@ -623,7 +661,16 @@ const pileName = d => d === active ? d.def.name : 'Montón';
 
 // ================= UI: estado y guia contextual =================
 const $ = id => document.getElementById(id);
-const statusEl = $('status'), guideEl = $('guide'), toastEl = $('toast'), interpEl = $('interp');
+const statusEl = $('status'), guideEl = $('guide'), toastEl = $('toast');
+// Interpretacion vive bordada en el centro del hexagrama: gira e inclina con la mesa
+const EMBRO_AT = { x: 300, y: 484 };
+const interpEl = document.createElement('div');
+interpEl.className = 'embro'; interpEl.setAttribute('aria-label', 'Interpretación');
+// el anillo rodea toda la tirada; el punto de toque es la palabra, bajo la zona de la tirada, donde no llega ninguna carta
+interpEl.innerHTML = `<svg viewBox="0 0 440 440" aria-hidden="true"><circle class="thread" cx="220" cy="220" r="202"/><circle class="thread" cx="220" cy="220" r="194"/>
+  <circle class="seal-ring" cx="220" cy="220" r="202"/><text x="220" y="452" text-anchor="middle">Interpretar</text></svg><div class="hit"></div>`;
+interpEl.style.transform = `translate3d(${EMBRO_AT.x - 220}px, ${EMBRO_AT.y - 220}px, .6px)`;
+table.appendChild(interpEl);
 let toastT = 0;
 function toast(msg){ toastEl.textContent = msg; toastEl.style.opacity = 1; clearTimeout(toastT); toastT = setTimeout(() => toastEl.style.opacity = 0, 2600); }
 function refresh(){
@@ -643,7 +690,7 @@ function refresh(){
     g = empty ? `Toca el mazo para extenderlo, o mantenlo para Sacar · faltan ${empty}` : down ? 'Toca una carta de la tirada o levanta su esquina' : 'Pulsa Interpretación, en el centro del paño';
   }
   guideEl.textContent = g;
-  interpEl.hidden = !readyToRead() || !!contemplating;
+  interpEl.classList.toggle('ready', readyToRead() && !contemplating);
   saveSoon();
   decks.forEach(d => d.el.classList.toggle('glow', d === active && piles.length === 1 && !fan && !cardsOut() && server.state.startsWith('sin')));
 }
@@ -1080,7 +1127,7 @@ function tableToScreen(x, y, z = 0){
   const f = P / (P - K * (yy * s + z * c)), r = scene.getBoundingClientRect();
   return { x: r.width / 2 + cam.panX + K * xx * f, y: r.height / 2 + cam.panY + cam.oy + K * (yy * c - z * s) * f, f };
 }
-interpEl.addEventListener('click', () => {
+function openInterp(){
   if (justClosed(interpEl)) return;
   // el sello se rompe aqui: la pregunta sale a la luz justo antes de interpretar
   if (seal){
@@ -1092,7 +1139,7 @@ interpEl.addEventListener('click', () => {
     <textarea class="q" maxlength="300" placeholder="¿Qué quieres preguntar? (opcional)" aria-label="Pregunta"></textarea>
     <div class="two"><button class="act" data-m="skip">Sin pregunta</button><button class="act primary" data-m="ask">Interpretar</button></div>`,
     (v, q) => showReading(v === 'ask' ? q : ''), 'wide');
-});
+}
 function showReading(q){
   reading.question = q;
   const rows = spread.pos.map((p, i) => { const c = cardAt(i);
@@ -1476,7 +1523,7 @@ const CANDLES = [
 });
 // coloca el lienzo de la llama alrededor de su pabilo, con sitio para el halo, el polvo y las rafagas
 function placeFlameCanvas(c){
-  const s = projScale(c.x, c.y), d = Math.min(devicePixelRatio, 1.5), half = 120 * s + 16, up = 150 * s + 90, down = 70 * s + 10;
+  const s = projScale(c.x, c.y), d = fx.d, half = 120 * s + 16, up = 150 * s + 90, down = 70 * s + 10;
   c.box = { left: c.tip.x - half, top: c.tip.y - up, w: half * 2, h: up + down };
   c.cv.width = c.box.w * d; c.cv.height = c.box.h * d; c.cv.style.width = c.box.w + 'px'; c.cv.style.height = c.box.h + 'px';
   c.cv.style.transform = `translate(${c.box.left}px, ${c.box.top}px)`;
@@ -1494,14 +1541,19 @@ function ringPts(c, rad, z){
 }
 function poly(g2, pts){ g2.beginPath(); pts.forEach((q, i) => i ? g2.lineTo(q.x, q.y) : g2.moveTo(q.x, q.y)); g2.closePath(); }
 // cilindro por caras, pintadas de lejos a cerca; cada cara con su sombreado y un degradado vertical
+let camMoving = false;   // mientras gira la mesa, las velas se pintan con color plano y se afinan al pararse
 function drawCylinder(g2, c, rad, z0, h, bottom, top, glow){
   const lo = ringPts(c, rad, z0), hi = ringPts(c, rad, z0 + h), faces = [];
   for (let i = 0; i < SEG; i++){ const j = (i + 1) % SEG; faces.push({ q: [lo[i], lo[j], hi[j], hi[i]], phi: (i + .5) * 2 * Math.PI / SEG, depth: lo[i].f + lo[j].f }); }
   faces.sort((a, b) => a.depth - b.depth);
   faces.forEach(fc => {
     const k = shade(fc.phi), [a, b, cc, d] = fc.q;
-    const gr = g2.createLinearGradient((a.x + b.x) / 2, (a.y + b.y) / 2, (cc.x + d.x) / 2, (cc.y + d.y) / 2);
-    gr.addColorStop(0, rgb(bottom, k)); gr.addColorStop(.72, rgb(top, k)); gr.addColorStop(1, rgb(glow || top, k + .3));
+    let gr;
+    if (camMoving) gr = rgb(top, k * .92);
+    else {
+      gr = g2.createLinearGradient((a.x + b.x) / 2, (a.y + b.y) / 2, (cc.x + d.x) / 2, (cc.y + d.y) / 2);
+      gr.addColorStop(0, rgb(bottom, k)); gr.addColorStop(.72, rgb(top, k)); gr.addColorStop(1, rgb(glow || top, k + .3));
+    }
     poly(g2, fc.q); g2.fillStyle = gr; g2.fill(); g2.strokeStyle = gr; g2.lineWidth = .7; g2.stroke();   // el trazo tapa las costuras
   });
   return hi;
@@ -1563,8 +1615,9 @@ function updateCandles(){ candlesDirty = true; }
 const fx = {
   // el cuerpo de las velas vive en su propio lienzo: se pinta al mover la camara y no se copia cada fotograma
   cv: $('fx'), ctx: null, body: $('fxbody'), bctx: null, parts: [], flare: 0, t: 0,
+  d: Math.min(devicePixelRatio, 1.5),
   fit(){
-    const r = scene.getBoundingClientRect(), d = Math.min(devicePixelRatio, 1.5);
+    const r = scene.getBoundingClientRect(), d = this.d;
     for (const cv of [this.cv, this.body]){ cv.width = r.width * d; cv.height = r.height * d; }
     this.ctx = this.cv.getContext('2d'); this.ctx.setTransform(d, 0, 0, d, 0, 0);
     this.bctx = this.body.getContext('2d'); this.bctx.setTransform(d, 0, 0, d, 0, 0); candlesDirty = true;
@@ -1595,8 +1648,8 @@ const fx = {
       g2.fillStyle = gr; g2.beginPath(); g2.arc(c.fx, c.fy, rad, 0, 7); g2.fill();
       g2.globalCompositeOperation = 'source-over';
     });
-    // polvo dorado flotando sobre cada llama
-    if (!reduced) CANDLES.forEach((c, ci) => {
+    // polvo dorado flotando sobre cada llama (se apaga en calidad reducida)
+    if (!reduced && quality === 0) CANDLES.forEach((c, ci) => {
       const g2 = c.cx2d;
       for (let i = 0; i < 9; i++){
         const ph = i * 1.7 + ci * 3.1, up = ((this.t * .08 + i / 9) % 1);
@@ -1643,7 +1696,7 @@ function returnToPile(c){
 const pointers = new Map(); let g = null, pinch = null, lastTap = { t: 0, x: 0, y: 0 }, tapWait = null;
 const LONG = 430;
 scene.addEventListener('pointerdown', e => {
-  if (e.button > 0 || e.target.closest('.interp, .banner, .undo-dot')) return;   // esos botones no deben perder su clic por la captura
+  if (e.button > 0 || e.target.closest('.banner, .undo-dot, .help')) return;   // esos botones no deben perder su clic por la captura
   sfx.init();
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   scene.setPointerCapture(e.pointerId);
@@ -1658,6 +1711,11 @@ scene.addEventListener('pointerdown', e => {
     open(); if (menuEl && menuEl._geo){ g.mode = 'radial'; sfx.vib(12); }
   }, LONG); };
   if (contemplating) return;
+  if (!piece && t.closest('.embro.ready') && !busy){
+    g.embro = true; g.surface = false; interpEl.classList.add('sealing');
+    g.lp = setTimeout(() => { if (g && g.embro && g.mode === 'pending'){ g.mode = 'sealed'; interpEl.classList.remove('sealing'); sfx.vib([10, 40, 10]); closeCircle(); } }, 1300);
+    return;
+  }
   if (!piece){ if (g.surface && !busy) hold(() => openClothRadial(pointAnchor(e.clientX, e.clientY))); return; }
   if (busy || piece.proxy){ g.piece = null; return; }
   const L = piece.local(p);
@@ -1700,7 +1758,7 @@ scene.addEventListener('pointermove', e => {
     if (moved < 6) return;
     clearTimeout(g.lp);
     const pc = g.piece;
-    if (!pc) g.mode = g.surface ? 'orbit' : 'none';
+    if (!pc) g.mode = g.embro ? 'none' : g.surface ? 'orbit' : 'none';
     else if (contemplating) g.mode = 'none';
     else if (pc.kind === 'deck'){
       const inPlay = piles.includes(pc);
@@ -1733,7 +1791,7 @@ scene.addEventListener('pointermove', e => {
     const vx = p.x - g.last.x, vy = p.y - g.last.y;
     pc.x = p.x + g.off.x; pc.y = p.y + g.off.y;
     pc.ty = clamp(pc.ty * .6 + vx * 1.1, -16, 16); pc.tx = clamp(pc.tx * .6 - vy * 1.1, -16, 16); pc.render();
-    if (pc.kind === 'card'){ const i = nearestSlot(pc); hotSlot(i); if (i >= 0) guideEl.textContent = `${i + 1} · ${spread.pos[i][3]} — ${spread.pos[i][4]}`; }
+    if (pc.kind === 'card') hotSlot(nearestSlot(pc));
   } else if (g.mode === 'fan'){
     layoutFan(p);
   } else if (g.mode === 'peel'){
@@ -1777,6 +1835,9 @@ function endGesture(cancel, e){
     cam.tYaw = clamp(cam.tYaw + (G.vyaw || 0) * 6, -40, 40); cam.tTheta = clamp(cam.tTheta + (G.vth || 0) * 5, 16, 56);
     return;
   }
+  if (G.embro) interpEl.classList.remove('sealing');
+  if (G.mode === 'sealed') return;
+  if (G.embro && G.mode === 'pending' && !cancel) return openInterp();
   if (G.mode === 'pending' && !cancel) return tap(pc, e, G);
   if (G.mode === 'move'){
     pc.tx = pc.ty = 0;
@@ -1868,6 +1929,19 @@ scene.addEventListener('wheel', e => {
 const fpsEl = location.hash === '#fps' ? Object.assign(document.createElement('div'), { className: 'fps' }) : null;
 if (fpsEl) scene.appendChild(fpsEl);
 let fpsN = 0, fpsT = 0;
+// La mesa mide sus fps y baja efectos sola si el movil no llega: 0 completa, 1 sin brillos caros, 2 minima
+let quality = 0, fxSkip = 0, qFrames = 0, qT = 0, qCalm = 0;
+function adapt(now){
+  if (!qT) qT = now;
+  qFrames++;
+  if (now - qT < 2000) return;
+  const fps = qFrames * 1000 / (now - qT); qFrames = 0; qT = now;
+  if (fps < 40 && quality < 2){ quality++; qCalm = 0; }
+  else if (fps > 56 && quality > 0 && ++qCalm > 3){ quality--; qCalm = 0; }   // solo sube si va holgada un rato
+  document.body.classList.toggle('q1', quality >= 1); document.body.classList.toggle('q2', quality >= 2);
+  const d = quality >= 2 ? 1 : Math.min(devicePixelRatio, 1.5);
+  if (d !== fx.d){ fx.d = d; fx.fit(); }
+}
 function frame(now){
   for (const tw of tweens){
     if (now < tw.t0) continue;
@@ -1876,6 +1950,7 @@ function frame(now){
     if (u >= 1){ tweens.delete(tw); tw.done && tw.done(); }
   }
   let camMoved = false;
+  const wasMoving = camMoving;
   if (Math.abs(cam.tTheta - cam.theta) > .01){ cam.theta += (cam.tTheta - cam.theta) * .14; camMoved = true; }
   if (Math.abs(cam.tYaw - cam.yaw) > .01){ cam.yaw += (cam.tYaw - cam.yaw) * .14; camMoved = true; }
   if (!pinch && Math.abs(cam.tZoom - cam.zoom) > .001){ cam.zoom += (cam.tZoom - cam.zoom) * .18; camMoved = true; }
@@ -1883,10 +1958,12 @@ function frame(now){
     cam.panX += (cam.tPanX - cam.panX) * .18; cam.panY += (cam.tPanY - cam.panY) * .18; clampPan(); camMoved = true;
   }
   if (camMoved) applyCam();
-  fx.step();
+  camMoving = camMoved;
+  if (wasMoving && !camMoved) candlesDirty = true;   // al pararse, velas en calidad completa
+  if (quality < 2 || (fxSkip ^= 1)) fx.step();   // en calidad minima los efectos van a medio ritmo
+  adapt(now);
   if (fpsEl){ fpsN++; if (now - fpsT > 1000){ fpsEl.textContent = `${fpsN} fps`; fpsN = 0; fpsT = now; } }
   // Interpretacion flota sobre el centro del hexagrama del pano
-  if (!interpEl.hidden){ const q = tableToScreen(300, 484); interpEl.style.left = q.x + 'px'; interpEl.style.top = q.y + 'px'; }
   requestAnimationFrame(frame);
 }
 new ResizeObserver(() => { fitCam(); clampPan(); applyCam(); }).observe(scene);
@@ -1896,6 +1973,14 @@ try {
   if (saved && saved.v === 1 && (saved.deck || saved.seal)){ restore(saved); toast('Mesa restaurada tal como la dejaste'); }
   else refresh();
 } catch { refresh(); }
+// Ayuda: la primera vez se abre sola y se cierra a los 40 s; despues queda el ? arriba a la derecha
+const helpEl = $('help'), helpBtn = $('help-btn');
+let helpT = 0;
+function showHelp(){ helpEl.hidden = false; helpBtn.hidden = true; const b = helpEl.querySelector('.bar i'); b.style.animation = 'none'; b.offsetWidth; b.style.animation = ''; clearTimeout(helpT); helpT = setTimeout(hideHelp, 40000); }
+function hideHelp(){ helpEl.hidden = true; helpBtn.hidden = false; clearTimeout(helpT); try { localStorage.setItem('arcanum.ayuda', '1'); } catch {} }
+$('help-ok').onclick = hideHelp; helpBtn.onclick = showHelp;
+let seenHelp = false; try { seenHelp = localStorage.getItem('arcanum.ayuda') === '1'; } catch {}
+seenHelp ? hideHelp() : showHelp();
 requestAnimationFrame(frame);
 </script>
 </body>
