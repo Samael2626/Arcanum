@@ -14,7 +14,7 @@ header h1{color:var(--gold);font-size:1.35rem;font-weight:400;letter-spacing:5px
 header p{color:var(--dim);font-size:.8rem;font-style:italic}
 .workspace{align-items:flex-start;display:flex;gap:12px}
 .panel{background:var(--panel);border:1px solid var(--border);border-radius:6px;flex:0 0 270px;max-height:94vh;overflow-y:auto;padding:12px}
-.canvas-wrap{aspect-ratio:1;background:#0a080d;border:1px solid var(--border);border-radius:6px;flex:1;max-width:720px;overflow:hidden}
+.canvas-wrap{position:relative;aspect-ratio:1;background:#0a080d;border:1px solid var(--border);border-radius:6px;flex:1;max-width:720px;overflow:hidden}
 canvas#canvas{display:block;height:auto;touch-action:none;width:100%}
 .fam-select{display:grid;gap:4px;grid-template-columns:1fr 1fr;margin-bottom:6px}
 .fam-btn{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--dim);cursor:pointer;font-family:var(--font);font-size:.72rem;min-height:36px;padding:4px}
@@ -68,6 +68,14 @@ textarea:focus,input[type=text]:focus,select:focus{border-color:var(--gold)}
 .term-btn span{color:var(--dim);font-family:var(--font);font-size:.54rem;line-height:1.1}
 .term-btn.active{border-color:var(--gold)}
 .term-btn.active span{color:var(--gold)}
+.seal-grid{display:grid;gap:4px;grid-template-columns:repeat(3,1fr);margin:6px 0;max-height:360px;overflow:auto}
+.seal-card{align-items:center;background:var(--paper,#efe6d2);border:2px solid transparent;border-radius:4px;color:#1b1612;cursor:pointer;display:flex;flex-direction:column;min-height:84px;padding:4px}
+.seal-card svg{height:54px;width:100%}
+.seal-card span{font-family:var(--font);font-size:.58rem;line-height:1.15;text-align:center}
+.seal-card.active{border-color:var(--gold)}
+.seal-filter{min-height:32px;padding:2px 6px}
+.seal-filter.active{border-color:var(--gold);color:var(--gold)}
+.seal-facsimile{background:#efe6d2;height:100%;inset:0;object-fit:contain;padding:6%;position:absolute;width:100%}
 .stamp-group{color:var(--dim);font-size:.62rem;letter-spacing:1px;margin:6px 0 2px;text-transform:uppercase}
 .stamp-grid{display:grid;gap:3px;grid-template-columns:repeat(6,1fr);margin:2px 0}
 .stamp-btn{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--dim);cursor:pointer;font-family:'Segoe UI Symbol',serif;font-size:1.1rem;min-height:38px}
@@ -136,7 +144,7 @@ q{cursor:help;font-style:italic;quotes:"«" "»"}
     <button class="fam-btn active" id="famLetters" title="Sigilo personal: la intención reducida a letras que se funden">Sigilo de letras</button>
     <button class="fam-btn" id="famRosa" title="Motor separado: nombre transliterado al hebreo sobre la Rosa de 22 pétalos">Rosa-Cruz</button>
     <button class="fam-btn" id="famKamea" title="Cuadrado mágico del planeta (Agrippa): el nombre se traza de número en número">Kamea</button>
-    <button class="fam-btn locked" title="Catálogo de sellos reproducidos de su fuente (manuscrito, edición y página). No se genera: está en preparación">Sello histórico · pronto</button>
+    <button class="fam-btn" id="famSeal" title="Catálogo de sellos reproducidos de su fuente, con edición y página. No se genera ni se edita">Sello histórico</button>
   </div>
 
   <section id="lettersPanel">
@@ -276,6 +284,22 @@ q{cursor:help;font-style:italic;quotes:"«" "»"}
     </details>
   </section>
 
+  <section id="sealPanel" hidden>
+    <details class="step" open>
+      <summary><span class="step-num">❖</span><span class="step-title">Sello histórico</span></summary>
+      <div class="step-body">
+        <p class="helper">Sellos y caracteres reproducidos de su fuente, con edición y página. No se generan ni se editan: se estudian. Primera colección: los siete planetas de Agrippa (1651).</p>
+        <div class="row" id="sealFilters"></div>
+        <div class="seal-grid" id="sealGrid"></div>
+        <div class="field"><label for="selSealView">Vista</label>
+          <select id="selSealView"><option value="trace" selected>Trazo (calco)</option><option value="facsimile">Facsímil (escaneo)</option></select></div>
+        <div class="info" id="sealBox">Elige una pieza.</div>
+        <div class="row"><button class="btn-dim" id="btnSealKamea" hidden>Trazar en la Kamea</button></div>
+        <div class="row"><button class="btn-dim" id="btnSealProv">Procedencia</button><button class="btn-dim" id="btnSealSVG">SVG</button></div>
+      </div>
+    </details>
+  </section>
+
   <section id="kameaPanel" hidden>
     <details class="step" open>
       <summary><span class="step-num">▦</span><span class="step-title">Kamea</span></summary>
@@ -324,7 +348,7 @@ q{cursor:help;font-style:italic;quotes:"«" "»"}
   <div class="panel-footer">Método de la palabra: Spare, Frater U∴D∴ y Cooper.<br>Las letras se reconocen, aunque cueste.</div>
 </aside>
 
-<div class="canvas-wrap"><canvas id="canvas" width="800" height="800"></canvas></div>
+<div class="canvas-wrap"><canvas id="canvas" width="800" height="800"></canvas><img id="sealFacsimile" class="seal-facsimile" hidden alt=""></div>
 
 <aside class="gallery" id="galleryPanel" aria-hidden="true">
   <div class="row"><h2>Galería</h2><button class="btn-dim" id="btnGalleryClose">X</button></div>
@@ -357,6 +381,7 @@ q{cursor:help;font-style:italic;quotes:"«" "»"}
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="sellos/sellos.js"></script>
 <script>
 'use strict';
 // ════════════════════════════════════════════════════════════════
@@ -654,6 +679,7 @@ function layoutLetters(active, mode, overlap) {
 // ── Estado ──────────────────────────────────────────────────────
 const state = {
   family: 'letters',
+  seal: { planet: 'all', id: 'saturno-sello', view: 'trace' },
   kamea: { planet: 'saturn', reduce: 'agrippa', ends: 'agrippa', grid: false, hebrew: '', words: [] },
   intention: '',
   method: 'cooper',
@@ -1013,6 +1039,7 @@ function paint(ctx, opt) {
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   if (state.family === 'rosa') { paintRose(ctx, th); return; }
   if (state.family === 'kamea') { paintKamea(ctx, th); return; }
+  if (state.family === 'seal') { paintSeal(ctx, th); return; }
   if (!state.prims.length || !state.view) return;
   const lw = Math.max(LINE_W, 2 / sc);
 
@@ -1105,6 +1132,7 @@ function buildSVG() {
   if (!state.transparent) out.push(`<rect width="${SIZE}" height="${SIZE}" fill="${th.bg}"/>`);
   if (state.family === 'rosa') { out.push(roseSVG(th)); out.push('</svg>'); return out.join(''); }
   if (state.family === 'kamea') { out.push(kameaSVG(th)); out.push('</svg>'); return out.join(''); }
+  if (state.family === 'seal') { out.push(sealSVG(th)); out.push('</svg>'); return out.join(''); }
   const bg = borderGeom();
   if (bg) {
     out.push(`<g data-layer="border" fill="none" stroke="${th.frame}" stroke-width="${f2(LINE_W * .45)}">`);
@@ -1755,7 +1783,7 @@ function kameaTraceFromHebrew() {
   const preset = k.names.find(n => n[2] === km.hebrew);
   $('kameaBox').innerHTML =
     (preset ? `<div class="line"><b>Nombre</b><span>${esc(preset[1])}, ${preset[0].toLowerCase()} de ${k.name} según Agrippa ${badge('HP')}</span></div>` +
-      `<div class="line"><b>Figura</b><span>${VERDICT_TEXT[preset[5]]}${km.reduce === 'agrippa' ? '' : ' (con la reducción «Como Agrippa»)'}</span></div>` : '') +
+      `<div class="line"><b>Figura</b><span>${VERDICT_TEXT[preset[5]]}${km.reduce === 'agrippa' ? '' : ' (con la reducción «Como Agrippa»)'} <button class="btn-dim" style="min-height:28px;padding:2px 8px" onclick="kameaToSeal('${k.id}', '${preset[0]}')">Ver el original de Agrippa</button></span></div>` : '') +
     `<div class="line"><b>Tabla</b><span>${k.sym}︎ ${k.name}: ${g.n}×${g.n}, cada línea suma ${line}, en total ${total}.</span></div>` +
     `<div class="line"><b>Hebreo</b><span dir="rtl" lang="he">${esc(km.hebrew) || '—'}</span></div>` +
     `<div class="line"><b>Casillas</b><span dir="ltr">${steps || '—'}</span></div>` +
@@ -1795,6 +1823,127 @@ function kameaProvenance() {
     '<h3>Grafiel, sin reproducir</h3><p>Su figura en Agrippa es un circuito cerrado de cinco vértices. גראפיאל pasa dos veces por el Álef y no puede dibujar eso; un Grafiel sin el segundo Álef (ג ר א פ י ל) sí daría cinco vértices cerrados, pero ninguna orientación de la tabla reproduce la forma. Queda como indicio, no como regla.</p>' +
     '<h3>Nombre que no se incluye</h3><p>La inteligencia de las inteligencias de la Luna, <i>Malkah be-Tarshishim…</i>, llega corrupta en Agrippa (Donald Tyson propuso una restauración en su edición anotada). Cinco grafías hebreas distintas suman su 3321; sin la fuente que decide entre ellas, el taller no elige ninguna.</p>' +
     `<p class="note">Láminas originales: <a href="${AGRIPPA_URL}" target="_blank" rel="noopener" style="color:var(--gold)">Agrippa, libro II, cap. 22 (Esoteric Archives)</a>.</p>`;
+}
+
+// ── Sello historico: catalogo, no generador ─────────────────────
+// Cada pieza se reproduce de su fuente: Agrippa, Three Books of Occult
+// Philosophy (Londres: R.W. para Gregory Moule, 1651), lib. II, cap. 22.
+// Escaneo de la Wellcome Collection en Internet Archive (b30335231, marca de
+// dominio publico). El trazo es un calco del escaneo (sellos/extract.py): no
+// se dibuja ni se edita. Datos en sellos/sellos.js.
+const SEAL_SOURCE = {
+  work: 'Agrippa, Tres libros de filosofía oculta, libro II, cap. 22',
+  edition: 'Londres: R.W. para Gregory Moule, 1651 (primera edición inglesa)',
+  scan: 'Wellcome Collection, en Internet Archive (b30335231)',
+  license: 'Marca de dominio público de Creative Commons',
+  item: 'b30335231'
+};
+const SEALS_DATA = window.SEALS || [];
+const SEAL_BY_ID = Object.fromEntries(SEALS_DATA.map(s => [s.id, s]));
+const scanUrl = s => `https://archive.org/details/${SEAL_SOURCE.item}/page/n${s.leaf}/mode/1up`;
+// Nombre de la tabla de Agrippa (p. 243) para los caracteres con nombre
+function sealKameaName(s) {
+  if (!s.role) return null;
+  const k = KAMEA_BY_ID[s.planet];
+  return k && k.names.find(n => n[0] === s.role) || null;
+}
+function sealFit(s, box = 600, top = 70) {
+  const k = Math.min(box / s.w, (box - 40) / s.h);
+  return { k, x: C - s.w * k / 2, y: top + (box - 40 - s.h * k) / 2 + 20 };
+}
+function paintSeal(ctx, th) {
+  const s = SEAL_BY_ID[state.seal.id];
+  if (!s) return;
+  const f = sealFit(s);
+  ctx.save(); ctx.translate(f.x, f.y); ctx.scale(f.k, f.k); ctx.fillStyle = th.ink;
+  for (const [d, tx, ty] of s.paths) { ctx.save(); ctx.translate(tx, ty); ctx.fill(new Path2D(d)); ctx.restore(); }
+  ctx.restore();
+  ctx.fillStyle = th.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.font = 'italic 24px Georgia, serif'; ctx.fillText(s.title, C, 52);
+  ctx.font = '15px Georgia, serif'; ctx.fillStyle = th.frame;
+  ctx.fillText(`Agrippa, Londres, 1651 · libro II, cap. 22 · p. ${s.page}`, C, SIZE - 28);
+}
+function sealSVG(th) {
+  const s = SEAL_BY_ID[state.seal.id];
+  if (!s) return '';
+  const f = sealFit(s);
+  // obra ajena reproducida: la atribucion viaja con el archivo
+  const out = [`<title>${esc(s.title)}</title><desc>${esc(`${SEAL_SOURCE.work}. ${SEAL_SOURCE.edition}, p. ${s.page}. Calco del escaneo de la ${SEAL_SOURCE.scan}, hoja ${s.leaf}. ${SEAL_SOURCE.license}.`)}</desc>`];
+  out.push(`<g data-layer="seal" fill="${th.ink}" transform="translate(${f2(f.x)} ${f2(f.y)}) scale(${f.k.toFixed(5)})">`);
+  for (const [d, tx, ty] of s.paths) out.push(`<path transform="translate(${tx} ${ty})" d="${d}"/>`);
+  out.push('</g>');
+  out.push(`<g data-layer="caption" text-anchor="middle" font-family="Georgia, serif"><text x="${C}" y="52" font-size="24" font-style="italic" fill="${th.ink}">${esc(s.title)}</text><text x="${C}" y="${SIZE - 28}" font-size="15" fill="${th.frame}">${esc(`Agrippa, Londres, 1651 · libro II, cap. 22 · p. ${s.page}`)}</text></g>`);
+  return out.join('');
+}
+function sealThumb(s) {
+  return `<svg viewBox="0 0 ${s.w} ${s.h}" aria-hidden="true"><g fill="currentColor">${s.paths.map(([d, tx, ty]) => `<path transform="translate(${tx} ${ty})" d="${d}"/>`).join('')}</g></svg>`;
+}
+function renderSealGrid() {
+  const grid = $('sealGrid'), pf = state.seal.planet;
+  grid.innerHTML = '';
+  for (const s of SEALS_DATA.filter(x => pf === 'all' || x.planet === pf)) {
+    const b = document.createElement('button');
+    b.className = 'seal-card' + (s.id === state.seal.id ? ' active' : '');
+    b.dataset.id = s.id; b.title = `${s.title} · p. ${s.page}`;
+    b.innerHTML = sealThumb(s) + `<span>${s.sym}︎ ${esc(s.kind === 'sello' ? 'Sello' : s.role || 'Inteligencia de las inteligencias')}</span>`;
+    b.addEventListener('click', () => selectSeal(s.id));
+    grid.append(b);
+  }
+}
+function selectSeal(id) {
+  state.seal.id = id;
+  const s = SEAL_BY_ID[id], kn = sealKameaName(s);
+  renderSealGrid();
+  $('sealBox').innerHTML =
+    `<div class="line"><b>Pieza</b><span>${esc(s.title)} ${badge('HP')}</span></div>` +
+    `<div class="line"><b>Grabado</b><span>El rótulo dice ${cita(esc(s.title.replace('Carácter d', 'D').replace('Sello d', 'D')), s.engraved)}.</span></div>` +
+    (kn ? `<div class="line"><b>Nombre</b><span>${esc(kn[1])} (<bdi lang="he">${kn[2]}</bdi>), según la tabla de nombres de la p. 243; suma ${kn[3]}.</span></div>` : '') +
+    `<div class="line"><b>Fuente</b><span>${esc(SEAL_SOURCE.work)}. ${esc(SEAL_SOURCE.edition)}, <b>p. ${s.page}</b>.</span></div>` +
+    `<div class="line"><b>Escaneo</b><span><a href="${scanUrl(s)}" target="_blank" rel="noopener" style="color:var(--gold)">${esc(SEAL_SOURCE.scan)}, hoja ${s.leaf}</a>. ${esc(SEAL_SOURCE.license)}.</span></div>` +
+    `<div class="line"><b>Trazo</b><span>Calcado del escaneo, no dibujado: la tinta se separa del papel y se vectoriza.</span></div>` +
+    (s.note ? `<div class="line"><b>Nota</b><span>${esc(s.note)}</span></div>` : '');
+  $('btnSealKamea').hidden = !kn;
+  updateSealView();
+  render();
+}
+function updateSealView() {
+  const s = SEAL_BY_ID[state.seal.id], fac = state.family === 'seal' && state.seal.view === 'facsimile' && s;
+  const img = $('sealFacsimile');
+  img.hidden = !fac;
+  if (fac) { img.src = `sellos/${s.id}.jpg`; img.alt = `Facsímil: ${s.title}, Agrippa 1651, p. ${s.page}`; }
+}
+function sealToKamea() {
+  const s = SEAL_BY_ID[state.seal.id], kn = sealKameaName(s);
+  if (!kn) return;
+  setFamily('kamea');
+  state.kamea.planet = s.planet; $('selKameaPlanet').value = s.planet; renderKameaPresets();
+  $('kameaName').value = kn[1]; $('kameaHebrew').value = kn[2]; kameaTraceFromHebrew();
+}
+// Desde la Kamea: el caracter original de Agrippa en el catalogo
+function kameaToSeal(planet, role) {
+  const s = SEALS_DATA.find(x => x.planet === planet && x.role === role);
+  if (!s) return;
+  setFamily('seal');
+  state.seal.planet = planet; syncSealFilter(); selectSeal(s.id);
+}
+function syncSealFilter() {
+  document.querySelectorAll('.seal-filter').forEach(b => b.classList.toggle('active', b.dataset.p === state.seal.planet));
+}
+function sealProvenance() {
+  const s = SEAL_BY_ID[state.seal.id];
+  if (!s) return '<p>Elige una pieza del catálogo.</p>';
+  return `<h3>${esc(s.title)}</h3>` +
+    `<p>${esc(SEAL_SOURCE.work)}. ${esc(SEAL_SOURCE.edition)}, p. ${s.page}. ${badge('HP')}</p>` +
+    '<h3>Cómo se ha reproducido</h3><ol>' +
+    `<li>Escaneo de la ${esc(SEAL_SOURCE.scan)}, hoja ${s.leaf} (${esc(SEAL_SOURCE.license)}).</li>` +
+    '<li>Recorte de la pieza a resolución completa.</li>' +
+    '<li>Se separa la tinta del papel: se descartan manchas, restos de rótulos y la tinta que se transparenta del reverso.</li>' +
+    '<li>La tinta se calca a vectores. No se redibuja ni se corrige nada a mano.</li></ol>' +
+    '<h3>Qué es y qué no es</h3><ul>' +
+    '<li>Es una reproducción de una pieza impresa, con su página. No se genera ni se edita, y no se mezcla con los motores del taller.</li>' +
+    '<li>Los caracteres de inteligencias y espíritus se pueden comparar con su trazado en la Kamea; los sellos de los planetas no salen de un nombre.</li>' +
+    (s.note ? `<li>${esc(s.note)}</li>` : '') + '</ul>' +
+    `<p class="note"><a href="${scanUrl(s)}" target="_blank" rel="noopener" style="color:var(--gold)">Ver la página en el escaneo</a></p>`;
 }
 
 // ── Generar ─────────────────────────────────────────────────────
@@ -1946,6 +2095,7 @@ function showProvenance() {
   const body = $('provBody');
   if (state.family === 'rosa') { body.innerHTML = rosaProvenance(); $('provModal').classList.add('open'); return; }
   if (state.family === 'kamea') { body.innerHTML = kameaProvenance(); $('provModal').classList.add('open'); return; }
+  if (state.family === 'seal') { body.innerHTML = sealProvenance(); $('provModal').classList.add('open'); return; }
   const r = state.reduction;
   if (!r) { body.innerHTML = '<p>Forja primero un sigilo.</p>'; $('provModal').classList.add('open'); return; }
   const m = MODES[state.mode];
@@ -2064,9 +2214,9 @@ function forgetSigil() {
 // ── Exportar ────────────────────────────────────────────────────
 function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); }
 function exportSVG() {
-  const ready = state.family === 'rosa' ? state.rosa.trace.length : state.family === 'kamea' ? state.kamea.words.length : state.prims.length;
+  const ready = state.family === 'rosa' ? state.rosa.trace.length : state.family === 'kamea' ? state.kamea.words.length : state.family === 'seal' ? !!SEAL_BY_ID[state.seal.id] : state.prims.length;
   if (!ready) { showToast('Forja primero un sigilo'); return; }
-  download(new Blob([buildSVG()], { type: 'image/svg+xml' }), state.family === 'rosa' ? 'rosa-cruz.svg' : state.family === 'kamea' ? `kamea-${state.kamea.planet}.svg` : 'sigilo.svg');
+  download(new Blob([buildSVG()], { type: 'image/svg+xml' }), state.family === 'rosa' ? 'rosa-cruz.svg' : state.family === 'kamea' ? `kamea-${state.kamea.planet}.svg` : state.family === 'seal' ? `agrippa-${state.seal.id}.svg` : 'sigilo.svg');
 }
 function exportPNG() {
   if (!state.prims.length) { showToast('Forja primero un sigilo'); return; }
@@ -2079,6 +2229,10 @@ function setFamily(f) {
   $('famLetters').classList.toggle('active', f === 'letters');
   $('famRosa').classList.toggle('active', f === 'rosa');
   $('famKamea').classList.toggle('active', f === 'kamea');
+  $('famSeal').classList.toggle('active', f === 'seal');
+  $('sealPanel').hidden = f !== 'seal';
+  if (f === 'seal' && !$('sealGrid').children.length) selectSeal(state.seal.id);
+  updateSealView();
   $('lettersPanel').hidden = f !== 'letters';
   $('rosaPanel').hidden = f !== 'rosa';
   $('kameaPanel').hidden = f !== 'kamea';
@@ -2179,6 +2333,19 @@ $('btnPNG').addEventListener('click', exportPNG);
 $('famLetters').addEventListener('click', () => setFamily('letters'));
 $('famRosa').addEventListener('click', () => setFamily('rosa'));
 $('famKamea').addEventListener('click', () => setFamily('kamea'));
+$('famSeal').addEventListener('click', () => setFamily('seal'));
+// Sello historico
+[['all', 'Todos'], ...KAMEAS.map(k => [k.id, k.sym + '\uFE0E'])].forEach(([id, label]) => {
+  const b = document.createElement('button');
+  b.className = 'btn-dim seal-filter' + (id === 'all' ? ' active' : ''); b.dataset.p = id; b.textContent = label;
+  b.title = id === 'all' ? 'Todas las piezas' : KAMEA_BY_ID[id].name;
+  b.addEventListener('click', () => { state.seal.planet = id; syncSealFilter(); renderSealGrid(); });
+  $('sealFilters').append(b);
+});
+$('selSealView').addEventListener('change', e => { state.seal.view = e.target.value; updateSealView(); });
+$('btnSealKamea').addEventListener('click', sealToKamea);
+$('btnSealProv').addEventListener('click', showProvenance);
+$('btnSealSVG').addEventListener('click', exportSVG);
 // Kamea
 KAMEAS.forEach(k => { const o = document.createElement('option'); o.value = k.id; o.textContent = `${k.sym}\uFE0E ${k.name} (${k.rows.length}×${k.rows.length})`; $('selKameaPlanet').append(o); });
 $('selKameaPlanet').addEventListener('change', e => { state.kamea.planet = e.target.value; renderKameaPresets(); kameaTraceFromHebrew(); });

@@ -482,6 +482,39 @@ check('kamea: procedencia en espanol', !mk, mk ? 'encontrado: ' + mk[0] : '');
 await page.click('#famLetters');
 
 
+// 13c) Sello historico: catalogo reproducido de Agrippa 1651, no generado
+await page.click('#famSeal');
+const scat = await page.evaluate(() => ({
+  n: SEALS_DATA.length, pages: [...new Set(SEALS_DATA.map(s => s.page))].sort().join(','),
+  paths: SEALS_DATA.every(s => s.paths.length && s.w > 0 && s.h > 0),
+  sellos: SEALS_DATA.filter(s => s.kind === 'sello').length,
+  roles: SEALS_DATA.filter(s => s.role).every(s => sealKameaName(s) && sealKameaName(s)[0] === s.role)
+}));
+check('sello: 23 piezas de Agrippa (7 sellos y 16 caracteres), pp. 244-252', scat.n === 23 && scat.sellos === 7 && scat.pages === '244,245,246,247,248,249,250,251,252', `${scat.n} piezas, paginas ${scat.pages}`);
+check('sello: cada pieza tiene calco y cada caracter con nombre enlaza con la Kamea', scat.paths && scat.roles);
+let sealErr = '';
+for (const id of await page.evaluate(() => SEALS_DATA.map(s => s.id))) {
+  const r = await page.evaluate(id => { selectSeal(id); const s = buildSVG(), s2 = buildSVG(); return { det: s === s2, bad: /NaN|undefined/.test(s), desc: /<desc>[^<]*Wellcome/.test(s) && /<desc>[^<]*p\. 2\d\d/.test(s), ok: !new DOMParser().parseFromString(s, 'image/svg+xml').querySelector('parsererror') }; }, id);
+  if (!r.det || r.bad || !r.desc || !r.ok) sealErr += id + ' ';
+}
+check('sello: las 23 piezas pintan, SVG valido con atribucion de fuente y pagina', !sealErr, sealErr);
+await page.selectOption('#selSealView', 'facsimile');
+await page.click('.seal-card[data-id="saturno-sello"]');
+await page.waitForTimeout(400);
+check('sello: facsimil del escaneo visible', await page.evaluate(() => { const i = document.getElementById('sealFacsimile'); return !i.hidden && i.complete && i.naturalWidth > 100; }));
+await page.selectOption('#selSealView', 'trace');
+await page.click('.seal-card[data-id="saturno-inteligencia"]');
+await page.click('#btnSealKamea');
+check('sello -> kamea: Agiel sobre Saturno', await page.evaluate(() => state.family === 'kamea' && state.kamea.planet === 'saturn' && state.kamea.hebrew === 'אגיאל'));
+await page.click('#kameaBox button');
+check('kamea -> sello: vuelve al caracter original de Agrippa', await page.evaluate(() => state.family === 'seal' && state.seal.id === 'saturno-inteligencia'));
+await page.click('#btnSealProv');
+const stext = await page.evaluate(() => document.getElementById('provBody').innerText + document.getElementById('sealBox').innerText);
+await page.click('#btnProvClose');
+const ms = stext.match(/\[(HP|OM|RC|AR)\]|(the|of the|with)/i);
+check('sello: ficha y procedencia en espanol', !ms, ms ? 'encontrado: ' + ms[0] : '');
+await page.click('#famLetters');
+
 // 14) Todo el texto visible en espanol: sin codigos internos ni citas en ingles
 // (el original en ingles solo puede vivir en tooltips)
 const ENGLISH = /\[(HP|OM|RC|AR)\]|\b(the|with|of the|from the|Sigils|Pleasure|Practical|Basic Sigil|Lamen\.svg|Mispar|noose|crook|recognizable|pattee|botonnee)\b/i;

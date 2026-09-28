@@ -162,6 +162,7 @@ Si falla trazabilidad, miniatura, redibujo o separación, no entregar.
   - Lámina *Tracing for Netzach* (`images/Manuscripts/Sigil_Netzach.gif`): **una palabra = un sigilo**; Nogah es נגה. El lazo también marca una letra del nombre **aún no visitada** por la que pasa un trazo (Haniel), pero no la primera ni la última ni una ya visitada (Hagiel, Tzabaoth). Regla calibrada con 8 láminas: hipótesis, no ley.
   - Documento 5=6 *The Rose Cross Lamen* + SVG de Commons: madres א arriba, ש abajo-der, מ abajo-izq; dobles פ ר ב ד ג ת כ con פ arriba-izq; zodiaco ה arriba, antihorario. Prueba: en Metatron, Teth-Resh-Vav quedan en línea (giro ~1°).
 - Claves de Salomón, *Lemegeton* y diarios de Dee: repertorios prescritos [HP].
+- **Catálogo «Sello histórico» (27-sep-2026):** reproducir, nunca generar. Primera colección: 7 sellos y 16 caracteres de Agrippa II.22, pp. 244–252 de la ed. de Londres, 1651, escaneo de la Wellcome Collection (Internet Archive `b30335231`, marca de dominio público). Proceso en `arcanum-sigil-prototype/sellos/extract.py` y `build_data.py`: recorte, tinta separada del papel (fuera manchas, rótulos y transparencia del reverso) y calco con vtracer. Sin retoques a mano: los defectos van anotados en la ficha. El SVG exportado lleva la atribución (obra ajena). La errata «45» de la Luna está en la impresión de 1651.
 - Runología académica e investigación del Instituto Árni Magnússon: runas y galdrastafir [HP/investigación].
 
 Consulta la guía de producto del vault antes de implementar cambios doctrinales.
