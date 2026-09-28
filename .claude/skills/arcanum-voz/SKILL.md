@@ -268,10 +268,24 @@ se siente en tus decisiones aprieta con fuerza"-- vale para cualquiera y el
 guard la aprobo sin un defecto. Elegir esta voz es elegir tambien eso, hasta
 que se ponga otra red.
 
-Lo unico que sigue pendiente de decidir aqui es si la cobertura se mide contra
-el cuerpo (punto 1 de la receta), que se puede hacer SIN cambiar la voz: no
-obliga a nombrar con oficio, solo deja de dar por buena una nota al pie como
-prueba de que el texto habla de algo.
+**Y NO, la cobertura contra el cuerpo NO se puede hacer sin cambiar la voz.**
+Eso se escribio aqui como si fuera gratis y es falso; probado el 28-sep-2026 y
+revertido en el acto. Con el cuerpo sin nombres --que es la voz elegida-- exigir
+los cuerpos EN el cuerpo hace que TODOS los horoscopos fallen la cobertura,
+reintenten y sigan fallando. No es un ajuste: es prompt y guard pidiendo lo
+contrario, la trampa de siempre.
+
+Lo pararon dos tests que ya estaban escritos, con su fecha dentro:
+`test_un_texto_que_nombra_su_transito_en_la_nota_no_reintenta` y
+`test_un_horoscopo_generico_dispara_el_reintento`. Defendian la decision del
+26-sep y tenian razon.
+
+**La red anti-generico sigue rota, y hay que buscarla por otro lado.** La idea
+que queda sin medir: exigir que el cuerpo toque el DOMINIO de los cuerpos en
+juego --"los pactos", "el corte", "el limite"-- en vez de su NOMBRE.
+`correspondences.PLANET_DOMAINS` ya los trae escritos. Eso ata el texto a lo
+concreto sin meter una sola palabra de oficio, que es justo lo que se busca.
+Sin medir: es un guard nuevo y sube la superficie de reintento.
 
 ### La receta medida, para cuando se implemente
 

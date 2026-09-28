@@ -386,7 +386,8 @@ figura, no ha llegado a nadie.
 Lo que NO se hace nunca es prometer un resultado cerrado.
 Prohibidas sin excepcion, en cualquier forma: "conseguiras", "vas a lograr",
 "lograras", "obtendras", "vas a obtener", "ganaras", "recibiras", "tendras",
-"encontraras", "te ira bien en", "te saldra bien", "todo saldra bien",
+"encontraras", "alcanzaras", "vas a alcanzar", "el logro sera",
+"te ira bien en", "te saldra bien", "todo saldra bien",
 "la suerte", "el exito esta asegurado", y cualquier promesa de dinero, salud,
 trabajo o de que otra persona haga algo. Tampoco sucesos ni fechas: que un aspecto cierre el jueves dice
 cuando aprieta el simbolo, no que vaya a pasarte algo el jueves.

@@ -79,6 +79,17 @@ PROMESAS_DE_RESULTADO: tuple[str, ...] = (
     "te ira bien", "te saldra bien", "todo saldra bien",
     "tendras exito", "el exito esta asegurado",
     "tendras suerte", "la suerte estara de tu lado",
+    # Anadidas el 28-sep-2026. Salieron SIN MARCAR en la Cruz Celta medida el
+    # 26: "alcanzaras una conclusion que reune los cuatro elementos" y "el
+    # logro sera la sintesis de los pasos ya recorridos". Son la misma apuesta
+    # que "conseguiras", con otro verbo.
+    #
+    # Se esperaron dos dias a proposito: el prompt vivo del Oraculo no tenia
+    # ninguna de estas formulas, y ensanchar el guard antes de reconciliarlo
+    # habria gastado reintentos por una regla que al modelo nunca se le dijo.
+    # Reconciliado el 27, el freno ya no hacia falta.
+    "alcanzaras", "vas a alcanzar",
+    "el logro sera",
 )
 
 
