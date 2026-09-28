@@ -37,7 +37,17 @@ class _SenderoScreenState extends ConsumerState<SenderoScreen> {
     }).length;
 
     return Scaffold(
-      appBar: AppBar(title: Text('Sendero', style: ArcanumText.heading(24))),
+      appBar: AppBar(
+        title: Text('Sendero', style: ArcanumText.heading(24)),
+        actions: [
+          TextButton(
+            key: const ValueKey('sendero_leave'),
+            onPressed: () => context.go('/hoy'),
+            child: const Text('Salir'),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 620),

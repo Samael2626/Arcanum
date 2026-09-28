@@ -8,6 +8,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _SenderoApi extends ArcanumApi {
@@ -112,6 +113,40 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Fragmentos Arcanos'), findsOneWidget);
+  });
+
+  testWidgets('primera entrada permite salir aunque no exista ruta anterior', (
+    tester,
+  ) async {
+    final api = _SenderoApi();
+    final router = GoRouter(
+      initialLocation: '/sendero',
+      routes: [
+        GoRoute(path: '/sendero', builder: (_, _) => const SenderoScreen()),
+        GoRoute(
+          path: '/hoy',
+          builder: (_, _) => const Scaffold(body: Text('CIELO')),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          arcanumApiProvider.overrideWithValue(api),
+          authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('sendero_leave')), findsOneWidget);
+    await tester.tap(find.text('Salir'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('CIELO'), findsOneWidget);
   });
 
   testWidgets('invitacion permite no recordarlo y sincroniza la decision', (
