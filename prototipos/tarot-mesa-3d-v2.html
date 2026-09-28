@@ -174,6 +174,13 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
 .pips b{font:700 17px/1 var(--display);color:#F2DFA0;writing-mode:vertical-rl;text-shadow:0 0 6px rgba(237,174,48,.8)}
 .cbase{position:absolute;left:0;top:0;width:44px;height:44px;border-radius:50%;pointer-events:none;
   background:radial-gradient(circle,rgba(255,196,120,calc(.4 * var(--lit,1))),rgba(255,170,90,calc(.14 * var(--lit,1))) 45%,transparent 72%)}
+.c3d{position:absolute;left:0;top:0;transform-style:preserve-3d;pointer-events:none}
+.c3d i,.c3d b{position:absolute;left:0;top:0;display:block;transform-origin:50% 100%}
+.c3d b{border-radius:50%;transform-origin:50% 50%}
+.c3d .flw{position:absolute;left:0;top:0;width:15px;height:38px;transform-origin:50% 100%}
+.c3d .flw .fl{position:absolute;inset:0;transform-origin:50% 92%;border-radius:50% 50% 46% 46%/64% 64% 36% 36%;filter:blur(.3px);
+  background:radial-gradient(ellipse 50% 60% at 50% 74%,#fffdf4 0 22%,#ffe9a8 38%,#ffb04a 62%,rgba(255,120,30,0) 78%)}
+.c3d .flw .fl::before{content:"";position:absolute;left:4px;right:4px;bottom:2px;height:9px;border-radius:50%;background:radial-gradient(ellipse,rgba(110,150,255,.75),rgba(110,150,255,0) 70%)}
 .candle{position:absolute;left:0;top:0;z-index:2;width:60px;height:180px;transform-origin:50% 100%;pointer-events:none}
 .candle > svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .candle .fl{position:absolute;left:50%;width:15px;height:38px;margin-left:-7.5px;transform-origin:50% 92%;
@@ -1441,50 +1448,69 @@ function showPips(c, instant = false){
 }
 
 // ================= velas =================
-// Dos velas distintas, como las de alguien: una alta con una gota larga, otra gastada con la cera derramada.
-// Candelero de laton con aro, cera con luz por dentro cerca de la llama, pabilo curvado con brasa.
-function candleSvg({ top, drips, id }){
-  const body = `M18 ${top + 4} Q22 ${top - 2} 30 ${top} Q38 ${top - 2} 42 ${top + 3} L43 163 Q30 166 17 163 Z`;
-  const dripPaths = drips.map(([x, len, w]) => `M${x - w} ${top + 2} q0 ${len * .55} ${w * .2} ${len} q${w * .8} ${w * 1.1} ${w * 1.6} 0 q.2 -${len * .5} ${w * .2} -${len}Z`).join('');
-  return `<svg viewBox="0 0 60 180" aria-hidden="true"><defs>
-    <linearGradient id="w${id}" x1="0" x2="1"><stop offset="0" stop-color="#9c8f74"/><stop offset=".3" stop-color="#eee3cb"/><stop offset=".52" stop-color="#fff8ea"/><stop offset=".78" stop-color="#dccfb3"/><stop offset="1" stop-color="#85795f"/></linearGradient>
-    <radialGradient id="g${id}" cx=".5" cy="0" r=".9"><stop offset="0" stop-color="rgba(255,170,80,.75)"/><stop offset=".35" stop-color="rgba(255,190,120,.25)"/><stop offset="1" stop-color="rgba(255,200,140,0)"/></radialGradient>
-    <radialGradient id="p${id}" cx=".5" cy=".5" r=".6"><stop offset="0" stop-color="#ffd27a"/><stop offset="1" stop-color="#c98a3c"/></radialGradient>
-    <linearGradient id="b${id}" x1="0" x2="1"><stop offset="0" stop-color="#5a4219"/><stop offset=".35" stop-color="#d9b25e"/><stop offset=".55" stop-color="#f4d98f"/><stop offset=".8" stop-color="#9c7630"/><stop offset="1" stop-color="#4a3512"/></linearGradient></defs>
-    <circle cx="57" cy="168" r="5.5" fill="none" stroke="url(#b${id})" stroke-width="2.2"/>
-    <ellipse cx="30" cy="175" rx="17" ry="4.5" fill="#3a2a10"/>
-    <ellipse cx="30" cy="169" rx="27" ry="7.5" fill="url(#b${id})"/>
-    <ellipse cx="30" cy="167.5" rx="23" ry="5.4" fill="none" stroke="rgba(60,40,10,.55)" stroke-width=".7"/>
-    <ellipse cx="31" cy="164.5" rx="15" ry="3.6" fill="#f3e9d4"/>
-    <path d="${body}" fill="url(#w${id})"/>
-    <path d="${body}" fill="url(#g${id})"/>
-    <g fill="#f6ecd6" stroke="rgba(150,125,85,.35)" stroke-width=".5">${dripPaths}</g>
-    <ellipse cx="30" cy="${top + 1.5}" rx="11.5" ry="3.3" fill="url(#p${id})" opacity=".92"/>
-    <path d="M30 ${top + 1} q1.4 -5 -1 -9" fill="none" stroke="#1d140b" stroke-width="1.6" stroke-linecap="round"/>
-    <circle cx="29" cy="${top - 8}" r="1.1" fill="#ff7a32"/></svg><div class="fl" style="bottom:${180 - top + 6}px"></div>`;
+// Velas en 3D de verdad: cilindro de cera por caras, tapa fundida, gotas, candelero de laton con grosor.
+// Como objetos reales sobre la mesa, al girarla se ven desde otro lado; solo la llama mira a la camara.
+const LIGHT = 112 * D2R;   // luz fija, de frente e izquierda: el sombreado no cambia al girar la mesa
+const shade = phi => .3 + .7 * Math.max(0, Math.cos(phi - LIGHT));
+// cara vertical de ancho w y alto h, con su pie en (px, py) a altura z, girada rotz grados alrededor del eje vertical
+const face = (w, h, px, py, z, rotz, css) =>
+  `<i style="width:${w}px;height:${h}px;transform:translate3d(${px - w / 2}px,${py - h}px,${z}px) rotateZ(${rotz}deg) rotateX(-90deg);${css}"></i>`;
+const disc = (rad, cx, cy, z, css) => `<b style="width:${rad * 2}px;height:${rad * 2}px;transform:translate3d(${cx - rad}px,${cy - rad}px,${z}px);${css}"></b>`;
+function ring(n, rad, h, cx, cy, z, paint){
+  let out = '';
+  const w = 2 * rad * Math.tan(Math.PI / n) * 1.06;
+  for (let i = 0; i < n; i++){
+    const phi = i * 2 * Math.PI / n;
+    out += face(w, h, cx + rad * Math.cos(phi), cy + rad * Math.sin(phi), z, phi / D2R + 90, paint(phi));
+  }
+  return out;
 }
-const CANDLES = [{ x: 58, y: 64, top: 36, drips: [[39, 26, 2.6], [22, 9, 1.8]] }, { x: 542, y: 64, top: 74, drips: [[24, 34, 3], [37, 14, 2.2], [41, 8, 1.6]] }].map((pos, id) => {
+function buildCandle(c){
+  const { x, y, H, R } = c, DISH = 5;
+  const dark = phi => `rgba(0,0,0,${((1 - shade(phi)) * .62).toFixed(3)})`;
+  // candelero: pared del plato, plato, aro y un poco de cera derramada
+  let html = ring(16, 27, DISH, x, y, 0, phi => `background:linear-gradient(${dark(phi)},${dark(phi)}),linear-gradient(to top,#6d4f1c,#caa04f 60%,#f0d48a)`);
+  html += disc(27, x, y, DISH, 'background:radial-gradient(circle at 42% 38%,#f6dd96,#c99c46 42%,#8a6526 72%,#4f3913);box-shadow:inset 0 0 0 1.2px rgba(255,236,180,.55)');
+  html += face(13, 13, x + 32, y, 1, 0, 'border-radius:50%;border:2.6px solid #b88c3c;box-shadow:inset 0 0 2px rgba(0,0,0,.6)');
+  html += disc(16, x + 2, y + 1, DISH + .3, 'background:radial-gradient(circle at 45% 40%,#fbf3e2,#e2d4b6 70%,#cdbd99)');
+  // cera: cara iluminada por la llama cerca de la tapa (luz a traves de la cera)
+  html += ring(14, R, H, x, y, DISH, phi => `background:linear-gradient(${dark(phi)},${dark(phi)}),linear-gradient(to top,#d6c9ad 0%,#ece1ca 40%,#fbf3e2 76%,#ffe0a8 94%,#ffc676 100%)`);
+  // gotas que resbalan desde el borde
+  c.drips.forEach(([deg, len, w]) => {
+    const phi = deg * D2R;
+    html += face(w, len, x + (R + .7) * Math.cos(phi), y + (R + .7) * Math.sin(phi), DISH + H - len, deg + 90,
+      `border-radius:1px 1px ${w}px ${w}px;background:linear-gradient(to top,#efe3c9,#fff7e8);box-shadow:inset 0 -2px 2px rgba(150,120,80,.25)`);
+  });
+  // tapa con charco de cera fundida, pabilo en cruz con brasa y resplandor para verla desde arriba
+  html += disc(R, x, y, DISH + H, 'background:radial-gradient(circle,#ffd58a 0 34%,#f4e3bf 62%,#eadcbc 100%)');
+  html += face(1.5, 8, x, y, DISH + H, 0, 'background:linear-gradient(to top,#1a120a 70%,#ff6a2a)');
+  html += face(1.5, 8, x, y, DISH + H, 90, 'background:linear-gradient(to top,#1a120a 70%,#ff6a2a)');
+  html += disc(20, x, y, DISH + H + .4, 'background:radial-gradient(circle,rgba(255,205,125,.55),rgba(255,180,90,0) 70%)');
+  html += `<div class="flw"><div class="fl"></div></div>`;
+  const el = document.createElement('div'); el.className = 'c3d'; el.innerHTML = html;
+  return el;
+}
+const CANDLES = [
+  { x: 58, y: 64, H: 104, R: 12, drips: [[40, 34, 3.2], [150, 14, 2.4], [260, 22, 2.8]] },   // alta, con una gota larga
+  { x: 542, y: 64, H: 64, R: 13, drips: [[120, 30, 3.6], [200, 16, 2.6], [330, 40, 3.2], [20, 9, 2]] },   // gastada, cera derramada
+].map((c, id) => {
   const base = document.createElement('div'); base.className = 'cbase';
-  base.style.transform = `translate3d(${pos.x - 22}px, ${pos.y - 22}px, .4px)`;
-  const el = document.createElement('div'); el.className = 'candle';
-  el.innerHTML = candleSvg({ ...pos, id });
-  // la base (charco de luz) vive en la mesa; la vela, en pantalla, siempre erguida
-  table.append(base); scene.appendChild(el);
+  base.style.transform = `translate3d(${c.x - 22}px, ${c.y - 22}px, .4px)`;
+  const el = buildCandle(c);
+  table.append(base, el);
   // cada llama tiene su propio pulso, y de vez en cuando una corriente la inclina
-  return { ...pos, el, base, fl: el.querySelector('.fl'), fz: 180 - pos.top + 22, seed: id * 7.3, gust: 0, gustDir: 1, nextGust: 4 + id * 5 };
+  return { ...c, el, base, flw: el.querySelector('.flw'), fl: el.querySelector('.fl'), top: 180 - (c.H + 5), fz: c.H + 5 + 22,
+    seed: id * 7.3, gust: 0, gustDir: 1, nextGust: 4 + id * 5 };
 });
-// la vela siempre mira a la camara: se gira al reves que la mesa antes de ponerse de pie
-// En 3D la vela era un plano vertical y la perspectiva la inclinaba hacia el punto de fuga al girar la mesa.
-// Ahora se apoya en su punto proyectado y escala con la distancia, pero nunca se tuerce.
 function projScale(x, y){
   const K = cam.k * cam.zoom, a = cam.yaw * D2R, yy = (x - TW / 2) * Math.sin(a) + (y - TH / 2) * Math.cos(a);
   return K * P / (P - K * yy * Math.sin(cam.theta * D2R));
 }
+// solo la llama mira a la camara; el resto de la vela es un objeto fijo sobre la mesa
 function updateCandles(){
   CANDLES.forEach(c => {
-    const b = tableToScreen(c.x, c.y), s = projScale(c.x, c.y);
-    c.sc = s; c.el.style.transform = `translate(${b.x - 30}px, ${b.y - 180}px) scale(${s})`;
-    c.fx = b.x; c.fy = b.y - (180 - c.top + 14) * s;   // punta de la llama en pantalla
+    c.flw.style.transform = `translate3d(${c.x - 7.5}px, ${c.y - 38}px, ${c.H + 5 + 6}px) rotateZ(${-cam.yaw}deg) rotateX(${-cam.theta}deg)`;   // de frente a la camara en giro e inclinacion
+    const f = tableToScreen(c.x, c.y, c.fz); c.sc = projScale(c.x, c.y); c.fx = f.x; c.fy = f.y;
   });
 }
 const clightEl = $('clight');
