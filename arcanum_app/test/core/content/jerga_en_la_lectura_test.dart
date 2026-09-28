@@ -59,6 +59,48 @@ void main() {
       );
     });
 
+    test('los terminos mas frecuentes tambien abren, aunque su clave no se llame igual', () {
+      // El contenido ya estaba escrito y enterrado en otra entrada: "invertida"
+      // dentro de `tarot`, las cuatro dignidades dentro de `dignidad`. Lo que
+      // faltaba era el alias.
+      String? abre(String texto) {
+        final t = jergaEnLaLectura(texto);
+        return t.isEmpty ? null : t.first.titulo;
+      }
+
+      expect(abre('la carta sale invertida'), 'Tirada de tarot');
+      expect(abre('tu Venus natal'), isNotNull);
+      expect(abre('Venus en exilio'), 'Dignidad esencial');
+      expect(abre('Saturno en caída'), 'Dignidad esencial');
+      expect(abre('Marte en domicilio'), 'Dignidad esencial');
+    });
+
+    test('un termino repetido se subraya SOLO la primera vez', () {
+      // "natal" sale 52 veces en las lecturas medidas. Subrayarlas todas deja
+      // el texto lleno de oro y deja de senalar nada.
+      final t = jergaEnLaLectura(
+        'tu Luna natal, tu Venus natal y tu Marte natal se tocan hoy',
+      );
+      expect(t, hasLength(1));
+      expect(t.single.inicio, lessThan(12));
+    });
+
+    test('las figuras de la corte abren por sus dos nombres', () {
+      // El catalogo mezcla sistemas: slug Rider-Waite ("rey-de-copas") y
+      // titulo Golden Dawn ("Prince of the Chariot"). Quien lea "Princesa" en
+      // la ficha de la carta tiene que poder tocarla igual que quien lee
+      // "Sota".
+      String? abre(String t) {
+        final r = jergaEnLaLectura(t);
+        return r.isEmpty ? null : r.first.titulo;
+      }
+
+      expect(abre('el Caballero de Copas entra de golpe'), 'Caballero');
+      expect(abre('la Princesa de las Aguas'), 'Sota');
+      expect(abre('el Príncipe del Carro de Fuego'), 'Rey');
+      expect(abre('la Reina de los Tronos'), 'Reina');
+    });
+
     test('lo que no tiene ficha no se subraya', () {
       // Regla de la casa: un subrayado dorado que no abre nada es peor que no
       // subrayar. "Netzach" si tiene ficha; "Qliphoth" no, y no debe marcarse.

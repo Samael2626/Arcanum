@@ -19,6 +19,7 @@
 /// --`sephirahLore` y `glossary`--, y lo que no esta, no se marca.
 library;
 
+import 'court_lore.dart';
 import 'glossary.dart';
 import 'sephirah_lore.dart';
 
@@ -34,6 +35,7 @@ class TerminoJerga {
   /// Que abrir al tocarlo: una sefira o una entrada del glosario.
   final SephirahLore? sefira;
   final GlossaryEntry? glosario;
+  final CourtLore? figura;
 
   const TerminoJerga({
     required this.inicio,
@@ -41,9 +43,11 @@ class TerminoJerga {
     required this.textoVisible,
     this.sefira,
     this.glosario,
+    this.figura,
   });
 
-  String get titulo => sefira?.titulo ?? glosario?.title ?? textoVisible;
+  String get titulo =>
+      sefira?.titulo ?? figura?.titulo ?? glosario?.title ?? textoVisible;
 }
 
 /// Las palabras del glosario que aparecen en LECTURAS, con su clave.
@@ -51,6 +55,12 @@ class TerminoJerga {
 /// No es todo el glosario a proposito: "casa 7" o "profeccion" no salen en una
 /// lectura de tarot, y buscarlas seria gastar pasadas por nada. Si una empieza
 /// a salir, se anade aqui y ya tiene ficha.
+/// Varias entradas EXPLICAN un termino sin llamarse como el: "invertida" vive
+/// dentro de `tarot`, y "caida", "domicilio", "exilio" y "exaltacion" dentro
+/// de `dignidad`. El contenido ya estaba escrito; lo que faltaba era poder
+/// llegar a el desde la palabra. Por eso esto es un mapa palabra -> clave y no
+/// una lista: barrido el catalogo y las lecturas reales del 27-sep, las que
+/// mas salen son justo estas, no las sefiras.
 const Map<String, String> _terminosDeGlosario = {
   'decanato': 'decanato',
   'decanatos': 'decanato',
@@ -59,8 +69,23 @@ const Map<String, String> _terminosDeGlosario = {
   'sephirah': 'sephirah',
   'retrógrado': 'retrogrado',
   'retrogrado': 'retrogrado',
-  'dignidad': 'dignidad',
   'hora planetaria': 'hora_planetaria',
+  // La carta al reves: 18 apariciones en las lecturas medidas, mas que todas
+  // las sefiras juntas.
+  'invertida': 'tarot',
+  'invertido': 'tarot',
+  'tirada': 'tarot',
+  // Lo natal frente a lo que pasa hoy: 52 apariciones. La entrada existia y
+  // su clave no casaba con la palabra, asi que no habia forma de llegar.
+  'natal': 'natal_vs_transito',
+  'de nacimiento': 'natal_vs_transito',
+  // Las cuatro dignidades, explicadas todas dentro de la misma entrada.
+  'dignidad': 'dignidad',
+  'domicilio': 'dignidad',
+  'exaltación': 'dignidad',
+  'exaltacion': 'dignidad',
+  'exilio': 'dignidad',
+  'caída': 'dignidad',
 };
 
 /// Localiza en [texto] los terminos que tienen ficha, en orden de aparicion.
@@ -71,7 +96,8 @@ List<TerminoJerga> jergaEnLaLectura(String texto) {
   final hallazgos = <TerminoJerga>[];
   final plano = _plano(texto);
 
-  void buscar(String aguja, {SephirahLore? sefira, GlossaryEntry? glosario}) {
+  void buscar(String aguja,
+      {SephirahLore? sefira, GlossaryEntry? glosario, CourtLore? figura}) {
     final needle = _plano(aguja);
     var desde = 0;
     while (true) {
@@ -85,6 +111,7 @@ List<TerminoJerga> jergaEnLaLectura(String texto) {
         textoVisible: texto.substring(i, i + needle.length),
         sefira: sefira,
         glosario: glosario,
+        figura: figura,
       ));
     }
   }
@@ -92,6 +119,20 @@ List<TerminoJerga> jergaEnLaLectura(String texto) {
   for (final s in sephirahLore.values) {
     buscar(s.titulo, sefira: s);
   }
+  // Las figuras, por los dos nombres que circulan: el que la app ensena
+  // (Rider-Waite) y el del titulo del catalogo (Golden Dawn). Quien lea
+  // "Princesa de las Aguas" en la ficha de la carta tiene que poder tocar la
+  // palabra igual que quien lee "Sota".
+  const alias = <String, String>{
+    'sota': 'sota', 'princesa': 'sota', 'paje': 'sota',
+    'caballero': 'caballero',
+    'reina': 'reina',
+    'rey': 'rey', 'príncipe': 'rey', 'principe': 'rey',
+  };
+  alias.forEach((palabra, clave) {
+    final f = courtLore[clave];
+    if (f != null) buscar(palabra, figura: f);
+  });
   _terminosDeGlosario.forEach((palabra, clave) {
     final entrada = glossary[clave];
     if (entrada != null) buscar(palabra, glosario: entrada);
@@ -99,11 +140,18 @@ List<TerminoJerga> jergaEnLaLectura(String texto) {
 
   hallazgos.sort((a, b) => a.inicio.compareTo(b.inicio));
 
-  // Sin solapes: "séfira" dentro de otra coincidencia partiria el texto.
+  // SOLO LA PRIMERA VEZ DE CADA TERMINO. "natal" sale 52 veces en las lecturas
+  // medidas: subrayarlas todas deja el texto lleno de oro y deja de senalar
+  // nada, que es lo contrario de lo que se buscaba. La primera basta para
+  // aprenderlo, y quien ya lo sepa no tropieza con el resto.
+  //
+  // Sin solapes tampoco: una coincidencia dentro de otra partiria el texto.
   final limpio = <TerminoJerga>[];
+  final yaVistos = <String>{};
   var ultimoFin = -1;
   for (final h in hallazgos) {
     if (h.inicio < ultimoFin) continue;
+    if (!yaVistos.add(h.titulo)) continue;
     limpio.add(h);
     ultimoFin = h.fin;
   }
