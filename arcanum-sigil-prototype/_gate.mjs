@@ -547,11 +547,11 @@ await page.click('#famPersonal');
 const pers = {};
 for (const fmt of ['goetia', 'pentaculo', 'agrippa']) {
   await page.selectOption('#selPersonalFormat', fmt);
-  pers[fmt] = await page.evaluate(() => { const s = buildSVG(); return { s, det: s === buildSVG(), ok: !new DOMParser().parseFromString(s, 'image/svg+xml').querySelector('parsererror'), nan: /NaN|undefined/.test(s), texts: (s.match(/<g data-layer="personal-name">[\s\S]*?<\/g>/) || [''])[0].split('<text').length - 1, sigil: /data-layer="personal-sigil"[\s\S]*<path/.test(s), honest: /No es un sello histórico/.test(s) }; });
+  pers[fmt] = await page.evaluate(() => { const s = buildSVG(); return { s, det: s === buildSVG(), ok: !new DOMParser().parseFromString(s, 'image/svg+xml').querySelector('parsererror'), nan: /NaN|undefined/.test(s), texts: (s.match(/<g data-layer="personal-name"[^>]*>[\s\S]*?<\/g>/) || [''])[0].split('<text').length - 1, sigil: /data-layer="personal-sigil"[\s\S]*<path/.test(s), honest: /No es un sello histórico/.test(s) }; });
 }
 check('sello personal: 3 formatos distintos, deterministas y validos', new Set(Object.values(pers).map(x => x.s)).size === 3 && Object.values(pers).every(x => x.det && x.ok && !x.nan && x.sigil));
-check('sello personal: Goetia con las 6 letras de SAMUEL en el anillo', pers.goetia.texts === 6, pers.goetia.texts + '');
-check('sello personal: pentaculo con el nombre en hebreo (שמואל)', pers.pentaculo.texts === 5 && /[א-ת]/.test(pers.pentaculo.s));
+check('sello personal: Goetia con SAMUEL (6 letras) y el simbolo del planeta en el anillo', pers.goetia.texts === 7, pers.goetia.texts + '');
+check('sello personal: pentaculo con el nombre en hebreo (שמואל) y el simbolo', pers.pentaculo.texts === 6 && /[א-ת]/.test(pers.pentaculo.s));
 check('sello personal: el SVG declara que es un sello nuevo, no historico', Object.values(pers).every(x => x.honest));
 const auto = await page.evaluate(() => personalPlanet() === DAY_RULER[new Date().getDay()]);
 check('sello personal: planeta por defecto = regente del dia', auto);
@@ -563,7 +563,28 @@ await page.selectOption('#selPersonalSource', 'kamea');
 const kp = await page.evaluate(() => ({ planet: personalPlanet(), locked: document.getElementById('selPersonalPlanet').disabled, metal: /metal: hierro/.test(buildSVG()) }));
 check('sello personal: con Kamea el planeta es el de la tabla (Marte, hierro)', kp.planet === 'mars' && kp.locked && kp.metal, JSON.stringify(kp));
 await page.selectOption('#selPersonalSource', 'letters');
+// opciones nuevas: separadores y estrella interior
+await page.selectOption('#selPersonalFormat', 'goetia'); await page.selectOption('#selPersonalSep', 'cross'); await page.selectOption('#selPersonalStar', '7');
+const po = await page.evaluate(() => { const s = buildSVG(); return { cross: (s.match(/>✠</g) || []).length, star: (s.match(/data-layer="personal-star"[\s\S]*?<\/g>/) || [''])[0].split('<path').length - 1 }; });
+check('sello personal: cruces entre letras y estrella de 7 puntas', po.cross === 5 && po.star === 8, JSON.stringify(po));
+await page.selectOption('#selPersonalSep', 'none'); await page.selectOption('#selPersonalStar', '0');
 await page.click('#famLetters');
+// Sigilo de letras: anillo con nombre y estrella angulosa
+await forge('Amor', 'fusion', 'cooper');
+await page.selectOption('#selBorder', 'ringLatin');
+const lr = await page.evaluate(() => { const s = buildSVG(); return { ring: s.includes('data-layer="ring"'), n: (s.match(/<g data-layer="ring-text"[^>]*>[\s\S]*?<\/g>/) || [''])[0].split('<text').length - 1, row: !document.getElementById('ringRow').hidden }; });
+check('letras: anillo con el nombre (AMOR, 4 letras)', lr.ring && lr.n === 4 && lr.row, JSON.stringify(lr));
+await page.selectOption('#selBorder', 'ringHebrew');
+check('letras: anillo en hebreo', await page.evaluate(() => /[א-ת]/.test(buildSVG())));
+await page.selectOption('#selBorder', 'none');
+await page.check('#chkStar');
+await page.selectOption('#selStarPoints', '5');
+const sr = await page.evaluate(() => { const g = starGeom(); const out = Math.hypot(g.pts[0][0] - C, g.pts[0][1] - C), inn = Math.hypot(g.pts[1][0] - C, g.pts[1][1] - C); return inn / out; });
+check('letras: estrella angulosa de 5 puntas = pentagrama exacto (0,382)', Math.abs(sr - 0.382) < 0.002, sr.toFixed(3));
+await page.selectOption('#selStarShape', 'wide');
+check('letras: estrella ancha disponible', await page.evaluate(() => { const g = starGeom(); return Math.hypot(g.pts[1][0] - C, g.pts[1][1] - C) / Math.hypot(g.pts[0][0] - C, g.pts[0][1] - C) > 0.5; }));
+await page.selectOption('#selStarShape', 'sharp');
+await page.uncheck('#chkStar');
 
 // 14) Todo el texto visible en espanol: sin codigos internos ni citas en ingles
 // (el original en ingles solo puede vivir en tooltips)
