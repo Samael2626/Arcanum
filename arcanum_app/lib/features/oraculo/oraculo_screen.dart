@@ -20,6 +20,7 @@ import 'data/tarot_hint.dart';
 import 'tarot_learn.dart';
 import 'widgets/tarot_card.dart';
 import '../../shared/widgets/ai_output.dart';
+import '../../shared/widgets/texto_con_jerga.dart';
 
 /// Quien lee las cartas. No son dos actividades: las dos TIRAN, y lo que
 /// cambia es de donde sale el significado.
@@ -659,7 +660,7 @@ class _OracleViewState extends ConsumerState<_OracleView> {
                     child: AiOutput(
                       text: _iaReply!,
                       surface: 'oraculo',
-                      child: Text(_iaReply!, style: ArcanumText.body(16)),
+                      child: TextoConJerga(_iaReply!),
                     ),
                   ),
                 ),
