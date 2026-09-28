@@ -123,6 +123,35 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
 .rtitle{position:fixed;z-index:1;transform:translate(-50%,-50%);width:132px;text-align:center;color:var(--gold);
   font:600 12px/1.15 var(--display);letter-spacing:.08em;text-transform:uppercase;pointer-events:none}
 
+.rclose.undo{width:64px;height:64px;grid-template-rows:24px auto;padding:6px 4px;border-color:var(--gold);color:var(--gold-light);
+  background:linear-gradient(145deg,rgba(120,91,38,.72),rgba(45,35,20,.6));font:600 11px/1 var(--display)}
+.undo-chip{position:fixed;z-index:45;transform:translate(-50%,-100%);display:flex;align-items:center;gap:8px;min-height:48px;padding:8px 16px 8px 12px;
+  border-radius:999px;border:1px solid var(--gold);color:var(--gold-light);cursor:pointer;font:600 16px/1 var(--display);
+  background:linear-gradient(145deg,rgba(60,48,26,.85),rgba(18,17,24,.8));box-shadow:0 10px 26px rgba(0,0,0,.55);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);animation:pop .16s ease-out}
+.undo-chip svg{width:22px;height:22px}
+.seal{position:absolute;left:0;top:0;width:84px;height:84px;border-radius:50%;cursor:pointer;
+  background:radial-gradient(circle at 38% 32%,#9b2a3d,#5a1422 55%,#2a0610);border:3px solid rgba(201,168,76,.75);
+  box-shadow:0 6px 14px rgba(0,0,0,.6),inset 0 2px 6px rgba(255,210,180,.25),inset 0 -4px 8px rgba(0,0,0,.5)}
+.seal svg{position:absolute;inset:14px;width:50px;height:50px}
+.seal.open{background:radial-gradient(circle at 38% 32%,#6d2030,#3a0b16 60%,#1d050a);opacity:.7}
+.seal.open::after{content:"";position:absolute;inset:0;border-radius:50%;
+  background:linear-gradient(118deg,transparent 47%,rgba(10,4,6,.95) 48%,rgba(10,4,6,.95) 51%,transparent 52%)}
+.seal-fly{position:fixed;z-index:70;overflow:hidden;padding:14px;color:var(--ivory);font:500 17px/1.35 var(--body);
+  background:radial-gradient(circle at 38% 32%,#9b2a3d,#4A0E1A 70%);border:2px solid var(--gold);pointer-events:none}
+.mark{position:absolute;left:0;top:0;width:440px;height:440px;border-radius:50%;pointer-events:none;opacity:0;
+  border:3px solid rgba(236,215,154,.9);box-shadow:0 0 40px rgba(237,174,48,.7),inset 0 0 40px rgba(237,174,48,.45)}
+.card.clar .face{outline:2px solid rgba(236,215,154,.85);box-shadow:0 0 14px rgba(236,215,154,.5)}
+.banner{position:absolute;left:12px;right:12px;top:6px;z-index:6;display:grid;gap:8px;padding:10px 12px;border-radius:14px;
+  background:rgba(18,17,24,.72);border:1px solid var(--line);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.banner[hidden]{display:none}
+.banner p{margin:0;font-size:14px;color:var(--ivory-muted);line-height:1.35}
+.banner b{font-family:var(--display);font-size:17px;color:var(--gold-light);font-weight:600}
+.hist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.act.hrow{display:grid;gap:2px;text-align:left;white-space:normal;padding:10px 12px;line-height:1.25}
+.act.hrow b{font-size:17px}
+.act.hrow span{font-family:var(--body);font-weight:400;font-size:14px;color:var(--ivory-muted)}
+.act.hrow em{font-family:var(--body);font-weight:400;font-size:14px;color:var(--ivory)}
 .menu{position:fixed;z-index:40;display:grid;gap:6px;padding:10px;min-width:260px;background:rgba(18,18,26,.97);border:1px solid var(--line);border-radius:14px;
   box-shadow:0 14px 40px rgba(0,0,0,.6);animation:pop .14s ease-out}
 @keyframes pop{from{transform:scale(.94);opacity:0}}
@@ -169,14 +198,14 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
     <h1>Mesa de tarot</h1>
     <div class="status" id="status">Ningún mazo en juego</div>
   </div>
-  <div class="seg" role="group" aria-label="Vista">
-    <button id="v-tilt" aria-pressed="true">Inclinada</button>
-    <button id="v-top" aria-pressed="false">Cenital</button>
-  </div>
 </header>
 
 <main class="scene" id="scene">
   <div class="guide" id="guide"></div>
+  <div class="banner" id="banner" hidden>
+    <p id="banner-text"></p>
+    <div class="two"><button class="act" id="b-back">Volver a mi mesa</button><button class="act primary" id="b-go">Continuar aquí</button></div>
+  </div>
   <button class="interp" id="interp" hidden>Interpretación</button>
   <div class="table" id="table">
     <div class="wood"></div>
@@ -192,6 +221,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
 
 <div class="toast" id="toast" style="opacity:0"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
 <script>
 'use strict';
 // ================= geometria de la mesa (unidades de mesa) =================
@@ -254,7 +284,7 @@ const SPREADS = [
 
 // ================= camara =================
 const scene = document.getElementById('scene'), table = document.getElementById('table');
-const cam = { theta: 38, tTheta: 38, k: 1, oy: 0, zoom: 1, tZoom: 1, panX: 0, panY: 0, tPanX: 0, tPanY: 0 };
+const cam = { theta: 38, tTheta: 38, yaw: 0, tYaw: 0, k: 1, oy: 0, zoom: 1, tZoom: 1, panX: 0, panY: 0, tPanX: 0, tPanY: 0 };
 function fitCam(){
   const r = scene.getBoundingClientRect(), th = cam.theta * D2R, s = Math.sin(th), c = Math.cos(th);
   let k = 1;
@@ -270,14 +300,16 @@ function fitCam(){
 function applyCam(){
   const K = cam.k * cam.zoom, ox = cam.panX, oy = cam.panY + cam.oy;
   scene.style.perspectiveOrigin = `calc(50% + ${ox}px) calc(50% + ${oy}px)`;
-  table.style.transform = `translate(${ox}px, ${oy}px) translate(-50%, -50%) scale3d(${K}, ${K}, ${K}) rotateX(${cam.theta}deg)`;
+  table.style.transform = `translate(${ox}px, ${oy}px) translate(-50%, -50%) scale3d(${K}, ${K}, ${K}) rotateX(${cam.theta}deg) rotateZ(${cam.yaw}deg)`;
 }
 function toTable(cx, cy){
   const r = scene.getBoundingClientRect();
   const sx = cx - (r.left + r.width / 2 + cam.panX), sy = cy - (r.top + r.height / 2 + cam.panY + cam.oy);
   const th = cam.theta * D2R, s = Math.sin(th), c = Math.cos(th), K = cam.k * cam.zoom;
   const y = sy * P / (K * (c * P + sy * s)), x = sx * (P - K * y * s) / (K * P);
-  return { x: x + TW / 2, y: y + TH / 2 };
+  // deshace el giro de la mesa (rotateZ se aplica antes que la inclinacion)
+  const a = -cam.yaw * D2R;
+  return { x: x * Math.cos(a) - y * Math.sin(a) + TW / 2, y: x * Math.sin(a) + y * Math.cos(a) + TH / 2 };
 }
 function clampPan(){
   const r = scene.getBoundingClientRect(), mx = (cam.zoom - 1) * r.width / 2 + 10, my = (cam.zoom - 1) * r.height / 2 + 10;
@@ -326,7 +358,7 @@ class Card extends Piece {
   constructor(deck){
     super('card');
     this.deck = deck; this.data = null; this.reversed = false; this.angle = 0; this.diag = 0; this.trem = 0; this.settle = 1;
-    this.slot = null; this.fanPos = null; this.proxy = false;
+    this.slot = null; this.fanPos = null; this.proxy = false; this.host = null; this.clars = [];
     this.el.innerHTML = `<div class="shadow"></div><div class="flip"><div class="face back"></div><div class="face front"><img alt="" draggable="false"><div class="fx"></div></div></div>`;
     this.flipEl = this.el.querySelector('.flip'); this.shadowEl = this.el.querySelector('.shadow');
     this.el.querySelector('.back').style.backgroundImage = deck.back;
@@ -344,6 +376,11 @@ class Card extends Piece {
     const L = this.lift;
     this.shadowEl.style.opacity = Math.min(1, L / 24) * .6;
     this.shadowEl.style.transform = `translate3d(${L * .25}px, ${L * .4}px, ${-(this.z + L) + .15}px)`;
+    // las aclaratorias siguen a su carta, salvo la que se esta arrastrando
+    this.clars.forEach((k, i) => {
+      if (g && g.piece === k) return;
+      Object.assign(k, clarPos(this, i), { sc: this.sc * .82, lift: this.lift, z: this.z + .8 + i * .3 }); k.render();
+    });
   }
 }
 
@@ -405,6 +442,7 @@ const cardAt = i => tableCards().find(c => c.slot === i);
 function hotSlot(i){ slotEls.forEach(e => e.classList && e.classList.remove('hot')); if (i >= 0) slotEls.filter(e => e.classList.contains('slot'))[i].classList.add('hot'); }
 function place(c, i, ms = 360, delay = 0){
   const s = slotPos(spread, i); c.slot = i; c.toFront();
+  if (!reading.ctx) reading.ctx = astralNow();   // el momento de la tirada queda registrado con la primera carta
   return new Promise(r => moveTo(c, { x: s.x, y: s.y, rot: s.rot, sc: spread.s, lift: 0, tx: 0, ty: 0 }, ms, ease.out, delay, r));
 }
 function dropCard(c, origin){
@@ -418,6 +456,9 @@ function dropCard(c, origin){
     }
     c.aside = false; place(c, i); toast(`${i + 1} · ${spread.pos[i][3]}`);
   } else {
+    // soltada junto a una carta de la tirada (sin caer en su hueco): queda vinculada como aclaratoria
+    const host = spread && c.y >= SHELF_Y && tableCards().find(h => h !== c && h.slot !== null && Math.hypot(h.x - c.x, h.y - c.y) < CH * h.sc * 1.05);
+    if (host){ linkClar(c, host); toast(`Aclaratoria de ${host.slot + 1} · ${spread.pos[host.slot][3]}`); return refresh(); }
     c.slot = null; c.toFront(); c.aside = c.y < SHELF_Y;
     moveTo(c, { lift: 0, tx: 0, ty: 0, x: clamp(c.x, 40, TW - 40), y: clamp(c.y, 40, TH - 40), sc: c.aside ? DECK_S : spread ? spread.s : FREE_S }, 260);
     if (c.aside) toast('Apartada en el estante: no cuenta para la lectura');
@@ -518,18 +559,20 @@ function refresh(){
     ? `<b>${active.def.name}</b> · ${server.total()} en el mazo${piles.length > 1 ? ` · ${piles.length} montones` : ''} · ${server.state}`
     : 'Ningún mazo en juego';
   let g = '';
-  if (!active) g = 'Arrastra un mazo del estante al paño';
+  if (contemplating) g = '';
+  else if (!active) g = 'Arrastra un mazo del estante al paño';
   else if (union) g = `Toca los montones de abajo arriba (${union.length}/${piles.length}) · toca el paño para cancelar`;
   else if (fan) g = spread ? 'Toca o arrastra una carta · mantén pulsado para Juntar' : 'Toca o arrastra una carta · mantén pulsado para Juntar';
   else if (piles.length > 1) g = 'Toca un montón y elige Unir · o arrástralo sobre otro';
-  else if (!spread) g = 'Toca el mazo para barajar, cortar o elegir tirada';
+  else if (!spread) g = !seal && !cardsOut() ? 'Toca el paño para sellar tu pregunta, o el mazo para barajar' : 'Toca el mazo para barajar, cortar o elegir tirada';
   else {
     const empty = spread.pos.length - tableCards().filter(c => c.slot !== null).length;
     const down = tableCards().filter(c => !c.up).length;
     g = empty ? `Toca el mazo y elige Sacar, o extiéndelo · faltan ${empty}` : down ? 'Toca una carta para desvelarla o desvelar todas' : 'Pulsa Interpretación, en el centro del paño';
   }
   guideEl.textContent = g;
-  interpEl.hidden = !readyToRead();
+  interpEl.hidden = !readyToRead() || !!contemplating;
+  saveSoon();
   decks.forEach(d => d.el.classList.toggle('glow', d === active && piles.length === 1 && !fan && !cardsOut() && server.state.startsWith('sin')));
 }
 
@@ -580,14 +623,15 @@ function layoutFan(end){
     c.x = start.x + dx * t + px * sag; c.y = start.y + dy * t + py * sag;
     c.rot = ang / D2R + (dx < 0 ? 180 : 0); c.z = 1 + i * .12; c.lift = 0; c.render();
   });
-  fan.len = len;
+  fan.len = len; fan.end = { x: end.x, y: end.y };
 }
 function autoFan(pile){
+  takeSnap();
   if (!openFan(pile)) return;
   const endX = pile.x > TW / 2 ? 58 : TW - 58, sx = pile.x, y = clamp(pile.y, SHELF_Y + 90, FAN_Y);
   fan.start = { x: sx, y }; busy = true; refresh();
   pile.y = y; pile.render();
-  tween(780, v => layoutFan({ x: sx + (endX - sx) * v, y }), () => { busy = false; refresh(); }, ease.out);
+  tween(780, v => layoutFan({ x: sx + (endX - sx) * v, y }), () => { busy = false; refresh(); offerUndo(pile); }, ease.out);
 }
 function closeFan(ms = 460){
   if (!fan) return Promise.resolve();
@@ -661,6 +705,7 @@ function newPile(from, pid, k){
   piles.push(p); return p;
 }
 function beginCut(d){
+  takeSnap();
   const n = server.count(d.pid), k = Math.round(n * (.3 + Math.random() * .4));
   const p = newPile(d, server.cut(d.pid, k), k);
   d.setCount(n - k); refresh();
@@ -671,7 +716,7 @@ function endCutDrag(p, d){
     // soltado encima: el corte se deshace y el orden queda como estaba
     return moveTo(p, { x: d.x, y: d.y, lift: 0 }, 220, ease.out, 0, () => { server.merge([p.pid, d.pid], d.pid); dropPile(p); d.setCount(server.count(d.pid)); refresh(); });
   }
-  p.z = 1; moveTo(p, { lift: 0, tx: 0, ty: 0 }, 200); refresh();
+  p.z = 1; moveTo(p, { lift: 0, tx: 0, ty: 0 }, 200); refresh(); offerUndo(p);
 }
 function freeSpot(near){
   const w = CW * DECK_S * 1.9;
@@ -685,12 +730,13 @@ function autoCut(d){
   const spot = freeSpot(d), p = beginCut(d);
   busy = true;
   moveTo(p, { lift: 50 }, 160, ease.out, 0, () => moveTo(p, { x: spot.x, y: spot.y, lift: 0 }, 360, ease.inOut, 0, () => {
-    busy = false; p.z = 1; refresh(); toast('Corte hecho. Toca un montón y elige Unir, o arrástralo sobre otro.');
+    busy = false; p.z = 1; refresh(); toast('Corte hecho. Toca un montón y elige Unir, o arrástralo sobre otro.'); offerUndo(p);
   }));
 }
 function dropPile(p){ piles = piles.filter(q => q !== p); p.remove(); }
 // apila `list` (de abajo arriba) en la posicion del primero; el servidor lo convierte en un solo monton
-async function stack(list){
+async function stack(list, { snap = true, offer = true } = {}){
+  if (snap) takeSnap();
   busy = true; refresh();
   const base = list[0], keeper = list.includes(active) ? active : base, at = { x: base.x, y: base.y, rot: base.rot };
   let h = base.thick;
@@ -703,10 +749,11 @@ async function stack(list){
   list.forEach(p => { if (p !== keeper) dropPile(p); p.badge && (p.badge.hidden = true); });
   keeper.x = at.x; keeper.y = at.y; keeper.rot = at.rot; keeper.z = 1; keeper.setCount(server.count(keeper.pid)); keeper.render();
   union = null; busy = false; refresh();
+  if (offer) offerUndo(keeper);
 }
 async function mergePair(top, below){
   if (fan && (fan.pile === top || fan.pile === below)) await closeFan(260);
-  await stack([below, top]);
+  await stack([below, top], { snap: false });
   toast(piles.length > 1 ? 'Montones unidos' : 'Mazo entero de nuevo');
 }
 function startUnion(){ union = []; piles.forEach(p => p.badge.hidden = true); refresh(); }
@@ -768,6 +815,11 @@ const ICON = {
   wash: '<path d="M12 12a2 2 0 1 1 2-2 5 5 0 1 1-5-5 8 8 0 1 1-6 7"/>',
   union: '<path d="M4 6h6l3 4h7M4 18h6l3-4h7"/><path d="m17 7 3 3-3 3"/>',
   order: '<rect x="4" y="4" width="11" height="8" rx="1.5"/><rect x="9" y="12" width="11" height="8" rx="1.5"/>',
+  undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>',
+  seal: '<circle cx="12" cy="12" r="8"/><path d="M12 7.5 15.9 14.2H8.1ZM12 16.5 8.1 9.8h7.8Z"/>',
+  gather: '<rect x="8" y="8" width="8" height="11" rx="1.5"/><path d="M3 4l4 4M21 4l-4 4M3 21l4-3M21 21l-4-3"/>',
+  hist: '<path d="M4 4h12l4 4v12H4z"/><path d="M8 11h8M8 15h6"/>',
+  circle: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.5"/>',
 };
 const svgIcon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
 let menuEl = null, menuFor = null, menuClosedAt = 0;
@@ -786,7 +838,9 @@ function radial(anchor, title, items, onPick){
   menuEl = document.createElement('div'); menuEl.className = 'radial'; menuEl.setAttribute('role', 'menu'); menuEl.setAttribute('aria-label', title);
   menuEl.innerHTML = `<div class="disk" style="left:${cx}px;top:${cy}px;width:${(R + 78) * 2}px;height:${(R + 78) * 2}px"></div>
     <div class="rtitle" style="left:${cx}px;top:${cy - 40}px">${title}</div>
-    <button class="rclose" style="left:${cx}px;top:${cy}px" aria-label="Cerrar">${'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>'}</button>` +
+    ${canUndo()
+      ? `<button class="rclose undo" style="left:${cx}px;top:${cy}px" aria-label="Deshacer">${svgIcon('undo')}<span>Deshacer</span></button>`
+      : `<button class="rclose" style="left:${cx}px;top:${cy}px" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>`}` +
     items.map((it, i) => {
       const a = -Math.PI / 2 + i * 2 * Math.PI / n, x = cx + Math.cos(a) * R, y = cy + Math.sin(a) * R;
       return `<button class="rbtn" role="menuitem" data-m="${it.id}" ${it.off ? 'disabled' : ''} aria-current="${!!it.cur}"
@@ -795,7 +849,8 @@ function radial(anchor, title, items, onPick){
   document.body.appendChild(menuEl);
   requestAnimationFrame(() => menuEl && menuEl.classList.add('open'));
   menuEl.addEventListener('click', e => {
-    if (e.target.closest('.rclose')) return closeMenu();
+    const cc = e.target.closest('.rclose');
+    if (cc){ closeMenu(); if (cc.classList.contains('undo')) doUndo(); return; }
     const b = e.target.closest('[data-m]'); if (!b || b.disabled) return;
     closeMenu(); onPick(b.dataset.m);
   });
@@ -888,8 +943,8 @@ function showPanel(anchor, html, onAction, cls = ''){
   document.body.appendChild(menuEl); placePanel();
   menuEl.addEventListener('click', e => {
     const b = e.target.closest('[data-m]'); if (!b || b.disabled) return;
-    const t = menuEl.querySelector('textarea'), txt = t ? t.value.trim() : '';
-    closeMenu(); onAction && onAction(b.dataset.m, txt);
+    const t = menuEl.querySelector('textarea'), txt = t ? t.value.trim() : '', rect = menuEl.getBoundingClientRect();
+    closeMenu(); onAction && onAction(b.dataset.m, txt, rect);
   });
   const f = menuEl.querySelector('textarea, .act:not(:disabled)'); f && f.focus({ preventScroll: true });
 }
@@ -906,7 +961,8 @@ function openReading(c){
   const pos = c.slot !== null && spread ? spread.pos[c.slot] : null;
   showPanel(c, `<div class="mh">${posLabel(c)}</div>
     <div class="rd">${c.data.name}<br><small>${c.reversed ? 'Invertida' : 'Al derecho'}${c.data.major ? ' · Arcano Mayor' : ''}</small></div>
-    <div class="mt">${pos ? pos[4] : 'No entra en la lectura: arrástrala a una posición para que cuente.'}</div>`);
+    <div class="mt">${pos ? pos[4] : c.host ? `Aclaratoria de ${posLabel(c.host)}.` : 'No entra en la lectura: arrástrala a una posición para que cuente.'}</div>
+    ${c.clars.map(k => `<div class="mt">Aclaratoria: ${k.up ? `${k.data.name}${k.reversed ? ' · invertida' : ''}` : 'aún boca abajo'}</div>`).join('')}`);
 }
 
 // ================= acciones sobre una carta =================
@@ -922,6 +978,7 @@ function turn(c){
 }
 // Recoger: vuelve al fondo del mazo activo
 function collectOne(c){
+  unlinkAll(c);
   const d = active; busyCard.add(c); c.slot = null;
   moveTo(c, { x: d.x, y: d.y, rot: d.rot, sc: DECK_S, lift: 0 }, 420, ease.inOut, 0, () => {
     c.remove(); busyCard.delete(c); server.giveBack(c.cid, d.pid);
@@ -931,6 +988,7 @@ function collectOne(c){
 }
 // Sacar: fuera del pano, en el estante junto al otro mazo
 function setAside(c){
+  unlinkAll(c);
   const other = decks.find(d => d !== active), h = other.home;
   const x = h.x + (h.x + 125 < TW - 40 ? 125 : -125), n = tableCards().filter(k => k.aside).length;
   c.slot = null; c.aside = true; c.toFront();
@@ -944,44 +1002,310 @@ function revealAll(){
 
 // ================= interpretacion =================
 function tableToScreen(x, y){
-  const th = cam.theta * D2R, s = Math.sin(th), c = Math.cos(th), K = cam.k * cam.zoom;
-  const yy = y - TH / 2, f = P / (P - K * yy * s), r = scene.getBoundingClientRect();
-  return { x: r.width / 2 + cam.panX + K * (x - TW / 2) * f, y: r.height / 2 + cam.panY + cam.oy + K * yy * c * f };
+  const th = cam.theta * D2R, s = Math.sin(th), c = Math.cos(th), K = cam.k * cam.zoom, a = cam.yaw * D2R;
+  const x0 = x - TW / 2, y0 = y - TH / 2, xx = x0 * Math.cos(a) - y0 * Math.sin(a), yy = x0 * Math.sin(a) + y0 * Math.cos(a);
+  const f = P / (P - K * yy * s), r = scene.getBoundingClientRect();
+  return { x: r.width / 2 + cam.panX + K * xx * f, y: r.height / 2 + cam.panY + cam.oy + K * yy * c * f };
 }
 interpEl.addEventListener('click', () => {
   if (justClosed(interpEl)) return;
+  // el sello se rompe aqui: la pregunta sale a la luz justo antes de interpretar
+  if (seal){
+    if (!seal.open) openSeal();
+    return showPanel(interpEl, `<div class="mh">Interpretación</div><div class="mt">Tu pregunta sellada</div>
+      <div class="rd">«${esc(seal.text)}»</div><button class="act primary" data-m="ask">Interpretar</button>`, () => showReading(seal.text), 'wide');
+  }
   showPanel(interpEl, `<div class="mh">Interpretación</div>
     <textarea class="q" maxlength="300" placeholder="¿Qué quieres preguntar? (opcional)" aria-label="Pregunta"></textarea>
     <div class="two"><button class="act" data-m="skip">Sin pregunta</button><button class="act primary" data-m="ask">Interpretar</button></div>`,
     (v, q) => showReading(v === 'ask' ? q : ''), 'wide');
 });
 function showReading(q){
-  const esc = t => t.replace(/[<>&"]/g, ch => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[ch]));
+  reading.question = q;
   const rows = spread.pos.map((p, i) => { const c = cardAt(i);
-    return `<li><i>${i + 1}</i><div><b>${c.data.name}</b>${c.reversed ? ' · invertida' : ''}<span>${p[3]}: ${p[4]}</span></div></li>`; }).join('');
-  showPanel(interpEl, `<div class="mh">${spread.name}</div><div class="mt">${q ? `«${esc(q)}»` : 'Sin pregunta'}</div><ul class="lect">${rows}</ul>
-    <div class="mt">Aquí respondería el motor elegido: Tradición, con textos fijos, u Oráculo, con IA.</div>`, null, 'wide tall');
+    return `<li><i>${i + 1}</i><div><b>${c.data.name}</b>${c.reversed ? ' · invertida' : ''}<span>${p[3]}: ${p[4]}</span>${
+      c.clars.map(k => `<span>Aclaratoria: ${k.up ? `${k.data.name}${k.reversed ? ' · invertida' : ''}` : 'boca abajo'}</span>`).join('')}</div></li>`; }).join('');
+  showPanel(interpEl, `<div class="mh">${spread.name}</div><div class="mt">${astralText(reading.ctx || astralNow())}</div>
+    <div class="mt">${q ? `«${esc(q)}»` : 'Sin pregunta'}</div><ul class="lect">${rows}</ul>
+    <div class="mt">Aquí respondería el motor elegido: Tradición, con textos fijos, u Oráculo, con IA.</div>
+    <button class="act primary" data-m="close">Cerrar el círculo</button>`, a => { if (a === 'close') closeCircle(); }, 'wide tall');
 }
 
-function setView(top){
-  cam.tTheta = top ? 0 : 38;
-  $('v-top').setAttribute('aria-pressed', top); $('v-tilt').setAttribute('aria-pressed', !top);
+function resetCam(){ cam.tTheta = 38; cam.tYaw = 0; cam.tZoom = 1; cam.tPanX = 0; cam.tPanY = 0; }
+
+// ================= utilidades =================
+const esc = t => String(t).replace(/[<>&"]/g, ch => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[ch]));
+const pointAnchor = (x, y) => ({ getBoundingClientRect: () => new DOMRect(x, y, 0, 0) });
+let reading = { ctx: null, question: '' };
+let contemplating = null;
+
+// ================= contexto astral: mismo calculo que lunar_calendar.py y planetary_hours.py =================
+const PLACE = { lat: 4.711, lon: -74.0721, name: 'Bogotá (predeterminado)' };
+const PHASES = [[22.5, 'Luna Nueva'], [67.5, 'Creciente'], [112.5, 'Cuarto Creciente'], [157.5, 'Gibosa Creciente'],
+  [202.5, 'Luna Llena'], [247.5, 'Gibosa Menguante'], [292.5, 'Cuarto Menguante'], [337.5, 'Menguante'], [360, 'Luna Nueva']];
+const CHALDEAN = ['Sol', 'Venus', 'Mercurio', 'Luna', 'Saturno', 'Júpiter', 'Marte'];
+const horaDe = p => p === 'Sol' ? 'hora del Sol' : p === 'Luna' ? 'hora de la Luna' : `hora de ${p}`;
+const DAY_RULER = [0, 3, 6, 2, 5, 1, 4];   // getDay(): domingo = Sol, lunes = Luna ...
+function astralNow(d = new Date()){
+  const fecha = d.toLocaleString('es', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const out = { at: d.toISOString(), fecha, luna: null, ilum: null, hora: null, lugar: PLACE.name };
+  const A = window.Astronomy; if (!A) return out;
+  try {
+    const el = A.MoonPhase(d);
+    out.luna = PHASES.find(([lim]) => el < lim)[1];
+    out.ilum = Math.round(A.Illumination(A.Body.Moon, d).phase_fraction * 100);
+    // hora planetaria: dia de amanecer a ocaso y noche de ocaso a amanecer, 12 horas desiguales cada uno
+    const obs = new A.Observer(PLACE.lat, PLACE.lon, 0);
+    const rise = A.SearchRiseSet(A.Body.Sun, obs, +1, new Date(d - 864e5), 1).date;
+    const set = A.SearchRiseSet(A.Body.Sun, obs, -1, rise, 1).date;
+    const next = A.SearchRiseSet(A.Body.Sun, obs, +1, set, 1).date;
+    const day = d < set, from = day ? rise : set, dur = ((day ? set : next) - from) / 12;
+    const n = (day ? 0 : 12) + Math.min(11, Math.floor((d - from) / dur));
+    out.hora = CHALDEAN[(DAY_RULER[rise.getDay()] + n) % 7];
+  } catch { /* zona polar o libreria ausente: queda solo la fecha */ }
+  return out;
 }
-$('v-tilt').onclick = () => setView(false);
-$('v-top').onclick = () => setView(true);
+const astralText = x => !x ? '' : [x.fecha, x.luna && `${x.luna} (${x.ilum} %)`, x.hora && horaDe(x.hora)].filter(Boolean).join(' · ');
+if (navigator.geolocation) navigator.geolocation.getCurrentPosition(
+  pos => { PLACE.lat = pos.coords.latitude; PLACE.lon = pos.coords.longitude; PLACE.name = 'tu ubicación'; }, () => {}, { timeout: 5000, maximumAge: 36e5 });
+
+// ================= pregunta sellada =================
+const SEAL_AT = { x: 88, y: 712 };
+let seal = null, sealEl = null;
+function setSeal(sv){
+  seal = sv; sealEl && sealEl.remove(); sealEl = null;
+  if (!sv) return;
+  sealEl = document.createElement('div'); sealEl.className = 'seal' + (sv.open ? ' open' : '');
+  sealEl.innerHTML = `<svg viewBox="-12 -12 24 24" fill="none" stroke="#ECD79A" stroke-width="1.1" aria-hidden="true"><circle r="10.5"/><path d="M0-8 6.9 4H-6.9Z"/><path d="M0 8-6.9-4H6.9Z"/></svg>`;
+  sealEl.style.transform = `translate3d(${SEAL_AT.x - 42}px, ${SEAL_AT.y - 42}px, .6px)`;
+  table.appendChild(sealEl);
+}
+function openSealPanel(anchor){
+  showPanel(anchor, `<div class="mh">Sellar la pregunta</div>
+    <textarea class="q" maxlength="300" placeholder="¿Qué quieres preguntar?" aria-label="Pregunta"></textarea>
+    <div class="mt">Quedará sellada sobre el paño y se abrirá al interpretar.</div>
+    <button class="act primary" data-m="seal">Sellar</button>`, (a, txt, rect) => { if (txt) sealQuestion(txt, rect); else toast('Escribe la pregunta para sellarla'); }, 'wide');
+}
+function sealQuestion(text, rect){
+  const t = tableToScreen(SEAL_AT.x, SEAL_AT.y), fly = document.createElement('div');
+  fly.className = 'seal-fly'; fly.textContent = text; document.body.appendChild(fly);
+  const k = cam.k * cam.zoom * 84;
+  fly.animate([
+    { left: rect.left + 'px', top: rect.top + 'px', width: rect.width + 'px', height: rect.height + 'px', borderRadius: '14px', color: 'rgba(245,240,232,1)' },
+    { left: (t.x - k / 2) + 'px', top: (t.y - k / 2) + 'px', width: k + 'px', height: k + 'px', borderRadius: '50%', color: 'rgba(245,240,232,0)' },
+  ], { duration: 760 * SPEED, easing: 'cubic-bezier(.5,0,.2,1)', fill: 'forwards' }).onfinish = () => {
+    fly.remove();
+    setSeal({ text, at: new Date().toISOString(), ctx: astralNow(), open: false });
+    sealEl.animate([{ transform: sealEl.style.transform + ' scale(1.25)' }, { transform: sealEl.style.transform }], { duration: 260, easing: 'ease-out' });
+    refresh(); toast('Pregunta sellada');
+  };
+}
+function openSeal(){
+  if (!seal) return;
+  seal.open = true; sealEl.classList.add('open');
+  sealEl.animate([{ transform: sealEl.style.transform + ' scale(1.2) rotate(-6deg)' }, { transform: sealEl.style.transform }], { duration: 420, easing: 'ease-out' });
+  saveSoon();
+}
+function sealInfo(){
+  showPanel(sealEl, seal.open
+    ? `<div class="mh">Pregunta abierta</div><div class="rd">«${esc(seal.text)}»</div><div class="mt">${astralText(seal.ctx)}</div>`
+    : `<div class="mh">Pregunta sellada</div><div class="mt">${astralText(seal.ctx)}</div><div class="mt">Se abre al interpretar.</div>`);
+}
+
+// ================= cartas aclaratorias =================
+function clarPos(h, i){
+  const a = h.rot * D2R, ox = h.hw * .78 + i * h.hw * .55, oy = h.hh * .3;
+  return { x: h.x + ox * Math.cos(a) - oy * Math.sin(a), y: h.y + ox * Math.sin(a) + oy * Math.cos(a), rot: h.rot + 9 };
+}
+function linkClar(c, h){
+  c.slot = null; c.aside = false;
+  const t = clarPos(h, h.clars.length);
+  h.clars.push(c); c.host = h; c.el.classList.add('clar');
+  moveTo(c, { ...t, sc: h.sc * .82, lift: 0, tx: 0, ty: 0, z: h.z + .8 + (h.clars.length - 1) * .3 }, 260, ease.out, 0, () => h.render());
+}
+function unlinkClar(c){
+  const h = c.host; if (!h) return;
+  h.clars = h.clars.filter(k => k !== c); c.host = null; c.el.classList.remove('clar'); h.render();
+}
+function unlinkAll(c){ unlinkClar(c); c.clars.slice().forEach(unlinkClar); }
+
+// ================= autoguardado: la mesa entera cabe en una foto =================
+const KEY = 'arcanum.mesa.v1', HKEY = 'arcanum.lecturas.v1';
+function serialize(){
+  const round = v => Math.round(v * 10) / 10;
+  return {
+    v: 1, deck: active ? active.def.id : null, activePid: active ? active.pid : null,
+    server: { piles: [...server.piles].map(([k, a]) => [k, a.slice()]), rev: [...server.rev], drawn: server.drawn.slice(), state: server.state, seq: server.seq },
+    piles: piles.map(p => ({ pid: p.pid, x: round(p.x), y: round(p.y), rot: round(p.rot) })),
+    fan: fan && fan.end ? { pid: fan.pile.pid, start: fan.start, end: fan.end } : null,
+    cards: tableCards().map(c => ({ cid: c.cid, x: round(c.x), y: round(c.y), rot: round(c.rot), sc: c.sc, slot: c.slot, aside: !!c.aside,
+      up: c.up, dir: Math.sign(c.angle) || -1, reversed: c.reversed, host: c.host ? c.host.cid : null })),
+    spread: spread ? spread.id : null, seal, reading,
+    cam: { theta: cam.tTheta, yaw: cam.tYaw, zoom: cam.tZoom, panX: cam.tPanX, panY: cam.tPanY },
+  };
+}
+let restoring = false, saveT = 0;
+function saveSoon(){
+  if (restoring || contemplating) return;
+  clearTimeout(saveT);
+  saveT = setTimeout(() => {
+    if (busy || busyCard.size || g) return saveSoon();
+    try { localStorage.setItem(KEY, JSON.stringify(serialize())); } catch { /* almacenamiento bloqueado: la mesa sigue viva, solo no persiste */ }
+  }, 300);
+}
+function clearTable(){
+  closeMenu(); tweens.clear(); fan = null; union = null;
+  [...pieces.values()].forEach(p => { if (p.kind === 'card' || (p.kind === 'deck' && !decks.includes(p))) p.remove(); });
+  slotEls.splice(0).forEach(e => e.remove()); spread = null;
+  piles = []; active = null; busy = false; busyCard.clear();
+  decks.forEach(d => { Object.assign(d, { x: d.home.x, y: d.home.y, rot: 0, z: 1, lift: 0, tx: 0, ty: 0 }); d.label.style.opacity = 1; d.badge.hidden = true; d.setCount(d.def.cards.length); d.render(); });
+  setSeal(null); reading = { ctx: null, question: '' };
+}
+function restore(st){
+  restoring = true;
+  clearTable();
+  if (st.cam){ Object.assign(cam, { tTheta: st.cam.theta, theta: st.cam.theta, tYaw: st.cam.yaw, yaw: st.cam.yaw, tZoom: st.cam.zoom, zoom: st.cam.zoom,
+    tPanX: st.cam.panX, panX: st.cam.panX, tPanY: st.cam.panY, panY: st.cam.panY }); fitCam(); applyCam(); }
+  setSeal(st.seal); reading = st.reading || { ctx: null, question: '' };
+  const d = st.deck && decks.find(k => k.def.id === st.deck);
+  if (d){
+    active = d; d.label.style.opacity = 0;
+    Object.assign(server, { deck: d.def, piles: new Map(st.server.piles.map(([k, a]) => [k, a.slice()])), rev: new Map(st.server.rev), drawn: st.server.drawn.slice(), state: st.server.state, seq: st.server.seq });
+    st.piles.forEach(q => {
+      let p = d;
+      if (q.pid !== st.activePid){ p = new Deck(d.def); p.label.remove(); p.home = null; }
+      Object.assign(p, { pid: q.pid, x: q.x, y: q.y, rot: q.rot, z: 1 }); p.setCount(server.count(q.pid)); p.render(); piles.push(p);
+    });
+    if (st.spread) applySpread(SPREADS.find(sp => sp.id === st.spread));
+    const byId = new Map();
+    st.cards.forEach(cs => {
+      const c = new Card(d.def);
+      c.reveal({ id: cs.cid, card: d.def.cards[cs.cid], reversed: cs.reversed });
+      Object.assign(c, { x: cs.x, y: cs.y, rot: cs.rot, sc: cs.sc, slot: cs.slot, aside: cs.aside, angle: cs.up ? 180 * cs.dir : 0 });
+      c.toFront(); byId.set(cs.cid, c);
+    });
+    st.cards.forEach(cs => { if (cs.host == null) return; const c = byId.get(cs.cid), h = byId.get(cs.host); if (c && h){ c.host = h; h.clars.push(c); c.el.classList.add('clar'); } });
+    byId.forEach(c => c.render());
+    if (st.fan){ const fp = piles.find(q => q.pid === st.fan.pid); if (openFan(fp)){ fan.start = st.fan.start; layoutFan(st.fan.end); } }
+  }
+  restoring = false;
+  refresh();
+}
+
+// ================= deshacer el ultimo gesto =================
+let undoSnap = null, undoUntil = 0, undoEl = null, undoT = 0;
+const canUndo = () => !!undoSnap && performance.now() < undoUntil && !contemplating;
+function takeSnap(){ if (contemplating || restoring) return; undoSnap = serialize(); hideUndo(); }
+function hideUndo(){ undoEl && undoEl.remove(); undoEl = null; clearTimeout(undoT); }
+function offerUndo(piece){
+  if (!undoSnap || contemplating) return;
+  hideUndo(); undoUntil = performance.now() + 5000;
+  const r = anchorRect(piece);
+  undoEl = document.createElement('button'); undoEl.className = 'undo-chip'; undoEl.innerHTML = `${svgIcon('undo')}Deshacer`;
+  undoEl.style.left = clamp(r.left + r.width / 2, 80, innerWidth - 80) + 'px'; undoEl.style.top = clamp(r.top - 10, 70, innerHeight - 20) + 'px';
+  undoEl.onclick = doUndo; document.body.appendChild(undoEl);
+  undoT = setTimeout(hideUndo, 5000);
+}
+function doUndo(){
+  if (!undoSnap || busy) return;
+  const st = undoSnap; undoSnap = null; hideUndo(); closeMenu();
+  restore(st); toast('Deshecho');
+}
+
+// ================= recoger todo y cerrar el circulo =================
+async function collectAll(slow = false){
+  if (!active) return;
+  closeMenu(); hideUndo(); undoSnap = null;
+  if (fan) await closeFan(300);
+  if (union) cancelUnion();
+  if (piles.length > 1) await stack([active, ...piles.filter(p => p !== active)], { snap: false, offer: false });
+  const d = active, list = tableCards();
+  busy = true; refresh();
+  await Promise.all(list.map((c, i) => new Promise(res => moveTo(c, { x: d.x, y: d.y, rot: d.rot, sc: DECK_S, lift: 0 }, slow ? 900 : 420, ease.inOut, i * (slow ? 170 : 30), res))));
+  list.forEach(c => c.remove());
+  server.gather(d.pid); d.setCount(server.count(d.pid));
+  slotEls.splice(0).forEach(e => e.remove()); spread = null;
+  setSeal(null); reading = { ctx: null, question: '' };
+  busy = false; refresh();
+}
+const loadHistory = () => { try { return JSON.parse(localStorage.getItem(HKEY)) || []; } catch { return []; } };
+function circleMark(){
+  const m = document.createElement('div'); m.className = 'mark';
+  m.style.transform = `translate3d(${300 - 220}px, ${484 - 220}px, .7px)`; table.appendChild(m);
+  m.animate([{ opacity: 0, transform: m.style.transform + ' scale(.7)' }, { opacity: .9, offset: .3 }, { opacity: 0, transform: m.style.transform + ' scale(1.08)' }],
+    { duration: 3400 * SPEED, easing: 'ease-out' }).onfinish = () => m.remove();
+}
+async function closeCircle(){
+  if (!active || busy) return;
+  if (seal && !seal.open) openSeal();
+  const h = { id: Date.now(), at: new Date().toISOString(), spread: spread ? spread.name : 'Lectura libre',
+    question: reading.question || (seal ? seal.text : ''), ctx: reading.ctx || astralNow(), snap: serialize() };
+  try { localStorage.setItem(HKEY, JSON.stringify([h, ...loadHistory()].slice(0, 30))); } catch { toast('No se pudo guardar la lectura en este navegador'); }
+  circleMark();
+  await wait(600);
+  await collectAll(true);
+  toast('Círculo cerrado. La lectura quedó guardada en Lecturas.');
+}
+
+// ================= memoria: lecturas guardadas =================
+let prevSnap = null;
+const bannerEl = $('banner');
+function openHistory(anchor){
+  const list = loadHistory();
+  showPanel(anchor, `<div class="mh">Lecturas guardadas</div><ul class="hist">${list.map(h => `<li><button class="act hrow" data-m="${h.id}">
+    <b>${esc(h.spread)}</b><span>${esc(astralText(h.ctx))}</span>${h.question ? `<em>«${esc(h.question)}»</em>` : ''}</button></li>`).join('')}</ul>`,
+    id => contemplate(list.find(h => String(h.id) === id)), 'wide tall');
+}
+function contemplate(h){
+  if (!h) return;
+  if (!contemplating) prevSnap = serialize();
+  contemplating = h; hideUndo();
+  restore(h.snap);
+  $('banner-text').innerHTML = `<b>${esc(h.spread)}</b><br>${esc(astralText(h.ctx))}${h.question ? `<br>«${esc(h.question)}»` : ''}`;
+  bannerEl.hidden = false; refresh();
+}
+function leaveContemplation(keep){
+  bannerEl.hidden = true;
+  const back = prevSnap; contemplating = null; prevSnap = null;
+  if (keep){ refresh(); toast('Sigues desde esa lectura'); }
+  else restore(back);
+}
+$('b-back').onclick = () => leaveContemplation(false);
+$('b-go').onclick = () => leaveContemplation(true);
+
+// ================= radial del pano vacio =================
+function openClothRadial(anchor){
+  radial(anchor, 'Paño', [
+    { id: 'seal', label: 'Sellar pregunta', icon: 'seal', off: !!seal || tableCards().some(c => c.up) },
+    { id: 'all', label: 'Recoger todo', icon: 'gather', off: !active || (!cardsOut() && !fan && piles.length < 2) },
+    { id: 'hist', label: 'Lecturas', icon: 'hist', off: !loadHistory().length },
+  ], a => {
+    if (a === 'seal') openSealPanel(anchor);
+    else if (a === 'hist') openHistory(anchor);
+    else if (a === 'all'){
+      // con lectura empezada, recoger obliga a decidir si se guarda
+      if (tableCards().some(c => c.slot !== null && c.up)) radial(anchor, 'Recoger todo', [
+        { id: 'close', label: 'Cerrar el círculo', icon: 'circle' },
+        { id: 'drop', label: 'Sin guardar', icon: 'gather' },
+      ], b => b === 'close' ? closeCircle() : collectAll());
+      else collectAll();
+    }
+  });
+}
 
 // ================= gestos =================
 const pointers = new Map(); let g = null, pinch = null, lastTap = { t: 0, x: 0, y: 0 };
 scene.addEventListener('pointerdown', e => {
-  if (e.button > 0 || e.target.closest('.interp')) return;   // el boton no debe perder su clic por la captura
+  if (e.button > 0 || e.target.closest('.interp, .banner')) return;   // el boton no debe perder su clic por la captura
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   scene.setPointerCapture(e.pointerId);
   if (pointers.size === 2){ if (g) endGesture(true); startPinch(); return; }
   if (pointers.size > 2) return;
   const el = e.target.closest('.piece'), piece = el && pieces.get(el.dataset.id);
   const p = toTable(e.clientX, e.clientY);
-  g = { id: e.pointerId, piece, sx: e.clientX, sy: e.clientY, p0: p, last: p, mode: 'pending' };
-  if (!piece || busy || piece.proxy){ if (piece) g.piece = null; return; }
+  g = { id: e.pointerId, piece, sx: e.clientX, sy: e.clientY, p0: p, last: p, mode: 'pending', target: e.target,
+    frame: !piece && !!e.target.closest('.wood') };
+  if (!piece || busy || piece.proxy || contemplating){ if (piece && !contemplating) g.piece = null; return; }
   const L = piece.local(p);
   if (piece.kind === 'deck' && piles.includes(piece) && !fan && !union){
     g.edge = Math.abs(L.x) > piece.hw * .5;
@@ -1009,17 +1333,18 @@ scene.addEventListener('pointermove', e => {
     if (moved < 7) return;
     clearTimeout(g.lp);
     const pc = g.piece;
-    if (!pc) g.mode = cam.zoom > 1.02 ? 'pan' : 'none';
+    if (!pc) g.mode = g.frame ? 'orbit' : cam.zoom > 1.02 ? 'pan' : 'none';
+    else if (contemplating) g.mode = 'none';
     else if (pc.kind === 'deck'){
       const inPlay = piles.includes(pc);
       if (union || (fan && fan.pile === pc)) g.mode = 'none';
-      else if (inPlay && g.edge && !fan && server.count(pc.pid)){ g.mode = 'fan'; openFan(pc); }
-      else { g.mode = 'move'; g.from = { x: pc.x, y: pc.y }; }
+      else if (inPlay && g.edge && !fan && server.count(pc.pid)){ g.mode = 'fan'; takeSnap(); openFan(pc); }
+      else { g.mode = 'move'; takeSnap(); g.from = { x: pc.x, y: pc.y }; }
     } else if (pc.kind === 'card'){
       if (busyCard.has(pc)) g.mode = 'none';
       else if (g.corner && !pc.up && pc.data){ g.mode = 'peel'; g.lx0 = pc.local(p).x; }
       else {
-        g.mode = 'move';
+        g.mode = 'move'; takeSnap(); unlinkClar(pc);
         if (pc.fanPos !== null){ takeFromFan(pc); g.from = { x: pc.x, y: pc.y, rot: pc.rot, slot: null }; }
         else g.from = { x: pc.x, y: pc.y, rot: pc.rot, slot: pc.slot };
         pc.slot = null;
@@ -1043,6 +1368,12 @@ scene.addEventListener('pointermove', e => {
   } else if (g.mode === 'peel'){
     const L = pc.local(p), prog = clamp(-(L.x - g.lx0) * g.corner / (pc.hw * 2), 0, 1);
     pc.angle = prog * 180 * g.corner * -1; pc.lift = bump(prog) * 26; pc.render();
+  } else if (g.mode === 'orbit'){
+    // arrastrar el marco: horizontal gira la mesa, vertical la inclina
+    const dx = e.clientX - (g.px ?? g.sx), dy = e.clientY - (g.py ?? g.sy); g.px = e.clientX; g.py = e.clientY;
+    cam.yaw = cam.tYaw = cam.yaw + dx * .35;
+    cam.theta = cam.tTheta = clamp(cam.theta - dy * .3, 0, 62);
+    fitCam(); applyCam();
   } else if (g.mode === 'pan'){
     cam.panX += e.clientX - (g.px ?? g.sx); cam.panY += e.clientY - (g.py ?? g.sy); g.px = e.clientX; g.py = e.clientY; clampPan(); cam.tPanX = cam.panX; cam.tPanY = cam.panY; applyCam();
   }
@@ -1061,15 +1392,17 @@ function endGesture(cancel, e){
   const G = g; g = null; if (!G) return;
   clearTimeout(G.lp);
   const pc = G.piece;
-  if (G.mode === 'pending' && !cancel) return tap(pc, e);
+  if (G.mode === 'pending' && !cancel) return tap(pc, e, G);
   if (G.mode === 'move'){
     pc.tx = pc.ty = 0;
     if (pc.kind === 'deck'){ pc.z = 1; dropDeck(pc, G.from); }
     else dropCard(pc, G.from);
+    if (pieces.has(pc.id)) offerUndo(pc);
   } else if (G.mode === 'cut'){
     pc.tx = pc.ty = 0; endCutDrag(pc, G.src);
   } else if (G.mode === 'fan'){
-    if (!fan || fan.len < 90) closeFan(260);
+    if (!fan || fan.len < 90){ closeFan(260); undoSnap = null; }
+    else offerUndo(fan.pile);
   } else if (G.mode === 'peel'){
     const a = Math.abs(pc.angle), dir = Math.sign(pc.angle) || -1;
     if (a > 90) flip(pc, pc.angle, dir);
@@ -1078,17 +1411,23 @@ function endGesture(cancel, e){
   }
   refresh();
 }
-function tap(pc, e){
+function tap(pc, e, G){
+  const t = (G && G.target) || scene;
+  if (contemplating){
+    if (pc && pc.kind === 'card' && pc.up) openReading(pc);
+    return;
+  }
   if (!pc){
     if (union) return cancelUnion();
-    const now = performance.now();
-    if (now - lastTap.t < 320 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 30){
-      const r = scene.getBoundingClientRect();
-      if (cam.tZoom > 1.02){ cam.tZoom = 1; cam.tPanX = 0; cam.tPanY = 0; }
-      else { cam.tZoom = 2.1; cam.tPanX = -(e.clientX - r.left - r.width / 2) * 1.1; cam.tPanY = -(e.clientY - r.top - r.height / 2) * 1.1; }
-      lastTap.t = 0; return;
+    if (t.closest('.seal')) return justClosed(sealEl) ? null : sealInfo();
+    if (t.closest('.wood')){
+      // doble toque en el marco: la mesa vuelve a su vista inicial
+      const now = performance.now();
+      if (now - lastTap.t < 320 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 40){ resetCam(); lastTap.t = 0; return; }
+      lastTap = { t: now, x: e.clientX, y: e.clientY }; return;
     }
-    lastTap = { t: now, x: e.clientX, y: e.clientY }; return;
+    if (t.closest('.cloth, .slot, .slot-label') && !busy) return openClothRadial(pointAnchor(e.clientX, e.clientY));
+    return;
   }
   if (busy) return;
   if (pc.kind === 'deck'){
@@ -1142,6 +1481,7 @@ function frame(now){
   }
   let camMoved = false;
   if (Math.abs(cam.tTheta - cam.theta) > .01){ cam.theta += (cam.tTheta - cam.theta) * .12; fitCam(); camMoved = true; }
+  if (Math.abs(cam.tYaw - cam.yaw) > .01){ cam.yaw += (cam.tYaw - cam.yaw) * .16; camMoved = true; }
   if (!pinch && Math.abs(cam.tZoom - cam.zoom) > .001){ cam.zoom += (cam.tZoom - cam.zoom) * .18; camMoved = true; }
   if (!pinch && (Math.abs(cam.tPanX - cam.panX) > .3 || Math.abs(cam.tPanY - cam.panY) > .3)){
     cam.panX += (cam.tPanX - cam.panX) * .18; cam.panY += (cam.tPanY - cam.panY) * .18; clampPan(); camMoved = true;
@@ -1152,7 +1492,12 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 new ResizeObserver(() => { fitCam(); clampPan(); applyCam(); }).observe(scene);
-fitCam(); applyCam(); refresh();
+fitCam(); applyCam();
+try {
+  const saved = JSON.parse(localStorage.getItem(KEY));
+  if (saved && saved.v === 1 && (saved.deck || saved.seal)){ restore(saved); toast('Mesa restaurada tal como la dejaste'); }
+  else refresh();
+} catch { refresh(); }
 requestAnimationFrame(frame);
 </script>
 </body>
