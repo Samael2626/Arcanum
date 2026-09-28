@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sendero"
+  short_description: "Diseña la guía práctica de ARCANUM"
+  default_prompt: "Usa $arcanum-sendero para diseñar o implementar un recorrido guiado en ARCANUM."
