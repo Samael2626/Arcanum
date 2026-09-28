@@ -302,7 +302,6 @@ header{position:relative}
   <div class="table" id="table">
     <div class="wood"></div>
     <div class="cloth">
-      <div class="candlelight" id="clight"></div>
       <svg viewBox="-100 -100 200 200" fill="none" stroke="#C9A84C" stroke-width="1.2">
         <circle r="96"/><circle r="88"/><circle r="52"/>
         <path d="M0-88 76 44H-76Z"/><path d="M0 88-76-44H76Z"/>
@@ -1511,10 +1510,9 @@ function showPips(c, instant = false){
 const LIGHT = 112 * D2R;   // luz fija de frente e izquierda: el sombreado pertenece a la vela, no a la pantalla
 const shade = phi => .32 + .68 * Math.max(0, Math.cos(phi - LIGHT));
 const DISH = 5, DISH_R = 27, SEG = 22;
-const CANDLES = [
-  { x: 58, y: 64, H: 104, R: 12, drips: [[40, 34, 3.2], [150, 14, 2.4], [100, 22, 2.8]] },               // alta, con una gota larga
-  { x: 542, y: 64, H: 64, R: 13, drips: [[120, 30, 3.6], [70, 16, 2.6], [30, 40, 3.2], [95, 9, 2]] },     // gastada, cera derramada
-].map((c, id) => {
+// Sin velas (decision de Samuel, 28-sep). El motor de velas se conserva por si vuelven:
+// { x: 58, y: 64, H: 104, R: 12, drips: [[40, 34, 3.2], [150, 14, 2.4], [100, 22, 2.8]] }
+const CANDLES = [].map((c, id) => {
   const base = document.createElement('div'); base.className = 'cbase';
   base.style.transform = `translate3d(${c.x - 22}px, ${c.y - 22}px, .4px)`; table.append(base);
   // cada llama tiene su propio pulso, y de vez en cuando una corriente la inclina
@@ -1607,7 +1605,6 @@ function drawFlame(g2, c, n){
   g2.restore();
   return { x: tip.x, y: tip.y - h * .45, s };
 }
-const clightEl = $('clight');
 let candlesDirty = true;
 function updateCandles(){ candlesDirty = true; }
 
