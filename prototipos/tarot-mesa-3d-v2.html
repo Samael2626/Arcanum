@@ -174,7 +174,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
 .pips b{font:700 17px/1 var(--display);color:#F2DFA0;writing-mode:vertical-rl;text-shadow:0 0 6px rgba(237,174,48,.8)}
 .cbase{position:absolute;left:0;top:0;width:44px;height:44px;border-radius:50%;pointer-events:none;
   background:radial-gradient(circle,rgba(255,196,120,calc(.4 * var(--lit,1))),rgba(255,170,90,calc(.14 * var(--lit,1))) 45%,transparent 72%)}
-.candle{position:absolute;left:0;top:0;width:60px;height:180px;transform-origin:50% 100%;pointer-events:none}
+.candle{position:absolute;left:0;top:0;z-index:2;width:60px;height:180px;transform-origin:50% 100%;pointer-events:none}
 .candle > svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .candle .fl{position:absolute;left:50%;width:15px;height:38px;margin-left:-7.5px;transform-origin:50% 92%;
   border-radius:50% 50% 46% 46%/64% 64% 36% 36%;filter:blur(.3px);
@@ -1468,12 +1468,25 @@ const CANDLES = [{ x: 58, y: 64, top: 36, drips: [[39, 26, 2.6], [22, 9, 1.8]] }
   base.style.transform = `translate3d(${pos.x - 22}px, ${pos.y - 22}px, .4px)`;
   const el = document.createElement('div'); el.className = 'candle';
   el.innerHTML = candleSvg({ ...pos, id });
-  table.append(base, el);
+  // la base (charco de luz) vive en la mesa; la vela, en pantalla, siempre erguida
+  table.append(base); scene.appendChild(el);
   // cada llama tiene su propio pulso, y de vez en cuando una corriente la inclina
   return { ...pos, el, base, fl: el.querySelector('.fl'), fz: 180 - pos.top + 22, seed: id * 7.3, gust: 0, gustDir: 1, nextGust: 4 + id * 5 };
 });
 // la vela siempre mira a la camara: se gira al reves que la mesa antes de ponerse de pie
-function updateCandles(){ CANDLES.forEach(c => { c.el.style.transform = `translate3d(${c.x - 30}px, ${c.y - 180}px, 1px) rotateZ(${-cam.yaw}deg) rotateX(-90deg)`; }); }
+// En 3D la vela era un plano vertical y la perspectiva la inclinaba hacia el punto de fuga al girar la mesa.
+// Ahora se apoya en su punto proyectado y escala con la distancia, pero nunca se tuerce.
+function projScale(x, y){
+  const K = cam.k * cam.zoom, a = cam.yaw * D2R, yy = (x - TW / 2) * Math.sin(a) + (y - TH / 2) * Math.cos(a);
+  return K * P / (P - K * yy * Math.sin(cam.theta * D2R));
+}
+function updateCandles(){
+  CANDLES.forEach(c => {
+    const b = tableToScreen(c.x, c.y), s = projScale(c.x, c.y);
+    c.sc = s; c.el.style.transform = `translate(${b.x - 30}px, ${b.y - 180}px) scale(${s})`;
+    c.fx = b.x; c.fy = b.y - (180 - c.top + 14) * s;   // punta de la llama en pantalla
+  });
+}
 const clightEl = $('clight');
 
 // ================= particulas: polvo en la luz de las velas y humo =================
@@ -1497,8 +1510,8 @@ const fx = {
       c.gust *= .975;
       const n = Math.sin(this.t * 6.1 + c.seed) * .5 + Math.sin(this.t * 13.7 + c.seed * 2) * .3 + Math.sin(this.t * 2.3 + c.seed) * .2;
       if (!reduced) c.fl.style.transform = `translateX(${c.gust * c.gustDir * 2.5}px) skewX(${n * 4 + c.gust * c.gustDir * 14}deg) scale(${1 - c.gust * .12 + n * .04}, ${1 + n * .09 - c.gust * .1})`;
-      if (c.gust > .9 && Math.random() < .3){ const q = tableToScreen(c.x, c.y, c.fz + 10); this.parts.push({ x: q.x, y: q.y, vx: c.gustDir * .3, vy: -.4, r: 2, life: .8, dl: .01 }); }
-      const f = tableToScreen(c.x, c.y, c.fz), rad = 70 * cam.k * cam.zoom * (1 + this.flare * .6) * (1 + n * .05);
+      if (c.gust > .9 && Math.random() < .3){ const q = { x: c.fx, y: c.fy - 10 * c.sc }; this.parts.push({ x: q.x, y: q.y, vx: c.gustDir * .3, vy: -.4, r: 2, life: .8, dl: .01 }); }
+      const f = { x: c.fx, y: c.fy }, rad = 70 * c.sc * (1 + this.flare * .6) * (1 + n * .05);
       const gr = g2.createRadialGradient(f.x, f.y, 0, f.x, f.y, rad);
       gr.addColorStop(0, `rgba(255,205,125,${.42 * lit})`); gr.addColorStop(.45, `rgba(255,160,70,${.12 * lit})`); gr.addColorStop(1, 'rgba(255,150,60,0)');
       g2.fillStyle = gr; g2.beginPath(); g2.arc(f.x, f.y, rad, 0, 7); g2.fill();
@@ -1506,7 +1519,7 @@ const fx = {
     g2.globalCompositeOperation = 'source-over';
     // polvo dorado flotando sobre cada llama
     if (!reduced) CANDLES.forEach((c, ci) => {
-      const f = tableToScreen(c.x, c.y, c.fz + 6);
+      const f = { x: c.fx, y: c.fy - 6 * c.sc };
       for (let i = 0; i < 9; i++){
         const ph = i * 1.7 + ci * 3.1, up = ((this.t * .08 + i / 9) % 1);
         const x = f.x + Math.sin(this.t * .7 + ph) * 16 * (1 + up), y = f.y - up * 70;
@@ -1618,7 +1631,7 @@ scene.addEventListener('pointermove', e => {
       else { g.mode = 'move'; takeSnap(); g.from = { x: pc.x, y: pc.y }; }
     } else if (pc.kind === 'card'){
       if (busyCard.has(pc)) g.mode = 'none';
-      else if (g.corner && !pc.up && pc.data){ g.mode = 'peel'; g.lx0 = pc.local(p).x; }
+      else if (g.corner && !pc.up && pc.data){ g.mode = 'peel'; const L0 = pc.local(p); g.lx0 = L0.x; g.ly0 = L0.y; }
       else {
         g.mode = 'move'; takeSnap(); unlinkClar(pc);
         if (pc.fanPos !== null){ takeFromFan(pc); g.from = { x: pc.x, y: pc.y, rot: pc.rot, slot: null }; }
@@ -1643,7 +1656,10 @@ scene.addEventListener('pointermove', e => {
     layoutFan(p);
   } else if (g.mode === 'peel'){
     // la esquina sigue al dedo: cos(angulo) = lo que queda de carta entre la bisagra y el dedo
-    const L = pc.local(p), d = -(L.x - g.lx0) * g.corner, ang = Math.acos(clamp(1 - d / (pc.hw * 2), -1, 1)) / D2R;
+    // cuenta todo lo que aleja la esquina de su sitio: hacia el borde contrario, hacia arriba o en diagonal
+    const L = pc.local(p), mx = -(L.x - g.lx0) * g.corner, my = -(L.y - g.ly0) * g.cy;
+    const d = Math.max(0, mx) + Math.abs(my) * .9 + Math.max(0, -mx) * .6;
+    const ang = Math.acos(clamp(1 - d / (pc.hw * 2), -1, 1)) / D2R;
     pc.hx = -g.corner * CW / 2; pc.hinge = 1;
     pc.angle = -ang * g.corner; pc.tilt = g.cy * 12 * bump(ang / 180); pc.lift = bump(ang / 180) * 6; pc.render();
   } else if (g.mode === 'orbit'){
