@@ -20,6 +20,7 @@ import '../../features/lecturas/presentation/indice_screen.dart';
 import '../../features/saber/saber_screen.dart';
 import '../../features/settings/privacy_screen.dart';
 import '../../features/settings/settings_screen.dart';
+import '../../features/sendero/presentation/sendero_screen.dart';
 import 'app_shell.dart';
 
 /// Rutas que se pueden ver SIN sesion.
@@ -87,6 +88,12 @@ final arcanumRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/privacy', builder: (c, s) => const PrivacyScreen()),
       GoRoute(path: '/perfil', builder: (c, s) => const PerfilScreen()),
       GoRoute(path: '/paywall', builder: (c, s) => const PaywallScreen()),
+      GoRoute(path: '/sendero', builder: (c, s) => const SenderoScreen()),
+      GoRoute(
+        path: '/sendero/:journey',
+        builder: (c, s) =>
+            SenderoLessonScreen(journeyId: s.pathParameters['journey']!),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             AppShell(navigationShell: navigationShell),

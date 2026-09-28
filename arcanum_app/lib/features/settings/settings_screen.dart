@@ -156,6 +156,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               if (auth.isAuthenticated) ...[
                 const SizedBox(height: 20),
+                ArcanumCard(
+                  intensity: 0.35,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SectionLabel('SENDERO'),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Recorre de nuevo las guías o continúa donde las dejaste.',
+                        style: ArcanumText.body(16),
+                      ),
+                      const SizedBox(height: 14),
+                      OutlinedButton.icon(
+                        onPressed: () => context.push('/sendero'),
+                        icon: const Icon(Icons.explore_outlined),
+                        label: const Text('Abrir Sendero'),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
                 const AiConsentSettingsCard(),
                 const SizedBox(height: 20),
                 const SensitiveDataConsentSettingsCard(),

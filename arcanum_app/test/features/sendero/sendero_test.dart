@@ -1,0 +1,146 @@
+import 'package:arcanum_app/core/api/arcanum_api.dart';
+import 'package:arcanum_app/core/auth/auth_controller.dart';
+import 'package:arcanum_app/features/sendero/application/sendero_controller.dart';
+import 'package:arcanum_app/features/sendero/domain/sendero_catalog.dart';
+import 'package:arcanum_app/features/sendero/presentation/sendero_invitation.dart';
+import 'package:arcanum_app/features/sendero/presentation/sendero_screen.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class _SenderoApi extends ArcanumApi {
+  _SenderoApi() : super(Dio());
+
+  final saved = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> remote = [];
+
+  @override
+  Future<List<Map<String, dynamic>>> senderoProgress() async => remote;
+
+  @override
+  Future<Map<String, dynamic>> updateSenderoProgress({
+    required String journeyId,
+    required int version,
+    required int step,
+    required String status,
+  }) async {
+    final value = {
+      'journey_id': journeyId,
+      'version': version,
+      'step': step,
+      'status': status,
+    };
+    saved.add(value);
+    return value;
+  }
+}
+
+class _AuthenticatedAuthNotifier extends AuthNotifier {
+  @override
+  AuthState build() =>
+      const AuthState(AuthStatus.authenticated, {'id': 'sendero-test-user'});
+}
+
+void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  test('avance local es monotono y completar es terminal', () async {
+    final api = _SenderoApi();
+    final container = ProviderContainer(
+      overrides: [
+        arcanumApiProvider.overrideWithValue(api),
+        authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+      ],
+    );
+    addTearDown(container.dispose);
+    await container.read(senderoControllerProvider.future);
+
+    final notifier = container.read(senderoControllerProvider.notifier);
+    await notifier.advance(journeyId: 'cielo', version: 1, step: 1);
+    await notifier.advance(
+      journeyId: 'cielo',
+      version: 1,
+      step: 0,
+      status: 'completed',
+    );
+    await notifier.advance(journeyId: 'cielo', version: 1, step: 0);
+
+    final progress = container
+        .read(senderoControllerProvider)
+        .value!['cielo:1']!;
+    expect(progress.step, 1);
+    expect(progress.status, 'completed');
+    expect(api.saved.last['status'], 'completed');
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.containsKey('sendero_progress_v1_sendero-test-user'), isTrue);
+  });
+
+  testWidgets('hub muestra todas las camaras y estado completado', (
+    tester,
+  ) async {
+    final api = _SenderoApi()
+      ..remote = [
+        {
+          'journey_id': 'orientation',
+          'version': 1,
+          'step': 2,
+          'status': 'completed',
+        },
+      ];
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          arcanumApiProvider.overrideWithValue(api),
+          authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+        ],
+        child: const MaterialApp(home: SenderoScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('1 de ${senderoJourneys.length} cámaras recorridas.'),
+      findsOneWidget,
+    );
+    expect(find.text('Primer umbral'), findsOneWidget);
+    expect(find.text('Cielo'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Fragmentos Arcanos'),
+      350,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Fragmentos Arcanos'), findsOneWidget);
+  });
+
+  testWidgets('invitacion permite no recordarlo y sincroniza la decision', (
+    tester,
+  ) async {
+    final api = _SenderoApi();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          arcanumApiProvider.overrideWithValue(api),
+          authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+        ],
+        child: const MaterialApp(
+          home: SenderoInvitationGate(child: Scaffold(body: Text('CIELO'))),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Una guía breve para recorrer ARCANUM a tu ritmo. Puedes dejarla en cualquier momento.',
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('No recordarlo'));
+    await tester.pumpAndSettle();
+
+    expect(api.saved.last['status'], 'dismissed');
+    expect(find.text('CIELO'), findsOneWidget);
+  });
+}

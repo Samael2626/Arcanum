@@ -5,6 +5,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/crypto/grimoire_crypto.dart';
 import '../onboarding/application/onboarding_controller.dart';
+import '../sendero/application/sendero_controller.dart';
 
 abstract interface class AccountDeletionService {
   Future<void> deleteAccount();
@@ -29,9 +30,11 @@ class DefaultAccountDeletionService implements AccountDeletionService {
       await Future.wait([
         _ref.read(grimoireCryptoProvider).clearLocalKey(),
         clearOnboardingLocalData(),
+        clearSenderoLocalData(),
       ]);
       _ref.invalidate(onboardingProvider);
       _ref.invalidate(onboardingCompletedProvider);
+      _ref.invalidate(senderoControllerProvider);
     } on Object catch (error, stackTrace) {
       FlutterError.reportError(
         FlutterErrorDetails(

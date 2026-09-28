@@ -23,6 +23,7 @@ REQUIRED_TABLES = {
     'reading_progress',
     'reading_bookmarks',
     'saved_passages',
+    'sendero_progress',
 }
 
 

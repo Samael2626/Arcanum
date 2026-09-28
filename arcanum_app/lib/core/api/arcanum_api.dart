@@ -574,6 +574,23 @@ class ArcanumApi {
             },
           )).data
           as Map<String, dynamic>;
+
+  // Progreso del tutorial Sendero. Cada version conserva su propio estado:
+  // una guia nueva no borra lo ya completado en la anterior.
+  Future<List<Map<String, dynamic>>> senderoProgress() async =>
+      (await _dio.get('/sendero/progress')).data.cast<Map<String, dynamic>>();
+
+  Future<Map<String, dynamic>> updateSenderoProgress({
+    required String journeyId,
+    required int version,
+    required int step,
+    required String status,
+  }) async =>
+      (await _dio.put(
+            '/sendero/progress/$journeyId',
+            data: {'version': version, 'step': step, 'status': status},
+          )).data
+          as Map<String, dynamic>;
 }
 
 final arcanumApiProvider = Provider((ref) => ArcanumApi(ref.read(dioProvider)));
