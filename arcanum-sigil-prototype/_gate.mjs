@@ -482,25 +482,50 @@ check('kamea: procedencia en espanol', !mk, mk ? 'encontrado: ' + mk[0] : '');
 await page.click('#famLetters');
 
 
-// 13c) Sello historico: catalogo reproducido de Agrippa 1651, no generado
+// 13c) Sello historico: catalogo reproducido, no generado
 await page.click('#famSeal');
-const scat = await page.evaluate(() => ({
-  n: SEALS_DATA.length, pages: [...new Set(SEALS_DATA.map(s => s.page))].sort().join(','),
-  paths: SEALS_DATA.every(s => s.paths.length && s.w > 0 && s.h > 0),
-  sellos: SEALS_DATA.filter(s => s.kind === 'sello').length,
-  roles: SEALS_DATA.filter(s => s.role).every(s => sealKameaName(s) && sealKameaName(s)[0] === s.role)
-}));
+const scat = await page.evaluate(() => {
+  const ag = SEALS_DATA.filter(s => s.src === 'agrippa1651');
+  return {
+    n: ag.length, pages: [...new Set(ag.map(s => s.page))].sort().join(','),
+    paths: SEALS_DATA.every(s => s.paths.length && s.w > 0 && s.h > 0),
+    sellos: ag.filter(s => s.kind === 'sello').length,
+    roles: ag.filter(s => s.role).every(s => sealKameaName(s) && sealKameaName(s)[0] === s.role)
+  };
+});
 check('sello: 23 piezas de Agrippa (7 sellos y 16 caracteres), pp. 244-252', scat.n === 23 && scat.sellos === 7 && scat.pages === '244,245,246,247,248,249,250,251,252', `${scat.n} piezas, paginas ${scat.pages}`);
 check('sello: cada pieza tiene calco y cada caracter con nombre enlaza con la Kamea', scat.paths && scat.roles);
 let sealErr = '';
 for (const id of await page.evaluate(() => SEALS_DATA.map(s => s.id))) {
-  const r = await page.evaluate(id => { selectSeal(id); const s = buildSVG(), s2 = buildSVG(); return { det: s === s2, bad: /NaN|undefined/.test(s), desc: /<desc>[^<]*Wellcome/.test(s) && /<desc>[^<]*p\. 2\d\d/.test(s), ok: !new DOMParser().parseFromString(s, 'image/svg+xml').querySelector('parsererror') }; }, id);
+  const r = await page.evaluate(id => { selectSeal(id); const s = buildSVG(), s2 = buildSVG(); const g = SEAL_BY_ID[id].src === 'goetia1916'; return { det: s === s2, bad: /NaN|undefined/.test(s), desc: /<desc>[^<]*(Wellcome|Harold B\. Lee)/.test(s) && (g ? /<desc>[^<]*figura \d+/.test(s) : /<desc>[^<]*p\. 2\d\d/.test(s)), ok: !new DOMParser().parseFromString(s, 'image/svg+xml').querySelector('parsererror') }; }, id);
   if (!r.det || r.bad || !r.desc || !r.ok) sealErr += id + ' ';
 }
-check('sello: las 23 piezas pintan, SVG valido con atribucion de fuente y pagina', !sealErr, sealErr);
+check('sello: las 103 piezas pintan, SVG valido con atribucion de fuente y pagina o figura', !sealErr, sealErr);
+// Goetia: 72 espiritus, 80 figuras, rangos de la lista clasificada (pp. 47-48)
+const go = await page.evaluate(() => {
+  const G = SEALS_DATA.filter(s => s.src === 'goetia1916');
+  const spirits = new Set(G.map(s => s.spirit));
+  const doubles = G.filter(s => s.second).map(s => s.name).join(',');
+  const byS = {}; G.forEach(s => { byS[s.spirit] = s; });
+  const two = Object.values(byS).filter(s => s.ranks.length === 2).length;
+  const noRank = Object.values(byS).filter(s => !s.ranks.length).length;
+  const pages = G.every(s => s.page >= 22 && s.page <= 45);
+  const b = G.find(s => s.fig === 1);
+  return { n: G.length, spirits: spirits.size, doubles, two, noRank, pages, bael: `${b.name}|${b.ranks}|${b.metals}|${b.page}`, figs: G.map(s => s.fig).join(',') === [...Array(80)].map((_, i) => i + 1).join(',') };
+});
+check('goetia: 80 figuras para 72 espiritus', go.n === 80 && go.spirits === 72 && go.figs, `${go.n}/${go.spirits}`);
+check('goetia: los 8 sellos dobles del libro', go.doubles === 'Paimon,Beleth,Leraje,Bathin,Bune,Vepar,Uvall,Seere', go.doubles);
+check('goetia: rangos de la lista clasificada (7 con doble titulo, ninguno sin rango)', go.two === 7 && go.noRank === 0, `dobles ${go.two}, sin rango ${go.noRank}`);
+check('goetia: Bael rey, sello en oro, p. 22; paginas del texto entre 22 y 45', go.bael === 'Bael|Rey|oro|22' && go.pages, go.bael);
+await page.selectOption('#selSealCollection', 'goetia1916');
+await page.click('.seal-filter[data-p="Caballero"]');
+check('goetia: filtro por rango (Caballero = Furcas)', await page.evaluate(() => [...document.querySelectorAll('.seal-card')].map(b => SEAL_BY_ID[b.dataset.id].name).join() === 'Furcas'));
+await page.click('.seal-filter[data-p="all"]');
+await page.click('.seal-card[data-id="goetia-09"]');
+await page.click('#sealBox a[onclick*="goetia-10"]');
+check('goetia: el sello doble enlaza con su pareja (Paimon 9 -> 10)', await page.evaluate(() => state.seal.id === 'goetia-10' && /figura 9/.test(document.getElementById('sealBox').innerText)));
+await page.selectOption('#selSealCollection', 'agrippa1651');
 await page.selectOption('#selSealView', 'facsimile');
-await page.click('.seal-card[data-id="saturno-sello"]');
-await page.waitForTimeout(400);
 check('sello: facsimil del escaneo visible', await page.evaluate(() => { const i = document.getElementById('sealFacsimile'); return !i.hidden && i.complete && i.naturalWidth > 100; }));
 await page.selectOption('#selSealView', 'trace');
 await page.click('.seal-card[data-id="saturno-inteligencia"]');
