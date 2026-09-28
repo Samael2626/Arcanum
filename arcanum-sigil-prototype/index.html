@@ -17,6 +17,7 @@ header p{color:var(--dim);font-size:.8rem;font-style:italic}
 .canvas-wrap{position:relative;aspect-ratio:1;background:#0a080d;border:1px solid var(--border);border-radius:6px;flex:1;max-width:720px;overflow:hidden}
 canvas#canvas{display:block;height:auto;touch-action:none;width:100%}
 .fam-select{display:grid;gap:4px;grid-template-columns:1fr 1fr;margin-bottom:6px}
+.fam-ref{font-size:.62rem;font-style:italic;grid-column:1/-1}
 .fam-btn{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--dim);cursor:pointer;font-family:var(--font);font-size:.72rem;min-height:36px;padding:4px}
 .fam-btn.active{background:var(--gold);border-color:var(--gold);color:#0c0b0f;font-weight:600}
 .fam-btn.locked{cursor:not-allowed;font-style:italic;opacity:.5}
@@ -144,7 +145,8 @@ q{cursor:help;font-style:italic;quotes:"«" "»"}
     <button class="fam-btn active" id="famLetters" title="Sigilo personal: la intención reducida a letras que se funden">Sigilo de letras</button>
     <button class="fam-btn" id="famRosa" title="Motor separado: nombre transliterado al hebreo sobre la Rosa de 22 pétalos">Rosa-Cruz</button>
     <button class="fam-btn" id="famKamea" title="Cuadrado mágico del planeta (Agrippa): el nombre se traza de número en número">Kamea</button>
-    <button class="fam-btn" id="famSeal" title="Catálogo de sellos reproducidos de su fuente, con edición y página. No se genera ni se edita">Sello histórico</button>
+    <button class="fam-btn" id="famPersonal" title="Tu sigilo montado en formato de sello clásico, con planeta y metal">Sello personal</button>
+    <button class="fam-btn fam-ref" id="famSeal" title="Sellos de Agrippa y la Goetia reproducidos de su fuente. Irán a Materia; aquí quedan como referencia">Consulta: sellos históricos (irá a Materia)</button>
   </div>
 
   <section id="lettersPanel">
@@ -280,6 +282,26 @@ q{cursor:help;font-style:italic;quotes:"«" "»"}
           <button class="btn-dim" id="btnPNG">PNG</button>
         </div>
         <label class="check"><input type="checkbox" id="chkTransparent">Fondo transparente al exportar</label>
+      </div>
+    </details>
+  </section>
+
+  <section id="personalPanel" hidden>
+    <details class="step" open>
+      <summary><span class="step-num">✠</span><span class="step-title">Sello personal</span></summary>
+      <div class="step-body">
+        <p class="helper">Tu sigilo, montado con la forma de un sello clásico. Es un sello nuevo y tuyo: el formato imita modelos históricos, pero no es uno de ellos.</p>
+        <div class="field"><label for="selPersonalSource">Sigilo de</label>
+          <select id="selPersonalSource"><option value="letters" selected>Sigilo de letras</option><option value="rosa">Rosa-Cruz</option><option value="kamea">Kamea</option></select></div>
+        <div class="field"><label for="selPersonalFormat">Formato</label>
+          <select id="selPersonalFormat"><option value="goetia" selected>Goetia (anillo con letras)</option><option value="pentaculo">Pentáculo salomónico (hebreo)</option><option value="agrippa">Lámina de Agrippa (rótulo)</option></select></div>
+        <input type="text" id="personalName" maxlength="32" placeholder="Nombre del sello (si lo dejas vacío, el del sigilo)">
+        <div class="field"><label for="selPersonalPlanet">Planeta</label>
+          <select id="selPersonalPlanet"><option value="auto" selected>Regente de hoy</option></select></div>
+        <div class="field"><label for="selPersonalView">Vista</label>
+          <select id="selPersonalView"><option value="paper" selected>Papel</option><option value="metal">Grabado en su metal</option></select></div>
+        <div class="info" id="personalBox">—</div>
+        <div class="row"><button class="btn-dim" id="btnPersonalProv">Procedencia</button><button class="btn-dim" id="btnPersonalSVG">SVG</button><button class="btn-dim" id="btnPersonalPNG">PNG</button></div>
       </div>
     </details>
   </section>
@@ -682,6 +704,7 @@ function layoutLetters(active, mode, overlap) {
 // ── Estado ──────────────────────────────────────────────────────
 const state = {
   family: 'letters',
+  personal: { source: 'letters', format: 'goetia', name: '', planet: 'auto', view: 'paper', day: new Date().getDay() },
   seal: { collection: 'agrippa1651', filter: 'all', id: 'saturno-sello', view: 'trace' },
   kamea: { planet: 'saturn', reduce: 'agrippa', ends: 'agrippa', grid: false, hebrew: '', words: [] },
   intention: '',
@@ -1043,6 +1066,7 @@ function paint(ctx, opt) {
   if (state.family === 'rosa') { paintRose(ctx, th); return; }
   if (state.family === 'kamea') { paintKamea(ctx, th); return; }
   if (state.family === 'seal') { paintSeal(ctx, th); return; }
+  if (state.family === 'personal') { paintPersonal(ctx); return; }
   if (!state.prims.length || !state.view) return;
   const lw = Math.max(LINE_W, 2 / sc);
 
@@ -1136,6 +1160,7 @@ function buildSVG() {
   if (state.family === 'rosa') { out.push(roseSVG(th)); out.push('</svg>'); return out.join(''); }
   if (state.family === 'kamea') { out.push(kameaSVG(th)); out.push('</svg>'); return out.join(''); }
   if (state.family === 'seal') { out.push(sealSVG(th)); out.push('</svg>'); return out.join(''); }
+  if (state.family === 'personal') return personalSVG() || out.concat('</svg>').join('');
   const bg = borderGeom();
   if (bg) {
     out.push(`<g data-layer="border" fill="none" stroke="${th.frame}" stroke-width="${f2(LINE_W * .45)}">`);
@@ -2013,6 +2038,182 @@ function sealProvenance() {
   return html + `<p class="note"><a href="${scanUrl(s)}" target="_blank" rel="noopener" style="color:var(--gold)">Ver la página en el escaneo</a></p>`;
 }
 
+// ── Sello personal: tu sigilo en formato de sello historico ─────
+// Toma el sigilo de un motor del taller y lo monta con la forma de un
+// sello clasico. Es un sello NUEVO: el formato imita modelos reales
+// (Goetia 1904, pentaculos de la Clave de Salomon, laminas de Agrippa),
+// pero el resultado no es ninguno de ellos y la ficha lo dice [RC].
+const PERSONAL_FORMATS = {
+  goetia: { label: 'Goetia', model: 'los 72 sellos de la Goetia (ed. 1904): doble anillo con el nombre en letras latinas repartidas por el borde' },
+  pentaculo: { label: 'Pentáculo salomónico', model: 'los pentáculos de la Clave de Salomón: banda con el nombre en hebreo entre dos círculos' },
+  agrippa: { label: 'Lámina de Agrippa', model: 'los caracteres planetarios de Agrippa (1651): la figura sola, con su rótulo' }
+};
+// Metales de los siete planetas, como los enumera la Goetia (p. 48)
+const PLANET_METAL = { saturn: 'plomo', jupiter: 'estaño', mars: 'hierro', sun: 'oro', venus: 'cobre', mercury: 'mercurio', moon: 'plata' };
+const METAL_TONE = { plomo: ['#8d9096', '#5c6066'], estaño: ['#c3c8cc', '#8f969c'], hierro: ['#9a9da0', '#5e6264'], oro: ['#e7c35a', '#a8801f'], cobre: ['#d99365', '#8f4f2a'], mercurio: ['#dfe5ea', '#98a4ad'], plata: ['#e4e6ea', '#a3a8b0'] };
+// Regente del dia (orden de los dias de la semana: domingo = Sol)
+const DAY_RULER = ['sun', 'moon', 'mars', 'mercury', 'jupiter', 'venus', 'saturn'];
+const DAY_NAMES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const PERSONAL_SOURCES = { letters: 'Sigilo de letras', rosa: 'Rosa-Cruz', kamea: 'Kamea' };
+
+// Un sigilo de Kamea ya pertenece a un planeta: el sello no puede decir otro
+function personalPlanet() {
+  const p = state.personal;
+  if (p.source === 'kamea') return state.kamea.planet;
+  return p.planet === 'auto' ? DAY_RULER[p.day] : p.planet;
+}
+function personalName() {
+  const p = state.personal;
+  if (p.name.trim()) return p.name.trim();
+  if (p.source === 'letters') return state.intention;
+  if (p.source === 'rosa') return state.rosa.name;
+  return $('kameaName') ? $('kameaName').value.trim() : '';
+}
+// Sigilo de un motor como marcado SVG monocromo, sin fondo ni rotulos
+function personalSourceMarkup(src) {
+  const keep = { family: state.family, diagram: state.rosa.diagram, grid: state.kamea.grid };
+  state.family = src; state.rosa.diagram = false; state.kamea.grid = false;
+  let svg;
+  try { svg = buildSVG(); } finally { state.family = keep.family; state.rosa.diagram = keep.diagram; state.kamea.grid = keep.grid; }
+  const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
+  const layers = { letters: ['core', 'terminals'], rosa: ['rose'], kamea: ['kamea'] }[src];
+  const ser = new XMLSerializer();
+  const parts = [];
+  for (const name of layers) {
+    const g = doc.querySelector(`g[data-layer="${name}"]`);
+    if (!g) continue;
+    g.querySelectorAll('linearGradient').forEach(n => n.remove());
+    for (const el of [g, ...g.querySelectorAll('*')]) {
+      for (const a of ['stroke', 'fill']) {
+        const v = el.getAttribute(a);
+        if (v && v !== 'none') el.setAttribute(a, 'currentColor');
+      }
+    }
+    parts.push(ser.serializeToString(g).replace(/ xmlns="[^"]*"/g, ''));
+  }
+  return parts.join('');
+}
+function personalReady(src) {
+  return src === 'letters' ? state.prims.length > 0 : src === 'rosa' ? state.rosa.trace.length > 0 : state.kamea.words.length > 0;
+}
+// Caja del sigilo medida en el propio navegador
+let personalProbe = null;
+function measureMarkup(markup) {
+  if (!personalProbe) {
+    personalProbe = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    personalProbe.setAttribute('width', SIZE); personalProbe.setAttribute('height', SIZE);
+    personalProbe.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden';
+    document.body.append(personalProbe);
+  }
+  personalProbe.innerHTML = `<g>${markup}</g>`;
+  const b = personalProbe.firstChild.getBBox();
+  return { x: b.x, y: b.y, w: b.width || 1, h: b.height || 1 };
+}
+// Letras en el borde: una por posicion, en sentido horario desde arriba
+// (antihorario si es hebreo, que se lee de derecha a izquierda)
+function ringLetters(chars, r, size, dir, font, color) {
+  const n = chars.length;
+  return chars.map((ch, i) => {
+    const a = -90 + dir * i * 360 / n;
+    const x = C + Math.cos(rad(a)) * r, y = C + Math.sin(rad(a)) * r;
+    return `<text transform="translate(${f2(x)} ${f2(y)}) rotate(${f2(a + 90)})" text-anchor="middle" dominant-baseline="central" font-family="${font}" font-size="${size}" fill="${color}">${esc(ch)}</text>`;
+  }).join('');
+}
+function personalSVG() {
+  const p = state.personal, src = p.source;
+  if (!personalReady(src)) return null;
+  const planet = personalPlanet(), metal = PLANET_METAL[planet], k = KAMEA_BY_ID[planet];
+  const metalView = p.view === 'metal';
+  const ink = metalView ? '#2b2116' : '#1b1612';
+  const name = personalName() || 'SIN NOMBRE';
+  const fmt = p.format;
+  const out = [`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SIZE} ${SIZE}" width="${SIZE}" height="${SIZE}">`];
+  out.push(`<title>${esc(`Sello personal de ${name}`)}</title>`);
+  out.push(`<desc>${esc(`Sello nuevo creado en ARCANUM en formato de ${PERSONAL_FORMATS[fmt].model}. No es un sello histórico. Sigilo: ${PERSONAL_SOURCES[src]}. Planeta: ${k.name}; metal: ${metal} (tabla de metales de la Goetia, p. 48).`)}</desc>`);
+  if (!state.transparent) out.push(`<rect width="${SIZE}" height="${SIZE}" fill="${metalView ? '#1a1612' : '#efe6d2'}"/>`);
+  const [light, dark] = METAL_TONE[metal];
+  const ringed = fmt !== 'agrippa';
+  if (metalView) {
+    out.push(`<defs><radialGradient id="metal" cx="38%" cy="32%" r="80%"><stop offset="0" stop-color="${light}"/><stop offset="1" stop-color="${dark}"/></radialGradient></defs>`);
+    out.push(ringed ? `<circle cx="${C}" cy="${C}" r="352" fill="url(#metal)"/>` : `<rect x="48" y="48" width="704" height="704" rx="18" fill="url(#metal)"/>`);
+  }
+  out.push(`<g data-layer="personal-frame" fill="none" stroke="${ink}">`);
+  let contentR = 300;
+  if (fmt === 'goetia') {
+    out.push(`<circle cx="${C}" cy="${C}" r="334" stroke-width="4"/><circle cx="${C}" cy="${C}" r="262" stroke-width="4"/>`);
+    contentR = 232;
+  } else if (fmt === 'pentaculo') {
+    out.push(`<circle cx="${C}" cy="${C}" r="338" stroke-width="3"/><circle cx="${C}" cy="${C}" r="328" stroke-width="1.5"/><circle cx="${C}" cy="${C}" r="258" stroke-width="3"/>`);
+    contentR = 228;
+  }
+  out.push('</g>');
+  // anillo con el nombre
+  if (fmt === 'goetia') {
+    const chars = [...name.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z]/g, '')];
+    out.push(`<g data-layer="personal-name">${ringLetters(chars, 298, Math.max(22, Math.min(40, 700 / Math.max(chars.length, 1))), 1, 'Georgia, serif', ink)}</g>`);
+  } else if (fmt === 'pentaculo') {
+    const heb = hasHebrew(name) ? cleanHebrew(name) : transliterate(name, 'consonantal').hebrew;
+    // separador entre palabras, como en los pentaculos
+    const chars = [...heb.replace(/ /g, '·')].filter(c => c.trim());
+    out.push(`<g data-layer="personal-name">${ringLetters(chars, 293, Math.max(20, Math.min(34, 620 / Math.max(chars.length, 1))), -1, 'Arial Hebrew, Segoe UI, serif', ink)}</g>`);
+  } else {
+    out.push(`<g data-layer="personal-name" text-anchor="middle" font-family="Georgia, serif" fill="${ink}"><text x="${C}" y="104" font-size="30" font-style="italic">${esc(`Sello de ${name}`)}</text><text x="${C}" y="${SIZE - 86}" font-size="18">${esc(`${k.sym}︎ ${k.name} · ${metal}`)}</text></g>`);
+  }
+  // el sigilo, encajado en el hueco central
+  const markup = personalSourceMarkup(src);
+  const b = measureMarkup(markup);
+  const s = fmt === 'agrippa' ? Math.min(520 / b.w, 460 / b.h, 2.2) : Math.min((2 * contentR) / Math.hypot(b.w, b.h), 2.2);
+  const cy = fmt === 'agrippa' ? C + 4 : C;
+  out.push(`<g data-layer="personal-sigil" color="${ink}" transform="translate(${f2(C - (b.x + b.w / 2) * s)} ${f2(cy - (b.y + b.h / 2) * s)}) scale(${s.toFixed(4)})">${markup}</g>`);
+  out.push('</svg>');
+  return out.join('');
+}
+// En el lienzo se pinta el mismo SVG (una sola geometria para las dos salidas)
+const personalImg = { key: '', img: null };
+function paintPersonal(ctx) {
+  const svg = personalSVG();
+  if (!svg) {
+    ctx.fillStyle = '#8a7f72'; ctx.textAlign = 'center'; ctx.font = 'italic 22px Georgia, serif';
+    ctx.fillText(`Primero crea un sigilo en «${PERSONAL_SOURCES[state.personal.source]}».`, C, C);
+    return;
+  }
+  if (personalImg.key !== svg) {
+    personalImg.key = svg; personalImg.img = new Image();
+    personalImg.img.onload = () => render();
+    personalImg.img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    return;
+  }
+  if (personalImg.img.complete && personalImg.img.naturalWidth) ctx.drawImage(personalImg.img, 0, 0, SIZE, SIZE);
+}
+function renderPersonalInfo() {
+  const p = state.personal, planet = personalPlanet(), k = KAMEA_BY_ID[planet], f = PERSONAL_FORMATS[p.format];
+  const ready = personalReady(p.source);
+  $('personalBox').innerHTML =
+    `<div class="line"><b>Sigilo</b><span>${ready ? `El último que hiciste en ${PERSONAL_SOURCES[p.source]}.` : `Aún no hay sigilo en ${PERSONAL_SOURCES[p.source]}: créalo primero en su pestaña.`}</span></div>` +
+    `<div class="line"><b>Formato</b><span>Imita ${f.model}. ${badge('RC')}</span></div>` +
+    `<div class="line"><b>Planeta</b><span>${k.sym}︎ ${k.name}${p.source === 'kamea' ? ', el de la tabla sobre la que se trazó el sigilo' : p.planet === 'auto' ? `, regente del ${DAY_NAMES[p.day]} (el día en que lo creas)` : ', elegido por ti'}.</span></div>` +
+    `<div class="line"><b>Metal</b><span>${PLANET_METAL[planet]}, según la tabla de metales de los planetas de la Goetia (p. 48). ${badge('HP')}</span></div>` +
+    `<div class="line"><b>Qué es</b><span>Un sello nuevo, tuyo, en formato histórico. No es un sello de Salomón ni de Agrippa: esos están en el catálogo de consulta.</span></div>`;
+}
+function personalRefresh() {
+  const p = state.personal;
+  p.name = $('personalName').value; p.source = $('selPersonalSource').value; p.format = $('selPersonalFormat').value;
+  p.planet = $('selPersonalPlanet').value; p.view = $('selPersonalView').value;
+  $('selPersonalPlanet').disabled = p.source === 'kamea';
+  renderPersonalInfo();
+  render();
+}
+function personalProvenance() {
+  const p = state.personal, f = PERSONAL_FORMATS[p.format];
+  return `<h3>Sello personal</h3><p>Sello nuevo creado en el taller a partir de tu sigilo de ${PERSONAL_SOURCES[p.source]}. ${badge('RC')}</p>` +
+    '<h3>De dónde sale cada parte</h3><ul>' +
+    `<li>La figura central: tu sigilo, tal como lo trazó su motor (con sus propias fuentes, en la procedencia de ese motor).</li>` +
+    `<li>El formato: imita ${f.model}. Es una reconstrucción del aspecto, no una regla del libro.</li>` +
+    `<li>El metal: la Goetia asigna a cada planeta un metal (Saturno plomo, Júpiter estaño, Marte hierro, Sol oro, Venus cobre, Mercurio mercurio, Luna plata; p. 48). ${badge('HP')}</li>` +
+    `<li>El planeta por defecto es el regente del día de la semana en que lo creas (domingo Sol, lunes Luna… sábado Saturno). ${badge('HP')}</li></ul>` +
+    '<p class="note">El SVG exportado lo declara en su descripción: sello nuevo, no histórico.</p>';
+}
+
 // ── Generar ─────────────────────────────────────────────────────
 function generate() {
   const text = $('intention').value.trim();
@@ -2163,6 +2364,7 @@ function showProvenance() {
   if (state.family === 'rosa') { body.innerHTML = rosaProvenance(); $('provModal').classList.add('open'); return; }
   if (state.family === 'kamea') { body.innerHTML = kameaProvenance(); $('provModal').classList.add('open'); return; }
   if (state.family === 'seal') { body.innerHTML = sealProvenance(); $('provModal').classList.add('open'); return; }
+  if (state.family === 'personal') { body.innerHTML = personalProvenance(); $('provModal').classList.add('open'); return; }
   const r = state.reduction;
   if (!r) { body.innerHTML = '<p>Forja primero un sigilo.</p>'; $('provModal').classList.add('open'); return; }
   const m = MODES[state.mode];
@@ -2281,9 +2483,9 @@ function forgetSigil() {
 // ── Exportar ────────────────────────────────────────────────────
 function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); }
 function exportSVG() {
-  const ready = state.family === 'rosa' ? state.rosa.trace.length : state.family === 'kamea' ? state.kamea.words.length : state.family === 'seal' ? !!SEAL_BY_ID[state.seal.id] : state.prims.length;
+  const ready = state.family === 'rosa' ? state.rosa.trace.length : state.family === 'kamea' ? state.kamea.words.length : state.family === 'seal' ? !!SEAL_BY_ID[state.seal.id] : state.family === 'personal' ? personalReady(state.personal.source) : state.prims.length;
   if (!ready) { showToast('Forja primero un sigilo'); return; }
-  download(new Blob([buildSVG()], { type: 'image/svg+xml' }), state.family === 'rosa' ? 'rosa-cruz.svg' : state.family === 'kamea' ? `kamea-${state.kamea.planet}.svg` : state.family === 'seal' ? `agrippa-${state.seal.id}.svg` : 'sigilo.svg');
+  download(new Blob([buildSVG()], { type: 'image/svg+xml' }), state.family === 'rosa' ? 'rosa-cruz.svg' : state.family === 'kamea' ? `kamea-${state.kamea.planet}.svg` : state.family === 'seal' ? `agrippa-${state.seal.id}.svg` : state.family === 'personal' ? 'sello-personal.svg' : 'sigilo.svg');
 }
 function exportPNG() {
   if (!state.prims.length) { showToast('Forja primero un sigilo'); return; }
@@ -2297,6 +2499,9 @@ function setFamily(f) {
   $('famRosa').classList.toggle('active', f === 'rosa');
   $('famKamea').classList.toggle('active', f === 'kamea');
   $('famSeal').classList.toggle('active', f === 'seal');
+  $('famPersonal').classList.toggle('active', f === 'personal');
+  $('personalPanel').hidden = f !== 'personal';
+  if (f === 'personal') { $('selPersonalPlanet').disabled = state.personal.source === 'kamea'; renderPersonalInfo(); }
   $('sealPanel').hidden = f !== 'seal';
   if (f === 'seal' && !$('sealGrid').children.length) { renderSealFilters(); renderSealGrid(); selectSeal(state.seal.id); }
   updateSealView();
@@ -2401,6 +2606,21 @@ $('famLetters').addEventListener('click', () => setFamily('letters'));
 $('famRosa').addEventListener('click', () => setFamily('rosa'));
 $('famKamea').addEventListener('click', () => setFamily('kamea'));
 $('famSeal').addEventListener('click', () => setFamily('seal'));
+$('famPersonal').addEventListener('click', () => setFamily('personal'));
+// Sello personal
+KAMEAS.forEach(k => { const o = document.createElement('option'); o.value = k.id; o.textContent = `${k.sym}\uFE0E ${k.name} (${PLANET_METAL[k.id]})`; $('selPersonalPlanet').append(o); });
+$('selPersonalPlanet').options[0].textContent = `Regente de hoy (${KAMEA_BY_ID[DAY_RULER[state.personal.day]].name})`;
+['selPersonalSource', 'selPersonalFormat', 'selPersonalPlanet', 'selPersonalView'].forEach(id => $(id).addEventListener('change', personalRefresh));
+$('personalName').addEventListener('input', personalRefresh);
+$('btnPersonalProv').addEventListener('click', showProvenance);
+$('btnPersonalSVG').addEventListener('click', exportSVG);
+$('btnPersonalPNG').addEventListener('click', () => {
+  if (!personalReady(state.personal.source)) { showToast('Primero crea un sigilo'); return; }
+  const img = new Image(), c = document.createElement('canvas');
+  c.width = c.height = SIZE;
+  img.onload = () => { c.getContext('2d').drawImage(img, 0, 0); c.toBlob(b => download(b, 'sello-personal.png')); };
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(personalSVG());
+});
 // Sello historico
 $('selSealCollection').addEventListener('change', e => setSealCollection(e.target.value));
 $('selSealView').addEventListener('change', e => { state.seal.view = e.target.value; updateSealView(); });

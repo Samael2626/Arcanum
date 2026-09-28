@@ -526,6 +526,7 @@ await page.click('#sealBox a[onclick*="goetia-10"]');
 check('goetia: el sello doble enlaza con su pareja (Paimon 9 -> 10)', await page.evaluate(() => state.seal.id === 'goetia-10' && /figura 9/.test(document.getElementById('sealBox').innerText)));
 await page.selectOption('#selSealCollection', 'agrippa1651');
 await page.selectOption('#selSealView', 'facsimile');
+await page.waitForFunction(() => { const i = document.getElementById('sealFacsimile'); return i.complete && i.naturalWidth > 0; }, null, { timeout: 5000 }).catch(() => {});
 check('sello: facsimil del escaneo visible', await page.evaluate(() => { const i = document.getElementById('sealFacsimile'); return !i.hidden && i.complete && i.naturalWidth > 100; }));
 await page.selectOption('#selSealView', 'trace');
 await page.click('.seal-card[data-id="saturno-inteligencia"]');
@@ -538,6 +539,30 @@ const stext = await page.evaluate(() => document.getElementById('provBody').inne
 await page.click('#btnProvClose');
 const ms = stext.match(/\[(HP|OM|RC|AR)\]|(the|of the|with)/i);
 check('sello: ficha y procedencia en espanol', !ms, ms ? 'encontrado: ' + ms[0] : '');
+await page.click('#famLetters');
+
+// 13d) Sello personal: sigilo propio en formato historico, declarado como nuevo
+await forge('Samuel', 'fusion', 'cooper');
+await page.click('#famPersonal');
+const pers = {};
+for (const fmt of ['goetia', 'pentaculo', 'agrippa']) {
+  await page.selectOption('#selPersonalFormat', fmt);
+  pers[fmt] = await page.evaluate(() => { const s = buildSVG(); return { s, det: s === buildSVG(), ok: !new DOMParser().parseFromString(s, 'image/svg+xml').querySelector('parsererror'), nan: /NaN|undefined/.test(s), texts: (s.match(/<g data-layer="personal-name">[\s\S]*?<\/g>/) || [''])[0].split('<text').length - 1, sigil: /data-layer="personal-sigil"[\s\S]*<path/.test(s), honest: /No es un sello histórico/.test(s) }; });
+}
+check('sello personal: 3 formatos distintos, deterministas y validos', new Set(Object.values(pers).map(x => x.s)).size === 3 && Object.values(pers).every(x => x.det && x.ok && !x.nan && x.sigil));
+check('sello personal: Goetia con las 6 letras de SAMUEL en el anillo', pers.goetia.texts === 6, pers.goetia.texts + '');
+check('sello personal: pentaculo con el nombre en hebreo (שמואל)', pers.pentaculo.texts === 5 && /[א-ת]/.test(pers.pentaculo.s));
+check('sello personal: el SVG declara que es un sello nuevo, no historico', Object.values(pers).every(x => x.honest));
+const auto = await page.evaluate(() => personalPlanet() === DAY_RULER[new Date().getDay()]);
+check('sello personal: planeta por defecto = regente del dia', auto);
+await page.click('#famKamea');
+await page.selectOption('#selKameaPlanet', 'mars');
+await page.fill('#kameaName', 'Samuel'); await page.click('#btnKameaGenerate');
+await page.click('#famPersonal');
+await page.selectOption('#selPersonalSource', 'kamea');
+const kp = await page.evaluate(() => ({ planet: personalPlanet(), locked: document.getElementById('selPersonalPlanet').disabled, metal: /metal: hierro/.test(buildSVG()) }));
+check('sello personal: con Kamea el planeta es el de la tabla (Marte, hierro)', kp.planet === 'mars' && kp.locked && kp.metal, JSON.stringify(kp));
+await page.selectOption('#selPersonalSource', 'letters');
 await page.click('#famLetters');
 
 // 14) Todo el texto visible en espanol: sin codigos internos ni citas en ingles
