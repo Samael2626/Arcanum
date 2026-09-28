@@ -199,9 +199,10 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
   background:radial-gradient(circle,rgba(255,205,125,.5),rgba(255,170,80,.14) 45%,transparent 70%)}
 @keyframes flick{0%,100%{transform:scale(1,1) skewX(0)}30%{transform:scale(.93,1.09) skewX(3deg)}62%{transform:scale(1.05,.94) skewX(-2deg)}}
 @keyframes flick2{50%{opacity:.86}}
-.candlelight{position:absolute;inset:0;border-radius:16px;pointer-events:none;mix-blend-mode:screen;
+.candlelight{position:absolute;inset:0;border-radius:16px;pointer-events:none;mix-blend-mode:screen;opacity:.86;
   background:radial-gradient(circle at 7% -12%,rgba(255,176,96,.34),transparent 46%),radial-gradient(circle at 93% -12%,rgba(255,176,96,.34),transparent 46%)}
 .fxcanvas{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
+.cflame{position:absolute;left:0;top:0;z-index:3;pointer-events:none}
 @media (prefers-reduced-motion:reduce){.candle .flame,.card .face.back::after{animation:none}}
 .menu{position:fixed;z-index:40;display:grid;gap:6px;padding:10px;min-width:260px;background:rgba(18,18,26,.97);border:1px solid var(--line);border-radius:14px;
   box-shadow:0 14px 40px rgba(0,0,0,.6);animation:pop .14s ease-out}
@@ -258,6 +259,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
     <div class="two"><button class="act" id="b-back">Volver a mi mesa</button><button class="act primary" id="b-go">Continuar aquí</button></div>
   </div>
   <button class="interp" id="interp" hidden>Interpretación</button>
+  <canvas class="fxcanvas" id="fxbody"></canvas>
   <canvas class="fxcanvas" id="fx"></canvas>
   <div class="table" id="table">
     <div class="wood"></div>
@@ -411,14 +413,21 @@ class Piece {
 }
 
 class Card extends Piece {
-  constructor(deck){
+  // light: solo el dorso. Las 78 cartas del abanico no necesitan cara, sombra ni simbolos hasta salir de el.
+  constructor(deck, light = false){
     super('card');
     this.deck = deck; this.data = null; this.reversed = false; this.angle = 0; this.diag = 0; this.trem = 0; this.settle = 1;
     this.slot = null; this.fanPos = null; this.proxy = false; this.host = null; this.clars = [];
-    this.el.innerHTML = `<div class="shadow"></div><div class="flip"><div class="face back"></div><div class="face front"><img alt="" draggable="false"><div class="fx"></div></div></div><div class="pips"></div>`;
-    this.pipsEl = this.el.querySelector('.pips');
-    this.flipEl = this.el.querySelector('.flip'); this.shadowEl = this.el.querySelector('.shadow');
-    this.el.querySelector('.back').style.backgroundImage = deck.back;
+    this.el.innerHTML = `<div class="flip"><div class="face back"></div></div>`;
+    this.flipEl = this.el.firstChild; this.flipEl.firstChild.style.backgroundImage = deck.back;
+    if (!light) this.full();
+  }
+  full(){
+    if (this.front) return;
+    this.flipEl.insertAdjacentHTML('beforeend', `<div class="face front"><img alt="" draggable="false"><div class="fx"></div></div>`);
+    this.el.insertAdjacentHTML('afterbegin', `<div class="shadow"></div>`);
+    this.el.insertAdjacentHTML('beforeend', `<div class="pips"></div>`);
+    this.shadowEl = this.el.querySelector('.shadow'); this.pipsEl = this.el.querySelector('.pips');
     this.front = this.el.querySelector('.front'); this.fx = this.el.querySelector('.fx');
   }
   get up(){ return Math.abs(this.angle) >= 179; }
@@ -434,8 +443,8 @@ class Card extends Piece {
     const tx = w * hx * (1 - Math.cos(a)), tz = w * hx * Math.sin(a);
     this.flipEl.style.transform = `translate3d(${tx}px, 0, ${tz}px) rotateZ(${this.diag + this.trem}deg) rotateY(${this.angle}deg) rotateX(${this.tilt || 0}deg) scale(${this.settle})`;
     const L = this.lift;
-    this.shadowEl.style.opacity = Math.min(1, L / 24) * .6;
-    this.shadowEl.style.transform = `translate3d(${L * .25}px, ${L * .4}px, ${-(this.z + L) + .15}px)`;
+    if (this.shadowEl){ this.shadowEl.style.opacity = Math.min(1, L / 24) * .6;
+    this.shadowEl.style.transform = `translate3d(${L * .25}px, ${L * .4}px, ${-(this.z + L) + .15}px)`; }
     // las aclaratorias siguen a su carta, salvo la que se esta arrastrando
     this.clars.forEach((k, i) => {
       if (g && g.piece === k) return;
@@ -670,7 +679,7 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function openFan(pile){
   if (!pile || !server.count(pile.pid)) return null;
   const cards = server.slots(pile.pid).map(pos => {
-    const c = new Card(pile.def); c.fanPos = pos; c.sc = FAN_S; c.el.classList.add('noear'); c.x = pile.x; c.y = pile.y; c.rot = pile.rot; c.z = 1 + pile.thick; c.render(); return c;
+    const c = new Card(pile.def, true); c.fanPos = pos; c.sc = FAN_S; c.el.classList.add('noear'); c.x = pile.x; c.y = pile.y; c.rot = pile.rot; c.z = 1 + pile.thick; c.render(); return c;
   });
   pile.setCount(0);
   fan = { pile, cards, start: { x: pile.x, y: pile.y } };
@@ -708,14 +717,14 @@ function closeFan(ms = 460){
 }
 function takeFromFan(c){
   fan.cards.splice(fan.cards.indexOf(c), 1);
-  c.reveal(server.take(fan.pile.pid, c.fanPos)); c.fanPos = null; c.el.classList.remove('noear');
+  c.full(); c.reveal(server.take(fan.pile.pid, c.fanPos)); c.fanPos = null; c.el.classList.remove('noear');
   if (!fan.cards.length){ fan.pile.setCount(server.count(fan.pile.pid)); fan = null; }
 }
 
 // ================= barajar: la animacion es teatro; el orden lo fija el servidor =================
 function proxies(d, n){
   const out = [];
-  for (let i = 0; i < n; i++){ const c = new Card(d.def); c.proxy = true; c.el.classList.add('noear'); c.sc = DECK_S; c.x = d.x; c.y = d.y; c.rot = d.rot; c.z = 1 + d.thick + i * .6; c.render(); out.push(c); }
+  for (let i = 0; i < n; i++){ const c = new Card(d.def, true); c.proxy = true; c.el.classList.add('noear'); c.sc = DECK_S; c.x = d.x; c.y = d.y; c.rot = d.rot; c.z = 1 + d.thick + i * .6; c.render(); out.push(c); }
   return out;
 }
 async function shuffle(d, style){
@@ -1069,7 +1078,7 @@ function tableToScreen(x, y, z = 0){
   const th = cam.theta * D2R, s = Math.sin(th), c = Math.cos(th), K = cam.k * cam.zoom, a = cam.yaw * D2R;
   const x0 = x - TW / 2, y0 = y - TH / 2, xx = x0 * Math.cos(a) - y0 * Math.sin(a), yy = x0 * Math.sin(a) + y0 * Math.cos(a);
   const f = P / (P - K * (yy * s + z * c)), r = scene.getBoundingClientRect();
-  return { x: r.width / 2 + cam.panX + K * xx * f, y: r.height / 2 + cam.panY + cam.oy + K * (yy * c - z * s) * f };
+  return { x: r.width / 2 + cam.panX + K * xx * f, y: r.height / 2 + cam.panY + cam.oy + K * (yy * c - z * s) * f, f };
 }
 interpEl.addEventListener('click', () => {
   if (justClosed(interpEl)) return;
@@ -1448,77 +1457,118 @@ function showPips(c, instant = false){
 }
 
 // ================= velas =================
-// Velas en 3D de verdad: cilindro de cera por caras, tapa fundida, gotas, candelero de laton con grosor.
-// Como objetos reales sobre la mesa, al girarla se ven desde otro lado; solo la llama mira a la camara.
-const LIGHT = 112 * D2R;   // luz fija, de frente e izquierda: el sombreado no cambia al girar la mesa
-const shade = phi => .3 + .7 * Math.max(0, Math.cos(phi - LIGHT));
-// cara vertical de ancho w y alto h, con su pie en (px, py) a altura z, girada rotz grados alrededor del eje vertical
-const face = (w, h, px, py, z, rotz, css) =>
-  `<i style="width:${w}px;height:${h}px;transform:translate3d(${px - w / 2}px,${py - h}px,${z}px) rotateZ(${rotz}deg) rotateX(-90deg);${css}"></i>`;
-const disc = (rad, cx, cy, z, css) => `<b style="width:${rad * 2}px;height:${rad * 2}px;transform:translate3d(${cx - rad}px,${cy - rad}px,${z}px);${css}"></b>`;
-function ring(n, rad, h, cx, cy, z, paint){
-  let out = '';
-  const w = 2 * rad * Math.tan(Math.PI / n) * 1.06;
-  for (let i = 0; i < n; i++){
-    const phi = i * 2 * Math.PI / n;
-    out += face(w, h, cx + rad * Math.cos(phi), cy + rad * Math.sin(phi), z, phi / D2R + 90, paint(phi));
-  }
-  return out;
-}
-function buildCandle(c){
-  const { x, y, H, R } = c, DISH = 5;
-  const dark = phi => `rgba(0,0,0,${((1 - shade(phi)) * .62).toFixed(3)})`;
-  // candelero: pared del plato, plato, aro y un poco de cera derramada
-  let html = ring(16, 27, DISH, x, y, 0, phi => `background:linear-gradient(${dark(phi)},${dark(phi)}),linear-gradient(to top,#6d4f1c,#caa04f 60%,#f0d48a)`);
-  html += disc(27, x, y, DISH, 'background:radial-gradient(circle at 42% 38%,#f6dd96,#c99c46 42%,#8a6526 72%,#4f3913);box-shadow:inset 0 0 0 1.2px rgba(255,236,180,.55)');
-  html += face(13, 13, x + 32, y, 1, 0, 'border-radius:50%;border:2.6px solid #b88c3c;box-shadow:inset 0 0 2px rgba(0,0,0,.6)');
-  html += disc(16, x + 2, y + 1, DISH + .3, 'background:radial-gradient(circle at 45% 40%,#fbf3e2,#e2d4b6 70%,#cdbd99)');
-  // cera: cara iluminada por la llama cerca de la tapa (luz a traves de la cera)
-  html += ring(14, R, H, x, y, DISH, phi => `background:linear-gradient(${dark(phi)},${dark(phi)}),linear-gradient(to top,#d6c9ad 0%,#ece1ca 40%,#fbf3e2 76%,#ffe0a8 94%,#ffc676 100%)`);
-  // gotas que resbalan desde el borde
-  c.drips.forEach(([deg, len, w]) => {
-    const phi = deg * D2R;
-    html += face(w, len, x + (R + .7) * Math.cos(phi), y + (R + .7) * Math.sin(phi), DISH + H - len, deg + 90,
-      `border-radius:1px 1px ${w}px ${w}px;background:linear-gradient(to top,#efe3c9,#fff7e8);box-shadow:inset 0 -2px 2px rgba(150,120,80,.25)`);
-  });
-  // tapa con charco de cera fundida, pabilo en cruz con brasa y resplandor para verla desde arriba
-  html += disc(R, x, y, DISH + H, 'background:radial-gradient(circle,#ffd58a 0 34%,#f4e3bf 62%,#eadcbc 100%)');
-  html += face(1.5, 8, x, y, DISH + H, 0, 'background:linear-gradient(to top,#1a120a 70%,#ff6a2a)');
-  html += face(1.5, 8, x, y, DISH + H, 90, 'background:linear-gradient(to top,#1a120a 70%,#ff6a2a)');
-  html += disc(20, x, y, DISH + H + .4, 'background:radial-gradient(circle,rgba(255,205,125,.55),rgba(255,180,90,0) 70%)');
-  html += `<div class="flw"><div class="fl"></div></div>`;
-  const el = document.createElement('div'); el.className = 'c3d'; el.innerHTML = html;
-  return el;
-}
+// ================= velas: geometria 3D proyectada en el lienzo =================
+// Cada vela es geometria real (anillos de puntos sobre la mesa) proyectada con la misma camara que la mesa:
+// al girarla se ve desde otro lado y con la perspectiva correcta. En el DOM eran ~140 capas compuestas y el
+// rendimiento caia de 59 a 19 fps; aqui es un solo lienzo. El cuerpo se repinta solo cuando cambia la camara.
+const LIGHT = 112 * D2R;   // luz fija de frente e izquierda: el sombreado pertenece a la vela, no a la pantalla
+const shade = phi => .32 + .68 * Math.max(0, Math.cos(phi - LIGHT));
+const DISH = 5, DISH_R = 27, SEG = 22;
 const CANDLES = [
-  { x: 58, y: 64, H: 104, R: 12, drips: [[40, 34, 3.2], [150, 14, 2.4], [260, 22, 2.8]] },   // alta, con una gota larga
-  { x: 542, y: 64, H: 64, R: 13, drips: [[120, 30, 3.6], [200, 16, 2.6], [330, 40, 3.2], [20, 9, 2]] },   // gastada, cera derramada
+  { x: 58, y: 64, H: 104, R: 12, drips: [[40, 34, 3.2], [150, 14, 2.4], [100, 22, 2.8]] },               // alta, con una gota larga
+  { x: 542, y: 64, H: 64, R: 13, drips: [[120, 30, 3.6], [70, 16, 2.6], [30, 40, 3.2], [95, 9, 2]] },     // gastada, cera derramada
 ].map((c, id) => {
   const base = document.createElement('div'); base.className = 'cbase';
-  base.style.transform = `translate3d(${c.x - 22}px, ${c.y - 22}px, .4px)`;
-  const el = buildCandle(c);
-  table.append(base, el);
+  base.style.transform = `translate3d(${c.x - 22}px, ${c.y - 22}px, .4px)`; table.append(base);
   // cada llama tiene su propio pulso, y de vez en cuando una corriente la inclina
-  return { ...c, el, base, flw: el.querySelector('.flw'), fl: el.querySelector('.fl'), top: 180 - (c.H + 5), fz: c.H + 5 + 22,
-    seed: id * 7.3, gust: 0, gustDir: 1, nextGust: 4 + id * 5 };
+  const cv = document.createElement('canvas'); cv.className = 'cflame'; scene.appendChild(cv);
+  return { ...c, base, cv, cx2d: cv.getContext('2d'), seed: id * 7.3, gust: 0, gustDir: 1, nextGust: 4 + id * 5 };
 });
+// coloca el lienzo de la llama alrededor de su pabilo, con sitio para el halo, el polvo y las rafagas
+function placeFlameCanvas(c){
+  const s = projScale(c.x, c.y), d = Math.min(devicePixelRatio, 1.5), half = 120 * s + 16, up = 150 * s + 90, down = 70 * s + 10;
+  c.box = { left: c.tip.x - half, top: c.tip.y - up, w: half * 2, h: up + down };
+  c.cv.width = c.box.w * d; c.cv.height = c.box.h * d; c.cv.style.width = c.box.w + 'px'; c.cv.style.height = c.box.h + 'px';
+  c.cv.style.transform = `translate(${c.box.left}px, ${c.box.top}px)`;
+  c.cx2d.setTransform(d, 0, 0, d, -c.box.left * d, -c.box.top * d);   // se dibuja en coordenadas de escena
+}
 function projScale(x, y){
   const K = cam.k * cam.zoom, a = cam.yaw * D2R, yy = (x - TW / 2) * Math.sin(a) + (y - TH / 2) * Math.cos(a);
   return K * P / (P - K * yy * Math.sin(cam.theta * D2R));
 }
-// solo la llama mira a la camara; el resto de la vela es un objeto fijo sobre la mesa
-function updateCandles(){
-  CANDLES.forEach(c => {
-    c.flw.style.transform = `translate3d(${c.x - 7.5}px, ${c.y - 38}px, ${c.H + 5 + 6}px) rotateZ(${-cam.yaw}deg) rotateX(${-cam.theta}deg)`;   // de frente a la camara en giro e inclinacion
-    const f = tableToScreen(c.x, c.y, c.fz); c.sc = projScale(c.x, c.y); c.fx = f.x; c.fy = f.y;
+const rgb = (col, k = 1) => `rgb(${col.map(v => Math.min(255, Math.round(v * k))).join(',')})`;
+function ringPts(c, rad, z){
+  const out = [];
+  for (let i = 0; i < SEG; i++){ const a = i * 2 * Math.PI / SEG; out.push(tableToScreen(c.x + rad * Math.cos(a), c.y + rad * Math.sin(a), z)); }
+  return out;
+}
+function poly(g2, pts){ g2.beginPath(); pts.forEach((q, i) => i ? g2.lineTo(q.x, q.y) : g2.moveTo(q.x, q.y)); g2.closePath(); }
+// cilindro por caras, pintadas de lejos a cerca; cada cara con su sombreado y un degradado vertical
+function drawCylinder(g2, c, rad, z0, h, bottom, top, glow){
+  const lo = ringPts(c, rad, z0), hi = ringPts(c, rad, z0 + h), faces = [];
+  for (let i = 0; i < SEG; i++){ const j = (i + 1) % SEG; faces.push({ q: [lo[i], lo[j], hi[j], hi[i]], phi: (i + .5) * 2 * Math.PI / SEG, depth: lo[i].f + lo[j].f }); }
+  faces.sort((a, b) => a.depth - b.depth);
+  faces.forEach(fc => {
+    const k = shade(fc.phi), [a, b, cc, d] = fc.q;
+    const gr = g2.createLinearGradient((a.x + b.x) / 2, (a.y + b.y) / 2, (cc.x + d.x) / 2, (cc.y + d.y) / 2);
+    gr.addColorStop(0, rgb(bottom, k)); gr.addColorStop(.72, rgb(top, k)); gr.addColorStop(1, rgb(glow || top, k + .3));
+    poly(g2, fc.q); g2.fillStyle = gr; g2.fill(); g2.strokeStyle = gr; g2.lineWidth = .7; g2.stroke();   // el trazo tapa las costuras
   });
+  return hi;
+}
+function drawCandleBody(g2, c){
+  const s = projScale(c.x, c.y);
+  // candelero de laton: pared, plato con brillo, aro para el dedo y cera derramada
+  const rim = drawCylinder(g2, c, DISH_R, 0, DISH, [88, 62, 22], [214, 172, 86]);
+  const ctr = tableToScreen(c.x, c.y, DISH), rd = Math.max(...rim.map(q => Math.hypot(q.x - ctr.x, q.y - ctr.y)));
+  const dg = g2.createRadialGradient(ctr.x - rd * .25, ctr.y - rd * .15, 0, ctr.x, ctr.y, rd);
+  dg.addColorStop(0, '#f6dd96'); dg.addColorStop(.45, '#c99c46'); dg.addColorStop(.82, '#8a6526'); dg.addColorStop(1, '#4f3913');
+  poly(g2, rim); g2.fillStyle = dg; g2.fill(); g2.strokeStyle = 'rgba(255,236,180,.55)'; g2.lineWidth = 1; g2.stroke();
+  g2.strokeStyle = '#b88c3c'; g2.lineWidth = Math.max(1.2, 2.6 * s); g2.beginPath();
+  for (let i = 0; i <= 24; i++){ const t = i / 24 * 2 * Math.PI, q = tableToScreen(c.x + DISH_R + 5, c.y + 6 * Math.cos(t), 6 + 6 * Math.sin(t)); i ? g2.lineTo(q.x, q.y) : g2.moveTo(q.x, q.y); }
+  g2.stroke();
+  poly(g2, ringPts(c, c.R + 4, DISH + .3)); g2.fillStyle = 'rgba(242,232,210,.95)'; g2.fill();
+  // cera, con la luz de la llama atravesandola en lo alto
+  const top = drawCylinder(g2, c, c.R, DISH, c.H, [206, 192, 162], [250, 242, 224], [255, 212, 150]);
+  // gotas: solo las del lado que mira a la camara
+  const tc = tableToScreen(c.x, c.y, DISH + c.H);
+  c.drips.forEach(([deg, len, w]) => {
+    const a = deg * D2R, px = c.x + (c.R + .6) * Math.cos(a), py = c.y + (c.R + .6) * Math.sin(a);
+    const t1 = tableToScreen(px, py, DISH + c.H), t2 = tableToScreen(px, py, DISH + c.H - len);
+    if (t1.f < tc.f) return;
+    g2.strokeStyle = rgb([250, 241, 219], shade(a) + .12); g2.lineCap = 'round'; g2.lineWidth = w * s;
+    g2.beginPath(); g2.moveTo(t1.x, t1.y); g2.lineTo(t2.x, t2.y); g2.stroke();
+    g2.fillStyle = g2.strokeStyle; g2.beginPath(); g2.arc(t2.x, t2.y, w * s * .7, 0, 7); g2.fill();
+  });
+  // tapa con charco de cera fundida y pabilo curvado
+  const tr = Math.max(...top.map(q => Math.hypot(q.x - tc.x, q.y - tc.y)));
+  const pgr = g2.createRadialGradient(tc.x, tc.y, 0, tc.x, tc.y, tr);
+  pgr.addColorStop(0, '#ffd27e'); pgr.addColorStop(.5, '#f8e8c4'); pgr.addColorStop(1, '#e6d6b2');
+  poly(g2, top); g2.fillStyle = pgr; g2.fill();
+  const w1 = tableToScreen(c.x + 1.4, c.y, DISH + c.H + 8);
+  g2.strokeStyle = '#1d140b'; g2.lineWidth = Math.max(1, 1.6 * s); g2.lineCap = 'round';
+  g2.beginPath(); g2.moveTo(tc.x, tc.y); g2.quadraticCurveTo(tc.x, w1.y, w1.x, w1.y); g2.stroke();
+  g2.fillStyle = '#ff7a32'; g2.beginPath(); g2.arc(w1.x, w1.y, Math.max(.8, 1.1 * s), 0, 7); g2.fill();
+  c.tip = w1;
+}
+// llama: gota con nucleo blanco, cuerpo ambar y base azul; se inclina con el pulso y las rafagas
+function drawFlame(g2, c, n){
+  const s = projScale(c.x, c.y), tip = c.tip;
+  const h = 36 * s * (1 + n * .09 - c.gust * .1), w = 15 * s * (1 - c.gust * .12 + n * .04);
+  g2.save(); g2.translate(tip.x + c.gust * c.gustDir * 2.5 * s, tip.y + 2 * s); g2.rotate((n * 3 + c.gust * c.gustDir * 12) * D2R);
+  g2.beginPath(); g2.moveTo(0, 0);
+  g2.bezierCurveTo(w * .75, -h * .12, w * .42, -h * .66, 0, -h); g2.bezierCurveTo(-w * .42, -h * .66, -w * .75, -h * .12, 0, 0);
+  const gr = g2.createRadialGradient(0, -h * .26, 0, 0, -h * .34, h * .72);
+  gr.addColorStop(0, '#fffdf4'); gr.addColorStop(.24, '#ffeaa8'); gr.addColorStop(.58, '#ffb04a'); gr.addColorStop(1, 'rgba(255,120,30,0)');
+  g2.fillStyle = gr; g2.fill();
+  g2.fillStyle = 'rgba(110,150,255,.55)'; g2.beginPath(); g2.ellipse(0, -h * .08, w * .22, h * .08, 0, 0, 7); g2.fill();
+  g2.restore();
+  return { x: tip.x, y: tip.y - h * .45, s };
 }
 const clightEl = $('clight');
+let candlesDirty = true;
+function updateCandles(){ candlesDirty = true; }
 
-// ================= particulas: polvo en la luz de las velas y humo =================
+// ================= particulas: velas, polvo en su luz y humo =================
 const fx = {
-  cv: $('fx'), ctx: null, parts: [], motes: [], flare: 0, t: 0,
-  fit(){ const r = scene.getBoundingClientRect(), d = Math.min(devicePixelRatio, 1.5); this.cv.width = r.width * d; this.cv.height = r.height * d; this.ctx = this.cv.getContext('2d'); this.ctx.setTransform(d, 0, 0, d, 0, 0); },
+  // el cuerpo de las velas vive en su propio lienzo: se pinta al mover la camara y no se copia cada fotograma
+  cv: $('fx'), ctx: null, body: $('fxbody'), bctx: null, parts: [], flare: 0, t: 0,
+  fit(){
+    const r = scene.getBoundingClientRect(), d = Math.min(devicePixelRatio, 1.5);
+    for (const cv of [this.cv, this.body]){ cv.width = r.width * d; cv.height = r.height * d; }
+    this.ctx = this.cv.getContext('2d'); this.ctx.setTransform(d, 0, 0, d, 0, 0);
+    this.bctx = this.body.getContext('2d'); this.bctx.setTransform(d, 0, 0, d, 0, 0); candlesDirty = true;
+  },
   smoke(x, y, n){
     if (reduced) return;
     for (let i = 0; i < n; i++) this.parts.push({ x: x + (Math.random() - .5) * 20, y, vx: (Math.random() - .5) * .35, vy: -.5 - Math.random() * .7, r: 6 + Math.random() * 8, life: 1, dl: .006 + Math.random() * .006 });
@@ -1526,45 +1576,51 @@ const fx = {
   step(){
     const g2 = this.ctx; if (!g2) return;
     this.t += 1 / 60;
-    const r = scene.getBoundingClientRect(); g2.clearRect(0, 0, r.width, r.height);
+    const r = scene.getBoundingClientRect();
+    if (candlesDirty){ this.bctx.clearRect(0, 0, r.width, r.height); CANDLES.forEach(c => { drawCandleBody(this.bctx, c); placeFlameCanvas(c); }); candlesDirty = false; }
+    CANDLES.forEach(c => { c.cx2d.save(); c.cx2d.setTransform(1, 0, 0, 1, 0, 0); c.cx2d.clearRect(0, 0, c.cv.width, c.cv.height); c.cx2d.restore(); });
     const lit = .82 + .12 * Math.sin(this.t * 7.3) * Math.sin(this.t * 3.1 + 1) + .06 * Math.sin(this.t * 17) + this.flare * .5;
-    // halo de cada llama: luz aditiva en pantalla (en 3D el plano de la vela cortaba el halo contra la madera)
-    g2.globalCompositeOperation = 'lighter';
     CANDLES.forEach(c => {
-      // llama: ruido suave propio + rafaga ocasional que la inclina y deja una voluta de humo
       if (this.t > c.nextGust){ c.gust = 1; c.gustDir = Math.random() < .5 ? -1 : 1; c.nextGust = this.t + 7 + Math.random() * 9; }
       c.gust *= .975;
-      const n = Math.sin(this.t * 6.1 + c.seed) * .5 + Math.sin(this.t * 13.7 + c.seed * 2) * .3 + Math.sin(this.t * 2.3 + c.seed) * .2;
-      if (!reduced) c.fl.style.transform = `translateX(${c.gust * c.gustDir * 2.5}px) skewX(${n * 4 + c.gust * c.gustDir * 14}deg) scale(${1 - c.gust * .12 + n * .04}, ${1 + n * .09 - c.gust * .1})`;
-      if (c.gust > .9 && Math.random() < .3){ const q = { x: c.fx, y: c.fy - 10 * c.sc }; this.parts.push({ x: q.x, y: q.y, vx: c.gustDir * .3, vy: -.4, r: 2, life: .8, dl: .01 }); }
-      const f = { x: c.fx, y: c.fy }, rad = 70 * c.sc * (1 + this.flare * .6) * (1 + n * .05);
-      const gr = g2.createRadialGradient(f.x, f.y, 0, f.x, f.y, rad);
-      gr.addColorStop(0, `rgba(255,205,125,${.42 * lit})`); gr.addColorStop(.45, `rgba(255,160,70,${.12 * lit})`); gr.addColorStop(1, 'rgba(255,150,60,0)');
-      g2.fillStyle = gr; g2.beginPath(); g2.arc(f.x, f.y, rad, 0, 7); g2.fill();
+      const n = reduced ? 0 : Math.sin(this.t * 6.1 + c.seed) * .5 + Math.sin(this.t * 13.7 + c.seed * 2) * .3 + Math.sin(this.t * 2.3 + c.seed) * .2;
+      const f = drawFlame(c.cx2d, c, n); c.fx = f.x; c.fy = f.y; c.sc = f.s; c.n = n;
+      if (c.gust > .9 && Math.random() < .3) this.parts.push({ x: f.x, y: f.y - 18 * f.s, vx: c.gustDir * .3, vy: -.4, r: 2, life: .8, dl: .01 });
     });
-    g2.globalCompositeOperation = 'source-over';
+    // halo: luz aditiva alrededor de cada llama
+    CANDLES.forEach(c => {
+      const g2 = c.cx2d; g2.globalCompositeOperation = 'lighter';
+      const rad = 70 * c.sc * (1 + this.flare * .6) * (1 + c.n * .05), gr = g2.createRadialGradient(c.fx, c.fy, 0, c.fx, c.fy, rad);
+      gr.addColorStop(0, `rgba(255,205,125,${.42 * lit})`); gr.addColorStop(.45, `rgba(255,160,70,${.12 * lit})`); gr.addColorStop(1, 'rgba(255,150,60,0)');
+      g2.fillStyle = gr; g2.beginPath(); g2.arc(c.fx, c.fy, rad, 0, 7); g2.fill();
+      g2.globalCompositeOperation = 'source-over';
+    });
     // polvo dorado flotando sobre cada llama
     if (!reduced) CANDLES.forEach((c, ci) => {
-      const f = { x: c.fx, y: c.fy - 6 * c.sc };
+      const g2 = c.cx2d;
       for (let i = 0; i < 9; i++){
         const ph = i * 1.7 + ci * 3.1, up = ((this.t * .08 + i / 9) % 1);
-        const x = f.x + Math.sin(this.t * .7 + ph) * 16 * (1 + up), y = f.y - up * 70;
         g2.globalAlpha = Math.sin(Math.PI * up) * .7; g2.fillStyle = '#F2D38A';
-        g2.beginPath(); g2.arc(x, y, .8 + (i % 3) * .45, 0, 7); g2.fill();
+        g2.beginPath(); g2.arc(c.fx + Math.sin(this.t * .7 + ph) * 16 * (1 + up), c.fy - 6 * c.sc - up * 70, .8 + (i % 3) * .45, 0, 7); g2.fill();
       }
+      g2.globalAlpha = 1;
     });
+    // el lienzo grande solo trabaja mientras hay humo
+    if (this.parts.length || this.dirtyBig){ g2.clearRect(0, 0, r.width, r.height); this.dirtyBig = this.parts.length > 0; }
     // humo: se expande, deriva y se apaga
-    this.parts = this.parts.filter(p => (p.life -= p.dl) > 0);
-    this.parts.forEach(p => {
-      p.x += p.vx + Math.sin(this.t * 2 + p.y * .05) * .25; p.y += p.vy; p.r += .22;
-      const gr = g2.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
-      gr.addColorStop(0, `rgba(215,205,190,${.22 * p.life})`); gr.addColorStop(1, 'rgba(215,205,190,0)');
-      g2.globalAlpha = 1; g2.fillStyle = gr; g2.beginPath(); g2.arc(p.x, p.y, p.r, 0, 7); g2.fill();
+    this.parts = this.parts.filter(q => (q.life -= q.dl) > 0);
+    this.parts.forEach(q => {
+      q.x += q.vx + Math.sin(this.t * 2 + q.y * .05) * .25; q.y += q.vy; q.r += .22;
+      const gr = g2.createRadialGradient(q.x, q.y, 0, q.x, q.y, q.r);
+      gr.addColorStop(0, `rgba(215,205,190,${.22 * q.life})`); gr.addColorStop(1, 'rgba(215,205,190,0)');
+      g2.globalAlpha = 1; g2.fillStyle = gr; g2.beginPath(); g2.arc(q.x, q.y, q.r, 0, 7); g2.fill();
     });
     g2.globalAlpha = 1;
     // la luz de las velas respira; al cerrar el circulo se aviva y vuelve a calmarse
     this.flare *= .985;
-    clightEl.style.opacity = lit; table.style.setProperty('--lit', lit.toFixed(3));
+    // solo los dos charcos de luz respiran: una variable en toda la mesa recalculaba el estilo de cada carta (~10 fps)
+    // la luz del pano queda fija: animarla repintaba el pano entero cada fotograma (de 56 a 29 fps)
+    CANDLES.forEach(c => { c.base.style.opacity = lit; });
   },
 };
 new ResizeObserver(() => fx.fit()).observe(scene);
