@@ -295,6 +295,8 @@ header{position:relative}
 .moon-btn{position:absolute;right:64px;top:calc(env(safe-area-inset-top,0px) + 12px);width:44px;height:44px;border-radius:50%;padding:0;cursor:pointer;
   display:grid;place-items:center;background:none;border:0}
 .moon-btn svg{width:24px;height:24px;filter:drop-shadow(0 0 6px rgba(200,215,255,.35))}
+.piece.card::after{content:"";position:absolute;inset:-24px}
+.piece.card.noear::after{display:none}
 </style>
 </head>
 <body>
@@ -404,20 +406,22 @@ const SPREADS = [
 
 // ================= camara =================
 const scene = document.getElementById('scene'), table = document.getElementById('table');
-const cam = { theta: 38, tTheta: 38, yaw: 0, tYaw: 0, k: 1, oy: 0, zoom: 1, tZoom: 1, panX: 0, panY: 0, tPanX: 0, tPanY: 0 };
+const cam = { theta: 30, tTheta: 30, yaw: 0, tYaw: 0, k: 1, oy: 0, zoom: 1, tZoom: 1, panX: 0, panY: 0, tPanX: 0, tPanY: 0 };
 // el encuadre se calcula con la inclinacion de reposo: inclinar la mesa ya no cambia el zoom
-const BASE_THETA = 38;
+const BASE_THETA = 30;   // en movil vertical la mesa llena mas alto y las cartas se leen mejor
 function fitCam(){
   const r = scene.getBoundingClientRect(), th = BASE_THETA * D2R, s = Math.sin(th), c = Math.cos(th);
+  // el ancho se ajusta al contenido del pano (no al marco de madera): el marco puede recortarse un poco en los lados
+  const CONTENT_W = TW - 44;
   let k = 1;
-  for (let i = 0; i < 5; i++){
+  for (let i = 0; i < 6; i++){
     const A = k * TH / 2, bottom = A * c * P / (P - A * s), top = A * c * P / (P + A * s);
-    const kh = k * (r.height - 70) / (bottom + top), kw = (r.width - 24) / (TW * P / (P - A * s));
+    const kh = k * (r.height - 24) / (bottom + top), kw = (r.width - 8) / (CONTENT_W * P / (P - A * s));
     k = Math.min(kh, kw, 1.5);
   }
-  const A = k * TH / 2;
-  // la mesa arranca justo bajo la guia; el hueco sobrante queda abajo, no arriba
-  cam.k = k; cam.oy = A * c * P / (P + A * s) - r.height / 2 + 56;
+  const A = k * TH / 2, bottom = A * c * P / (P - A * s), top = A * c * P / (P + A * s);
+  // centrada en el alto disponible: sin la guia de arriba ya no hace falta pegarla al borde superior
+  cam.k = k; cam.oy = (top - bottom) / 2;
 }
 function applyCam(){
   const K = cam.k * cam.zoom, ox = cam.panX, oy = cam.panY + cam.oy;
@@ -1772,7 +1776,7 @@ function suitMark(c){
   const P2 = fx.parts, rs = scene.getBoundingClientRect(), b = c.el.getBoundingClientRect();
   const bx = b.left - rs.left, by = b.top - rs.top, rnd = (a, z) => a + Math.random() * (z - a);
   if (c.data.suit === 'bastos') for (let i = 0; i < 22; i++)
-    P2.push({ k: 'ember', x: bx + rnd(.1, .9) * b.width, y: by + rnd(.55, 1) * b.height, vx: rnd(-.4, .4), vy: rnd(-2.4, -1), r: rnd(1.2, 2.4), life: 1, dl: rnd(.012, .022) });
+    P2.push({ k: 'ember', x: Math.random() < .5 ? bx - rnd(2, 12) : bx + b.width + rnd(2, 12), y: by + rnd(.3, 1) * b.height, vx: rnd(-.4, .4), vy: rnd(-2.4, -1), r: rnd(1.2, 2.4), life: 1, dl: rnd(.012, .022) });
   else if (c.data.suit === 'copas') [0, 1, 2].forEach(i =>
     P2.push({ k: 'ring', cx: c.x, cy: c.y, r0: c.hw * .9, r1: c.hw * 3.4, life: 1 + i * .35, dl: .014 }));
   else if (c.data.suit === 'espadas'){
@@ -1781,7 +1785,7 @@ function suitMark(c){
   }
   else if (c.data.suit === 'oros') for (let i = 0; i < 26; i++){
     const a = rnd(0, Math.PI * 2), sp = rnd(.6, 1.6);
-    P2.push({ k: 'dust', x: c.x + Math.cos(a) * c.hw * .6, y: c.y + Math.sin(a) * c.hh * .6, z: 2, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, vz: rnd(.3, .9), r: rnd(1, 2.2), life: 1, dl: rnd(.012, .02) });
+    P2.push({ k: 'dust', x: c.x + Math.cos(a) * c.hw * 1.15, y: c.y + Math.sin(a) * c.hh * 1.08, z: 2, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, vz: rnd(.3, .9), r: rnd(1, 2.2), life: 1, dl: rnd(.012, .02) });
   }
 }
 
