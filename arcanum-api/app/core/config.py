@@ -62,6 +62,16 @@ class Settings(BaseSettings):
     ORACLE_SYSTEM_PROMPT: Optional[str] = None
     # Oráculo IA (Groq — free tier, sin cuota diaria estricta)
     GROQ_API_KEY: Optional[str] = None
+    # Claves ADICIONALES, separadas por comas, para repartir las llamadas.
+    #
+    # Medido el 29-sep-2026: el system prompt del horoscopo son 4.360 tokens y
+    # el plan gratuito da 8.000 por MINUTO, asi que con una sola clave el techo
+    # real es ~1 horoscopo por minuto. Tres claves lo suben a ~3, que es la
+    # unica palanca que sube el techo en vez de bajar el coste por llamada.
+    # Decision del 28-sep-2026.
+    #
+    # Vacio por defecto: quien tenga una sola clave no nota nada.
+    GROQ_API_KEYS: Optional[str] = None
     ORACLE_MODEL_FREE: str = "openai/gpt-oss-120b"
     ORACLE_MODEL_PREMIUM: str = "openai/gpt-oss-120b"
     CLAUDE_MAX_TOKENS: int = 1024

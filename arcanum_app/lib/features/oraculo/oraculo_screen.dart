@@ -20,6 +20,8 @@ import 'data/tarot_hint.dart';
 import 'tarot_learn.dart';
 import 'widgets/tarot_card.dart';
 import '../../shared/widgets/ai_output.dart';
+import '../../shared/widgets/texto_con_jerga.dart';
+import '../../shared/widgets/precio_lectura.dart';
 
 /// Quien lee las cartas. No son dos actividades: las dos TIRAN, y lo que
 /// cambia es de donde sale el significado.
@@ -505,9 +507,18 @@ class _OracleViewState extends ConsumerState<_OracleView> {
                             colors: [Color(0xFF332D38), Color(0xFF1D1822)],
                           ),
                   ),
-                  child: Text(
-                    s.$2,
-                    style: ArcanumSelection.textStyle(sel, size: 14),
+                  // El precio va DEBAJO del nombre y no al lado: en un
+                  // Wrap de tres tiradas, alargar la etiqueta las tiraba de
+                  // linea en pantallas estrechas.
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        s.$2,
+                        style: ArcanumSelection.textStyle(sel, size: 14),
+                      ),
+                      PrecioTirada(s.$1, seleccionada: sel),
+                    ],
                   ),
                 ),
               ),
@@ -641,6 +652,9 @@ class _OracleViewState extends ConsumerState<_OracleView> {
             loading: _iaLoading,
             onPressed: _askIa,
           ),
+          // Lo que va a costar, ANTES de pulsar. Cobrar sin avisar es lo que
+          // no se hace, y la Cruz Celta cuesta el triple que una de tres.
+          AvisoPrecioInterpretacion(_spread),
           if (_iaError != null) ...[
             const SizedBox(height: 14),
             Text(
@@ -659,7 +673,7 @@ class _OracleViewState extends ConsumerState<_OracleView> {
                     child: AiOutput(
                       text: _iaReply!,
                       surface: 'oraculo',
-                      child: Text(_iaReply!, style: ArcanumText.body(16)),
+                      child: TextoConJerga(_iaReply!),
                     ),
                   ),
                 ),

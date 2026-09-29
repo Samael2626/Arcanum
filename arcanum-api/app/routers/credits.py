@@ -5,6 +5,8 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.domain.reading_cost import coste_en_creditos
+from app.domain.spreads import list_spreads
 from app.core.security import get_current_user
 from app.db.session import get_db
 from app.domain.entities import UserEntity
@@ -82,7 +84,11 @@ def get_usage_today(
     )
     limites = _limites(current_user)
     filas = db.execute(
-        select(UsageOperation.action, func.count(UsageOperation.id))
+        # SUMA CREDITOS, no cuenta filas. Desde el 28-sep-2026 una lectura
+        # puede costar mas de uno --la Cruz Celta vale 3-- y contar filas
+        # diria que queda cupo donde `_charge` ya esta cobrando del saldo.
+        select(UsageOperation.action,
+               func.coalesce(func.sum(UsageOperation.credits_cost), 0))
         .where(
             UsageOperation.user_id == current_user.id,
             UsageOperation.action.in_(tuple(limites)),
@@ -104,6 +110,19 @@ def get_usage_today(
             limite_diario=limite,
             usado=usado,
             restante=restante,
-            siguiente_gasta_credito=restante == 0,
+            # La barata de cada accion: si ni siquiera UN credito cabe en lo
+            # que queda, la siguiente sale del saldo seguro. Una tirada mas
+            # cara puede gastar credito aun con `restante` por encima de cero,
+            # y eso lo resuelve el cliente con `coste_en_creditos`, que es
+            # quien sabe cuantas cartas va a pedir.
+            siguiente_gasta_credito=restante < 1,
         )
-    return UsageTodayResponse(balance=balance, acciones=acciones)
+    # El precio de cada tirada sale del registro, no de una lista escrita
+    # aqui: si manana entra una tirada de cinco cartas, aparece sola.
+    costes = {
+        spread.slug: coste_en_creditos(spread.card_count)
+        for spread in list_spreads()
+    }
+    return UsageTodayResponse(
+        balance=balance, acciones=acciones, coste_por_tirada=costes
+    )

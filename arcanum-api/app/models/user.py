@@ -45,3 +45,8 @@ class User(Base):
     credit_ledger = relationship("CreditLedger", back_populates="user", cascade="all, delete-orphan")
     content_reports = relationship("ContentReport", back_populates="user", cascade="all, delete-orphan")
     user_consents = relationship("UserConsent", back_populates="user", cascade="all, delete-orphan")
+    sendero_progress = relationship(
+        "SenderoProgress",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )

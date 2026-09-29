@@ -47,7 +47,7 @@ class OnboardingScreen extends ConsumerWidget {
       }
       notifier.setSensitiveDataConsent(false);
       await notifier.finishWithoutSensitiveData();
-      if (context.mounted) context.go('/hoy');
+      if (context.mounted) context.go('/sendero');
     }
 
     Widget stepView() {
@@ -83,7 +83,7 @@ class OnboardingScreen extends ConsumerWidget {
                 }
                 return;
               }
-              if (context.mounted) context.go('/hoy');
+              if (context.mounted) context.go('/sendero');
             }
           : () => notifier.next();
 

@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ARCANUM · Sendero contextual</title>
+  <style>
+    @font-face {
+      font-family: "Cormorant";
+      src: url("../arcanum_app/assets/fonts/CormorantGaramond-600.ttf") format("truetype");
+      font-weight: 600;
+    }
+
+    @font-face {
+      font-family: "Crimson";
+      src: url("../arcanum_app/assets/fonts/CrimsonPro-400.ttf") format("truetype");
+      font-weight: 400;
+    }
+
+    @font-face {
+      font-family: "Crimson";
+      src: url("../arcanum_app/assets/fonts/CrimsonPro-600.ttf") format("truetype");
+      font-weight: 600;
+    }
+
+    :root {
+      --bg: #09080b;
+      --surface: #17131a;
+      --surface-high: #211b24;
+      --gold: #b79855;
+      --ivory: #eee7d8;
+      --muted: #a79d90;
+      --burgundy: #3a151d;
+      --line: rgba(183, 152, 85, .28);
+      --display: "Cormorant", Georgia, serif;
+      --body: "Crimson", Georgia, serif;
+      --shadow: 0 32px 90px rgba(0, 0, 0, .62);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ivory);
+      background:
+        radial-gradient(circle at 78% 28%, rgba(99, 61, 74, .23), transparent 33rem),
+        repeating-linear-gradient(92deg, rgba(255,255,255,.012) 0 1px, transparent 1px 4px),
+        var(--bg);
+      font-family: var(--body);
+    }
+
+    button { font: inherit; }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(260px, 390px) minmax(420px, 1fr);
+    }
+
+    .editorial {
+      position: relative;
+      overflow: hidden;
+      min-height: 100vh;
+      border-right: 1px solid var(--line);
+      background: #101015;
+    }
+
+    .editorial img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 25% center;
+      filter: sepia(.3) saturate(.65) contrast(1.08) brightness(.58);
+      transform: scale(1.035);
+    }
+
+    .editorial::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(8,7,10,.08), rgba(8,7,10,.4) 46%, rgba(8,7,10,.96));
+    }
+
+    .editorial-copy {
+      position: absolute;
+      z-index: 1;
+      left: clamp(24px, 4vw, 56px);
+      right: 28px;
+      bottom: 42px;
+    }
+
+    .eyebrow {
+      color: var(--gold);
+      font-family: var(--body);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+    }
+
+    .editorial h1 {
+      max-width: 340px;
+      margin: 10px 0 14px;
+      font-family: var(--display);
+      font-size: clamp(48px, 7vw, 82px);
+      font-weight: 600;
+      line-height: .82;
+      letter-spacing: -.045em;
+    }
+
+    .editorial p {
+      max-width: 330px;
+      margin: 0;
+      color: rgba(238, 231, 216, .73);
+      font-size: 17px;
+      line-height: 1.45;
+    }
+
+    .stage {
+      display: grid;
+      grid-template-columns: minmax(320px, 400px) minmax(210px, 330px);
+      gap: clamp(30px, 5vw, 76px);
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 42px;
+    }
+
+    .phone {
+      position: relative;
+      width: min(100%, 390px);
+      height: min(820px, calc(100vh - 84px));
+      min-height: 690px;
+      overflow: hidden;
+      border: 1px solid rgba(238, 231, 216, .2);
+      border-radius: 34px;
+      background:
+        radial-gradient(circle at 50% 4%, rgba(86, 54, 70, .29), transparent 17rem),
+        #0c0a0e;
+      box-shadow: var(--shadow), inset 0 0 0 7px #050507;
+    }
+
+    .phone::before {
+      content: "";
+      position: absolute;
+      z-index: 20;
+      top: 11px;
+      left: 50%;
+      width: 92px;
+      height: 20px;
+      border-radius: 20px;
+      background: #050507;
+      transform: translateX(-50%);
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: none;
+      overflow: hidden;
+      animation: reveal .42s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    .screen.active { display: block; }
+
+    @keyframes reveal {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .appbar {
+      position: sticky;
+      z-index: 4;
+      top: 0;
+      height: 74px;
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      padding: 0 22px 13px;
+      border-bottom: 1px solid rgba(183, 152, 85, .14);
+      background: rgba(12, 10, 14, .91);
+      backdrop-filter: blur(16px);
+    }
+
+    .appbar-title {
+      font-family: var(--display);
+      font-size: 26px;
+      letter-spacing: -.02em;
+    }
+
+    .exit {
+      min-width: 48px;
+      min-height: 44px;
+      padding: 9px 12px;
+      border: 0;
+      color: var(--gold);
+      background: transparent;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .exit:hover, .exit:focus-visible { color: var(--ivory); outline: 1px solid var(--gold); }
+
+    .scroll {
+      height: calc(100% - 74px);
+      overflow: auto;
+      padding: 24px 20px 42px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--gold) transparent;
+    }
+
+    .brand {
+      margin-bottom: 22px;
+      text-align: center;
+    }
+
+    .brand-mark {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--gold);
+      font-size: 25px;
+    }
+
+    .brand-name {
+      font-family: var(--display);
+      font-size: 27px;
+      letter-spacing: .17em;
+    }
+
+    .brand-subtitle { color: var(--muted); font-size: 13px; letter-spacing: .08em; }
+
+    .summary {
+      position: relative;
+      margin: 0 0 18px;
+      padding: 23px 20px 21px;
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(58,21,29,.34), rgba(23,19,26,.88));
+    }
+
+    .summary::before, .summary::after {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-color: var(--gold);
+    }
+
+    .summary::before { left: -1px; top: -1px; border-left: 1px solid; border-top: 1px solid; }
+    .summary::after { right: -1px; bottom: -1px; border-right: 1px solid; border-bottom: 1px solid; }
+
+    .label {
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .18em;
+    }
+
+    .summary h2 {
+      margin: 9px 0 5px;
+      font-family: var(--display);
+      font-size: 25px;
+      line-height: 1;
+    }
+
+    .summary p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.35; }
+
+    .journey {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 32px 1fr auto;
+      gap: 13px;
+      align-items: center;
+      margin: 0 0 10px;
+      padding: 15px 14px;
+      border: 0;
+      border-left: 1px solid rgba(183, 152, 85, .18);
+      color: var(--ivory);
+      background: rgba(31, 25, 34, .62);
+      text-align: left;
+      cursor: pointer;
+      transition: background .2s ease, border-color .2s ease, transform .2s ease;
+    }
+
+    .journey:nth-of-type(even) { margin-left: 9px; width: calc(100% - 9px); }
+    .journey:hover, .journey:focus-visible { background: var(--surface-high); border-color: var(--gold); transform: translateX(2px); outline: 0; }
+    .journey-symbol { color: var(--gold); font-size: 21px; text-align: center; }
+    .journey strong { display: block; font-family: var(--display); font-size: 20px; line-height: 1; }
+    .journey small { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+    .chevron { color: var(--muted); font-size: 20px; }
+
+    .cielo {
+      height: 100%;
+      padding: 88px 24px 30px;
+      background:
+        linear-gradient(rgba(6,6,10,.58), rgba(6,6,10,.93)),
+        url("../arcanum_app/assets/tarot/la-estrella.webp") center 30% / cover;
+    }
+
+    .cielo .date { color: var(--gold); letter-spacing: .16em; font-size: 11px; }
+    .cielo h2 { margin: 16px 0 7px; font-family: var(--display); font-size: 48px; line-height: .9; }
+    .cielo p { max-width: 290px; color: rgba(238,231,216,.74); font-size: 16px; line-height: 1.45; }
+
+    .sky-data {
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      bottom: 31px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .sky-data div { padding: 14px 0; }
+    .sky-data div + div { padding-left: 16px; border-left: 1px solid var(--line); }
+    .sky-data span { display: block; color: var(--muted); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+    .sky-data strong { font-family: var(--display); font-size: 19px; }
+
+    .lesson-body {
+      height: calc(100% - 74px);
+      display: flex;
+      flex-direction: column;
+      padding: 21px 20px 28px;
+    }
+
+    .progress-label { color: var(--gold); font-size: 11px; letter-spacing: .16em; }
+    .progress-track { height: 2px; margin: 10px 0 26px; background: var(--surface-high); }
+    .progress-value { width: 33%; height: 100%; background: var(--gold); transition: width .35s ease; }
+
+    .lesson-card {
+      position: relative;
+      flex: 1;
+      padding: 27px 23px;
+      border: 1px solid var(--line);
+      background: linear-gradient(145deg, rgba(58,21,29,.34), var(--surface));
+    }
+
+    .lesson-symbol { color: var(--gold); font-size: 35px; }
+    .lesson-card h2 { margin: 22px 0 13px; font-family: var(--display); font-size: 38px; line-height: .94; }
+    .lesson-card p { margin: 0; color: rgba(238,231,216,.76); font-size: 18px; line-height: 1.48; }
+
+    .lesson-actions { display: grid; grid-template-columns: 1fr 1.65fr; gap: 10px; margin-top: 17px; }
+    .btn {
+      min-height: 48px;
+      border: 1px solid var(--line);
+      color: var(--ivory);
+      background: transparent;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-primary { border-color: var(--gold); color: #120e0b; background: var(--gold); }
+    .btn:hover, .btn:focus-visible { filter: brightness(1.14); outline: 1px solid var(--ivory); outline-offset: 2px; }
+
+    .real-app {
+      position: relative; height: 100%; overflow: hidden;
+      background: linear-gradient(180deg, rgba(7,7,12,.25), rgba(7,7,12,.94)),
+        url("../arcanum_app/assets/tarot/la-estrella.webp") center 24% / cover;
+    }
+    .real-appbar {
+      position: relative; z-index: 5; height: 76px; display: grid;
+      grid-template-columns: 48px 1fr auto; gap: 9px; align-items: end;
+      padding: 0 17px 13px; border-bottom: 1px solid var(--line);
+      background: rgba(9,8,12,.88); backdrop-filter: blur(14px);
+    }
+    .real-appbar button, .drawer button, .help-mark {
+      min-width: 44px; min-height: 44px; border: 0; color: var(--ivory);
+      background: transparent; cursor: pointer;
+    }
+    .menu-mark { font-size: 25px; }
+    .real-title { padding-bottom: 8px; font-family: var(--display); font-size: 25px; }
+    .credit-mark { padding-bottom: 9px; color: var(--gold); font-size: 12px; letter-spacing: .08em; }
+    .real-content { position: relative; height: calc(100% - 76px); padding: 31px 22px; }
+    .real-content .date { color: var(--gold); font-size: 11px; letter-spacing: .16em; }
+    .real-content h2 { max-width: 280px; margin: 17px 0 9px; font-family: var(--display); font-size: 45px; line-height: .88; }
+    .real-content > p { max-width: 285px; margin: 0; color: rgba(238,231,216,.72); font-size: 16px; line-height: 1.42; }
+    .celestial-reading {
+      position: absolute; left: 22px; right: 22px; bottom: 28px;
+      padding: 19px 58px 18px 17px; border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line); background: rgba(13,10,15,.64);
+    }
+    .celestial-reading span { color: var(--gold); font-size: 10px; letter-spacing: .14em; }
+    .celestial-reading strong { display: block; margin-top: 5px; font-family: var(--display); font-size: 21px; }
+    .help-mark { position: absolute; right: 7px; top: 10px; color: var(--gold); font-size: 20px; }
+    .drawer {
+      position: absolute; z-index: 6; inset: 0 74px 0 0; padding: 35px 17px 24px;
+      border-right: 1px solid var(--line); background: #120f15;
+      box-shadow: 18px 0 50px rgba(0,0,0,.64);
+      transform: translateX(-105%); transition: transform .4s cubic-bezier(.16,1,.3,1);
+    }
+    .drawer.open { transform: none; }
+    .drawer-brand { margin: 4px 11px 24px; font-family: var(--display); font-size: 25px; letter-spacing: .13em; }
+    .drawer button { width: 100%; display: flex; gap: 14px; align-items: center; padding: 0 13px; text-align: left; }
+    .drawer button + button { margin-top: 5px; }
+    .drawer button span { width: 25px; color: var(--gold); text-align: center; }
+    .guided-target {
+      z-index: 9 !important; border-color: var(--gold) !important;
+      outline: 1px solid var(--ivory) !important; outline-offset: 4px;
+      background: #18131b !important;
+      box-shadow: 0 0 0 999px rgba(5,4,7,.72), 0 0 28px rgba(183,152,85,.5) !important;
+    }
+    .guide-card {
+      position: absolute; z-index: 12; left: 17px; right: 17px; bottom: 22px;
+      padding: 20px 19px 17px; border: 1px solid var(--gold);
+      background: #211b24; box-shadow: 0 20px 55px rgba(0,0,0,.68);
+    }
+    .guide-card.top { top: 98px; bottom: auto; }
+    .guide-step { color: var(--gold); font-size: 10px; letter-spacing: .17em; }
+    .guide-card h3 { margin: 7px 0 6px; font-family: var(--display); font-size: 27px; line-height: 1; }
+    .guide-card p { margin: 0; color: rgba(238,231,216,.74); font-size: 15px; line-height: 1.35; }
+    .guide-card footer { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
+    .guide-card footer button { min-height: 42px; border: 0; color: var(--muted); background: transparent; cursor: pointer; }
+    .guide-cue { color: var(--gold); font-size: 11px; letter-spacing: .06em; }
+    .help-reveal {
+      position: absolute; z-index: 11; right: 28px; bottom: 113px; width: 254px;
+      padding: 15px 16px; border-left: 1px solid var(--gold);
+      background: #241d27; box-shadow: 0 14px 36px rgba(0,0,0,.48);
+      font-size: 14px; line-height: 1.35;
+    }
+    .guide-finish { padding: 0 16px !important; border: 1px solid var(--gold) !important; color: #120e0b !important; background: var(--gold) !important; }
+
+    .veil {
+      position: absolute;
+      z-index: 6;
+      inset: 0;
+      display: grid;
+      align-items: end;
+      padding: 0 17px 24px;
+      background: rgba(5, 4, 7, .66);
+      backdrop-filter: blur(3px);
+    }
+
+    .invitation {
+      padding: 27px 23px 19px;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      background: #211b24;
+      box-shadow: 0 18px 50px rgba(0,0,0,.55);
+    }
+
+    .invitation h2 { margin: 0 0 8px; font-family: var(--display); font-size: 37px; }
+    .invitation p { margin: 0 0 22px; color: rgba(238,231,216,.74); font-size: 17px; line-height: 1.4; }
+    .invitation .btn-primary { width: 100%; }
+    .invitation-secondary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 7px; }
+    .invitation-secondary button { min-height: 44px; border: 0; color: var(--muted); background: transparent; cursor: pointer; }
+    .invitation-secondary button:hover { color: var(--ivory); }
+
+    .controls { align-self: center; }
+    .controls .eyebrow { margin-bottom: 14px; }
+    .controls h2 { max-width: 290px; margin: 0 0 9px; font-family: var(--display); font-size: 37px; line-height: .95; }
+    .controls > p { margin: 0 0 27px; color: var(--muted); font-size: 15px; line-height: 1.45; }
+
+    .state-nav { display: grid; gap: 2px; border-top: 1px solid var(--line); }
+    .state-nav button {
+      position: relative;
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      gap: 13px;
+      align-items: baseline;
+      min-height: 59px;
+      padding: 16px 4px;
+      border: 0;
+      border-bottom: 1px solid rgba(183,152,85,.14);
+      color: var(--muted);
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .state-nav button span:first-child { color: rgba(183,152,85,.52); font-size: 13px; }
+    .state-nav button strong { color: inherit; font-weight: 600; }
+    .state-nav button.active { color: var(--ivory); }
+    .state-nav button.active::after { content: ""; position: absolute; right: 0; bottom: -1px; width: 38%; height: 1px; background: var(--gold); }
+    .state-nav button.active span:first-child { color: var(--gold); }
+
+    .status {
+      margin-top: 24px;
+      padding-left: 14px;
+      border-left: 1px solid var(--gold);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .status strong { color: var(--ivory); }
+
+    @media (max-width: 980px) {
+      .shell { grid-template-columns: 1fr; }
+      .editorial { min-height: 440px; border-right: 0; border-bottom: 1px solid var(--line); }
+      .stage { min-height: auto; grid-template-columns: minmax(320px, 390px) minmax(220px, 300px); padding: 42px 24px; }
+      .phone { height: 760px; }
+    }
+
+    @media (max-width: 700px) {
+      .editorial { height: 124px; min-height: 124px; }
+      .editorial-copy { bottom: 17px; }
+      .editorial h1 { margin: 3px 0 0; font-size: 46px; }
+      .editorial p { display: none; }
+      .stage { grid-template-columns: 1fr; gap: 24px; padding: 18px 14px 28px; }
+      .phone { justify-self: center; order: 0; height: clamp(620px, calc(100dvh - 190px), 760px); min-height: 620px; }
+      .controls { max-width: 390px; justify-self: center; order: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="editorial" aria-label="El Ermitaño ilumina el Sendero">
+      <img src="../arcanum_app/assets/tarot/el-ermitano.webp" alt="Grabado del Ermitaño sosteniendo una lámpara">
+      <div class="editorial-copy">
+        <div class="eyebrow">ARCANUM · Primera experiencia</div>
+        <h1>Sendero</h1>
+        <p>Una guía que espera tu paso. Calma, opcional y siempre abierta para volver.</p>
+      </div>
+    </section>
+
+    <section class="stage">
+      <div class="phone" aria-live="polite">
+        <section class="screen active" data-screen="invite">
+          <div class="cielo">
+            <div class="date">CIELO DE HOY · 28 SEP</div>
+            <h2>La noche<br>se abre.</h2>
+            <p>Tu mapa natal y el cielo presente comparten una misma cámara.</p>
+            <div class="sky-data">
+              <div><span>Luna</span><strong>Gibosa creciente</strong></div>
+              <div><span>Hora</span><strong>Saturno</strong></div>
+            </div>
+          </div>
+          <div class="veil">
+            <div class="invitation">
+              <h2>Sendero</h2>
+              <p>Una guía breve para recorrer ARCANUM a tu ritmo. Puedes dejarla en cualquier momento.</p>
+              <button class="btn btn-primary" data-go="guide">Abrir Sendero</button>
+              <div class="invitation-secondary">
+                <button data-go="sky">Ahora no</button>
+                <button data-go="sky">No recordarlo</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" data-screen="hub">
+          <header class="appbar">
+            <span class="appbar-title">Sendero</span>
+            <button class="exit" data-go="sky">Salir</button>
+          </header>
+          <div class="scroll">
+            <div class="brand">
+              <span class="brand-mark">✦</span>
+              <div class="brand-name">ARCANUM</div>
+              <div class="brand-subtitle">UNA GUÍA QUE ESPERA TU PASO</div>
+            </div>
+            <article class="summary">
+              <div class="label">A TU LADO</div>
+              <h2>Aprende mientras recorres ARCANUM.</h2>
+              <p>Sendero ilumina una función a la vez. Tú decides cuándo seguir.</p>
+            </article>
+            <button class="journey" data-go="guide"><span class="journey-symbol">⌁</span><span><strong>Primer umbral</strong><small>Explora el menú sobre la app real</small></span><span class="chevron">›</span></button>
+            <button class="journey"><span class="journey-symbol">☼</span><span><strong>Cielo</strong><small>Carta natal, tránsitos y hora planetaria</small></span><span class="chevron">›</span></button>
+            <button class="journey"><span class="journey-symbol">☾</span><span><strong>Horóscopo</strong><small>Una lectura diaria sobre tu propia carta</small></span><span class="chevron">›</span></button>
+            <button class="journey"><span class="journey-symbol">▤</span><span><strong>Grimorio</strong><small>Diario privado y pasajes guardados</small></span><span class="chevron">›</span></button>
+            <button class="journey"><span class="journey-symbol">⌘</span><span><strong>Saber</strong><small>Plantas, correspondencias y obras clásicas</small></span><span class="chevron">›</span></button>
+            <button class="journey"><span class="journey-symbol">◇</span><span><strong>Oráculo</strong><small>Tarot, consulta y estudio del mazo</small></span><span class="chevron">›</span></button>
+            <button class="journey"><span class="journey-symbol">✧</span><span><strong>Fragmentos Arcanos</strong><small>Huella de una práctica real</small></span><span class="chevron">›</span></button>
+            <button class="journey"><span class="journey-symbol">♙</span><span><strong>Tu cuenta</strong><small>Perfil, permisos, privacidad y repetición</small></span><span class="chevron">›</span></button>
+          </div>
+        </section>
+
+        <section class="screen" data-screen="guide">
+          <div class="real-app">
+            <header class="real-appbar">
+              <button class="menu-mark" id="guide-menu" aria-label="Abrir menú">☰</button>
+              <span class="real-title" id="real-title">Cielo</span>
+              <span class="credit-mark">1 CRÉDITO</span>
+            </header>
+            <div class="real-content">
+              <div class="date" id="real-date">CIELO DE HOY · 28 SEP</div>
+              <h2 id="real-heading">La noche<br>se abre.</h2>
+              <p id="real-copy">Tu mapa natal y el cielo presente comparten una misma cámara.</p>
+              <article class="celestial-reading">
+                <span id="reading-label">HORA PLANETARIA</span>
+                <strong id="reading-value">Saturno · recogimiento</strong>
+                <button class="help-mark" id="guide-help" aria-label="Abrir ayuda">?</button>
+              </article>
+            </div>
+            <aside class="drawer" id="guide-drawer" aria-label="Menú principal">
+              <div class="drawer-brand">ARCANUM</div>
+              <button><span>☼</span>Cielo</button>
+              <button id="guide-horoscope"><span>☾</span>Horóscopo</button>
+              <button><span>▤</span>Grimorio</button>
+              <button><span>⌘</span>Saber</button>
+              <button><span>◇</span>Oráculo</button>
+            </aside>
+            <div class="help-reveal" id="help-reveal" hidden>Esta ayuda aclara el término que estás mirando. Puedes cerrarla y seguir en la misma pantalla.</div>
+            <article class="guide-card" id="guide-card">
+              <div class="guide-step" id="guide-step">ORIENTACIÓN · 1 DE 3</div>
+              <h3 id="guide-title">Todo empieza en el menú</h3>
+              <p id="guide-copy">Ábrelo. Sendero esperará tu gesto antes de continuar.</p>
+              <footer>
+                <button data-go="hub">Pausar</button>
+                <span class="guide-cue" id="guide-cue">TOCA EL FOCO DORADO</span>
+                <button class="guide-finish" id="guide-finish" hidden>Terminar</button>
+              </footer>
+            </article>
+          </div>
+        </section>
+
+        <section class="screen" data-screen="sky">
+          <div class="cielo">
+            <div class="date">CIELO DE HOY · 28 SEP</div>
+            <h2>La noche<br>se abre.</h2>
+            <p>Saliste de Sendero. Puedes volver cuando quieras desde el menú o desde Ajustes.</p>
+            <button class="btn btn-primary" data-go="hub" style="margin-top:18px;padding:0 20px">Volver a Sendero</button>
+            <div class="sky-data">
+              <div><span>Luna</span><strong>Gibosa creciente</strong></div>
+              <div><span>Hora</span><strong>Saturno</strong></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="controls">
+        <div class="eyebrow">Dirección del recorrido</div>
+        <h2>La app enseña mientras la usas.</h2>
+        <p>Abre Sendero y toca cada control iluminado. Tu gesto mueve la guía.</p>
+        <nav class="state-nav" aria-label="Estados del prototipo">
+          <button class="active" data-go="invite"><span>01</span><strong>Invitación opcional</strong></button>
+          <button data-go="guide"><span>02</span><strong>Guía sobre la app</strong></button>
+          <button data-go="hub"><span>03</span><strong>Biblioteca para repetir</strong></button>
+          <button data-go="sky"><span>04</span><strong>Salida hacia Cielo</strong></button>
+        </nav>
+        <div class="status"><strong>Prueba:</strong> menú → Horóscopo → ayuda <strong>?</strong>. Este HTML muestra la dirección UX; Flutter aún debe implementarla.</div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const screens = [...document.querySelectorAll('[data-screen]')];
+    const navigationButtons = [...document.querySelectorAll('[data-go]')];
+    const stateButtons = [...document.querySelectorAll('.state-nav [data-go]')];
+    const guideTargets = ['#guide-menu', '#guide-horoscope', '#guide-help'];
+    const guideContent = [
+      ['ORIENTACIÓN · 1 DE 3', 'Todo empieza en el menú', 'Ábrelo. Sendero esperará tu gesto antes de continuar.'],
+      ['ORIENTACIÓN · 2 DE 3', 'Entra al Horóscopo', 'Toca su nombre. Conocerás cada cámara dentro de ella.'],
+      ['ORIENTACIÓN · 3 DE 3', 'Las ayudas viven aquí', 'Toca el signo. Explica lo necesario sin detener tu práctica.'],
+      ['UMBRAL RECORRIDO', 'Ya conoces el gesto', 'Explora con libertad. Sendero volverá cuando tú lo llames.']
+    ];
+    let guideStep = 0;
+
+    function showScreen(name) {
+      screens.forEach((screen) => screen.classList.toggle('active', screen.dataset.screen === name));
+      stateButtons.forEach((button) => button.classList.toggle('active', button.dataset.go === name));
+      if (name === 'guide') resetGuide();
+    }
+
+    function renderGuide() {
+      document.querySelectorAll('.guided-target').forEach((target) => target.classList.remove('guided-target'));
+      const [step, title, copy] = guideContent[guideStep];
+      document.querySelector('#guide-step').textContent = step;
+      document.querySelector('#guide-title').textContent = title;
+      document.querySelector('#guide-copy').textContent = copy;
+      document.querySelector('#guide-card').classList.toggle('top', guideStep === 2);
+      document.querySelector('#guide-cue').hidden = guideStep === 3;
+      document.querySelector('#guide-finish').hidden = guideStep !== 3;
+      if (guideStep < guideTargets.length) document.querySelector(guideTargets[guideStep]).classList.add('guided-target');
+    }
+
+    function resetGuide() {
+      guideStep = 0;
+      document.querySelector('#guide-drawer').classList.remove('open');
+      document.querySelector('#help-reveal').hidden = true;
+      document.querySelector('#real-title').textContent = 'Cielo';
+      document.querySelector('#real-date').textContent = 'CIELO DE HOY · 28 SEP';
+      document.querySelector('#real-heading').innerHTML = 'La noche<br>se abre.';
+      document.querySelector('#real-copy').textContent = 'Tu mapa natal y el cielo presente comparten una misma cámara.';
+      document.querySelector('#reading-label').textContent = 'HORA PLANETARIA';
+      document.querySelector('#reading-value').textContent = 'Saturno · recogimiento';
+      renderGuide();
+    }
+
+    navigationButtons.forEach((button) => button.addEventListener('click', () => showScreen(button.dataset.go)));
+    document.querySelector('#guide-menu').addEventListener('click', () => {
+      if (guideStep !== 0) return;
+      document.querySelector('#guide-drawer').classList.add('open');
+      guideStep = 1;
+      renderGuide();
+    });
+    document.querySelector('#guide-horoscope').addEventListener('click', () => {
+      if (guideStep !== 1) return;
+      document.querySelector('#guide-drawer').classList.remove('open');
+      document.querySelector('#real-title').textContent = 'Horóscopo';
+      document.querySelector('#real-date').textContent = 'LECTURA DEL DÍA';
+      document.querySelector('#real-heading').innerHTML = 'Tu cielo<br>te responde.';
+      document.querySelector('#real-copy').textContent = 'Una lectura nacida de tu carta y de los tránsitos presentes.';
+      document.querySelector('#reading-label').textContent = 'CLAVE DEL TRÁNSITO';
+      document.querySelector('#reading-value').textContent = 'Luna en aspecto con Saturno';
+      guideStep = 2;
+      renderGuide();
+    });
+    document.querySelector('#guide-help').addEventListener('click', () => {
+      if (guideStep !== 2) return;
+      document.querySelector('#help-reveal').hidden = false;
+      guideStep = 3;
+      renderGuide();
+    });
+    document.querySelector('#guide-finish').addEventListener('click', () => showScreen('hub'));
+  </script>
+</body>
+</html>

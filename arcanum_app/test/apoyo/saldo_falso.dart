@@ -18,10 +18,19 @@ library;
 import 'package:arcanum_app/core/monetization/saldo.dart';
 
 class SaldoFalso extends SaldoNotifier {
-  SaldoFalso({this.creditos = 0, this.gastaCredito = false});
+  SaldoFalso({
+    this.creditos = 0,
+    this.gastaCredito = false,
+    this.costes = const {'three_card': 1, 'celtic_cross': 3},
+  });
 
   final int creditos;
   final bool gastaCredito;
+
+  /// Los precios que mandaria el servidor. Por defecto los de verdad; un mapa
+  /// vacio simula un backend viejo, que es cuando la UI no debe prometer
+  /// ningun precio.
+  final Map<String, int> costes;
 
   @override
   Future<EstadoSaldo> build() async => EstadoSaldo(
@@ -35,6 +44,7 @@ class SaldoFalso extends SaldoNotifier {
           siguienteGastaCredito: gastaCredito,
         ),
     },
+    costePorTirada: costes,
   );
 
   @override

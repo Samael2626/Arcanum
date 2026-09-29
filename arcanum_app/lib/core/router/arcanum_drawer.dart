@@ -127,7 +127,13 @@ class ArcanumDrawer extends StatelessWidget {
                     const _Separador(),
                     const Padding(
                       padding: EdgeInsets.fromLTRB(20, 6, 20, 14),
-                      child: SectionLabel('TU CUENTA'),
+                      child: SectionLabel('GUÍA Y CUENTA'),
+                    ),
+                    _FilaRuta(
+                      icono: Icons.explore_outlined,
+                      iconoActivo: Icons.explore,
+                      rotulo: 'Sendero',
+                      ruta: '/sendero',
                     ),
                     _FilaRuta(
                       icono: Icons.person_outline,

@@ -69,7 +69,25 @@ class InfoDot extends StatelessWidget {
   }
 }
 
-void _show(BuildContext context, GlossaryEntry entry) {
+void _show(BuildContext context, GlossaryEntry entry) =>
+    showConceptSheet(context, titulo: entry.title, que: entry.what,
+        comoLabel: 'CÓMO USARLO', como: entry.howTo);
+
+/// La hoja explicativa de CUALQUIER concepto, con la forma de siempre.
+///
+/// Se saco de `_show` cuando la lectura del Oraculo empezo a abrir tambien
+/// sefiras y figuras de la corte: son el mismo gesto y la misma hoja, y
+/// duplicar el armazon tres veces habria hecho que las tres se separaran a la
+/// primera retocada.
+void showConceptSheet(
+  BuildContext context, {
+  required String titulo,
+  required String que,
+  required String como,
+  String comoLabel = 'CÓMO USARLO',
+  String queLabel = 'QUÉ ES',
+  String? subtitulo,
+}) {
   showModalBottomSheet(
     context: context,
     backgroundColor: ArcanumColors.surface,
@@ -101,17 +119,21 @@ void _show(BuildContext context, GlossaryEntry entry) {
             ),
             const SizedBox(height: 18),
             Text(
-              entry.title,
+              titulo,
               style: ArcanumText.heading(26, color: ArcanumColors.gold),
             ),
+            if (subtitulo != null) ...[
+              const SizedBox(height: 4),
+              Text(subtitulo, style: ArcanumText.label()),
+            ],
             const SizedBox(height: 16),
-            Text('QUÉ ES', style: ArcanumText.label()),
+            Text(queLabel, style: ArcanumText.label()),
             const SizedBox(height: 6),
-            Text(entry.what, style: ArcanumText.body(16)),
+            Text(que, style: ArcanumText.body(16)),
             const SizedBox(height: 18),
-            Text('CÓMO USARLO', style: ArcanumText.label()),
+            Text(comoLabel, style: ArcanumText.label()),
             const SizedBox(height: 6),
-            Text(entry.howTo, style: ArcanumText.body(16)),
+            Text(como, style: ArcanumText.body(16)),
           ],
         ),
       ),

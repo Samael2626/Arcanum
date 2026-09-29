@@ -15,6 +15,7 @@ from app.models.reading import ReadingBookmark, ReadingProgress, SavedPassage
 from app.models.content_report import ContentReport
 from app.models.horoscope_reading import HoroscopeReading
 from app.models.user_consent import UserConsent
+from app.models.sendero_progress import SenderoProgress
 
 __all__ = [
     "User",
@@ -39,4 +40,5 @@ __all__ = [
     "ContentReport",
     "UserConsent",
     "HoroscopeReading",
+    "SenderoProgress",
 ]

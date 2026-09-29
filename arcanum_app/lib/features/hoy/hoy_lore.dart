@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/content/moon_phase_lore.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
@@ -407,20 +408,34 @@ Widget _hourRow(String planetKey) {
 
 // ── Hoja: la fase de la Luna ───────────────────────────────────────────────
 
+/// [phaseSlug] es el `phase_slug` del backend y es lo que sube la resolución
+/// de esta hoja de dos textos a ocho.
+///
+/// Sin él, "QUÉ FAVORECE" solo sabía distinguir creciente de menguante: las
+/// cuatro fases crecientes enseñaban el mismo párrafo y las cuatro menguantes
+/// el mismo. El dato ya viajaba en `/astral/today`; nadie lo leía.
+///
+/// Se queda OPCIONAL a propósito. Si el backend reparticiona el ciclo y manda
+/// un slug que aquí no existe, `moonPhaseLoreOf` devuelve null y la hoja cae
+/// al binario de siempre: medio dato es mejor que una hoja vacía.
 void showMoonPhaseSheet(
   BuildContext context, {
   required String phaseName,
   required double illumination,
   required bool waxing,
   double? ageDays,
+  String? phaseSlug,
 }) {
   final mood = ArcanumMood.moon;
-  final favors = waxing
-      ? 'atraer, crecer, edificar, invocar. La Luna que crece suma fuerza a '
-            'todo lo que quieres que aumente: prosperidad, amor, salud, proyectos '
-            'nuevos.'
-      : 'desterrar, disolver, cerrar, soltar. La Luna que mengua retira y '
-            'limpia: rompe ataduras, aleja lo dañino, termina lo que debe acabar.';
+  final ficha = moonPhaseLoreOf(phaseSlug);
+  final favors =
+      ficha?.favorece ??
+      (waxing
+          ? 'atraer, crecer, edificar, invocar. La Luna que crece suma fuerza a '
+                'todo lo que quieres que aumente: prosperidad, amor, salud, proyectos '
+                'nuevos.'
+          : 'desterrar, disolver, cerrar, soltar. La Luna que mengua retira y '
+                'limpia: rompe ataduras, aleja lo dañino, termina lo que debe acabar.');
   final pct = (illumination * 100).round();
 
   _sheet(
@@ -438,10 +453,26 @@ void showMoonPhaseSheet(
         _row('LUZ', '$pct % iluminada'),
         const SizedBox(height: 10),
         _row('MARCHA', waxing ? 'Creciente' : 'Menguante'),
+        // La fase primero, que es lo que se vino a mirar; el texto general de
+        // la Luna cierra la hoja y no la abre.
+        if (ficha != null) ...[
+          const SizedBox(height: 24),
+          Text(ficha.descripcion, style: ArcanumText.body(16)),
+        ],
         const SizedBox(height: 24),
         Text('QUÉ FAVORECE', style: ArcanumText.label()),
         const SizedBox(height: 10),
         Text(favors, style: ArcanumText.body(16), textAlign: TextAlign.justify),
+        if (ficha != null) ...[
+          const SizedBox(height: 24),
+          Text('QUÉ HACER HOY', style: ArcanumText.label()),
+          const SizedBox(height: 10),
+          Text(
+            ficha.practica,
+            style: ArcanumText.body(16),
+            textAlign: TextAlign.justify,
+          ),
+        ],
         const SizedBox(height: 20),
         Text(
           'La Luna es el reloj de la magia sublunar: rige las mareas del alma, '

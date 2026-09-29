@@ -310,6 +310,29 @@ const Map<String, GlossaryEntry> glossary = {
     'No la leas como suerte buena o mala. Dice CUÁNTO alcance tiene el planeta ese día, no si el día '
         'te irá bien: un Saturno caído sigue siendo Saturno, solo que llega menos lejos.',
   ),
+  // Los dos siguientes salen en las LECTURAS del Oráculo, no en el sello: el
+  // catálogo de tarot trae `decan` y `sephirah` en cada arcano menor y el
+  // modelo los escribe dentro del texto ("primer decanato", "el aire de
+  // Chokmah" — medido el 27-sep-2026). Sin entrada aquí, el término queda
+  // suelto en mitad de una lectura y no abre nada.
+  'decanato': GlossaryEntry(
+    'Decanato',
+    'Cada signo son 30 grados, y se parte en tres tramos de 10: son los decanatos. Cada tramo lo '
+        'gobierna un planeta distinto, así que dos personas del mismo signo pueden tener regentes '
+        'distintos según el grado. En el Tarot no es un detalle: cada arcano menor del 2 al 10 ES un '
+        'decanato concreto — el Ocho de Oros es el primer decanato de Virgo, regido por el Sol.',
+    'Te dice de qué VA la carta antes de mirar su dibujo. Si sabes qué planeta rige el decanato y en '
+        'qué signo cae, ya sabes qué fuerza opera y sobre qué terreno.',
+  ),
+  'sephirah': GlossaryEntry(
+    'Séfira',
+    'Las diez estaciones del Árbol de la Vida de la Cábala, de Kether (1) a Malkuth (10). Cada una es '
+        'una FUNCIÓN, no un estado de ánimo: recibir, dar forma, cortar, equilibrar, manifestar. En '
+        'los arcanos menores el número de la carta ES su séfira — todos los ochos son Hod, todos los '
+        'dieces son Malkuth —, y por eso los cuatro ochos se parecen entre sí.',
+    'Cuando el Oráculo nombra una séfira te está diciendo en qué punto del proceso estás, no cómo te '
+        'sientes. Toca el nombre en la lectura y se abre la suya.',
+  ),
   'profeccion': GlossaryEntry(
     'Profección y señor del año',
     'Técnica antigua para saber de qué va cada año de tu vida. Cada cumpleaños el turno avanza una '

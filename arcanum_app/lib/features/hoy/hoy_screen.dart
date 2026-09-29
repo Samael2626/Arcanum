@@ -231,6 +231,9 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
     final illumination = (moon['illumination'] as num).toDouble();
     final waxing = moon['is_waxing'] as bool;
     final phase = moon['phase_name'] as String;
+    // El slug viajaba en la respuesta desde siempre y nadie lo leia: es lo que
+    // deja a la hoja distinguir las ocho fases en vez de dos.
+    final phaseSlug = moon['phase_slug'] as String?;
     final age = (moon['age_days'] as num?)?.toDouble();
 
     return NestedSkyInstrument(
@@ -254,6 +257,7 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         illumination: illumination,
         waxing: waxing,
         ageDays: age,
+        phaseSlug: phaseSlug,
       ),
       onConfirmPlace: () => context.push('/perfil'),
       // Los chips siguen al cuerpo elegido en el selector, no a la hora: los

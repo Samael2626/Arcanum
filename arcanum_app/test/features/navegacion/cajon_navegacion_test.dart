@@ -37,6 +37,32 @@ class _AuthDePrueba extends AuthNotifier {
 class _ApiMuda extends ArcanumApi {
   _ApiMuda() : super(Dio());
 
+  /// Este arnes prueba navegacion de una cuenta existente, no el primer uso.
+  /// Sin progreso, Sendero abre su invitacion y la barrera modal absorbe el
+  /// toque de la hamburguesa antes de que el cajon llegue a existir.
+  @override
+  Future<List<Map<String, dynamic>>> senderoProgress() async => [
+    {
+      'journey_id': 'orientation',
+      'version': 1,
+      'step': 0,
+      'status': 'dismissed',
+    },
+  ];
+
+  @override
+  Future<Map<String, dynamic>> updateSenderoProgress({
+    required String journeyId,
+    required int version,
+    required int step,
+    required String status,
+  }) async => {
+    'journey_id': journeyId,
+    'version': version,
+    'step': step,
+    'status': status,
+  };
+
   /// Saber monta Plantas y Biblioteca al entrar, y el lector pide su capitulo.
   /// Sin doblarlos, las llamadas se van al Dio real y quedan temporizadores
   /// colgando: el test muere por algo que no es lo que prueba.

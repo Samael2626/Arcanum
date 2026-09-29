@@ -15,6 +15,7 @@ desarrollo.
 from __future__ import annotations
 
 import logging
+import re
 import unicodedata
 from typing import Optional
 
@@ -22,8 +23,10 @@ from fastapi import HTTPException, status
 from groq import Groq, RateLimitError
 
 from app.core.config import settings
+from app.services import groq_keys as gk
 from app.services import safety
 from app.services import horoscope_guard as hg
+from app.services import oracle_guard as og
 from app.services.horoscope_prompt import HOROSCOPE_SYSTEM_PROMPT
 from app.services.oracle_prompt import get_oracle_system_prompt
 
@@ -46,18 +49,16 @@ UNAVAILABLE_UNSAFE = "unsafe"
 # Motivos que significan "el modelo respondio, pero lo que devolvio no sirve".
 INVALID_OUTPUT_REASONS = (UNAVAILABLE_TRUNCATED, UNAVAILABLE_EMPTY)
 
-# Cliente lazy: se crea una sola vez si hay API key.
-_client: Optional[Groq] = None
-
-
 def _get_client() -> Optional[Groq]:
-    global _client
-    if _client is not None:
-        return _client
-    if not settings.GROQ_API_KEY:
-        return None
-    _client = Groq(api_key=settings.GROQ_API_KEY)
-    return _client
+    """El cliente que toca en este turno, o None si no hay ninguna clave.
+
+    Desde el 29-sep-2026 sale del rotador (`groq_keys`) en vez de ser un unico
+    cliente global. Con una sola clave configurada devuelve siempre la misma y
+    no cambia nada; con varias, reparte. El None sigue significando lo mismo
+    --- no hay API key --- y es lo que miran los llamadores.
+    """
+    clave = gk.rotador().siguiente()
+    return clave.cliente if clave else None
 
 
 def _unavailable(reason: str) -> dict:
@@ -154,6 +155,38 @@ def _missing_terms(expected_terms: list[str], text: str) -> list[str]:
     return [name for name in expected_terms if _norm(_term_key(name)) not in t]
 
 
+def _retry_after(exc: RateLimitError) -> float | None:
+    """Los segundos que pide la respuesta, o None si no lo dice.
+
+    El 429 de MINUTO se apaga en segundos y el de DIA tarda; por eso el tiempo
+    de castigo lo manda la respuesta y no una constante nuestra.
+    """
+    response = getattr(exc, "response", None)
+    if response is None:
+        return None
+    try:
+        return float(dict(response.headers).get("retry-after") or 0) or None
+    except (TypeError, ValueError):
+        return None
+
+
+def _saturado(exc: RateLimitError) -> HTTPException:
+    """El 429 que ve quien pregunta, con las cabeceras en el log.
+
+    Se loguean enteras para poder dimensionar el techo, que es como se
+    descubrio que el cuello era el TPM y no el cupo diario. Y se traduce a 429
+    y no a 500 porque un 500 haria que el cliente reintentase en bucle.
+    """
+    response = getattr(exc, "response", None)
+    headers = dict(response.headers) if response is not None else {}
+    logger.warning("Groq rate limit: retry_after=%s headers=%s",
+                   headers.get("retry-after"), headers)
+    return HTTPException(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        detail="El oráculo está saturado. Intenta de nuevo en unos minutos.",
+    )
+
+
 def _complete(client: Groq, model: str, system_prompt: str, user_content: str,
               max_tokens: int, temperature: float,
               reasoning_effort: str | None = None) -> tuple[str, str, int]:
@@ -171,8 +204,9 @@ def _complete(client: Groq, model: str, system_prompt: str, user_content: str,
     Oráculo es el mismo.
     """
     extra = {"reasoning_effort": reasoning_effort} if reasoning_effort else {}
-    try:
-        resp = client.chat.completions.create(
+
+    def _pide(cliente: Groq):
+        return cliente.chat.completions.create(
             model=model,
             messages=[
                 {"role": "system", "content": system_prompt},
@@ -182,21 +216,65 @@ def _complete(client: Groq, model: str, system_prompt: str, user_content: str,
             temperature=temperature,
             **extra,
         )
+
+    # SALTO A OTRA CLAVE ANTES DE RENDIRSE. Medido el 29-sep: una sola llamada
+    # de horoscopo se lleva 4.360 de los 8.000 tokens por minuto, asi que el
+    # 429 de minuto se toca constantemente. Con varias claves configuradas, el
+    # que llega aqui se prueba en la siguiente en vez de convertirse en un 429
+    # para quien pregunta.
+    #
+    # Cada clave, como mucho UNA vez: el techo sigue siendo el que era, y lo
+    # que cambia es que se agota el de todas y no el de una.
+    rot = gk.rotador()
+    probadas: set[int] = set()
+    actual = rot.por_cliente(client)
+    if actual is not None:
+        probadas.add(actual.indice)
+    try:
+        resp = _pide(client)
     except RateLimitError as exc:
-        # La cuenta tiene un techo de tokens por minuto muy bajo, asi que esto
-        # se toca de verdad. Se loguea el retry-after para poder dimensionarlo y
-        # se traduce a 429: un 500 haria que el cliente reintentase en bucle.
-        response = getattr(exc, "response", None)
-        headers = dict(response.headers) if response is not None else {}
-        logger.warning("Groq rate limit: retry_after=%s headers=%s",
-                       headers.get("retry-after"), headers)
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="El oráculo está saturado. Intenta de nuevo en unos minutos.",
-        ) from exc
+        ultima = exc
+        if actual is not None:
+            rot.enfriar(actual, _retry_after(exc))
+            for otra in rot.alternativas(probadas):
+                probadas.add(otra.indice)
+                try:
+                    resp = _pide(otra.cliente)
+                    break
+                except RateLimitError as exc2:
+                    rot.enfriar(otra, _retry_after(exc2))
+                    ultima = exc2
+            else:
+                raise _saturado(ultima) from ultima
+        else:
+            raise _saturado(ultima) from ultima
+    _anota_cache(resp)
     choice = resp.choices[0]
     return (_limpia_espacios(choice.message.content or ""), choice.finish_reason,
             resp.usage.completion_tokens if resp.usage else 0)
+
+
+def _anota_cache(resp) -> None:
+    """Deja en el log si Groq sirvio parte del prompt desde su cache.
+
+    La doc de Groq dice que el cacheado de prompt es AUTOMATICO en gpt-oss-120b
+    y que no hace falta tocar nada. Seria la palanca grande: el system prompt
+    es el 80% de un horoscopo y es identico en todas las llamadas.
+
+    Medido el 29-sep-2026: NO ocurre en esta cuenta. Cuatro llamadas seguidas a
+    la misma region con el mismo prefijo, y `prompt_tokens_details` ausente las
+    cuatro. No se sabe por que --- la sospecha es que este capado al plan de
+    pago y la doc no lo diga, pero eso NO esta comprobado.
+
+    Esto se queda para enterarse el dia que se encienda, que si no pasaria de
+    largo: nadie miraba ese campo.
+    """
+    usage = getattr(resp, "usage", None)
+    det = getattr(usage, "prompt_tokens_details", None) if usage else None
+    cacheados = getattr(det, "cached_tokens", None) if det else None
+    if cacheados:
+        logger.info("Groq sirvio %s tokens de prompt desde cache (de %s).",
+                    cacheados, getattr(usage, "prompt_tokens", "?"))
 
 
 # Espacios que el modelo mete y que no son el espacio normal. El fino (U+202F)
@@ -214,9 +292,17 @@ _ESPACIOS_RAROS = str.maketrans({
 })
 
 
+# El modelo negrita a mano lo que cree importante: "forma una **cuadratura**".
+# En la app eso son dos asteriscos impresos, porque el texto se pinta como texto
+# y no como markdown. No es un defecto de voz y no merece un reintento -- que
+# cuesta una llamada entera del cupo de 8.000 tokens por minuto --: se quita en
+# el borde, igual que los espacios raros.
+_ENFASIS = re.compile(r"(\*{1,3}|_{2,3})(?=\S)(.+?)(?<=\S)\1", re.DOTALL)
+
+
 def _limpia_espacios(texto: str) -> str:
-    """Normaliza los espacios exoticos del modelo al espacio de toda la vida."""
-    return texto.translate(_ESPACIOS_RAROS)
+    """Normaliza los espacios exoticos y borra el marcado que se veria crudo."""
+    return _ENFASIS.sub(r"\2", texto.translate(_ESPACIOS_RAROS))
 
 
 def _stamp_safety(diag: dict, content: str) -> None:
@@ -359,17 +445,21 @@ def generate_reading(context: str, model: str, question: Optional[str] = None,
     expected = expected_cards or []
 
     def notice(missing: list[str], flaws: list[str]) -> str:
-        return (
-            f"Tu versión anterior omitió: {'; '.join(_term_key(c) for c in missing)}. "
-            f"Produce una lectura COMPLETA e INTEGRADA que cubra las "
-            f"{len(expected)} posiciones en orden, sin omitir ninguna."
-        )
+        return og.aviso([_term_key(c) for c in missing], flaws,
+                        obligatorios=[_term_key(c) for c in expected])
+
+    # El Oraculo paso meses SIN esta linea, y es la ruta que se cobra: el
+    # horoscopo comprobaba siete cosas y una lectura de tarot ninguna. Medido el
+    # 25-sep-2026 con una tirada real: escribio "energia" tres veces, hablo de
+    # "el consultante" y cerro con un ritual de siete pasos. Nada lo paro.
+    def checks(texto: str, user_msg: str) -> list[str]:
+        return og.defectos(texto, user_msg)
 
     return _generate_with_coverage(
         client, model, get_oracle_system_prompt(),
         _build_user_message(context, question, tarot),
         _max_tokens_for(card_count), _temperature_for(card_count),
-        expected, notice,
+        expected, notice, extra_checks=checks,
     )
 
 

@@ -160,7 +160,12 @@ def test_el_horoscopo_de_hoy_no_toca_el_saldo(db, make_user, groq):
 def test_y_tampoco_lo_toca_quien_no_tiene_creditos(db, make_user, groq):
     """El cupo diario es de todos; quedarse a cero no deja sin lectura de hoy."""
     uid = make_user(credits=0)
-    assert _pedir(db, uid)["text"] == ENTERO
+
+    # El texto entregado lleva DETRAS la nota que compone el codigo
+    # (`horoscope.con_nota`, 28-sep-2026), asi que ya no es igual palabra
+    # por palabra a lo que dijo el modelo. Lo que este test defiende no
+    # cambia: que el texto del modelo llega entero y sin tocar.
+    assert _pedir(db, uid)["text"].startswith(ENTERO)
 
 
 def test_hoy_primero_y_luego_recuperar_solo_cobra_lo_recuperado(db, make_user, groq):

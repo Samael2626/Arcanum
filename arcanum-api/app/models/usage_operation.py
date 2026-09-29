@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, ForeignKey, String, UniqueConstraint, text
+from sqlalchemy import SmallInteger, Column, DateTime, ForeignKey, String, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -15,6 +15,11 @@ class UsageOperation(Base):
     request_fingerprint = Column(String(64), nullable=False)
     state = Column(String(16), nullable=False)
     source = Column(String(16), nullable=False)
+    # Cuantos creditos costo. Antes toda operacion valia exactamente uno y el
+    # dato no hacia falta; desde el 28-sep-2026 el precio sale del numero de
+    # cartas, y sin guardarlo ni `reverse` puede devolver lo cobrado ni el cupo
+    # diario puede sumarse.
+    credits_cost = Column(SmallInteger, nullable=False, server_default=text("1"))
     result = Column(JSONB, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

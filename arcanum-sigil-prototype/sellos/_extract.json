@@ -1,0 +1,370 @@
+[
+ {
+  "id": "saturno-sello",
+  "leaf": 257,
+  "page": 244,
+  "box": [
+   698,
+   1577,
+   1292,
+   2133
+  ],
+  "size": [
+   594,
+   556
+  ],
+  "inkComponents": 1
+ },
+ {
+  "id": "saturno-inteligencia",
+  "leaf": 257,
+  "page": 244,
+  "box": [
+   1654,
+   1652,
+   2078,
+   2047
+  ],
+  "size": [
+   424,
+   395
+  ],
+  "inkComponents": 1
+ },
+ {
+  "id": "saturno-espiritu",
+  "leaf": 257,
+  "page": 244,
+  "box": [
+   2385,
+   1586,
+   2861,
+   2004
+  ],
+  "size": [
+   476,
+   418
+  ],
+  "inkComponents": 1
+ },
+ {
+  "id": "jupiter-sello",
+  "leaf": 257,
+  "page": 244,
+  "box": [
+   716,
+   2960,
+   1388,
+   3577
+  ],
+  "size": [
+   672,
+   617
+  ],
+  "inkComponents": 1
+ },
+ {
+  "id": "jupiter-inteligencia",
+  "leaf": 257,
+  "page": 244,
+  "box": [
+   1520,
+   3095,
+   2123,
+   3463
+  ],
+  "size": [
+   603,
+   368
+  ],
+  "inkComponents": 3
+ },
+ {
+  "id": "jupiter-espiritu",
+  "leaf": 257,
+  "page": 244,
+  "box": [
+   2308,
+   3031,
+   2868,
+   3514
+  ],
+  "size": [
+   560,
+   483
+  ],
+  "inkComponents": 1
+ },
+ {
+  "id": "marte-sello",
+  "leaf": 258,
+  "page": 245,
+  "box": [
+   176,
+   1552,
+   1035,
+   2274
+  ],
+  "size": [
+   859,
+   722
+  ],
+  "inkComponents": 2
+ },
+ {
+  "id": "marte-inteligencia",
+  "leaf": 258,
+  "page": 245,
+  "box": [
+   1065,
+   1734,
+   1859,
+   2180
+  ],
+  "size": [
+   794,
+   446
+  ],
+  "inkComponents": 1
+ },
+ {
+  "id": "marte-espiritu",
+  "leaf": 258,
+  "page": 245,
+  "box": [
+   1907,
+   1585,
+   2321,
+   2345
+  ],
+  "size": [
+   414,
+   760
+  ],
+  "inkComponents": 1
+ },
+ {
+  "id": "sol-sello",
+  "leaf": 259,
+  "page": 246,
+  "box": [
+   668,
+   1723,
+   1399,
+   2563
+  ],
+  "size": [
+   731,
+   840
+  ],
+  "inkComponents": 1
+ },
+ {
+  "id": "sol-inteligencia",
+  "leaf": 259,
+  "page": 246,
+  "box": [
+   1485,
+   1845,
+   2095,
+   2415
+  ],
+  "size": [
+   610,
+   570
+  ],
+  "inkComponents": 2
+ },
+ {
+  "id": "sol-espiritu",
+  "leaf": 259,
+  "page": 246,
+  "box": [
+   2182,
+   1787,
+   2788,
+   2425
+  ],
+  "size": [
+   606,
+   638
+  ],
+  "inkComponents": 1
+ },
+ {
+  "id": "venus-sello",
+  "leaf": 260,
+  "page": 247,
+  "box": [
+   173,
+   1856,
+   960,
+   2666
+  ],
+  "size": [
+   787,
+   810
+  ],
+  "inkComponents": 4
+ },
+ {
+  "id": "venus-inteligencia",
+  "leaf": 260,
+  "page": 247,
+  "box": [
+   1257,
+   1785,
+   1993,
+   2412
+  ],
+  "size": [
+   736,
+   627
+  ],
+  "inkComponents": 1
+ },
+ {
+  "id": "venus-espiritu",
+  "leaf": 261,
+  "page": 248,
+  "box": [
+   1106,
+   1683,
+   1737,
+   2501
+  ],
+  "size": [
+   631,
+   818
+  ],
+  "inkComponents": 1
+ },
+ {
+  "id": "venus-inteligencias",
+  "leaf": 261,
+  "page": 248,
+  "box": [
+   2251,
+   1689,
+   2824,
+   2332
+  ],
+  "size": [
+   573,
+   643
+  ],
+  "inkComponents": 2
+ },
+ {
+  "id": "mercurio-sello",
+  "leaf": 262,
+  "page": 249,
+  "box": [
+   223,
+   1888,
+   947,
+   2635
+  ],
+  "size": [
+   724,
+   747
+  ],
+  "inkComponents": 13
+ },
+ {
+  "id": "mercurio-inteligencia",
+  "leaf": 262,
+  "page": 249,
+  "box": [
+   1248,
+   1879,
+   1865,
+   2510
+  ],
+  "size": [
+   617,
+   631
+  ],
+  "inkComponents": 2
+ },
+ {
+  "id": "mercurio-espiritu",
+  "leaf": 263,
+  "page": 250,
+  "box": [
+   1681,
+   1908,
+   2072,
+   2404
+  ],
+  "size": [
+   391,
+   496
+  ],
+  "inkComponents": 1
+ },
+ {
+  "id": "luna-sello",
+  "leaf": 264,
+  "page": 251,
+  "box": [
+   211,
+   2060,
+   1250,
+   3067
+  ],
+  "size": [
+   1039,
+   1007
+  ],
+  "inkComponents": 10
+ },
+ {
+  "id": "luna-espiritu",
+  "leaf": 264,
+  "page": 251,
+  "box": [
+   1328,
+   2044,
+   2140,
+   2788
+  ],
+  "size": [
+   812,
+   744
+  ],
+  "inkComponents": 1
+ },
+ {
+  "id": "luna-espiritu-de-los-espiritus",
+  "leaf": 265,
+  "page": 252,
+  "box": [
+   822,
+   1924,
+   1694,
+   2671
+  ],
+  "size": [
+   872,
+   747
+  ],
+  "inkComponents": 8
+ },
+ {
+  "id": "luna-inteligencia-de-las-inteligencias",
+  "leaf": 265,
+  "page": 252,
+  "box": [
+   1782,
+   1944,
+   2780,
+   2708
+  ],
+  "size": [
+   998,
+   764
+  ],
+  "inkComponents": 5
+ }
+]

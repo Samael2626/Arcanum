@@ -164,9 +164,23 @@ void main() {
       findsNothing,
       reason: 'una carta sin voltear no puede estar contando lo que dice',
     );
-    // El bloque de saldo (1.0.6) ocupa la cabecera del Oraculo, asi que la
-    // carta y su significado caen mas abajo que antes: hay que desplazar para
-    // alcanzarlos. Sin esto el `tap` cae fuera de pantalla y no dispara nada.
+    // El bloque de saldo (1.0.6) y el precio por tirada (1.0.6, 29-sep) ocupan
+    // la cabecera del Oraculo, asi que la carta cae cada vez mas abajo.
+    //
+    // `ensureVisible` NO basta y por eso hay un arrastre antes: la lista
+    // construye sus hijos por tramos, y lo que queda fuera de la ventana no
+    // existe todavia en el arbol. `ensureVisible` pide un elemento que aun no
+    // esta y revienta con "Bad state: No element" --- que fue lo que paso al
+    // anadir el precio. `dragUntilVisible` lo construye primero.
+    //
+    // Escrito asi para que la proxima pieza que crezca la cabecera no vuelva a
+    // romperlo: el arrastre no depende de cuanto mida lo de arriba.
+    await tester.dragUntilVisible(
+      find.byType(TarotCardView),
+      find.byType(Scrollable).first,
+      const Offset(0, -120),
+    );
+    await tester.pumpAndSettle();
     final naipe = find
         .descendant(
           of: find.byType(TarotCardView),

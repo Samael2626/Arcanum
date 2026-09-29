@@ -43,3 +43,22 @@ def test_texto_ya_limpio_pasa_intacto():
 
 def test_cadena_vacia():
     assert _limpia_espacios("") == ""
+
+
+# ── El marcado que se veria crudo (25-sep-2026) ──────────────────────────────
+# Medido contra Groq: el modelo negrita a mano lo que cree importante, y en la
+# app eso son dos asteriscos impresos, porque el texto se pinta como texto. Es
+# formato, no voz: no merece un reintento, se quita en el borde.
+
+def test_las_negritas_del_modelo_no_llegan_a_la_pantalla():
+    assert _limpia_espacios("forma una **cuadratura**, que es") == \
+        "forma una cuadratura, que es"
+    assert _limpia_espacios("un *filo* en los tratos") == \
+        "un filo en los tratos"
+    assert _limpia_espacios("***fuerte***") == "fuerte"
+
+
+def test_un_asterisco_suelto_no_se_toca():
+    """Sin pareja no es marcado, y comerselo cambiaria el texto."""
+    for crudo in ("2*3 y a_b sin tocar", "el dia * marca", "hora_planetaria"):
+        assert _limpia_espacios(crudo) == crudo

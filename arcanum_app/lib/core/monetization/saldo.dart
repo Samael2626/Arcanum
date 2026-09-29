@@ -61,20 +61,55 @@ class CupoAccion {
 /// El saldo y el cupo de todas las acciones.
 @immutable
 class EstadoSaldo {
-  const EstadoSaldo({required this.creditos, required this.acciones});
+  const EstadoSaldo({
+    required this.creditos,
+    required this.acciones,
+    this.costePorTirada = const {},
+  });
 
   final int creditos;
   final Map<String, CupoAccion> acciones;
 
+  /// Cuantos creditos cuesta interpretar cada tirada, por slug.
+  ///
+  /// LO MANDA EL SERVIDOR y no se calcula aqui a proposito. La formula del
+  /// precio --un credito cada cuatro cartas-- es una regla de negocio, y
+  /// escrita en dos lenguajes se separa a la primera que alguien toque una
+  /// sola. Si el backend es viejo y no la manda, el mapa viene vacio y la UI
+  /// no promete ningun precio en vez de inventarse uno.
+  final Map<String, int> costePorTirada;
+
   CupoAccion? cupoDe(String accion) => acciones[accion];
+
+  /// Lo que cuesta interpretar [tirada], o null si el servidor no lo dijo.
+  int? costeDe(String tirada) => costePorTirada[tirada];
+
+  /// Si interpretar [tirada] va a descontar creditos del saldo.
+  ///
+  /// No basta con `siguienteGastaCredito`: ese dice si cabe UNA barata. Una
+  /// Cruz Celta cuesta tres y puede no caber aunque queden dos de cupo.
+  bool gastaCredito(String accion, String tirada) {
+    final coste = costeDe(tirada);
+    final cupo = cupoDe(accion);
+    if (coste == null || cupo == null) {
+      return cupo?.siguienteGastaCredito ?? false;
+    }
+    return cupo.restante < coste;
+  }
 
   factory EstadoSaldo.deJson(Map<String, dynamic> json) {
     final crudas = (json['acciones'] as Map?)?.cast<String, dynamic>() ?? {};
+    final costes =
+        (json['coste_por_tirada'] as Map?)?.cast<String, dynamic>() ?? {};
     return EstadoSaldo(
       creditos: (json['balance'] as num?)?.toInt() ?? 0,
       acciones: {
         for (final e in crudas.entries)
           e.key: CupoAccion.deJson((e.value as Map).cast<String, dynamic>()),
+      },
+      costePorTirada: {
+        for (final e in costes.entries)
+          if ((e.value as num?) != null) e.key: (e.value as num).toInt(),
       },
     );
   }
@@ -83,10 +118,15 @@ class EstadoSaldo {
   bool operator ==(Object other) =>
       other is EstadoSaldo &&
       other.creditos == creditos &&
-      mapEquals(other.acciones, acciones);
+      mapEquals(other.acciones, acciones) &&
+      mapEquals(other.costePorTirada, costePorTirada);
 
   @override
-  int get hashCode => Object.hash(creditos, Object.hashAll(acciones.entries));
+  int get hashCode => Object.hash(
+    creditos,
+    Object.hashAll(acciones.entries),
+    Object.hashAll(costePorTirada.entries),
+  );
 }
 
 /// Pide el estado al servidor y lo deja observable.

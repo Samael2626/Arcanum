@@ -286,6 +286,12 @@ def horoscope(
                         planetary_hour=us.planetary_hour(current_user, now)),
             hs.expected_terms(sky),
         )
+        # La nota al pie la pone el codigo, no el modelo: la suya venia con
+        # jerga --"conjuncion", "trigono", "natal"-- y se degradaba sola. Va
+        # DESPUES de la guarda de cobertura a proposito, porque esa sigue
+        # mirando los nombres que el modelo escribio.
+        if diag.get("available"):
+            texto = hs.con_nota(texto, sky, now)
         if not diag.get("available"):
             # Sin modelo, o con una respuesta truncada o vacia, NO hay
             # horóscopo. Capturarlo dejaria el texto de relleno (o uno cortado a

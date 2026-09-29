@@ -59,6 +59,24 @@ Mostrar entrada, normalización, regla, unidades descartadas y resultado.
 
 No usar `ao` ni “A‑O Principle” como doctrina Spare. No hay respaldo primario verificado con ese nombre y procedimiento; solo podría volver con autor, edición y página, etiquetado correctamente.
 
+## Letras reconocibles (v3, decisión del 26-sep-2026)
+
+Las letras reducidas son el material, no una semilla de azar. Frater U∴D∴,
+*Practical Sigil Magic*, cap. 2 (método de la palabra) [OM]: *"as simple as
+possible with the various letters recognizable (even with slight difficulty)"*.
+Los sigilos salen de la *fusión y estilización* de letras (Spare).
+
+- Cada letra se dibuja con su forma real (capital de trazo único sobre caja común).
+- Los trazos que coinciden se comparten y guardan todas sus letras.
+- Letra gemela (giro/reflejo de otra ya presente, p. ej. W = M invertida): no se
+  repite; se declara en la procedencia.
+- Tres composiciones, de menos a más legible: **Fusión** (Spare/U∴D∴, misma caja),
+  **Bloque** (una celda por letra, bordes compartidos) y **Cruz** (monograma
+  KAROLVS, 769 [HP]: vocales al centro, consonantes en los brazos).
+- Cada letra muestra su % visible; ocultar trazos lo baja y el usuario lo ve.
+- Rechazado: bandas, tótems o motivos derivados por hash de la letra. Si no se
+  puede leer la letra, no es este motor.
+
 ## Gramática visual v1
 
 Resultado = grafo determinista de primitivas SVG:
@@ -131,9 +149,39 @@ Si falla trazabilidad, miniatura, redibujo o separación, no entregar.
 
 - Austin Osman Spare, *The Book of Pleasure*: sigilos y Alfabeto del Deseo [OM].
 - Phillip Cooper, *Basic Sigil Magic*: iniciales, superposición y simplicidad [OM].
-- Agrippa, *Three Books of Occult Philosophy*, II.22: kameas [HP].
+- Frater U∴D∴, *Practical Sigil Magic*, cap. 2: método de la palabra, letras reconocibles, M/W/E [OM].
+- Monograma KAROLVS de Carlomagno (desde 769): K izquierda, R arriba, L abajo, S derecha; vocales al centro [HP]. Diploma: Commons `Karldergrossesignatur.svg`.
+- Casos de prueba fijos (gate): U∴D∴ `THISMYWOBANERGF`; Cooper `IDANP` con la I en el asta de la D; láminas de Mathers (Metatron, Elohim, Netzach ×6).
+- Agrippa, *Three Books of Occult Philosophy*, II.22: kameas [HP]. Motor implementado (26-27 sep 2026):
+  - Tablas transcritas de las láminas (ed. 1651, Peterson) y verificadas mágicas por código. Erratas de esa edición: Luna f1c8 «45» → 54; Kedemel «157» → 175; Bne Seraphim בסי → בני.
+  - Agrippa cuenta las finales de 500 a 900 (Bne Seraphim 1252, Schedbarschemoth 3321 solo cuadran así).
+  - Agrippa NO explica el trazado («el buscador sabio lo descubrirá»): el recorrido es [RC]. Sus caracteres llevan círculo en ambos extremos y horquilla al repasar.
+  - Reducción calibrada con sus 15 figuras [AR]: Aiq Bekar hasta 6×6 (Barzabel, Sorath), quitar ceros desde 7×7 (Kedemel, Tiriel, Taftartarat, Hasmodai). 8 figuras coinciden, 6 en estructura, Grafiel no sale con ningún método: se avisa, no se fuerza. Malkah be-Tarshishim excluido: ninguna grafía probada da su 3321.
 - Golden Dawn, documentos de Rosa-Cruz: coordenadas de letras [OM].
+  - Mathers, manuscrito F *Sigils from the Rose*: círculo inicial; quiebro u onda en letras iguales seguidas; lazo donde la línea pasa por una letra del nombre (Resh en Metatron). El texto no habla de marca final, pero **sus figuras (Metatron, Elohim) acaban en barra corta**: va activada. Mirar las láminas, no solo el texto. Figuras: tarrdaniel.com `images/Manuscripts/Sigil_Metatron_Elohim.gif` y `Rose_Cross_22_Letters.gif`.
+  - Lámina *Tracing for Netzach* (`images/Manuscripts/Sigil_Netzach.gif`): **una palabra = un sigilo**; Nogah es נגה. El lazo también marca una letra del nombre **aún no visitada** por la que pasa un trazo (Haniel), pero no la primera ni la última ni una ya visitada (Hagiel, Tzabaoth). Regla calibrada con 8 láminas: hipótesis, no ley.
+  - Documento 5=6 *The Rose Cross Lamen* + SVG de Commons: madres א arriba, ש abajo-der, מ abajo-izq; dobles פ ר ב ד ג ת כ con פ arriba-izq; zodiaco ה arriba, antihorario. Prueba: en Metatron, Teth-Resh-Vav quedan en línea (giro ~1°).
 - Claves de Salomón, *Lemegeton* y diarios de Dee: repertorios prescritos [HP].
+- **Catálogo «Sello histórico» (27-sep-2026):** reproducir, nunca generar. Primera colección: 7 sellos y 16 caracteres de Agrippa II.22, pp. 244–252 de la ed. de Londres, 1651, escaneo de la Wellcome Collection (Internet Archive `b30335231`, marca de dominio público). Proceso en `arcanum-sigil-prototype/sellos/extract.py` y `build_data.py`: recorte, tinta separada del papel (fuera manchas, rótulos y transparencia del reverso) y calco con vtracer. Sin retoques a mano: los defectos van anotados en la ficha. El SVG exportado lleva la atribución (obra ajena). La errata «45» de la Luna está en la impresión de 1651.
+- **Goetia (27-sep-2026):** 80 sellos de los 72 espíritus de las láminas de L. W. de Laurence (Chicago, 1916), que reimprime sin citarla la ed. Mathers-Crowley (1904); el escaneo es de la Harold B. Lee Library (BYU), en Internet Archive (`lesserkeyofsolom00dela`), anterior a 1929. Las láminas numeran FIGURAS, no espíritus: Paimon, Beleth, Leraje, Bathin, Bune, Vepar, Vual y Seere tienen dos sellos. Cada figura se identifica por el nombre grabado en su borde. Rangos y metales, de la lista clasificada del libro (pp. 47–48). Scripts en `sellos/goetia/`. Repertorio histórico: se estudia, no se genera ni se edita.
 - Runología académica e investigación del Instituto Árni Magnússon: runas y galdrastafir [HP/investigación].
 
 Consulta la guía de producto del vault antes de implementar cambios doctrinales.
+
+## Prototipo del taller: estructura y reglas (29-sep-2026)
+
+`arcanum-sigil-prototype/index.html` solo trae marcado y CSS. El código va en `js/` y se carga en este orden (scripts clásicos, sin módulos ES, para que funcione con `file://`):
+
+| Fichero | Qué hace |
+|---|---|
+| `glifos.js` | 39 símbolos arcanos + planetas y separadores dibujados a trazo propio (caja 100×100). **Nunca** depender de `Segoe UI Symbol`: no existe en Android ni en Flutter. |
+| `escena.js` | Grupos de dibujo con dos emisores, canvas y SVG. Rosa, Kamea y sellos pintan en el lienzo su propio SVG. |
+| `estilo.js` | Estilos, tintas, soportes, trazo y efectos. Relampagueantes según Flying Roll XIV (complementarios; el ámbar de Saturno es RC). Metales según Goetia p. 48. |
+| `interfaz.js` | Estructura A: hamburguesa, pestañas Crear/Capas/Estilo/Guardar, hoja inferior en móvil, radial del elemento tocado, botón + con radial. `revealFor(el)` abre la pestaña/menú de un control. |
+| `letras.js`, `capas.js`, `lienzo.js`, `rosa.js`, `kamea.js`, `catalogo.js`, `personal.js`, `app.js` | Motores y aplicación, en el orden original. |
+
+Reglas:
+- **Lo que se ve es lo que se exporta.** Todo dibujo nuevo entra como grupo de la escena, no como pintado aparte. El gate compara lienzo y SVG pixel a pixel (<0,05 % de píxeles distintos; quitar los remates solo del lienzo da 0,2–0,5 %).
+- Texto con línea base alfabética y `TEXT_MID` en los dos emisores (con `middle`/`central` no coinciden).
+- Móvil primero: todo lo tocable ≥ 48 px, iconos SVG propios (no caracteres ⟲ ⇋ ↶), el lienzo cabe encima de la hoja a media altura. El gate abre una sesión 390×844.
+- Historial por fotos del documento (`docSnapshot`/`docRestore`): cualquier campo nuevo que el usuario decida va en la foto, o deshacer lo pierde.

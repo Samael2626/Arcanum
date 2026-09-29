@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARCANUM -- Mesa de Tarot 2.5D</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --perspective:1200px;
+    --card-w:90px;--card-h:150px;
+    --card-radius:8px;
+    --ritual-bg:#0a0a0f;
+    --ritual-cloth:#1a1520;
+    --ritual-gold:#c9a84c;
+    --ritual-gold-dim:#8a6e30;
+    --ritual-text:#e8dcc8;
+    --ritual-card-back:#1e1a28;
+    --ritual-card-border:#3a2f4a;
+    --min-bg:#0d0d0d;
+    --min-cloth:#1a1a1a;
+    --min-gold:#888;
+    --min-gold-dim:#555;
+    --min-text:#ccc;
+    --min-card-back:#222;
+    --min-card-border:#333;
+    --bg:var(--ritual-bg);--cloth:var(--ritual-cloth);
+    --gold:var(--ritual-gold);--gold-dim:var(--ritual-gold-dim);
+    --text:var(--ritual-text);
+    --card-back:var(--ritual-card-back);--card-border:var(--ritual-card-border);
+  }
+  body{
+    font-family:'Segoe UI',system-ui,sans-serif;
+    background:var(--bg);color:var(--text);
+    overflow:hidden;height:100vh;width:100vw;
+    user-select:none;-webkit-user-select:none;
+  }
+
+  .top-bar{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 20px;
+    background:rgba(10,10,15,0.85);backdrop-filter:blur(10px);
+    border-bottom:1px solid rgba(201,168,76,0.15);
+  }
+  .top-bar h1{font-size:16px;font-weight:500;letter-spacing:2px;color:var(--gold)}
+  .style-tabs{display:flex;gap:4px}
+  .style-tab{
+    padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;
+    border:1px solid rgba(201,168,76,0.2);background:transparent;color:var(--text);
+    transition:all 0.3s;
+  }
+  .style-tab.active{background:rgba(201,168,76,0.15);border-color:var(--gold);color:var(--gold)}
+  .exit-btn{
+    width:36px;height:36px;border-radius:50%;border:1px solid rgba(201,168,76,0.2);
+    background:rgba(10,10,15,0.6);color:var(--gold);font-size:18px;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:all 0.3s;
+  }
+  .exit-btn:hover{background:rgba(201,168,76,0.15);border-color:var(--gold)}
+
+  .sandbox{
+    position:fixed;inset:0;z-index:1;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:var(--bg);transition:opacity 0.4s,transform 0.4s;
+  }
+  .sandbox.hidden{opacity:0;pointer-events:none;transform:scale(0.95)}
+  .sandbox h2{font-size:24px;font-weight:300;letter-spacing:3px;color:var(--gold);margin-bottom:12px}
+  .sandbox p{font-size:13px;color:rgba(232,220,200,0.5);letter-spacing:1px}
+  .sandbox-icon{
+    width:80px;height:120px;border:2px solid var(--gold-dim);border-radius:var(--card-radius);
+    display:flex;align-items:center;justify-content:center;margin-bottom:24px;
+    color:var(--gold-dim);animation:float 3s ease-in-out infinite;
+  }
+  .sandbox-icon svg{width:50px;height:50px}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+  .table-scene{
+    position:fixed;inset:0;z-index:10;
+    perspective:var(--perspective);
+    display:flex;align-items:center;justify-content:center;
+    transition:transform 0.5s cubic-bezier(0.4,0,0.2,1),opacity 0.4s;
+    transform-origin:bottom center;
+  }
+  .table-scene.exit-down{transform:translateY(110vh);opacity:0}
+  .table-scene.hidden{pointer-events:none;opacity:0;transform:scale(0.9)}
+
+  .table-surface{
+    width:min(90vw,700px);height:min(70vh,500px);
+    background:var(--cloth);border-radius:12px;
+    transform:rotateX(25deg);position:relative;
+    box-shadow:0 40px 80px rgba(0,0,0,0.6),inset 0 1px 0 rgba(201,168,76,0.08);
+    transition:background 0.5s;overflow:visible;
+  }
+  .table-surface.ritual{
+    background:
+      radial-gradient(ellipse at 50% 50%,rgba(107,58,94,0.12) 0%,transparent 70%),
+      repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(201,168,76,0.03) 39px,rgba(201,168,76,0.03) 40px),
+      repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(201,168,76,0.03) 39px,rgba(201,168,76,0.03) 40px),
+      var(--cloth);
+  }
+  .table-surface.ritual::before{
+    content:'';position:absolute;inset:12px;border-radius:8px;
+    border:1px solid rgba(201,168,76,0.12);pointer-events:none;
+  }
+  .table-surface.minimal{background:var(--cloth);box-shadow:0 40px 80px rgba(0,0,0,0.4)}
+
+  .spread-label{
+    position:absolute;top:16px;left:50%;
+    transform:translateX(-50%) rotateX(-25deg);
+    font-size:11px;letter-spacing:3px;text-transform:uppercase;
+    color:var(--gold-dim);opacity:0;transition:opacity 0.4s;
+    pointer-events:none;white-space:nowrap;
+  }
+  .spread-label.visible{opacity:1}
+
+  .deck-zone{
+    position:absolute;bottom:30px;right:40px;
+    transform:rotateX(-25deg);z-index:20;
+    transition:opacity 0.4s;
+  }
+  .deck{width:var(--card-w);height:var(--card-h);position:relative;cursor:pointer;transition:transform 0.3s}
+  .deck:hover{transform:translateY(-4px)}
+  .deck-card{
+    position:absolute;inset:0;
+    background:var(--card-back);border:1px solid var(--card-border);
+    border-radius:var(--card-radius);
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+  }
+  .deck-card svg{width:55%;height:55%;color:var(--gold-dim);opacity:0.5}
+  .deck-card:nth-child(2){transform:translate(2px,-2px);opacity:0.7}
+  .deck-card:nth-child(3){transform:translate(4px,-4px);opacity:0.4}
+
+  .table-card{
+    position:absolute;width:var(--card-w);height:var(--card-h);
+    cursor:pointer;z-index:10;
+    transition:transform 0.4s cubic-bezier(0.4,0,0.2,1),
+               left 0.5s cubic-bezier(0.4,0,0.2,1),
+               top 0.5s cubic-bezier(0.4,0,0.2,1),
+               opacity 0.4s,box-shadow 0.3s;
+  }
+  .table-card.dragging{
+    transition:none;z-index:100;
+    transform:scale(1.1);
+    box-shadow:0 20px 40px rgba(0,0,0,0.5);
+  }
+  .card-inner{
+    width:100%;height:100%;position:relative;
+    transform:rotateX(-25deg) rotateZ(var(--rot,0deg));
+  }
+  .card-face{
+    position:absolute;inset:0;
+    border-radius:var(--card-radius);border:1px solid var(--card-border);
+    overflow:hidden;transition:opacity 0.4s;
+  }
+  .card-face.card-back{opacity:1;z-index:2}
+  .card-face.card-front{opacity:0;z-index:1}
+  .table-card.flipped .card-face.card-back{opacity:0}
+  .table-card.flipped .card-face.card-front{opacity:1}
+
+  .card-back{
+    background:var(--card-back);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .card-back svg{width:60%;height:60%;color:var(--gold-dim);opacity:0.5}
+
+  .card-front{background:#f5ecd7}
+  .card-front img{
+    width:100%;height:100%;object-fit:cover;
+    border-radius:var(--card-radius);
+  }
+
+  .position-label{
+    position:absolute;bottom:-18px;left:50%;
+    transform:translateX(-50%);
+    font-size:8px;color:var(--gold-dim);white-space:nowrap;letter-spacing:1px;
+    opacity:0;transition:opacity 0.3s;pointer-events:none;
+  }
+  .table-card:hover .position-label,.table-card.flipped .position-label{opacity:1}
+
+  .remove-btn{
+    position:absolute;top:-8px;right:-8px;
+    width:20px;height:20px;border-radius:50%;
+    background:rgba(180,60,60,0.9);color:#fff;
+    font-size:11px;border:none;cursor:pointer;
+    display:none;align-items:center;justify-content:center;z-index:10;
+  }
+  .table-card:hover .remove-btn{display:flex}
+  @media(hover:none){ .remove-btn{display:flex} }
+
+  .deck-menu{
+    position:absolute;bottom:100%;right:0;margin-bottom:12px;
+    background:rgba(20,16,30,0.95);backdrop-filter:blur(12px);
+    border:1px solid rgba(201,168,76,0.2);border-radius:10px;
+    padding:6px 0;min-width:180px;
+    transform:rotateX(25deg) scale(0.9);opacity:0;
+    pointer-events:none;transition:all 0.25s;z-index:50;
+  }
+  .deck-menu.open{transform:rotateX(25deg) scale(1);opacity:1;pointer-events:auto}
+  .deck-menu-item{
+    padding:10px 16px;font-size:12px;cursor:pointer;
+    display:flex;align-items:center;gap:10px;
+    transition:background 0.2s;color:var(--text);
+  }
+  .deck-menu-item:hover{background:rgba(201,168,76,0.1);color:var(--gold)}
+  .deck-menu-item .icon{width:18px;text-align:center;font-size:14px}
+
+  .overlay{
+    position:fixed;inset:0;z-index:200;
+    background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;pointer-events:none;transition:opacity 0.3s;
+  }
+  .overlay.open{opacity:1;pointer-events:auto}
+  .picker-panel{
+    background:rgba(20,16,30,0.95);border:1px solid rgba(201,168,76,0.2);
+    border-radius:16px;padding:24px;max-width:520px;width:90vw;
+    transform:translateY(20px);transition:transform 0.3s;
+  }
+  .overlay.open .picker-panel{transform:translateY(0)}
+  .picker-panel h3{
+    font-size:14px;letter-spacing:3px;text-transform:uppercase;
+    color:var(--gold);margin-bottom:16px;text-align:center;
+  }
+  .spread-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+  .spread-option{
+    padding:14px 12px;border-radius:10px;cursor:pointer;
+    border:1px solid rgba(201,168,76,0.12);background:rgba(255,255,255,0.02);
+    transition:all 0.2s;text-align:center;
+  }
+  .spread-option:hover{border-color:var(--gold);background:rgba(201,168,76,0.08)}
+  .spread-option.selected{border-color:var(--gold);background:rgba(201,168,76,0.12)}
+  .spread-option .sp-icon{font-size:22px;margin-bottom:6px}
+  .spread-option .sp-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px}
+  .spread-option .sp-count{font-size:10px;color:var(--gold-dim)}
+  .spread-option .sp-desc{font-size:9px;color:rgba(232,220,200,0.4);margin-top:4px;line-height:1.3}
+  .picker-actions{display:flex;justify-content:center;margin-top:16px;gap:10px}
+  .picker-btn{
+    padding:10px 28px;border-radius:8px;font-size:12px;letter-spacing:1px;
+    cursor:pointer;border:1px solid rgba(201,168,76,0.3);
+    background:transparent;color:var(--text);transition:all 0.2s;
+  }
+  .picker-btn.primary{background:rgba(201,168,76,0.15);color:var(--gold);border-color:var(--gold)}
+  .picker-btn:hover{background:rgba(201,168,76,0.1)}
+
+  .deck-options{display:flex;flex-direction:column;gap:8px}
+  .deck-option{
+    display:flex;align-items:center;gap:14px;
+    padding:14px;border-radius:10px;cursor:pointer;
+    border:1px solid rgba(201,168,76,0.12);background:rgba(255,255,255,0.02);
+    transition:all 0.2s;
+  }
+  .deck-option:hover{border-color:var(--gold);background:rgba(201,168,76,0.08)}
+  .deck-option.selected{border-color:var(--gold);background:rgba(201,168,76,0.12)}
+  .deck-preview{
+    width:44px;height:72px;border-radius:5px;
+    border:1px solid var(--card-border);background:var(--card-back);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;overflow:hidden;
+  }
+  .deck-preview svg{width:60%;height:60%;color:var(--gold-dim);opacity:0.5}
+  .deck-option-info .doi-name{font-size:13px;font-weight:600;color:var(--text)}
+  .deck-option-info .doi-desc{font-size:10px;color:var(--gold-dim);margin-top:2px}
+
+  .toast{
+    position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:rgba(20,16,30,0.9);border:1px solid rgba(201,168,76,0.2);
+    border-radius:8px;padding:10px 20px;font-size:12px;color:var(--gold);
+    opacity:0;transition:all 0.3s;z-index:300;pointer-events:none;white-space:nowrap;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .swipe-indicator{
+    position:fixed;bottom:8px;left:50%;transform:translateX(-50%);
+    z-index:15;opacity:0.3;font-size:10px;color:var(--gold-dim);letter-spacing:2px;
+    animation:pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:0.2}50%{opacity:0.5}}
+  @media(pointer:fine){ .swipe-indicator{display:none} }
+
+  @media(max-width:600px){
+    :root{--card-w:70px;--card-h:115px}
+    .table-surface{width:95vw;height:65vh}
+    .spread-grid{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1>TAROT</h1>
+  <div class="style-tabs">
+    <div class="style-tab active" data-style="ritual">Ritual</div>
+    <div class="style-tab" data-style="minimal">Minimal</div>
+  </div>
+  <button class="exit-btn" id="exitBtn" title="Volver al sandbox">X</button>
+</div>
+
+<div class="swipe-indicator" id="swipeIndicator">DESLIZA HACIA ABAJO PARA SALIR</div>
+
+<div class="sandbox" id="sandbox">
+  <div class="sandbox-icon">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <polygon points="50,8 61,38 95,38 67,58 78,90 50,70 22,90 33,58 5,38 39,38"
+        fill="none" stroke="currentColor" stroke-width="1"/>
+      <circle cx="50" cy="50" r="6" fill="currentColor" opacity="0.3"/>
+    </svg>
+  </div>
+  <h2>ARCANUM</h2>
+  <p>Toca la mesa para comenzar</p>
+</div>
+
+<div class="table-scene hidden" id="tableScene">
+  <div class="table-surface ritual" id="tableSurface">
+    <div class="spread-label" id="spreadLabel"></div>
+    <div id="cardSlots"></div>
+    <div class="deck-zone" id="deckZone">
+      <div class="deck" id="deck">
+        <div class="deck-card" id="deckCard1"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-width="1.5"/><polygon points="50,8 61,38 95,38 67,58 78,90 50,70 22,90 33,58 5,38 39,38" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="50" cy="50" r="6" fill="currentColor" opacity="0.3"/></svg></div>
+        <div class="deck-card"></div>
+        <div class="deck-card"></div>
+      </div>
+      <div class="deck-menu" id="deckMenu">
+        <div class="deck-menu-item" data-action="shuffle"><span class="icon">~</span>Revolver</div>
+        <div class="deck-menu-item" data-action="tiradas"><span class="icon">:</span>Tiradas</div>
+        <div class="deck-menu-item" data-action="deck"><span class="icon">#</span>Cambiar mazo</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="spreadOverlay">
+  <div class="picker-panel">
+    <h3>Elegir Tirada</h3>
+    <div class="spread-grid" id="spreadGrid"></div>
+    <div class="picker-actions">
+      <button class="picker-btn" id="spreadCancel">Cancelar</button>
+      <button class="picker-btn primary" id="spreadConfirm">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="deckOverlay">
+  <div class="picker-panel" style="max-width:420px">
+    <h3>Elegir Mazo</h3>
+    <div class="deck-options" id="deckOptions"></div>
+    <div class="picker-actions">
+      <button class="picker-btn primary" id="deckConfirm">Usar este mazo</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ======================================
+//  SVG BACKS
+// ======================================
+var SVG_HEPTAGRAM = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-width="1.5"/><polygon points="50,8 61,38 95,38 67,58 78,90 50,70 22,90 33,58 5,38 39,38" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="50" cy="50" r="6" fill="currentColor" opacity="0.3"/></svg>';
+var SVG_SUN = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="20" fill="none" stroke="currentColor" stroke-width="2"/><g stroke="currentColor" stroke-width="1.5"><line x1="50" y1="5" x2="50" y2="22"/><line x1="50" y1="78" x2="50" y2="95"/><line x1="5" y1="50" x2="22" y2="50"/><line x1="78" y1="50" x2="95" y2="50"/><line x1="18" y1="18" x2="30" y2="30"/><line x1="70" y1="70" x2="82" y2="82"/><line x1="82" y1="18" x2="70" y2="30"/><line x1="30" y1="70" x2="18" y2="82"/></g></svg>';
+var SVG_MOON = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M55,15 A35,35 0 1,0 55,85 A28,28 0 1,1 55,15Z" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="40" cy="30" r="2" fill="currentColor" opacity="0.4"/><circle cx="30" cy="50" r="1.5" fill="currentColor" opacity="0.3"/><circle cx="45" cy="65" r="1.8" fill="currentColor" opacity="0.35"/></svg>';
+
+// ======================================
+//  DECK - 22 majors + 56 minors = 78
+// ======================================
+var DECK_RWS = [];
+var MAJORS = [
+  {name:'El Loco',file:'el-loco'},{name:'El Mago',file:'el-mago'},
+  {name:'La Sacerdotisa',file:'la-sacerdotisa'},{name:'La Emperatriz',file:'la-emperatriz'},
+  {name:'El Emperador',file:'el-emperador'},{name:'El Hierofante',file:'el-hierofante'},
+  {name:'Los Enamorados',file:'los-enamorados'},{name:'El Carro',file:'el-carro'},
+  {name:'La Fuerza',file:'la-fuerza'},
+  {name:'El Ermitano',file:'el-ermitano'},{name:'La Rueda',file:'la-rueda'},
+  {name:'La Justicia',file:'la-justicia'},{name:'El Colgado',file:'el-colgado'},
+  {name:'La Muerte',file:'la-muerte'},{name:'La Templanza',file:'la-templanza'},
+  {name:'El Diablo',file:'el-diablo'},{name:'La Torre',file:'la-torre'},
+  {name:'La Estrella',file:'la-estrella'},{name:'La Luna',file:'la-luna'},
+  {name:'El Sol',file:'el-sol'},{name:'El Juicio',file:'el-juicio'},
+  {name:'El Mundo',file:'el-mundo'}
+];
+MAJORS.forEach(function(m,i){ DECK_RWS.push({isMajor:true,name:m.name,file:m.file,num:i+1}); });
+
+var SUIT_NAMES = ['bastos','copas','espadas','oros'];
+var NUM_NAMES = ['as','dos','tres','cuatro','cinco','seis','siete','ocho','nueve','diez','sota','caballero','reina','rey'];
+SUIT_NAMES.forEach(function(suit){
+  NUM_NAMES.forEach(function(num,i){
+    var displayName = num.charAt(0).toUpperCase()+num.slice(1)+' de '+suit.charAt(0).toUpperCase()+suit.slice(1);
+    DECK_RWS.push({isMajor:false,name:displayName,file:num+'-de-'+suit,num:i+1,suit:suit});
+  });
+});
+
+// ======================================
+//  DECKS
+// ======================================
+var DECKS = [
+  { id:'rws', name:'Rider-Waite-Smith', desc:'78 cartas - Clasico 1909', back:SVG_SUN, style:'rws', cards:DECK_RWS },
+  { id:'arcanum', name:'Vectorial ARCANUM', desc:'78 cartas - Arte original', back:SVG_HEPTAGRAM, style:'arcanum', cards:null },
+  { id:'marsella', name:'Marsella', desc:'78 cartas - Tradicion francesa', back:SVG_MOON, style:'marsella', cards:null },
+];
+
+// ======================================
+//  SPREADS
+// ======================================
+var SPREADS = {
+  one_card: {
+    name:'Una Carta', icon:'*', count:1, desc:'Respuesta rapida',
+    positions:[{id:0,x:50,y:50,label:'Tu respuesta',rotation:0}]
+  },
+  three_card: {
+    name:'Tres Cartas', icon:'* * *', count:3, desc:'Pasado - Presente - Futuro',
+    positions:[
+      {id:0,x:22,y:50,label:'Pasado',rotation:0},
+      {id:1,x:50,y:50,label:'Presente',rotation:0},
+      {id:2,x:78,y:50,label:'Futuro',rotation:0},
+    ]
+  },
+  celtic_cross: {
+    name:'Cruz Celta', icon:'+', count:10, desc:'La tirada clasica',
+    positions:[
+      {id:0,x:35,y:45,label:'Situacion',rotation:0},
+      {id:1,x:35,y:45,label:'Desafio',rotation:90},
+      {id:2,x:35,y:72,label:'Fundamento',rotation:0},
+      {id:3,x:35,y:18,label:'Corona',rotation:0},
+      {id:4,x:12,y:45,label:'Pasado',rotation:0},
+      {id:5,x:62,y:45,label:'Futuro',rotation:0},
+      {id:6,x:78,y:72,label:'Tu',rotation:0},
+      {id:7,x:78,y:55,label:'Entorno',rotation:0},
+      {id:8,x:78,y:38,label:'Esperanzas',rotation:0},
+      {id:9,x:78,y:20,label:'Desenlace',rotation:0},
+    ]
+  },
+  horseshoe: {
+    name:'Herradura', icon:'U', count:7, desc:'Situacion - Obstaculo - Consejo',
+    positions:[
+      {id:0,x:12,y:65,label:'Pasado',rotation:-15},
+      {id:1,x:22,y:38,label:'Pasado reciente',rotation:-8},
+      {id:2,x:36,y:20,label:'Situacion',rotation:0},
+      {id:3,x:50,y:15,label:'Obstaculo',rotation:0},
+      {id:4,x:64,y:20,label:'Consejo',rotation:0},
+      {id:5,x:78,y:38,label:'Futuro cercano',rotation:8},
+      {id:6,x:88,y:65,label:'Futuro',rotation:15},
+    ]
+  },
+  simple_cross: {
+    name:'Cruz Simple', icon:'+', count:5, desc:'Lo que fue, lo que es, lo que sera',
+    positions:[
+      {id:0,x:50,y:45,label:'Tu',rotation:0},
+      {id:1,x:50,y:45,label:'Cruce',rotation:90},
+      {id:2,x:50,y:72,label:'Base',rotation:0},
+      {id:3,x:22,y:45,label:'Pasado',rotation:0},
+      {id:4,x:78,y:45,label:'Futuro',rotation:0},
+    ]
+  },
+  relationship: {
+    name:'Relacion', icon:'<3', count:5, desc:'Tu, tu pareja, la relacion',
+    positions:[
+      {id:0,x:25,y:40,label:'Tu',rotation:0},
+      {id:1,x:75,y:40,label:'Tu pareja',rotation:0},
+      {id:2,x:50,y:22,label:'Lo que une',rotation:0},
+      {id:3,x:50,y:50,label:'El desafio',rotation:0},
+      {id:4,x:50,y:75,label:'Direccion',rotation:0},
+    ]
+  },
+  year_wheel: {
+    name:'Rueda del Ano', icon:'O', count:12, desc:'Un mes por carta',
+    positions:[
+      {id:0,x:50,y:12,label:'Ene',rotation:0},
+      {id:1,x:70,y:16,label:'Feb',rotation:0},
+      {id:2,x:84,y:28,label:'Mar',rotation:0},
+      {id:3,x:88,y:48,label:'Abr',rotation:0},
+      {id:4,x:84,y:68,label:'May',rotation:0},
+      {id:5,x:70,y:82,label:'Jun',rotation:0},
+      {id:6,x:50,y:88,label:'Jul',rotation:0},
+      {id:7,x:30,y:82,label:'Ago',rotation:0},
+      {id:8,x:16,y:68,label:'Sep',rotation:0},
+      {id:9,x:12,y:48,label:'Oct',rotation:0},
+      {id:10,x:16,y:28,label:'Nov',rotation:0},
+      {id:11,x:30,y:16,label:'Dic',rotation:0},
+    ]
+  },
+};
+
+// ======================================
+//  STATE
+// ======================================
+var currentDeck = null;
+var currentSpread = 'celtic_cross';
+var spreadData = [];
+var deckMenuOpen = false;
+var selectedSpreadForPick = null;
+var isDragging = false;
+var tableVisible = false;
+var usedCardIndices = [];
+
+// ======================================
+//  DOM
+// ======================================
+function $(id){ return document.getElementById(id); }
+var tableScene = $('tableScene');
+var tableSurface = $('tableSurface');
+var cardSlots = $('cardSlots');
+var deckEl = $('deck');
+var deckMenu = $('deckMenu');
+var deckZone = $('deckZone');
+var spreadLabel = $('spreadLabel');
+var spreadOverlay = $('spreadOverlay');
+var spreadGrid = $('spreadGrid');
+var deckOverlay = $('deckOverlay');
+var deckOptionsEl = $('deckOptions');
+var sandbox = $('sandbox');
+var toastEl = $('toast');
+
+// ======================================
+//  INIT
+// ======================================
+function init() {
+  renderSpreadPicker();
+  renderDeckPicker();
+  bindEvents();
+}
+
+// ======================================
+//  RENDER PICKERS
+// ======================================
+function renderSpreadPicker() {
+  spreadGrid.innerHTML = '';
+  Object.keys(SPREADS).forEach(function(key) {
+    var s = SPREADS[key];
+    var sel = key === currentSpread ? ' selected' : '';
+    spreadGrid.innerHTML += '<div class="spread-option' + sel + '" data-spread="' + key + '">' +
+      '<div class="sp-icon">' + s.icon + '</div>' +
+      '<div class="sp-name">' + s.name + '</div>' +
+      '<div class="sp-count">' + s.count + ' carta' + (s.count>1?'s':'') + '</div>' +
+      '<div class="sp-desc">' + s.desc + '</div>' +
+    '</div>';
+  });
+  spreadGrid.querySelectorAll('.spread-option').forEach(function(el) {
+    el.addEventListener('click', function() {
+      spreadGrid.querySelectorAll('.spread-option').forEach(function(e){e.classList.remove('selected')});
+      el.classList.add('selected');
+      selectedSpreadForPick = el.dataset.spread;
+    });
+  });
+}
+
+function renderDeckPicker() {
+  deckOptionsEl.innerHTML = '';
+  DECKS.forEach(function(d, i) {
+    var sel = (currentDeck ? d.id === currentDeck.id : i === 0) ? ' selected' : '';
+    deckOptionsEl.innerHTML += '<div class="deck-option' + sel + '" data-deck="' + d.id + '">' +
+      '<div class="deck-preview">' + d.back + '</div>' +
+      '<div class="deck-option-info">' +
+        '<div class="doi-name">' + d.name + '</div>' +
+        '<div class="doi-desc">' + d.desc + '</div>' +
+      '</div>' +
+    '</div>';
+  });
+  deckOptionsEl.querySelectorAll('.deck-option').forEach(function(el) {
+    el.addEventListener('click', function() {
+      deckOptionsEl.querySelectorAll('.deck-option').forEach(function(e){e.classList.remove('selected')});
+      el.classList.add('selected');
+    });
+  });
+}
+
+// ======================================
+//  EVENTS
+// ======================================
+function bindEvents() {
+  document.querySelectorAll('.style-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.style-tab').forEach(function(t){t.classList.remove('active')});
+      tab.classList.add('active');
+      tableSurface.className = 'table-surface ' + tab.dataset.style;
+    });
+  });
+
+  $('exitBtn').addEventListener('click', exitTable);
+
+  var touchStartY = 0;
+  tableScene.addEventListener('touchstart', function(e) { touchStartY = e.touches[0].clientY; });
+  tableScene.addEventListener('touchend', function(e) {
+    // un drag de carta no debe cerrar la mesa (bug #7)
+    if (isDragging) return;
+    if (e.changedTouches[0].clientY - touchStartY > 80) exitTable();
+  });
+
+  tableSurface.addEventListener('click', function(e) {
+    if (e.target === tableSurface && !currentDeck) openDeckPicker();
+  });
+
+  deckEl.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (!currentDeck) { openDeckPicker(); return; }
+    toggleDeckMenu();
+  });
+
+  deckMenu.querySelectorAll('.deck-menu-item').forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var action = item.dataset.action;
+      closeDeckMenu();
+      if (action === 'shuffle') shuffleBackToDeck();
+      else if (action === 'tiradas') openSpreadPicker();
+      else if (action === 'deck') openDeckPicker();
+    });
+  });
+
+  $('spreadCancel').addEventListener('click', closeSpreadPicker);
+  $('spreadConfirm').addEventListener('click', function() {
+    if (selectedSpreadForPick) {
+      currentSpread = selectedSpreadForPick;
+      closeSpreadPicker();
+      dealCards();
+    }
+  });
+  spreadOverlay.addEventListener('click', function(e) { if (e.target === spreadOverlay) closeSpreadPicker(); });
+
+  $('deckConfirm').addEventListener('click', function() {
+    var sel = deckOptionsEl.querySelector('.deck-option.selected');
+    if (sel) {
+      currentDeck = DECKS.find(function(d){return d.id===sel.dataset.deck});
+      closeDeckPicker();
+      usedCardIndices = [];
+      applyDeckVisuals();
+      showToast('Mazo: ' + currentDeck.name + ' - Toca el mazo para tiradas');
+    }
+  });
+  deckOverlay.addEventListener('click', function(e) { if (e.target === deckOverlay) closeDeckPicker(); });
+
+  document.addEventListener('click', function(e) { if (!e.target.closest('.deck-zone')) closeDeckMenu(); });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      if (spreadOverlay.classList.contains('open')) closeSpreadPicker();
+      else if (deckOverlay.classList.contains('open')) closeDeckPicker();
+      else if (tableVisible) exitTable();
+    }
+  });
+}
+
+// ======================================
+//  TABLE OPEN / EXIT
+// ======================================
+function openTable() {
+  tableVisible = true;
+  tableScene.classList.remove('hidden');
+  sandbox.classList.add('hidden');
+  $('swipeIndicator').style.display = 'none';
+  if (!currentDeck) setTimeout(function(){ openDeckPicker(); }, 400);
+}
+
+function exitTable() {
+  tableVisible = false;
+  tableScene.classList.add('exit-down');
+  setTimeout(function() {
+    tableScene.classList.add('hidden');
+    tableScene.classList.remove('exit-down');
+    sandbox.classList.remove('hidden');
+    $('swipeIndicator').style.display = '';
+    cardSlots.innerHTML = '';
+    spreadData = [];
+    deckMenu.classList.remove('open');
+  }, 500);
+}
+
+// ======================================
+//  PICKERS
+// ======================================
+function openDeckPicker() { renderDeckPicker(); deckOverlay.classList.add('open'); }
+function closeDeckPicker() { deckOverlay.classList.remove('open'); }
+function openSpreadPicker() {
+  selectedSpreadForPick = currentSpread;
+  renderSpreadPicker();
+  spreadOverlay.classList.add('open');
+}
+function closeSpreadPicker() { spreadOverlay.classList.remove('open'); }
+
+// ======================================
+//  DECK MENU
+// ======================================
+function toggleDeckMenu() {
+  deckMenuOpen = !deckMenuOpen;
+  deckMenu.classList.toggle('open', deckMenuOpen);
+}
+function closeDeckMenu() {
+  deckMenuOpen = false;
+  deckMenu.classList.remove('open');
+}
+
+// ======================================
+//  CARD IMAGE PATH
+// ======================================
+function getCardImagePath(cardData) {
+  if (!currentDeck || currentDeck.style !== 'rws') return null;
+  if (!cardData || !cardData.file) return null;
+  return '../arcanum_app/assets/tarot/' + cardData.file + '.webp';
+}
+
+// ======================================
+//  DECK VISUALS - dorso del mazo + cartas en mesa
+// ======================================
+function applyDeckVisuals() {
+  if (!currentDeck) return;
+  var backSVG = currentDeck.back;
+  var deckCards = deckEl.querySelectorAll('.deck-card');
+  deckCards.forEach(function(dc, i) { dc.innerHTML = i === 0 ? backSVG : ''; });
+  spreadData.forEach(function(s) {
+    var back = s.element.querySelector('.card-face.card-back');
+    if (back) back.innerHTML = backSVG;
+    var front = s.element.querySelector('.card-face.card-front');
+    if (front) front.outerHTML = buildCardFront(s.cardData);
+  });
+}
+
+function buildCardFront(cardData) {
+  var imgPath = getCardImagePath(cardData);
+  if (imgPath) {
+    return '<div class="card-face card-front"><img src="' + imgPath + '" alt="' + cardData.name + '" draggable="false"/></div>';
+  }
+  return '<div class="card-face card-front" style="display:flex;align-items:center;justify-content:center;background:#f5ecd7">' +
+    '<div style="text-align:center;padding:6px"><div style="font-size:16px;font-weight:700;color:#3a2f20">' + cardData.name + '</div></div></div>';
+}
+
+// ======================================
+//  PICK RANDOM CARD FROM DECK
+// ======================================
+function pickRandomCard() {
+  if (currentDeck && currentDeck.cards) {
+    // RWS: pick from real deck, avoid repeats
+    var available = [];
+    for (var i = 0; i < currentDeck.cards.length; i++) {
+      if (usedCardIndices.indexOf(i) === -1) available.push(i);
+    }
+    if (available.length === 0) {
+      usedCardIndices = [];
+      for (var k = 0; k < currentDeck.cards.length; k++) available.push(k);
+    }
+    var idx = available[Math.floor(Math.random() * available.length)];
+    usedCardIndices.push(idx);
+    return currentDeck.cards[idx];
+  }
+  // fallback: random sin repetir (registro en usedCardIndices)
+  var fallbackDeck = [];
+  MAJORS.forEach(function(m, i){ fallbackDeck.push({isMajor:true,name:m.name,file:m.file,num:i+1,idx:'M'+i}); });
+  var suits = ['bastos','copas','espadas','oros'];
+  var nums = ['as','dos','tres','cuatro','cinco','seis','siete','ocho','nueve','diez','sota','caballero','reina','rey'];
+  suits.forEach(function(suit){
+    nums.forEach(function(num,i){
+      fallbackDeck.push({isMajor:false,name:num+' de '+suit,file:num+'-de-'+suit,num:i+1,suit:suit,idx:suit+'-'+num});
+    });
+  });
+  var fbAvailable = [];
+  for (var f = 0; f < fallbackDeck.length; f++) {
+    if (usedCardIndices.indexOf(fallbackDeck[f].idx) === -1) fbAvailable.push(f);
+  }
+  if (fbAvailable.length === 0) { usedCardIndices = []; fbAvailable = fallbackDeck.map(function(_,i){return i;}); }
+  var fi = fbAvailable[Math.floor(Math.random() * fbAvailable.length)];
+  usedCardIndices.push(fallbackDeck[fi].idx);
+  return fallbackDeck[fi];
+}
+
+// ======================================
+//  DEAL
+// ======================================
+function dealCards() {
+  cardSlots.innerHTML = '';
+  spreadData = [];
+  usedCardIndices = [];
+
+  var spread = SPREADS[currentSpread];
+  spreadLabel.textContent = spread.name;
+  spreadLabel.classList.add('visible');
+
+  deckZone.style.opacity = '0.3';
+  deckZone.style.pointerEvents = 'none';
+
+  spread.positions.forEach(function(pos, i) {
+    var cardData = pickRandomCard();
+    var card = createCardElement(pos, cardData, i);
+    cardSlots.appendChild(card);
+    spreadData.push({flipped:false, element:card, cardData:cardData, x:pos.x, y:pos.y, label:pos.label});
+
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(40px) scale(0.8)';
+    setTimeout(function() {
+      card.style.transition = 'opacity 0.5s cubic-bezier(0.4,0,0.2,1), transform 0.5s cubic-bezier(0.4,0,0.2,1)';
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0) scale(1)';
+      setTimeout(function() {
+        // limpiar inline para no pisar .dragging (transition/transform de clase)
+        card.style.transition = '';
+        card.style.transform = '';
+      }, 550);
+      if (i === spread.positions.length - 1) {
+        setTimeout(function(){ deckZone.style.opacity = '1'; deckZone.style.pointerEvents = ''; }, 300);
+      }
+    }, 100 + i * 120);
+  });
+
+  showToast(spread.name + ' - ' + spread.count + ' carta' + (spread.count>1?'s':''));
+}
+
+// ======================================
+//  CARD SLOT POSITION (% del mismo sistema que la mesa)
+// ======================================
+function setCardSlot(el, x, y) {
+  el.style.position = 'absolute';
+  el.style.left = 'calc(' + x + '% - var(--card-w)/2)';
+  el.style.top = 'calc(' + y + '% - var(--card-h)/2)';
+  el.style.zIndex = '10';
+}
+
+function createCardElement(pos, cardData, index) {
+  var el = document.createElement('div');
+  el.className = 'table-card';
+  el.style.left = 'calc(' + pos.x + '% - var(--card-w)/2)';
+  el.style.top = 'calc(' + pos.y + '% - var(--card-h)/2)';
+  // rotacion en el inner: no la pisa la animacion de reparto (bug #5)
+  if (pos.rotation) el.style.setProperty('--rot', pos.rotation + 'deg');
+
+  var backSVG = currentDeck ? currentDeck.back : SVG_HEPTAGRAM;
+  var frontHTML = buildCardFront(cardData);
+
+  el.innerHTML = '<div class="card-inner">' +
+    '<div class="card-face card-back">' + backSVG + '</div>' +
+    frontHTML +
+    '</div>' +
+    '<div class="position-label">' + pos.label + '</div>' +
+    '<button class="remove-btn" title="Quitar carta">x</button>';
+
+  // flip: just toggle class, no 3D rotation
+  el.addEventListener('click', function(e) {
+    if (isDragging) return;
+    if (e.target.classList.contains('remove-btn')) return;
+    e.stopPropagation();
+    el.classList.toggle('flipped');
+  });
+
+  el.querySelector('.remove-btn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    var deckRect = deckZone.getBoundingClientRect();
+    el.style.transition = 'all 0.5s cubic-bezier(0.4,0,0.2,1)';
+    el.style.position = 'fixed';
+    el.style.left = (deckRect.left + deckRect.width/2 - 45) + 'px';
+    el.style.top = (deckRect.top + deckRect.height/2 - 75) + 'px';
+    el.style.transform = 'scale(0.4)';
+    el.style.opacity = '0';
+    el.style.zIndex = '100';
+    setTimeout(function() {
+      var idx = spreadData.findIndex(function(s){return s.element===el});
+      if (idx >= 0) spreadData.splice(idx, 1);
+      el.remove();
+    }, 500);
+  });
+
+  el.addEventListener('mousedown', function(e) { startDrag(e, el); });
+  el.addEventListener('touchstart', function(e) { startDrag(e, el); }, {passive:false});
+
+  return el;
+}
+
+// ======================================
+//  DRAG
+// ======================================
+function startDrag(e, el) {
+  if (e.target.classList.contains('remove-btn')) return;
+  var touch = e.touches ? e.touches[0] : e;
+  var rect = el.getBoundingClientRect();
+  var offX = touch.clientX - rect.left;
+  var offY = touch.clientY - rect.top;
+  var dragging = false;
+  var startX = touch.clientX;
+  var startY = touch.clientY;
+
+  function onMove(ev) {
+    var t = ev.touches ? ev.touches[0] : ev;
+    if (!dragging && (Math.abs(t.clientX-startX)>5 || Math.abs(t.clientY-startY)>5)) {
+      dragging = true;
+      isDragging = true;
+      el.classList.add('dragging');
+    }
+    if (dragging) {
+      ev.preventDefault();
+      el.style.position = 'fixed';
+      el.style.left = (t.clientX - offX) + 'px';
+      el.style.top = (t.clientY - offY) + 'px';
+      el.style.zIndex = '100';
+    }
+  }
+
+  function onEnd() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onEnd);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onEnd);
+
+    if (dragging) {
+      el.classList.remove('dragging');
+      var r2 = el.getBoundingClientRect();
+      var cx = r2.left + r2.width/2;
+      var cy = r2.top + r2.height/2;
+
+      var pi = spreadData.findIndex(function(s){return s.element===el});
+      var pd = pi >= 0 ? spreadData[pi] : null;
+
+      var closest = null, minDist = Infinity;
+      spreadData.forEach(function(s) {
+        if (s.element === el) return;
+        var sr = s.element.getBoundingClientRect();
+        var d = Math.hypot(cx-(sr.left+sr.width/2), cy-(sr.top+sr.height/2));
+        if (d < minDist) { minDist = d; closest = s; }
+      });
+
+      el.style.position = 'absolute';
+      el.style.zIndex = '10';
+
+      if (pd && closest && minDist < 120) {
+        // swap de slots en datos + posicion % del mismo sistema de coordenadas
+        var tmpX = pd.x, tmpY = pd.y;
+        pd.x = closest.x; pd.y = closest.y;
+        closest.x = tmpX; closest.y = tmpY;
+        // la etiqueta pertenece al slot: se queda donde estaba
+        var lblA = el.querySelector('.position-label');
+        var lblB = closest.element.querySelector('.position-label');
+        var tmpLbl = lblA.textContent;
+        lblA.textContent = lblB.textContent;
+        lblB.textContent = tmpLbl;
+        setCardSlot(el, pd.x, pd.y);
+        setCardSlot(closest.element, closest.x, closest.y);
+        showToast('Cartas intercambiadas');
+      } else if (pd) {
+        setCardSlot(el, pd.x, pd.y);
+      } else {
+        setCardSlot(el, 50, 50);
+      }
+
+      setTimeout(function() { isDragging = false; }, 50);
+    }
+  }
+
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onEnd);
+  document.addEventListener('touchmove', onMove, {passive:false});
+  document.addEventListener('touchend', onEnd);
+}
+
+// ======================================
+//  SHUFFLE BACK TO DECK
+// ======================================
+function shuffleBackToDeck() {
+  var cards = cardSlots.querySelectorAll('.table-card');
+  if (!cards.length) { showToast('No hay cartas en la mesa'); return; }
+
+  // coordenadas de layout (offset*), no rect proyectado por rotateX (bug #13)
+  var deckRelX = ((deckZone.offsetLeft + deckZone.offsetWidth/2) / tableSurface.offsetWidth) * 100;
+  var deckRelY = ((deckZone.offsetTop + deckZone.offsetHeight/2) / tableSurface.offsetHeight) * 100;
+
+  showToast('Revolver...');
+
+  cards.forEach(function(card, i) {
+    setTimeout(function() {
+      card.style.transition = 'all 0.5s cubic-bezier(0.4,0,0.2,1)';
+      card.style.transform = 'scale(0.5)';
+      card.style.left = 'calc(' + deckRelX + '% - var(--card-w)/2)';
+      card.style.top = 'calc(' + deckRelY + '% - var(--card-h)/2)';
+      card.style.opacity = '0';
+    }, i * 60);
+  });
+
+  setTimeout(function() {
+    cardSlots.innerHTML = '';
+    spreadData = [];
+    usedCardIndices = [];
+    spreadLabel.classList.remove('visible');
+  }, cards.length * 60 + 600);
+}
+
+// ======================================
+//  TOAST
+// ======================================
+var toastTimer;
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { toastEl.classList.remove('show'); }, 2000);
+}
+
+sandbox.addEventListener('click', openTable);
+init();
+</script>
+</body>
+</html>

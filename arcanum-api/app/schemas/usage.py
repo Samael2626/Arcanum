@@ -25,6 +25,16 @@ class UsageTodayResponse(BaseModel):
     agotado cuesta un credito, y entonces importa cuantos quedan.
     """
 
+    coste_por_tirada: dict[str, int] = Field(
+        default_factory=dict,
+        description=(
+            "Cuantos creditos cuesta interpretar cada tirada, por slug. Se "
+            "envia para que la app NO tenga que reimplementar la formula del "
+            "precio: una regla de negocio escrita en dos lenguajes se separa "
+            "a la primera que alguien toque una sola. Sale del registro de "
+            "tiradas, asi que una tirada nueva aparece aqui sin tocar nada."
+        ),
+    )
     balance: int = Field(..., ge=0, description="Creditos disponibles.")
     acciones: dict[str, AccionUso] = Field(
         ...,

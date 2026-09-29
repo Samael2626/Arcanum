@@ -5,1754 +5,570 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Taller de Sigilos — ARCANUM</title>
 <style>
-:root { --bg:#0c0b0f; --panel:#15121a; --border:#2a2433; --gold:#b8860b; --burgundy:#4b101c; --navy:#0d1424; --text:#d4c9b8; --text-dim:#8a7f72; --font:'Cormorant Garamond','Georgia',serif; }
+:root{--bg:#0c0b0f;--panel:#15121a;--border:#2a2433;--gold:#b8860b;--gold-hi:#e6b422;--burgundy:#4b101c;--text:#d4c9b8;--dim:#8a7f72;--font:'Cormorant Garamond',Georgia,serif}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;display:flex;justify-content:center;padding:16px}
-.app{max-width:1200px;width:100%}
-header{text-align:center;padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:12px}
-header h1{font-size:1.4rem;font-weight:400;color:var(--gold);letter-spacing:5px;text-transform:uppercase}
-header p{color:var(--text-dim);font-style:italic;font-size:.78rem}
-.mobile-toggle{display:none}
-.mobile-panel-close{display:none}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;padding:16px}
+.app{margin:0 auto;max-width:1180px}
+header{border-bottom:1px solid var(--border);margin-bottom:12px;padding:8px 0;text-align:center}
+header h1{color:var(--gold);font-size:1.35rem;font-weight:400;letter-spacing:5px;text-transform:uppercase}
+header p{color:var(--dim);font-size:.8rem;font-style:italic}
 .workspace{align-items:flex-start;display:flex;gap:12px}
-.panel{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:12px;width:232px;flex-shrink:0;overflow-y:auto;max-height:92vh}
-.panel h3{font-size:.58rem;text-transform:uppercase;letter-spacing:3px;color:var(--text-dim);margin:6px 0 2px;font-weight:400;border-top:1px solid var(--border);padding-top:5px}
-.panel h3:first-child{border:none;padding-top:0;margin-top:0}
-.panel h4{font-size:.55rem;text-transform:uppercase;letter-spacing:2px;color:var(--text-dim);margin:4px 0 1px;font-weight:400}
-textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:4px 6px;color:var(--text);font-family:var(--font);font-size:.78rem;outline:none;resize:vertical;min-height:34px}
-textarea:focus{border-color:var(--gold)}
-#insText{background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--font);font-size:.62rem;max-width:120px;padding:2px 4px;width:100%}
-.btn{background:var(--gold);color:#0c0b0f;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-family:var(--font);font-size:.72rem;font-weight:600}
-.btn:hover{background:#e6b422}
-.btn-dim{background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:4px 10px;border-radius:4px;cursor:pointer;font-family:var(--font);font-size:.72rem}
-.btn-dim:hover{border-color:var(--gold);color:var(--gold)}
-.btn-sm{padding:3px 8px;font-size:.65rem}
-.btn-group{display:flex;flex-wrap:wrap;gap:3px;margin:3px 0}
-.info-box{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:5px;font-size:.65rem;color:var(--text-dim);margin:3px 0;line-height:1.4}
-.toggle-row{display:flex;align-items:center;gap:5px;margin:1px 0}
-.toggle-row label{margin:0;cursor:pointer;font-size:.72rem}
-input[type=checkbox]{accent-color:var(--gold);width:12px;height:12px;cursor:pointer}
-input[type=range]{accent-color:var(--gold);flex:1;height:3px;cursor:pointer;background:transparent}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:var(--gold);cursor:pointer}
-.fam-select{display:flex;flex-wrap:wrap;gap:2px;margin:4px 0}
-.fam-btn{background:var(--bg);border:1px solid var(--border);border-radius:3px;cursor:pointer;flex:1 1 calc(50% - 2px);font-size:.58rem;padding:4px 2px;text-align:center;color:var(--text-dim);transition:all .15s}
-.fam-btn.active{background:var(--gold);color:#0c0b0f;border-color:var(--gold)}
-.fam-btn:hover:not(.active):not(.locked){border-color:var(--gold)}
-.fam-btn.locked{opacity:.55;cursor:not-allowed}
-.fam-btn.locked::after{content:" 🔒";font-size:.5rem}
-.skeleton-group{display:flex;gap:3px;margin:3px 0}
-.skeleton-btn{background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text-dim);cursor:pointer;flex:1;font-size:.6rem;padding:4px 2px;text-align:center}
-.skeleton-btn.active{background:var(--gold);color:#0c0b0f;border-color:var(--gold)}
-.skeleton-btn:hover:not(.active){border-color:var(--gold)}
-.param-group{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:4px;margin:3px 0}
-.param-row{display:flex;align-items:center;justify-content:space-between;gap:4px;margin:1px 0}
-.param-row label{font-size:.62rem;color:var(--text-dim);white-space:nowrap}
-.param-row select{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:.62rem;padding:1px 3px;border-radius:3px;outline:none;font-family:var(--font);max-width:96px}
-.param-row select:focus{border-color:var(--gold)}
-.param-row .val{color:var(--gold);font-size:.6rem;min-width:18px;text-align:right}
-.stamp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;margin:3px 0}
-.stamp-btn{background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:2px;cursor:pointer;text-align:center;font-size:1rem;color:var(--text-dim);line-height:1.1}
-.stamp-btn:hover{border-color:var(--gold);color:var(--gold)}
-.stamp-btn.active{border-color:var(--gold);background:#1a1220;color:var(--gold)}
-.canvas-wrap{aspect-ratio:10/7;background:#0a080d;border:1px solid var(--border);border-radius:6px;flex:1;overflow:hidden;position:relative}
-canvas{aspect-ratio:10/7;display:block;height:auto;min-height:0;width:100%}
-.preview-box{align-items:center;border:1px solid var(--border);border-radius:4px;display:flex;gap:6px;margin:3px 0;padding:4px}
-.preview-box canvas{aspect-ratio:1;border:1px solid var(--border);display:block;height:44px;image-rendering:pixelated;width:44px}
-.preview-box span{color:var(--text-dim);font-size:.6rem;line-height:1.3}
-.panel-footer{border-top:1px solid var(--border);color:var(--text-dim);font-size:.58rem;line-height:1.35;margin-top:8px;padding-top:7px;text-align:center}
-.step{border:1px solid var(--border);border-radius:6px;margin:8px 0;overflow:hidden}
-.step>summary{align-items:center;background:linear-gradient(180deg,rgba(75,16,28,.28),transparent);cursor:pointer;display:flex;gap:8px;list-style:none;padding:7px 8px;user-select:none}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:6px;flex:0 0 270px;max-height:94vh;overflow-y:auto;padding:12px}
+.canvas-wrap{position:relative;aspect-ratio:1;background:#0a080d;border:1px solid var(--border);border-radius:6px;flex:1;max-width:720px;overflow:hidden}
+canvas#canvas{display:block;height:auto;touch-action:none;width:100%}
+.fam-select{display:grid;gap:4px;grid-template-columns:1fr 1fr;margin-bottom:6px}
+.fam-ref{font-size:.62rem;font-style:italic;grid-column:1/-1}
+.fam-btn{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--dim);cursor:pointer;font-family:var(--font);font-size:.72rem;min-height:36px;padding:4px}
+.fam-btn.active{background:var(--gold);border-color:var(--gold);color:#0c0b0f;font-weight:600}
+.fam-btn.locked{cursor:not-allowed;font-style:italic;opacity:.5}
+.step{border:1px solid var(--border);border-radius:6px;margin:8px 0}
+.step>summary{align-items:center;background:linear-gradient(180deg,rgba(75,16,28,.28),transparent);cursor:pointer;display:flex;gap:8px;list-style:none;padding:8px}
 .step>summary::-webkit-details-marker{display:none}
-.step>summary:hover{background:linear-gradient(180deg,rgba(184,134,11,.16),rgba(75,16,28,.18))}
-.step-num{align-items:center;background:var(--gold);border-radius:50%;color:#0c0b0f;display:flex;flex:0 0 20px;font-size:.62rem;font-weight:700;height:20px;justify-content:center}
-.step-title{color:var(--text);font-size:.74rem;font-weight:600;letter-spacing:2px;text-transform:uppercase}
-.step-chevron{margin-left:auto;transition:transform .18s}
-.step[open]>.step-chevron{display:none}
-.step[open]>summary>.step-chevron{transform:rotate(90deg)}
-.step-body{padding:6px 8px 8px}
-.step-body>h3{border:none;margin-top:6px;padding-top:0}
-.step-helper{color:var(--text-dim);font-size:.66rem;font-style:italic;line-height:1.4;margin:2px 0 6px}
-.sub-step{border:1px solid var(--border);border-radius:5px;margin:7px 0 2px}
-.sub-step>summary{color:var(--gold);cursor:pointer;font-size:.66rem;letter-spacing:1px;list-style:none;padding:6px 8px;text-transform:uppercase;user-select:none}
-.sub-step>summary::-webkit-details-marker{display:none}
-.sub-step>summary:hover{background:rgba(184,134,11,.08)}
-.sub-body{padding:4px 8px 8px}
-.reduction-line{display:grid;grid-template-columns:52px 1fr;gap:4px;line-height:1.35}
-.reduction-line b{color:var(--gold);font-weight:400}
-.reduction-chips{margin-top:5px}
-.chip-label{display:block;font-size:.58rem;color:var(--text-dim);margin-bottom:2px}
-.chip-row{display:flex;flex-wrap:wrap;gap:3px}
-.unit-chip{background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--gold);cursor:pointer;font-family:var(--font);font-size:.7rem;font-weight:600;min-width:22px;padding:2px 0;text-align:center;transition:all .12s}
-.unit-chip:hover{background:var(--gold);color:#0c0b0f;border-color:var(--gold)}
-.gallery{background:rgba(12,11,15,.98);border:1px solid var(--border);border-radius:6px;display:none;flex:0 0 220px;max-height:92vh;overflow:auto;padding:10px}
+.step-num{align-items:center;background:var(--gold);border-radius:50%;color:#0c0b0f;display:flex;flex:0 0 20px;font-size:.66rem;font-weight:700;height:20px;justify-content:center}
+.step-title{font-size:.76rem;font-weight:600;letter-spacing:2px;text-transform:uppercase}
+.step-body{padding:6px 8px 9px}
+.helper{color:var(--dim);font-size:.7rem;font-style:italic;line-height:1.4;margin:2px 0 6px}
+textarea,input[type=text],select{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--font);font-size:.8rem;outline:none;padding:5px 6px;width:100%}
+textarea{min-height:40px;resize:vertical}
+textarea:focus,input[type=text]:focus,select:focus{border-color:var(--gold)}
+.btn,.btn-dim{border-radius:4px;cursor:pointer;font-family:var(--font);font-size:.76rem;min-height:34px;padding:5px 10px}
+.btn{background:var(--gold);border:0;color:#0c0b0f;font-weight:600}
+.btn:hover{background:var(--gold-hi)}
+.btn-dim{background:transparent;border:1px solid var(--border);color:var(--dim)}
+.btn-dim:hover,.btn-dim.on{border-color:var(--gold);color:var(--gold)}
+.row{display:flex;flex-wrap:wrap;gap:4px;margin:5px 0}
+.row>*{flex:1 1 auto}
+.field{align-items:center;display:flex;gap:6px;justify-content:space-between;margin:4px 0}
+.field label{color:var(--dim);font-size:.7rem;white-space:nowrap}
+.field select{max-width:150px}
+.field input[type=range]{accent-color:var(--gold);flex:1}
+.field .val{color:var(--gold);font-size:.68rem;min-width:30px;text-align:right}
+.check{align-items:center;display:flex;font-size:.74rem;gap:6px;margin:4px 0}
+.check input{accent-color:var(--gold)}
+.mode-group{display:grid;gap:4px;grid-template-columns:repeat(3,1fr)}
+.mode-btn{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--dim);cursor:pointer;font-family:var(--font);font-size:.72rem;min-height:40px;padding:3px}
+.mode-btn.active{background:var(--gold);border-color:var(--gold);color:#0c0b0f;font-weight:600}
+.info{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--dim);font-size:.7rem;line-height:1.45;margin:4px 0;padding:6px}
+.info b{color:var(--gold);font-weight:400}
+.line{display:grid;gap:4px;grid-template-columns:62px 1fr}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}
+.chip{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--gold);cursor:pointer;display:flex;flex-direction:column;font-family:var(--font);min-height:44px;min-width:40px;padding:3px 5px;text-align:center}
+.chip b{font-size:1rem}
+.chip small{color:var(--dim);font-size:.58rem}
+.chip.sel{background:var(--gold);border-color:var(--gold);color:#0c0b0f}
+.chip.sel small{color:#2a1d05}
+.chip.absorbed{opacity:.55}
+.chip.weak small{color:#d0674f}
+.sub{border:1px solid var(--border);border-radius:5px;margin:6px 0;padding:0 6px}
+.sub>summary{color:var(--gold);cursor:pointer;font-size:.7rem;letter-spacing:1px;list-style:none;min-height:34px;display:flex;align-items:center;text-transform:uppercase}
+.sub>summary::-webkit-details-marker{display:none}
+.sub[open]{padding-bottom:6px}
+.term-grid{display:grid;gap:3px;grid-template-columns:repeat(4,1fr);margin:4px 0}
+.term-btn{align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:4px;cursor:pointer;display:flex;flex-direction:column;min-height:52px;padding:2px}
+.term-btn svg{height:30px;width:30px}
+.term-btn span{color:var(--dim);font-family:var(--font);font-size:.54rem;line-height:1.1}
+.term-btn.active{border-color:var(--gold)}
+.term-btn.active span{color:var(--gold)}
+.seal-grid{display:grid;gap:4px;grid-template-columns:repeat(3,1fr);margin:6px 0;max-height:420px;overflow:auto}
+.seal-card{align-items:center;background:var(--paper,#efe6d2);border:2px solid transparent;border-radius:4px;color:#1b1612;cursor:pointer;display:flex;flex-direction:column;min-height:84px;padding:4px}
+.seal-card svg{height:54px;width:100%}
+.seal-card span{font-family:var(--font);font-size:.58rem;line-height:1.15;text-align:center}
+.seal-card.active{border-color:var(--gold)}
+.seal-filter{min-height:32px;padding:2px 6px}
+.seal-filter.active{border-color:var(--gold);color:var(--gold)}
+.seal-facsimile{background:#efe6d2;height:100%;inset:0;object-fit:contain;padding:6%;position:absolute;width:100%}
+.layer-list{display:flex;flex-direction:column;gap:3px;margin:6px 0}
+.layer-row{align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:4px;display:flex;gap:4px;padding:2px 4px}
+.layer-row.sel{border-color:var(--gold)}
+.layer-row.off .layer-name{opacity:.45}
+.layer-row .layer-name{cursor:pointer;flex:1;font-size:.74rem;min-height:30px;display:flex;align-items:center}
+.layer-row .btn-dim{min-height:30px;padding:2px 7px}
+.layer-row input{accent-color:var(--gold)}
+.layer-editor{border:1px solid var(--border);border-radius:5px;margin:6px 0;padding:6px}
+.layer-editor h4{color:var(--gold);margin-bottom:4px}
+.layer-editor input[type=text]{margin:3px 0}
+.layer-presets .btn-dim{flex:1 1 22%;padding:4px}
+.stamp-group{color:var(--dim);font-size:.62rem;letter-spacing:1px;margin:6px 0 2px;text-transform:uppercase}
+.stamp-grid{display:grid;gap:3px;grid-template-columns:repeat(6,1fr);margin:2px 0}
+.stamp-btn{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--dim);cursor:pointer;font-family:var(--font);font-size:1.1rem;min-height:38px}
+.stamp-btn svg{display:block;margin:auto}
+.stamp-btn.active{border-color:var(--gold);color:var(--gold)}
+.preview{align-items:center;display:flex;gap:8px;margin-top:6px}
+.preview canvas{border:1px solid var(--border);height:80px;width:80px}
+.preview span{color:var(--dim);font-size:.66rem;line-height:1.35}
+.panel-footer{border-top:1px solid var(--border);color:var(--dim);font-size:.62rem;line-height:1.4;margin-top:8px;padding-top:7px;text-align:center}
+.gallery{background:var(--panel);border:1px solid var(--border);border-radius:6px;display:none;flex:0 0 200px;max-height:94vh;overflow:auto;padding:10px}
 .gallery.open{display:block}
-.gallery-head{align-items:center;display:flex;justify-content:space-between;margin-bottom:8px}
-.gallery-head h2{color:var(--gold);font-size:.78rem;font-weight:400;letter-spacing:2px;text-transform:uppercase}
-.gallery-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
-.gallery-empty{color:var(--text-dim);font-size:.68rem;grid-column:1/-1;padding:16px 4px;text-align:center}
-.gallery-item{background:var(--panel);border:1px solid var(--border);border-radius:4px;overflow:hidden;position:relative}
-.gallery-item:hover{border-color:var(--gold)}
-.gallery-item img{aspect-ratio:1;cursor:pointer;display:block;object-fit:cover;width:100%}
-.gallery-name{color:var(--text-dim);font-size:.58rem;overflow:hidden;padding:4px;padding-right:20px;text-overflow:ellipsis;white-space:nowrap}
-.gallery-delete{background:var(--burgundy);border:0;border-radius:50%;color:var(--text);cursor:pointer;font-size:.58rem;height:16px;position:absolute;right:3px;bottom:3px;width:16px}
+.gallery h2{color:var(--gold);font-size:.8rem;font-weight:400;letter-spacing:2px;margin-bottom:8px;text-transform:uppercase}
+.gallery-grid{display:grid;gap:6px;grid-template-columns:1fr 1fr}
+.g-item{border:1px solid var(--border);border-radius:4px;position:relative}
+.g-item img{cursor:pointer;display:block;width:100%}
+.g-item div{color:var(--dim);font-size:.6rem;overflow:hidden;padding:3px 20px 3px 4px;text-overflow:ellipsis;white-space:nowrap}
+.g-item button{background:var(--burgundy);border:0;border-radius:50%;bottom:3px;color:var(--text);cursor:pointer;font-size:.6rem;height:16px;position:absolute;right:3px;width:16px}
 .modal{background:rgba(0,0,0,.92);display:none;inset:0;overflow:auto;padding:24px;position:fixed;z-index:300}
 .modal.open{display:block}
-.modal-card{background:var(--panel);border:1px solid var(--border);border-radius:6px;margin:0 auto;max-width:560px;padding:14px 18px}
-.modal-card h2{color:var(--gold);font-size:.9rem;font-weight:400;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px}
-.modal-card h3{color:var(--text-dim);font-size:.62rem;letter-spacing:2px;text-transform:uppercase;margin:10px 0 3px;font-weight:400;border-top:1px solid var(--border);padding-top:6px}
-.prov-row{display:grid;grid-template-columns:56px 1fr;gap:4px;font-size:.68rem;line-height:1.45}
-.prov-row b{color:var(--gold);font-weight:400}
-.prov-strokes{font-size:.66rem;line-height:1.5}
-.prov-strokes .srow{display:flex;gap:6px;padding:1px 0}
-.prov-strokes .srow .uid{color:var(--gold);min-width:34px}
+.modal-card{background:var(--panel);border:1px solid var(--border);border-radius:6px;margin:0 auto;max-width:600px;padding:14px 18px}
+.modal-card h2{color:var(--gold);font-size:.95rem;font-weight:400;letter-spacing:3px;margin-bottom:6px;text-transform:uppercase}
+.modal-card h3{border-top:1px solid var(--border);color:var(--dim);font-size:.66rem;font-weight:400;letter-spacing:2px;margin:10px 0 4px;padding-top:6px;text-transform:uppercase}
+.modal-card p,.modal-card li{font-size:.74rem;line-height:1.5}
+.modal-card ol,.modal-card ul{padding-left:18px}
 .modal-close{float:right}
-.edit-overlay{background:var(--panel);border:1px solid var(--gold);border-radius:6px;bottom:10px;box-shadow:0 8px 40px rgba(0,0,0,.6);left:50%;max-height:46vh;overflow:auto;padding:10px;position:fixed;transform:translateX(-50%);width:min(560px,92vw);z-index:240}
-.edit-overlay h3{color:var(--gold);font-size:.68rem;font-weight:400;letter-spacing:3px;text-transform:uppercase}
-.edit-hint{color:var(--text-dim);font-size:.6rem;margin:3px 0 6px}
-.edit-list{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
-.edit-chip{background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text-dim);cursor:pointer;font-size:.62rem;padding:2px 6px}
-.edit-chip.active{border-color:var(--gold);background:#1a1220;color:var(--gold)}
-.gnosis-overlay{align-items:center;background:rgba(0,0,0,.97);display:none;inset:0;justify-content:center;padding:20px;position:fixed;z-index:400}
-.gnosis-overlay.open{display:flex}
-.gnosis-stage{align-items:center;display:flex;flex-direction:column;max-width:720px;text-align:center;width:100%}
+.gnosis{align-items:center;background:rgba(0,0,0,.97);display:none;inset:0;justify-content:center;padding:20px;position:fixed;z-index:400}
+.gnosis.open{display:flex}
+.gnosis-stage{align-items:center;display:flex;flex-direction:column;max-width:640px;text-align:center;width:100%}
 .gnosis-stage h2{color:var(--gold);font-size:1rem;font-weight:400;letter-spacing:5px;text-transform:uppercase}
-.gnosis-copy{color:var(--text-dim);font-size:.8rem;line-height:1.5;margin:8px auto 14px;max-width:560px}
-.gnosis-visual{align-items:center;display:flex;height:min(48vh,390px);justify-content:center;position:relative;width:100%}
-.gnosis-sigil{height:100%;object-fit:contain;width:100%}
-.breath-orb{align-items:center;background:radial-gradient(circle,rgba(184,134,11,.28),rgba(75,16,28,.06) 62%,transparent 70%);border:1px solid rgba(184,134,11,.45);border-radius:50%;display:flex;height:130px;justify-content:center;position:absolute;width:130px}
-.gnosis-overlay.running .breath-orb{animation:breathe 16s linear infinite}
-.breath-label{color:var(--gold);font-size:.65rem;letter-spacing:2px;text-transform:uppercase}
-@keyframes breathe{0%{transform:scale(.65);opacity:.45}25%{transform:scale(1);opacity:1}50%{transform:scale(1);opacity:1}75%{transform:scale(.65);opacity:.45}100%{transform:scale(.65);opacity:.45}}
-.gnosis-timer{color:var(--text);font-size:1.7rem;font-variant-numeric:tabular-nums;letter-spacing:4px;margin:5px}
-.gnosis-controls{align-items:center;display:flex;flex-wrap:wrap;gap:7px;justify-content:center}
-.gnosis-controls select{background:var(--panel);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--font);padding:5px 8px}
-.btn-forget{background:transparent;border:1px solid var(--border);color:var(--text-dim);opacity:.45;pointer-events:none}
-.btn-forget.ready{background:var(--gold);border-color:var(--gold);color:var(--bg);opacity:1;pointer-events:auto;box-shadow:0 0 30px rgba(184,134,11,.35)}
-.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--gold);color:#0c0b0f;padding:5px 16px;border-radius:20px;font-size:.78rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:500}
+.gnosis-copy{color:var(--dim);font-size:.82rem;line-height:1.5;margin:8px auto 12px;max-width:520px}
+.gnosis-visual{align-items:center;display:flex;height:min(48vh,380px);justify-content:center;position:relative;width:100%}
+.gnosis-visual img{height:100%;object-fit:contain}
+.orb{align-items:center;border:1px solid rgba(184,134,11,.45);border-radius:50%;display:flex;height:120px;justify-content:center;position:absolute;width:120px}
+.gnosis.running .orb{animation:breathe 16s linear infinite}
+.orb span{color:var(--gold);font-size:.66rem;letter-spacing:2px;text-transform:uppercase}
+@keyframes breathe{0%{transform:scale(.65);opacity:.45}25%,50%{transform:scale(1);opacity:1}75%,100%{transform:scale(.65);opacity:.45}}
+.gnosis-timer{font-size:1.7rem;font-variant-numeric:tabular-nums;letter-spacing:4px;margin:6px}
+.btn-forget{opacity:.45;pointer-events:none}
+.btn-forget.ready{opacity:1;pointer-events:auto}
+.tag{border:1px solid #6f5a1e;border-radius:10px;color:var(--gold);cursor:help;display:inline-block;font-size:.6rem;font-style:normal;letter-spacing:.4px;line-height:1.5;padding:0 7px;vertical-align:1px;white-space:nowrap}
+.tag-om{border-color:#4a4f7a;color:#a9b2e0}
+.tag-rc{border-color:#6b3a3a;color:#d9a0a0}
+.tag-ar{border-color:#3d5e4a;color:#9fcfb0}
+q{cursor:help;font-style:italic;quotes:"«" "»"}
+.note{color:var(--dim);font-size:.68rem;margin-top:8px}
+.toast{background:var(--gold);border-radius:20px;bottom:30px;color:#0c0b0f;font-size:.8rem;left:50%;opacity:0;padding:6px 16px;pointer-events:none;position:fixed;transform:translateX(-50%);transition:opacity .2s;z-index:500}
 .toast.show{opacity:1}
-@media (max-width:768px){
-  body{padding:8px}
-  .app{max-width:none}
-  header{align-items:center;display:flex;justify-content:space-between;padding:7px 2px;text-align:left}
-  header h1{font-size:1rem;letter-spacing:3px}
-  header p{display:none}
-  .mobile-toggle{display:block}
-  .mobile-panel-close{display:block;margin-left:auto}
-  .workspace{display:block;position:relative}
-  .panel{box-shadow:12px 0 35px rgba(0,0,0,.55);inset:0 auto 0 0;max-height:calc(100vh - 58px);position:fixed;transform:translateX(-110%);transition:transform .22s ease;width:min(82vw,290px);z-index:200}
-  .panel.open{transform:translateX(0)}
-  .canvas-wrap{aspect-ratio:10/7;width:100%}
-  canvas{height:auto;min-height:0;touch-action:none;width:100%}
-  .gallery{bottom:8px;left:8px;max-height:70vh;position:fixed;right:8px;z-index:210}
-  .gallery-grid{grid-template-columns:repeat(3,1fr)}
-  .param-row label,.param-row select{font-size:.68rem}
-  .gnosis-copy{font-size:.7rem}
-  .gnosis-visual{height:42vh}
-  .edit-overlay{max-height:60vh;width:94vw}
+.swatches{display:flex;gap:6px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:thin}
+.sw-card{align-items:center;background:none;border:1px solid transparent;border-radius:6px;color:var(--dim);cursor:pointer;display:flex;flex:0 0 64px;flex-direction:column;font-family:var(--font);font-size:.6rem;gap:3px;line-height:1.1;min-height:72px;padding:3px 2px;text-align:center}
+.sw-card.active{border-color:var(--gold);color:var(--gold)}
+.sw-disc{align-items:center;border:1px solid rgba(255,255,255,.15);border-radius:50%;display:flex;height:44px;justify-content:center;width:44px}
+.sw{border:2px solid var(--border);border-radius:50%;cursor:pointer;flex:0 0 44px;height:44px;width:44px}
+.sw.active{border-color:var(--gold-hi);box-shadow:0 0 0 2px var(--bg) inset}
+.seg{border:1px solid var(--border);border-radius:4px;display:flex;margin:4px 0;overflow:hidden}
+.seg button{background:none;border:0;color:var(--dim);cursor:pointer;flex:1;font-family:var(--font);font-size:.72rem;min-height:40px}
+.seg button.active{background:var(--burgundy);color:var(--gold-hi)}
+.seg button:disabled{opacity:.35}
+.level{border:1px solid var(--border);border-radius:4px;display:grid;grid-template-columns:1fr 1fr;margin:0 0 8px;overflow:hidden}
+.level button{background:transparent;border:0;color:var(--dim);cursor:pointer;font-family:var(--font);font-size:.74rem;min-height:36px}
+.level button.active{background:var(--burgundy);color:var(--gold-hi)}
+body:not(.adv) [data-adv]{display:none!important}
+.step p.helper{display:none}
+.step.help-on p.helper{display:block}
+.info-btn{background:none;border:1px solid var(--border);border-radius:50%;color:var(--dim);cursor:pointer;flex:0 0 26px;font-family:var(--font);font-size:.74rem;font-style:italic;height:26px;margin-left:auto}
+.info-btn.on{border-color:var(--gold);color:var(--gold)}
+.sublabel{color:var(--dim);font-size:.7rem;margin:6px 0 2px}
+.palette{background:var(--bg);border:1px solid var(--gold);border-radius:5px;margin:4px 0;max-height:360px;overflow:auto;padding:4px 6px 6px}
+.pal-grid{display:grid;gap:3px;grid-template-columns:repeat(3,1fr);margin:2px 0}
+.pal-grid .btn-dim{font-size:.7rem;min-height:36px;padding:2px}
+.canvas-tools{display:flex;gap:4px;position:absolute;right:8px;top:8px;z-index:5}
+.canvas-tools-left{left:8px;right:auto}
+.tool:disabled{cursor:default;opacity:.35}
+.tool{align-items:center;background:rgba(12,11,15,.8);border:1px solid var(--border);border-radius:5px;color:var(--dim);cursor:pointer;display:flex;font-family:var(--font);font-size:.74rem;justify-content:center;min-height:48px;min-width:48px;padding:2px 8px}
+.tool:hover,.tool.on{border-color:var(--gold);color:var(--gold)}
+.ctx-group{display:flex;flex-wrap:wrap;gap:3px}
+.ctx-group[hidden]{display:none}
+.ctx-name{align-items:center;color:var(--gold);display:flex;font-size:.8rem;gap:4px;padding:0 6px}
+
+/* ── estructura A: barra superior, riel, cajon y lienzo ── */
+body{padding:0}
+.app{max-width:none}
+.topbar{margin:0;text-align:left;align-items:center;background:var(--bg);border-bottom:1px solid var(--border);display:flex;gap:8px;height:56px;padding:0 8px;position:sticky;top:0;z-index:40}
+.icon-btn{align-items:center;background:none;border:0;border-radius:8px;color:var(--text);cursor:pointer;display:flex;height:48px;justify-content:center;width:48px}
+.icon-btn:hover{color:var(--gold)}
+.brand{display:flex;flex-direction:column;line-height:1.05}
+.brand h1{color:var(--gold);font-size:.78rem;font-weight:400;letter-spacing:4px;text-transform:uppercase}
+.fam-current{background:none;border:0;color:var(--text);cursor:pointer;font-family:var(--font);font-size:1rem;min-height:30px;padding:0;text-align:left}
+.menu{background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 14px 36px rgba(0,0,0,.65);left:8px;max-width:calc(100vw - 16px);padding:10px 12px;position:fixed;top:58px;width:320px;z-index:60}
+.menu[hidden]{display:none}
+.menu-title{color:var(--dim);font-size:.62rem;letter-spacing:2px;margin:6px 0 4px;text-transform:uppercase}
+.menu .fam-btn{min-height:48px}
+.menu-note{color:var(--dim);font-size:.66rem;font-style:italic;margin-top:8px}
+.workspace{align-items:stretch;display:flex;gap:0;height:calc(100vh - 56px)}
+.rail{border-right:1px solid var(--border);display:flex;flex:0 0 78px;flex-direction:column;gap:4px;padding:8px 6px}
+.tab{align-items:center;background:none;border:0;border-radius:10px;color:var(--dim);cursor:pointer;display:flex;flex-direction:column;font-family:var(--font);font-size:.68rem;gap:3px;justify-content:center;min-height:62px;padding:6px 2px}
+.tab:hover{color:var(--text)}
+.tab.active{background:rgba(75,16,28,.5);color:var(--gold-hi)}
+.tab[hidden]{display:none}
+.panel{border:0;border-radius:0;border-right:1px solid var(--border);flex:0 0 340px;height:100%;max-height:none}
+.tab-page[hidden]{display:none}
+.sheet-handle{display:none}
+.canvas-wrap{align-self:center;flex:1 1 auto;margin:12px auto;max-width:min(760px,calc(100vh - 84px))}
+.gallery{height:100%;max-height:none}
+/* radial de acciones del elemento */
+.radial{pointer-events:none;position:absolute;z-index:6}
+.radial[hidden]{display:none}
+.radial .ctx-group{display:contents}
+.radial .ctx-group[hidden]{display:none}
+.radial .tool{animation:pop .14s ease-out;background:rgba(21,18,26,.95);border-color:var(--gold);border-radius:50%;box-shadow:0 4px 14px rgba(0,0,0,.5);color:var(--gold-hi);padding:0;pointer-events:auto;position:absolute}
+.radial .tool[hidden]{display:none}
+.radial .ctx-name{background:rgba(21,18,26,.95);border:1px solid var(--border);border-radius:12px;bottom:0;left:50%;padding:2px 10px;pointer-events:none;position:absolute;transform:translate(-50%,24px);white-space:nowrap}
+@keyframes pop{from{opacity:0;transform:scale(.6)}}
+/* boton + y su radial */
+.fab{background:var(--gold);border:0;border-radius:50%;bottom:8px;box-shadow:0 6px 18px rgba(0,0,0,.5);color:#0c0b0f;position:absolute;right:8px;z-index:7}
+.fab:hover,.fab.on{background:var(--gold-hi);color:#0c0b0f}
+.fab svg{transition:transform .15s}
+.fab.on svg{transform:rotate(45deg)}
+.fab[hidden]{display:none}
+.fab-radial{inset:0;pointer-events:none;position:absolute;z-index:7}
+.fab-radial[hidden]{display:none}
+.fab-item{animation:pop .14s ease-out;background:rgba(21,18,26,.95);border-color:var(--gold);border-radius:50%;color:var(--gold-hi);flex-direction:column;height:52px;padding:0;pointer-events:auto;position:absolute;width:52px}
+.fab-item small{background:rgba(21,18,26,.92);border-radius:8px;color:var(--text);font-size:.6rem;left:50%;padding:1px 6px;position:absolute;top:calc(100% + 2px);transform:translateX(-50%);white-space:nowrap}
+.quick-sheet{background:var(--panel);border:1px solid var(--gold);border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,.6);left:6%;max-height:80%;overflow:auto;padding:8px 10px;position:absolute;right:6%;top:10%;z-index:8}
+.quick-sheet[hidden]{display:none}
+.quick-head{align-items:center;display:flex;gap:8px;justify-content:space-between}
+.quick-head b{color:var(--gold);font-weight:400;letter-spacing:2px;text-transform:uppercase}
+.quick-head span{color:var(--dim);flex:1;font-size:.7rem;font-style:italic}
+.quick-sheet .stamp-btn{min-height:44px}
+@media (max-width:820px){
+  .workspace{display:block;height:auto}
+  .canvas-wrap{border-left:0;border-radius:0;border-right:0;margin:0;max-width:none;width:100%}
+  .rail{background:var(--panel);border-right:0;border-top:1px solid var(--border);bottom:0;flex-direction:row;height:calc(64px + env(safe-area-inset-bottom));justify-content:space-around;left:0;padding:4px 4px env(safe-area-inset-bottom);position:fixed;right:0;z-index:50}
+  .tab{flex:1;min-height:56px}
+  .panel{border-radius:14px 14px 0 0;border-right:0;border-top:1px solid var(--border);bottom:calc(64px + env(safe-area-inset-bottom));box-shadow:0 -10px 30px rgba(0,0,0,.55);height:46vh;left:0;padding-top:0;position:fixed;right:0;transition:height .18s ease;z-index:45}
+  .panel[data-sheet=closed]{border:0;height:0;overflow:hidden;padding:0}
+  .panel[data-sheet=full]{height:82vh}
+  .panel{height:40vh}
+  body[data-sheet=half] .canvas-wrap{margin:0 auto;max-width:calc(60vh - 128px)}
+  .sheet-handle{background:var(--panel);cursor:grab;display:flex;justify-content:center;margin:0 -12px 4px;padding:10px 0 8px;position:sticky;top:0;touch-action:none;z-index:2}
+  .sheet-handle span{background:var(--dim);border-radius:3px;height:5px;opacity:.6;width:44px}
+  .gallery.open{inset:0;position:fixed;z-index:250}
+  .radial .ctx-name{display:none}
 }
 </style>
 </head>
 <body>
 <div class="app">
-<header><h1>⟠ <span>Taller de</span> Sigilos</h1><p>ARCANUM — glifo personal y marco ceremonial</p></header>
-<button class="btn-dim mobile-toggle" id="panelToggle" aria-controls="controlPanel" aria-expanded="false">&#9776; Panel</button>
+<header class="topbar">
+  <button class="icon-btn" id="btnMenu" data-icon="menu" aria-label="Menú" aria-expanded="false" aria-controls="famMenu"></button>
+  <div class="brand"><h1>Taller de Sigilos</h1><button class="fam-current" id="famCurrent" aria-label="Cambiar de motor">Sigilo de letras ▾</button></div>
+</header>
+<nav class="menu" id="famMenu" hidden aria-label="Motor y nivel">
+  <div class="menu-title">Motor</div>
+  <div class="fam-select">
+    <button class="fam-btn active" id="famLetters" title="Sigilo personal: la intención reducida a letras que se funden">Sigilo de letras</button>
+    <button class="fam-btn" id="famRosa" title="Motor separado: nombre transliterado al hebreo sobre la Rosa de 22 pétalos">Rosa-Cruz</button>
+    <button class="fam-btn" id="famKamea" title="Cuadrado mágico del planeta (Agrippa): el nombre se traza de número en número">Kamea</button>
+    <button class="fam-btn" id="famPersonal" title="Tu sigilo montado en formato de sello clásico, con planeta y metal">Sello personal</button>
+    <button class="fam-btn" id="famCompare" title="Un mismo nombre trazado con letras, Rosa-Cruz y Kamea, lado a lado">Comparar</button>
+    <button class="fam-btn fam-ref" id="famSeal" title="Sellos de Agrippa y la Goetia reproducidos de su fuente. Irán a Materia; aquí quedan como referencia">Consulta: sellos históricos (irá a Materia)</button>
+  </div>
+  <div class="menu-title">Detalle del panel</div>
+  <div class="level" role="group" aria-label="Nivel de detalle"><button id="btnBasic" class="active">Básico</button><button id="btnAdvanced">Avanzado</button></div>
+  <p class="menu-note">ARCANUM — las letras de tu intención, fundidas en un signo.</p>
+</nav>
 <div class="workspace">
-<div class="panel" id="controlPanel">
-  <button class="btn-dim btn-sm mobile-panel-close" id="panelClose">X</button>
-
-  <details class="step" open>
-    <summary><span class="step-num">1</span><span class="step-title">Intención</span><span class="step-chevron">▸</span></summary>
-    <div class="step-body">
-      <p class="step-helper">Una acción o disposición propia que quieras cultivar. Clara, tuya, sin daño a terceros.</p>
-      <textarea id="intention" placeholder="Ej.: mi práctica mantiene enfoque sereno"></textarea>
-      <div class="btn-group"><button class="btn" id="btnGenerate">✦ Forjar</button></div>
-    </div>
-  </details>
-
-  <details class="step" open>
-    <summary><span class="step-num">2</span><span class="step-title">Reducción</span><span class="step-chevron">▸</span></summary>
-    <div class="step-body">
-      <p class="step-helper">La intención se condensa con una regla nombrada y documentada.</p>
-      <div class="param-row"><label for="selReduction">Método</label>
-        <select id="selReduction" title="Regla nombrada para condensar la intención">
-          <option value="cooper" selected>Cooper — iniciales</option>
-          <option value="novowels">Sin vocales (moderno)</option>
-          <option value="unique">Letras únicas</option>
-        </select></div>
-      <div class="info-box" id="reductionBox">—</div>
-      <details class="sub-step">
-        <summary id="subFamilias">Familias (no se mezclan)</summary>
-        <div class="sub-body">
-          <div class="fam-select">
-            <div class="fam-btn active" id="famPersonal" title="Composición personal asistida. El ordenador propone; tú eliges y corriges.">Glifo personal</div>
-            <div class="fam-btn active" id="famMarco" title="Círculo, estrella e inscripción como capas independientes del núcleo.">Marco ceremonial</div>
-            <div class="fam-btn" id="famRosaCruz" title="Motor separado: diagrama de letras de la Rosa y transliteración explícita. No se mezcla con el glifo personal.">Rosa-Cruz</div>
-            <div class="fam-btn locked" id="famKamea" title="Motor futuro: planeta, tabla histórica, transliteración y secuencia.">Kamea planetario</div>
-            <div class="fam-btn locked" id="famSeal" title="Catálogo documentado por manuscrito/edición. No se genera libremente.">Sello histórico</div>
-            <div class="fam-btn locked" id="famGoetia" title="Catálogo documentado. Ningún generador inventa entidades.">Goetia / Dee</div>
-          </div>
-          <div class="rosa-panel" id="rosaPanel" hidden>
-            <h4>Rosa-Cruz — motor separado</h4>
-            <p class="step-helper">Translitera un nombre al hebreo y une sus letras sobre la Rosa de 22 pétalos. Sistema de coordenadas alfabéticas; no es reducción estilo Spare.</p>
-            <div class="param-row"><label for="rosaName">Nombre</label><input id="rosaName" type="text" maxlength="20" placeholder="Ej.: VOLUNTAS"></div>
-            <div class="btn-group"><button class="btn btn-sm" id="btnRosaGenerate">✜ Transliterar y trazar</button></div>
-            <div class="toggle-row"><input type="checkbox" id="chkRosaDiagram" checked><label title="Muestra los 22 pétalos con su letra y correspondencia">Mostrar diagrama de letras</label></div>
-            <div class="info-box" id="rosaBox">—</div>
-          </div>
-        </div>
-      </details>
-    </div>
-  </details>
-
-  <details class="step" open>
-    <summary><span class="step-num">3</span><span class="step-title">Tótem</span><span class="step-chevron">▸</span></summary>
-    <div class="step-body">
-      <p class="step-helper">Un poste vertical con bandas: cada letra talla su registro sobre el asta. Sin letras amontonadas.</p>
-      <h4>Talla</h4>
-      <div class="skeleton-group">
-        <button class="skeleton-btn active" data-k="0" id="btnSkel0" title="Asta y soportes rectos, talla sobria">Poste</button>
-        <button class="skeleton-btn" data-k="1" id="btnSkel1" title="Soportes con hombro y remates, talla ceremonial">Totémico</button>
-        <button class="skeleton-btn" data-k="2" id="btnSkel2" title="Soportes con curva y lomo orgánico">Tronco vivo</button>
+<nav class="rail" id="tabBar" role="tablist" aria-label="Secciones">
+  <button class="tab" data-tab="crear" data-icon="crear" role="tab" aria-selected="false"><span>Crear</span></button>
+  <button class="tab" data-tab="capas" data-icon="capas" role="tab" aria-selected="false"><span>Capas</span></button>
+  <button class="tab" data-tab="estilo" data-icon="estilo" role="tab" aria-selected="false"><span>Estilo</span></button>
+  <button class="tab" data-tab="guardar" data-icon="guardar" role="tab" aria-selected="false"><span>Guardar</span></button>
+</nav>
+<aside class="panel" id="controlPanel" data-sheet="half">
+  <div class="sheet-handle" id="sheetHandle" title="Arrastra para abrir o cerrar"><span></span></div>
+  <div class="tab-page" id="page_crear" role="tabpanel">
+  <section id="lettersPanel">
+    <details class="step" open>
+      <summary><span class="step-title">Intención</span></summary>
+      <div class="step-body">
+        <p class="helper">Una frase en presente, propia y sin daño a terceros.</p>
+        <textarea id="intention" placeholder="Ej.: mi práctica mantiene enfoque sereno"></textarea>
+        <div class="row"><button class="btn" id="btnGenerate">Forjar</button></div>
       </div>
-      <div class="param-row"><label for="rngOrganic">Carácter</label><input type="range" id="rngOrganic" min="0" max="100" value="35"><span class="val" id="organicVal">35%</span></div>
-      <div class="toggle-row"><input type="checkbox" id="chkJoin" checked><label title="Fusiona trazos casi-colineales en ligaduras con procedencia compartida">Unir trazos compatibles</label></div>
-      <div class="toggle-row"><input type="checkbox" id="chkMirror" checked><label title="Simetría bilateral del tótem (decisión de usuario)">Simetría bilateral</label></div>
-      <div class="toggle-row"><input type="checkbox" id="chkTerminals"><label>Terminales</label>
-        <select id="selTerminalStyle" style="flex:1;min-width:0">
-          <option value="dot">Punto</option><option value="cross">Cruz</option><option value="ring">Anillo</option>
-        </select></div>
-      <div class="btn-group">
-        <button class="btn-dim btn-sm" id="btnEditStrokes">✎ Editar trazos</button>
-        <button class="btn-dim btn-sm" id="btnSimplify" title="Re-fusiona, elimina duplicados y trazos aislados cortos">Simplificar</button>
-      </div>
-      <div class="btn-group"><button class="btn-dim btn-sm" id="btnProvenance">☰ Ver procedencia</button></div>
-
-      <details class="sub-step">
-        <summary id="subMarco">Marco ritual (círculo, estrella, inscripción)</summary>
-        <div class="sub-body">
-          <div class="param-group">
-            <div class="toggle-row"><input type="checkbox" id="chkCircle" checked><label>Círculo exterior</label></div>
-            <div class="param-row" id="circleScaleRow"><label>Escala</label><input type="range" id="rngCircleScale" min="80" max="115" value="100"><span class="val" id="circleScaleVal">100%</span></div>
-            <div class="param-row"><label>Grosor</label><input type="range" id="rngCircleThick" min="4" max="30" value="14"><span class="val" id="circleThickVal">1.4</span></div>
-            <div class="param-row"><label>Opacidad</label><input type="range" id="rngCircleOpacity" min="10" max="100" value="55"><span class="val" id="circleOpacityVal">55%</span></div>
-            <div class="toggle-row"><input type="checkbox" id="chkCircleDouble"><label>Anillo doble</label></div>
-          </div>
-          <div class="param-group">
-            <div class="toggle-row"><input type="checkbox" id="chkStar" checked><label>Estrella ritual</label></div>
-            <div class="param-row"><label>Puntas</label><select id="selStarPoints">
-              <option value="5" selected>5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
-            </select></div>
-            <div class="param-row"><label>Escala</label><input type="range" id="rngStarScale" min="70" max="105" value="92"><span class="val" id="starScaleVal">92%</span></div>
-            <div class="param-row"><label>Rotación</label><input type="range" id="rngStarRot" min="0" max="360" value="0"><span class="val" id="starRotVal">0°</span></div>
-            <div class="param-row"><label>Grosor</label><input type="range" id="rngStarThick" min="4" max="30" value="18"><span class="val" id="starThickVal">1.8</span></div>
-            <div class="param-row"><label>Opacidad</label><input type="range" id="rngStarOpacity" min="10" max="100" value="80"><span class="val" id="starOpacityVal">80%</span></div>
-            <div class="param-row"><label>Interior</label><input type="range" id="rngStarInner" min="30" max="65" value="45"><span class="val" id="starInnerVal">45%</span></div>
-            <div class="param-row"><label>Separación núcleo</label><input type="range" id="rngStarGap" min="0" max="100" value="30"><span class="val" id="starGapVal">30%</span></div>
-            <div class="toggle-row"><input type="checkbox" id="chkStarChords" checked><label title="Acordes internos del polígono estelar (pentagrama, hexagrama…)">Acordes internos</label></div>
-          </div>
-          <div class="toggle-row"><input type="checkbox" id="chkInscription"><label>Inscripción latina</label></div>
-          <div class="param-row" id="insRow"><label>Texto</label><input id="insText" type="text" maxlength="42" placeholder="Lema, nombre o frase"></div>
-          <div class="param-row"><label>Posición</label><select id="selInsPos">
-            <option value="top">Arriba</option><option value="bottom">Abajo</option>
-            <option value="upperArc" selected>Arco superior</option><option value="lowerArc">Arco inferior</option>
+    </details>
+    <details class="step" open data-adv>
+      <summary><span class="step-title">Reducción</span></summary>
+      <div class="step-body">
+        <div class="field"><label for="selReduction">Método</label>
+          <select id="selReduction">
+            <option value="cooper" selected>Cooper — iniciales</option>
+            <option value="novowels">Únicas sin vocales</option>
+            <option value="unique">Letras únicas</option>
           </select></div>
-          <div class="param-row"><label>Tamaño</label><input type="range" id="rngInsSize" min="9" max="30" value="17"><span class="val" id="insSizeVal">17</span></div>
-          <div class="param-row"><label>Espaciado</label><input type="range" id="rngInsSpacing" min="0" max="16" value="3"><span class="val" id="insSpacingVal">3</span></div>
-          <div class="param-row"><label>Orientación</label><select id="selInsOrientation">
-            <option value="normal">Normal</option><option value="mirror">Espejo</option>
-          </select></div>
-          <div class="info-box">El texto nunca se añade solo. El hebreo es un motor separado con transliteración y mapa de letras; aquí no se improvisan letras hebreas.</div>
+        <label class="check" title="Una letra que es giro o reflejo de otra ya presente no se dibuja dos veces (M y W, N y Z). Frater U∴D∴"><input type="checkbox" id="chkAbsorb" checked>Absorber letras gemelas (M/W, N/Z)</label>
+        <div class="info" id="reductionBox">—</div>
+      </div>
+    </details>
+    <details class="step" open>
+      <summary><span class="step-title">Composición</span></summary>
+      <div class="step-body">
+        <div class="mode-group">
+          <button class="mode-btn active" data-mode="fusion" id="btnModeFusion">Fusión</button>
+          <button class="mode-btn" data-mode="block" id="btnModeBlock">Bloque</button>
+          <button class="mode-btn" data-mode="cross" id="btnModeCross">Cruz</button>
         </div>
-      </details>
+        <p class="helper" id="modeHelp"></p>
+        <label class="check" id="compactRow" data-adv title="Cada letra prueba a desplazarse media caja y se queda donde comparte más trazo con las demás. Como en Cooper, donde la I es el asta de la D."><input type="checkbox" id="chkCompact" checked>Encaje compacto</label>
+        <div class="field" id="overlapRow" data-adv><label for="rngOverlap">Solape</label><input type="range" id="rngOverlap" min="0" max="50" value="0"><span class="val" id="overlapVal">0%</span></div>
+      </div>
+    </details>
+    <details class="step" open data-adv>
+      <summary><span class="step-title">Letras</span></summary>
+      <div class="step-body">
+        <p class="helper">Toca una letra, aquí o en el lienzo, y aparecen sus botones sobre ella: girar, reflejar, escalar y restaurar. Arrástrala en el lienzo para moverla. El porcentaje indica cuánto de ella sigue visible.</p>
+        <div class="chips" id="letterChips"></div>
+        <div class="row"><button class="btn-dim" id="btnHideMode" title="Con el modo activo, toca un trazo para ocultarlo o recuperarlo">Ocultar trazos</button></div>
+      </div>
+    </details>
+    <details class="step" open data-adv>
+      <summary><span class="step-title">Presentación</span></summary>
+      <div class="step-body">
+        <details class="sub" id="subTerminals" open>
+          <summary>Terminales</summary>
+          <p class="helper">Remate en la punta de cada trazo libre. Elige uno para todos, o activa «Uno a uno» y toca las puntas que quieras.</p>
+          <button class="btn-dim" id="btnTermPalette" data-pal="termPalette" aria-expanded="false">Remate ▾</button>
+          <div class="palette" id="termPalette" hidden><div class="term-grid" id="termGrid"></div></div>
+          <div class="field"><label for="rngTermScale">Tamaño</label><input type="range" id="rngTermScale" min="50" max="220" value="100"><span class="val" id="termScaleVal">100%</span></div>
+          <div class="row">
+            <button class="btn-dim" id="btnTermPick" title="Toca una punta para ponerle el remate elegido; tócala otra vez para quitárselo">Uno a uno</button>
+            <button class="btn-dim" id="btnTermClear">Quitar todos</button>
+          </div>
+        </details>
+        <label class="check" title="Colorea cada letra para ver de dónde sale cada trazo"><input type="checkbox" id="chkColors">Colorear letras</label>
+        <div class="preview"><canvas id="previewCanvas" width="80" height="80"></canvas><span>Miniatura 80×80:<br>la silueta debe leerse</span></div>
+      </div>
+    </details>
+  </section>
 
-      <details class="sub-step">
-        <summary id="subPresentacion">Presentación</summary>
-        <div class="sub-body">
-          <div class="toggle-row"><input type="checkbox" id="chkGlow"><label title="Halo dorado opcional. La estructura manda; el brillo decora.">Brillo suave</label></div>
-          <div class="toggle-row"><input type="checkbox" id="chkGuide"><label title="Colorea cada banda para ver de qué letra viene cada talla. Apaga para ver el tótem puro.">Ver construcción (colores)</label></div>
-          <div class="toggle-row"><input type="checkbox" id="chkPreview" checked><label>Vista previa 80×80</label></div>
-          <div class="preview-box"><canvas id="previewCanvas" width="80" height="80" title="Minatura a 80×80: la silueta debe seguir siendo legible"></canvas><span>Silueta a 80×80<br>legible y trazable</span></div>
-          <h4>Presets</h4>
-          <div class="btn-group">
-            <button class="btn-dim btn-sm" id="btnPresetSolo">Solo tótem</button>
-            <button class="btn-dim btn-sm" id="btnPresetCircle">Tótem + círculo</button>
-          </div>
-          <div class="btn-group">
-            <button class="btn-dim btn-sm" id="btnPresetStar">Tótem + estrella</button>
-            <button class="btn-dim btn-sm" id="btnPresetCircleStar">Tótem + círculo + estrella</button>
-          </div>
-          <div class="btn-group"><button class="btn-dim btn-sm" id="btnPresetCircleIns">Tótem + círculo + inscripción</button></div>
+  <section id="comparePanel" hidden>
+    <details class="step" open>
+      <summary><span class="step-title">Comparar</span></summary>
+      <div class="step-body">
+        <p class="helper">El mismo nombre trazado en los tres sistemas del taller, lado a lado. Rellena las tres pestañas con este nombre.</p>
+        <input type="text" id="compareName" maxlength="32" placeholder="Nombre. Ej.: Samuel">
+        <div class="field"><label for="selComparePlanet">Kamea</label><select id="selComparePlanet"><option value="auto" selected>Regente de hoy</option></select></div>
+        <div class="row"><button class="btn" id="btnCompare">Comparar</button></div>
+        <div class="info" id="compareBox">—</div>
+      </div>
+    </details>
+  </section>
+
+  <section id="personalPanel" hidden>
+    <details class="step" open>
+      <summary><span class="step-title">Sello personal</span></summary>
+      <div class="step-body">
+        <p class="helper">Tu sigilo, montado con la forma de un sello clásico. Es un sello nuevo y tuyo: el formato imita modelos históricos, pero no es uno de ellos.</p>
+        <div class="field"><label for="selPersonalSource">Sigilo de</label>
+          <select id="selPersonalSource"><option value="letters" selected>Sigilo de letras</option><option value="rosa">Rosa-Cruz</option><option value="kamea">Kamea</option></select></div>
+        <input type="text" id="personalName" maxlength="32" placeholder="Nombre del sello (si lo dejas vacío, el del sigilo)">
+        <div class="field"><label for="selPersonalPlanet">Planeta</label>
+          <select id="selPersonalPlanet"><option value="auto" selected>Regente de hoy</option></select></div>
+        <div class="field" data-adv><label for="selPersonalView">Vista</label>
+          <select id="selPersonalView"><option value="paper" selected>Papel</option><option value="metal">Grabado en su metal</option></select></div>
+        <div class="info" id="personalBox">—</div>
+      </div>
+    </details>
+  </section>
+
+  <section id="sealPanel" hidden>
+    <details class="step" open>
+      <summary><span class="step-title">Sello histórico</span></summary>
+      <div class="step-body">
+        <p class="helper">Sellos reproducidos de su fuente, con edición y página. No se generan ni se editan: se estudian.</p>
+        <div class="field"><label for="selSealCollection">Colección</label>
+          <select id="selSealCollection"><option value="agrippa1651" selected>Agrippa · planetas (1651)</option><option value="goetia1916">Goetia · 72 espíritus (1904)</option></select></div>
+        <div class="row" id="sealFilters"></div>
+        <div class="seal-grid" id="sealGrid"></div>
+        <div class="field"><label for="selSealView">Vista</label>
+          <select id="selSealView"><option value="trace" selected>Trazo (calco)</option><option value="facsimile">Facsímil (escaneo)</option></select></div>
+        <div class="info" id="sealBox">Elige una pieza.</div>
+        <div class="row"><button class="btn-dim" id="btnSealKamea" hidden>Trazar en la Kamea</button></div>
+      </div>
+    </details>
+  </section>
+
+  <section id="kameaPanel" hidden>
+    <details class="step" open>
+      <summary><span class="step-title">Kamea</span></summary>
+      <div class="step-body">
+        <p class="helper">Cada planeta tiene su cuadrado mágico (Agrippa, libro II, cap. 22). El nombre se pasa a números hebreos y se une de casilla en casilla.</p>
+        <div class="field"><label for="selKameaPlanet">Planeta</label>
+          <select id="selKameaPlanet"></select></div>
+        <p class="sublabel">Nombres que da Agrippa para este planeta:</p>
+        <div class="row" id="kameaPresets"></div>
+        <input type="text" id="kameaName" maxlength="32" placeholder="O tu propio nombre, en latín o en hebreo">
+        <div class="field" data-adv><label for="selKameaTranslit">Transliteración</label>
+          <select id="selKameaTranslit"><option value="consonantal" selected>Consonántica (como se escribe)</option><option value="full">Letra a letra (con vocales)</option></select></div>
+        <div class="row"><button class="btn" id="btnKameaGenerate">Trazar sobre la tabla</button></div>
+        <div class="field" data-adv><label for="kameaHebrew">Hebreo</label><input type="text" id="kameaHebrew" dir="rtl" lang="he" maxlength="40"></div>
+        <div class="field" data-adv><label for="selKameaReduce">Números grandes</label>
+          <select id="selKameaReduce"><option value="agrippa" selected>Como Agrippa</option><option value="zeros">Quitar ceros</option><option value="aiq">Aiq Bekar</option></select></div>
+        <div class="field" data-adv><label for="selKameaEnds">Extremos</label>
+          <select id="selKameaEnds"><option value="agrippa" selected>Dos círculos (Agrippa)</option><option value="gd">Círculo y barra (Aurora Dorada)</option></select></div>
+        <label class="check" data-adv title="Con la tabla visible se ve la construcción; sin ella, el carácter como en las láminas de Agrippa"><input type="checkbox" id="chkKameaGrid">Mostrar la tabla (construcción)</label>
+        <div class="info" id="kameaBox">—</div>
+      </div>
+    </details>
+  </section>
+
+  <section id="rosaPanel" hidden>
+    <details class="step" open>
+      <summary><span class="step-title">Rosa-Cruz</span></summary>
+      <div class="step-body">
+        <p class="helper">El nombre se escribe en hebreo y se une letra a letra sobre la Rosa del Lamen de la Aurora Dorada (Golden Dawn). Es un sistema de coordenadas, no una reducción al estilo de Spare.</p>
+        <input type="text" id="rosaName" maxlength="32" placeholder="Nombre en latín o en hebreo. Ej.: Metatron">
+        <div class="field" data-adv><label for="selTranslit">Transliteración</label>
+          <select id="selTranslit"><option value="consonantal" selected>Consonántica (como se escribe)</option><option value="full">Letra a letra (con vocales)</option></select></div>
+        <div class="row"><button class="btn" id="btnRosaGenerate">Transliterar y trazar</button></div>
+        <div class="field" data-adv><label for="rosaHebrew">Hebreo</label><input type="text" id="rosaHebrew" dir="rtl" lang="he" maxlength="40" placeholder="מטטרון"></div>
+        <p class="helper">Puedes corregir el hebreo a mano y el trazo se actualiza. Si el nombre tiene grafía hebrea tradicional, escríbela aquí: Samuel es שמואל y Miguel es מיכאל.</p>
+        <label class="check"><input type="checkbox" id="chkRosaDiagram" checked>Mostrar la Rosa</label>
+        <label class="check" data-adv title="Manuscrito F: trazar las letras en sus colores respectivos (escala del Rey)"><input type="checkbox" id="chkRosaColors">Colores del Lamen</label>
+        <label class="check" data-adv title="El texto del manuscrito F no la menciona, pero sus figuras de Metatron y Elohim terminan en una barra corta"><input type="checkbox" id="chkRosaEndBar" checked>Barra final (como en las figuras del manuscrito)</label>
+        <div class="info" id="rosaBox">—</div>
+      </div>
+    </details>
+  </section>
+  </div>
+  <div class="tab-page" id="page_capas" role="tabpanel" hidden>
+  <section id="lettersLayersPage">
+    <details class="step" open>
+      <summary><span class="step-title">Capas</span></summary>
+      <div class="step-body">
+        <p class="helper">Marcos, anillos, estrellas, inscripciones, rótulos y símbolos apilados. Cada marco se encaja dentro del anterior. Toca uno en el lienzo para arrastrarlo, escalarlo o girarlo y así hacer que se crucen. Las guías aparecen al arrastrar; mantén Alt para moverlo libre. El icono ⌗ del lienzo muestra una rejilla que no se exporta.</p>
+        <div id="layersHost_letters"></div>
+        <div class="row" data-adv><button class="btn-dim" id="btnClearStamps">Quitar todos los símbolos</button></div>
+      </div>
+    </details>
+  </section>
+  <section id="personalLayersPage" hidden>
+    <details class="step" open>
+      <summary><span class="step-title">Capas del sello</span></summary>
+      <div class="step-body">
+        <p class="helper">Las plantillas cargan un formato histórico; después puedes añadir, ordenar y cruzar capas.</p>
+        <div id="layersHost_personal"></div>
+      </div>
+    </details>
+  </section>
+  </div>
+  <div class="tab-page" id="page_estilo" role="tabpanel" hidden>
+  <section id="stylePanel">
+    <details class="step" open>
+      <summary><span class="step-title">Estilo</span></summary>
+      <div class="step-body">
+        <p class="helper">Tinta, soporte y trazo. Lo que ves es lo que se exporta. «Ajustar» abre cada parte por separado.</p>
+        <div class="swatches" id="stylePresets"></div>
+        <p class="sublabel">Relampagueantes: el color del planeta y su complementario</p>
+        <div class="swatches" id="flashPresets"></div>
+        <button class="btn-dim" id="btnStyleAdjust" data-pal="styleAdjust" aria-expanded="false">Ajustar ▾</button>
+        <div class="palette" id="styleAdjust" hidden>
+          <div class="stamp-group">Tinta</div><div class="swatches" id="inkSwatches"></div>
+          <div class="stamp-group">Soporte</div><div class="swatches" id="bgSwatches"></div>
+          <div class="seg"><button data-texture="none">Liso</button><button data-texture="pergamino">Pergamino</button></div>
+          <div class="stamp-group">Trazo</div>
+          <div class="field"><label for="rngStrokeW">Grosor</label><input type="range" id="rngStrokeW" min="50" max="180" step="5" value="100"><span class="val" id="strokeWVal">100%</span></div>
+          <div class="seg"><button data-line="single">Simple</button><button data-line="double">Doble</button></div>
+          <div class="seg"><button data-cap="round">Punta redonda</button><button data-cap="square">Punta recta</button></div>
+          <div class="stamp-group">Efectos</div>
+          <label class="check"><input type="checkbox" id="chkRelief">Relieve (grabado)</label>
+          <label class="check"><input type="checkbox" id="chkGlow">Resplandor</label>
         </div>
-      </details>
-    </div>
-  </details>
+        <div class="info" id="styleInfo"></div>
+      </div>
+    </details>
+  </section>
+  </div>
+  <div class="tab-page" id="page_guardar" role="tabpanel" hidden>
+    <details class="step" open>
+      <summary><span class="step-title">Guardar y exportar</span></summary>
+      <div class="step-body">
+        <p class="helper">«Cargar» abre la contemplación del sigilo. La galería lo guarda en este dispositivo, sea del motor que sea. Las fuentes de cada decisión están en el botón «Fuentes» del lienzo.</p>
+        <div class="row">
+          <button class="btn" id="btnCharge">Cargar</button>
+          <button class="btn-dim" id="btnSave">Guardar</button>
+          <button class="btn-dim" id="btnGallery">Galería</button>
+        </div>
+        <div class="row">
+          <button class="btn-dim" id="btnSVG" title="Vector: se amplía sin perder calidad">Descargar SVG</button>
+          <button class="btn-dim" id="btnPNG" title="Imagen de 800 × 800">Descargar PNG</button>
+        </div>
+        <label class="check" data-adv><input type="checkbox" id="chkTransparent">Fondo transparente al exportar</label>
+      </div>
+    </details>
+  </div>
+  <div class="panel-footer">Método de la palabra: Spare, Frater U∴D∴ y Cooper.<br>Las letras se reconocen, aunque cueste.</div>
+</aside>
 
-  <details class="step" open>
-    <summary><span class="step-num">4</span><span class="step-title">Cargar</span><span class="step-chevron">▸</span></summary>
-    <div class="step-body">
-      <p class="step-helper">Contempla el tótem, respira natural y decide guardar u olvidar.</p>
-      <div class="btn-group">
-        <button class="btn" id="btnCharge">&#10208; Cargar</button>
-        <button class="btn-dim" id="btnSave">Guardar</button>
-        <button class="btn-dim" id="btnGallery">Galería</button>
-      </div>
-      <h4>Estampas</h4>
-      <div class="stamp-grid">
-        <button class="stamp-btn" data-s="♄">♄</button>
-        <button class="stamp-btn" data-s="♃">♃</button>
-        <button class="stamp-btn" data-s="♂">♂</button>
-        <button class="stamp-btn" data-s="☉">☉</button>
-        <button class="stamp-btn" data-s="♀">♀</button>
-        <button class="stamp-btn" data-s="☿">☿</button>
-        <button class="stamp-btn" data-s="☽">☽</button>
-        <button class="stamp-btn" data-s="✦">✦</button>
-        <button class="stamp-btn" data-s="✧">✧</button>
-        <button class="stamp-btn" data-s="◎">◎</button>
-      </div>
-      <div class="btn-group">
-        <button class="btn-dim btn-sm" id="btnStamp">🔨 Estampa</button>
-        <button class="btn-dim btn-sm" id="btnClearStamps">✕</button>
-      </div>
-    </div>
-  </details>
-
-  <details class="step" open>
-    <summary><span class="step-num">5</span><span class="step-title">Exportar</span><span class="step-chevron">▸</span></summary>
-    <div class="step-body">
-      <div class="toggle-row" title="Omite el fondo oscuro en PNG y SVG"><input type="checkbox" id="chkTransparent"><label>Fondo transparente</label></div>
-      <div class="btn-group">
-        <button class="btn btn-sm" id="btnSVG">SVG por capas</button>
-        <button class="btn btn-sm" id="btnPNG">PNG</button>
-      </div>
-    </div>
-  </details>
-
-  <div class="panel-footer">Tótem personal Spare/Cooper + marco ceremonial — ARCANUM</div>
+<div class="canvas-wrap"><canvas id="canvas" width="800" height="800"></canvas><img id="sealFacsimile" class="seal-facsimile" hidden alt="">
+  <div class="canvas-tools canvas-tools-left">
+    <button class="tool" id="btnUndo" data-icon="undo" title="Deshacer (Ctrl+Z)" aria-label="Deshacer" disabled></button>
+    <button class="tool" id="btnRedo" data-icon="redo" title="Rehacer (Ctrl+Y)" aria-label="Rehacer" disabled></button>
+  </div>
+  <div class="canvas-tools">
+    <button class="tool" id="btnGrid" title="Rejilla de ayuda (no se exporta)" aria-label="Rejilla"></button>
+    <button class="tool" id="btnProvenance" title="Procedencia: fuentes y decisiones">Fuentes</button>
+  </div>
+  <div class="radial" id="ctxBar" hidden>
+    <span class="ctx-name" id="ctxName"></span>
+    <span class="ctx-group" id="ctxLetter">
+      <button class="tool" id="btnRotL" data-icon="rotL" title="Girar −15°" aria-label="Girar −15°"></button>
+      <button class="tool" id="btnRotR" data-icon="rotR" title="Girar +15°" aria-label="Girar +15°"></button>
+      <button class="tool" id="btnFlipH" data-icon="flipH" title="Reflejo horizontal" aria-label="Reflejo horizontal"></button>
+      <button class="tool" id="btnFlipV" data-icon="flipV" title="Reflejo vertical" aria-label="Reflejo vertical"></button>
+      <button class="tool" id="btnSmaller" data-icon="minus" title="Reducir" aria-label="Reducir"></button>
+      <button class="tool" id="btnBigger" data-icon="plus" title="Ampliar" aria-label="Ampliar"></button>
+      <button class="tool" id="btnLetterReset" data-icon="reset" title="Restaurar la letra" aria-label="Restaurar la letra"></button>
+    </span>
+    <span class="ctx-group" id="ctxLayer">
+      <button class="tool" id="btnLayerSmaller" data-icon="minus" title="Reducir" aria-label="Reducir"></button>
+      <button class="tool" id="btnLayerBigger" data-icon="plus" title="Ampliar" aria-label="Ampliar"></button>
+      <button class="tool" id="btnLayerRotL" data-icon="rotL" title="Girar −15°" aria-label="Girar −15°"></button>
+      <button class="tool" id="btnLayerRotR" data-icon="rotR" title="Girar +15°" aria-label="Girar +15°"></button>
+      <button class="tool" id="btnLayerDelete" data-icon="trash" title="Quitar (Supr)" aria-label="Quitar (Supr)"></button>
+    </span>
+  </div>
+  <button class="tool fab" id="btnFab" data-icon="plus" aria-label="Añadir al lienzo" aria-expanded="false" title="Añadir"></button>
+  <div class="fab-radial" id="fabRadial" hidden></div>
+  <div class="quick-sheet" id="quickSymbols" hidden>
+    <div class="quick-head"><b>Símbolo</b><span>Elige uno y toca el lienzo</span><button class="tool" id="btnQuickClose" data-icon="minus" aria-label="Cerrar" title="Cerrar"></button></div>
+    <div id="quickSymbolsGrid"></div>
+  </div>
 </div>
 
-<div class="canvas-wrap"><canvas id="canvas" width="1000" height="700"></canvas></div>
+
+
+</div>
 
 <aside class="gallery" id="galleryPanel" aria-hidden="true">
-  <div class="gallery-head"><h2>Galería</h2><button class="btn-dim btn-sm" id="btnGalleryClose">X</button></div>
+  <div class="row"><h2>Galería</h2><button class="btn-dim" id="btnGalleryClose">X</button></div>
   <div class="gallery-grid" id="galleryGrid"></div>
 </aside>
 </div>
-
-<div class="edit-overlay" id="editOverlay" role="dialog" aria-modal="true" aria-hidden="true">
-  <div style="display:flex;justify-content:space-between;align-items:center">
-    <h3>✎ Edición de trazos</h3>
-    <button class="btn-dim btn-sm" id="btnEditClose">Listo</button>
-  </div>
-  <p class="edit-hint">Selecciona un trazo en el lienzo o en la lista. Arrastra los puntos para moverlos; arrastra el cuerpo para desplazar el trazo.</p>
-  <div class="edit-list" id="editList"></div>
-  <div class="btn-group">
-    <button class="btn-dim btn-sm" id="btnStRot" title="Rotar 15°">⟳ Rotar</button>
-    <button class="btn-dim btn-sm" id="btnStFlipH" title="Reflejar horizontal">⇋ H</button>
-    <button class="btn-dim btn-sm" id="btnStFlipV" title="Reflejar vertical">⇵ V</button>
-    <button class="btn-dim btn-sm" id="btnStJoin" title="Unir con el trazo anterior">Unir</button>
-    <button class="btn-dim btn-sm" id="btnStDup" title="Duplicar">Duplicar</button>
-    <button class="btn-dim btn-sm" id="btnStDel" title="Eliminar">Eliminar</button>
-  </div>
 </div>
 
 <div class="modal" id="provModal" role="dialog" aria-modal="true" aria-labelledby="provTitle">
   <div class="modal-card">
-    <button class="btn-dim btn-sm modal-close" id="btnProvClose">X</button>
+    <button class="btn-dim modal-close" id="btnProvClose">X</button>
     <h2 id="provTitle">Procedencia del sigilo</h2>
     <div id="provBody"></div>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
-<div class="gnosis-overlay" id="gnosisOverlay" role="dialog" aria-modal="true" aria-labelledby="gnosisTitle">
+<div class="gnosis" id="gnosisOverlay" role="dialog" aria-modal="true" aria-labelledby="gnosisTitle">
   <div class="gnosis-stage">
     <h2 id="gnosisTitle">Carga del sigilo</h2>
-    <p class="gnosis-copy">Fija tu mirada en el sigilo. Vac&#237;a tu mente. Cuando el tiempo termine, cierra los ojos y olvida.</p>
-    <div class="gnosis-visual">
-      <img class="gnosis-sigil" id="gnosisSigil" alt="Sigilo para contemplación">
-      <div class="breath-orb"><span class="breath-label" id="breathLabel">Inhala</span></div>
-    </div>
+    <p class="gnosis-copy">Fija la mirada en el sigilo y respira sin forzar. Cuando el tiempo termine, cierra los ojos y decide si lo guardas o lo olvidas.</p>
+    <div class="gnosis-visual"><img id="gnosisSigil" alt="Sigilo para contemplación"><div class="orb"><span id="breathLabel">Inhala</span></div></div>
     <div class="gnosis-timer" id="gnosisTimer">00:30</div>
-    <div class="gnosis-controls">
-      <select id="gnosisDuration" aria-label="Duración de contemplación"><option value="30">30 s</option><option value="60">60 s</option><option value="120">120 s</option></select>
-      <button class="btn" id="btnStartCharge">Cargar</button>
+    <div class="row">
+      <select id="gnosisDuration" aria-label="Duración"><option value="30">30 s</option><option value="60">60 s</option><option value="120">120 s</option></select>
+      <button class="btn" id="btnStartCharge">Empezar</button>
       <button class="btn btn-forget" id="btnForget">Olvidar</button>
       <button class="btn-dim" id="btnGnosisClose">Cerrar</button>
     </div>
   </div>
 </div>
-
-<script>
-'use strict';
-// ═══════════════════════════════════════════════════════════════
-//  TALLER DE SIGILOS v2 — glifo personal (Spare/Cooper) + marco
-//  ceremonial en capas independientes. Determinista y trazable.
-// ═══════════════════════════════════════════════════════════════
-
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-const W = 1000, H = 700, CX = W / 2, CY = H / 2;
-const CORE_R = 170, RING_R = 290;
-
-// ── Estado ──────────────────────────────────────────────────────
-const state = {
-  intention: '',
-  reductionMethod: 'cooper',
-  reduction: null,
-  skeleton: 0,
-  organic: 35,
-  autoJoin: true,
-  terminals: { enabled: false, style: 'dot' },
-  frame: {
-    circle: { enabled: true, scale: 100, thickness: 14, opacity: 55, double: false },
-    star: { enabled: true, points: 5, scale: 92, rotation: 0, thickness: 18, opacity: 80, inner: 45, gap: 30, chords: true }
-  },
-  inscription: { enabled: false, text: '', pos: 'upperArc', size: 17, spacing: 3, orientation: 'normal' },
-  presentation: { glow: false, mirror: true, preview: true, guide: false },
-  highlightUnit: null,
-  stamps: [],
-  core: { strokes: [], merges: [], removed: [] },
-  userDecisions: [],
-  ritualState: 'draft',
-  family: 'personal',
-  rosa: { name: '', mapping: [], resolved: [], gematria: 0, diagram: true }
-};
-
-let stamps = state.stamps;
-let stampSym = '♄', stampMode = false;
-let nextId = 100;
-
-// ── Utilidades ──────────────────────────────────────────────────
-function hashStr(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
-function val(ch) { return ch.charCodeAt(0) - 64; }
-function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c])); }
-
-// Colores distinguibles para la capa "Ver construcción" (una por letra)
-const GUIDE_COLORS = ['#e0b64c', '#c65a3b', '#8fa6c9', '#7fb08a', '#b58ac9', '#c99a1a', '#5fa3a0', '#c26a7a', '#9aa67a', '#d9c46a', '#6a7fb0', '#b0805a'];
-
-// ── Rosa-Cruz: diagrama de letras (motor separado) ──────────────
-// Golden Dawn, Rose Cross Lamen: 22 pétalos = 3 letras madre
-// (elementos) + 7 dobles (planetas) + 12 simples (signos). Sistema
-// de coordenadas alfabéticas: translitera un nombre al hebreo y une
-// sus letras sobre la Rosa. No es eliminación estilo Spare. NUNCA se
-// mezcla con el glifo personal [HP][RC].
-const HEBREW_VALUES = { 'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,'כ':20,'ל':30,'מ':40,'נ':50,'ס':60,'ע':70,'פ':80,'צ':90,'ק':100,'ר':200,'ש':300,'ת':400 };
-const LATIN_TO_HEBREW = { a:'א',b:'ב',c:'כ',g:'ג',d:'ד',h:'ה',v:'ו',w:'ו',u:'ו',z:'ז',ch:'ח',t:'ט',i:'י',y:'י',j:'י',e:'י',f:'פ',k:'כ',l:'ל',m:'מ',n:'נ',s:'ס',o:'ע',p:'פ',tz:'צ',q:'ק',r:'ר',sh:'ש',th:'ת' };
-const ROSE_CROSS = {
-  edition: 'Golden Dawn, Rose Cross Lamen — 22 pétalos (3+7+12). Diagrama prototipo ARCANUM [RC], atribución estándar.',
-  elements: [ // 3 letras madre: elementos
-    { he:'א', name:'Aleph', en:'Aire' }, { he:'מ', name:'Mem', en:'Agua' }, { he:'ש', name:'Shin', en:'Fuego' }
-  ],
-  planets: [ // 7 dobles: planetas en orden de exaltación
-    { he:'ר', name:'Resh', en:'Sol', sym:'☉' }, { he:'ג', name:'Gimel', en:'Luna', sym:'☽' },
-    { he:'ת', name:'Tav', en:'Saturno', sym:'♄' }, { he:'כ', name:'Kaph', en:'Júpiter', sym:'♃' },
-    { he:'פ', name:'Peh', en:'Marte', sym:'♂' }, { he:'ד', name:'Daleth', en:'Venus', sym:'♀' },
-    { he:'ב', name:'Beth', en:'Mercurio', sym:'☿' }
-  ],
-  signs: [ // 12 simples: zodíaco en orden, Heh (Aries) arriba
-    { he:'ה', name:'Heh', en:'Aries', sym:'♈' }, { he:'ו', name:'Vav', en:'Tauro', sym:'♉' },
-    { he:'ז', name:'Zayin', en:'Géminis', sym:'♊' }, { he:'ח', name:'Cheth', en:'Cáncer', sym:'♋' },
-    { he:'ט', name:'Teth', en:'Leo', sym:'♌' }, { he:'י', name:'Yod', en:'Virgo', sym:'♍' },
-    { he:'ל', name:'Lamed', en:'Libra', sym:'♎' }, { he:'נ', name:'Nun', en:'Escorpio', sym:'♏' },
-    { he:'ס', name:'Samekh', en:'Sagitario', sym:'♐' }, { he:'ע', name:'Ayin', en:'Capricornio', sym:'♑' },
-    { he:'צ', name:'Tzaddi', en:'Acuario', sym:'♒' }, { he:'ק', name:'Qoph', en:'Piscis', sym:'♓' }
-  ]
-};
-const ROSE_RINGS = { element: 108, planet: 186, sign: 260 };
-
-function roseLayout() {
-  const items = [];
-  const a0 = -Math.PI / 2;
-  const ring = (arr, ringName, R) => arr.forEach((it, i) => {
-    const a = a0 + (i * 2 * Math.PI) / arr.length;
-    items.push({ ...it, ring: ringName, i, x: CX + Math.cos(a) * R, y: CY + Math.sin(a) * R });
-  });
-  ring(ROSE_CROSS.elements, 'element', ROSE_RINGS.element);
-  ring(ROSE_CROSS.planets, 'planet', ROSE_RINGS.planet);
-  ring(ROSE_CROSS.signs, 'sign', ROSE_RINGS.sign);
-  return items;
-}
-
-// Transliteración latina → hebreo con coincidencia de dígrafos
-// (ch, sh, th, tz) antes que letras simples. Sin correspondencia:
-// la letra se omite y se marca en la procedencia.
-function transliterateToHebrew(name) {
-  const norm = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-  const keys = Object.keys(LATIN_TO_HEBREW).sort((a, b) => b.length - a.length);
-  const layout = roseLayout();
-  const byHe = {};
-  layout.forEach(L => { byHe[L.he] = L; });
-  const mapping = [], resolved = [];
-  let i = 0;
-  while (i < norm.length) {
-    let m = null;
-    for (const k of keys) { if (norm.startsWith(k, i)) { m = { latin: k, he: LATIN_TO_HEBREW[k] }; break; } }
-    if (m) {
-      mapping.push(m);
-      const pos = byHe[m.he];
-      resolved.push(pos ? { ...m, x: pos.x, y: pos.y, ring: pos.ring, label: pos.name, val: HEBREW_VALUES[m.he] || 0 }
-                        : { ...m, x: null, y: null, missing: true });
-      i += m.latin.length;
-    } else {
-      mapping.push({ latin: norm[i], he: null, omitted: true });
-      i++;
-    }
-  }
-  const gematria = mapping.filter(m => m.he).reduce((s, m) => s + (HEBREW_VALUES[m.he] || 0), 0);
-  return { mapping, resolved, gematria };
-}
-
-// ── Reducción nombrada ──────────────────────────────────────────
-// cooper: iniciales únicas (Cooper). Si quedan <3 unidades, se
-// completan con las letras únicas restantes del texto [AR].
-const REDUCTION_RULES = {
-  cooper: { label: 'Cooper — iniciales únicas', rule: 'Inicial de cada palabra + primera aparición. Intención corta: se completan con las letras únicas restantes [AR].' },
-  novowels: { label: 'Letras únicas sin vocales', rule: 'Normalizar, quitar vocales, conservar la primera consonante de cada tipo. Desarrollo moderno, no receta exclusiva de Spare.' },
-  unique: { label: 'Letras únicas', rule: 'Conservar la primera aparición de cada letra. Variante moderna [AR].' }
-};
-
-function getReduction(t, method = state.reductionMethod) {
-  const normalized = t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
-  const words = normalized.trim().split(/\s+/).filter(Boolean);
-  const cleaned = normalized.replace(/[^A-Z]/g, '');
-  let reduced;
-  if (method === 'cooper') {
-    reduced = [...new Set(words.map(w => w[0]).filter(Boolean))].join('');
-    if (reduced.length < 3 && cleaned.length > reduced.length) {
-      const extras = [...new Set(cleaned.split(''))].filter(c => !reduced.includes(c)).join('');
-      reduced += extras;
-    }
-  } else if (method === 'novowels') {
-    reduced = [...new Set(cleaned.replace(/[AEIOU]/g, ''))].join('');
-  } else {
-    reduced = [...new Set(cleaned.split(''))].join('');
-  }
-  return {
-    original: t, words, cleaned,
-    reduced, values: [...reduced].map(val),
-    rule: REDUCTION_RULES[method].rule,
-    label: REDUCTION_RULES[method].label
-  };
-}
-
-// ── Tótem: poste vertical con bandas ─────────────────────────────
-// Estructura: asta continua + una banda por unidad reducida (cada
-// letra talla su registro: soportes, remates, cabeza o base). Los
-// motivos son deterministas por letra (hash puro), nunca letras
-// amontonadas. La silueta es una estela vertical redibujable.
-const TOTEM_STYLES = ['Poste', 'Totémico', 'Tronco vivo'];
-
-function dotPts(x, y, r, seg) {
-  const pts = [];
-  for (let k = 0; k <= seg; k++) { const t = (k / seg) * Math.PI * 2; pts.push({ x: x + Math.cos(t) * r, y: y + Math.sin(t) * r }); }
-  return pts;
-}
-
-function bandMotif(ch, i, n, bandH, y0, y1) {
-  const o = state.organic / 100;
-  const h = hashStr(ch + ':' + i);
-  const bars = 1 + (h % 3);
-  const len = (0.30 + ((h >> 4) % 9) / 10 * 0.34) * (1 + 0.15 * o);
-  const remate = (h >> 8) % 3;
-  const sideAlt = (h >> 12) & 1;
-  const strokes = [];
-  for (let k = 0; k < bars; k++) {
-    const yk = y0 + bandH * (k + 1) / (bars + 1);
-    const side = (k + sideAlt) % 2 ? 1 : -1;
-    const sx = side * len;
-    const lift = bandH * (0.10 + 0.16 * o);
-    const last = k === bars - 1;
-    if (state.skeleton === 0) {
-      const bend = 0.05 * o;
-      strokes.push({ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: [{ x: 0, y: yk }, { x: sx, y: yk - bend }] });
-      if (last && remate === 0) strokes.push({ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: dotPts(sx, yk - bend, 0.03, 5) });
-    } else if (state.skeleton === 1) {
-      strokes.push({ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: [{ x: 0, y: yk }, { x: sx * 0.72, y: yk }, { x: sx, y: yk - lift }] });
-      if (last && remate === 1) strokes.push({ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: dotPts(sx, yk - lift, 0.028, 6) });
-    } else {
-      const c = Math.min(0.55, bandH * 0.9 + 0.08 * o);
-      strokes.push({ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: [{ x: 0, y: yk }, { x: sx * 0.45, y: yk - c * 0.6 }, { x: sx * 0.8, y: yk - c * 0.25 }, { x: sx, y: yk - c * 0.1 }] });
-      if (last && remate === 2) strokes.push({ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: [{ x: sx, y: yk - c * 0.1 }, { x: sx * 1.18, y: yk - c * 0.28 }] });
-    }
-  }
-  if (i === 0) strokes.push(...totemHead(ch, bandH, y0, h));
-  if (i === n - 1) strokes.push(...totemBase(ch, bandH, y1, h));
-  return strokes;
-}
-
-function totemHead(ch, bandH, y0, h) {
-  const y = y0 + bandH * 0.16;
-  const kind = (h >> 16) % 3;
-  const half = 0.14 + (bandH > 0.5 ? 0.10 : 0);
-  if (kind === 0) {
-    return [{ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: [{ x: -half, y }, { x: 0, y: y - bandH * 0.20 }, { x: half, y }] }];
-  }
-  if (kind === 1) {
-    return [{ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: dotPts(0, y - bandH * 0.06, 0.075 + (bandH > 0.5 ? 0.06 : 0), 8) }];
-  }
-  return [{ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: [{ x: -half, y }, { x: -half * 0.5, y: y - bandH * 0.14 }, { x: 0, y }, { x: half * 0.5, y: y - bandH * 0.14 }, { x: half, y }] }];
-}
-
-function totemBase(ch, bandH, y1, h) {
-  const y = y1 - bandH * 0.14;
-  const half = 0.30 + ((h >> 20) % 6) / 10 * 0.22;
-  const out = [{ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: [{ x: -half, y }, { x: half, y }] }];
-  out.push({ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: [{ x: -half, y }, { x: -half * 0.55, y: y1 - bandH * 0.02 }] });
-  out.push({ id: ++nextId, unit: ch, kind: 'letter', units: [ch], pts: [{ x: half, y }, { x: half * 0.55, y: y1 - bandH * 0.02 }] });
-  return out;
-}
-
-// ── Fusión de trazos (ligaduras) ────────────────────────────────
-function dirOf(st) {
-  if (!st.pts.length) return null;
-  const a = st.pts[0], b = st.pts[st.pts.length - 1];
-  const dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy);
-  return l < 1e-6 ? null : { x: dx / l, y: dy / l };
-}
-function proj(st, d) {
-  const n = { x: -d.y, y: d.x };
-  let min = Infinity, max = -Infinity, off = 0, c = 0;
-  for (const p of st.pts) {
-    const t = p.x * d.x + p.y * d.y, o = p.x * n.x + p.y * n.y;
-    if (t < min) min = t; if (t > max) max = t;
-    off += o; c++;
-  }
-  return { min, max, off: off / c };
-}
-function tryMerge(a, b, thr) {
-  const da = dirOf(a), db = dirOf(b);
-  if (!da || !db) return null;
-  if (Math.abs(da.x * db.y - da.y * db.x) > Math.sin(12 * Math.PI / 180)) return null;
-  const A = proj(a, da), B = proj(b, da);
-  const ov = Math.min(A.max, B.max) - Math.max(A.min, B.min);
-  const un = Math.max(A.max, B.max) - Math.min(A.min, B.min);
-  if (un <= 0 || ov / un < thr) return null;
-  if (Math.abs(A.off - B.off) > 0.15) return null;
-  const t0 = Math.min(A.min, B.min), t1 = Math.max(A.max, B.max);
-  const off = (A.off + B.off) / 2;
-  const nx = -da.y, ny = da.x;
-  const pts = [
-    { x: da.x * t0 + nx * off, y: da.y * t0 + ny * off },
-    { x: da.x * t1 + nx * off, y: da.y * t1 + ny * off }
-  ];
-  return { id: ++nextId, unit: '⚭', kind: 'merge', units: [...new Set([...a.units, ...b.units])], pts };
-}
-function mergePass(strokes, merges, thr) {
-  let changed = true, guard = 0;
-  while (changed && guard++ < 6) {
-    changed = false;
-    for (let i = 0; i < strokes.length && !changed; i++) {
-      for (let j = i + 1; j < strokes.length && !changed; j++) {
-        const m = tryMerge(strokes[i], strokes[j], thr);
-        if (m) {
-          merges.push({ from: [strokes[i].id, strokes[j].id], to: m.id, units: [...m.units] });
-          strokes.splice(j, 1); strokes.splice(i, 1, m);
-          changed = true;
-        }
-      }
-    }
-  }
-  return strokes;
-}
-
-function normalizeStrokes(strokes) {
-  const p = normParams(strokes);
-  if (!p) return;
-  for (const st of strokes) for (const pt of st.pts) {
-    pt.x = (pt.x - p.cxm) * p.k; pt.y = (pt.y - p.cym) * p.k;
-  }
-}
-function normParams(strokes) {
-  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  for (const st of strokes) for (const p of st.pts) {
-    if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
-    if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
-  }
-  if (!isFinite(minX)) return null;
-  const cxm = (minX + maxX) / 2, cym = (minY + maxY) / 2;
-  const s = Math.max(maxX - minX, maxY - minY) || 1;
-  return { cxm, cym, k: 2 / s };
-}
-
-function buildCore(units) {
-  const n = units.length;
-  const bandH = 1.92 / n;
-  const top = 0.96 - bandH / 2;
-  const strokes = [{ id: ++nextId, unit: '⚭', kind: 'merge', units: [...units], pts: [{ x: 0, y: 0.98 }, { x: 0, y: -0.98 }] }];
-  for (let i = 0; i < n; i++) {
-    const cy = top - i * bandH;
-    strokes.push(...bandMotif(units[i], i, n, bandH, cy - bandH / 2, cy + bandH / 2));
-  }
-  state._guideStrokes = strokes.filter(st => st.unit !== '⚭').map(st => ({ id: st.id, unit: st.unit, pts: st.pts.map(p => ({ x: p.x, y: p.y })) }));
-  const merges = [];
-  let list = state.autoJoin ? mergePass(strokes, merges, 0.62) : strokes;
-  const np = normParams(list);
-  if (np) {
-    for (const st of list) for (const p of st.pts) { p.x = (p.x - np.cxm) * np.k; p.y = (p.y - np.cym) * np.k; }
-    for (const st of state._guideStrokes) for (const p of st.pts) { p.x = (p.x - np.cxm) * np.k; p.y = (p.y - np.cym) * np.k; }
-  }
-  return { strokes: list, merges };
-}
-
-// ── Simplificar: re-fusión agresiva + limpieza ──────────────────
-function simplifyCore() {
-  const before = state.core.strokes.length;
-  const merges = state.core.merges;
-  let list = mergePass([...state.core.strokes], merges, 0.3);
-  const eps = 0.012;
-  const out = [];
-  for (const st of list) {
-    let dup = false;
-    for (const o of out) {
-      if (o.pts.length !== st.pts.length) continue;
-      let same = true;
-      for (let i = 0; i < o.pts.length; i++) {
-        if (Math.hypot(o.pts[i].x - st.pts[i].x, o.pts[i].y - st.pts[i].y) > eps) { same = false; break; }
-      }
-      if (same) { dup = true; break; }
-    }
-    if (!dup) out.push(st);
-  }
-  list = out;
-  const len = st => st.pts.reduce((s, p, i) => i ? s + Math.hypot(p.x - st.pts[i - 1].x, p.y - st.pts[i - 1].y) : 0, 0);
-  const avg = list.length ? list.reduce((s, st) => s + len(st), 0) / list.length : 1;
-  const keep = [];
-  for (const st of list) {
-    if (len(st) < avg * 0.18) { // aislado corto
-      const near = list.some(o => o !== st && o.pts.some(p => st.pts.some(q => Math.hypot(p.x - q.x, p.y - q.y) < 0.09)));
-      if (!near) continue;
-    }
-    keep.push(st);
-  }
-  state.core.strokes = keep;
-  state._guideStrokes = null;
-  state.core.removed.push({ n: before - keep.length, when: 'simplify' });
-  state.userDecisions.push({ type: 'simplify', removed: before - keep.length });
-  return before - keep.length;
-}
-
-// ── Geometría de escena ─────────────────────────────────────────
-function starGeom() {
-  const p = state.frame.star;
-  const n = p.points * 2;
-  const outer = RING_R * (p.scale / 100) + (p.gap / 100) * 42;
-  const inner = Math.max(outer * (p.inner / 100), CORE_R + 22 + (p.gap / 100) * 40);
-  const a0 = (p.rotation * Math.PI) / 180 - Math.PI / 2;
-  const pts = [];
-  for (let i = 0; i < n; i++) {
-    const a = a0 + (i * Math.PI) / p.points;
-    const r = i % 2 ? inner : outer;
-    pts.push({ x: CX + Math.cos(a) * r, y: CY + Math.sin(a) * r });
-  }
-  const chordStep = p.points === 8 ? 3 : 2;
-  const chordVerts = [];
-  for (let k = 0; k < p.points; k++) {
-    const j = (k * chordStep) % p.points;
-    if (j <= k) continue;
-    chordVerts.push({ a: pts[k * 2], b: pts[j * 2] });
-  }
-  return { pts, chordVerts, chordStep };
-}
-
-function inscriptionGeom() {
-  const p = state.inscription;
-  const txt = p.text.trim().toUpperCase();
-  if (!txt) return { chars: [] };
-  const fs = p.size, sp = p.spacing;
-  const chars = [];
-  let seq = [...txt];
-  if (p.orientation === 'mirror') seq.reverse();
-  if (p.pos === 'top' || p.pos === 'bottom') {
-    const adv = fs * 0.62 + sp;
-    const total = seq.length * adv;
-    const x0 = CX - total / 2 + adv / 2;
-    const y = p.pos === 'top' ? CY - RING_R - fs * 1.25 : CY + RING_R + fs * 1.25;
-    seq.forEach((ch, i) => chars.push({ ch, x: x0 + i * adv, y, rot: 0 }));
-  } else {
-    const R = RING_R + fs * 1.1;
-    const arc = Math.max(0.5, Math.min(1.35, (seq.length * (fs * 0.62 + sp)) / R));
-    const a0 = -Math.PI / 2 - arc / 2;
-    const lower = p.pos === 'lowerArc';
-    seq.forEach((ch, i) => {
-      const t = seq.length === 1 ? 0.5 : i / (seq.length - 1);
-      const a = a0 + arc * t;
-      const ca = lower ? a + Math.PI : a;
-      const rot = lower ? a - Math.PI / 2 : a + Math.PI / 2;
-      chars.push({ ch, x: CX + Math.cos(ca) * R, y: CY + Math.sin(ca) * R, rot });
-    });
-  }
-  return { chars, fs, sp };
-}
-
-function buildScene() {
-  const layers = [];
-  if (state.family === 'rosacruz') {
-    if (state.rosa.resolved.length) layers.push({ type: 'rose', params: { diagram: state.rosa.diagram } });
-    return { W, H, CX, CY, coreR: CORE_R, layers };
-  }
-  const f = state.frame;
-  if (f.circle.enabled) layers.push({ type: 'circle', params: f.circle, geom: { r: RING_R * (f.circle.scale / 100) } });
-  if (f.star.enabled) layers.push({ type: 'star', params: f.star, geom: starGeom() });
-  if (state.inscription.enabled && state.inscription.text.trim()) layers.push({ type: 'inscription', params: state.inscription, geom: inscriptionGeom() });
-  layers.push({ type: 'core', strokes: state.core.strokes, terminals: state.terminals.enabled });
-  if (state.stamps.length) layers.push({ type: 'stamps', stamps: state.stamps });
-  return { W, H, CX, CY, coreR: CORE_R, layers };
-}
-
-function mapPoint(p, mirror) {
-  const x = CX + p.x * CORE_R;
-  const y = CY + p.y * CORE_R;
-  return mirror ? { x: 2 * CX - x, y } : { x, y };
-}
-
-// ── Pintado (canvas + geometría compartida con SVG) ─────────────
-function pathFromPts(pts, mirror) {
-  if (!pts.length) return '';
-  const mapped = pts.map(p => mapPoint(p, mirror));
-  let d = `M ${mapped[0].x.toFixed(2)} ${mapped[0].y.toFixed(2)}`;
-  if (mapped.length >= 4) {
-    for (let i = 1; i < mapped.length - 1; i++) {
-      const p0 = mapped[Math.max(0, i - 1)], p1 = mapped[i], p2 = mapped[i + 1], p3 = mapped[Math.min(mapped.length - 1, i + 2)];
-      d += ` C ${(p1.x + (p2.x - p0.x) / 6).toFixed(2)} ${(p1.y + (p2.y - p0.y) / 6).toFixed(2)} ${(p2.x - (p3.x - p1.x) / 6).toFixed(2)} ${(p2.y - (p3.y - p1.y) / 6).toFixed(2)} ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
-    }
-    const last = mapped[mapped.length - 1];
-    d += ` L ${last.x.toFixed(2)} ${last.y.toFixed(2)}`;
-  } else {
-    for (let i = 1; i < mapped.length; i++) d += ` L ${mapped[i].x.toFixed(2)} ${mapped[i].y.toFixed(2)}`;
-  }
-  return d;
-}
-
-function tracePath(ctx, pts, mirror) {
-  if (pts.length < 2) return;
-  const mapped = pts.map(p => mapPoint(p, mirror));
-  ctx.beginPath();
-  ctx.moveTo(mapped[0].x, mapped[0].y);
-  if (mapped.length >= 4) {
-    for (let i = 1; i < mapped.length - 1; i++) {
-      const p0 = mapped[Math.max(0, i - 1)], p1 = mapped[i], p2 = mapped[i + 1], p3 = mapped[Math.min(mapped.length - 1, i + 2)];
-      ctx.bezierCurveTo(
-        p1.x + (p2.x - p0.x) / 6, p1.y + (p2.y - p0.y) / 6,
-        p2.x - (p3.x - p1.x) / 6, p2.y - (p3.y - p1.y) / 6,
-        p2.x, p2.y);
-    }
-    ctx.lineTo(mapped[mapped.length - 1].x, mapped[mapped.length - 1].y);
-  } else {
-    for (let i = 1; i < mapped.length; i++) ctx.lineTo(mapped[i].x, mapped[i].y);
-  }
-  ctx.stroke();
-}
-
-function drawBackdrop(ctx, withVignette) {
-  ctx.fillStyle = '#0a080d';
-  ctx.fillRect(0, 0, W, H);
-  ctx.strokeStyle = 'rgba(184,134,11,0.10)'; ctx.lineWidth = 1;
-  ctx.strokeRect(10, 10, W - 20, H - 20);
-  ctx.strokeStyle = 'rgba(184,134,11,0.05)'; ctx.lineWidth = 0.5;
-  ctx.strokeRect(16, 16, W - 32, H - 32);
-  for (const [x, y] of [[14, 14], [W - 14, 14], [14, H - 14], [W - 14, H - 14]]) {
-    ctx.strokeStyle = 'rgba(184,134,11,0.15)'; ctx.lineWidth = 0.8;
-    ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.stroke();
-    ctx.strokeStyle = 'rgba(184,134,11,0.08)'; ctx.lineWidth = 0.5;
-    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.stroke();
-  }
-  if (withVignette) {
-    const g = ctx.createRadialGradient(CX, CY, 0, CX, CY, RING_R * 1.4);
-    g.addColorStop(0, 'rgba(18,14,26,0)');
-    g.addColorStop(1, 'rgba(0,0,0,0.4)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
-  }
-}
-
-function paintLayer(ctx, layer) {
-  const mirror = state.presentation.mirror;
-  switch (layer.type) {
-    case 'circle': {
-      const p = layer.params;
-      ctx.save();
-      ctx.globalAlpha = p.opacity / 100;
-      ctx.strokeStyle = '#b8860b';
-      ctx.lineWidth = p.thickness / 10;
-      ctx.beginPath(); ctx.arc(CX, CY, layer.geom.r, 0, Math.PI * 2); ctx.stroke();
-      if (p.double) {
-        ctx.globalAlpha = p.opacity / 140;
-        ctx.lineWidth = p.thickness / 20;
-        ctx.beginPath(); ctx.arc(CX, CY, layer.geom.r * 0.92, 0, Math.PI * 2); ctx.stroke();
-        ctx.beginPath(); ctx.arc(CX, CY, layer.geom.r * 1.08, 0, Math.PI * 2); ctx.stroke();
-      }
-      ctx.restore();
-      break;
-    }
-    case 'star': {
-      const p = layer.params, g = layer.geom;
-      ctx.save();
-      ctx.globalAlpha = p.opacity / 100;
-      ctx.strokeStyle = '#b8860b';
-      ctx.lineWidth = p.thickness / 10;
-      ctx.lineJoin = 'round';
-      ctx.beginPath();
-      ctx.moveTo(g.pts[0].x, g.pts[0].y);
-      for (let i = 1; i < g.pts.length; i++) ctx.lineTo(g.pts[i].x, g.pts[i].y);
-      ctx.closePath();
-      ctx.stroke();
-      if (p.chords) {
-        ctx.globalAlpha = p.opacity / 180;
-        ctx.lineWidth = p.thickness / 22;
-        for (const c of g.chordVerts) {
-          ctx.beginPath(); ctx.moveTo(c.a.x, c.a.y); ctx.lineTo(c.b.x, c.b.y); ctx.stroke();
-        }
-      }
-      ctx.restore();
-      break;
-    }
-    case 'inscription': {
-      const p = layer.params;
-      ctx.save();
-      ctx.fillStyle = 'rgba(201,154,26,.85)';
-      ctx.font = p.size + 'px Georgia';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      for (const c of layer.geom.chars) {
-        ctx.save();
-        ctx.translate(c.x, c.y);
-        if (c.rot) ctx.rotate(c.rot);
-        ctx.fillText(c.ch, 0, 0);
-        ctx.restore();
-      }
-      ctx.restore();
-      break;
-    }
-    case 'core': {
-      const glow = state.presentation.glow;
-      const guide = state.presentation.guide && state._guideStrokes;
-      const hl = state.highlightUnit;
-      ctx.save();
-      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      if (guide) {
-        const guideByUnit = {};
-        for (const g of state._guideStrokes) (guideByUnit[g.unit] = guideByUnit[g.unit] || []).push(g.pts);
-        const units = Object.keys(guideByUnit);
-        units.forEach((u, i) => {
-          const col = GUIDE_COLORS[i % GUIDE_COLORS.length];
-          const active = hl === null || hl === u;
-          ctx.globalAlpha = active ? 0.95 : 0.12;
-          ctx.strokeStyle = col; ctx.lineWidth = active ? 3.2 : 1.6;
-          for (const pts of guideByUnit[u]) tracePath(ctx, pts, mirror);
-        });
-        ctx.globalAlpha = 1;
-        ctx.strokeStyle = 'rgba(201,154,26,0.35)'; ctx.lineWidth = 1.6;
-        for (const st of layer.strokes) tracePath(ctx, st.pts, mirror);
-        ctx.globalAlpha = 1;
-        break;
-      }
-      if (glow) { ctx.shadowColor = '#b8860b'; ctx.shadowBlur = 14; ctx.lineWidth = 7; ctx.strokeStyle = 'rgba(184,134,11,.28)'; for (const st of layer.strokes) tracePath(ctx, st.pts, mirror); }
-      ctx.shadowBlur = 0;
-      ctx.lineWidth = 2.8;
-      ctx.strokeStyle = '#c99a1a';
-      for (const st of layer.strokes) {
-        if (hl && !st.units.includes(hl)) { ctx.globalAlpha = 0.28; }
-        tracePath(ctx, st.pts, mirror);
-        ctx.globalAlpha = 1;
-      }
-      if (guide) {
-        ctx.lineWidth = 2.4;
-        for (const g of state._guideStrokes) {
-          if (g.unit === hl) { ctx.strokeStyle = '#fff4c8'; ctx.globalAlpha = 0.9; tracePath(ctx, g.pts, mirror); }
-        }
-        ctx.globalAlpha = 1;
-      }
-      if (layer.terminals) {
-        const style = state.terminals.style;
-        for (const st of layer.strokes) {
-          const ends = [mapPoint(st.pts[0], mirror), mapPoint(st.pts[st.pts.length - 1], mirror)];
-          for (const e of ends) {
-            ctx.fillStyle = '#c99a1a';
-            ctx.beginPath();
-            if (style === 'dot') { ctx.arc(e.x, e.y, 3, 0, Math.PI * 2); ctx.fill(); }
-            else if (style === 'ring') { ctx.arc(e.x, e.y, 3.6, 0, Math.PI * 2); ctx.stroke(); }
-            else { ctx.moveTo(e.x - 3, e.y - 3); ctx.lineTo(e.x + 3, e.y + 3); ctx.moveTo(e.x + 3, e.y - 3); ctx.lineTo(e.x - 3, e.y + 3); ctx.stroke(); }
-          }
-        }
-      }
-      ctx.restore();
-      break;
-    }
-    case 'rose': {
-      ctx.save();
-      if (layer.params.diagram) {
-        ctx.strokeStyle = 'rgba(184,134,11,.38)'; ctx.lineWidth = 1.2;
-        for (const r of Object.values(ROSE_RINGS)) { ctx.beginPath(); ctx.arc(CX, CY, r, 0, Math.PI * 2); ctx.stroke(); }
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        for (const L of roseLayout()) {
-          ctx.fillStyle = 'rgba(201,154,26,.9)';
-          ctx.font = '16px "Segoe UI", "Arial Hebrew", serif';
-          ctx.fillText(L.he, L.x, L.y);
-          ctx.fillStyle = 'rgba(138,127,114,.75)';
-          ctx.font = '8px Georgia, serif';
-          ctx.fillText(L.sym || L.en, L.x, L.y + 15);
-        }
-      }
-      const pts = state.rosa.resolved.filter(p => !p.missing);
-      if (pts.length >= 2) {
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = '#e6b422'; ctx.lineWidth = 2.2;
-        ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-        ctx.stroke();
-        ctx.strokeStyle = '#e6b422'; ctx.lineWidth = 1.6;
-        ctx.beginPath(); ctx.arc(pts[0].x, pts[0].y, 12, 0, Math.PI * 2); ctx.stroke();
-        const last = pts[pts.length - 1];
-        ctx.strokeStyle = '#c65a3b'; ctx.lineWidth = 1.6;
-        ctx.beginPath(); ctx.arc(last.x, last.y, 6, 0, Math.PI * 2); ctx.stroke();
-      }
-      ctx.restore();
-      break;
-    }
-    case 'stamps': {
-      ctx.save();
-      for (const st of layer.stamps) {
-        ctx.font = '20px serif';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillStyle = 'rgba(184,134,11,0.5)';
-        ctx.fillText(st.sym, st.x, st.y);
-      }
-      ctx.restore();
-      break;
-    }
-  }
-}
-
-function paintScene(ctx, transparent) {
-  ctx.clearRect(0, 0, W, H);
-  if (!transparent) drawBackdrop(ctx, true);
-  const scene = buildScene();
-  for (const layer of scene.layers) paintLayer(ctx, layer);
-  return scene;
-}
-
-function render() {
-  paintScene(ctx, state.chkTransparent ? true : false);
-  state._scene = buildScene();
-  updatePreview();
-  if (editMode) renderEditHandles();
-}
-
-// ── Vista previa 80×80 ──────────────────────────────────────────
-const previewCanvas = document.getElementById('previewCanvas');
-function updatePreview() {
-  const box = document.getElementById('previewCanvas').closest('.preview-box');
-  if (!state.presentation.preview) { box.style.display = 'none'; return; }
-  box.style.display = 'flex';
-  const pc = previewCanvas.getContext('2d');
-  pc.clearRect(0, 0, 80, 80);
-  pc.drawImage(canvas, 0, 0, W, H, 0, 0, 80, 80);
-}
-
-// ── SVG real por capas ──────────────────────────────────────────
-function svgPathFor(pts, mirror) { return pathFromPts(pts, mirror); }
-
-function buildSVG() {
-  const transparent = document.getElementById('chkTransparent').checked;
-  const scene = buildScene();
-  const mirror = state.presentation.mirror;
-  const parts = [`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">`];
-  if (!transparent) parts.push(`<rect width="${W}" height="${H}" fill="#0a080d"/>`);
-  for (const layer of scene.layers) {
-    const g = layer.params ? layer.params : {};
-    parts.push(`<g data-layer="${layer.type}" ${layer.type === 'core' ? 'fill="none" stroke="#c99a1a" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"' : ''}>`);
-    switch (layer.type) {
-      case 'circle': {
-        const p = layer.params, r = layer.geom.r;
-        parts.push(`<circle cx="${CX}" cy="${CY}" r="${r.toFixed(2)}" fill="none" stroke="#b8860b" stroke-width="${(p.thickness / 10).toFixed(2)}" opacity="${(p.opacity / 100).toFixed(2)}"/>`);
-        if (p.double) {
-          parts.push(`<circle cx="${CX}" cy="${CY}" r="${(r * 0.92).toFixed(2)}" fill="none" stroke="#b8860b" stroke-width="${(p.thickness / 20).toFixed(2)}" opacity="${(p.opacity / 140).toFixed(2)}"/>`);
-          parts.push(`<circle cx="${CX}" cy="${CY}" r="${(r * 1.08).toFixed(2)}" fill="none" stroke="#b8860b" stroke-width="${(p.thickness / 20).toFixed(2)}" opacity="${(p.opacity / 140).toFixed(2)}"/>`);
-        }
-        break;
-      }
-      case 'star': {
-        const p = layer.params, g2 = layer.geom;
-        const d = 'M' + g2.pts.map(p2 => `${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`).join(' L') + ' Z';
-        parts.push(`<path d="${d}" fill="none" stroke="#b8860b" stroke-width="${(p.thickness / 10).toFixed(2)}" stroke-linejoin="round" opacity="${(p.opacity / 100).toFixed(2)}"/>`);
-        if (p.chords) {
-          for (const c of g2.chordVerts) {
-            parts.push(`<path d="M ${c.a.x.toFixed(2)} ${c.a.y.toFixed(2)} L ${c.b.x.toFixed(2)} ${c.b.y.toFixed(2)}" fill="none" stroke="#b8860b" stroke-width="${(p.thickness / 22).toFixed(2)}" opacity="${(p.opacity / 180).toFixed(2)}"/>`);
-          }
-        }
-        break;
-      }
-      case 'inscription': {
-        for (const c of layer.geom.chars) {
-          const t = c.rot ? ` transform="translate(${c.x.toFixed(2)} ${c.y.toFixed(2)}) rotate(${(c.rot * 180 / Math.PI).toFixed(2)})"` : ` x="${c.x.toFixed(2)}" y="${c.y.toFixed(2)}"`;
-          parts.push(`<text${t} text-anchor="middle" dominant-baseline="middle" font-family="Georgia,serif" font-size="${layer.params.size}" fill="rgba(201,154,26,0.85)">${esc(c.ch)}</text>`);
-        }
-        break;
-      }
-      case 'rose': {
-        if (layer.params.diagram) {
-          for (const r of Object.values(ROSE_RINGS)) {
-            parts.push(`<circle cx="${CX}" cy="${CY}" r="${r}" fill="none" stroke="rgba(184,134,11,0.38)" stroke-width="1.2"/>`);
-          }
-          for (const L of roseLayout()) {
-            parts.push(`<text x="${L.x.toFixed(2)}" y="${L.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-family="Arial Hebrew, serif" font-size="16" fill="rgba(201,154,26,0.9)">${esc(L.he)}</text>`);
-            parts.push(`<text x="${L.x.toFixed(2)}" y="${(L.y + 15).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-family="Georgia, serif" font-size="8" fill="rgba(138,127,114,0.75)">${esc(L.sym || L.en)}</text>`);
-          }
-        }
-        const pts = state.rosa.resolved.filter(p => !p.missing);
-        if (pts.length >= 2) {
-          const d = 'M ' + pts.map(p => `${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' L ');
-          parts.push(`<path d="${d}" fill="none" stroke="#e6b422" stroke-width="2.2" stroke-linecap="round"/>`);
-          parts.push(`<circle cx="${pts[0].x.toFixed(2)}" cy="${pts[0].y.toFixed(2)}" r="12" fill="none" stroke="#e6b422" stroke-width="1.6"/>`);
-          const last = pts[pts.length - 1];
-          parts.push(`<circle cx="${last.x.toFixed(2)}" cy="${last.y.toFixed(2)}" r="6" fill="none" stroke="#c65a3b" stroke-width="1.6"/>`);
-        }
-        break;
-      }
-      case 'core': {
-        for (const st of layer.strokes) parts.push(`<path d="${svgPathFor(st.pts, mirror)}"/>`);
-        if (state.terminals.enabled) {
-          const style = state.terminals.style;
-          for (const st of layer.strokes) {
-            for (const p0 of [st.pts[0], st.pts[st.pts.length - 1]]) {
-              const e = mapPoint(p0, mirror);
-              if (style === 'dot') parts.push(`<circle cx="${e.x.toFixed(2)}" cy="${e.y.toFixed(2)}" r="3" fill="#c99a1a" stroke="none"/>`);
-              else if (style === 'ring') parts.push(`<circle cx="${e.x.toFixed(2)}" cy="${e.y.toFixed(2)}" r="3.6" fill="none" stroke="#c99a1a" stroke-width="1.4"/>`);
-              else parts.push(`<path d="M ${(e.x - 3).toFixed(2)} ${(e.y - 3).toFixed(2)} L ${(e.x + 3).toFixed(2)} ${(e.y + 3).toFixed(2)} M ${(e.x + 3).toFixed(2)} ${(e.y - 3).toFixed(2)} L ${(e.x - 3).toFixed(2)} ${(e.y + 3).toFixed(2)}" fill="none" stroke="#c99a1a" stroke-width="1.4"/>`);
-            }
-          }
-        }
-        break;
-      }
-    case 'stamps': {
-        for (const st of layer.stamps) {
-          parts.push(`<text x="${st.x.toFixed(2)}" y="${st.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-family="serif" font-size="20" fill="rgba(184,134,11,0.5)">${esc(st.sym)}</text>`);
-        }
-        break;
-      }
-    }
-    parts.push('</g>');
-  }
-  parts.push('</svg>');
-  return parts.join('');
-}
-
-// ── Rosa-Cruz (motor separado) ──────────────────────────────────
-function rosaGenerate() {
-  const name = document.getElementById('rosaName').value.trim();
-  if (!name) { showToast('Escribe un nombre'); return; }
-  const r = transliterateToHebrew(name);
-  state.rosa.name = name;
-  state.rosa.mapping = r.mapping;
-  state.rosa.resolved = r.resolved;
-  state.rosa.gematria = r.gematria;
-  const box = document.getElementById('rosaBox');
-  const pairs = r.mapping.filter(m => !m.omitted).map(m =>
-    '<div class="reduction-line"><b>' + esc(m.latin) + '</b><span>' + (m.he ? m.he + ' · ' + (HEBREW_VALUES[m.he] || 0) : 'sin correspondencia') + '</span></div>').join('');
-  const omitted = r.mapping.filter(m => m.omitted).map(m => m.latin);
-  box.innerHTML =
-    '<div class="reduction-line"><b>Original</b><span>' + esc(name) + '</span></div>' +
-    '<div class="reduction-line"><b>Unidades (hebreo)</b><span>' + (r.mapping.length ? r.mapping.filter(m => m.he).map(m => m.he).join(' ') : '—') + '</span></div>' +
-    (omitted.length ? '<div class="reduction-line"><b>Sin correspondencia</b><span>' + esc(omitted.join(' ')) + '</span></div>' : '') +
-    '<div class="reduction-line"><b>Gematría</b><span>' + r.gematria + '</span></div>' +
-    '<div class="reduction-line"><b>Regla</b><span>Coordenadas alfabéticas: trazo de letra en letra; círculo en la primera, marca en la última.</span></div>' +
-    '<div class="reduction-line"><b>Tradición</b><span>Golden Dawn, Rose Cross Lamen.</span></div>' +
-    (pairs ? '<div class="prov-strokes" style="margin-top:6px">' + pairs + '</div>' : '');
-  render();
-  showToast(state.rosa.resolved.length + ' letras trazadas sobre la Rosa');
-}
-
-function setFamily(f) {
-  state.family = f;
-  const personal = f === 'personal';
-  document.getElementById('famPersonal').classList.toggle('active', personal);
-  document.getElementById('famMarco').classList.toggle('active', personal);
-  document.getElementById('famRosaCruz').classList.toggle('active', !personal);
-  document.getElementById('rosaPanel').hidden = personal;
-  if (!personal && document.getElementById('rosaName').value.trim()) rosaGenerate();
-  render();
-}
-
-// ── Generar ─────────────────────────────────────────────────────
-function generate() {
-  const t = document.getElementById('intention').value.trim();
-  if (!t) { showToast('Escribe una intención'); return; }
-  const r = getReduction(t);
-  state.reduction = r;
-  state.intention = t;
-  state.core = buildCore([...r.reduced]);
-  state.userDecisions = [];
-  state.core.removed = [];
-  state.highlightUnit = null;
-  const box = document.getElementById('reductionBox');
-  box.innerHTML =
-    '<div class="reduction-line"><b>Original</b><span>' + esc(r.original) + '</span></div>' +
-    '<div class="reduction-line"><b>Letras</b><span>' + esc(r.cleaned) + '</span></div>' +
-    '<div class="reduction-line"><b>Regla</b><span>' + esc(r.rule) + '</span></div>' +
-    '<div class="reduction-line"><b>Unidades</b><span>' + esc(r.reduced) + '</span></div>' +
-    '<div class="reduction-line"><b>Valores</b><span>' + r.values.join(' ') + '</span></div>' +
-    '<div class="reduction-chips"><span class="chip-label">Pasa el ratón por cada letra para verla en el glifo:</span><div class="chip-row">' +
-    [...r.reduced].map((ch, i) => '<button class="unit-chip" data-u="' + ch + '" title="Letra ' + ch + ' de la intención">' + ch + '</button>').join('') +
-    '</div></div>';
-  box.querySelectorAll('.unit-chip').forEach(btn => {
-    btn.addEventListener('mouseenter', () => { state.highlightUnit = btn.dataset.u; render(); });
-    btn.addEventListener('mouseleave', () => { state.highlightUnit = null; render(); });
-  });
-  if (state.core.strokes.length < 2) { showToast('Necesitas al menos 2 unidades'); return; }
-  render();
-  showToast(state.core.strokes.length + ' trazos — glifo personal trazable');
-}
-
-// ── Presets ─────────────────────────────────────────────────────
-function applyPreset(preset) {
-  const f = state.frame, i = state.inscription;
-  if (preset === 'solo') { f.circle.enabled = false; f.star.enabled = false; i.enabled = false; }
-  else if (preset === 'circle') { f.circle.enabled = true; f.star.enabled = false; i.enabled = false; }
-  else if (preset === 'star') { f.circle.enabled = false; f.star.enabled = true; i.enabled = false; }
-  else if (preset === 'circleStar') { f.circle.enabled = true; f.star.enabled = true; i.enabled = false; }
-  else if (preset === 'circleIns') { f.circle.enabled = true; f.star.enabled = false; i.enabled = true; }
-  syncControls();
-  render();
-}
-
-// ── Procedencia ─────────────────────────────────────────────────
-function showProvenance() {
-  const body = document.getElementById('provBody');
-  if (state.family === 'rosacruz') {
-    const ro = state.rosa;
-    let html = '<h3>Rosa-Cruz</h3>' +
-      '<div class="prov-row"><b>Nombre</b><span>' + esc(ro.name || '—') + '</span></div>' +
-      '<div class="prov-row"><b>Unidades</b><span>' + (ro.mapping.length ? ro.mapping.filter(m => m.he).map(m => m.he).join(' ') : '—') + '</span></div>' +
-      '<div class="prov-row"><b>Gematría</b><span>' + ro.gematria + '</span></div>' +
-      '<div class="prov-row"><b>Tradición</b><span>Golden Dawn, Rose Cross Lamen (22 pétalos: 3 madres, 7 dobles, 12 simples).</span></div>';
-    const mapping = ro.mapping.filter(m => !m.omitted);
-    if (mapping.length) {
-      html += '<h3>Transliteración letra a letra</h3><div class="prov-strokes">';
-      mapping.forEach(m => {
-        html += '<div class="srow"><span class="uid">' + esc(m.latin) + '</span><span>' + m.he + ' · ' + (HEBREW_VALUES[m.he] || 0) + '</span></div>';
-      });
-      html += '</div>';
-    }
-    html += '<h3>Regla</h3><p style="font-size:.68rem;color:var(--text-dim);line-height:1.5">' +
-      'Coordenadas alfabéticas: une las letras del nombre sobre la Rosa en orden. ' +
-      'Círculo en la primera letra, marca en la última. Diagrama prototipo ARCANUM [RC] sobre la atribución estándar.</p>' +
-      '<p style="font-size:.62rem;color:var(--text-dim);margin-top:8px">La procedencia se muestra aquí pero nunca se exporta al SVG.</p>';
-    body.innerHTML = html;
-    document.getElementById('provModal').classList.add('open');
-    return;
-  }
-  const r = state.reduction;
-  let html = '';
-  if (!r) { html = '<p style="font-size:.7rem;color:var(--text-dim)">Genera primero.</p>'; }
-  else {
-    html += '<h3>Reducción</h3>' +
-      '<div class="prov-row"><b>Intención</b><span>' + esc(r.original) + '</span></div>' +
-      '<div class="prov-row"><b>Método</b><span>' + esc(r.label) + '</span></div>' +
-      '<div class="prov-row"><b>Regla</b><span>' + esc(r.rule) + '</span></div>' +
-      '<div class="prov-row"><b>Unidades</b><span>' + [...r.reduced].map((c, i) => esc(c) + '(' + r.values[i] + ')').join(' ') + '</span></div>' +
-      '<div class="prov-row"><b>Talla</b><span>' + TOTEM_STYLES[state.skeleton] + '</span></div>';
-    html += '<h3>Trazos (cada uno con su origen)</h3><div class="prov-strokes">';
-    state.core.strokes.forEach(st => {
-      const src = st.kind === 'merge' ? 'fusión ' + st.units.join('+') : 'letra ' + st.unit;
-      html += '<div class="srow"><span class="uid">#' + st.id + '</span><span>' + esc(src) + ' · ' + st.pts.length + ' pts</span></div>';
-    });
-    html += '</div>';
-    if (state.userDecisions.length) {
-      html += '<h3>Decisiones de usuario</h3><div class="prov-strokes">';
-      state.userDecisions.forEach(d => { html += '<div class="srow"><span class="uid">·</span><span>' + esc(d.type + (d.removed ? ' (' + d.removed + ' trazos)' : '')) + '</span></div>'; });
-      html += '</div>';
-    }
-    const f = state.frame;
-    html += '<h3>Capas rituales</h3>' +
-      '<div class="prov-row"><b>Círculo</b><span>' + (f.circle.enabled ? 'activo' : 'inactivo') + '</span></div>' +
-      '<div class="prov-row"><b>Estrella</b><span>' + (f.star.enabled ? f.star.points + ' puntas' : 'inactiva') + '</span></div>' +
-      '<div class="prov-row"><b>Inscripción</b><span>' + (state.inscription.enabled && state.inscription.text ? esc(state.inscription.text) + ' · ' + state.inscription.pos : 'inactiva') + '</span></div>';
-    html += '<h3>Cómo trazar a mano</h3><p style="font-size:.68rem;color:var(--text-dim);line-height:1.5">' +
-      '1) Escribe la intención y aplica la regla nombrada. 2) Dibuja el asta vertical (la espina del poste). ' +
-      '3) Talla una banda por letra: soportes o muescas a los lados del asta, en su propio registro. ' +
-      '4) Remata la cabeza arriba y la base abajo. 5) Borra todo trazo sin función y redibuja de memoria.</p>';
-    html += '<p style="font-size:.62rem;color:var(--text-dim);margin-top:8px">La procedencia se muestra aquí pero nunca se exporta al SVG.</p>';
-  }
-  body.innerHTML = html;
-  document.getElementById('provModal').classList.add('open');
-}
-
-// ── Edición de trazos ───────────────────────────────────────────
-let editMode = false, selectedStroke = null, editing = { type: null, strokeId: null, ptIdx: null, moved: false };
-
-function editPoints() {
-  const strokes = state.core.strokes;
-  if (!strokes.length) return { stroke: null, point: -1 };
-  let best = null, bestD = Infinity;
-  const screen = [];
-  strokes.forEach((st, i) => st.pts.forEach((p, j) => screen.push({ st: st, i: i, j: j, x: p.x, y: p.y })));
-  for (const s of screen) {
-    const p = mapPoint({ x: s.x, y: s.y }, state.presentation.mirror);
-    const d = Math.hypot(p.x - editing.mx, p.y - editing.my);
-    if (d < 10 && d < bestD) { bestD = d; best = { type: 'point', stroke: s.st, i: s.i, j: s.j }; }
-  }
-  if (!best) {
-    let bestS = null, bestSD = Infinity;
-    for (const st of strokes) {
-      const mapped = st.pts.map(p => mapPoint(p, state.presentation.mirror));
-      for (let k = 0; k < mapped.length - 1; k++) {
-        const d = segDist(editing.mx, editing.my, mapped[k].x, mapped[k].y, mapped[k + 1].x, mapped[k + 1].y);
-        if (d < 7 && d < bestSD) { bestSD = d; bestS = st; }
-      }
-    }
-    if (bestS) best = { type: 'stroke', stroke: bestS };
-  }
-  return best;
-}
-function segDist(px, py, x1, y1, x2, y2) {
-  const dx = x2 - x1, dy = y2 - y1;
-  const l = dx * dx + dy * dy;
-  let t = l ? ((px - x1) * dx + (py - y1) * dy) / l : 0;
-  t = Math.max(0, Math.min(1, t));
-  return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
-}
-
-function renderEditHandles() {
-  if (!editMode) return;
-  ctx.save();
-  for (const st of state.core.strokes) {
-    const mapped = st.pts.map(p => mapPoint(p, state.presentation.mirror));
-    const active = selectedStroke === st.id;
-    ctx.strokeStyle = active ? '#e6b422' : 'rgba(201,154,26,.55)';
-    ctx.lineWidth = active ? 3.4 : 1.6;
-    tracePath(ctx, st.pts, state.presentation.mirror);
-    ctx.fillStyle = active ? '#e6b422' : '#c99a1a';
-    ctx.strokeStyle = '#0a080d'; ctx.lineWidth = 1;
-    for (const p of mapped) { ctx.beginPath(); ctx.arc(p.x, p.y, active ? 5 : 3.4, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
-  }
-  ctx.restore();
-}
-
-function refreshEditList() {
-  const list = document.getElementById('editList');
-  list.innerHTML = '';
-  state.core.strokes.forEach(st => {
-    const chip = document.createElement('button');
-    chip.className = 'edit-chip' + (selectedStroke === st.id ? ' active' : '');
-    chip.textContent = '#' + st.id + ' ' + (st.kind === 'merge' ? st.units.join('+') : st.unit) + ' (' + st.pts.length + ')';
-    chip.addEventListener('click', () => { selectedStroke = st.id; render(); });
-    list.append(chip);
-  });
-  render();
-}
-
-function strokeById(id) { return state.core.strokes.find(s => s.id === id) || null; }
-
-function editAction(fn, label) {
-  const st = strokeById(selectedStroke);
-  if (!st) { showToast('Selecciona un trazo'); return; }
-  fn(st);
-  state._guideStrokes = null;
-  state.userDecisions.push({ type: label, stroke: selectedStroke });
-  refreshEditList();
-}
-function rotateStroke(st) {
-  const cx = st.pts.reduce((s, p) => s + p.x, 0) / st.pts.length;
-  const cy = st.pts.reduce((s, p) => s + p.y, 0) / st.pts.length;
-  const a = 15 * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
-  st.pts.forEach(p => { const x = p.x - cx, y = p.y - cy; p.x = cx + x * c - y * s; p.y = cy + x * s + y * c; });
-}
-function flipStroke(st, horizontal) {
-  const cx = st.pts.reduce((s, p) => s + p.x, 0) / st.pts.length;
-  const cy = st.pts.reduce((s, p) => s + p.y, 0) / st.pts.length;
-  st.pts.forEach(p => { if (horizontal) p.x = 2 * cx - p.x; else p.y = 2 * cy - p.y; });
-}
-function joinStroke(st) {
-  const idx = state.core.strokes.indexOf(st);
-  if (idx <= 0) { showToast('Es el primer trazo: no hay anterior'); return; }
-  const prev = state.core.strokes[idx - 1];
-  const a = prev.pts[prev.pts.length - 1], b = st.pts[0];
-  if (Math.hypot(a.x - b.x, a.y - b.y) > 0.5) { showToast('Extremos lejanos: no se pueden unir'); return; }
-  const merged = { id: ++nextId, unit: '⚭', kind: 'merge', units: [...new Set([...prev.units, ...st.units])], pts: [...prev.pts, ...st.pts.slice(1)] };
-  state.core.strokes.splice(idx - 1, 2, merged);
-  state.core.merges.push({ from: [prev.id, st.id], to: merged.id, units: [...merged.units] });
-  selectedStroke = merged.id;
-}
-
-// ── UI wiring ───────────────────────────────────────────────────
-const $ = id => document.getElementById(id);
-
-function syncControls() {
-  $('chkCircle').checked = state.frame.circle.enabled;
-  $('rngCircleScale').value = state.frame.circle.scale; $('circleScaleVal').textContent = state.frame.circle.scale + '%';
-  $('rngCircleThick').value = state.frame.circle.thickness; $('circleThickVal').textContent = (state.frame.circle.thickness / 10).toFixed(1);
-  $('rngCircleOpacity').value = state.frame.circle.opacity; $('circleOpacityVal').textContent = state.frame.circle.opacity + '%';
-  $('chkCircleDouble').checked = state.frame.circle.double;
-  $('chkStar').checked = state.frame.star.enabled;
-  $('selStarPoints').value = String(state.frame.star.points);
-  $('rngStarScale').value = state.frame.star.scale; $('starScaleVal').textContent = state.frame.star.scale + '%';
-  $('rngStarRot').value = state.frame.star.rotation; $('starRotVal').textContent = state.frame.star.rotation + '°';
-  $('rngStarThick').value = state.frame.star.thickness; $('starThickVal').textContent = (state.frame.star.thickness / 10).toFixed(1);
-  $('rngStarOpacity').value = state.frame.star.opacity; $('starOpacityVal').textContent = state.frame.star.opacity + '%';
-  $('rngStarInner').value = state.frame.star.inner; $('starInnerVal').textContent = state.frame.star.inner + '%';
-  $('rngStarGap').value = state.frame.star.gap; $('starGapVal').textContent = state.frame.star.gap + '%';
-  $('chkStarChords').checked = state.frame.star.chords;
-  $('chkInscription').checked = state.inscription.enabled;
-  $('insText').value = state.inscription.text;
-  $('selInsPos').value = state.inscription.pos;
-  $('rngInsSize').value = state.inscription.size; $('insSizeVal').textContent = state.inscription.size;
-  $('rngInsSpacing').value = state.inscription.spacing; $('insSpacingVal').textContent = state.inscription.spacing;
-  $('selInsOrientation').value = state.inscription.orientation;
-  $('chkGlow').checked = state.presentation.glow;
-  $('chkGuide').checked = state.presentation.guide;
-  $('chkMirror').checked = state.presentation.mirror;
-  $('chkPreview').checked = state.presentation.preview;
-  $('rngOrganic').value = state.organic; $('organicVal').textContent = state.organic + '%';
-  $('chkJoin').checked = state.autoJoin;
-  $('chkTerminals').checked = state.terminals.enabled;
-  $('selTerminalStyle').value = state.terminals.style;
-  document.querySelectorAll('.skeleton-btn').forEach(b => b.classList.toggle('active', Number(b.dataset.k) === state.skeleton));
-  document.getElementById('selReduction').value = state.reductionMethod;
-  document.getElementById('chkTransparent').checked = state.chkTransparent || false;
-  const personal = state.family !== 'rosacruz';
-  document.getElementById('famPersonal').classList.toggle('active', personal);
-  document.getElementById('famMarco').classList.toggle('active', personal);
-  document.getElementById('famRosaCruz').classList.toggle('active', !personal);
-  document.getElementById('rosaPanel').hidden = personal;
-  document.getElementById('chkRosaDiagram').checked = state.rosa.diagram;
-}
-
-function setupRange(id, valId, fmt, cb) {
-  const el = $(id), val = $(valId);
-  el.addEventListener('input', () => { val.textContent = fmt(parseInt(el.value)); cb(parseInt(el.value)); });
-}
-
-$('btnGenerate').addEventListener('click', generate);
-$('selReduction').addEventListener('change', e => { state.reductionMethod = e.target.value; if ($('intention').value.trim()) generate(); });
-
-document.querySelectorAll('.skeleton-btn').forEach(b => {
-  b.addEventListener('click', () => { state.skeleton = Number(b.dataset.k); syncControls(); if ($('intention').value.trim()) generate(); });
-});
-setupRange('rngOrganic', 'organicVal', v => v + '%', v => { state.organic = v; if ($('intention').value.trim()) generate(); });
-$('chkJoin').addEventListener('change', e => { state.autoJoin = e.target.checked; if ($('intention').value.trim()) generate(); });
-$('chkTerminals').addEventListener('change', e => { state.terminals.enabled = e.target.checked; render(); });
-$('selTerminalStyle').addEventListener('change', e => { state.terminals.style = e.target.value; render(); });
-
-document.querySelectorAll('.fam-btn.locked').forEach(b => {
-  b.addEventListener('click', () => showToast('Motor histórico separado: no se mezcla con el glifo personal'));
-});
-
-$('famPersonal').addEventListener('click', () => setFamily('personal'));
-$('famMarco').addEventListener('click', () => setFamily('personal'));
-$('famRosaCruz').addEventListener('click', () => setFamily('rosacruz'));
-$('btnRosaGenerate').addEventListener('click', rosaGenerate);
-$('chkRosaDiagram').addEventListener('change', e => { state.rosa.diagram = e.target.checked; render(); });
-
-$('chkCircle').addEventListener('change', e => { state.frame.circle.enabled = e.target.checked; render(); });
-setupRange('rngCircleScale', 'circleScaleVal', v => v + '%', v => { state.frame.circle.scale = v; render(); });
-setupRange('rngCircleThick', 'circleThickVal', v => (v / 10).toFixed(1), v => { state.frame.circle.thickness = v; render(); });
-setupRange('rngCircleOpacity', 'circleOpacityVal', v => v + '%', v => { state.frame.circle.opacity = v; render(); });
-$('chkCircleDouble').addEventListener('change', e => { state.frame.circle.double = e.target.checked; render(); });
-
-$('chkStar').addEventListener('change', e => { state.frame.star.enabled = e.target.checked; render(); });
-$('selStarPoints').addEventListener('change', e => { state.frame.star.points = Number(e.target.value); render(); });
-setupRange('rngStarScale', 'starScaleVal', v => v + '%', v => { state.frame.star.scale = v; render(); });
-setupRange('rngStarRot', 'starRotVal', v => v + '°', v => { state.frame.star.rotation = v; render(); });
-setupRange('rngStarThick', 'starThickVal', v => (v / 10).toFixed(1), v => { state.frame.star.thickness = v; render(); });
-setupRange('rngStarOpacity', 'starOpacityVal', v => v + '%', v => { state.frame.star.opacity = v; render(); });
-setupRange('rngStarInner', 'starInnerVal', v => v + '%', v => { state.frame.star.inner = v; render(); });
-setupRange('rngStarGap', 'starGapVal', v => v + '%', v => { state.frame.star.gap = v; render(); });
-$('chkStarChords').addEventListener('change', e => { state.frame.star.chords = e.target.checked; render(); });
-
-$('chkInscription').addEventListener('change', e => { state.inscription.enabled = e.target.checked; render(); });
-$('insText').addEventListener('input', e => { state.inscription.text = e.target.value; render(); });
-$('selInsPos').addEventListener('change', e => { state.inscription.pos = e.target.value; render(); });
-setupRange('rngInsSize', 'insSizeVal', v => v, v => { state.inscription.size = v; render(); });
-setupRange('rngInsSpacing', 'insSpacingVal', v => v, v => { state.inscription.spacing = v; render(); });
-$('selInsOrientation').addEventListener('change', e => { state.inscription.orientation = e.target.value; render(); });
-
-$('chkGlow').addEventListener('change', e => { state.presentation.glow = e.target.checked; render(); });
-$('chkGuide').addEventListener('change', e => { state.presentation.guide = e.target.checked; render(); });
-$('chkMirror').addEventListener('change', e => { state.presentation.mirror = e.target.checked; render(); });
-$('chkPreview').addEventListener('change', e => { state.presentation.preview = e.target.checked; updatePreview(); });
-$('chkTransparent').addEventListener('change', e => { state.chkTransparent = e.target.checked; render(); });
-
-[['btnPresetSolo', 'solo'], ['btnPresetCircle', 'circle'], ['btnPresetStar', 'star'], ['btnPresetCircleStar', 'circleStar'], ['btnPresetCircleIns', 'circleIns']].forEach(([id, p]) => $('btnPresetSolo') && $(id).addEventListener('click', () => applyPreset(p)));
-
-$('btnProvenance').addEventListener('click', showProvenance);
-$('btnProvClose').addEventListener('click', () => $('provModal').classList.remove('open'));
-
-$('btnEditStrokes').addEventListener('click', () => {
-  if (state.family === 'rosacruz') { showToast('Edición disponible solo en el glifo personal'); return; }
-  editMode = !editMode; if (editMode) { refreshEditList(); } else { selectedStroke = null; render(); }
-});
-$('btnEditClose').addEventListener('click', () => { editMode = false; selectedStroke = null; render(); });
-$('btnStRot').addEventListener('click', () => editAction(rotateStroke, 'rotar'));
-$('btnStFlipH').addEventListener('click', () => editAction(st => flipStroke(st, true), 'reflejar-H'));
-$('btnStFlipV').addEventListener('click', () => editAction(st => flipStroke(st, false), 'reflejar-V'));
-$('btnStJoin').addEventListener('click', () => editAction(joinStroke, 'unir'));
-$('btnStDup').addEventListener('click', () => editAction(st => {
-  const copy = { id: ++nextId, unit: st.unit, kind: st.kind, units: [...st.units], pts: st.pts.map(p => ({ x: p.x + 0.03, y: p.y + 0.03 })) };
-  state.core.strokes.push(copy); selectedStroke = copy.id;
-}, 'duplicar'));
-$('btnStDel').addEventListener('click', () => editAction(st => {
-  const idx = state.core.strokes.indexOf(st);
-  if (idx >= 0) state.core.strokes.splice(idx, 1);
-  selectedStroke = null;
-}, 'eliminar'));
-
-$('btnSimplify').addEventListener('click', () => {
-  if (state.family === 'rosacruz') { showToast('Simplificar solo aplica al glifo personal'); return; }
-  if (!state.core.strokes.length) { showToast('Genera primero'); return; }
-  const removed = simplifyCore();
-  render(); showToast(removed + ' trazo(s) retirado(s) — estructura intacta');
-});
-
-// ── Pointer editing ─────────────────────────────────────────────
-function canvasPos(e) {
-  const rect = canvas.getBoundingClientRect();
-  const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
-  return { x: (sx / rect.width) * W, y: (sy / rect.height) * H };
-}
-let dragState = null;
-canvas.addEventListener('pointerdown', e => {
-  if (!editMode) return;
-  editing.mx = canvasPos(e).x; editing.my = canvasPos(e).y;
-  const hit = editPoints();
-  if (hit) {
-    selectedStroke = hit.stroke.id;
-    dragState = { type: hit.type, stroke: hit.stroke, j: hit.j || -1 };
-    refreshEditList();
-  } else { render(); }
-});
-canvas.addEventListener('pointermove', e => {
-  if (!editMode || !dragState) return;
-  const p = canvasPos(e);
-  const nx = (p.x - CX) / CORE_R, ny = (p.y - CY) / CORE_R;
-  const mirror = state.presentation.mirror;
-  const rx = mirror ? -nx : nx;
-  if (dragState.type === 'point') { dragState.stroke.pts[dragState.j].x = rx; dragState.stroke.pts[dragState.j].y = ny; }
-  else {
-    const dx = rx - editing.mx, dy = ny - editing.my;
-    dragState.stroke.pts.forEach(pt => { pt.x += dx; pt.y += dy; });
-  }
-  editing.mx = rx; editing.my = ny;
-  renderEditHandles();
-});
-canvas.addEventListener('pointerup', () => {
-  if (dragState) { state.userDecisions.push({ type: 'mover-trazo', stroke: dragState.stroke.id }); }
-  dragState = null;
-});
-
-// ── Estampas ────────────────────────────────────────────────────
-document.querySelectorAll('.stamp-btn').forEach(b => {
-  b.addEventListener('click', () => {
-    document.querySelectorAll('.stamp-btn').forEach(x => x.classList.remove('active'));
-    b.classList.add('active'); stampSym = b.dataset.s;
-  });
-});
-$('btnStamp').addEventListener('click', () => { stampMode = !stampMode; showToast(stampMode ? 'Click en canvas para estampar' : 'Estampa off'); });
-$('btnClearStamps').addEventListener('click', () => { state.stamps = []; stampMode = false; render(); });
-
-function placeStamp(clientX, clientY) {
-  if (!stampMode || editMode) return;
-  const rect = canvas.getBoundingClientRect();
-  state.stamps.push({ x: (clientX - rect.left) * (W / rect.width), y: (clientY - rect.top) * (H / rect.height), sym: stampSym });
-  render(); showToast('Estampa: ' + stampSym);
-}
-canvas.addEventListener('click', e => placeStamp(e.clientX, e.clientY));
-canvas.addEventListener('touchstart', e => {
-  if (!stampMode) return;
-  e.preventDefault();
-  const t = e.changedTouches[0];
-  placeStamp(t.clientX, t.clientY);
-}, { passive: false });
-
-// ── Exportar ────────────────────────────────────────────────────
-$('btnSVG').addEventListener('click', () => {
-  const ready = state.family === 'rosacruz' ? state.rosa.resolved.length : state.core.strokes.length;
-  if (!ready) { showToast('Genera primero'); return; }
-  const svg = buildSVG();
-  const blob = new Blob([svg], { type: 'image/svg+xml' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = state.family === 'rosacruz' ? 'rosa-cruz.svg' : 'sigilo.svg';
-  a.click();
-  showToast('SVG por capas exportado');
-});
-$('btnPNG').addEventListener('click', () => {
-  const ready = state.family === 'rosacruz' ? state.rosa.resolved.length : state.core.strokes.length;
-  if (!ready) { showToast('Genera primero'); return; }
-  canvas.toBlob(b => {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(b);
-    a.download = state.family === 'rosacruz' ? 'rosa-cruz.png' : 'sigilo.png';
-    a.click();
-    showToast('PNG exportado');
-  });
-});
-
-// ── Galería ─────────────────────────────────────────────────────
-const STORAGE_KEY = 'arcanum_sigils';
-function captureState() {
-  return JSON.parse(JSON.stringify({
-    intention: $('intention').value, reductionMethod: state.reductionMethod, skeleton: state.skeleton,
-    organic: state.organic, autoJoin: state.autoJoin, terminals: state.terminals, frame: state.frame,
-    inscription: state.inscription, presentation: state.presentation, stamps: state.stamps,
-    core: state.core, userDecisions: state.userDecisions, chkTransparent: state.chkTransparent,
-    family: state.family, rosa: state.rosa
-  }));
-}
-function restoreState(saved) {
-  Object.assign(state, JSON.parse(JSON.stringify(saved)));
-  state.reduction = null;
-  $('intention').value = state.intention;
-  syncControls();
-  if (state.family === 'rosacruz') { render(); return; }
-  generate();
-}
-function readGallery() {
-  try { const d = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); return Array.isArray(d) ? d : []; }
-  catch { return []; }
-}
-function writeGallery(items) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); return true; }
-  catch { showToast('Galería llena: elimina un sigilo'); return false; }
-}
-function saveSigil() {
-  const ready = state.family === 'rosacruz' ? state.rosa.resolved.length : state.core.strokes.length;
-  if (!ready) { showToast('Genera primero'); return; }
-  const intention = state.family === 'rosacruz' ? state.rosa.name : $('intention').value.trim();
-  const now = new Date();
-  const thumb = document.createElement('canvas');
-  thumb.width = 160; thumb.height = 112;
-  thumb.getContext('2d').drawImage(canvas, 0, 0, thumb.width, thumb.height);
-  const item = { id: 'sigil-' + now.getTime(), name: now.toLocaleDateString('es-CO') + ' - ' + intention.slice(0, 24), createdAt: now.toISOString(), thumbnail: thumb.toDataURL('image/png'), state: captureState() };
-  const items = readGallery();
-  items.unshift(item);
-  if (writeGallery(items)) { renderGallery(); showToast('Sigilo guardado'); }
-}
-function renderGallery() {
-  const grid = $('galleryGrid');
-  grid.innerHTML = '';
-  const items = readGallery();
-  if (!items.length) { grid.innerHTML = '<div class="gallery-empty">Aún no hay sigilos guardados.</div>'; return; }
-  items.forEach(item => {
-    const card = document.createElement('article');
-    card.className = 'gallery-item';
-    const image = document.createElement('img');
-    image.src = item.thumbnail; image.alt = item.name; image.title = 'Restaurar ' + item.name;
-    image.addEventListener('click', () => { restoreState(item.state); toggleGallery(false); showToast('Sigilo restaurado'); });
-    const name = document.createElement('div');
-    name.className = 'gallery-name'; name.textContent = item.name;
-    const remove = document.createElement('button');
-    remove.className = 'gallery-delete'; remove.textContent = 'X'; remove.title = 'Eliminar';
-    remove.addEventListener('click', () => { writeGallery(readGallery().filter(s => s.id !== item.id)); renderGallery(); showToast('Sigilo eliminado'); });
-    card.append(image, name, remove);
-    grid.append(card);
-  });
-}
-function toggleGallery(force) {
-  const panel = $('galleryPanel');
-  const open = typeof force === 'boolean' ? force : !panel.classList.contains('open');
-  panel.classList.toggle('open', open);
-  panel.setAttribute('aria-hidden', String(!open));
-  if (open) renderGallery();
-}
-$('btnSave').addEventListener('click', saveSigil);
-$('btnGallery').addEventListener('click', () => toggleGallery());
-$('btnGalleryClose').addEventListener('click', () => toggleGallery(false));
-
-// ── Ritual / gnosis (conservado, bajo riesgo) ───────────────────
-let gnosisInterval = null, gnosisDeadline = 0;
-const gnosisOverlay = $('gnosisOverlay');
-function setGnosisTime(seconds) {
-  $('gnosisTimer').textContent = String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(Math.ceil(seconds % 60)).padStart(2, '0');
-}
-function stopGnosis() {
-  clearInterval(gnosisInterval);
-  gnosisInterval = null;
-  gnosisOverlay.classList.remove('running');
-  $('gnosisDuration').disabled = false;
-  $('btnStartCharge').disabled = false;
-}
-function openGnosis() {
-  if (state.family === 'rosacruz') { showToast('La carga ritual aplica al glifo personal'); return; }
-  if (!state.core.strokes.length) { showToast('Genera primero'); return; }
-  stopGnosis();
-  $('gnosisSigil').src = canvas.toDataURL('image/png');
-  setGnosisTime(Number($('gnosisDuration').value));
-  $('btnForget').classList.remove('ready');
-  gnosisOverlay.classList.add('open');
-}
-function closeGnosis() { stopGnosis(); gnosisOverlay.classList.remove('open'); }
-function startGnosis() {
-  const duration = Number($('gnosisDuration').value);
-  gnosisDeadline = performance.now() + duration * 1000;
-  gnosisOverlay.classList.add('running');
-  $('gnosisDuration').disabled = true;
-  $('btnStartCharge').disabled = true;
-  const tick = () => {
-    const remaining = Math.max(0, (gnosisDeadline - performance.now()) / 1000);
-    setGnosisTime(remaining);
-    const phase = Math.floor(((duration - remaining) % 16) / 4);
-    $('breathLabel').textContent = ['Inhala', 'Sostén', 'Exhala', 'Sostén'][phase];
-    if (remaining <= 0) { stopGnosis(); $('btnForget').classList.add('ready'); playGnosisTone(); }
-  };
-  tick();
-  gnosisInterval = setInterval(tick, 200);
-}
-function playGnosisTone() {
-  try {
-    const audio = new (window.AudioContext || window.webkitAudioContext)(), osc = audio.createOscillator(), gain = audio.createGain();
-    osc.frequency.value = 220;
-    gain.gain.setValueAtTime(.035, audio.currentTime);
-    gain.gain.exponentialRampToValueAtTime(.001, audio.currentTime + 1.4);
-    osc.connect(gain).connect(audio.destination);
-    osc.start(); osc.stop(audio.currentTime + 1.4);
-  } catch {}
-}
-function forgetSigil() {
-  closeGnosis();
-  state.core.strokes = [];
-  state.stamps = [];
-  state.userDecisions = [];
-  $('intention').value = '';
-  $('reductionBox').textContent = '-';
-  render();
-  showToast('El sigilo obra en el Caos');
-}
-$('btnCharge').addEventListener('click', openGnosis);
-$('btnStartCharge').addEventListener('click', startGnosis);
-$('btnForget').addEventListener('click', forgetSigil);
-$('btnGnosisClose').addEventListener('click', closeGnosis);
-$('gnosisDuration').addEventListener('change', e => setGnosisTime(Number(e.target.value)));
-
-// ── Paneles móviles ─────────────────────────────────────────────
-$('panelToggle').addEventListener('click', e => {
-  const panel = $('controlPanel'), open = panel.classList.toggle('open');
-  e.currentTarget.setAttribute('aria-expanded', String(open));
-});
-$('panelClose').addEventListener('click', () => $('controlPanel').classList.remove('open'));
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate();
-  if (e.key === 'Escape') {
-    stampMode = false; dragState = null; closeGnosis(); toggleGallery(false);
-    $('provModal').classList.remove('open');
-    $('controlPanel').classList.remove('open');
-    if (editMode) { editMode = false; selectedStroke = null; render(); }
-  }
-});
-
-let tt;
-function showToast(m) {
-  const e = $('toast');
-  e.textContent = m;
-  e.classList.add('show');
-  clearTimeout(tt);
-  tt = setTimeout(() => e.classList.remove('show'), 1800);
-}
-
-// ── Arranque ────────────────────────────────────────────────────
-syncControls();
-setTimeout(() => {
-  $('intention').value = 'SABIDURIA';
-  generate();
-}, 100);
-</script>
+<div class="toast" id="toast"></div>
+
+<script src="js/glifos.js"></script>
+<script src="js/escena.js"></script>
+<script src="js/estilo.js"></script>
+<script src="js/interfaz.js"></script>
+<script src="sellos/sellos.js"></script>
+<script src="sellos/goetia/goetia.js"></script>
+<script src="js/letras.js"></script>
+<script src="js/capas.js"></script>
+<script src="js/lienzo.js"></script>
+<script src="js/rosa.js"></script>
+<script src="js/kamea.js"></script>
+<script src="js/catalogo.js"></script>
+<script src="js/personal.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

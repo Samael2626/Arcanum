@@ -59,24 +59,53 @@ def _resumen_natal(chart_data: dict) -> list[str]:
     if partes:
         lineas.append("Planetas natales: " + "; ".join(partes) + ".")
 
-    # Aspectos mayores: priorizamos los que tocan planetas personales para
-    # controlar el tamaño del contexto.
-    aspectos = chart_data.get("aspects") or []
-    relevantes = [
-        a for a in aspectos
-        if a.get("p1") in _PLANETAS_PERSONALES or a.get("p2") in _PLANETAS_PERSONALES
-    ][:8]
-    if relevantes:
-        asp_txt = "; ".join(
-            f"{a['p1']} {a['aspect']} {a['p2']}" for a in relevantes
-        )
-        lineas.append("Aspectos natales destacados: " + asp_txt + ".")
+    # LOS ASPECTOS NATALES YA NO SE ENTREGAN. Derogado el 27-sep-2026.
+    #
+    # Eran otros ocho en crudo y en ingles ("sun trine neptune; moon square
+    # uranus; ..."), encima de los ocho del transito. Dieciseis figuras
+    # delante, y el modelo las recorria. Lo que se le pide es que lea el dia
+    # de esta persona, no que recite su carta: los planetas natales con su
+    # signo siguen arriba, que es de donde cuelga la lectura, y el transito
+    # de hoy dice lo que se mueve.
+    #
+    # Si algun dia hace falta el aspecto natal, entra como entra el transito
+    # --dicho por lo que hace y contado con los dedos--, no como volcado.
 
     return lineas
 
 
+# El aspecto dicho por lo que HACE, no por su nombre.
+#
+# Derogado el 27-sep-2026 el volcado anterior, que entregaba hasta OCHO
+# aspectos en ingles y en crudo ("sun opposition venus natal; moon conjunction
+# venus natal; ..."). Medido contra el modelo: los recitaba tal cual, y las
+# lecturas salian llenas de "la oposicion actual del Sol a tu Venus natal" y
+# "la cuadratura de la Luna con Urano". No era desobediencia -- el prompt pide
+# nombrar los transitos reales del contexto, y esto era lo unico que habia que
+# nombrar.
+#
+# El horoscopo lleva haciendo esto bien desde siempre: `horoscope.describe`
+# SELECCIONA dos y los glosa en prosa. Esto es lo mismo, con retraso.
+_ASPECTO_LLANO: dict[str, str] = {
+    "conjunction": "encima de",
+    "opposition": "enfrente de",
+    "square": "en pelea con",
+    "trine": "a favor de",
+    "sextile": "echando una mano a",
+    "quincunx": "a destiempo con",
+}
+
+# Cuantos transitos entran. Tres, no ocho: con ocho el texto los recorre como
+# una lista y deja de ser una lectura. Con tres tiene que ELEGIR.
+_MAX_TRANSITOS = 3
+
+
+def _cuerpo_es(punto: str) -> str:
+    return nce.POINTS_ES.get(punto, punto)
+
+
 def _resumen_transitos(natal_planets: list[dict], now: datetime) -> str:
-    """Resumen de aspectos de los planetas en tránsito a la carta natal."""
+    """Los transitos de hoy, dichos por lo que hacen y no por su figura."""
     try:
         tr = nce.compute_transits(natal_planets, now)
     except Exception:
@@ -84,10 +113,26 @@ def _resumen_transitos(natal_planets: list[dict], now: datetime) -> str:
     aspectos = tr.get("aspects_to_natal") or []
     if not aspectos:
         return "Tránsitos actuales: sin aspectos exactos a la carta natal."
-    txt = "; ".join(
-        f"{a['transit']} {a['aspect']} {a['natal']} natal" for a in aspectos[:8]
-    )
-    return "Tránsitos actuales a la natal: " + txt + "."
+
+    # De cuerpos DISTINTOS: los tres primeros de la lista salian a menudo del
+    # mismo planeta ("el Sol enfrente de tu Venus; el Sol echando una mano a tu
+    # Marte; el Sol encima de tu Jupiter"), que es el mismo dato tres veces.
+    vistos: set[str] = set()
+    dichos: list[str] = []
+    for a in aspectos:
+        cuerpo = a.get("transit", "")
+        if cuerpo in vistos:
+            continue
+        vistos.add(cuerpo)
+        verbo = _ASPECTO_LLANO.get(a.get("aspect", ""), "cruzando")
+        dichos.append(
+            f"{_cuerpo_es(cuerpo)} {verbo} tu {_cuerpo_es(a.get('natal', ''))} "
+            "de nacimiento"
+        )
+        if len(dichos) == _MAX_TRANSITOS:
+            break
+
+    return "Lo que el cielo le está haciendo hoy: " + "; ".join(dichos) + "."
 
 
 def build_oracle_context(user: User, natal_chart: NatalChart) -> str:
@@ -191,9 +236,13 @@ def build_tarot_context(session: DivinationSession) -> str:
     y system=="tarot"). Aquí NO se consulta la BD ni se adivina nada: se lee la
     posición, orientación, significado y correspondencias que `draw_cards` ya
     horneó en cada carta al momento de tirar (cards_drawn = {"cards": [...]}).
-    Incluir las correspondencias (elemento, decanato/astro, palo, letra hebrea)
-    es lo que le permite al oráculo anclar la lectura en la carta CONCRETA en
-    vez de responder con significado de manual.
+    DESDE EL 27-SEP-2026 NO SE INCLUYE EL CORCHETE de correspondencias
+    (elemento, decanato/astro, palo, letra hebrea). Se defendia porque ancla la
+    lectura en la carta CONCRETA en vez de en el significado de manual, y eso
+    era cierto; lo que no se habia visto es que el modelo lo COPIA literal
+    --"agua regida por Marte en Escorpio"-- y que el `meaning` ya trae el
+    decanato y la sephirah dichos en prosa, asi que el ancla no se pierde. Ver
+    el comentario en el bucle.
 
     Returns:
         Bloque legible de la tirada para el prompt, o "" si no hay cartas.
@@ -212,10 +261,25 @@ def build_tarot_context(session: DivinationSession) -> str:
         name = c.get("name_es") or c.get("name") or c.get("slug") or "?"
         orient = "derecha" if c.get("drawn_upright", True) else "invertida"
         meaning = (c.get("meaning") or "").strip()
-        corr = _correspondencias(c)
+        # EL CORCHETE DE CORRESPONDENCIAS YA NO VIAJA. Derogado el 27-sep-2026.
+        #
+        # Iba "[elemento agua · palo copas · decanato Marte en Escorpio ·
+        # zodiaco Escorpio 0-10]" pegado a cada carta, y el modelo lo copiaba:
+        # de ahi salia "agua regida por Marte en Escorpio" y "aire de la Luna
+        # en Libra" en mitad de la lectura. Medido con tres variantes del
+        # prompt: mientras el dato llegara asi, ninguna regla de voz lo
+        # quitaba.
+        #
+        # El docstring de arriba defendia el corchete diciendo que es lo que
+        # ancla la lectura en la carta CONCRETA en vez de en el manual. Ese
+        # motivo era bueno y resulto innecesario: el `meaning` que va detras ya
+        # trae el decanato y la sephirah dichos en prosa, asi que el ancla
+        # sigue ahi sin la ficha tecnica delante.
+        #
+        # `_correspondencias` se deja en pie: no tiene otro llamador hoy, pero
+        # borrarla obligaria a reescribirla si algun dia se quiere una ficha de
+        # carta aparte de la lectura, que es otro asunto.
         linea = f"- {pos}: {name} ({orient})"
-        if corr:
-            linea += f" [{corr}]"
         if meaning:
             linea += f" — {meaning}"
         lineas.append(linea)

@@ -334,3 +334,85 @@ def describe(sky: dict, now: datetime, day_ruler: str | None = None,
         )
 
     return "\n".join(lineas)
+
+
+# ── LA NOTA AL PIE, COMPUESTA POR CODIGO ────────────────────────────────────
+#
+# Hasta el 28-sep-2026 la escribia el modelo, y salia asi:
+#
+#   "El cielo de hoy: Mercurio en Libra, Luna natal en Libra, conjuncion;
+#    Nodo Norte en Acuario, trigono; Luna Llena menguante; Saturno; Jupiter."
+#
+# Jerga pura --conjuncion, trigono, natal-- que es justo lo que Samuel pidio
+# quitar el 27-sep. Y ademas se DEGRADABA sola: medido, acabo en "Luna Llena,
+# Saturno, Marte", sin etiquetas y sin decir de que hablaba.
+#
+# Hecha aqui: siempre existe, es exacta, no gasta tokens de salida y no puede
+# degradarse. El aspecto se dice por lo que HACE, con la misma regla que el
+# cuerpo del texto.
+#
+# LO QUE ESTO NO HACE, y hay que saberlo: al modelo se le SIGUE pidiendo su
+# nota, y aqui se tira. Parece desperdicio y es deliberado --- la cobertura
+# (`expected_terms`) se satisface con los nombres de la nota, asi que quitarla
+# del prompt dejaria al modelo sin nombrar nada en ningun sitio y TODOS los
+# horoscopos fallarian la cobertura y reintentarian. Esa pieza se toca cuando
+# se decida que hacer con la red anti-generico, no antes. Probado el 28-sep y
+# revertido en el acto.
+
+# El aspecto dicho por lo que hace. Mismas palabras que usa `oracle_context`.
+_ASPECTO_LLANO: dict[str, str] = {
+    "conjunction": "encima de",
+    "opposition": "enfrente de",
+    "square": "en pelea con",
+    "trine": "a favor de",
+    "sextile": "echando una mano a",
+    "quincunx": "a destiempo con",
+}
+
+MARCA_NOTA = "El cielo de hoy:"
+
+
+def _tramo(aspecto: dict | None) -> str:
+    if not aspecto:
+        return ""
+    verbo = _ASPECTO_LLANO.get(aspecto.get("aspect", ""), "cruzando")
+    transito = nce.POINTS_ES.get(aspecto.get("transit", ""), aspecto.get("transit", ""))
+    natal = nce.POINTS_ES.get(aspecto.get("natal", ""), aspecto.get("natal", ""))
+    if not transito or not natal:
+        return ""
+    return f"{transito} {verbo} tu {natal} de nacimiento"
+
+
+def nota_del_cielo(sky: dict, ahora: datetime) -> str:
+    """La nota al pie sin una sola palabra de oficio.
+
+    Solo los DOS transitos de los que cuelga el texto --el rapido y el
+    capitulo-- y la fase. Listar el cielo entero volveria a ser el volcado del
+    que se venia huyendo.
+    """
+    trozos = [t for t in (_tramo(sky.get("today")), _tramo(sky.get("chapter"))) if t]
+    try:
+        luna = lc.get_moon_info(ahora)
+        fase = luna.phase_name.lower()
+        if fase in ("luna llena", "luna nueva"):
+            fase += " creciente" if luna.is_waxing else " menguante"
+        trozos.append(fase)
+    except Exception:  # noqa: BLE001
+        pass
+    if not trozos:
+        return ""
+    return f"{MARCA_NOTA} " + "; ".join(trozos) + "."
+
+
+def con_nota(texto: str, sky: dict, ahora: datetime) -> str:
+    """Quita la nota que escribio el modelo y pega la buena.
+
+    Si no compone ninguna --cielo en calma, sin transitos-- se devuelve el
+    texto sin nota en vez de una linea vacia con dos puntos.
+    """
+    cuerpo = texto.rstrip()
+    corte = cuerpo.lower().rfind(MARCA_NOTA.lower())
+    if corte >= 0:
+        cuerpo = cuerpo[:corte].rstrip()
+    nota = nota_del_cielo(sky, ahora)
+    return f"{cuerpo}\n\n{nota}" if nota else cuerpo

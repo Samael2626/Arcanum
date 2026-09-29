@@ -1,0 +1,2100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mesa de tarot v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Crimson+Pro:wght@400;500&display=swap">
+<style>
+/* paleta de arcanum_colors.dart */
+:root{
+  color-scheme:dark;
+  --bg:#0A0A0F; --surface:#12121A; --surface-hi:#1C1C28;
+  --gold:#C9A84C; --gold-muted:#8A6E32; --gold-light:#ECD79A;
+  --burgundy:#4A0E1A; --ivory:#F5F0E8; --ivory-muted:#B8B0A0;
+  --line:rgba(201,168,76,.24);
+  --display:"Cormorant Garamond","Garamond","Times New Roman",serif;
+  --body:"Crimson Pro","Georgia",serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ivory);font-family:var(--body);font-size:16px;}
+body{display:grid;grid-template-rows:auto 1fr auto;grid-template-columns:minmax(0,1fr);overflow:hidden;user-select:none;-webkit-user-select:none;}
+button{font:inherit;color:inherit}
+
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 8px;}
+.titles h1{margin:0;font-family:var(--display);font-weight:600;font-size:24px;letter-spacing:.02em;line-height:1.1}
+.status{font-size:14px;color:var(--ivory-muted);min-height:1.3em}
+.status b{color:var(--gold-light);font-weight:500}
+.seg{display:flex;border:1px solid var(--line);border-radius:999px;padding:2px;flex-shrink:0}
+.seg button{background:none;border:0;padding:8px 12px;min-height:40px;border-radius:999px;font-family:var(--display);font-size:15px;font-weight:600;color:var(--ivory-muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:rgba(201,168,76,.16);color:var(--gold-light)}
+
+.scene{position:relative;overflow:hidden;perspective:1000px;touch-action:none;
+  background:radial-gradient(ellipse 70% 60% at 50% 55%, #1d1410 0%, #0e0b0c 55%, var(--bg) 100%);}
+.scene::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 55% 45% at 50% 58%, rgba(255,190,110,.07), transparent 70%),
+             radial-gradient(ellipse 120% 90% at 50% 50%, transparent 55%, rgba(0,0,0,.55));}
+.guide{position:absolute;left:16px;right:16px;top:10px;z-index:5;text-align:center;pointer-events:none;
+  font-family:var(--display);font-style:italic;font-size:17px;color:var(--gold-light);text-shadow:0 1px 8px #000;text-wrap:balance}
+
+.table{position:absolute;left:50%;top:50%;width:600px;height:900px;transform-style:preserve-3d;will-change:transform}
+.card.noear .face{box-shadow:none}.card.noear .shadow{display:none}
+body.q1 .card .face{box-shadow:none}
+body.q1 .candlelight{display:none}
+body.q2 .deck .side{background:#d9ccad}
+body.q2 .slot{border-style:solid;border-width:1.5px}
+.guide{display:none!important}
+header{position:relative}
+.help-btn{position:absolute;right:14px;top:calc(env(safe-area-inset-top,0px) + 12px);width:44px;height:44px;border-radius:50%;cursor:pointer;
+  border:1px solid rgba(201,168,76,.45);background:rgba(18,17,24,.8);color:var(--gold-light);font:600 22px/1 var(--display)}
+.help-btn[hidden]{display:none}
+.help{position:absolute;left:12px;right:12px;top:10px;z-index:8;padding:16px 16px 12px;border-radius:16px;
+  background:rgba(14,13,20,.94);border:1px solid rgba(201,168,76,.4);box-shadow:0 18px 50px rgba(0,0,0,.6);animation:pop .2s ease-out}
+.help[hidden]{display:none}
+.help h2{margin:0 0 10px;font:600 22px/1.1 var(--display);color:var(--gold-light)}
+.help ul{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.help li{display:grid;grid-template-columns:96px 1fr;gap:10px;font-size:15px;line-height:1.35;color:var(--ivory-muted)}
+.help li b{font:600 16px/1.2 var(--display);color:var(--gold)}
+.help .row{display:flex;align-items:center;gap:12px;margin-top:12px}
+.help .bar{flex:1;height:3px;border-radius:2px;background:rgba(201,168,76,.18);overflow:hidden}
+.help .bar i{display:block;height:100%;background:var(--gold);transform-origin:left;animation:shrink 40s linear forwards}
+@keyframes shrink{to{transform:scaleX(0)}}
+.help .act{flex:0 0 auto;min-width:120px}
+.embro{position:absolute;left:0;top:0;width:440px;height:440px;pointer-events:none;opacity:0;transition:opacity .9s}
+.embro.ready{opacity:1}
+.embro .hit{position:absolute;left:140px;top:420px;width:160px;height:52px;cursor:pointer}
+.embro.ready .hit{pointer-events:auto}
+.embro svg{width:100%;height:100%;overflow:visible}
+.embro .thread{fill:none;stroke:#d9b45e;stroke-width:2;stroke-dasharray:3 4;opacity:.55}
+.embro.ready .thread{animation:stitch 3.2s ease-in-out infinite}
+@keyframes stitch{50%{opacity:.95}}
+.embro .seal-ring{fill:none;stroke:#f3dc9a;stroke-width:3.2;stroke-linecap:round;stroke-dasharray:1270;stroke-dashoffset:1270;transform:rotate(90deg);transform-origin:220px 220px}
+.embro.sealing .seal-ring{transition:stroke-dashoffset 1.3s linear;stroke-dashoffset:0}
+.embro text{font:italic 600 21px var(--display);fill:#e8c878;letter-spacing:.08em;opacity:.85}
+.fps{position:absolute;right:10px;bottom:10px;z-index:7;font:600 13px/1 ui-monospace,monospace;color:var(--gold-light);background:rgba(10,10,15,.7);padding:5px 8px;border-radius:6px;pointer-events:none}
+.wood{position:absolute;inset:0;border-radius:28px;transform:translateZ(0);
+  background:
+    repeating-linear-gradient(88deg, rgba(0,0,0,.0) 0 7px, rgba(0,0,0,.18) 7px 9px, rgba(255,220,170,.03) 9px 16px),
+    linear-gradient(180deg,#2b1a12,#1a0f0a 60%,#140b07);
+  box-shadow:0 0 0 2px #0c0705, inset 0 0 0 3px rgba(201,168,76,.22), inset 0 0 40px rgba(0,0,0,.6);}
+.cloth{background-size:96px 96px;position:absolute;left:18px;right:18px;top:172px;bottom:18px;border-radius:16px;transform:translateZ(.2px);
+  background:
+    radial-gradient(ellipse 75% 60% at 50% 45%, #5a1422 0%, #3a0b16 55%, #1f050b 100%);
+  box-shadow:inset 0 0 0 2px rgba(201,168,76,.35), inset 0 0 0 9px #22060d, inset 0 0 0 10px rgba(201,168,76,.18), inset 0 0 60px rgba(0,0,0,.55);}
+.cloth svg{position:absolute;left:50%;top:44%;width:420px;height:420px;transform:translate(-50%,-50%);opacity:.14}
+
+.slot{position:absolute;left:0;top:0;width:110px;height:190px;border-radius:8px;border:2px dashed rgba(201,168,76,.42);transform-origin:50% 50%;transition:border-color .15s,box-shadow .15s}
+.slot.hot{border-style:solid;border-color:var(--gold-light);box-shadow:0 0 18px rgba(236,215,154,.45), inset 0 0 18px rgba(236,215,154,.2)}
+.slot i{position:absolute;left:8px;top:6px;font-style:normal;font-family:var(--display);font-weight:600;font-size:30px;color:rgba(201,168,76,.6)}
+.slot-label{position:absolute;left:0;top:0;width:220px;text-align:center;font-family:var(--display);font-size:21px;font-weight:600;color:rgba(236,215,154,.72);white-space:nowrap}
+
+.piece{position:absolute;left:0;top:0;width:110px;height:190px;transform-style:preserve-3d;transform-origin:50% 50%;cursor:grab}
+.flip{position:absolute;inset:0;transform-style:preserve-3d}
+.face{position:absolute;inset:0;border-radius:7px;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  box-shadow:0 1px 2px rgba(0,0,0,.6)}
+.face.back{background-size:100% 100%;}
+.face.front{transform:rotateY(180deg);background:#efe6d2}
+.face.front img{width:100%;height:100%;object-fit:contain;object-position:center;display:block;pointer-events:none;background:#e7dcc4}
+.face.front img.rev{transform:rotate(180deg)}
+.fx{position:absolute;inset:0;pointer-events:none;opacity:0}
+.mote{position:absolute;width:5px;height:5px;border-radius:50%;background:#FAD26A;box-shadow:0 0 6px #EDAE30;bottom:6px}
+.shadow{position:absolute;inset:-8px;border-radius:16px;background:radial-gradient(closest-side,rgba(0,0,0,.7),rgba(0,0,0,0));opacity:0;pointer-events:none}
+
+.deck .side{position:absolute;pointer-events:auto}
+.deck .side.s,.deck .side.n{left:0;width:110px;background:repeating-linear-gradient(to bottom,#e9dec4 0 1px,#b39d6c 1px 2px)}
+.deck .side.e,.deck .side.w{top:0;height:190px;background:repeating-linear-gradient(to right,#e9dec4 0 1px,#b39d6c 1px 2px)}
+.deck .side.s{top:190px;transform-origin:50% 0;transform:rotateX(90deg)}
+.deck .side.n{transform-origin:50% 100%}
+.deck .side.e{left:110px;transform-origin:0 50%;transform:rotateY(-90deg)}
+.deck .side.w{transform-origin:100% 50%}
+.deck .top{border:1.5px solid rgba(201,168,76,.55)}
+.deck.glow .top{box-shadow:0 0 0 2px rgba(236,215,154,.55),0 0 22px rgba(236,215,154,.35)}
+.dshadow{position:absolute;inset:-10px;border-radius:16px;background:radial-gradient(closest-side,rgba(0,0,0,.6),rgba(0,0,0,0));transform:translate3d(8px,12px,.1px)}
+.dlabel{position:absolute;left:-90px;right:-90px;top:200px;text-align:center;transform:translateZ(.3px);
+  font-family:var(--display);font-weight:600;font-size:30px;line-height:1.1;color:var(--gold-light)}
+.dlabel small{display:block;font-family:var(--body);font-weight:400;font-size:24px;color:var(--ivory-muted)}
+.pile-badge{position:absolute;right:-14px;top:-14px;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  transform:translateZ(80px);background:var(--gold-light);border:2px solid #fff2bd;color:#1b1208;
+  font-family:var(--display);font-size:22px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.65)}
+.pile-badge[hidden]{display:none}
+
+.actions{display:flex;gap:6px;max-width:640px;margin:0 auto}
+.act{flex:1 1 0;background:none;border:1px solid var(--line);border-radius:10px;min-height:48px;padding:6px 4px;cursor:pointer;
+  font-family:var(--display);font-weight:600;font-size:16px;color:var(--gold-light);white-space:nowrap}
+.act:disabled{opacity:.32;cursor:default}
+.act:not(:disabled):active{background:rgba(201,168,76,.14)}
+.act:focus-visible,.seg button:focus-visible,.opt:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+.radial{position:fixed;inset:0;z-index:50;pointer-events:none}
+.radial .disk{position:fixed;transform:translate(-50%,-50%) scale(.76);border-radius:50%;
+  background:radial-gradient(circle,rgba(12,11,17,.72) 0 24%,rgba(18,17,24,.58) 25% 59%,rgba(7,7,11,.38) 60% 72%,transparent 73%);
+  border:1px solid rgba(201,168,76,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 22px 80px rgba(0,0,0,.62);;
+  opacity:0;transition:transform .18s ease-out,opacity .18s}
+.radial.open .disk{transform:translate(-50%,-50%) scale(1);opacity:1}
+.rbtn,.rclose{position:fixed;pointer-events:auto;transform:translate(-50%,-50%);border-radius:50%;cursor:pointer;color:var(--gold-light)}
+.rbtn{width:76px;height:76px;padding:8px 5px;display:grid;grid-template-rows:30px auto;place-items:center;
+  background:linear-gradient(145deg,rgba(43,41,50,.7),rgba(13,13,19,.5));border:1px solid rgba(201,168,76,.38);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.11),0 9px 24px rgba(0,0,0,.5);
+  font:600 12px/1.05 var(--display);
+  opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.2);
+  transition:transform .22s cubic-bezier(.2,.8,.2,1),opacity .16s;transition-delay:calc(var(--i) * 18ms)}
+.radial.open .rbtn{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.rbtn svg{width:29px;height:29px;overflow:visible}
+.rbtn svg.thumb{width:58px;height:31px}
+.rbtn span{max-width:68px;overflow-wrap:anywhere}
+.rbtn[aria-current="true"]{border-color:var(--gold);background:linear-gradient(145deg,rgba(120,91,38,.7),rgba(45,35,20,.58));box-shadow:0 0 0 2px rgba(201,168,76,.2),0 8px 20px rgba(0,0,0,.55)}
+.rbtn:disabled{opacity:.24;cursor:default}
+.rbtn:not(:disabled):active{background:rgba(201,168,76,.25)}
+.rbtn:focus-visible,.rclose:focus-visible{outline:2px solid var(--gold-light);outline-offset:3px}
+.rclose{width:52px;height:52px;display:grid;place-items:center;background:rgba(18,17,24,.58);border:1px solid rgba(201,168,76,.34);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 7px 22px rgba(0,0,0,.5);}
+.rclose svg{width:22px;height:22px}
+.rtitle{position:fixed;z-index:1;transform:translate(-50%,-50%);width:132px;text-align:center;color:var(--gold);
+  font:600 12px/1.15 var(--display);letter-spacing:.08em;text-transform:uppercase;pointer-events:none}
+
+.rclose.undo{width:64px;height:64px;grid-template-rows:24px auto;padding:6px 4px;border-color:var(--gold);color:var(--gold-light);
+  background:linear-gradient(145deg,rgba(120,91,38,.72),rgba(45,35,20,.6));font:600 11px/1 var(--display)}
+.undo-dot{position:absolute;left:14px;bottom:14px;z-index:6;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;padding:0;cursor:pointer;
+  border:1px solid rgba(201,168,76,.4);background:rgba(18,17,24,.72);color:var(--gold-light);animation:pop .16s ease-out}
+.undo-dot .i{width:20px;height:20px}
+.undo-dot .ring{position:absolute;inset:-2px;width:52px;height:52px;transform:rotate(-90deg)}
+.undo-dot .ring circle{fill:none;stroke:var(--gold);stroke-width:2;stroke-dasharray:151;stroke-dashoffset:0;animation:ring 5s linear forwards}
+@keyframes ring{to{stroke-dashoffset:151}}
+.undo-chip{position:fixed;z-index:45;transform:translate(-50%,-100%);display:flex;align-items:center;gap:8px;min-height:48px;padding:8px 16px 8px 12px;
+  border-radius:999px;border:1px solid var(--gold);color:var(--gold-light);cursor:pointer;font:600 16px/1 var(--display);
+  background:linear-gradient(145deg,rgba(60,48,26,.85),rgba(18,17,24,.8));box-shadow:0 10px 26px rgba(0,0,0,.55);;animation:pop .16s ease-out}
+.undo-chip svg{width:22px;height:22px}
+.seal{position:absolute;left:0;top:0;width:84px;height:84px;border-radius:50%;cursor:pointer;
+  background:radial-gradient(circle at 38% 32%,#9b2a3d,#5a1422 55%,#2a0610);border:3px solid rgba(201,168,76,.75);
+  box-shadow:0 6px 14px rgba(0,0,0,.6),inset 0 2px 6px rgba(255,210,180,.25),inset 0 -4px 8px rgba(0,0,0,.5)}
+.seal svg{position:absolute;inset:14px;width:50px;height:50px}
+.seal.open{background:radial-gradient(circle at 38% 32%,#6d2030,#3a0b16 60%,#1d050a);opacity:.7}
+.seal.open::after{content:"";position:absolute;inset:0;border-radius:50%;
+  background:linear-gradient(118deg,transparent 47%,rgba(10,4,6,.95) 48%,rgba(10,4,6,.95) 51%,transparent 52%)}
+.seal-fly{position:fixed;z-index:70;overflow:hidden;padding:14px;color:var(--ivory);font:500 17px/1.35 var(--body);
+  background:radial-gradient(circle at 38% 32%,#9b2a3d,#4A0E1A 70%);border:2px solid var(--gold);pointer-events:none}
+.mark{position:absolute;left:0;top:0;width:440px;height:440px;border-radius:50%;pointer-events:none;opacity:0;
+  border:3px solid rgba(236,215,154,.9);box-shadow:0 0 40px rgba(237,174,48,.7),inset 0 0 40px rgba(237,174,48,.45)}
+.card.clar .face{outline:2px solid rgba(236,215,154,.85);box-shadow:0 0 14px rgba(236,215,154,.5)}
+.banner{position:absolute;left:12px;right:12px;top:6px;z-index:6;display:grid;gap:8px;padding:10px 12px;border-radius:14px;
+  background:rgba(18,17,24,.72);border:1px solid var(--line);}
+.banner[hidden]{display:none}
+.banner p{margin:0;font-size:14px;color:var(--ivory-muted);line-height:1.35}
+.banner b{font-family:var(--display);font-size:17px;color:var(--gold-light);font-weight:600}
+.hist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.act.hrow{display:grid;gap:2px;text-align:left;white-space:normal;padding:10px 12px;line-height:1.25}
+.act.hrow b{font-size:17px}
+.act.hrow span{font-family:var(--body);font-weight:400;font-size:14px;color:var(--ivory-muted)}
+.act.hrow em{font-family:var(--body);font-weight:400;font-size:14px;color:var(--ivory)}
+.rbtn.hot{border-color:var(--gold-light);background:linear-gradient(145deg,rgba(150,115,48,.85),rgba(60,45,22,.7));
+  transform:translate(-50%,-50%) scale(1.14)!important;box-shadow:0 0 0 2px rgba(236,215,154,.35),0 0 24px rgba(237,174,48,.45)}
+/* esquina para levantar la carta: visible y viva */
+.card:not(.noear) .face.back::after{content:"";position:absolute;right:0;bottom:0;width:13px;height:13px;border-top-left-radius:3px;
+  background:linear-gradient(135deg,transparent 49%,rgba(243,223,160,.9) 50%,#a88a42 100%);box-shadow:-1px -1px 3px rgba(0,0,0,.45);animation:ear 3.2s ease-in-out infinite}
+@keyframes ear{50%{width:16px;height:16px}}
+.pips{position:absolute;left:calc(100% + 5px);top:6px;height:180px;width:18px;display:flex;flex-direction:column;flex-wrap:wrap;align-content:flex-start;gap:2px;
+  transform:translateZ(.4px);pointer-events:none}
+.pips i{display:block;width:16px;height:16px;color:#F7E3A6}
+.pips i svg{width:100%;height:100%;display:block}
+.pips.rev i{transform:rotate(180deg)}
+.pips b{font:700 17px/1 var(--display);color:#F2DFA0;writing-mode:vertical-rl;text-shadow:0 0 6px rgba(237,174,48,.8)}
+.cbase{position:absolute;left:0;top:0;width:44px;height:44px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(255,196,120,calc(.4 * var(--lit,1))),rgba(255,170,90,calc(.14 * var(--lit,1))) 45%,transparent 72%)}
+.c3d{position:absolute;left:0;top:0;transform-style:preserve-3d;pointer-events:none}
+.c3d i,.c3d b{position:absolute;left:0;top:0;display:block;transform-origin:50% 100%}
+.c3d b{border-radius:50%;transform-origin:50% 50%}
+.c3d .flw{position:absolute;left:0;top:0;width:15px;height:38px;transform-origin:50% 100%}
+.c3d .flw .fl{position:absolute;inset:0;transform-origin:50% 92%;border-radius:50% 50% 46% 46%/64% 64% 36% 36%;filter:blur(.3px);
+  background:radial-gradient(ellipse 50% 60% at 50% 74%,#fffdf4 0 22%,#ffe9a8 38%,#ffb04a 62%,rgba(255,120,30,0) 78%)}
+.c3d .flw .fl::before{content:"";position:absolute;left:4px;right:4px;bottom:2px;height:9px;border-radius:50%;background:radial-gradient(ellipse,rgba(110,150,255,.75),rgba(110,150,255,0) 70%)}
+.candle{position:absolute;left:0;top:0;z-index:2;width:60px;height:180px;transform-origin:50% 100%;pointer-events:none}
+.candle > svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.candle .fl{position:absolute;left:50%;width:15px;height:38px;margin-left:-7.5px;transform-origin:50% 92%;
+  border-radius:50% 50% 46% 46%/64% 64% 36% 36%;filter:blur(.3px);
+  background:radial-gradient(ellipse 50% 60% at 50% 74%,#fffdf4 0 22%,#ffe9a8 38%,#ffb04a 62%,rgba(255,120,30,0) 78%)}
+.candle .fl::before{content:"";position:absolute;left:4px;right:4px;bottom:2px;height:9px;border-radius:50%;background:radial-gradient(ellipse,rgba(110,150,255,.75),rgba(110,150,255,0) 70%)}
+.candle .fl::after{content:"";position:absolute;inset:-9px -7px -2px;border-radius:50%;background:radial-gradient(ellipse at 50% 70%,rgba(255,190,110,.35),transparent 70%)}
+.candle .wax{position:absolute;left:0;right:0;bottom:0;height:82px;border-radius:7px 7px 3px 3px;
+  background:linear-gradient(90deg,#8f846e,#e9dfca 32%,#fbf5e8 50%,#d4c7ad 74%,#7d725d)}
+.candle .wax::before{content:"";position:absolute;left:1px;right:1px;top:-3px;height:8px;border-radius:50%;background:#f7efdd;box-shadow:inset 0 -2px 3px rgba(150,120,80,.35)}
+.candle .wick{position:absolute;left:14px;width:2px;height:9px;bottom:81px;background:#2a1d10}
+.candle .flame-old{position:absolute;left:50%;bottom:86px;width:16px;height:36px;margin-left:-8px;border-radius:50% 50% 45% 45%/62% 62% 38% 38%;transform-origin:50% 100%;
+  background:radial-gradient(ellipse at 50% 72%,#fff 0 16%,#ffe7a6 30%,#ffa640 56%,rgba(255,120,30,0) 72%);
+  animation:flick 1.3s infinite ease-in-out,flick2 .37s infinite}
+.candle .halo{position:absolute;left:50%;bottom:62px;width:130px;height:130px;margin-left:-65px;border-radius:50%;opacity:var(--lit,1);
+  background:radial-gradient(circle,rgba(255,205,125,.5),rgba(255,170,80,.14) 45%,transparent 70%)}
+@keyframes flick{0%,100%{transform:scale(1,1) skewX(0)}30%{transform:scale(.93,1.09) skewX(3deg)}62%{transform:scale(1.05,.94) skewX(-2deg)}}
+@keyframes flick2{50%{opacity:.86}}
+.candlelight{position:absolute;inset:0;border-radius:16px;pointer-events:none;opacity:.6;
+  background:radial-gradient(circle at 7% -12%,rgba(255,176,96,.34),transparent 46%),radial-gradient(circle at 93% -12%,rgba(255,176,96,.34),transparent 46%)}
+.fxcanvas{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
+.cflame{position:absolute;left:0;top:0;z-index:3;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.candle .flame,.card .face.back::after{animation:none}}
+.menu{position:fixed;z-index:40;display:grid;gap:6px;padding:10px;min-width:260px;background:rgba(18,18,26,.97);border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 14px 40px rgba(0,0,0,.6);animation:pop .14s ease-out}
+@keyframes pop{from{transform:scale(.94);opacity:0}}
+.menu .mt{font-size:14px;color:var(--ivory-muted);padding:0 4px;line-height:1.35}
+.menu .mh{font-family:var(--display);font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);padding:0 4px}
+.menu .mrow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.menu .act{font-size:16px;padding:6px 8px}
+.menu{max-width:calc(100vw - 16px)}
+.menu.wide{width:min(400px,calc(100vw - 16px))}
+.menu.tall{max-height:min(68vh,560px);overflow:auto}
+.menu .mrow.three{grid-template-columns:repeat(3,1fr)}
+.menu .act.wrap{white-space:normal;line-height:1.1}
+.menu .rd{font-family:var(--display);font-size:24px;font-weight:600;line-height:1.1;padding:0 4px}
+.menu .rd small{font-family:var(--body);font-size:15px;font-weight:400;color:var(--ivory-muted)}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.act.sp{display:grid;gap:2px;justify-items:center;padding:6px 4px;white-space:normal;font-size:14px;line-height:1.1}
+.act.sp svg{width:100%;height:34px}
+.act.sp[aria-current="true"]{border-color:var(--gold);background:rgba(201,168,76,.12)}
+.interp{position:absolute;left:0;top:0;z-index:4;transform:translate(-50%,-50%);min-height:52px;padding:10px 22px;border-radius:999px;cursor:pointer;
+  font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:.04em;color:#1a0f06;
+  background:radial-gradient(circle at 50% 35%,#F2DFA0,#C9A84C 70%,#8A6E32);border:1px solid #ECD79A;
+  box-shadow:0 0 0 4px rgba(10,10,15,.55),0 0 28px rgba(237,174,48,.55);animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{50%{box-shadow:0 0 0 4px rgba(10,10,15,.55),0 0 44px rgba(237,174,48,.8)}}
+.q{width:100%;min-height:72px;resize:vertical;background:var(--bg);color:var(--ivory);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:17px}
+.q:focus{outline:2px solid var(--gold);outline-offset:1px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.act.primary{background:rgba(201,168,76,.18);border-color:var(--gold)}
+.lect{list-style:none;margin:0;padding:0 4px;display:grid;gap:8px}
+.lect li{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:baseline;border-top:1px solid var(--line);padding-top:8px}
+.lect li i{font-style:normal;font-family:var(--display);font-weight:600;font-size:20px;color:var(--gold)}
+.lect li b{font-weight:500}
+.lect li span{display:block;color:var(--ivory-muted);font-size:14px}
+@media (prefers-reduced-motion:reduce){.interp{animation:none}}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 86px);transform:translateX(-50%);z-index:60;max-width:calc(100% - 32px);
+  background:rgba(18,18,26,.96);border:1px solid var(--line);border-radius:10px;padding:10px 16px;font-size:15px;color:var(--gold-light);text-align:center;
+  transition:opacity .25s;pointer-events:none}
+@media (max-width:420px){.titles h1{font-size:21px}}
+/* v2.1: cada accion es un circulo pequeno suelto, sin disco comun; botones mas finos */
+.radial .disk{display:none}
+.rbtn{width:52px;height:52px;padding:0;display:grid;grid-template-rows:none;place-items:center;overflow:visible;
+  background:radial-gradient(circle at 50% 32%,rgba(52,45,36,.96),rgba(13,12,18,.96));border:1px solid rgba(201,168,76,.5);
+  box-shadow:0 6px 18px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,236,190,.14)}
+.rbtn svg{width:22px;height:22px}
+.rbtn svg.thumb{width:40px;height:22px}
+.rbtn span{position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);max-width:none;white-space:nowrap;pointer-events:none;
+  font:600 10.5px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--gold-light);text-shadow:0 1px 3px #000,0 0 10px #000}
+.rbtn.hot{transform:translate(-50%,-50%) scale(1.18)!important;background:radial-gradient(circle at 50% 32%,#6d5424,#2b2112);
+  border-color:#f3dc9a;box-shadow:0 0 0 3px rgba(236,215,154,.2),0 0 22px rgba(237,174,48,.5)}
+.rbtn[aria-current="true"]{border-color:var(--gold);background:radial-gradient(circle at 50% 32%,#5a4520,#221a0f)}
+.rclose{width:44px;height:44px;background:rgba(13,12,18,.9);border-color:rgba(201,168,76,.3)}
+.rclose svg{width:15px;height:15px}
+.rclose.undo{width:52px;height:52px}
+.rtitle{width:240px;font-size:11px;letter-spacing:.22em;text-shadow:0 1px 3px #000,0 0 10px #000}
+.radial.open .rbtn:disabled{opacity:.28}
+.act{min-height:44px;border-radius:999px;font-size:15px;letter-spacing:.03em;border-color:rgba(201,168,76,.32);padding-inline:14px}
+.act.primary{background:linear-gradient(180deg,rgba(201,168,76,.22),rgba(201,168,76,.1))}
+.help-btn{border-color:rgba(201,168,76,.3);font-size:18px;background:rgba(13,12,18,.7)}
+.undo-dot{width:44px;height:44px}
+.undo-dot .ring{width:48px;height:48px}
+.moonlight{position:absolute;inset:0;z-index:2;pointer-events:none;transition:background 2.5s}
+.moon-btn{position:absolute;right:64px;top:calc(env(safe-area-inset-top,0px) + 12px);width:44px;height:44px;border-radius:50%;padding:0;cursor:pointer;
+  display:grid;place-items:center;background:none;border:0}
+.moon-btn svg{width:24px;height:24px;filter:drop-shadow(0 0 6px rgba(200,215,255,.35))}
+.piece.card::after{content:"";position:absolute;inset:-24px}
+.piece.card.noear::after{display:none}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="titles">
+    <h1>Mesa de tarot</h1>
+    <div class="status" id="status">Ningún mazo en juego</div>
+  </div>
+  <button class="moon-btn" id="moon-btn" aria-label="Fase lunar"></button>
+  <button class="help-btn" id="help-btn" aria-label="Cómo se usa la mesa" hidden>?</button>
+</header>
+
+<main class="scene" id="scene">
+  <div class="guide" id="guide"></div>
+  <div class="banner" id="banner" hidden>
+    <p id="banner-text"></p>
+    <div class="two"><button class="act" id="b-back">Volver a mi mesa</button><button class="act primary" id="b-go">Continuar aquí</button></div>
+  </div>
+  <div class="help" id="help" role="dialog" aria-label="Cómo se usa la mesa" hidden>
+    <h2>Cómo se usa la mesa</h2>
+    <ul>
+      <li><b>Tocar</b><span>Hace lo evidente: extiende el mazo, desvela una carta de la tirada o devuelve una suelta a su montón.</span></li>
+      <li><b>Mantener</b><span>Abre el menú de lo que tocas. Desliza hasta la opción y suelta.</span></li>
+      <li><b>Arrastrar el tapete</b><span>Gira e inclina la mesa. Pellizca para acercarte.</span></li>
+      <li><b>Esquina</b><span>Levanta la esquina de una carta para voltearla. El doble toque también la desvela.</span></li>
+    </ul>
+    <div class="row"><div class="bar"><i></i></div><button class="act" id="help-ok">Entendido</button></div>
+  </div>
+  <div class="moonlight" id="moonlight"></div>
+  <canvas class="fxcanvas" id="fxbody"></canvas>
+  <canvas class="fxcanvas" id="fx"></canvas>
+  <div class="table" id="table">
+    <div class="wood"></div>
+    <div class="cloth">
+      <svg viewBox="-100 -100 200 200" fill="none" stroke="#C9A84C" stroke-width="1.2">
+        <circle r="96"/><circle r="88"/><circle r="52"/>
+        <path d="M0-88 76 44H-76Z"/><path d="M0 88-76-44H76Z"/>
+        <path d="M0-96V-88M0 96V88M-96 0H-88M96 0H88"/>
+      </svg>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast" style="opacity:0"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+<script>
+'use strict';
+// ================= geometria de la mesa (unidades de mesa) =================
+const TW = 600, TH = 900, CW = 110, CH = 190, P = 1000;
+const SHELF_Y = 168;                              // por encima: estante
+const AREA = { x: 36, y: 200, w: 528, h: 470 };   // zona de la tirada
+const DECK_S = .62, FAN_S = .55, FREE_S = .7;
+const HOME_SPOT = { x: 470, y: 782 };             // mazo en juego por defecto
+const FAN_Y = 782;
+const D2R = Math.PI / 180;
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SPEED = reduced ? .5 : 1;
+
+// ================= datos: cartas, mazos, tiradas =================
+const MAJORS = [['el-loco','El Loco'],['el-mago','El Mago'],['la-sacerdotisa','La Sacerdotisa'],['la-emperatriz','La Emperatriz'],
+  ['el-emperador','El Emperador'],['el-hierofante','El Hierofante'],['los-enamorados','Los Enamorados'],['el-carro','El Carro'],
+  ['la-fuerza','La Fuerza'],['el-ermitano','El Ermitaño'],['la-rueda','La Rueda de la Fortuna'],['la-justicia','La Justicia'],
+  ['el-colgado','El Colgado'],['la-muerte','La Muerte'],['la-templanza','La Templanza'],['el-diablo','El Diablo'],
+  ['la-torre','La Torre'],['la-estrella','La Estrella'],['la-luna','La Luna'],['el-sol','El Sol'],['el-juicio','El Juicio'],['el-mundo','El Mundo']];
+const RANKS = [['as','As'],['dos','Dos'],['tres','Tres'],['cuatro','Cuatro'],['cinco','Cinco'],['seis','Seis'],['siete','Siete'],
+  ['ocho','Ocho'],['nueve','Nueve'],['diez','Diez'],['sota','Sota'],['caballero','Caballero'],['reina','Reina'],['rey','Rey']];
+const SUITS = [['bastos','Bastos'],['copas','Copas'],['espadas','Espadas'],['oros','Oros']];
+const ALL = [
+  ...MAJORS.map(([f, n]) => ({ file: f, name: n, major: true })),
+  ...SUITS.flatMap(([s, sn]) => RANKS.map(([r, rn]) => ({ file: `${r}-de-${s}`, name: `${rn} de ${sn}`, suit: s }))),
+];
+const img = c => `../arcanum_app/assets/tarot/${c.file}.webp`;
+
+const svgUri = s => `url("data:image/svg+xml;utf8,${encodeURIComponent(s)}")`;
+const BACK_SOL = svgUri(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 110 190'><defs><radialGradient id='g' cx='50%' cy='50%' r='70%'><stop offset='0' stop-color='#1b2a4c'/><stop offset='1' stop-color='#060a16'/></radialGradient></defs><rect width='110' height='190' fill='url(#g)'/><rect x='6' y='6' width='98' height='178' rx='5' fill='none' stroke='#C9A84C' stroke-width='1.6'/><rect x='10' y='10' width='90' height='170' rx='3' fill='none' stroke='#8A6E32' stroke-width='.6'/><g transform='translate(55 95)' stroke='#C9A84C' fill='none'>${Array.from({length:16},(_,i)=>`<path d='M0 -17 L0 ${i%2?-28:-36}' transform='rotate(${i*22.5})' stroke-width='${i%2?.8:1.3}'/>`).join('')}<circle r='14' stroke-width='1.3'/><circle r='2.5' fill='#C9A84C'/></g><g fill='#8A6E32'><circle cx='55' cy='30' r='1.6'/><circle cx='55' cy='160' r='1.6'/></g></svg>`);
+const BACK_TRIUNFO = svgUri(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 110 190'><defs><radialGradient id='g' cx='50%' cy='50%' r='70%'><stop offset='0' stop-color='#5a1422'/><stop offset='1' stop-color='#1b050a'/></radialGradient></defs><rect width='110' height='190' fill='url(#g)'/><rect x='6' y='6' width='98' height='178' rx='5' fill='none' stroke='#C9A84C' stroke-width='1.6'/><rect x='10' y='10' width='90' height='170' rx='3' fill='none' stroke='#8A6E32' stroke-width='.6'/><g transform='translate(55 95)' stroke='#C9A84C' fill='none' stroke-width='1.2'><circle r='30'/><path d='M0 -26 22.5 13 -22.5 13Z'/><path d='M0 26 -22.5 -13 22.5 -13Z'/><circle r='3' fill='#C9A84C'/></g></svg>`);
+
+const DECKS = [
+  { id: 'rws', name: 'Rider–Waite–Smith', sub: '78 cartas', back: BACK_SOL, cards: ALL, home: { x: 180, y: 84 } },
+  { id: 'mayores', name: 'Arcanos Mayores', sub: '22 triunfos', back: BACK_TRIUNFO, cards: ALL.filter(c => c.major), home: { x: 420, y: 84 } },
+];
+
+// posiciones en fraccion de AREA; lab = 'full' pinta el nombre en el pano, 'num' solo el numero
+const SPREADS = [
+  { id: 'one', name: 'Una carta', desc: 'Lo esencial, sin rodeos.', s: 1, lab: 'full', pos: [[.5,.5,0,'Respuesta','Lo esencial de la pregunta.']] },
+  { id: 'three', name: 'Tres cartas', desc: 'Pasado, presente y futuro.', s: .9, lab: 'full', pos: [
+    [.2,.46,0,'Pasado','Lo que trajo hasta aquí.'],[.5,.46,0,'Presente','Lo que pesa ahora.'],[.8,.46,0,'Futuro','Hacia dónde tiende.']] },
+  { id: 'cross5', name: 'Cruz simple', desc: 'Situación, lo que ayuda y lo que frena.', s: .74, lab: 'num', pos: [
+    [.5,.5,0,'Situación','El centro de la pregunta.'],[.2,.5,0,'Pasado','Lo que queda atrás.'],[.8,.5,0,'Futuro','Lo que se acerca.'],
+    [.5,.14,0,'Lo que ayuda','La fuerza a favor.'],[.5,.86,0,'Lo que frena','La resistencia.']] },
+  { id: 'relation', name: 'Relación', desc: 'Dos personas y lo que hay entre ellas.', s: .74, lab: 'num', pos: [
+    [.18,.3,0,'Tú','Cómo llegas a la relación.'],[.82,.3,0,'La otra persona','Cómo llega la otra parte.'],
+    [.5,.16,0,'Lo que os une','El vínculo.'],[.5,.52,0,'Lo que os separa','La tensión.'],[.5,.87,0,'Hacia dónde va','La tendencia.']] },
+  { id: 'horseshoe', name: 'Herradura', desc: 'Siete cartas en arco: del pasado al desenlace.', s: .64, lab: 'num', pos: [
+    [.08,.8,-8,'Pasado','Lo que dejó huella.'],[.14,.46,-5,'Presente','La situación de hoy.'],[.29,.17,-2,'Futuro próximo','Lo que llega pronto.'],
+    [.5,.08,0,'Consejo','Lo que conviene hacer.'],[.71,.17,2,'Entorno','Las personas y el ambiente.'],[.86,.46,5,'Obstáculos','Lo que se interpone.'],[.92,.8,8,'Desenlace','Hacia dónde va.']] },
+  { id: 'celtic', name: 'Cruz Celta', desc: 'La tirada clásica de diez cartas.', s: .56, lab: 'num', pos: [
+    [.34,.5,0,'Presente','Lo que ocupa tu momento.'],[.34,.5,90,'Lo que cruza','El desafío inmediato.'],[.34,.8,0,'Fundamento','La raíz de la situación.'],
+    [.13,.5,0,'Pasado reciente','Lo que se está yendo.'],[.34,.2,0,'Corona','Lo mejor que puede salir.'],[.55,.5,0,'Futuro próximo','Lo que se acerca.'],
+    [.86,.87,0,'Tú','Tu actitud.'],[.86,.62,0,'Entorno','Lo que te rodea.'],[.86,.38,0,'Esperanzas y temores','Lo que deseas o temes.'],[.86,.13,0,'Desenlace','Hacia dónde tiende todo.']] },
+  { id: 'year', name: 'Rueda del año', desc: 'Una carta por mes.', s: .46, lab: 'num',
+    pos: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+      .map((m, i) => { const a = -Math.PI/2 + i * Math.PI / 6; return [.5 + Math.cos(a) * .4, .5 + Math.sin(a) * .41, 0, m, `Lo que trae ${m.toLowerCase()}.`]; }) },
+];
+
+// ================= camara =================
+const scene = document.getElementById('scene'), table = document.getElementById('table');
+const cam = { theta: 30, tTheta: 30, yaw: 0, tYaw: 0, k: 1, oy: 0, zoom: 1, tZoom: 1, panX: 0, panY: 0, tPanX: 0, tPanY: 0 };
+// el encuadre se calcula con la inclinacion de reposo: inclinar la mesa ya no cambia el zoom
+const BASE_THETA = 30;   // en movil vertical la mesa llena mas alto y las cartas se leen mejor
+function fitCam(){
+  const r = scene.getBoundingClientRect(), th = BASE_THETA * D2R, s = Math.sin(th), c = Math.cos(th);
+  // el ancho se ajusta al contenido del pano (no al marco de madera): el marco puede recortarse un poco en los lados
+  const CONTENT_W = TW - 44;
+  let k = 1;
+  for (let i = 0; i < 6; i++){
+    const A = k * TH / 2, bottom = A * c * P / (P - A * s), top = A * c * P / (P + A * s);
+    const kh = k * (r.height - 24) / (bottom + top), kw = (r.width - 8) / (CONTENT_W * P / (P - A * s));
+    k = Math.min(kh, kw, 1.5);
+  }
+  const A = k * TH / 2, bottom = A * c * P / (P - A * s), top = A * c * P / (P + A * s);
+  // centrada en el alto disponible: sin la guia de arriba ya no hace falta pegarla al borde superior
+  cam.k = k; cam.oy = (top - bottom) / 2;
+}
+function applyCam(){
+  const K = cam.k * cam.zoom, ox = cam.panX, oy = cam.panY + cam.oy;
+  scene.style.perspectiveOrigin = `calc(50% + ${ox}px) calc(50% + ${oy}px)`;
+  table.style.transform = `translate(${ox}px, ${oy}px) translate(-50%, -50%) scale3d(${K}, ${K}, ${K}) rotateX(${cam.theta}deg) rotateZ(${cam.yaw}deg)`;
+  updateCandles();
+}
+function toTable(cx, cy){
+  const r = scene.getBoundingClientRect();
+  const sx = cx - (r.left + r.width / 2 + cam.panX), sy = cy - (r.top + r.height / 2 + cam.panY + cam.oy);
+  const th = cam.theta * D2R, s = Math.sin(th), c = Math.cos(th), K = cam.k * cam.zoom;
+  const y = sy * P / (K * (c * P + sy * s)), x = sx * (P - K * y * s) / (K * P);
+  // deshace el giro de la mesa (rotateZ se aplica antes que la inclinacion)
+  const a = -cam.yaw * D2R;
+  return { x: x * Math.cos(a) - y * Math.sin(a) + TW / 2, y: x * Math.sin(a) + y * Math.cos(a) + TH / 2 };
+}
+function clampPan(){
+  const r = scene.getBoundingClientRect(), mx = (cam.zoom - 1) * r.width / 2 + 10, my = (cam.zoom - 1) * r.height / 2 + 10;
+  cam.panX = Math.max(-mx, Math.min(mx, cam.panX)); cam.panY = Math.max(-my, Math.min(my, cam.panY));
+}
+
+// ================= tweens =================
+const tweens = new Set();
+const ease = {
+  linear: t => t,
+  out: t => 1 - Math.pow(1 - t, 3),
+  inOut: t => -(Math.cos(Math.PI * t) - 1) / 2,
+  inOutCubic: t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
+  outBack: t => { const c1 = 1.70158; return 1 + (c1 + 1) * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); },
+};
+const bump = t => Math.sin(Math.PI * Math.max(0, Math.min(1, t)));
+function tween(ms, fn, done, e = ease.out, delay = 0){
+  const tw = { t0: performance.now() + delay, ms: Math.max(1, ms * SPEED), fn, done, e };
+  tweens.add(tw); return tw;
+}
+function moveTo(p, to, ms = 380, e = ease.out, delay = 0, done){
+  if (wobble.has(p)){ delete to.tx; delete to.ty; }
+  const from = {}; for (const k in to) from[k] = p[k];
+  return tween(ms, v => { for (const k in to) p[k] = from[k] + (to[k] - from[k]) * v; p.render(); }, done, e, delay);
+}
+const wait = ms => new Promise(r => tween(ms, () => {}, r, ease.linear));
+// Peso: la inclinacion de lo que se arrastra es un muelle que persigue la velocidad del dedo.
+// Al soltar, el objetivo vuelve a cero y el muelle se pasa de largo un par de veces, como algo con masa.
+const wobble = new Set();
+function stepWobble(){
+  for (const q of wobble){
+    const dragging = g && g.piece === q;
+    if (!dragging){ q.ttx = (q.ttx || 0) * .8; q.tty = (q.tty || 0) * .8; }
+    q.wvx = (q.wvx || 0) * .74 + ((q.ttx || 0) - q.tx) * .16; q.wvy = (q.wvy || 0) * .74 + ((q.tty || 0) - q.ty) * .16;
+    q.tx += q.wvx; q.ty += q.wvy;
+    if (!dragging && Math.abs(q.tx) + Math.abs(q.ty) + Math.abs(q.wvx) + Math.abs(q.wvy) < .05){ q.tx = q.ty = 0; wobble.delete(q); }
+    q.render();
+  }
+}
+
+// ================= piezas =================
+const pieces = new Map(); let uid = 0, zTop = 2;
+class Piece {
+  constructor(kind){
+    this.id = String(++uid); this.kind = kind;
+    this.x = 0; this.y = 0; this.z = 1; this.lift = 0; this.rot = 0; this.sc = 1; this.tx = 0; this.ty = 0;
+    this.el = document.createElement('div'); this.el.className = 'piece ' + kind; this.el.dataset.id = this.id;
+    pieces.set(this.id, this); table.appendChild(this.el);
+  }
+  get hw(){ return CW * this.sc / 2; } get hh(){ return CH * this.sc / 2; }
+  local(p){ const dx = p.x - this.x, dy = p.y - this.y, a = -this.rot * D2R; return { x: dx * Math.cos(a) - dy * Math.sin(a), y: dx * Math.sin(a) + dy * Math.cos(a) }; }
+  toFront(){ this.z = (zTop += .6); }
+  render(){
+    this.el.style.transform = `translate3d(${this.x - CW / 2}px, ${this.y - CH / 2}px, ${this.z + this.lift}px) rotateZ(${this.rot}deg) rotateX(${this.tx}deg) rotateY(${this.ty}deg) scale(${this.sc})`;
+  }
+  remove(){ this.el.remove(); pieces.delete(this.id); }
+}
+
+class Card extends Piece {
+  // light: solo el dorso. Las 78 cartas del abanico no necesitan cara, sombra ni simbolos hasta salir de el.
+  constructor(deck, light = false){
+    super('card');
+    this.deck = deck; this.data = null; this.reversed = false; this.angle = 0; this.diag = 0; this.trem = 0; this.settle = 1;
+    this.slot = null; this.fanPos = null; this.proxy = false; this.host = null; this.clars = [];
+    this.el.innerHTML = `<div class="flip"><div class="face back"></div></div>`;
+    this.flipEl = this.el.firstChild; this.flipEl.firstChild.style.backgroundImage = deck.back;
+    if (!light) this.full();
+  }
+  full(){
+    if (this.front) return;
+    this.flipEl.insertAdjacentHTML('beforeend', `<div class="face front"><img alt="" draggable="false"><div class="fx"></div></div>`);
+    this.el.insertAdjacentHTML('afterbegin', `<div class="shadow"></div>`);
+    this.el.insertAdjacentHTML('beforeend', `<div class="pips"></div>`);
+    this.shadowEl = this.el.querySelector('.shadow'); this.pipsEl = this.el.querySelector('.pips');
+    this.front = this.el.querySelector('.front'); this.fx = this.el.querySelector('.fx');
+  }
+  get up(){ return Math.abs(this.angle) >= 179; }
+  reveal(info){
+    this.data = info.card; this.reversed = info.reversed; this.cid = info.id;
+    const im = this.el.querySelector('img'); im.decoding = 'async'; im.src = img(info.card); im.alt = info.card.name; im.classList.toggle('rev', info.reversed);
+  }
+  get style(){ return !this.data ? 'llano' : this.data.major ? 'mayor' : this.data.suit; }
+  render(){
+    super.render();
+    // bisagra: al levantar por una esquina gira sobre el borde opuesto (T = h - R h), no sobre su centro
+    const a = this.angle * D2R, hx = this.hx || 0, w = this.hinge || 0;
+    const tx = w * hx * (1 - Math.cos(a)), tz = w * hx * Math.sin(a);
+    this.flipEl.style.transform = `translate3d(${tx}px, 0, ${tz}px) rotateZ(${this.diag + this.trem}deg) rotateY(${this.angle}deg) rotateX(${this.tilt || 0}deg) scale(${this.settle})`;
+    const L = this.lift;
+    if (this.shadowEl){ this.shadowEl.style.opacity = Math.min(1, L / 24) * .6;
+    this.shadowEl.style.transform = `translate3d(${L * .25}px, ${L * .4}px, ${-(this.z + L) + .15}px)`; }
+    // las aclaratorias siguen a su carta, salvo la que se esta arrastrando
+    this.clars.forEach((k, i) => {
+      if (g && g.piece === k) return;
+      Object.assign(k, clarPos(this, i), { sc: this.sc * .82, lift: this.lift, z: this.z + .8 + i * .3 }); k.render();
+    });
+  }
+}
+
+class Deck extends Piece {
+  constructor(def){
+    super('deck');
+    this.def = def; this.count = def.cards.length; this.sc = DECK_S; this.home = def.home;
+    this.el.innerHTML = `<div class="dshadow"></div><div class="side s"></div><div class="side n"></div><div class="side e"></div><div class="side w"></div>
+      <div class="face back top"></div><div class="pile-badge" hidden></div><div class="dlabel">${def.name}<small>${def.sub}</small></div>`;
+    this.el.querySelector('.top').style.backgroundImage = def.back;
+    this.sides = [...this.el.querySelectorAll('.side')]; this.topEl = this.el.querySelector('.top'); this.label = this.el.querySelector('.dlabel'); this.badge = this.el.querySelector('.pile-badge');
+    this.setCount(this.count);
+  }
+  get thick(){ return Math.max(1.5, this.count * .62); }
+  setCount(n){
+    this.count = n; const t = this.thick;
+    this.el.style.visibility = n > 0 ? '' : 'hidden';
+    const [s, nn, e, w] = this.sides;
+    s.style.height = nn.style.height = t + 'px'; e.style.width = w.style.width = t + 'px';
+    nn.style.top = -t + 'px'; nn.style.transform = 'rotateX(-90deg)';
+    w.style.left = -t + 'px'; w.style.transform = 'rotateY(90deg)';
+    this.topEl.style.transform = `translateZ(${t}px)`;
+  }
+}
+
+
+// ================= tiradas =================
+function slotPos(sp, i){ const [fx, fy, r] = sp.pos[i]; return { x: AREA.x + fx * AREA.w, y: AREA.y + fy * AREA.h, rot: r }; }
+function clearSpread(){ slotEls.splice(0).forEach(e => e.remove()); tableCards().forEach(c => c.slot = null); spread = null; }
+function applySpread(sp){
+  slotEls.splice(0).forEach(e => e.remove());
+  spread = sp;
+  sp.pos.forEach((p, i) => {
+    const s = slotPos(sp, i), el = document.createElement('div');
+    el.className = 'slot'; el.innerHTML = sp.lab === 'num' ? `<i>${i + 1}</i>` : '';
+    el.style.transform = `translate3d(${s.x - CW / 2}px, ${s.y - CH / 2}px, .5px) rotateZ(${s.rot}deg) scale(${sp.s})`;
+    table.appendChild(el); slotEls.push(el);
+    if (sp.lab === 'full'){
+      const l = document.createElement('div'); l.className = 'slot-label'; l.textContent = p[3];
+      l.style.transform = `translate3d(${s.x - 110}px, ${s.y + CH * sp.s / 2 + 10}px, .5px)`;
+      table.appendChild(l); slotEls.push(l);
+    }
+  });
+  // las cartas colocadas conservan su numero de posicion; las que sobran quedan libres
+  tableCards().forEach(c => {
+    if (c.slot === null) return;
+    if (c.slot >= sp.pos.length){ c.slot = null; return; }
+    const s = slotPos(sp, c.slot); moveTo(c, { x: s.x, y: s.y, rot: s.rot, sc: sp.s }, 420);
+  });
+  refresh();
+}
+function nearestSlot(p, except){
+  if (!spread) return -1;
+  let best = -1, bd = Infinity;
+  spread.pos.forEach((_, i) => { const s = slotPos(spread, i), d = Math.hypot(p.x - s.x, p.y - s.y); if (d < bd){ bd = d; best = i; } });
+  return bd < Math.max(46, CH * spread.s * .55) ? best : -1;
+}
+const cardAt = i => tableCards().find(c => c.slot === i);
+function hotSlot(i){ slotEls.forEach(e => e.classList && e.classList.remove('hot')); if (i >= 0) slotEls.filter(e => e.classList.contains('slot'))[i].classList.add('hot'); }
+function place(c, i, ms = 360, delay = 0){
+  const s = slotPos(spread, i); c.slot = i; c.toFront();
+  if (!reading.ctx){ reading.ctx = astralNow(); moonLight(); }   // el momento de la tirada queda registrado con la primera carta
+  return new Promise(r => moveTo(c, { x: s.x, y: s.y, rot: s.rot, sc: spread.s, lift: 0, tx: 0, ty: 0 }, ms, ease.out, delay, () => { sfx.play('thud'); sfx.vib(8); r(); }));
+}
+function dropCard(c, origin){
+  const i = nearestSlot(c, c);
+  hotSlot(-1);
+  if (i >= 0){
+    const other = cardAt(i);
+    if (other && other !== c){
+      if (origin.slot !== null) place(other, origin.slot);
+      else { other.slot = null; moveTo(other, { x: origin.x, y: origin.y, rot: origin.rot, sc: spread.s }, 360); }
+    }
+    c.aside = false; place(c, i); toast(`${i + 1} · ${spread.pos[i][3]}`);
+  } else {
+    // soltada junto a una carta de la tirada (sin caer en su hueco): queda vinculada como aclaratoria
+    const host = spread && c.y >= SHELF_Y && tableCards().find(h => h !== c && h.slot !== null && Math.hypot(h.x - c.x, h.y - c.y) < CH * h.sc * 1.05);
+    if (host){ linkClar(c, host); toast(`Aclaratoria de ${host.slot + 1} · ${spread.pos[host.slot][3]}`); return refresh(); }
+    c.slot = null; c.toFront(); c.aside = c.y < SHELF_Y;
+    moveTo(c, { lift: 0, tx: 0, ty: 0, x: clamp(c.x, 40, TW - 40), y: clamp(c.y, 40, TH - 40), sc: c.aside ? DECK_S : spread ? spread.s : FREE_S }, 260);
+    if (c.aside) toast('Apartada en el estante: no cuenta para la lectura');
+    else if (spread) toast('Fuera de la tirada: no cuenta para la lectura');
+  }
+  refresh();
+}
+
+// ================= volteo por palo (valores de _FlipSpec en tarot_card.dart) =================
+const FLIP = {
+  mayor:   { ms: 700, e: ease.inOutCubic, settle: 1500, over: .055, flash: 1, halo: 1 },
+  bastos:  { ms: 250, e: ease.inOut, settle: 420, tremor: 1, motes: 1 },
+  copas:   { ms: 430, e: ease.outBack, settle: 620, sweep: 1 },
+  espadas: { ms: 200, e: ease.inOut, settle: 300, diag: .26, cut: 1 },
+  oros:    { ms: 500, e: ease.inOut, settle: 460, squash: .045, spread: 22 },
+  llano:   { ms: 620, e: ease.outBack, settle: 300 },
+};
+function flip(c, from = 0, dir = -1){
+  const sp = FLIP[c.style]; busyCard.add(c);
+  const major = c.data && c.data.major;
+  sfx.play(major ? 'bell' : 'reveal'); sfx.vib(major ? [12, 40, 12] : 10);
+  const start = from, end = 180 * dir, left = Math.abs(end - start) / 180;
+  if (sp.flash) setTimeout(() => fxFlash(c), sp.ms * left * .4 * SPEED);
+  tween(sp.ms * Math.max(.25, left), v => {
+    c.angle = start + (end - start) * v;
+    c.diag = (sp.diag || 0) / D2R * bump(Math.abs(c.angle) / 180);
+    c.render();
+  // la carta queda libre al acabar el giro; el asentamiento (halo, temblor) sigue solo y no bloquea toques
+  }, () => { c.angle = end; c.diag = 0; c.render(); showPips(c); suitMark(c); busyCard.delete(c); settleFx(c, sp); }, sp.e);
+}
+const busyCard = new Set();
+function settleFx(c, sp){
+  const f = c.front;
+  if (sp.halo) f.animate([{ boxShadow: '0 0 28px 6px rgba(237,174,48,.75)' }, { boxShadow: '0 0 0 0 rgba(237,174,48,0)' }], { duration: sp.settle * SPEED, easing: 'ease-out' });
+  if (sp.spread) f.animate([{ boxShadow: `0 0 ${sp.spread}px ${sp.spread / 3}px rgba(0,0,0,.8)` }, { boxShadow: '0 1px 2px rgba(0,0,0,.6)' }], { duration: sp.settle * SPEED, easing: 'ease-out' });
+  if (sp.sweep){ c.fx.style.background = 'linear-gradient(115deg, transparent 35%, rgba(200,230,255,.55) 50%, transparent 65%)';
+    c.fx.animate([{ opacity: 0, transform: 'translateX(-70%)' }, { opacity: 1, offset: .3 }, { opacity: 0, transform: 'translateX(70%)' }], { duration: sp.settle * SPEED, easing: 'ease-in-out' }); }
+  if (sp.cut){ c.fx.style.background = 'linear-gradient(60deg, transparent calc(50% - 1px), rgba(255,255,255,.95) 50%, transparent calc(50% + 1px))';
+    c.fx.animate([{ opacity: 0 }, { opacity: 1, offset: .2 }, { opacity: 0 }], { duration: sp.settle * SPEED }); }
+  if (sp.motes) for (let i = 0; i < 7; i++){
+    const m = document.createElement('div'); m.className = 'mote'; m.style.left = (12 + Math.random() * 80) + '%'; f.appendChild(m);
+    m.animate([{ transform: 'translateY(0)', opacity: 1 }, { transform: `translateY(-${60 + Math.random() * 70}px)`, opacity: 0 }], { duration: (500 + Math.random() * 400) * SPEED, easing: 'ease-out' }).onfinish = () => m.remove();
+  }
+  tween(sp.settle, (v, u) => {
+    const ms = u * sp.settle;
+    c.settle = 1 + ((sp.over || 0) - (sp.squash || 0)) * bump(Math.min(1, ms / 260));
+    c.trem = sp.tremor ? 3.4 * Math.sin(ms / 28) * Math.exp(-ms / 140) : 0;
+    c.render();
+  }, () => { c.settle = 1; c.trem = 0; c.render(); busyCard.delete(c); refresh(); }, ease.linear);
+}
+function fxFlash(c){
+  c.fx.style.background = 'linear-gradient(100deg, transparent 30%, rgba(250,210,106,.85) 50%, transparent 70%)';
+  c.fx.animate([{ opacity: 0, transform: 'translateX(-60%)' }, { opacity: 1, offset: .4 }, { opacity: 0, transform: 'translateX(60%)' }], { duration: 520 * SPEED, easing: 'ease-out' });
+}
+
+
+// ================= servidor simulado: baraja y decide; el cliente solo elige posiciones =================
+// Guarda el mazo como montones independientes: cortar crea uno nuevo, unir los apila.
+const rand = n => { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; };
+const server = {
+  deck: null, piles: new Map(), rev: new Map(), drawn: [], state: 'sin barajar', seq: 0,
+  open(deck){ this.deck = deck; this.piles = new Map([['p0', deck.cards.map((_, i) => i)]]); this.rev = new Map(); this.drawn = []; this.state = 'sin barajar'; this.seq = 0; return 'p0'; },
+  live(pid){ return (this.piles.get(pid) || []).filter(v => v !== null); },
+  count(pid){ return this.live(pid).length; },
+  total(){ let n = 0; for (const k of this.piles.keys()) n += this.count(k); return n; },
+  top(pid){ return this.piles.get(pid).findIndex(v => v !== null); },
+  // posiciones vivas del monton, estables mientras el abanico este abierto
+  slots(pid){ return this.piles.get(pid).flatMap((v, i) => v === null ? [] : [i]); },
+  shuffle(pid, style){
+    const a = this.live(pid);
+    for (let i = a.length - 1; i > 0; i--){ const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; }
+    this.piles.set(pid, a); a.forEach(id => this.rev.set(id, rand(2) === 1)); this.state = `barajado · ${style}`;
+  },
+  cut(pid, n){ const a = this.live(pid), np = 'p' + (++this.seq); this.piles.set(np, a.slice(0, n)); this.piles.set(pid, a.slice(n)); this.state = 'cortado'; return np; },
+  merge(topFirst, into){ const all = topFirst.flatMap(p => this.live(p)); topFirst.forEach(p => this.piles.delete(p)); this.piles.set(into, all); },
+  take(pid, pos){ const a = this.piles.get(pid), id = a[pos]; a[pos] = null; this.drawn.push(id); return { id, card: this.deck.cards[id], reversed: !!this.rev.get(id) }; },
+  giveBack(id, pid){ this.drawn = this.drawn.filter(v => v !== id); this.piles.get(pid).push(id); },
+  gather(pid){ this.piles.set(pid, this.live(pid).concat(this.drawn)); this.drawn = []; this.state = 'recogido · sin barajar'; },
+};
+
+
+
+// ================= estado de la mesa =================
+const decks = DECKS.map(d => { const k = new Deck(d); k.x = d.home.x; k.y = d.home.y; k.render(); return k; });
+let active = null, spread = null, fan = null, busy = false, union = null;
+let piles = [];                                   // montones en juego; el primero es el mazo activo
+const slotEls = [];
+const tableCards = () => [...pieces.values()].filter(p => p.kind === 'card' && !p.proxy && p.fanPos === null);
+const hidden = () => tableCards().filter(c => !c.aside && !c.up && !busyCard.has(c));
+const readyToRead = () => !!spread && !busy && !busyCard.size && spread.pos.every((_, i) => { const c = cardAt(i); return c && c.up; });
+const cardsOut = () => tableCards().length > 0;
+const pileName = d => d === active ? d.def.name : 'Montón';
+
+// ================= UI: estado y guia contextual =================
+const $ = id => document.getElementById(id);
+const statusEl = $('status'), guideEl = $('guide'), toastEl = $('toast');
+// Interpretacion vive bordada en el centro del hexagrama: gira e inclina con la mesa
+const EMBRO_AT = { x: 300, y: 484 };
+const interpEl = document.createElement('div');
+interpEl.className = 'embro'; interpEl.setAttribute('aria-label', 'Interpretación');
+// el anillo rodea toda la tirada; el punto de toque es la palabra, bajo la zona de la tirada, donde no llega ninguna carta
+interpEl.innerHTML = `<svg viewBox="0 0 440 440" aria-hidden="true"><circle class="thread" cx="220" cy="220" r="202"/><circle class="thread" cx="220" cy="220" r="194"/>
+  <circle class="seal-ring" cx="220" cy="220" r="202"/><text x="220" y="452" text-anchor="middle">Interpretar</text></svg><div class="hit"></div>`;
+interpEl.style.transform = `translate3d(${EMBRO_AT.x - 220}px, ${EMBRO_AT.y - 220}px, .6px)`;
+table.appendChild(interpEl);
+let toastT = 0;
+function toast(msg){ toastEl.textContent = msg; toastEl.style.opacity = 1; clearTimeout(toastT); toastT = setTimeout(() => toastEl.style.opacity = 0, 2600); }
+function refresh(){
+  statusEl.innerHTML = active
+    ? `<b>${active.def.name}</b> · ${server.total()} en el mazo${piles.length > 1 ? ` · ${piles.length} montones` : ''} · ${server.state}`
+    : 'Ningún mazo en juego';
+  let g = '';
+  if (contemplating) g = '';
+  else if (!active) g = 'Arrastra un mazo del estante al paño';
+  else if (union) g = `Toca los montones de abajo arriba (${union.length}/${piles.length}) · toca el paño para cancelar`;
+  else if (fan) g = 'Toca o arrastra una carta · mantén una pulsada para Juntar';
+  else if (piles.length > 1) g = 'Mantén pulsado un montón y elige Unir · o arrástralo sobre otro';
+  else if (!spread) g = !seal && !cardsOut() ? 'Mantén pulsado el paño para sellar tu pregunta · el mazo, para barajar' : 'Mantén pulsado el mazo para barajar, cortar o elegir tirada';
+  else {
+    const empty = spread.pos.length - tableCards().filter(c => c.slot !== null).length;
+    const down = tableCards().filter(c => !c.up).length;
+    g = empty ? `Toca el mazo para extenderlo, o mantenlo para Sacar · faltan ${empty}` : down ? 'Toca una carta de la tirada o levanta su esquina' : 'Pulsa Interpretación, en el centro del paño';
+  }
+  guideEl.textContent = g;
+  interpEl.classList.toggle('ready', readyToRead() && !contemplating);
+  saveSoon();
+  decks.forEach(d => d.el.classList.toggle('glow', d === active && piles.length === 1 && !fan && !cardsOut() && server.state.startsWith('sin')));
+}
+
+// ================= mazos: estante y juego =================
+function activate(d){
+  active = d; d.pid = server.open(d.def); piles = [d]; d.label.style.opacity = 0; d.setCount(server.count(d.pid)); refresh();
+  toast(`${d.def.name} en juego. Tócalo para extenderlo; mantenlo pulsado para lo demás.`);
+}
+function sendHome(d){ d.label.style.opacity = 1; d.setCount(d.def.cards.length); moveTo(d, { x: d.home.x, y: d.home.y, rot: 0, lift: 0 }, 420); }
+const busyTable = () => cardsOut() || fan || piles.length > 1;
+function dropDeck(d, from){
+  const inPlay = piles.includes(d);
+  // unir arrastrando: el monton soltado queda encima del otro
+  const target = inPlay && !union && piles.find(q => q !== d && !(fan && fan.pile === q) && Math.hypot(q.x - d.x, q.y - d.y) < CW * DECK_S * .8);
+  if (target) return mergePair(d, target);
+  if (d.y < SHELF_Y){
+    if (d === active && !busyTable()){ active = null; piles = []; spread && clearSpread(); refresh(); return sendHome(d); }
+    if (d === active){ toast('Recoge las cartas y une los montones antes de guardar el mazo'); return moveTo(d, { x: from.x, y: from.y, lift: 0, tx: 0, ty: 0 }, 380); }
+    if (!inPlay) return sendHome(d);
+  }
+  if (!inPlay){
+    if (active && busyTable()){ toast('Recoge las cartas y une los montones antes de cambiar de mazo'); return sendHome(d); }
+    if (active) sendHome(active);
+    activate(d);
+  }
+  moveTo(d, { x: clamp(d.x, 70, TW - 70), y: clamp(d.y, SHELF_Y + 70, TH - 70), lift: 0, tx: 0, ty: 0 }, 260);
+}
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+
+// ================= abanico (de cualquier monton) =================
+function openFan(pile){
+  if (!pile || !server.count(pile.pid)) return null;
+  const cards = server.slots(pile.pid).map(pos => {
+    const c = new Card(pile.def, true); c.fanPos = pos; c.sc = FAN_S; c.el.classList.add('noear'); c.x = pile.x; c.y = pile.y; c.rot = pile.rot; c.z = 1 + pile.thick; c.render(); return c;
+  });
+  pile.setCount(0);
+  fan = { pile, cards, start: { x: pile.x, y: pile.y } };
+  refresh();
+  return fan;
+}
+function layoutFan(end){
+  const { cards, start } = fan, n = cards.length;
+  const dx = end.x - start.x, dy = end.y - start.y, len = Math.hypot(dx, dy) || 1, ang = Math.atan2(dy, dx);
+  const px = -dy / len, py = dx / len;
+  cards.forEach((c, i) => {
+    const t = n > 1 ? i / (n - 1) : 0, sag = Math.sin(Math.PI * t) * len * .07;
+    c.x = start.x + dx * t + px * sag; c.y = start.y + dy * t + py * sag;
+    c.rot = ang / D2R + (dx < 0 ? 180 : 0); c.z = 1 + i * .12; c.lift = 0; c.render();
+  });
+  fan.len = len; fan.end = { x: end.x, y: end.y };
+}
+function autoFan(pile){
+  takeSnap();
+  if (!openFan(pile)) return;
+  const endX = pile.x > TW / 2 ? 58 : TW - 58, sx = pile.x, y = clamp(pile.y, SHELF_Y + 90, FAN_Y);
+  fan.start = { x: sx, y }; busy = true; refresh();
+  pile.y = y; pile.render();
+  tween(780, v => layoutFan({ x: sx + (endX - sx) * v, y }), () => { busy = false; refresh(); offerUndo(pile); }, ease.out);
+}
+function closeFan(ms = 460){
+  if (!fan) return Promise.resolve();
+  const d = fan.pile, list = fan.cards; fan = null; busy = true; refresh();
+  if (!list.length){ d.setCount(server.count(d.pid)); busy = false; refresh(); return Promise.resolve(); }
+  return new Promise(r => {
+    list.forEach((c, i) => moveTo(c, { x: d.x, y: d.y, rot: d.rot, lift: 0 }, ms, ease.inOut, (list.length - i) * 4, i === 0 ? () => {
+      list.forEach(k => k.remove()); d.setCount(server.count(d.pid)); busy = false; refresh(); r();
+    } : null));
+  });
+}
+function takeFromFan(c){
+  fan.cards.splice(fan.cards.indexOf(c), 1);
+  c.full(); c.reveal(server.take(fan.pile.pid, c.fanPos)); c.fanPos = null; c.el.classList.remove('noear');
+  if (!fan.cards.length){ fan.pile.setCount(server.count(fan.pile.pid)); fan = null; }
+}
+
+// ================= barajar: la animacion es teatro; el orden lo fija el servidor =================
+function proxies(d, n){
+  const out = [];
+  for (let i = 0; i < n; i++){ const c = new Card(d.def, true); c.proxy = true; c.el.classList.add('noear'); c.sc = DECK_S; c.x = d.x; c.y = d.y; c.rot = d.rot; c.z = 1 + d.thick + i * .6; c.render(); out.push(c); }
+  return out;
+}
+async function shuffle(d, style){
+  if (fan && fan.pile === d) await closeFan(300);
+  busy = true; refresh();
+  sfx.play(style === 'Cascada' ? 'riffle' : 'slide'); sfx.vib(8);
+  const full = d.count; d.setCount(Math.max(2, Math.round(full * .25)));
+  const w = CW * DECK_S, few = Math.min(14, Math.max(4, full));
+  if (style === 'Cascada'){
+    const ps = proxies(d, few), h = few >> 1;
+    ps.forEach((c, i) => moveTo(c, { x: d.x + (i < h ? -1 : 1) * w * .62, rot: d.rot + (i < h ? -7 : 7), lift: 6 + (i % h) }, 320, ease.out, 0));
+    await wait(360);
+    const order = ps.map((_, j) => j % 2 ? h + (j >> 1) : j >> 1).filter(k => k < ps.length);
+    order.forEach((k, j) => moveTo(ps[k], { x: d.x, rot: d.rot, lift: 0, z: 1 + d.thick + j * .6 }, 150, ease.inOut, j * 45));
+    await wait(order.length * 45 + 200);
+    ps.forEach(c => c.remove());
+  } else if (style === 'Por encima'){
+    const ps = proxies(d, Math.min(12, few));
+    for (let round = 0; round < 4; round++){
+      const chunk = ps.slice(0, 3);
+      chunk.forEach((c, i) => moveTo(c, { y: d.y - CH * DECK_S * .7, lift: 60 + i }, 170, ease.out));
+      await wait(190);
+      ps.push(...ps.splice(0, 3));
+      ps.forEach((c, j) => { c.z = 1 + d.thick + j * .6; c.render(); });
+      chunk.forEach(c => moveTo(c, { y: d.y, lift: 0 }, 150, ease.inOut));
+      await wait(170);
+    }
+    ps.forEach(c => c.remove());
+  } else {
+    const ps = proxies(d, Math.min(18, few + 4)), cx = d.x, cy = clamp(d.y, SHELF_Y + 190, TH - 190);
+    ps.forEach(c => { c.base = { a: Math.random() * Math.PI * 2, r: 70 + Math.random() * 110, rot: Math.random() * 360 }; c.z = 1 + Math.random() * 6; });
+    await new Promise(r => tween(reduced ? 500 : 1700, (v, u) => {
+      ps.forEach(c => {
+        const out = bump(Math.min(1, u * 1.15)), a = c.base.a + u * Math.PI * 1.6;
+        c.x = cx + Math.cos(a) * c.base.r * out + (d.x - cx) * (1 - out);
+        c.y = cy + Math.sin(a) * c.base.r * .8 * out + (d.y - cy) * (1 - out);
+        c.rot = d.rot + (c.base.rot + u * 140) * out; c.render();
+      });
+    }, r, ease.linear));
+    ps.forEach(c => c.remove());
+  }
+  server.shuffle(d.pid, style.toLowerCase());
+  d.setCount(server.count(d.pid)); busy = false; refresh();
+  toast(piles.length > 1 ? 'Montón barajado. Los demás no se tocan.' : 'Barajado. El servidor fija el orden; tú eliges qué posiciones sacar.');
+}
+
+// ================= cortar y unir =================
+function newPile(from, pid, k){
+  const p = new Deck(from.def); p.label.remove(); p.home = null; p.pid = pid;
+  p.x = from.x; p.y = from.y; p.rot = from.rot; p.z = 1 + from.thick; p.setCount(k); p.render();
+  piles.push(p); return p;
+}
+function beginCut(d){
+  takeSnap(); sfx.play('cut'); sfx.vib(12);
+  const n = server.count(d.pid), k = Math.round(n * (.3 + Math.random() * .4));
+  const p = newPile(d, server.cut(d.pid, k), k);
+  d.setCount(n - k); refresh();
+  return p;
+}
+function endCutDrag(p, d){
+  if (Math.hypot(p.x - d.x, p.y - d.y) < CW * DECK_S * .9){
+    // soltado encima: el corte se deshace y el orden queda como estaba
+    return moveTo(p, { x: d.x, y: d.y, lift: 0 }, 220, ease.out, 0, () => { server.merge([p.pid, d.pid], d.pid); dropPile(p); d.setCount(server.count(d.pid)); refresh(); });
+  }
+  p.z = 1; moveTo(p, { lift: 0, tx: 0, ty: 0 }, 200); refresh(); offerUndo(p);
+}
+function freeSpot(near){
+  const w = CW * DECK_S * 1.9;
+  for (const dx of [-w, w, -2 * w, 2 * w]){
+    const x = clamp(near.x + dx, 70, TW - 70), y = near.y;
+    if (piles.every(q => Math.hypot(q.x - x, q.y - y) > CW * DECK_S * 1.2)) return { x, y };
+  }
+  return { x: clamp(near.x, 70, TW - 70), y: clamp(near.y - CH * DECK_S * 1.3, SHELF_Y + 70, TH - 70) };
+}
+function autoCut(d){
+  const spot = freeSpot(d), p = beginCut(d);
+  busy = true;
+  moveTo(p, { lift: 50 }, 160, ease.out, 0, () => moveTo(p, { x: spot.x, y: spot.y, lift: 0 }, 360, ease.inOut, 0, () => {
+    busy = false; p.z = 1; refresh(); toast('Corte hecho. Mantén pulsado un montón para Unir, o arrástralo sobre otro.'); offerUndo(p);
+  }));
+}
+function dropPile(p){ piles = piles.filter(q => q !== p); p.remove(); }
+// apila `list` (de abajo arriba) en la posicion del primero; el servidor lo convierte en un solo monton
+async function stack(list, { snap = true, offer = true } = {}){
+  if (snap) takeSnap();
+  busy = true; refresh();
+  const base = list[0], keeper = list.includes(active) ? active : base, at = { x: base.x, y: base.y, rot: base.rot };
+  let h = base.thick;
+  for (const p of list.slice(1)){
+    p.z = 1 + h;
+    await new Promise(r => moveTo(p, { lift: 60 }, 150, ease.out, 0, () => moveTo(p, { x: at.x, y: at.y, rot: at.rot, lift: 0 }, 300, ease.inOut, 0, () => { sfx.play('thud'); sfx.vib(10); r(); })));
+    h += p.thick;
+  }
+  server.merge(list.slice().reverse().map(p => p.pid), keeper.pid);
+  list.forEach(p => { if (p !== keeper) dropPile(p); p.badge && (p.badge.hidden = true); });
+  keeper.x = at.x; keeper.y = at.y; keeper.rot = at.rot; keeper.z = 1; keeper.setCount(server.count(keeper.pid)); keeper.render();
+  union = null; busy = false; refresh();
+  if (offer) offerUndo(keeper);
+}
+async function mergePair(top, below){
+  if (fan && (fan.pile === top || fan.pile === below)) await closeFan(260);
+  await stack([below, top], { snap: false });
+  toast(piles.length > 1 ? 'Montones unidos' : 'Mazo entero de nuevo');
+}
+async function startUnion(){ if (fan) await closeFan(260); union = []; piles.forEach(p => p.badge.hidden = true); refresh(); }
+function pickUnion(p){
+  if (union.includes(p)) return;
+  union.push(p); p.badge.textContent = union.length; p.badge.hidden = false; refresh();
+  if (union.length === piles.length) stack(union).then(() => toast('Unidos en el orden que elegiste'));
+}
+async function autoUnion(){
+  if (fan) await closeFan(260);
+  // corte clasico: lo que quedo abajo pasa arriba
+  const list = [...piles.filter(p => p !== active).reverse(), active];
+  await stack(list); toast('Unidos: lo de abajo pasa arriba');
+}
+function cancelUnion(){ if (!union) return; union = null; piles.forEach(p => p.badge.hidden = true); refresh(); }
+
+// ================= sacar y recoger =================
+async function deal(d){
+  if (!spread) return openSpreadRadial(d, () => deal(d));
+  const empty = spread.pos.map((_, i) => i).filter(i => !cardAt(i));
+  if (!empty.length) return toast('La tirada ya está completa');
+  busy = true; refresh();
+  const jobs = [];
+  for (const [j, i] of empty.entries()){
+    const pos = server.top(d.pid); if (pos < 0) break;
+    let c = fan && fan.pile === d && fan.cards.find(k => k.fanPos === pos);
+    if (c) takeFromFan(c);
+    else { c = new Card(d.def); c.sc = DECK_S; c.x = d.x; c.y = d.y; c.rot = d.rot; c.z = 1 + d.thick; c.reveal(server.take(d.pid, pos)); d.setCount(server.count(d.pid)); c.render(); }
+    c.lift = 30; jobs.push(place(c, i, 420, j * 110));
+  }
+  await Promise.all(jobs);
+  if (!(fan && fan.pile === d)) d.setCount(server.count(d.pid));
+  busy = false; refresh();
+  if (empty.length > jobs.length) toast('No quedan cartas en este montón');
+}
+async function collect(d){
+  if (fan) await closeFan(360);
+  const list = tableCards();
+  busy = true; refresh();
+  await Promise.all(list.map((c, i) => new Promise(r => moveTo(c, { x: d.x, y: d.y, rot: d.rot, sc: DECK_S, lift: 0 }, 420, ease.inOut, i * 30, r))));
+  list.forEach(c => c.remove());
+  server.gather(d.pid); d.setCount(server.count(d.pid)); busy = false; refresh();
+}
+
+// ================= menus radiales =================
+const ICON = {
+  shuffle: '<path d="M3 7h4l9 10h5M3 17h4l9-10h5"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3"/>',
+  cut: '<rect x="3" y="3" width="10" height="13" rx="1.5"/><rect x="11" y="8" width="10" height="13" rx="1.5"/>',
+  fan: '<path d="M12 21 4 9M12 21 8.5 6M12 21l3.5-15M12 21l8-12"/>',
+  spread: '<rect x="2.5" y="7" width="5.5" height="9" rx="1"/><rect x="9.25" y="4" width="5.5" height="9" rx="1"/><rect x="16" y="7" width="5.5" height="9" rx="1"/>',
+  deal: '<rect x="3" y="6" width="8" height="12" rx="1.5"/><path d="M14 12h7M18 9l3 3-3 3"/>',
+  collect: '<rect x="13" y="6" width="8" height="12" rx="1.5"/><path d="M3 12h7M7 9l3 3-3 3"/>',
+  reveal: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  read: '<path d="M3 5h6a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H3zM21 5h-6a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h7z"/>',
+  turn: '<path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 3.5v5h-5"/>',
+  aside: '<rect x="7" y="11" width="10" height="10" rx="1.5"/><path d="M12 8V2M9 5l3-3 3 3"/>',
+  riffle: '<path d="M4 5h6M4 9h6M4 13h6M14 11h6M14 15h6M14 19h6"/><path d="M10 7l4 6"/>',
+  over: '<rect x="4" y="12" width="16" height="8" rx="1.5"/><path d="M12 10V3M8.5 6.5 12 3l3.5 3.5"/>',
+  wash: '<path d="M12 12a2 2 0 1 1 2-2 5 5 0 1 1-5-5 8 8 0 1 1-6 7"/>',
+  union: '<path d="M4 6h6l3 4h7M4 18h6l3-4h7"/><path d="m17 7 3 3-3 3"/>',
+  order: '<rect x="4" y="4" width="11" height="8" rx="1.5"/><rect x="9" y="12" width="11" height="8" rx="1.5"/>',
+  undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>',
+  seal: '<circle cx="12" cy="12" r="8"/><path d="M12 7.5 15.9 14.2H8.1ZM12 16.5 8.1 9.8h7.8Z"/>',
+  gather: '<rect x="8" y="8" width="8" height="11" rx="1.5"/><path d="M3 4l4 4M21 4l-4 4M3 21l4-3M21 21l-4-3"/>',
+  hist: '<path d="M4 4h12l4 4v12H4z"/><path d="M8 11h8M8 15h6"/>',
+  circle: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.5"/>',
+  sound: '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>',
+};
+const svgIcon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
+let menuEl = null, menuFor = null, menuClosedAt = 0;
+const anchorRect = a => (a.kind === 'deck' ? a.topEl : a.el || a).getBoundingClientRect();
+function closeMenu(){ if (!menuEl) return; menuEl.remove(); menuEl = null; menuClosedAt = performance.now(); }
+// un segundo toque sobre lo mismo cierra el menu en vez de reabrirlo
+const justClosed = a => menuFor === a && performance.now() - menuClosedAt < 250;
+document.addEventListener('pointerdown', e => { if (menuEl && !menuEl.contains(e.target)) closeMenu(); }, true);
+addEventListener('keydown', e => { if (e.key === 'Escape'){ closeMenu(); cancelUnion(); } });
+
+// items: [{ id, label, icon | svg, off, cur }]
+function radial(anchor, title, items, onPick){
+  closeMenu(); menuFor = anchor; toastEl.style.opacity = 0;
+  const r = anchorRect(anchor), n = items.length, R = n > 6 ? 100 : 86, pad = R + 44;
+  const cx = clamp(r.left + r.width / 2, pad, innerWidth - pad), cy = clamp(r.top + r.height / 2, pad - 6, innerHeight - pad - 16);
+  menuEl = document.createElement('div'); menuEl.className = 'radial'; menuEl.setAttribute('role', 'menu'); menuEl.setAttribute('aria-label', title);
+  menuEl.innerHTML = `<div class="disk" style="left:${cx}px;top:${cy}px;width:${(R + 78) * 2}px;height:${(R + 78) * 2}px"></div>
+    <div class="rtitle" style="left:${cx}px;top:${cy - R - 44}px">${title}</div>
+    ${canUndo()
+      ? `<button class="rclose undo" style="left:${cx}px;top:${cy}px" aria-label="Deshacer">${svgIcon('undo')}<span>Deshacer</span></button>`
+      : `<button class="rclose" style="left:${cx}px;top:${cy}px" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>`}` +
+    items.map((it, i) => {
+      const a = -Math.PI / 2 + i * 2 * Math.PI / n, x = cx + Math.cos(a) * R, y = cy + Math.sin(a) * R;
+      return `<button class="rbtn" role="menuitem" data-m="${it.id}" ${it.off ? 'disabled' : ''} aria-current="${!!it.cur}"
+        style="left:${x}px;top:${y}px;--dx:${cx - x}px;--dy:${cy - y}px;--i:${i}">${it.svg || svgIcon(it.icon)}<span>${it.label}</span></button>`;
+    }).join('');
+  menuEl._geo = { cx, cy, n, hot: -1, onPick };
+  document.body.appendChild(menuEl);
+  requestAnimationFrame(() => menuEl && menuEl.classList.add('open'));
+  menuEl.addEventListener('click', e => {
+    const cc = e.target.closest('.rclose');
+    if (cc){ closeMenu(); if (cc.classList.contains('undo')) doUndo(); return; }
+    const b = e.target.closest('[data-m]'); if (!b || b.disabled) return;
+    closeMenu(); onPick(b.dataset.m);
+  });
+  // el foco automatico pintaba un aro que parecia una seleccion: solo se enfoca si se abrio con teclado
+  if (!g){ const f = menuEl.querySelector('.rbtn:not(:disabled)'); f && f.focus({ preventScroll: true }); }
+}
+const posLabel = c => c.slot !== null && spread ? `${c.slot + 1} · ${spread.pos[c.slot][3]}` : c.aside ? 'Apartada' : 'Fuera de la tirada';
+function openCardRadial(c){
+  const items = [
+    c.up ? { id: 'read', label: 'Leer', icon: 'read' } : { id: 'reveal', label: 'Desvelar', icon: 'reveal' },
+    { id: 'turn', label: 'Girar', icon: 'turn' },
+    { id: 'collect', label: 'Recoger', icon: 'collect' },
+    { id: 'aside', label: 'Sacar', icon: 'aside', off: c.aside },
+    { id: 'reveal-all', label: 'Desvelar todas', icon: 'reveal', off: !(spread && hidden().length > 1) },
+  ];
+  radial(c, c.up ? c.data.name : posLabel(c), items, a => {
+    if (a === 'reveal') flip(c, 0, -1);
+    else if (a === 'reveal-all') revealAll();
+    else if (a === 'read') openReading(c);
+    else if (a === 'collect') collectOne(c);
+    else if (a === 'aside') setAside(c);
+    else if (a === 'turn') turn(c);
+  });
+}
+function openDeckRadial(d){
+  const n = server.count(d.pid), few = n < 4;
+  const items = [
+    { id: 'shuffle', label: 'Barajar', icon: 'shuffle', off: few },
+    { id: 'cut', label: 'Cortar', icon: 'cut', off: few },
+    { id: 'fan', label: 'Extender', icon: 'fan', off: !n },
+    { id: 'deal', label: 'Sacar', icon: 'deal', off: !n },
+    { id: 'collect', label: 'Recoger', icon: 'collect', off: !cardsOut() },
+    { id: 'spread', label: 'Tirada', icon: 'spread' },
+    { id: 'union', label: 'Unir', icon: 'union', off: piles.length < 2 },
+  ];
+  radial(d, `${pileName(d)} · ${n}`, items, a => {
+    if (a === 'shuffle') openShuffleRadial(d);
+    else if (a === 'cut') autoCut(d);
+    else if (a === 'fan') autoFan(d);
+    else if (a === 'deal') deal(d);
+    else if (a === 'collect') collect(d);
+    else if (a === 'spread') openSpreadRadial(d);
+    else if (a === 'union') openUnionRadial(d);
+  });
+}
+function openUnionRadial(d){
+  radial(d, 'Unir montones', [
+    { id: 'order', label: 'Elegir orden', icon: 'order' },
+    { id: 'auto', label: 'Automático', icon: 'union' },
+  ], a => {
+    if (a === 'order') startUnion();
+    else if (a === 'auto') autoUnion();
+  });
+}
+function openFanRadial(c){
+  const d = fan && fan.pile;
+  if (!d) return;
+  radial(c, 'Abanico', [
+    { id: 'take', label: 'Sacar', icon: 'deal' },
+    { id: 'gather', label: 'Juntar', icon: 'collect' },
+    { id: 'shuffle', label: 'Barajar', icon: 'shuffle' },
+  ], a => {
+    if (a === 'take') tap(c, {}, null);
+    else if (a === 'gather') closeFan();
+    else if (a === 'shuffle') closeFan(260).then(() => openShuffleRadial(d));
+  });
+}
+function openShuffleRadial(d){
+  radial(d, 'Barajar', [
+    { id: 'Cascada', label: 'Cascada', icon: 'riffle' },
+    { id: 'Por encima', label: 'Por encima', icon: 'over' },
+    { id: 'Sobre el paño', label: 'Sobre el paño', icon: 'wash' },
+  ], style => shuffle(d, style));
+}
+function spreadThumb(sp){
+  const r = sp.pos.map(p => { const x = p[0] * 150, y = p[1] * 70, w = 16 * sp.s + 6, h = w * 1.7;
+    return `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="2" transform="rotate(${p[2]} ${x} ${y})" fill="none" stroke="currentColor" stroke-width="5"/>`; }).join('');
+  return `<svg class="thumb" viewBox="-14 -24 178 118" aria-hidden="true">${r}</svg>`;
+}
+function openSpreadRadial(anchor, then){
+  radial(anchor, 'Tirada', SPREADS.map(sp => ({ id: sp.id, label: sp.name, svg: spreadThumb(sp), cur: spread && spread.id === sp.id })),
+    id => { applySpread(SPREADS.find(sp => sp.id === id)); then && then(); });
+}
+
+// ================= paneles de texto: Leer e Interpretacion =================
+function showPanel(anchor, html, onAction, cls = ''){
+  closeMenu(); menuFor = anchor; toastEl.style.opacity = 0;
+  menuEl = document.createElement('div'); menuEl.className = 'menu ' + cls; menuEl.setAttribute('role', 'dialog'); menuEl.innerHTML = html;
+  document.body.appendChild(menuEl); placePanel();
+  menuEl.addEventListener('click', e => {
+    const b = e.target.closest('[data-m]'); if (!b || b.disabled) return;
+    const t = menuEl.querySelector('textarea'), txt = t ? t.value.trim() : '', rect = menuEl.getBoundingClientRect();
+    closeMenu(); onAction && onAction(b.dataset.m, txt, rect);
+  });
+  const f = menuEl.querySelector('textarea, .act:not(:disabled)'); f && f.focus({ preventScroll: true });
+}
+function placePanel(){
+  if (!menuEl || !menuEl.classList.contains('menu')) return;
+  // offsetWidth/Height: el tamano real, sin la escala de la animacion de entrada
+  const r = anchorRect(menuFor), m = { width: menuEl.offsetWidth, height: menuEl.offsetHeight };
+  let top = r.top - m.height - 10; if (top < 8) top = r.bottom + 10;
+  menuEl.style.left = clamp(r.left + r.width / 2 - m.width / 2, 8, innerWidth - m.width - 8) + 'px';
+  menuEl.style.top = clamp(top, 8, innerHeight - m.height - 8) + 'px';
+}
+addEventListener('resize', () => { if (menuEl && menuEl.classList.contains('radial')) closeMenu(); else placePanel(); });
+function openReading(c){
+  const pos = c.slot !== null && spread ? spread.pos[c.slot] : null;
+  showPanel(c, `<div class="mh">${posLabel(c)}</div>
+    <div class="rd">${c.data.name}<br><small>${c.reversed ? 'Invertida' : 'Al derecho'}${c.data.major ? ' · Arcano Mayor' : ''}</small></div>
+    <div class="mt">${pos ? pos[4] : c.host ? `Aclaratoria de ${posLabel(c.host)}.` : 'No entra en la lectura: arrástrala a una posición para que cuente.'}</div>
+    ${c.clars.map(k => `<div class="mt">Aclaratoria: ${k.up ? `${k.data.name}${k.reversed ? ' · invertida' : ''}` : 'aún boca abajo'}</div>`).join('')}`);
+}
+
+// ================= acciones sobre una carta =================
+// Girar: media vuelta sobre el pano. Cambia el sentido en que se leera la carta.
+function turn(c){
+  const r0 = c.rot; busyCard.add(c);
+  tween(420, v => { c.rot = r0 + 180 * v; c.lift = bump(v) * 20; c.render(); }, () => {
+    c.rot = r0; c.lift = 0; c.reversed = !c.reversed;
+    c.el.querySelector('img').classList.toggle('rev', c.reversed); if (c.up) showPips(c, true); c.render(); busyCard.delete(c); refresh();
+    if (c.up) toast(c.reversed ? 'Ahora está invertida' : 'Ahora está al derecho');
+    else toast('Girada: se desvelará en el otro sentido');
+  }, ease.inOut);
+}
+// Recoger: vuelve al fondo del mazo activo
+function collectOne(c){
+  unlinkAll(c);
+  const d = active; busyCard.add(c); c.slot = null;
+  moveTo(c, { x: d.x, y: d.y, rot: d.rot, sc: DECK_S, lift: 0 }, 420, ease.inOut, 0, () => {
+    c.remove(); busyCard.delete(c); server.giveBack(c.cid, d.pid);
+    if (!(fan && fan.pile === d)) d.setCount(server.count(d.pid));
+    refresh(); toast('Devuelta al fondo del mazo');
+  });
+}
+// Sacar: fuera del pano, en el estante junto al otro mazo
+function setAside(c){
+  unlinkAll(c);
+  const other = decks.find(d => d !== active), h = other.home;
+  const x = h.x + (h.x + 125 < TW - 40 ? 125 : -125), n = tableCards().filter(k => k.aside).length;
+  c.slot = null; c.aside = true; c.toFront();
+  moveTo(c, { x: x + n * 3, y: h.y - n * 2, rot: (n % 2 ? 4 : -3), sc: DECK_S, lift: 0 }, 460, ease.inOut, 0, refresh);
+  toast('Apartada en el estante: no cuenta para la lectura');
+}
+function revealAll(){
+  const list = hidden().sort((a, b) => (a.slot ?? 99) - (b.slot ?? 99));
+  list.forEach((c, i) => setTimeout(() => flip(c, 0, -1), i * 170 * SPEED));
+}
+
+// ================= interpretacion =================
+function tableToScreen(x, y, z = 0){
+  const th = cam.theta * D2R, s = Math.sin(th), c = Math.cos(th), K = cam.k * cam.zoom, a = cam.yaw * D2R;
+  const x0 = x - TW / 2, y0 = y - TH / 2, xx = x0 * Math.cos(a) - y0 * Math.sin(a), yy = x0 * Math.sin(a) + y0 * Math.cos(a);
+  const f = P / (P - K * (yy * s + z * c)), r = scene.getBoundingClientRect();
+  return { x: r.width / 2 + cam.panX + K * xx * f, y: r.height / 2 + cam.panY + cam.oy + K * (yy * c - z * s) * f, f };
+}
+function openInterp(){
+  if (justClosed(interpEl)) return;
+  // el sello se rompe aqui: la pregunta sale a la luz justo antes de interpretar
+  if (seal){
+    if (!seal.open) openSeal();
+    return showPanel(interpEl, `<div class="mh">Interpretación</div><div class="mt">Tu pregunta sellada</div>
+      <div class="rd">«${esc(seal.text)}»</div><button class="act primary" data-m="ask">Interpretar</button>`, () => showReading(seal.text), 'wide');
+  }
+  showPanel(interpEl, `<div class="mh">Interpretación</div>
+    <textarea class="q" maxlength="300" placeholder="¿Qué quieres preguntar? (opcional)" aria-label="Pregunta"></textarea>
+    <div class="two"><button class="act" data-m="skip">Sin pregunta</button><button class="act primary" data-m="ask">Interpretar</button></div>`,
+    (v, q) => showReading(v === 'ask' ? q : ''), 'wide');
+}
+function showReading(q){
+  reading.question = q;
+  const rows = spread.pos.map((p, i) => { const c = cardAt(i);
+    return `<li><i>${i + 1}</i><div><b>${c.data.name}</b>${c.reversed ? ' · invertida' : ''}<span>${p[3]}: ${p[4]}</span>${
+      c.clars.map(k => `<span>Aclaratoria: ${k.up ? `${k.data.name}${k.reversed ? ' · invertida' : ''}` : 'boca abajo'}</span>`).join('')}</div></li>`; }).join('');
+  showPanel(interpEl, `<div class="mh">${spread.name}</div><div class="mt">${astralText(reading.ctx || astralNow())}</div>
+    <div class="mt">${q ? `«${esc(q)}»` : 'Sin pregunta'}</div><ul class="lect">${rows}</ul>
+    <div class="mt">Aquí respondería el motor elegido: Tradición, con textos fijos, u Oráculo, con IA.</div>
+    <button class="act primary" data-m="close">Cerrar el círculo</button>`, a => { if (a === 'close') closeCircle(); }, 'wide tall');
+}
+
+function resetCam(){ cam.tTheta = BASE_THETA; cam.tYaw = 0; cam.tZoom = 1; cam.tPanX = 0; cam.tPanY = 0; }
+
+// ================= utilidades =================
+const esc = t => String(t).replace(/[<>&"]/g, ch => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[ch]));
+const pointAnchor = (x, y) => ({ getBoundingClientRect: () => new DOMRect(x, y, 0, 0) });
+let reading = { ctx: null, question: '' };
+let contemplating = null;
+
+// ================= contexto astral: mismo calculo que lunar_calendar.py y planetary_hours.py =================
+const PLACE = { lat: 4.711, lon: -74.0721, name: 'Bogotá (predeterminado)' };
+const PHASES = [[22.5, 'Luna Nueva'], [67.5, 'Creciente'], [112.5, 'Cuarto Creciente'], [157.5, 'Gibosa Creciente'],
+  [202.5, 'Luna Llena'], [247.5, 'Gibosa Menguante'], [292.5, 'Cuarto Menguante'], [337.5, 'Menguante'], [360, 'Luna Nueva']];
+const CHALDEAN = ['Sol', 'Venus', 'Mercurio', 'Luna', 'Saturno', 'Júpiter', 'Marte'];
+const horaDe = p => p === 'Sol' ? 'hora del Sol' : p === 'Luna' ? 'hora de la Luna' : `hora de ${p}`;
+const DAY_RULER = [0, 3, 6, 2, 5, 1, 4];   // getDay(): domingo = Sol, lunes = Luna ...
+function astralNow(d = new Date()){
+  const fecha = d.toLocaleString('es', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const out = { at: d.toISOString(), fecha, luna: null, ilum: null, hora: null, lugar: PLACE.name };
+  const A = window.Astronomy; if (!A) return out;
+  try {
+    const el = A.MoonPhase(d); out.el = el;
+    out.luna = PHASES.find(([lim]) => el < lim)[1];
+    out.ilum = Math.round(A.Illumination(A.Body.Moon, d).phase_fraction * 100);
+    // hora planetaria: dia de amanecer a ocaso y noche de ocaso a amanecer, 12 horas desiguales cada uno
+    const obs = new A.Observer(PLACE.lat, PLACE.lon, 0);
+    const rise = A.SearchRiseSet(A.Body.Sun, obs, +1, new Date(d - 864e5), 1).date;
+    const set = A.SearchRiseSet(A.Body.Sun, obs, -1, rise, 1).date;
+    const next = A.SearchRiseSet(A.Body.Sun, obs, +1, set, 1).date;
+    const day = d < set, from = day ? rise : set, dur = ((day ? set : next) - from) / 12;
+    const n = (day ? 0 : 12) + Math.min(11, Math.floor((d - from) / dur));
+    out.hora = CHALDEAN[(DAY_RULER[rise.getDay()] + n) % 7];
+  } catch { /* zona polar o libreria ausente: queda solo la fecha */ }
+  return out;
+}
+const astralText = x => !x ? '' : [x.fecha, x.luna && `${x.luna} (${x.ilum} %)`, x.hora && horaDe(x.hora)].filter(Boolean).join(' · ');
+if (navigator.geolocation) navigator.geolocation.getCurrentPosition(
+  pos => { PLACE.lat = pos.coords.latitude; PLACE.lon = pos.coords.longitude; PLACE.name = 'tu ubicación'; }, () => {}, { timeout: 5000, maximumAge: 36e5 });
+
+// ================= luz de la Luna: la mesa se tine segun la fase registrada =================
+// Llena: luz plateada que baja sobre la mesa. Nueva: casi a oscuras. Se usa la fase de la lectura si la hay.
+const moonEl = $('moonlight'), moonBtn = $('moon-btn');
+function moonGlyph(ctx){
+  const f = (ctx.ilum ?? 50) / 100, waxing = (ctx.el ?? 90) < 180, r = 10, rx = Math.abs(1 - 2 * f) * r;
+  const lit = `M0 ${-r} A${r} ${r} 0 0 1 0 ${r} A${rx} ${r} 0 0 ${f > .5 ? 1 : 0} 0 ${-r}Z`;
+  return `<svg viewBox="-12 -12 24 24" aria-hidden="true"><circle r="${r}" fill="#1c1f2e" stroke="rgba(200,215,255,.35)" stroke-width=".8"/>
+    <path d="${lit}" fill="#dfe6f7" transform="scale(${waxing ? 1 : -1},1)"/></svg>`;
+}
+function moonLight(){
+  const ctx = (contemplating && contemplating.ctx) || reading.ctx || astralNow();
+  if (ctx.ilum == null){ moonEl.style.background = 'none'; moonBtn.hidden = true; return; }
+  const f = ctx.ilum / 100;
+  moonEl.style.background = `radial-gradient(ellipse 85% 55% at 50% -5%, rgba(205,218,255,${(.2 * f).toFixed(3)}), rgba(205,218,255,0) 70%),
+    linear-gradient(rgba(3,3,10,${(.34 * (1 - f)).toFixed(3)}), rgba(3,3,10,${(.34 * (1 - f)).toFixed(3)}))`;
+  moonBtn.hidden = false; moonBtn.innerHTML = moonGlyph(ctx); moonBtn.dataset.info = `${ctx.luna} · ${ctx.ilum} %`;
+}
+moonBtn.onclick = () => toast(`${moonBtn.dataset.info}. La luz de la mesa sigue a la Luna${reading.ctx ? ' de esta lectura' : ''}.`);
+setInterval(moonLight, 10 * 60 * 1000);
+
+// ================= pregunta sellada =================
+const SEAL_AT = { x: 88, y: 712 };
+let seal = null, sealEl = null;
+function setSeal(sv){
+  seal = sv; sealEl && sealEl.remove(); sealEl = null;
+  if (!sv) return;
+  sealEl = document.createElement('div'); sealEl.className = 'seal' + (sv.open ? ' open' : '');
+  sealEl.innerHTML = `<svg viewBox="-12 -12 24 24" fill="none" stroke="#ECD79A" stroke-width="1.1" aria-hidden="true"><circle r="10.5"/><path d="M0-8 6.9 4H-6.9Z"/><path d="M0 8-6.9-4H6.9Z"/></svg>`;
+  sealEl.style.transform = `translate3d(${SEAL_AT.x - 42}px, ${SEAL_AT.y - 42}px, .6px)`;
+  table.appendChild(sealEl);
+}
+function openSealPanel(anchor){
+  showPanel(anchor, `<div class="mh">Sellar la pregunta</div>
+    <textarea class="q" maxlength="300" placeholder="¿Qué quieres preguntar?" aria-label="Pregunta"></textarea>
+    <div class="mt">Quedará sellada sobre el paño y se abrirá al interpretar.</div>
+    <button class="act primary" data-m="seal">Sellar</button>`, (a, txt, rect) => { if (txt) sealQuestion(txt, rect); else toast('Escribe la pregunta para sellarla'); }, 'wide');
+}
+function sealQuestion(text, rect){
+  const t = tableToScreen(SEAL_AT.x, SEAL_AT.y), fly = document.createElement('div');
+  fly.className = 'seal-fly'; fly.textContent = text; document.body.appendChild(fly);
+  const k = cam.k * cam.zoom * 84;
+  fly.animate([
+    { left: rect.left + 'px', top: rect.top + 'px', width: rect.width + 'px', height: rect.height + 'px', borderRadius: '14px', color: 'rgba(245,240,232,1)' },
+    { left: (t.x - k / 2) + 'px', top: (t.y - k / 2) + 'px', width: k + 'px', height: k + 'px', borderRadius: '50%', color: 'rgba(245,240,232,0)' },
+  ], { duration: 760 * SPEED, easing: 'cubic-bezier(.5,0,.2,1)', fill: 'forwards' }).onfinish = () => {
+    fly.remove();
+    setSeal({ text, at: new Date().toISOString(), ctx: astralNow(), open: false }); sfx.play('press'); sfx.vib(14);
+    sealEl.animate([{ transform: sealEl.style.transform + ' scale(1.25)' }, { transform: sealEl.style.transform }], { duration: 260, easing: 'ease-out' });
+    refresh(); toast('Pregunta sellada');
+  };
+}
+function openSeal(){
+  if (!seal) return;
+  seal.open = true; sealEl.classList.add('open');
+  sfx.play('crack'); sfx.vib([8, 30, 8]); const sp = tableToScreen(SEAL_AT.x, SEAL_AT.y); fx.smoke(sp.x, sp.y, 16);
+  sealEl.animate([{ transform: sealEl.style.transform + ' scale(1.2) rotate(-6deg)' }, { transform: sealEl.style.transform }], { duration: 420, easing: 'ease-out' });
+  saveSoon();
+}
+function sealInfo(){
+  showPanel(sealEl, seal.open
+    ? `<div class="mh">Pregunta abierta</div><div class="rd">«${esc(seal.text)}»</div><div class="mt">${astralText(seal.ctx)}</div>`
+    : `<div class="mh">Pregunta sellada</div><div class="mt">${astralText(seal.ctx)}</div><div class="mt">Se abre al interpretar.</div>`);
+}
+
+// ================= cartas aclaratorias =================
+function clarPos(h, i){
+  const a = h.rot * D2R, ox = h.hw * .78 + i * h.hw * .55, oy = h.hh * .3;
+  return { x: h.x + ox * Math.cos(a) - oy * Math.sin(a), y: h.y + ox * Math.sin(a) + oy * Math.cos(a), rot: h.rot + 9 };
+}
+function linkClar(c, h){
+  c.slot = null; c.aside = false;
+  const t = clarPos(h, h.clars.length);
+  h.clars.push(c); c.host = h; c.el.classList.add('clar');
+  moveTo(c, { ...t, sc: h.sc * .82, lift: 0, tx: 0, ty: 0, z: h.z + .8 + (h.clars.length - 1) * .3 }, 260, ease.out, 0, () => h.render());
+}
+function unlinkClar(c){
+  const h = c.host; if (!h) return;
+  h.clars = h.clars.filter(k => k !== c); c.host = null; c.el.classList.remove('clar'); h.render();
+}
+function unlinkAll(c){ unlinkClar(c); c.clars.slice().forEach(unlinkClar); }
+
+// ================= autoguardado: la mesa entera cabe en una foto =================
+const KEY = 'arcanum.mesa.v1', HKEY = 'arcanum.lecturas.v1';
+function serialize(){
+  const round = v => Math.round(v * 10) / 10;
+  return {
+    v: 1, deck: active ? active.def.id : null, activePid: active ? active.pid : null,
+    server: { piles: [...server.piles].map(([k, a]) => [k, a.slice()]), rev: [...server.rev], drawn: server.drawn.slice(), state: server.state, seq: server.seq },
+    piles: piles.map(p => ({ pid: p.pid, x: round(p.x), y: round(p.y), rot: round(p.rot) })),
+    fan: fan && fan.end ? { pid: fan.pile.pid, start: fan.start, end: fan.end } : null,
+    cards: tableCards().map(c => ({ cid: c.cid, x: round(c.x), y: round(c.y), rot: round(c.rot), sc: c.sc, slot: c.slot, aside: !!c.aside,
+      up: c.up, dir: Math.sign(c.angle) || -1, reversed: c.reversed, host: c.host ? c.host.cid : null })),
+    spread: spread ? spread.id : null, seal, reading,
+    cam: { theta: cam.tTheta, yaw: cam.tYaw, zoom: cam.tZoom, panX: cam.tPanX, panY: cam.tPanY },
+  };
+}
+let restoring = false, saveT = 0;
+function saveSoon(){
+  if (restoring || contemplating) return;
+  clearTimeout(saveT);
+  saveT = setTimeout(() => {
+    if (busy || busyCard.size || g) return saveSoon();
+    try { localStorage.setItem(KEY, JSON.stringify(serialize())); } catch { /* almacenamiento bloqueado: la mesa sigue viva, solo no persiste */ }
+  }, 300);
+}
+function clearTable(){
+  closeMenu(); tweens.clear(); fan = null; union = null;
+  [...pieces.values()].forEach(p => { if (p.kind === 'card' || (p.kind === 'deck' && !decks.includes(p))) p.remove(); });
+  slotEls.splice(0).forEach(e => e.remove()); spread = null;
+  piles = []; active = null; busy = false; busyCard.clear();
+  decks.forEach(d => { Object.assign(d, { x: d.home.x, y: d.home.y, rot: 0, z: 1, lift: 0, tx: 0, ty: 0 }); d.label.style.opacity = 1; d.badge.hidden = true; d.setCount(d.def.cards.length); d.render(); });
+  setSeal(null); reading = { ctx: null, question: '' };
+}
+function restore(st){
+  restoring = true;
+  clearTable();
+  if (st.cam){ Object.assign(cam, { tTheta: st.cam.theta, theta: st.cam.theta, tYaw: st.cam.yaw, yaw: st.cam.yaw, tZoom: st.cam.zoom, zoom: st.cam.zoom,
+    tPanX: st.cam.panX, panX: st.cam.panX, tPanY: st.cam.panY, panY: st.cam.panY }); fitCam(); applyCam(); }
+  setSeal(st.seal); reading = st.reading || { ctx: null, question: '' };
+  const d = st.deck && decks.find(k => k.def.id === st.deck);
+  if (d){
+    active = d; d.label.style.opacity = 0;
+    Object.assign(server, { deck: d.def, piles: new Map(st.server.piles.map(([k, a]) => [k, a.slice()])), rev: new Map(st.server.rev), drawn: st.server.drawn.slice(), state: st.server.state, seq: st.server.seq });
+    st.piles.forEach(q => {
+      let p = d;
+      if (q.pid !== st.activePid){ p = new Deck(d.def); p.label.remove(); p.home = null; }
+      Object.assign(p, { pid: q.pid, x: q.x, y: q.y, rot: q.rot, z: 1 }); p.setCount(server.count(q.pid)); p.render(); piles.push(p);
+    });
+    if (st.spread) applySpread(SPREADS.find(sp => sp.id === st.spread));
+    const byId = new Map();
+    st.cards.forEach(cs => {
+      const c = new Card(d.def);
+      c.reveal({ id: cs.cid, card: d.def.cards[cs.cid], reversed: cs.reversed });
+      Object.assign(c, { x: cs.x, y: cs.y, rot: cs.rot, sc: cs.sc, slot: cs.slot, aside: cs.aside, angle: cs.up ? 180 * cs.dir : 0 });
+      c.toFront(); byId.set(cs.cid, c);
+    });
+    st.cards.forEach(cs => { if (cs.host == null) return; const c = byId.get(cs.cid), h = byId.get(cs.host); if (c && h){ c.host = h; h.clars.push(c); c.el.classList.add('clar'); } });
+    byId.forEach(c => { c.render(); if (c.up) showPips(c, true); });
+    if (st.fan){ const fp = piles.find(q => q.pid === st.fan.pid); if (openFan(fp)){ fan.start = st.fan.start; layoutFan(st.fan.end); } }
+  }
+  restoring = false;
+  moonLight();
+  refresh();
+}
+
+// ================= deshacer el ultimo gesto =================
+let undoSnap = null, undoUntil = 0, undoEl = null, undoT = 0;
+const canUndo = () => !!undoSnap && performance.now() < undoUntil && !contemplating;
+function takeSnap(){ if (contemplating || restoring) return; undoSnap = serialize(); hideUndo(); }
+function hideUndo(){ undoEl && undoEl.remove(); undoEl = null; clearTimeout(undoT); }
+// Deshacer vive en una esquina fija: nunca tapa cartas; el anillo muestra cuanto le queda
+function offerUndo(){
+  if (!undoSnap || contemplating) return;
+  hideUndo(); undoUntil = performance.now() + 5000;
+  undoEl = document.createElement('button'); undoEl.className = 'undo-dot'; undoEl.setAttribute('aria-label', 'Deshacer');
+  undoEl.innerHTML = `<svg class="ring" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/></svg>${svgIcon('undo').replace('<svg', '<svg class="i"')}`;
+  undoEl.onclick = doUndo; scene.appendChild(undoEl);
+  undoT = setTimeout(hideUndo, 5000);
+}
+function doUndo(){
+  if (!undoSnap || busy) return;
+  const st = undoSnap; undoSnap = null; hideUndo(); closeMenu();
+  restore(st); toast('Deshecho');
+}
+
+// ================= recoger todo y cerrar el circulo =================
+async function collectAll(slow = false){
+  if (!active) return;
+  closeMenu(); hideUndo(); undoSnap = null;
+  if (fan) await closeFan(300);
+  if (union) cancelUnion();
+  if (piles.length > 1) await stack([active, ...piles.filter(p => p !== active)], { snap: false, offer: false });
+  const d = active, list = tableCards();
+  busy = true; refresh();
+  await Promise.all(list.map((c, i) => new Promise(res => moveTo(c, { x: d.x, y: d.y, rot: d.rot, sc: DECK_S, lift: 0 }, slow ? 900 : 420, ease.inOut, i * (slow ? 170 : 30), res))));
+  list.forEach(c => c.remove()); if (list.length) sfx.play('slide');
+  server.gather(d.pid); d.setCount(server.count(d.pid));
+  slotEls.splice(0).forEach(e => e.remove()); spread = null;
+  setSeal(null); reading = { ctx: null, question: '' };
+  busy = false; refresh();
+}
+const loadHistory = () => { try { return JSON.parse(localStorage.getItem(HKEY)) || []; } catch { return []; } };
+function circleMark(){
+  const m = document.createElement('div'); m.className = 'mark';
+  m.style.transform = `translate3d(${300 - 220}px, ${484 - 220}px, .7px)`; table.appendChild(m);
+  m.animate([{ opacity: 0, transform: m.style.transform + ' scale(.7)' }, { opacity: .9, offset: .3 }, { opacity: 0, transform: m.style.transform + ' scale(1.08)' }],
+    { duration: 3400 * SPEED, easing: 'ease-out' }).onfinish = () => m.remove();
+}
+async function closeCircle(){
+  if (!active || busy) return;
+  if (seal && !seal.open) openSeal();
+  const h = { id: Date.now(), at: new Date().toISOString(), spread: spread ? spread.name : 'Lectura libre',
+    question: reading.question || (seal ? seal.text : ''), ctx: reading.ctx || astralNow(), snap: serialize() };
+  try { localStorage.setItem(HKEY, JSON.stringify([h, ...loadHistory()].slice(0, 30))); } catch { toast('No se pudo guardar la lectura en este navegador'); }
+  circleMark(); sfx.play('chord'); sfx.vib([10, 60, 10]);
+  fx.flare = 1; const cs = tableToScreen(300, 484); fx.smoke(cs.x, cs.y, 26);
+  await wait(600);
+  await collectAll(true);
+  toast('Círculo cerrado. La lectura quedó guardada en Lecturas.');
+}
+
+// ================= memoria: lecturas guardadas =================
+let prevSnap = null;
+const bannerEl = $('banner');
+function openHistory(anchor){
+  const list = loadHistory();
+  showPanel(anchor, `<div class="mh">Lecturas guardadas</div><ul class="hist">${list.map(h => `<li><button class="act hrow" data-m="${h.id}">
+    <b>${esc(h.spread)}</b><span>${esc(astralText(h.ctx))}</span>${h.question ? `<em>«${esc(h.question)}»</em>` : ''}</button></li>`).join('')}</ul>`,
+    id => contemplate(list.find(h => String(h.id) === id)), 'wide tall');
+}
+function contemplate(h){
+  if (!h) return;
+  if (!contemplating) prevSnap = serialize();
+  contemplating = h; hideUndo();
+  restore(h.snap);
+  $('banner-text').innerHTML = `<b>${esc(h.spread)}</b><br>${esc(astralText(h.ctx))}${h.question ? `<br>«${esc(h.question)}»` : ''}`;
+  bannerEl.hidden = false; refresh();
+}
+function leaveContemplation(keep){
+  bannerEl.hidden = true;
+  const back = prevSnap; contemplating = null; prevSnap = null;
+  if (keep){ refresh(); toast('Sigues desde esa lectura'); }
+  else restore(back);
+}
+$('b-back').onclick = () => leaveContemplation(false);
+$('b-go').onclick = () => leaveContemplation(true);
+
+// ================= radial del pano vacio =================
+function openClothRadial(anchor){
+  radial(anchor, 'Paño', [
+    { id: 'seal', label: 'Sellar pregunta', icon: 'seal', off: !!seal || tableCards().some(c => c.up) },
+    { id: 'all', label: 'Recoger todo', icon: 'gather', off: !active || (!cardsOut() && !fan && piles.length < 2) },
+    { id: 'hist', label: 'Lecturas', icon: 'hist', off: !loadHistory().length },
+    { id: 'sound', label: sfx.on ? 'Silenciar' : 'Sonido', icon: 'sound' },
+  ], a => {
+    if (a === 'sound'){ sfx.on = !sfx.on; try { localStorage.setItem('arcanum.sonido', sfx.on ? '1' : '0'); } catch {} return toast(sfx.on ? 'Sonido activado' : 'Silencio'); }
+    if (a === 'seal') openSealPanel(anchor);
+    else if (a === 'hist') openHistory(anchor);
+    else if (a === 'all'){
+      // con lectura empezada, recoger obliga a decidir si se guarda
+      if (tableCards().some(c => c.slot !== null && c.up)) radial(anchor, 'Recoger todo', [
+        { id: 'close', label: 'Cerrar el círculo', icon: 'circle' },
+        { id: 'drop', label: 'Sin guardar', icon: 'gather' },
+      ], b => b === 'close' ? closeCircle() : collectAll());
+      else collectAll();
+    }
+  });
+}
+
+// ================= sonido y vibracion: sintetizados, sin archivos =================
+const sfx = {
+  ctx: null, bus: null, wet: null,
+  on: (() => { try { return localStorage.getItem('arcanum.sonido') !== '0'; } catch { return true; } })(),
+  // re dorico pentatonico: cualquier combinacion suena bien, nada desafina
+  scale: [293.66, 349.23, 392, 440, 523.25, 587.33, 698.46, 783.99, 880],
+  init(){
+    if (!this.ctx){
+      try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch { return; }
+      const c = this.ctx, comp = c.createDynamicsCompressor(), master = c.createGain(); master.gain.value = .75;
+      comp.connect(master); master.connect(c.destination); this.bus = comp;
+      // sala: respuesta al impulso generada, 2,8 s de cola
+      const len = c.sampleRate * 2.8, ir = c.createBuffer(2, len, c.sampleRate);
+      for (let ch = 0; ch < 2; ch++){ const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
+      const conv = c.createConvolver(); conv.buffer = ir; this.wet = c.createGain(); this.wet.gain.value = .42;
+      this.wet.connect(conv); conv.connect(comp);
+    }
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+  },
+  vib(pat){ if (this.on && navigator.vibrate) navigator.vibrate(pat); },
+  out(node, t0, a, peak, d, wet = 1){
+    const g = this.ctx.createGain(); g.gain.setValueAtTime(.0001, t0);
+    g.gain.exponentialRampToValueAtTime(peak, t0 + a); g.gain.exponentialRampToValueAtTime(.0001, t0 + a + d);
+    node.connect(g); g.connect(this.bus); if (wet){ const w = this.ctx.createGain(); w.gain.value = wet; g.connect(w); w.connect(this.wet); }
+  },
+  osc(t0, f, a, d, peak, wet = 1, type = 'sine', glide){
+    const o = this.ctx.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t0);
+    if (glide) o.frequency.exponentialRampToValueAtTime(glide, t0 + a + d);
+    this.out(o, t0, a, peak, d, wet); o.start(t0); o.stop(t0 + a + d + .1);
+  },
+  // campana de cristal: fundamental y parciales inarmonicos que se apagan antes
+  bell(t0, f, d, peak){ this.osc(t0, f, .004, d, peak); this.osc(t0, f * 2.76, .004, d * .45, peak * .32); this.osc(t0, f * 5.4, .004, d * .2, peak * .12); },
+  // roce de papel: ruido filtrado, suave, sin aristas
+  brush(t0, d, peak, f = 1400){
+    const c = this.ctx, n = Math.ceil(c.sampleRate * (d + .1)), b = c.createBuffer(1, n, c.sampleRate), x = b.getChannelData(0);
+    for (let i = 0; i < n; i++) x[i] = Math.random() * 2 - 1;
+    const src = c.createBufferSource(), lp = c.createBiquadFilter(), hp = c.createBiquadFilter();
+    src.buffer = b; lp.type = 'lowpass'; lp.frequency.value = f; hp.type = 'highpass'; hp.frequency.value = 260;
+    src.connect(hp); hp.connect(lp); this.out(lp, t0, d * .35, peak, d * .65, .25); src.start(t0); src.stop(t0 + d + .1);
+  },
+  note(i){ return this.scale[Math.max(0, Math.min(this.scale.length - 1, i))]; },
+  play(k){
+    if (!this.on || !this.ctx) return;
+    const t = this.ctx.currentTime, rnd = n => Math.floor(Math.random() * n);
+    if (k === 'slide'){ this.brush(t, .24, .05); this.bell(t + .05, this.note(6 + rnd(3)), .9, .012); }
+    else if (k === 'riffle'){ for (let i = 0; i < 10; i++) this.brush(t + i * .05, .07, .03, 1800); [0, 2, 4].forEach((n, i) => this.bell(t + .5 + i * .09, this.note(4 + n), 1.2, .014)); }
+    else if (k === 'cut'){ this.brush(t, .22, .05); this.bell(t + .06, this.note(1), 1.4, .02); }
+    else if (k === 'thud'){ this.osc(t, 196, .003, .12, .06, .3, 'triangle', 150); this.bell(t + .02, this.note(3 + rnd(4)), 1.1, .012); }
+    else if (k === 'reveal'){ const i = 2 + rnd(6); this.bell(t, this.note(i), 2.2, .045); this.bell(t + .11, this.note(i + 2), 2, .025); }
+    else if (k === 'bell'){
+      // cuenco: dos fundamentales casi iguales que laten, cola larga
+      [146.83, 147.9].forEach(f => this.osc(t, f, .06, 5, .05)); this.osc(t, 146.83 * 2.71, .08, 3, .02); this.bell(t + .3, this.note(4), 2.5, .02);
+    }
+    else if (k === 'crack'){ this.osc(t, 900, .002, .08, .05, .2, 'sine', 240); [8, 6, 4, 2].forEach((n, i) => this.bell(t + .1 + i * .08, this.note(n), 1.2, .018)); }
+    else if (k === 'press'){ this.osc(t, 110, .02, .6, .06, .4); this.osc(t, 220, .02, .4, .025, .4); }
+    else if (k === 'chord'){ [146.83, 220, 293.66, 349.23, 440].forEach((f, i) => { this.osc(t + i * .1, f, .9, 3.4, .022); this.osc(t + i * .1, f * 1.004, .9, 3.4, .016); }); }
+  },
+};
+
+// ================= simbolos del palo junto a la carta desvelada =================
+const RANK_N = { as: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10 };
+const star = Array.from({ length: 5 }, (_, i) => { const a = (-90 + i * 144) * D2R; return `${(Math.cos(a) * 6.6).toFixed(2)} ${(Math.sin(a) * 6.6).toFixed(2)}`; });
+const PIP = {
+  oros: `<circle r="8.6"/><path d="M${star.join(' L')}Z"/>`,
+  copas: '<path d="M-6.5-7h13c0 6.5-3 9.5-6.5 9.5S-6.5-.5-6.5-7ZM0 2.5v5M-4.5 8h9"/>',
+  espadas: '<path d="M0-9.5v13.5M-5.5 4h11M0 4v5.5M-1.6-6.5 0-9.5 1.6-6.5"/>',
+  bastos: '<path d="M-3.5 9.5 3.5-9.5M1.2-4.2l3.6-1.1M-.9 1.4l-3.7.8M2.4-7.4l2.3 1.9"/>',
+  corona: '<path d="M-8 5h16l1.4-10-4.8 4.6L0-8.5l-4.6 8.1-4.8-4.6Z"/>',
+};
+const ROMAN = n => n === 0 ? '0' : [['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]].reduce((acc, [s, v]) => { while (n >= v){ acc += s; n -= v; } return acc; }, '');
+function showPips(c, instant = false){
+  if (!c.data || c.proxy) return;
+  const icon = k => `<i><svg viewBox="-10 -10 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${PIP[k]}</svg></i>`;
+  let html;
+  if (c.data.major) html = `<b>${ROMAN(MAJORS.findIndex(m => m[0] === c.data.file))}</b>`;
+  else {
+    const n = RANK_N[c.data.file.split('-')[0]];
+    html = n ? icon(c.data.suit).repeat(n) : icon('corona') + icon(c.data.suit);   // figuras: corona y su palo
+  }
+  c.pipsEl.innerHTML = html; c.pipsEl.classList.toggle('rev', c.reversed);
+  if (instant || reduced) return;
+  [...c.pipsEl.children].forEach((el, i) => el.animate(
+    [{ opacity: 0, transform: `${c.reversed ? 'rotate(180deg) ' : ''}scale(.2)` }, { opacity: 1, transform: `${c.reversed ? 'rotate(180deg) ' : ''}scale(1.35)`, offset: .6 }, { opacity: 1, transform: `${c.reversed ? 'rotate(180deg) ' : ''}scale(1)` }],
+    { duration: 420, delay: 120 + i * 70, easing: 'ease-out', fill: 'backwards' }));
+}
+
+// ================= velas =================
+// ================= velas: geometria 3D proyectada en el lienzo =================
+// Cada vela es geometria real (anillos de puntos sobre la mesa) proyectada con la misma camara que la mesa:
+// al girarla se ve desde otro lado y con la perspectiva correcta. En el DOM eran ~140 capas compuestas y el
+// rendimiento caia de 59 a 19 fps; aqui es un solo lienzo. El cuerpo se repinta solo cuando cambia la camara.
+const LIGHT = 112 * D2R;   // luz fija de frente e izquierda: el sombreado pertenece a la vela, no a la pantalla
+const shade = phi => .32 + .68 * Math.max(0, Math.cos(phi - LIGHT));
+const DISH = 5, DISH_R = 27, SEG = 22;
+// Sin velas (decision de Samuel, 28-sep). El motor de velas se conserva por si vuelven:
+// { x: 58, y: 64, H: 104, R: 12, drips: [[40, 34, 3.2], [150, 14, 2.4], [100, 22, 2.8]] }
+const CANDLES = [].map((c, id) => {
+  const base = document.createElement('div'); base.className = 'cbase';
+  base.style.transform = `translate3d(${c.x - 22}px, ${c.y - 22}px, .4px)`; table.append(base);
+  // cada llama tiene su propio pulso, y de vez en cuando una corriente la inclina
+  const cv = document.createElement('canvas'); cv.className = 'cflame'; scene.appendChild(cv);
+  return { ...c, base, cv, cx2d: cv.getContext('2d'), seed: id * 7.3, gust: 0, gustDir: 1, nextGust: 4 + id * 5 };
+});
+// coloca el lienzo de la llama alrededor de su pabilo, con sitio para el halo, el polvo y las rafagas
+function placeFlameCanvas(c){
+  const s = projScale(c.x, c.y), d = fx.d, half = 120 * s + 16, up = 150 * s + 90, down = 70 * s + 10;
+  c.box = { left: c.tip.x - half, top: c.tip.y - up, w: half * 2, h: up + down };
+  c.cv.width = c.box.w * d; c.cv.height = c.box.h * d; c.cv.style.width = c.box.w + 'px'; c.cv.style.height = c.box.h + 'px';
+  c.cv.style.transform = `translate(${c.box.left}px, ${c.box.top}px)`;
+  c.cx2d.setTransform(d, 0, 0, d, -c.box.left * d, -c.box.top * d);   // se dibuja en coordenadas de escena
+}
+function projScale(x, y){
+  const K = cam.k * cam.zoom, a = cam.yaw * D2R, yy = (x - TW / 2) * Math.sin(a) + (y - TH / 2) * Math.cos(a);
+  return K * P / (P - K * yy * Math.sin(cam.theta * D2R));
+}
+const rgb = (col, k = 1) => `rgb(${col.map(v => Math.min(255, Math.round(v * k))).join(',')})`;
+function ringPts(c, rad, z){
+  const out = [];
+  for (let i = 0; i < SEG; i++){ const a = i * 2 * Math.PI / SEG; out.push(tableToScreen(c.x + rad * Math.cos(a), c.y + rad * Math.sin(a), z)); }
+  return out;
+}
+function poly(g2, pts){ g2.beginPath(); pts.forEach((q, i) => i ? g2.lineTo(q.x, q.y) : g2.moveTo(q.x, q.y)); g2.closePath(); }
+// cilindro por caras, pintadas de lejos a cerca; cada cara con su sombreado y un degradado vertical
+let camMoving = false;   // mientras gira la mesa, las velas se pintan con color plano y se afinan al pararse
+function drawCylinder(g2, c, rad, z0, h, bottom, top, glow){
+  const lo = ringPts(c, rad, z0), hi = ringPts(c, rad, z0 + h), faces = [];
+  for (let i = 0; i < SEG; i++){ const j = (i + 1) % SEG; faces.push({ q: [lo[i], lo[j], hi[j], hi[i]], phi: (i + .5) * 2 * Math.PI / SEG, depth: lo[i].f + lo[j].f }); }
+  faces.sort((a, b) => a.depth - b.depth);
+  faces.forEach(fc => {
+    const k = shade(fc.phi), [a, b, cc, d] = fc.q;
+    let gr;
+    if (camMoving) gr = rgb(top, k * .92);
+    else {
+      gr = g2.createLinearGradient((a.x + b.x) / 2, (a.y + b.y) / 2, (cc.x + d.x) / 2, (cc.y + d.y) / 2);
+      gr.addColorStop(0, rgb(bottom, k)); gr.addColorStop(.72, rgb(top, k)); gr.addColorStop(1, rgb(glow || top, k + .3));
+    }
+    poly(g2, fc.q); g2.fillStyle = gr; g2.fill(); g2.strokeStyle = gr; g2.lineWidth = .7; g2.stroke();   // el trazo tapa las costuras
+  });
+  return hi;
+}
+function drawCandleBody(g2, c){
+  const s = projScale(c.x, c.y);
+  // candelero de laton: pared, plato con brillo, aro para el dedo y cera derramada
+  const rim = drawCylinder(g2, c, DISH_R, 0, DISH, [88, 62, 22], [214, 172, 86]);
+  const ctr = tableToScreen(c.x, c.y, DISH), rd = Math.max(...rim.map(q => Math.hypot(q.x - ctr.x, q.y - ctr.y)));
+  const dg = g2.createRadialGradient(ctr.x - rd * .25, ctr.y - rd * .15, 0, ctr.x, ctr.y, rd);
+  dg.addColorStop(0, '#f6dd96'); dg.addColorStop(.45, '#c99c46'); dg.addColorStop(.82, '#8a6526'); dg.addColorStop(1, '#4f3913');
+  poly(g2, rim); g2.fillStyle = dg; g2.fill(); g2.strokeStyle = 'rgba(255,236,180,.55)'; g2.lineWidth = 1; g2.stroke();
+  g2.strokeStyle = '#b88c3c'; g2.lineWidth = Math.max(1.2, 2.6 * s); g2.beginPath();
+  for (let i = 0; i <= 24; i++){ const t = i / 24 * 2 * Math.PI, q = tableToScreen(c.x + DISH_R + 5, c.y + 6 * Math.cos(t), 6 + 6 * Math.sin(t)); i ? g2.lineTo(q.x, q.y) : g2.moveTo(q.x, q.y); }
+  g2.stroke();
+  poly(g2, ringPts(c, c.R + 4, DISH + .3)); g2.fillStyle = 'rgba(242,232,210,.95)'; g2.fill();
+  // cera, con la luz de la llama atravesandola en lo alto
+  const top = drawCylinder(g2, c, c.R, DISH, c.H, [206, 192, 162], [250, 242, 224], [255, 212, 150]);
+  // gotas: solo las del lado que mira a la camara
+  const tc = tableToScreen(c.x, c.y, DISH + c.H);
+  c.drips.forEach(([deg, len, w]) => {
+    const a = deg * D2R, px = c.x + (c.R + .6) * Math.cos(a), py = c.y + (c.R + .6) * Math.sin(a);
+    const t1 = tableToScreen(px, py, DISH + c.H), t2 = tableToScreen(px, py, DISH + c.H - len);
+    if (t1.f < tc.f) return;
+    g2.strokeStyle = rgb([250, 241, 219], shade(a) + .12); g2.lineCap = 'round'; g2.lineWidth = w * s;
+    g2.beginPath(); g2.moveTo(t1.x, t1.y); g2.lineTo(t2.x, t2.y); g2.stroke();
+    g2.fillStyle = g2.strokeStyle; g2.beginPath(); g2.arc(t2.x, t2.y, w * s * .7, 0, 7); g2.fill();
+  });
+  // tapa con charco de cera fundida y pabilo curvado
+  const tr = Math.max(...top.map(q => Math.hypot(q.x - tc.x, q.y - tc.y)));
+  const pgr = g2.createRadialGradient(tc.x, tc.y, 0, tc.x, tc.y, tr);
+  pgr.addColorStop(0, '#ffd27e'); pgr.addColorStop(.5, '#f8e8c4'); pgr.addColorStop(1, '#e6d6b2');
+  poly(g2, top); g2.fillStyle = pgr; g2.fill();
+  const w1 = tableToScreen(c.x + 1.4, c.y, DISH + c.H + 8);
+  g2.strokeStyle = '#1d140b'; g2.lineWidth = Math.max(1, 1.6 * s); g2.lineCap = 'round';
+  g2.beginPath(); g2.moveTo(tc.x, tc.y); g2.quadraticCurveTo(tc.x, w1.y, w1.x, w1.y); g2.stroke();
+  g2.fillStyle = '#ff7a32'; g2.beginPath(); g2.arc(w1.x, w1.y, Math.max(.8, 1.1 * s), 0, 7); g2.fill();
+  c.tip = w1;
+}
+// llama: gota con nucleo blanco, cuerpo ambar y base azul; se inclina con el pulso y las rafagas
+function drawFlame(g2, c, n){
+  const s = projScale(c.x, c.y), tip = c.tip;
+  const h = 36 * s * (1 + n * .09 - c.gust * .1), w = 15 * s * (1 - c.gust * .12 + n * .04);
+  g2.save(); g2.translate(tip.x + c.gust * c.gustDir * 2.5 * s, tip.y + 2 * s); g2.rotate((n * 3 + c.gust * c.gustDir * 12) * D2R);
+  g2.beginPath(); g2.moveTo(0, 0);
+  g2.bezierCurveTo(w * .75, -h * .12, w * .42, -h * .66, 0, -h); g2.bezierCurveTo(-w * .42, -h * .66, -w * .75, -h * .12, 0, 0);
+  const gr = g2.createRadialGradient(0, -h * .26, 0, 0, -h * .34, h * .72);
+  gr.addColorStop(0, '#fffdf4'); gr.addColorStop(.24, '#ffeaa8'); gr.addColorStop(.58, '#ffb04a'); gr.addColorStop(1, 'rgba(255,120,30,0)');
+  g2.fillStyle = gr; g2.fill();
+  g2.fillStyle = 'rgba(110,150,255,.55)'; g2.beginPath(); g2.ellipse(0, -h * .08, w * .22, h * .08, 0, 0, 7); g2.fill();
+  g2.restore();
+  return { x: tip.x, y: tip.y - h * .45, s };
+}
+let candlesDirty = true;
+function updateCandles(){ candlesDirty = true; }
+
+// ================= particulas: velas, polvo en su luz y humo =================
+const fx = {
+  // el cuerpo de las velas vive en su propio lienzo: se pinta al mover la camara y no se copia cada fotograma
+  cv: $('fx'), ctx: null, body: $('fxbody'), bctx: null, parts: [], flare: 0, t: 0,
+  d: Math.min(devicePixelRatio, 1.5),
+  fit(){
+    const r = scene.getBoundingClientRect(), d = this.d;
+    for (const cv of [this.cv, this.body]){ cv.width = r.width * d; cv.height = r.height * d; }
+    this.ctx = this.cv.getContext('2d'); this.ctx.setTransform(d, 0, 0, d, 0, 0);
+    this.bctx = this.body.getContext('2d'); this.bctx.setTransform(d, 0, 0, d, 0, 0); candlesDirty = true;
+  },
+  smoke(x, y, n){
+    if (reduced) return;
+    for (let i = 0; i < n; i++) this.parts.push({ x: x + (Math.random() - .5) * 20, y, vx: (Math.random() - .5) * .35, vy: -.5 - Math.random() * .7, r: 6 + Math.random() * 8, life: 1, dl: .006 + Math.random() * .006 });
+  },
+  step(){
+    const g2 = this.ctx; if (!g2) return;
+    this.t += 1 / 60;
+    const r = scene.getBoundingClientRect();
+    if (candlesDirty){ this.bctx.clearRect(0, 0, r.width, r.height); CANDLES.forEach(c => { drawCandleBody(this.bctx, c); placeFlameCanvas(c); }); candlesDirty = false; }
+    CANDLES.forEach(c => { c.cx2d.save(); c.cx2d.setTransform(1, 0, 0, 1, 0, 0); c.cx2d.clearRect(0, 0, c.cv.width, c.cv.height); c.cx2d.restore(); });
+    const lit = .82 + .12 * Math.sin(this.t * 7.3) * Math.sin(this.t * 3.1 + 1) + .06 * Math.sin(this.t * 17) + this.flare * .5;
+    CANDLES.forEach(c => {
+      if (this.t > c.nextGust){ c.gust = 1; c.gustDir = Math.random() < .5 ? -1 : 1; c.nextGust = this.t + 7 + Math.random() * 9; }
+      c.gust *= .975;
+      const n = reduced ? 0 : Math.sin(this.t * 6.1 + c.seed) * .5 + Math.sin(this.t * 13.7 + c.seed * 2) * .3 + Math.sin(this.t * 2.3 + c.seed) * .2;
+      const f = drawFlame(c.cx2d, c, n); c.fx = f.x; c.fy = f.y; c.sc = f.s; c.n = n;
+      if (c.gust > .9 && Math.random() < .3) this.parts.push({ x: f.x, y: f.y - 18 * f.s, vx: c.gustDir * .3, vy: -.4, r: 2, life: .8, dl: .01 });
+    });
+    // halo: luz aditiva alrededor de cada llama
+    CANDLES.forEach(c => {
+      const g2 = c.cx2d; g2.globalCompositeOperation = 'lighter';
+      const rad = 70 * c.sc * (1 + this.flare * .6) * (1 + c.n * .05), gr = g2.createRadialGradient(c.fx, c.fy, 0, c.fx, c.fy, rad);
+      gr.addColorStop(0, `rgba(255,205,125,${.42 * lit})`); gr.addColorStop(.45, `rgba(255,160,70,${.12 * lit})`); gr.addColorStop(1, 'rgba(255,150,60,0)');
+      g2.fillStyle = gr; g2.beginPath(); g2.arc(c.fx, c.fy, rad, 0, 7); g2.fill();
+      g2.globalCompositeOperation = 'source-over';
+    });
+    // polvo dorado flotando sobre cada llama (se apaga en calidad reducida)
+    if (!reduced && quality === 0) CANDLES.forEach((c, ci) => {
+      const g2 = c.cx2d;
+      for (let i = 0; i < 9; i++){
+        const ph = i * 1.7 + ci * 3.1, up = ((this.t * .08 + i / 9) % 1);
+        g2.globalAlpha = Math.sin(Math.PI * up) * .7; g2.fillStyle = '#F2D38A';
+        g2.beginPath(); g2.arc(c.fx + Math.sin(this.t * .7 + ph) * 16 * (1 + up), c.fy - 6 * c.sc - up * 70, .8 + (i % 3) * .45, 0, 7); g2.fill();
+      }
+      g2.globalAlpha = 1;
+    });
+    // el lienzo grande solo trabaja mientras hay humo
+    if (this.parts.length || this.dirtyBig){ g2.clearRect(0, 0, r.width, r.height); this.dirtyBig = this.parts.length > 0; }
+    // humo y huellas del palo; cada particula sabe como moverse y pintarse
+    this.parts = this.parts.filter(q => (q.life -= q.dl) > 0);
+    this.parts.forEach(q => {
+      const a = Math.min(1, q.life);
+      if (q.k === 'ember'){
+        q.x += q.vx + Math.sin(this.t * 9 + q.y * .1) * .3; q.y += q.vy; q.vy *= .985;
+        g2.globalCompositeOperation = 'lighter'; g2.globalAlpha = a;
+        g2.fillStyle = a > .5 ? '#ffc861' : '#ff6a2a'; g2.beginPath(); g2.arc(q.x, q.y, q.r * (.5 + a * .5), 0, 7); g2.fill();
+        g2.globalCompositeOperation = 'source-over';
+      } else if (q.k === 'ring'){
+        if (q.life > 1) return;                              // las ondas salen escalonadas
+        const t = 1 - q.life, rr = q.r0 + (q.r1 - q.r0) * t;
+        g2.globalAlpha = .55 * q.life; g2.strokeStyle = '#b9d8ff'; g2.lineWidth = 1.4; g2.beginPath();
+        for (let i = 0; i <= 28; i++){ const an = i / 28 * Math.PI * 2, pt = tableToScreen(q.cx + Math.cos(an) * rr, q.cy + Math.sin(an) * rr * 1.2); i ? g2.lineTo(pt.x, pt.y) : g2.moveTo(pt.x, pt.y); }
+        g2.stroke();
+      } else if (q.k === 'streak'){
+        const t = 1 - q.life, gr = g2.createLinearGradient(q.x0, q.y0, q.x1, q.y1);
+        gr.addColorStop(Math.max(0, t - .25), 'rgba(220,235,255,0)'); gr.addColorStop(t, 'rgba(240,248,255,.95)'); gr.addColorStop(Math.min(1, t + .05), 'rgba(220,235,255,0)');
+        g2.globalAlpha = 1; g2.strokeStyle = gr; g2.lineWidth = 2; g2.beginPath(); g2.moveTo(q.x0, q.y0); g2.lineTo(q.x1, q.y1); g2.stroke();
+      } else if (q.k === 'shard'){
+        q.x += q.vx; q.y += q.vy; q.vx *= .9; q.vy *= .9;
+        g2.globalAlpha = a; g2.strokeStyle = '#e4efff'; g2.lineWidth = 1.2; g2.beginPath(); g2.moveTo(q.x, q.y); g2.lineTo(q.x - q.vx * 2.2, q.y - q.vy * 2.2); g2.stroke();
+      } else if (q.k === 'dust'){
+        // polvo sobre el pano: sale a ras de mesa, se eleva un poco y se asienta
+        q.x += q.vx; q.y += q.vy; q.vx *= .95; q.vy *= .95; q.z = Math.max(0, q.z + q.vz); q.vz -= .04;
+        const pt = tableToScreen(q.x, q.y, q.z);
+        g2.globalAlpha = a * .8; g2.fillStyle = a > .5 ? '#d8b36a' : '#8a6a3a'; g2.beginPath(); g2.arc(pt.x, pt.y, q.r, 0, 7); g2.fill();
+      } else {
+        q.x += q.vx + Math.sin(this.t * 2 + q.y * .05) * .25; q.y += q.vy; q.r += .22;
+        const gr = g2.createRadialGradient(q.x, q.y, 0, q.x, q.y, q.r);
+        gr.addColorStop(0, `rgba(215,205,190,${.22 * q.life})`); gr.addColorStop(1, 'rgba(215,205,190,0)');
+        g2.globalAlpha = 1; g2.fillStyle = gr; g2.beginPath(); g2.arc(q.x, q.y, q.r, 0, 7); g2.fill();
+      }
+    });
+    g2.globalAlpha = 1;
+    // la luz de las velas respira; al cerrar el circulo se aviva y vuelve a calmarse
+    this.flare *= .985;
+    // solo los dos charcos de luz respiran: una variable en toda la mesa recalculaba el estilo de cada carta (~10 fps)
+    // la luz del pano queda fija: animarla repintaba el pano entero cada fotograma (de 56 a 29 fps)
+    CANDLES.forEach(c => { c.base.style.opacity = lit; });
+  },
+};
+new ResizeObserver(() => fx.fit()).observe(scene);
+
+// ================= huella del palo: el pano reacciona un instante bajo la carta desvelada =================
+// Bastos: brasas que suben. Copas: ondas en el pano. Espadas: un destello frio que corta. Oros: polvo de tierra.
+function suitMark(c){
+  if (!c.data || c.data.major || reduced || quality >= 2) return;
+  const P2 = fx.parts, rs = scene.getBoundingClientRect(), b = c.el.getBoundingClientRect();
+  const bx = b.left - rs.left, by = b.top - rs.top, rnd = (a, z) => a + Math.random() * (z - a);
+  if (c.data.suit === 'bastos') for (let i = 0; i < 22; i++)
+    P2.push({ k: 'ember', x: Math.random() < .5 ? bx - rnd(2, 12) : bx + b.width + rnd(2, 12), y: by + rnd(.3, 1) * b.height, vx: rnd(-.4, .4), vy: rnd(-2.4, -1), r: rnd(1.2, 2.4), life: 1, dl: rnd(.012, .022) });
+  else if (c.data.suit === 'copas') [0, 1, 2].forEach(i =>
+    P2.push({ k: 'ring', cx: c.x, cy: c.y, r0: c.hw * .9, r1: c.hw * 3.4, life: 1 + i * .35, dl: .014 }));
+  else if (c.data.suit === 'espadas'){
+    P2.push({ k: 'streak', x0: bx - 10, y0: by + b.height * .8, x1: bx + b.width + 10, y1: by + b.height * .2, life: 1, dl: .06 });
+    for (let i = 0; i < 9; i++){ const a = rnd(0, Math.PI * 2); P2.push({ k: 'shard', x: bx + b.width / 2, y: by + b.height / 2, vx: Math.cos(a) * rnd(2, 4), vy: Math.sin(a) * rnd(2, 4), life: 1, dl: .045 }); }
+  }
+  else if (c.data.suit === 'oros') for (let i = 0; i < 26; i++){
+    const a = rnd(0, Math.PI * 2), sp = rnd(.6, 1.6);
+    P2.push({ k: 'dust', x: c.x + Math.cos(a) * c.hw * 1.15, y: c.y + Math.sin(a) * c.hh * 1.08, z: 2, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, vz: rnd(.3, .9), r: rnd(1, 2.2), life: 1, dl: rnd(.012, .02) });
+  }
+}
+
+// ================= volver al monton mas cercano =================
+function returnToPile(c){
+  const cand = piles.filter(p => !(fan && fan.pile === p));
+  const d = cand.length ? cand.reduce((a, b) => Math.hypot(a.x - c.x, a.y - c.y) <= Math.hypot(b.x - c.x, b.y - c.y) ? a : b) : active;
+  takeSnap(); unlinkAll(c); busyCard.add(c); c.slot = null; c.pipsEl.innerHTML = '';
+  sfx.play('slide'); sfx.vib(6);
+  moveTo(c, { x: d.x, y: d.y, rot: d.rot, sc: DECK_S, lift: 0, angle: 0 }, 520, ease.inOut, 0, () => {
+    c.remove(); busyCard.delete(c); server.giveBack(c.cid, d.pid);
+    if (!(fan && fan.pile === d)) d.setCount(server.count(d.pid));
+    refresh(); offerUndo(d);
+  });
+}
+
+// ================= gestos =================
+// Regla unica: tocar = accion directa; mantener = radial, que se elige deslizando y soltando o tocando.
+const pointers = new Map(); let g = null, pinch = null, lastTap = { t: 0, x: 0, y: 0 }, tapWait = null;
+const LONG = 430;
+scene.addEventListener('pointerdown', e => {
+  if (e.button > 0 || e.target.closest('.banner, .undo-dot, .help')) return;   // esos botones no deben perder su clic por la captura
+  sfx.init();
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  scene.setPointerCapture(e.pointerId);
+  if (pointers.size === 2){ if (g) endGesture(true); startPinch(); return; }
+  if (pointers.size > 2) return;
+  const el = e.target.closest('.piece'), piece = el && pieces.get(el.dataset.id), t = e.target;
+  const p = toTable(e.clientX, e.clientY);
+  g = { id: e.pointerId, piece, sx: e.clientX, sy: e.clientY, p0: p, last: p, mode: 'pending', target: t,
+    surface: !piece && !!t.closest('.wood, .cloth, .slot, .slot-label') && !t.closest('.seal') };
+  const hold = open => { g.lp = setTimeout(() => {
+    if (!g || g.mode !== 'pending') return;
+    open(); if (menuEl && menuEl._geo){ g.mode = 'radial'; sfx.vib(12); }
+  }, LONG); };
+  if (contemplating) return;
+  if (!piece && t.closest('.embro.ready') && !busy){
+    g.embro = true; g.surface = false; interpEl.classList.add('sealing');
+    g.lp = setTimeout(() => { if (g && g.embro && g.mode === 'pending'){ g.mode = 'sealed'; interpEl.classList.remove('sealing'); sfx.vib([10, 40, 10]); closeCircle(); } }, 1300);
+    return;
+  }
+  if (!piece){ if (g.surface && !busy) hold(() => openClothRadial(pointAnchor(e.clientX, e.clientY))); return; }
+  if (busy || piece.proxy){ g.piece = null; return; }
+  const L = piece.local(p);
+  if (piece.kind === 'deck' && piles.includes(piece) && !union){
+    g.edge = Math.abs(L.x) > piece.hw * .5;
+    g.top = !g.edge && L.y < -piece.hh * .45;          // arrastrar desde el borde de arriba corta
+    hold(() => openDeckRadial(piece));
+  }
+  if (piece.kind === 'card' && !busyCard.has(piece)){
+    if (piece.fanPos !== null) hold(() => openFanRadial(piece));
+    else {
+      g.cy = Math.sign(L.y) || 1;
+      // esquina generosa: basta con caer cerca de cualquier esquina
+      g.corner = !piece.up && Math.abs(L.x) > piece.hw * .3 && Math.abs(L.y) > piece.hh * .38 ? Math.sign(L.x) : 0;
+      hold(() => openCardRadial(piece));
+    }
+  }
+});
+function radialHover(x, y){
+  const G = menuEl && menuEl._geo; if (!G) return;
+  const dx = x - G.cx, dy = y - G.cy;
+  let hot = -1;
+  if (Math.hypot(dx, dy) > 46){
+    const a = (Math.atan2(dy, dx) + Math.PI / 2 + Math.PI * 4) % (Math.PI * 2);
+    hot = Math.round(a / (Math.PI * 2 / G.n)) % G.n;
+  }
+  const btns = menuEl.querySelectorAll('.rbtn');
+  if (hot >= 0 && btns[hot].disabled) hot = -1;
+  btns.forEach((b, i) => b.classList.toggle('hot', i === hot));
+  if (hot !== G.hot){ G.hot = hot; if (hot >= 0) sfx.vib(4); }
+}
+scene.addEventListener('pointermove', e => {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch) return movePinch();
+  if (!g || g.id !== e.pointerId) return;
+  if (g.mode === 'radial') return radialHover(e.clientX, e.clientY);
+  const p = toTable(e.clientX, e.clientY), moved = Math.hypot(e.clientX - g.sx, e.clientY - g.sy);
+  if (g.mode === 'pending'){
+    if (moved < 6) return;
+    clearTimeout(g.lp);
+    const pc = g.piece;
+    if (!pc) g.mode = g.embro ? 'none' : g.surface ? 'orbit' : 'none';
+    else if (contemplating) g.mode = 'none';
+    else if (pc.kind === 'deck'){
+      const inPlay = piles.includes(pc);
+      if (union || (fan && fan.pile === pc)) g.mode = 'none';
+      else if (inPlay && g.top && server.count(pc.pid) >= 4){
+        g.mode = 'cut'; g.src = pc; const pl = beginCut(pc); pl.lift = 40; pl.render();
+        g.off = { x: pl.x - p.x, y: pl.y - p.y }; g.piece = pl;
+      }
+      else if (inPlay && g.edge && !fan && server.count(pc.pid)){ g.mode = 'fan'; takeSnap(); openFan(pc); }
+      else { g.mode = 'move'; takeSnap(); g.from = { x: pc.x, y: pc.y }; }
+    } else if (pc.kind === 'card'){
+      if (busyCard.has(pc)) g.mode = 'none';
+      else if (g.corner && !pc.up && pc.data){ g.mode = 'peel'; const L0 = pc.local(p); g.lx0 = L0.x; g.ly0 = L0.y; }
+      else {
+        g.mode = 'move'; takeSnap(); unlinkClar(pc);
+        if (pc.fanPos !== null){ takeFromFan(pc); g.from = { x: pc.x, y: pc.y, rot: pc.rot, slot: null }; }
+        else g.from = { x: pc.x, y: pc.y, rot: pc.rot, slot: pc.slot };
+        pc.slot = null;
+      }
+    }
+    if (g.piece && g.mode === 'move'){
+      g.off = { x: g.piece.x - p.x, y: g.piece.y - p.y };
+      if (g.piece.kind === 'card') g.piece.toFront(); else g.piece.z = 1 + 80;
+      moveTo(g.piece, { lift: 64 }, 140);
+    }
+    refresh();
+  }
+  const pc = g.piece;
+  if (g.mode === 'move' || g.mode === 'cut'){
+    const vx = p.x - g.last.x, vy = p.y - g.last.y;
+    pc.x = p.x + g.off.x; pc.y = p.y + g.off.y;
+    // el muelle persigue la velocidad: la carta se inclina hacia donde va y se endereza con retraso
+    pc.tty = clamp(vx * 1.3, -15, 15); pc.ttx = clamp(-vy * 1.3, -15, 15); wobble.add(pc); pc.render();
+    if (pc.kind === 'card') hotSlot(nearestSlot(pc));
+  } else if (g.mode === 'fan'){
+    layoutFan(p);
+  } else if (g.mode === 'peel'){
+    // la esquina sigue al dedo: cos(angulo) = lo que queda de carta entre la bisagra y el dedo
+    // cuenta todo lo que aleja la esquina de su sitio: hacia el borde contrario, hacia arriba o en diagonal
+    const L = pc.local(p), mx = -(L.x - g.lx0) * g.corner, my = -(L.y - g.ly0) * g.cy;
+    const d = Math.max(0, mx) + Math.abs(my) * .9 + Math.max(0, -mx) * .6;
+    const ang = Math.acos(clamp(1 - d / (pc.hw * 2), -1, 1)) / D2R;
+    pc.hx = -g.corner * CW / 2; pc.hinge = 1;
+    pc.angle = -ang * g.corner; pc.tilt = g.cy * 12 * bump(ang / 180); pc.lift = bump(ang / 180) * 6; pc.render();
+  } else if (g.mode === 'orbit'){
+    // arrastrar el marco o el pano mueve el destino; el bucle lo alcanza con suavidad
+    const dx = e.clientX - (g.px ?? g.sx), dy = e.clientY - (g.py ?? g.sy); g.px = e.clientX; g.py = e.clientY;
+    g.vyaw = -dx * .22; g.vth = dy * .2;   // invertido a peticion de Samuel
+    cam.tYaw = clamp(cam.tYaw + g.vyaw, -40, 40);
+    cam.tTheta = clamp(cam.tTheta + g.vth, 16, 56);
+  }
+  g.last = p;
+});
+const up = e => {
+  pointers.delete(e.pointerId);
+  if (pinch){ if (pointers.size < 2) pinch = null; return; }
+  if (!g || g.id !== e.pointerId) return;
+  endGesture(false, e);
+};
+scene.addEventListener('pointerup', up);
+scene.addEventListener('pointercancel', e => { pointers.delete(e.pointerId); if (g && g.id === e.pointerId) endGesture(true); });
+
+function endGesture(cancel, e){
+  const G = g; g = null; if (!G) return;
+  clearTimeout(G.lp);
+  const pc = G.piece;
+  if (G.mode === 'radial'){
+    // soltar sobre una opcion la ejecuta; soltar en el centro deja el radial abierto para tocar
+    const geo = menuEl && menuEl._geo, b = geo && geo.hot >= 0 && menuEl.querySelectorAll('.rbtn')[geo.hot];
+    if (!cancel && b && !b.disabled){ closeMenu(); geo.onPick(b.dataset.m); }
+    return refresh();
+  }
+  if (G.mode === 'orbit'){
+    // inercia: la mesa sigue un poco en la direccion del gesto y se detiene sola
+    cam.tYaw = clamp(cam.tYaw + (G.vyaw || 0) * 6, -40, 40); cam.tTheta = clamp(cam.tTheta + (G.vth || 0) * 5, 16, 56);
+    return;
+  }
+  if (G.embro) interpEl.classList.remove('sealing');
+  if (G.mode === 'sealed') return;
+  if (G.embro && G.mode === 'pending' && !cancel) return openInterp();
+  if (G.mode === 'pending' && !cancel) return tap(pc, e, G);
+  if (G.mode === 'move'){
+    if (pc.kind === 'deck'){ pc.z = 1; dropDeck(pc, G.from); }
+    else dropCard(pc, G.from);
+    if (pieces.has(pc.id)) offerUndo(pc);
+  } else if (G.mode === 'cut'){
+    endCutDrag(pc, G.src);
+  } else if (G.mode === 'fan'){
+    if (!fan || fan.len < 90){ closeFan(260); undoSnap = null; }
+    else offerUndo(fan.pile);
+  } else if (G.mode === 'peel'){
+    const a = Math.abs(pc.angle), dir = Math.sign(pc.angle) || -1, t0 = pc.tilt || 0, a0 = pc.angle;
+    if (a > 70){
+      // termina de caer y la bisagra se disuelve: la carta vuelve a asentarse en su sitio
+      flip(pc, pc.angle, dir);
+      tween(FLIP[pc.style].ms, v => { pc.hinge = 1 - v; pc.tilt = t0 * (1 - v); }, () => { pc.hinge = 0; pc.tilt = 0; pc.render(); }, ease.inOut);
+    } else tween(220, v => { pc.angle = a0 * (1 - v); pc.tilt = t0 * (1 - v); pc.lift *= (1 - v); pc.render(); }, () => { pc.angle = 0; pc.hinge = 0; pc.tilt = 0; pc.lift = 0; pc.render(); }, ease.out);
+  }
+  refresh();
+}
+function tap(pc, e, G){
+  const t = (G && G.target) || scene;
+  if (contemplating){
+    if (pc && pc.kind === 'card' && pc.up) openReading(pc);
+    return;
+  }
+  if (!pc){
+    if (union) return cancelUnion();
+    if (t.closest('.seal')) return justClosed(sealEl) ? null : sealInfo();
+    if (G && G.surface){
+      // doble toque en el marco o el pano: la mesa vuelve a su vista inicial
+      const now = performance.now();
+      if (now - lastTap.t < 320 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 40){ resetCam(); lastTap.t = 0; return; }
+      lastTap = { t: now, x: e.clientX, y: e.clientY };
+    }
+    return;
+  }
+  if (busy) return;
+  if (pc.kind === 'deck'){
+    if (!piles.includes(pc)){
+      if (active && busyTable()) return toast('Recoge las cartas y une los montones antes de cambiar de mazo');
+      if (active) sendHome(active);
+      activate(pc); return moveTo(pc, { x: HOME_SPOT.x, y: HOME_SPOT.y }, 520, ease.inOut);
+    }
+    if (union) return pickUnion(pc);
+    if (justClosed(pc)) return;
+    // tocar el mazo lo extiende; si otro monton tiene el abanico abierto, primero se junta
+    if (!server.count(pc.pid)) return toast('Este montón está vacío');
+    return fan ? closeFan(260).then(() => autoFan(pc)) : autoFan(pc);
+  }
+  if (pc.kind === 'card'){
+    if (busyCard.has(pc)) return;
+    if (pc.fanPos !== null){
+      takeFromFan(pc);
+      const empty = spread ? spread.pos.map((_, i) => i).find(i => !cardAt(i)) : undefined;
+      if (empty !== undefined){ pc.lift = 30; place(pc, empty).then(refresh); }
+      else { pc.slot = null; pc.toFront(); sfx.play('slide'); moveTo(pc, { y: pc.y - 150, sc: spread ? spread.s : FREE_S, rot: pc.rot + (Math.random() * 10 - 5) }, 360); }
+      return refresh();
+    }
+    if (justClosed(pc)) return;
+    // en la tirada, tocar desvela o lee
+    if (pc.slot !== null || pc.host) return pc.up ? openReading(pc) : flip(pc, 0, -1);
+    // suelta: un toque la devuelve a su monton; dos, la desvelan
+    if (tapWait && tapWait.c === pc){ clearTimeout(tapWait.t); tapWait = null; return pc.up ? openReading(pc) : flip(pc, 0, -1); }
+    if (tapWait) clearTimeout(tapWait.t);
+    tapWait = { c: pc, t: setTimeout(() => { tapWait = null; if (pieces.has(pc.id) && !busyCard.has(pc)) returnToPile(pc); }, 280) };
+  }
+}
+function startPinch(){
+  const [a, b] = [...pointers.values()];
+  pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y), z0: cam.zoom, m0: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, p0: { x: cam.panX, y: cam.panY } };
+}
+function movePinch(){
+  const [a, b] = [...pointers.values()]; if (!b) return;
+  const d = Math.hypot(a.x - b.x, a.y - b.y), m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  cam.zoom = cam.tZoom = clamp(pinch.z0 * d / pinch.d0, 1, 2.6);
+  cam.panX = pinch.p0.x + (m.x - pinch.m0.x); cam.panY = pinch.p0.y + (m.y - pinch.m0.y); clampPan();
+  cam.tPanX = cam.panX; cam.tPanY = cam.panY; applyCam();
+}
+scene.addEventListener('wheel', e => {
+  e.preventDefault();
+  cam.tZoom = clamp(cam.tZoom * (e.deltaY < 0 ? 1.12 : 1 / 1.12), 1, 2.6);
+  const r = scene.getBoundingClientRect(), mx = (cam.tZoom - 1) * r.width / 2, my = (cam.tZoom - 1) * r.height / 2;
+  cam.tPanX = clamp(cam.tPanX, -mx, mx); cam.tPanY = clamp(cam.tPanY, -my, my);
+}, { passive: false });
+
+// ================= bucle =================
+const fpsEl = location.hash === '#fps' ? Object.assign(document.createElement('div'), { className: 'fps' }) : null;
+if (fpsEl) scene.appendChild(fpsEl);
+let fpsN = 0, fpsT = 0;
+// La mesa mide sus fps y baja efectos sola si el movil no llega: 0 completa, 1 sin brillos caros, 2 minima
+let quality = 0, fxSkip = 0, qFrames = 0, qT = 0, qCalm = 0;
+function adapt(now){
+  if (!qT) qT = now;
+  qFrames++;
+  if (now - qT < 2000) return;
+  const fps = qFrames * 1000 / (now - qT); qFrames = 0; qT = now;
+  if (fps < 40 && quality < 2){ quality++; qCalm = 0; }
+  else if (fps > 56 && quality > 0 && ++qCalm > 3){ quality--; qCalm = 0; }   // solo sube si va holgada un rato
+  document.body.classList.toggle('q1', quality >= 1); document.body.classList.toggle('q2', quality >= 2);
+  const d = quality >= 2 ? 1 : Math.min(devicePixelRatio, 1.5);
+  if (d !== fx.d){ fx.d = d; fx.fit(); }
+}
+function frame(now){
+  for (const tw of tweens){
+    if (now < tw.t0) continue;
+    const u = Math.min(1, (now - tw.t0) / tw.ms);
+    if (tw.fn) tw.fn(tw.e(u), u);
+    if (u >= 1){ tweens.delete(tw); tw.done && tw.done(); }
+  }
+  let camMoved = false;
+  const wasMoving = camMoving;
+  if (Math.abs(cam.tTheta - cam.theta) > .01){ cam.theta += (cam.tTheta - cam.theta) * .14; camMoved = true; }
+  if (Math.abs(cam.tYaw - cam.yaw) > .01){ cam.yaw += (cam.tYaw - cam.yaw) * .14; camMoved = true; }
+  if (!pinch && Math.abs(cam.tZoom - cam.zoom) > .001){ cam.zoom += (cam.tZoom - cam.zoom) * .18; camMoved = true; }
+  if (!pinch && (Math.abs(cam.tPanX - cam.panX) > .3 || Math.abs(cam.tPanY - cam.panY) > .3)){
+    cam.panX += (cam.tPanX - cam.panX) * .18; cam.panY += (cam.tPanY - cam.panY) * .18; clampPan(); camMoved = true;
+  }
+  if (camMoved) applyCam();
+  camMoving = camMoved;
+  if (wasMoving && !camMoved) candlesDirty = true;   // al pararse, velas en calidad completa
+  if (quality < 2 || (fxSkip ^= 1)) fx.step();   // en calidad minima los efectos van a medio ritmo
+  stepWobble();
+  adapt(now);
+  if (fpsEl){ fpsN++; if (now - fpsT > 1000){ fpsEl.textContent = `${fpsN} fps`; fpsN = 0; fpsT = now; } }
+  // Interpretacion flota sobre el centro del hexagrama del pano
+  requestAnimationFrame(frame);
+}
+new ResizeObserver(() => { fitCam(); clampPan(); applyCam(); }).observe(scene);
+fitCam(); applyCam();
+try {
+  const saved = JSON.parse(localStorage.getItem(KEY));
+  if (saved && saved.v === 1 && (saved.deck || saved.seal)){ restore(saved); toast('Mesa restaurada tal como la dejaste'); }
+  else refresh();
+} catch { refresh(); }
+// Ayuda: la primera vez se abre sola y se cierra a los 40 s; despues queda el ? arriba a la derecha
+const helpEl = $('help'), helpBtn = $('help-btn');
+let helpT = 0;
+function showHelp(){ helpEl.hidden = false; helpBtn.hidden = true; const b = helpEl.querySelector('.bar i'); b.style.animation = 'none'; b.offsetWidth; b.style.animation = ''; clearTimeout(helpT); helpT = setTimeout(hideHelp, 40000); }
+function hideHelp(){ helpEl.hidden = true; helpBtn.hidden = false; clearTimeout(helpT); try { localStorage.setItem('arcanum.ayuda', '1'); } catch {} }
+$('help-ok').onclick = hideHelp; helpBtn.onclick = showHelp;
+let seenHelp = false; try { seenHelp = localStorage.getItem('arcanum.ayuda') === '1'; } catch {}
+seenHelp ? hideHelp() : showHelp();
+moonLight();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

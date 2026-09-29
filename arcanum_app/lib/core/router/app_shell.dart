@@ -11,6 +11,7 @@ import '../content/sections.dart';
 import '../theme/arcanum_colors.dart';
 import '../theme/arcanum_theme.dart';
 import '../../shared/widgets/info_dot.dart';
+import '../../features/sendero/presentation/sendero_invitation.dart';
 
 /// Carcasa con barra superior contextual. YA NO HAY BARRA INFERIOR.
 ///
@@ -35,29 +36,31 @@ class AppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final router = GoRouter.of(context);
 
-    return Scaffold(
-      drawer: ArcanumDrawer(navigationShell: navigationShell),
-      // Se abre SOLO por sus dos tiradores, nunca arrastrando desde el borde:
-      // ese gesto es el de volver atras del sistema, y ahora que el cajon
-      // cuelga del lado izquierdo los dos caerian en el mismo sitio.
-      drawerEnableOpenDragGesture: false,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Se reconstruye en cada navegación para saber si estamos en una
-            // raíz de sección (mostrar barra) o en una sub-ruta (ocultarla).
-            AnimatedBuilder(
-              animation: router.routerDelegate,
-              builder: (context, _) {
-                final location =
-                    router.routerDelegate.currentConfiguration.uri.path;
-                final section = arcanumSectionForRoute(location);
-                if (section == null) return const SizedBox.shrink();
-                return _SectionBar(section: section);
-              },
-            ),
-            Expanded(child: navigationShell),
-          ],
+    return SenderoInvitationGate(
+      child: Scaffold(
+        drawer: ArcanumDrawer(navigationShell: navigationShell),
+        // Se abre SOLO por sus dos tiradores, nunca arrastrando desde el borde:
+        // ese gesto es el de volver atras del sistema, y ahora que el cajon
+        // cuelga del lado izquierdo los dos caerian en el mismo sitio.
+        drawerEnableOpenDragGesture: false,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Se reconstruye en cada navegación para saber si estamos en una
+              // raíz de sección (mostrar barra) o en una sub-ruta (ocultarla).
+              AnimatedBuilder(
+                animation: router.routerDelegate,
+                builder: (context, _) {
+                  final location =
+                      router.routerDelegate.currentConfiguration.uri.path;
+                  final section = arcanumSectionForRoute(location);
+                  if (section == null) return const SizedBox.shrink();
+                  return _SectionBar(section: section);
+                },
+              ),
+              Expanded(child: navigationShell),
+            ],
+          ),
         ),
       ),
     );
