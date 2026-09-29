@@ -231,7 +231,7 @@ await page.mouse.move(...at(.15, .15)); await page.mouse.down(); await page.mous
 st1 = await syms();
 check('arrastrar simbolo lo mueve', st1[0].x > 600 && st1.length === 1, `x=${st1[0].x.toFixed(0)}`);
 await page.click('#btnLayerBigger');
-check('ampliar simbolo', await page.evaluate(() => { const L = state.layers.find(q => q.type === 'symbol'); return L.size > STAMP_SIZE && buildSVG().includes(`font-size="${L.size}.00"`); }));
+check('ampliar simbolo', await page.evaluate(() => { const L = state.layers.find(q => q.type === 'symbol'); return L.size > STAMP_SIZE && buildSVG().includes(`scale(${(L.size / 100).toFixed(4)})`); }));
 await page.click('#btnLayerDelete');
 check('quitar simbolo', (await syms()).length === 0 && !(await page.evaluate(() => buildSVG().includes('data-layer="symbol"'))));
 // regresion: con «Colocar» activo, tocar un simbolo existente lo mueve, no crea otro
@@ -614,7 +614,7 @@ await page.click('#famPersonal');
 const pers = {};
 for (const fmt of ['goetia', 'pentaculo', 'agrippa']) {
   await preset(fmt);
-  pers[fmt] = await page.evaluate(() => { const s = buildSVG(); return { s, det: s === buildSVG(), ok: !new DOMParser().parseFromString(s, 'image/svg+xml').querySelector('parsererror'), nan: /NaN|undefined/.test(s), texts: (s.match(/<g data-layer="personal-name"[^>]*>[\s\S]*?<\/g>/) || [''])[0].split('<text').length - 1, sigil: /data-layer="personal-sigil"[\s\S]*<path/.test(s), honest: /No es un sello histórico/.test(s) }; });
+  pers[fmt] = await page.evaluate(() => { const s = buildSVG(); return { s, det: s === buildSVG(), ok: !new DOMParser().parseFromString(s, 'image/svg+xml').querySelector('parsererror'), nan: /NaN|undefined/.test(s), texts: (() => { const g = new DOMParser().parseFromString(s, 'image/svg+xml').querySelector('[data-layer="personal-name"]'); return g ? g.querySelectorAll('text, [data-glyph]').length : 0; })(), sigil: /data-layer="personal-sigil"[\s\S]*<path/.test(s), honest: /No es un sello histórico/.test(s) }; });
 }
 check('sello personal: 3 plantillas distintas, deterministas y validas', new Set(Object.values(pers).map(x => x.s)).size === 3 && Object.values(pers).every(x => x.det && x.ok && !x.nan && x.sigil));
 check('sello personal: Goetia con SAMUEL (6 letras) y el simbolo del planeta en el anillo', pers.goetia.texts === 7, pers.goetia.texts + '');
@@ -637,7 +637,7 @@ const po = await page.evaluate(() => {
   addLayer('personal', 'star', { points: 7 });
   addLayer('personal', 'ringHebrew');
   const s = buildSVG();
-  return { cross: (s.match(/>✠</g) || []).length, star: ((s.match(/<g data-layer="star">[\s\S]*?<\/g>/) || [''])[0].match(/<path/g) || []).length, heb: /[א-ת]/.test(s), layers: state.personal.layers.map(L => L.type).join() };
+  return { cross: (s.match(/data-glyph="✠"/g) || []).length, star: ((s.match(/<g data-layer="star">[\s\S]*?<\/g>/) || [''])[0].match(/<path/g) || []).length, heb: /[א-ת]/.test(s), layers: state.personal.layers.map(L => L.type).join() };
 });
 check('sello personal: capas combinadas (anillo con cruces, estrella de 7, anillo hebreo)', po.cross === 5 && po.star === 8 && po.heb, JSON.stringify(po));
 check('sello personal: la descripcion nombra sus capas', await page.evaluate(() => /capas: Anillo latino, Estrella 7, Anillo hebreo/.test(buildSVG())));
@@ -794,6 +794,13 @@ check('galeria guarda y restaura una Kamea (familia, planeta, trazo)', kBack.fam
 check('los sellos historicos no se guardan', await page.evaluate(() => { setFamily('seal'); const n = readGallery().length; saveSigil(); const ok = readGallery().length === n; setFamily('letters'); return ok; }));
 check('cache de capas: misma entrada, mismo objeto', await page.evaluate(() => { const c = layerCtx('letters'), L = [newLayer('star')]; return layoutLayers(L, c) === layoutLayers(JSON.parse(JSON.stringify(L)), c); }));
 await page.evaluate(() => localStorage.clear());
+
+// 17) Simbolos vectoriales: no dependen de la fuente del sistema
+check('los 39 simbolos del catalogo tienen dibujo propio', await page.evaluate(() => STAMP_CATALOG.every(([, items]) => items.every(i => hasGlyph(i.sym))) && ['☉', '☽', '☿', '♀', '♂', '♃', '♄', '✠'].every(hasGlyph)));
+const gsvg = await page.evaluate(() => { state.layers = []; addLayer('letters', 'symbol', { sym: '♃︎' }); addLayer('letters', 'ringLatin', { symbol: 'mars', sep: 'cross' }); const s = buildSVG(); state.layers = []; layersChanged('letters'); return s; });
+check('el SVG exportado no usa ninguna fuente de simbolos', !/Segoe UI Symbol/.test(gsvg) && /data-glyph="♃"/.test(gsvg) && /data-glyph="♂"/.test(gsvg) && /data-glyph="✠"/.test(gsvg));
+check('los glifos son SVG valido', await page.evaluate(() => Object.keys(GLYPHS_ARCANE).every(k => !new DOMParser().parseFromString(`<svg xmlns="http://www.w3.org/2000/svg">${glyphSVG(k, 50, 50, 60, 0, '#000')}</svg>`, 'image/svg+xml').querySelector('parsererror'))));
+check('la Rosa rotula planetas y signos con glifos', await page.evaluate(() => { setFamily('rosa'); const s = buildSVG(); setFamily('letters'); return (s.match(/data-glyph=/g) || []).length >= 19 && !/Segoe UI Symbol/.test(s); }));
 
 check('sin errores de pagina', errors.length === 0, errors.slice(0, 2).join(' | '));
 await browser.close();
