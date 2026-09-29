@@ -9,6 +9,8 @@ const validator = workflow.nodes.find((node) => node.name === 'Parsear y validar
 assert.ok(validator, 'Falta el nodo validador');
 const orthographyReviewer = workflow.nodes.find((node) => node.name === 'Revisar ortografia');
 assert.ok(orthographyReviewer, 'Falta el nodo de ortografia');
+const voiceReviewer = workflow.nodes.find((node) => node.name === 'Validar voz editorial');
+assert.ok(voiceReviewer, 'Falta el nodo de voz editorial');
 const structuredParser = workflow.nodes.find((node) => node.name === 'Forzar salida JSON');
 assert.equal(structuredParser.parameters.autoFix, false, 'La autorreparacion puede inventar hechos');
 assert.doesNotThrow(() => JSON.parse(structuredParser.parameters.inputSchema));
@@ -51,6 +53,17 @@ async function reviewOrthography(item) {
   return new vm.Script(`(async () => { ${orthographyReviewer.parameters.jsCode} })()`).runInNewContext(context);
 }
 
+async function reviewVoice(item) {
+  const context = {
+    $input: { first: () => ({ json: structuredClone(item) }) },
+    $: (name) => {
+      assert.equal(name, 'Preparar paquete factual');
+      return { first: () => ({ json: brief }) };
+    },
+  };
+  return new vm.Script(`(async () => { ${voiceReviewer.parameters.jsCode} })()`).runInNewContext(context);
+}
+
 async function normalize(item) {
   const context = { $input: { first: () => ({ json: structuredClone(item) }) } };
   return new vm.Script(`(async () => { ${normalizer.parameters.jsCode} })()`).runInNewContext(context);
@@ -73,6 +86,9 @@ const validDraft = {
 const accepted = await execute(JSON.stringify(validDraft));
 assert.equal(accepted[0].json.status, 'ready_for_review');
 assert.equal(accepted[0].json.validation.valid, true);
+const acceptedVoice = await reviewVoice(accepted[0].json);
+assert.equal(acceptedVoice[0].json.status, 'ready_for_review');
+assert.equal(acceptedVoice[0].json.validation.errors.length, 0);
 
 const normalized = await normalize({ output: validDraft });
 assert.deepEqual(JSON.parse(normalized[0].json.text), validDraft);
@@ -97,6 +113,30 @@ assert.ok(rejected[0].json.validation.errors.includes('alt_text: debe quedar vac
 assert.ok(rejected[0].json.validation.errors.includes('cta: formula generica'));
 assert.ok(rejected[0].json.validation.errors.some((error) => error.startsWith('repeticion alta:')));
 
+const inflatedDraft = {
+  hook: 'El porvenir permanece velado; el presente exige un instrumento de precisión.',
+  script: 'ARCANUM se establece como un espacio de rigor y disciplina interior. No existe en estas páginas artificio alguno para anticipar lo inescrutable. Su naturaleza es la del método metódico: un soporte para la lectura estructurada mediante Tarot, carta natal y grimorio cifrado.',
+  carousel: [
+    'Instrumento de práctica y reflexión',
+    'Lectura estructurada de Tarot',
+    'Estudio preciso de la carta natal',
+  ],
+  caption: 'ARCANUM ofrece herramientas fundamentales para el análisis personal.',
+  cta: 'Explora el grimorio cifrado',
+  alt_text: '',
+  source_ids: ['play-ficha'],
+  compliance: { claims_supported: true, warnings_applied: true },
+};
+const inflatedBase = await execute(JSON.stringify(inflatedDraft));
+const inflated = await reviewVoice(inflatedBase[0].json);
+assert.equal(inflated[0].json.status, 'needs_revision');
+assert.ok(inflated[0].json.validation.errors.includes('voz: la app se presenta como libro o paginas'));
+assert.ok(inflated[0].json.validation.errors.includes('voz: tautologia "metodo metodico"'));
+assert.ok(inflated[0].json.validation.errors.includes('voz: grandilocuencia artificial'));
+assert.ok(inflated[0].json.validation.errors.includes('claim: calificador no respaldado: preciso'));
+assert.ok(inflated[0].json.validation.errors.includes('claim: calificador no respaldado: estructurado'));
+assert.ok(inflated[0].json.validation.errors.includes('claim: calificador no respaldado: fundamental'));
+
 const missingAccents = await reviewOrthography({
   draft: { hook: 'Una reflexion exige observacion metodica.' },
   validation: { score: 100, warnings: [] },
@@ -106,4 +146,4 @@ assert.ok(missingAccents[0].json.validation.warnings.includes('ortografia: revis
 
 await assert.rejects(() => execute('{no es json}'), /JSON editorial invalido/);
 
-console.log('Validador editorial: 5 casos verdes');
+console.log('Validador editorial: 7 casos verdes');

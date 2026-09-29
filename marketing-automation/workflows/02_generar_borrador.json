@@ -23,7 +23,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=Convierte este paquete factual en una pieza maestra de contenido para ARCANUM. Usa solamente los hechos entregados. Devuelve JSON valido, sin markdown. Escribe espanol correcto, incluidas todas las tildes. Cada campo debe aportar algo distinto: no repitas frases ni reformules la misma idea. El hook debe plantear una tension concreta. carousel debe contener entre 3 y 6 textos no vacios. El CTA debe tener entre 3 y 10 palabras e invitar a una funcion confirmada. source_ids solo puede contener identificadores presentes en sources. Si asset es null, alt_text debe ser una cadena vacia porque la imagen aun no existe.\n\nPAQUETE FACTUAL:\n{{ JSON.stringify($json) }}\n\nFORMATO DE SALIDA:\n{\"hook\":\"\",\"script\":\"\",\"carousel\":[],\"caption\":\"\",\"cta\":\"\",\"alt_text\":\"\",\"source_ids\":[],\"compliance\":{\"claims_supported\":true,\"warnings_applied\":true}}",
+        "text": "=Convierte este paquete factual en una pieza maestra de contenido para ARCANUM. Usa solamente los hechos entregados. Devuelve JSON valido, sin markdown. Escribe espanol correcto, incluidas todas las tildes. Cada campo debe aportar algo distinto: no repitas frases ni reformules la misma idea. Una enumeracion de funciones puede aparecer una sola vez en toda la pieza; si el script las enumera, reparte una idea distinta por tarjeta y no vuelvas a enumerarlas en caption. Nombra el producto como app, aplicacion o instrumento; nunca como paginas, volumen, capitulos ni libro. Evita tautologias, solemnidad artificial y relleno arcaizante. No uses calificadores como preciso, estructurado, riguroso, profundo, metodico o fundamental salvo que aparezcan literalmente en los hechos. El hook debe plantear una tension concreta. carousel debe contener entre 3 y 6 textos no vacios. El CTA debe tener entre 3 y 10 palabras e invitar a una funcion confirmada. source_ids solo puede contener identificadores presentes en sources. Si asset es null, alt_text debe ser una cadena vacia porque la imagen aun no existe.\n\nPAQUETE FACTUAL:\n{{ JSON.stringify($json) }}\n\nFORMATO DE SALIDA:\n{\"hook\":\"\",\"script\":\"\",\"carousel\":[],\"caption\":\"\",\"cta\":\"\",\"alt_text\":\"\",\"source_ids\":[],\"compliance\":{\"claims_supported\":true,\"warnings_applied\":true}}",
         "hasOutputParser": true,
         "needsFallback": true,
         "messages": {
@@ -31,7 +31,7 @@
             {
               "type": "SystemMessagePromptTemplate",
               "messageType": "text",
-              "message": "Eres el editor de ARCANUM. Voz seria, simbolica y precisa: un grimorio bien encuadernado, no un banner de rebajas. Prohibido inventar hechos, predecir el futuro, dar consejo medico, legal, financiero o psicologico, usar urgencia falsa, superlativos vacios o emojis genericos. Cada pieza debe ser comprensible para principiantes sin infantilizar a quien practica. El CTA solo puede invitar a conocer una funcion confirmada en el paquete factual."
+              "message": "Eres el editor de ARCANUM. Voz seria, simbolica y clara: alguien que conoce el oficio y habla sin disfrazarse de oraculo. Prohibido inventar hechos, predecir el futuro, dar consejo medico, legal, financiero o psicologico, usar urgencia falsa, superlativos vacios, emojis genericos, tautologias o prosa grandilocuente. No confundas la app con un libro. Una frase concreta vale mas que palabras como inescrutable, artificio, riguroso o metodico. Cada pieza debe ser comprensible para principiantes sin infantilizar a quien practica. El CTA solo puede invitar a conocer una funcion confirmada en el paquete factual."
             }
           ]
         },
@@ -116,6 +116,16 @@
       "name": "Revisar ortografia",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
+      "position": [960, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst brief = $('Preparar paquete factual').first().json;\nconst draft = item.draft || {};\nconst textFields = [draft.hook, draft.script, draft.caption, draft.cta, ...(Array.isArray(draft.carousel) ? draft.carousel : [])].filter((value) => typeof value === 'string');\nconst corpus = textFields.join(' ');\nconst normalize = (value) => String(value || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();\nconst normalizedCorpus = normalize(corpus);\nconst factualCorpus = normalize([brief.premise, ...(brief.facts || []).map((fact) => fact.claim), ...(brief.warnings || [])].filter(Boolean).join(' '));\nconst errors = [];\nconst forbiddenMedium = /\\b(estas paginas|sus paginas|cada apartado|capitulos?|volumen|libro)\\b/i;\nif (forbiddenMedium.test(normalizedCorpus)) errors.push('voz: la app se presenta como libro o paginas');\nif (/\\bmetodo metodico\\b/i.test(normalizedCorpus)) errors.push('voz: tautologia \"metodo metodico\"');\nif (/\\b(artificio alguno|lo inescrutable)\\b/i.test(normalizedCorpus)) errors.push('voz: grandilocuencia artificial');\nconst qualifiers = [\n  ['preciso', /\\bprecis[ao]s?\\b/i, /\\bprecis[ao]s?\\b/i],\n  ['estructurado', /\\bestructurad[ao]s?\\b/i, /\\bestructurad[ao]s?\\b/i],\n  ['riguroso', /\\briguros[ao]s?\\b/i, /\\briguros[ao]s?\\b/i],\n  ['profundo', /\\bprofund[ao]s?\\b/i, /\\bprofund[ao]s?\\b/i],\n  ['metodico', /\\bmetodic[ao]s?\\b/i, /\\bmetodic[ao]s?\\b/i],\n  ['fundamental', /\\bfundamentales?\\b/i, /\\bfundamentales?\\b/i]\n];\nfor (const [name, usedPattern, factPattern] of qualifiers) {\n  if (usedPattern.test(normalizedCorpus) && !factPattern.test(factualCorpus)) errors.push(`claim: calificador no respaldado: ${name}`);\n}\nconst newErrors = [...new Set(errors)].filter((error) => !(item.validation.errors || []).includes(error));\nitem.validation.errors = [...new Set([...(item.validation.errors || []), ...newErrors])];\nitem.validation.valid = item.validation.errors.length === 0;\nitem.validation.score = Math.max(0, Number(item.validation.score ?? 100) - newErrors.length * 15);\nitem.status = item.validation.valid ? 'ready_for_review' : 'needs_revision';\nreturn [{ json: item }];"
+      },
+      "id": "91fbe49f-77dd-42a5-8c24-0a4e51317269",
+      "name": "Validar voz editorial",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [700, 0]
     }
   ],
@@ -134,6 +144,9 @@
       "main": [[{ "node": "Parsear y validar borrador", "type": "main", "index": 0 }]]
     },
     "Parsear y validar borrador": {
+      "main": [[{ "node": "Validar voz editorial", "type": "main", "index": 0 }]]
+    },
+    "Validar voz editorial": {
       "main": [[{ "node": "Revisar ortografia", "type": "main", "index": 0 }]]
     },
     "Gemini editorial": {

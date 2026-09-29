@@ -38,3 +38,7 @@ Abrir `http://localhost:5678` y crear la cuenta propietaria local.
 
 El publicador queda fuera del MVP. Primero se producen borradores y se mide la
 calidad editorial.
+
+Antes de aprobar, completar
+[`checklists/revision-editorial.md`](checklists/revision-editorial.md).
+`ready_for_review` abre la revisión humana; no autoriza publicación.
