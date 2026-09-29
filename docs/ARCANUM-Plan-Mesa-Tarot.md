@@ -27,20 +27,22 @@
 
 - [x] Medir el prototipo en un móvil real con `#fps`. **Referencia (móvil de Samuel, 29-sep): 36–42 fps en reposo, ~18 con movimiento o animaciones fuertes.** Es el techo del 3D del navegador; Flutter tiene que llegar a 60.
 - [x] Decisiones D1–D4 cerradas con Samuel el 29-sep; D5 se comprueba en la fase 3.
-- [ ] `git worktree add ../Arcanum-mesa -b feat/mesa-tarot origin/main` y traer la especificación, el plan y el prototipo.
+- [x] `git worktree add ../Arcanum-mesa -b feat/mesa-tarot origin/main` y traer la especificación, el plan y el prototipo.
 
 ## Fase 1: dominio del backend (sin HTTP)
 
-- [ ] **Catálogo de tiradas:** pasar a 7, con las mismas posiciones, nombres y significados que el prototipo, incluidas las coordenadas del paño. Una sola fuente para la app y el Oráculo, sin romper los 3 slugs actuales.
-- [ ] **Catálogo de mazos:** Rider–Waite–Smith (78) y Arcanos Mayores (22), como datos: cartas incluidas, si admite invertidas y arte.
-- [ ] **`TarotSession` como entidad de dominio pura:** abrir, barajar, cortar, unir, sacar por posición, devolver y recoger. Montones con posiciones estables (`null` = sacada) e invertidas decididas al barajar.
-- [ ] Azar con `secrets.SystemRandom`, inyectable para poder testear con semilla.
-- [ ] **Tests unitarios puros**, sin base de datos:
-  - [ ] Barajar mantiene el conjunto de cartas.
-  - [ ] Cortar y unir conservan el orden esperado, incluido el corte clásico.
-  - [ ] Sacar por posición es estable mientras hay un abanico abierto.
-  - [ ] Devolver y recoger no duplican ni pierden cartas: siempre suman 78 o 22.
-  - [ ] Con el mazo de Mayores nunca sale un Menor.
+- [x] **Catálogo de tiradas:** pasar a 7, con las mismas posiciones, nombres y significados que el prototipo, incluidas las coordenadas del paño. Una sola fuente para la app y el Oráculo, sin romper los 3 slugs actuales.
+- [x] **Catálogo de mazos:** Rider–Waite–Smith (78) y Arcanos Mayores (22), como datos: cartas incluidas, si admite invertidas y arte.
+- [x] **`TarotSession` como entidad de dominio pura:** abrir, barajar, cortar, unir, sacar por posición, devolver y recoger. Montones con posiciones estables (`null` = sacada) e invertidas decididas al barajar.
+- [x] Azar con `secrets.SystemRandom`, inyectable para poder testear con semilla.
+- [x] **Tests unitarios puros**, sin base de datos:
+  - [x] Barajar mantiene el conjunto de cartas.
+  - [x] Cortar y unir conservan el orden esperado, incluido el corte clásico.
+  - [x] Sacar por posición es estable mientras hay un abanico abierto.
+  - [x] Devolver y recoger no duplican ni pierden cartas: siempre suman 78 o 22.
+  - [x] Con el mazo de Mayores nunca sale un Menor.
+
+**Fase 1 hecha (29-sep, `f084f95`):** 243 tests puros; con el hook, 1176 + 98 de `tests_pg` en verde.
 
 ## Fase 2: persistencia y API
 
@@ -122,9 +124,25 @@
 | D2 | ¿Dónde entra el módulo en la app? | **Decidido: pestaña propia «Tarot»** en la navegación principal. |
 | D3 | ¿Todo de golpe o por entregas? | **Decidido: por fases.** Primera entrega = fases 1–5 (mesa y ritual) a la prueba cerrada. Segunda = fase 6 (efectos, sonido, háptica). |
 | D4 | ¿Oráculo con IA en la mesa? | **Decidido: solo Tradición en la primera versión.** El Oráculo, más adelante, con `arcanum-voz` y el cupo de Groq resuelto. |
+| D6 | ¿Sobre qué base va la migración de sesiones? | Abierta. `main` está en 012 y `release/1.0.6` en 014. Propuesta: que la migración de la mesa sea la **015**, colgando de la 014, y que la rama se rebase sobre `release/1.0.6` (o sobre `main` cuando esa rama se mezcle). |
 | D5 | ¿La pregunta de la lectura se cifra? | Abierta. El modelo anota «texto plano; en el cliente se cifra». **Sin comprobar** qué hace hoy la app: verificarlo en la fase 3 y aplicar lo mismo a la pregunta sellada. |
 
+## Entorno de pruebas de esta rama
+
+`main` va por la migración **012**, pero las bases de pruebas compartidas vienen de `release/1.0.6` (013 y 014, y la tabla `sendero_progress`). Con ellas, los `tests_pg` se saltan y un test de la voz del Oráculo falla al limpiar. Esta rama usa bases propias en los mismos contenedores, sin tocar las compartidas:
+
+```
+TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5434/arcanum_test_mesa
+MIGRATION_TEST_DATABASE_URL=postgresql://postgres:test@127.0.0.1:55434/arcanum_migration_test_mesa
+ARCANUM_DATA_DIR=D:/Proyectos/Arcanum-datos
+PYTHON=D:/Proyectos/Arcanum/arcanum-api/.venv/Scripts/python.exe
+```
+
+Además, el JSON de la biblioteca se copia desde la carpeta principal: está en `.gitignore`.
+
 ## Riesgos
+
+- **Numeración de migraciones:** `release/1.0.6` trae la 013 (créditos) y la 014 (Sendero), que no están en `main`. Si esta rama crea su migración como 013 partiendo de `main`, chocará al mezclar. **Hay que decidirlo antes de la fase 2** (ver D6).
 
 - **Mezclar a `main` despliega.** Toda la API nueva es aditiva y va detrás de rutas nuevas.
 - **Rendimiento de Flutter con muchas cartas en `Transform`:** por eso la prueba va al principio de la fase 4.
