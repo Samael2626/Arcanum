@@ -167,3 +167,21 @@ Si falla trazabilidad, miniatura, redibujo o separación, no entregar.
 - Runología académica e investigación del Instituto Árni Magnússon: runas y galdrastafir [HP/investigación].
 
 Consulta la guía de producto del vault antes de implementar cambios doctrinales.
+
+## Prototipo del taller: estructura y reglas (29-sep-2026)
+
+`arcanum-sigil-prototype/index.html` solo trae marcado y CSS. El código va en `js/` y se carga en este orden (scripts clásicos, sin módulos ES, para que funcione con `file://`):
+
+| Fichero | Qué hace |
+|---|---|
+| `glifos.js` | 39 símbolos arcanos + planetas y separadores dibujados a trazo propio (caja 100×100). **Nunca** depender de `Segoe UI Symbol`: no existe en Android ni en Flutter. |
+| `escena.js` | Grupos de dibujo con dos emisores, canvas y SVG. Rosa, Kamea y sellos pintan en el lienzo su propio SVG. |
+| `estilo.js` | Estilos, tintas, soportes, trazo y efectos. Relampagueantes según Flying Roll XIV (complementarios; el ámbar de Saturno es RC). Metales según Goetia p. 48. |
+| `interfaz.js` | Estructura A: hamburguesa, pestañas Crear/Capas/Estilo/Guardar, hoja inferior en móvil, radial del elemento tocado, botón + con radial. `revealFor(el)` abre la pestaña/menú de un control. |
+| `letras.js`, `capas.js`, `lienzo.js`, `rosa.js`, `kamea.js`, `catalogo.js`, `personal.js`, `app.js` | Motores y aplicación, en el orden original. |
+
+Reglas:
+- **Lo que se ve es lo que se exporta.** Todo dibujo nuevo entra como grupo de la escena, no como pintado aparte. El gate compara lienzo y SVG pixel a pixel (<0,05 % de píxeles distintos; quitar los remates solo del lienzo da 0,2–0,5 %).
+- Texto con línea base alfabética y `TEXT_MID` en los dos emisores (con `middle`/`central` no coinciden).
+- Móvil primero: todo lo tocable ≥ 48 px, iconos SVG propios (no caracteres ⟲ ⇋ ↶), el lienzo cabe encima de la hoja a media altura. El gate abre una sesión 390×844.
+- Historial por fotos del documento (`docSnapshot`/`docRestore`): cualquier campo nuevo que el usuario decida va en la foto, o deshacer lo pierde.
