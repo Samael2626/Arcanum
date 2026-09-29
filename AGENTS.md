@@ -136,6 +136,44 @@ cabecera `x-ratelimit-limit-tokens` de una llamada real**:
 | Tokens / minuto | **8.000** |
 | Tokens / dia | 200.000 |
 
+### TRES CLAVES EN ROTACION (29-sep-2026)
+
+El cuello NO es el cupo diario: es el del MINUTO. Medido contra la API, el
+system prompt del horoscopo son **4.360 tokens** y el plan gratuito da 8.000
+por minuto, asi que una sola llamada se lleva mas de la mitad y la segunda del
+mismo minuto **rebota**. El techo real es **~1 horoscopo por minuto**, no las
+30 que sugiere el limite de peticiones.
+
+Por eso se reparten las llamadas entre varias claves (`app/services/groq_keys.py`):
+
+```
+GROQ_API_KEY=gsk_la_principal
+GROQ_API_KEYS=gsk_la_segunda,gsk_la_tercera
+```
+
+`GROQ_API_KEYS` es opcional y admite la principal repetida dentro (se quita).
+**Con una sola clave configurada no cambia nada.** Reparte por turnos, y la
+clave que devuelve 429 se aparta el tiempo que diga su `retry-after`; cada una
+se prueba como mucho UNA vez por llamada.
+
+> **Las claves tienen que ser de ORGANIZACIONES distintas.** El limite es de la
+> organizacion, no de la clave (ver abajo): tres claves de la misma cuenta
+> comparten los mismos 8.000 TPM y no multiplican nada.
+
+### La cache de prompt de Groq NO funciona en esta cuenta
+
+La doc dice que es automatica en `gpt-oss-120b` y no menciona restriccion por
+plan. Seria la palanca grande, porque el system prompt es el **80%** de un
+horoscopo y es identico en todas las llamadas.
+
+Medido el 29-sep: dos llamadas separadas 70s cobran los 4.360 enteras las dos,
+y `usage` **no trae `prompt_tokens_details`**. Descartada la region: cuatro
+llamadas seguidas a la misma (`bra`) y el campo ausente las cuatro.
+
+**NO comprobado por que.** La sospecha es que este capado al plan de pago y la
+doc no lo diga. `claude_service._anota_cache` lo deja en el log el dia que se
+encienda.
+
 ### ESTOS LIMITES SON DE LA ORGANIZACION, NO DE CADA CLAVE
 
 Comprobado el 26-sep-2026. La clave de Railway y la de `arcanum-api/.env` son
