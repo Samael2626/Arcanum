@@ -421,6 +421,11 @@ class ArcanumApi {
     return res.data as Map<String, dynamic>;
   }
 
+  Future<Map<String, dynamic>> studyTarotCard(String slug) async {
+    final res = await _dio.post('/fragments/study-card/$slug');
+    return res.data as Map<String, dynamic>;
+  }
+
   // ── Geocoding (onboarding: lugar de nacimiento real) ─────────────────────
 
   /// Resuelve país+ciudad a lat/lon/timezone reales (Nominatim + timezonefinder,

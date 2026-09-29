@@ -3,6 +3,7 @@ from sqlalchemy import select
 from app.models.credit_ledger import CreditLedger
 from app.models.fragment_movement import FragmentMovement
 from app.models.user import User
+from app.models.tarot import TarotCard
 
 
 def _headers(client) -> dict[str, str]:
@@ -47,3 +48,23 @@ def test_conversion_requires_balance_and_idempotency_key(client, db_session):
     )
     assert result.status_code == 409
     assert db_session.query(FragmentMovement).count() == 0
+
+
+def test_studying_a_real_card_grants_once(client, db_session):
+    headers = _headers(client)
+    db_session.add(TarotCard(
+        slug="test-study-card", arcana="major",
+        meaning_upright="Inicio", meaning_reversed="Duda",
+    ))
+    db_session.flush()
+
+    first = client.post("/fragments/study-card/test-study-card", headers=headers)
+    repeat = client.post("/fragments/study-card/test-study-card", headers=headers)
+    missing = client.post("/fragments/study-card/no-existe", headers=headers)
+
+    assert first.status_code == repeat.status_code == 200
+    assert first.json()["granted"] == 1
+    assert repeat.json()["granted"] == 0
+    assert repeat.json()["balance"] == 1
+    assert missing.status_code == 404
+    assert db_session.query(FragmentMovement).filter_by(reason="card_study").count() == 1

@@ -170,7 +170,7 @@ const senderoJourneys = <SenderoJourney>[
       SenderoStep(
         title: 'Tu práctica deja huella',
         body:
-            'Sendero te entrega Fragmentos una sola vez. Aquí ves el saldo real y su conversión en créditos.',
+            'Sendero te entrega Fragmentos una sola vez. Estudiar cada carta del mazo también suma uno la primera vez. Aquí ves tu saldo real.',
         target: 'fragments_balance',
         route: '/fragmentos',
         buttonLabel: 'Entendido',

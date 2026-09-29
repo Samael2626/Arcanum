@@ -8,3 +8,7 @@ class FragmentBalanceResponse(BaseModel):
     weekly_conversions_remaining: int = Field(ge=0)
     weekly_conversion_limit: int = Field(ge=0)
     tutorial_reward: int = Field(ge=0)
+
+
+class FragmentGrantResponse(FragmentBalanceResponse):
+    granted: int = Field(ge=0)

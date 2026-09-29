@@ -18,14 +18,29 @@ class FragmentService:
     CONVERSION_RATE = 12
     WEEKLY_CONVERSION_LIMIT = 3
     TUTORIAL_REWARD = 3
+    CARD_STUDY_REWARD = 1
 
     def grant_tutorial(self, db: Session, user_id: UUID) -> int:
+        return self._grant(
+            db, user_id, self.TUTORIAL_REWARD,
+            "sendero_orientation", "sendero:orientation:2",
+        )
+
+    def grant_card_study(self, db: Session, user_id: UUID, slug: str) -> int:
+        return self._grant(
+            db, user_id, self.CARD_STUDY_REWARD,
+            "card_study", f"card_study:{slug}",
+        )
+
+    def _grant(
+        self, db: Session, user_id: UUID, amount: int, reason: str, event_key: str
+    ) -> int:
         user = db.execute(select(User).where(User.id == user_id).with_for_update()).scalar_one()
         movement = FragmentMovement(
             user_id=user_id,
-            delta=self.TUTORIAL_REWARD,
-            reason="sendero_orientation",
-            event_key="sendero:orientation:2",
+            delta=amount,
+            reason=reason,
+            event_key=event_key,
         )
         try:
             with db.begin_nested():
@@ -35,7 +50,7 @@ class FragmentService:
             existing = db.execute(
                 select(FragmentMovement.id).where(
                     FragmentMovement.user_id == user_id,
-                    FragmentMovement.event_key == "sendero:orientation:2",
+                    FragmentMovement.event_key == event_key,
                 )
             ).scalar_one_or_none()
             if existing is None:
@@ -44,11 +59,11 @@ class FragmentService:
         db.execute(
             update(User)
             .where(User.id == user_id)
-            .values(fragments_balance=User.fragments_balance + self.TUTORIAL_REWARD)
+            .values(fragments_balance=User.fragments_balance + amount)
         )
         db.flush()
         db.refresh(user)
-        return self.TUTORIAL_REWARD
+        return amount
 
     def balance(self, db: Session, user_id: UUID) -> dict[str, int]:
         user = db.execute(select(User).where(User.id == user_id)).scalar_one()

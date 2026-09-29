@@ -144,7 +144,8 @@ class _FragmentosScreenState extends ConsumerState<FragmentosScreen> {
                                 const SizedBox(height: 8),
                                 Text(
                                   'Sendero te da ${balance.tutorialReward} una sola vez al completar el primer recorrido. '
-                                  'No se compran.',
+                                  'Estudia una carta del mazo en Oráculo y marca su ficha: '
+                                  'la primera vez recibes 1 Fragmento más. No se compran.',
                                   style: ArcanumText.body(15),
                                 ),
                               ],

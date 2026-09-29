@@ -73,12 +73,16 @@ void main() {
     expect(find.text('15 Fragmentos'), findsOneWidget);
     expect(find.textContaining('Sendero te da 3'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('Convertir en crédito'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Convertir en crédito'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Cancelar'));
     await tester.pumpAndSettle();
     expect(api.keys, isEmpty);
 
+    await tester.ensureVisible(find.text('Convertir en crédito'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Convertir en crédito'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Convertir'));
