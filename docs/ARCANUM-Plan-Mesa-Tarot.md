@@ -25,7 +25,7 @@
 
 ## Fase 0: preparación
 
-- [ ] Medir el prototipo en un móvil real con `#fps` (quieta, Cruz Celta, abanico, girando). Es la referencia a batir en Flutter.
+- [x] Medir el prototipo en un móvil real con `#fps`. **Referencia (móvil de Samuel, 29-sep): 36–42 fps en reposo, ~18 con movimiento o animaciones fuertes.** Es el techo del 3D del navegador; Flutter tiene que llegar a 60.
 - [x] Decisiones D1–D4 cerradas con Samuel el 29-sep; D5 se comprueba en la fase 3.
 - [ ] `git worktree add ../Arcanum-mesa -b feat/mesa-tarot origin/main` y traer la especificación, el plan y el prototipo.
 
