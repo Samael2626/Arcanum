@@ -408,6 +408,19 @@ class ArcanumApi {
     return res.data as Map<String, dynamic>;
   }
 
+  Future<Map<String, dynamic>> fragmentsBalance() async {
+    final res = await _dio.get('/fragments/balance');
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> convertFragments(String idempotencyKey) async {
+    final res = await _dio.post(
+      '/fragments/convert',
+      options: Options(headers: {'Idempotency-Key': idempotencyKey}),
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
   // ── Geocoding (onboarding: lugar de nacimiento real) ─────────────────────
 
   /// Resuelve país+ciudad a lat/lon/timezone reales (Nominatim + timezonefinder,

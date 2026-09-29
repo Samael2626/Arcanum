@@ -20,5 +20,6 @@ class SenderoProgressResponse(SenderoProgressUpdate):
     journey_id: str
     completed_at: datetime | None
     updated_at: datetime
+    reward_fragments: int = 0
 
     model_config = ConfigDict(from_attributes=True)

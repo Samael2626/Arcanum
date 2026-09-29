@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, String, Boolean, Integer, text
+from sqlalchemy import CheckConstraint, Column, DateTime, String, Boolean, Integer, text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -7,6 +7,7 @@ from app.db.session import Base
 
 class User(Base):
     __tablename__ = "users"
+    __table_args__ = (CheckConstraint("fragments_balance >= 0", name="ck_users_fragments_balance"),)
 
     id = Column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     email = Column(String(255), unique=True, nullable=False, index=True)
@@ -29,6 +30,7 @@ class User(Base):
     subscription_expires_at = Column(DateTime(timezone=True), nullable=True)
     revenuecat_customer_id = Column(String(100), nullable=True)
     credits_balance = Column(Integer, nullable=False, server_default=text("0"))
+    fragments_balance = Column(Integer, nullable=False, server_default=text("0"))
     preferred_tradition = Column(String(50), nullable=True)
     preferred_house_system = Column(String(30), nullable=False, server_default=text("'placidus'"))
     onboarding_completed = Column(Boolean, nullable=False, server_default=text("false"))
@@ -43,6 +45,7 @@ class User(Base):
     oracle_conversations = relationship("OracleConversation", back_populates="user", cascade="all, delete-orphan")
     tarot_readings = relationship("TarotReading", back_populates="user", cascade="all, delete-orphan")
     credit_ledger = relationship("CreditLedger", back_populates="user", cascade="all, delete-orphan")
+    fragment_movements = relationship("FragmentMovement", back_populates="user", cascade="all, delete-orphan")
     content_reports = relationship("ContentReport", back_populates="user", cascade="all, delete-orphan")
     user_consents = relationship("UserConsent", back_populates="user", cascade="all, delete-orphan")
     sendero_progress = relationship(
