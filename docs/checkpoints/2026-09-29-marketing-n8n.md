@@ -70,6 +70,15 @@ para convertir un paquete factual en borrador mediante Gemini.
 - El aviso venia del paquete factual de demostracion, que entregaba palabras sin
   tildes y Gemini copiaba literalmente. La semilla ya usa espanol correcto y el
   test impide que esa regresion vuelva.
+- El manifiesto ya no parte de dos frases pobres: incorpora seis hechos de
+  `docs/play-ficha.md:95-129` sobre Tarot, carta natal, cielo de hoy, grimorio y
+  Materia arcana, mas vetos explicitos contra inferencias de relleno.
+- El detector de repeticion distingue copia real de vocabulario tecnico
+  inevitable entre formatos. Usa reutilizacion textual o solapamiento alto
+  entre fragmentos de tamano comparable; mencionar AES-256 o Swiss Ephemeris en
+  script y carrusel ya no produce un falso positivo.
+- Prueba viva final: modelo principal disponible, diez nodos verdes,
+  `ready_for_review`, puntuacion 100, cero errores y cero avisos.
 - Esta decision actualiza el plan del 28-sep: la automatizacion si comienza, pero
   todavia no abre TikTok, Instagram o YouTube como canales de publicacion.
 
