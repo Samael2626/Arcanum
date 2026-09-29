@@ -471,6 +471,15 @@ await fill('#rosaName', 'VOLUNTAS');
 await click('#btnRosaGenerate');
 const vol = await page.evaluate(() => ({ n: [...state.rosa.hebrew].length, g: gematria(state.rosa.hebrew).std }));
 check('letra a letra: VOLUNTAS 8 letras, 232', vol.n === 8 && vol.g === 232, `${vol.n} ${vol.g}`);
+// la c: suave ante e/i (ס), dura en el resto y al final de palabra (כ, final ך)
+const CASOS_C = [['Marc', 'מרך'], ['Frederic', 'פרדריך'], ['Cecilia', 'ססיליה'], ['Lucas', 'לוכס'], ['Rocco', 'רוכו'], ['Chesed', 'חסד'], ['Isaac', 'יצחק'], ['Marc Cid', 'מרך סיד']];
+const cRes = await page.evaluate(casos => casos.map(([n]) => transliterate(n, 'consonantal').hebrew), CASOS_C);
+CASOS_C.forEach(([n, he], i) => check(`transliteracion de la c: ${n} = ${he}`, cRes[i] === he, cRes[i]));
+check('letra a letra: Marc = מארך (la c final sigue siendo dura)', await page.evaluate(() => transliterate('Marc', 'full').hebrew === 'מארך'));
+check('ninguna c final se lee como s (26 nombres acabados en c)', await page.evaluate(() => ['Marc', 'Frederic', 'Eric', 'Isac', 'Ludovic', 'Lorenc', 'Franc', 'Domenec', 'Joaquic', 'Benedic', 'Tomic', 'Pic', 'Sec', 'Roc', 'Vic', 'Luc', 'Nic', 'Duc', 'Bec', 'Mac', 'Tec', 'Zac', 'Arc', 'Oc', 'Ac', 'Ec'].every(n => { const h = transliterate(n, 'consonantal').hebrew; return h.endsWith('ך') && !h.endsWith('ס'); })));
+await click('#famRosa'); await selectOpt('#selTranslit', 'consonantal'); await fill('#rosaName', 'Marc'); await click('#btnRosaGenerate');
+// la Rosa solo tiene las 22 letras base: la Kaf final se traza en el petalo de la Kaf
+check('Rosa-Cruz: Marc = מרך y termina en el pétalo de la Kaf', await page.evaluate(() => state.rosa.hebrew === 'מרך' && state.rosa.trace.map(v => v.he).join('') === 'מרכ'));
 await selectOpt('#selTranslit', 'consonantal');
 await click('#famLetters');
 await page.waitForTimeout(80);

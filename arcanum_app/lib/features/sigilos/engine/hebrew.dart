@@ -68,9 +68,8 @@ List<TranslitToken> _translitWord(String word, TranslitMethod method) {
       continue;
     }
     var he = _latCons[k]!;
-    // c suave ante e/i suena s. Como en el prototipo, una c final tambien da
-    // ס ('ei'.includes('') es true en JS): rareza pendiente de revisar alli
-    if (k == 'c' && method == TranslitMethod.consonantal && (i + 1 >= w.length || 'ei'.contains(w[i + 1]))) he = 'ס';
+    // c suave ante e/i suena s; al final de palabra es dura (Marc = מרך)
+    if (k == 'c' && method == TranslitMethod.consonantal && i + 1 < w.length && 'ei'.contains(w[i + 1])) he = 'ס';
     out.add(TranslitToken(k, he));
     i += k.length;
   }

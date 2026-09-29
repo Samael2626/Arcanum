@@ -96,6 +96,31 @@ void main() {
     });
   }
 
+  // la c: suave ante e/i (ס), dura en el resto y al final de palabra (כ, final ך)
+  const casosC = {
+    'Marc': 'מרך', 'Frederic': 'פרדריך', 'Cecilia': 'ססיליה', 'Lucas': 'לוכס', 'Rocco': 'רוכו',
+    'Chesed': 'חסד', 'Isaac': 'יצחק', 'Marc Cid': 'מרך סיד',
+  };
+  casosC.forEach((name, he) {
+    test('transliteracion de la c: $name = $he', () => expect(transliterate(name, TranslitMethod.consonantal).hebrew, he));
+  });
+  test('letra a letra: Marc = מארך (la c final sigue siendo dura)', () {
+    expect(transliterate('Marc', TranslitMethod.full).hebrew, 'מארך');
+  });
+  test('ninguna c final se lee como s', () {
+    const names = ['Marc', 'Frederic', 'Eric', 'Isac', 'Ludovic', 'Lorenc', 'Franc', 'Domenec', 'Joaquic', 'Benedic', 'Tomic', 'Pic', 'Sec',
+      'Roc', 'Vic', 'Luc', 'Nic', 'Duc', 'Bec', 'Mac', 'Tec', 'Zac', 'Arc', 'Oc', 'Ac', 'Ec'];
+    for (final n in names) {
+      final h = transliterate(n, TranslitMethod.consonantal).hebrew;
+      expect(h.endsWith('ך'), isTrue, reason: '$n = $h');
+    }
+  });
+  test('el anillo hebreo de Marc lleva la Kaf final', () {
+    final lay = layoutLayers([Layer.create('c1', LayerType.ringHebrew)], LayerCtx.letters('Marc'));
+    final chars = lay.parts.single.g.prims.whereType<TextPrim>().map((t) => t.ch).join();
+    expect(chars, 'מרך');
+  });
+
   test('Samuel se escribe con su grafia biblica', () {
     expect(transliterate('Samuel', TranslitMethod.consonantal).hebrew, 'שמואל');
     expect(cleanHebrew('שְׁמוּאֵל'), 'שמואל');

@@ -84,8 +84,10 @@ function translitWord(word, method) {
     const k = LAT_KEYS.find(k0 => w.startsWith(k0, i));
     if (!k) { out.push({ latin: c, he: '', note: 'sin correspondencia' }); i++; continue; }
     let he = LAT_CONS[k];
-    // c suave ante e/i suena s
-    if (k === 'c' && method === 'consonantal' && 'ei'.includes(w[i + 1] || '')) he = 'ס';
+    // c suave ante e/i suena s; al final de palabra es dura (Marc = מרך).
+    // Ojo: 'ei'.includes('') es true, por eso se mira que haya letra siguiente
+    const next = w[i + 1];
+    if (k === 'c' && method === 'consonantal' && next !== undefined && 'ei'.includes(next)) he = 'ס';
     out.push({ latin: k, he, note: '' });
     i += k.length;
   }
