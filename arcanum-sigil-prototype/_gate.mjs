@@ -703,7 +703,7 @@ await page.click('#famLetters');
 // 15) Interfaz simplificada: basico, paletas, barra contextual, ayuda
 check('arranca en basico: intencion visible, reduccion oculta', !basic.adv && basic.intent && !basic.reduc, JSON.stringify(basic));
 await page.evaluate(() => setLevel(false));
-const nBasic = await page.evaluate(() => [...document.querySelectorAll('#controlPanel button, #controlPanel select, #controlPanel input')].filter(e => e.offsetParent).length);
+const nBasic = await page.evaluate(() => [...document.querySelectorAll('#controlPanel button, #controlPanel select, #controlPanel input')].filter(e => e.offsetParent && !e.closest('#stylePanel')).length);
 await page.evaluate(() => setLevel(true));
 const nAdv = await page.evaluate(() => [...document.querySelectorAll('#controlPanel button, #controlPanel select, #controlPanel input')].filter(e => e.offsetParent).length);
 check('basico muestra muchos menos controles que avanzado', nBasic <= 22 && nBasic < nAdv / 2, `basico ${nBasic}, avanzado ${nAdv}`);
@@ -801,6 +801,52 @@ const gsvg = await page.evaluate(() => { state.layers = []; addLayer('letters', 
 check('el SVG exportado no usa ninguna fuente de simbolos', !/Segoe UI Symbol/.test(gsvg) && /data-glyph="♃"/.test(gsvg) && /data-glyph="♂"/.test(gsvg) && /data-glyph="✠"/.test(gsvg));
 check('los glifos son SVG valido', await page.evaluate(() => Object.keys(GLYPHS_ARCANE).every(k => !new DOMParser().parseFromString(`<svg xmlns="http://www.w3.org/2000/svg">${glyphSVG(k, 50, 50, 60, 0, '#000')}</svg>`, 'image/svg+xml').querySelector('parsererror'))));
 check('la Rosa rotula planetas y signos con glifos', await page.evaluate(() => { setFamily('rosa'); const s = buildSVG(); setFamily('letters'); return (s.match(/data-glyph=/g) || []).length >= 19 && !/Segoe UI Symbol/.test(s); }));
+
+// 18) Estilo: una sola escena para lienzo y SVG
+// paridad: el lienzo sin marcas y el SVG rasterizado deben dar la misma imagen
+async function parity() {
+  return page.evaluate(() => new Promise(res => {
+    const a = snapshot(400).getContext('2d').getImageData(0, 0, 400, 400).data;
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas'); c.width = c.height = 400;
+      const x = c.getContext('2d'); x.drawImage(img, 0, 0, 400, 400);
+      const b = x.getImageData(0, 0, 400, 400).data;
+      // porcentaje de pixeles con diferencia fuerte (el suavizado de bordes no cuenta)
+      let n = 0;
+      for (let i = 0; i < a.length; i += 4) if (Math.max(Math.abs(a[i] - b[i]), Math.abs(a[i + 1] - b[i + 1]), Math.abs(a[i + 2] - b[i + 2])) > 64) n++;
+      res(n / (a.length / 4) * 100);
+    };
+    img.src = svgURL(buildSVG());
+  }));
+}
+await forge('MI PRACTICA MANTIENE ENFOQUE SERENO', 'fusion');
+await page.evaluate(() => { state.layers = []; addLayer('letters', 'ringLatin', { symbol: 'jupiter', sep: 'cross' }); addLayer('letters', 'star', { points: 7 }); addLayer('letters', 'symbol', { sym: '♃︎', x: 400, y: 150 }); state.layerSel.letters = null; state.terminals = 'pattee'; render(); });
+for (const [k, patch] of [['pergamino', {}], ['oro', {}], ['flash-venus', {}], ['metal', {}], ['plata', { line: 'double', cap: 'square', width: 150 }]]) {
+  await page.evaluate(([k, patch]) => applyStyle({ ...presetStyle(k), ...patch }), [k, patch]);
+  const d = await parity();
+  check(`estilo ${k}: lienzo = SVG exportado (${d.toFixed(3)}% de pixeles distintos)`, d < .05, d.toFixed(3));
+}
+const fl = await page.evaluate(() => PLANET_ORDER.map(id => { const st = presetStyle('flash-' + id); return [id, st.bg, st.ink]; }));
+const FLASH_OK = { mars: ['#de2a1f', '#1d9a58'], venus: ['#1d9a58', '#de2a1f'], sun: ['#f28a1c', '#2f63d6'], moon: ['#2f63d6', '#f28a1c'], mercury: ['#f2cf1d', '#7b31b3'], jupiter: ['#7b31b3', '#f2cf1d'], saturn: ['#3c2b8f', '#f0aa1a'] };
+check('relampagueantes: campo del planeta y su complementario (Flying Roll XIV)', fl.every(([id, bg, ink]) => FLASH_OK[id][0] === bg && FLASH_OK[id][1] === ink), JSON.stringify(fl));
+check('metal del planeta segun la Goetia', await page.evaluate(() => metalStyle('mars').metal === 'hierro' && metalStyle('sun').metal === 'oro' && metalStyle('moon').metal === 'plata'));
+await page.evaluate(() => applyStyle(presetStyle('oro')));
+check('el estilo viaja con el SVG (fondo y tinta)', await page.evaluate(() => { const s = buildSVG(); return s.includes('#0a080d') && s.includes('stroke="#c99a1a"'); }));
+check('fondo transparente: sin soporte en el SVG', await page.evaluate(() => { state.transparent = true; const s = buildSVG(); state.transparent = false; return !/data-layer="bg/.test(s); }));
+await page.evaluate(() => histCommit());
+await page.click('#btnStyleAdjust');
+await page.click('#inkSwatches [data-ink="#7a1020"]');
+await page.evaluate(() => histCommit());
+check('ajustar la tinta cambia el estilo a propio', await page.evaluate(() => state.style.ink === '#7a1020' && state.style.preset === 'propio'));
+await page.click('#btnUndo');
+check('deshacer devuelve el estilo anterior', await page.evaluate(() => state.style.ink === '#c99a1a' && state.style.preset === 'oro'));
+await page.mouse.click(5, 5);
+await page.click('#famRosa'); await page.fill('#rosaName', 'Metatron'); await page.click('#btnRosaGenerate');
+await page.evaluate(() => applyStyle(presetStyle('flash-sun')));
+check('la Rosa-Cruz usa el mismo estilo', await page.evaluate(() => buildSVG().includes('#f28a1c')));
+await page.click('#famLetters');
+await page.evaluate(() => applyStyle(presetStyle('pergamino')));
 
 check('sin errores de pagina', errors.length === 0, errors.slice(0, 2).join(' | '));
 await browser.close();

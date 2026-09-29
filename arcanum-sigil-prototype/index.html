@@ -136,6 +136,16 @@ q{cursor:help;font-style:italic;quotes:"«" "»"}
 .toast{background:var(--gold);border-radius:20px;bottom:30px;color:#0c0b0f;font-size:.8rem;left:50%;opacity:0;padding:6px 16px;pointer-events:none;position:fixed;transform:translateX(-50%);transition:opacity .2s;z-index:500}
 .toast.show{opacity:1}
 .mobile-toggle{display:none}
+.swatches{display:flex;gap:6px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:thin}
+.sw-card{align-items:center;background:none;border:1px solid transparent;border-radius:6px;color:var(--dim);cursor:pointer;display:flex;flex:0 0 64px;flex-direction:column;font-family:var(--font);font-size:.6rem;gap:3px;line-height:1.1;min-height:72px;padding:3px 2px;text-align:center}
+.sw-card.active{border-color:var(--gold);color:var(--gold)}
+.sw-disc{align-items:center;border:1px solid rgba(255,255,255,.15);border-radius:50%;display:flex;height:44px;justify-content:center;width:44px}
+.sw{border:2px solid var(--border);border-radius:50%;cursor:pointer;flex:0 0 44px;height:44px;width:44px}
+.sw.active{border-color:var(--gold-hi);box-shadow:0 0 0 2px var(--bg) inset}
+.seg{border:1px solid var(--border);border-radius:4px;display:flex;margin:4px 0;overflow:hidden}
+.seg button{background:none;border:0;color:var(--dim);cursor:pointer;flex:1;font-family:var(--font);font-size:.72rem;min-height:40px}
+.seg button.active{background:var(--burgundy);color:var(--gold-hi)}
+.seg button:disabled{opacity:.35}
 .level{border:1px solid var(--border);border-radius:4px;display:grid;grid-template-columns:1fr 1fr;margin:0 0 8px;overflow:hidden}
 .level button{background:transparent;border:0;color:var(--dim);cursor:pointer;font-family:var(--font);font-size:.74rem;min-height:36px}
 .level button.active{background:var(--burgundy);color:var(--gold-hi)}
@@ -246,8 +256,6 @@ body:not(.adv) [data-adv]{display:none!important}
     <details class="step" open data-adv>
       <summary><span class="step-title">Presentación</span></summary>
       <div class="step-body">
-        <div class="field"><label for="selTheme">Tinta</label>
-          <select id="selTheme"><option value="build" selected>Construcción (papel)</option><option value="present">Presentación (oro)</option></select></div>
         <details class="sub" id="subTerminals" open>
           <summary>Terminales</summary>
           <p class="helper">Remate en la punta de cada trazo libre. Elige uno para todos, o activa «Uno a uno» y toca las puntas que quieras.</p>
@@ -371,6 +379,32 @@ body:not(.adv) [data-adv]{display:none!important}
     </details>
   </section>
 
+  <section id="stylePanel">
+    <details class="step" open>
+      <summary><span class="step-title">Estilo</span></summary>
+      <div class="step-body">
+        <p class="helper">Tinta, soporte y trazo. Lo que ves es lo que se exporta. «Ajustar» abre cada parte por separado.</p>
+        <div class="swatches" id="stylePresets"></div>
+        <p class="sublabel">Relampagueantes: el color del planeta y su complementario</p>
+        <div class="swatches" id="flashPresets"></div>
+        <button class="btn-dim" id="btnStyleAdjust" data-pal="styleAdjust" aria-expanded="false">Ajustar ▾</button>
+        <div class="palette" id="styleAdjust" hidden>
+          <div class="stamp-group">Tinta</div><div class="swatches" id="inkSwatches"></div>
+          <div class="stamp-group">Soporte</div><div class="swatches" id="bgSwatches"></div>
+          <div class="seg"><button data-texture="none">Liso</button><button data-texture="pergamino">Pergamino</button></div>
+          <div class="stamp-group">Trazo</div>
+          <div class="field"><label for="rngStrokeW">Grosor</label><input type="range" id="rngStrokeW" min="50" max="180" step="5" value="100"><span class="val" id="strokeWVal">100%</span></div>
+          <div class="seg"><button data-line="single">Simple</button><button data-line="double">Doble</button></div>
+          <div class="seg"><button data-cap="round">Punta redonda</button><button data-cap="square">Punta recta</button></div>
+          <div class="stamp-group">Efectos</div>
+          <label class="check"><input type="checkbox" id="chkRelief">Relieve (grabado)</label>
+          <label class="check"><input type="checkbox" id="chkGlow">Resplandor</label>
+        </div>
+        <div class="info" id="styleInfo"></div>
+      </div>
+    </details>
+  </section>
+
   <div class="panel-footer">Método de la palabra: Spare, Frater U∴D∴ y Cooper.<br>Las letras se reconocen, aunque cueste.</div>
 </aside>
 
@@ -438,6 +472,8 @@ body:not(.adv) [data-adv]{display:none!important}
 <div class="toast" id="toast"></div>
 
 <script src="js/glifos.js"></script>
+<script src="js/escena.js"></script>
+<script src="js/estilo.js"></script>
 <script src="sellos/sellos.js"></script>
 <script src="sellos/goetia/goetia.js"></script>
 <script>
@@ -952,8 +988,9 @@ function freeEnds(visible) {
 
 // ── Pintado (canvas) ────────────────────────────────────────────
 const THEMES = {
-  build: { bg: '#efe6d2', ink: '#1b1612', faint: 'rgba(27,22,18,.16)', accent: '#9b1c2e', frame: 'rgba(27,22,18,.55)' },
-  present: { bg: '#0a080d', ink: '#c99a1a', faint: 'rgba(201,154,26,.2)', accent: '#f3d27a', frame: 'rgba(184,134,11,.6)' }
+  build: { bg: '#efe6d2', ink: '#1b1612', faint: 'rgba(27,22,18,.16)', accent: '#9b1c2e', frame: 'rgba(27,22,18,.55)', ui: '#9b1c2e' },
+  present: { bg: '#0a080d', ink: '#c99a1a', faint: 'rgba(201,154,26,.2)', accent: '#f3d27a', frame: 'rgba(184,134,11,.6)', ui: '#f3d27a' }
+  // custom: lo rellena applyStyle con el estilo elegido
 };
 const LETTER_COLORS = ['#1f5fa8', '#c77700', '#2e7d32', '#8e44ad', '#b3261e', '#00838f', '#6d4c41', '#ad1457', '#558b2f', '#283593', '#e64a19', '#00695c'];
 const LINE_W = 7;
@@ -1167,6 +1204,8 @@ function layoutLayersRaw(layers, ctx) {
   return { parts, contentR: avail };
 }
 // Render de primitivas: canvas y SVG leen la misma lista
+// centro optico de una linea de texto respecto de su base (fraccion del cuerpo)
+const TEXT_MID = .35;
 function paintPrims(ctx, prims, color) {
   ctx.save(); ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   for (const p of prims) {
@@ -1178,7 +1217,8 @@ function paintPrims(ctx, prims, color) {
       ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(rad(p.rot));
       const italic = p.font.startsWith('italic');
       ctx.font = `${italic ? 'italic ' : ''}${p.size}px ${italic ? 'Georgia, serif' : p.font}`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(p.ch, 0, 0); ctx.restore();
+      // linea base alfabetica y el mismo desplazamiento que en el SVG: pixel a pixel igual
+      ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.fillText(p.ch, 0, p.size * TEXT_MID); ctx.restore();
     }
   }
   ctx.restore();
@@ -1190,7 +1230,7 @@ function primsSVG(prims, color) {
     if (p.k === 'poly') return `<path d="M ${p.pts.map(q => f2(q[0]) + ' ' + f2(q[1])).join(' L ')}${p.closed ? ' Z' : ''}" fill="none" stroke="${color}" stroke-width="${f2(p.w)}" stroke-linejoin="round" stroke-linecap="round"${o}/>`;
     if (p.k === 'glyph') return glyphSVG(p.ch, p.x, p.y, p.size, p.rot, color, p.op);
     const italic = p.font.startsWith('italic');
-    return `<text transform="translate(${f2(p.x)} ${f2(p.y)}) rotate(${f2(p.rot)})" text-anchor="middle" dominant-baseline="central" font-family="${italic ? 'Georgia, serif' : p.font}"${italic ? ' font-style="italic"' : ''} font-size="${f2(p.size)}" fill="${color}"${o}>${esc(p.ch)}</text>`;
+    return `<text transform="translate(${f2(p.x)} ${f2(p.y)}) rotate(${f2(p.rot)})" y="${f2(p.size * TEXT_MID)}" text-anchor="middle" font-family="${italic ? 'Georgia, serif' : p.font}"${italic ? ' font-style="italic"' : ''} font-size="${f2(p.size)}" fill="${color}"${o}>${esc(p.ch)}</text>`;
   }).join('');
 }
 const layersSVG = (parts, color, which) => parts.filter(which).map(p => `<g data-layer="${p.L.type}">${primsSVG(p.g.prims, color)}</g>`).join('');
@@ -1249,7 +1289,7 @@ function snapPoint(pt, scope, excludeId, ev) {
 const snapAngle = (deg, ev) => (!state.magnet || (ev && ev.altKey)) ? deg : (Math.abs(deg - Math.round(deg / 15) * 15) <= 4 ? Math.round(deg / 15) * 15 : deg);
 function paintGuides(ctx, th) {
   if (!state.guides.length) return;
-  ctx.save(); ctx.strokeStyle = th.accent; ctx.fillStyle = th.accent; ctx.lineWidth = 1.4; ctx.setLineDash([7, 6]); ctx.globalAlpha = .9;
+  ctx.save(); ctx.strokeStyle = th.ui; ctx.fillStyle = th.ui; ctx.lineWidth = 1.4; ctx.setLineDash([7, 6]); ctx.globalAlpha = .9;
   for (const g of state.guides) {
     ctx.beginPath();
     if (g.k === 'v') { ctx.moveTo(g.x, 0); ctx.lineTo(g.x, SIZE); }
@@ -1279,7 +1319,7 @@ function paintLayerSelection(ctx, th, scope) {
   if (!L || !L.visible) return;
   const lay = layoutLayers(layersOf(scope), layerCtx(scope)), p = lay.parts.find(q => q.L.id === L.id);
   if (!p) return;
-  ctx.save(); ctx.strokeStyle = th.accent; ctx.lineWidth = 2; ctx.setLineDash([4, 5]);
+  ctx.save(); ctx.strokeStyle = th.ui; ctx.lineWidth = 2; ctx.setLineDash([4, 5]);
   if (L.type === 'symbol') { ctx.beginPath(); ctx.arc(L.x, L.y, L.size * .72, 0, Math.PI * 2); ctx.stroke(); }
   else if (p.R) { ctx.beginPath(); ctx.arc(p.g.center[0], p.g.center[1], p.R + 6, 0, Math.PI * 2); ctx.stroke(); }
   ctx.restore();
@@ -1537,65 +1577,65 @@ function strokePrim(ctx, p) {
   ctx.stroke();
 }
 
+// Escena del sigilo de letras: soporte, capas, trazos, remates y simbolos
+function lettersScene(th, transparent) {
+  const st = state.style, lw = LINE_W * st.width / 100;
+  const lay = layoutLayers(state.layers, layerCtx('letters'));
+  const visible = state.prims.filter(p => !p.hidden);
+  const fg = [];
+  for (const p of lay.parts) if (p.L.type !== 'symbol') fg.push({ layer: p.L.type, color: th.ink, items: p.g.prims });
+  fg.push({ layer: 'core', color: th.ink, w: lw, cap: st.cap, sigil: true, items: visible.map(p => ({ d: primPath(p), units: p.units })) });
+  const terms = terminalList(visible);
+  if (terms.length) fg.push({ layer: 'terminals', color: th.ink, w: lw * .8, cap: st.cap, sigil: true, items: terms.flatMap(t => t.shapes.map(sh => ({ d: sh.d, fill: !!sh.fill }))) });
+  for (const p of lay.parts) if (p.L.type === 'symbol') fg.push({ layer: 'symbol', color: th.ink, items: p.g.prims });
+  return { bg: transparent ? [] : bgScene(th), fg: applyFx(fg.filter(g => g.items.length), th) };
+}
+
 // opt: { size, theme, transparent, interactive }
 function paint(ctx, opt) {
   const th = THEMES[opt.theme], sc = opt.size / SIZE;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, opt.size, opt.size);
-  if (!opt.transparent) { ctx.fillStyle = th.bg; ctx.fillRect(0, 0, opt.size, opt.size); }
   ctx.setTransform(sc, 0, 0, sc, 0, 0);
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  if (state.family === 'rosa') { paintRose(ctx, th); return; }
-  if (state.family === 'kamea') { paintKamea(ctx, th); return; }
-  if (state.family === 'seal') { paintSeal(ctx, th); return; }
   if (state.family === 'personal') { paintPersonal(ctx); return; }
   if (state.family === 'compare') { paintCompare(ctx); return; }
-  if (!state.prims.length || !state.view) return;
-  const lw = Math.max(LINE_W, 2 / sc);
-
+  if (state.family !== 'letters') {
+    // Rosa-Cruz, Kamea y sellos: el lienzo pinta el mismo SVG que se exporta
+    if (!opt.transparent) paintScene(ctx, bgScene(th));
+    paintSVGImage(ctx, buildSVG());
+    return;
+  }
+  if (!state.prims.length || !state.view) { if (!opt.transparent) paintScene(ctx, bgScene(th)); return; }
+  const scene = lettersScene(th, opt.transparent);
+  paintScene(ctx, scene.bg);
   if (opt.interactive) paintGrid(ctx, th);
-  const lay = layoutLayers(state.layers, layerCtx('letters'));
-  for (const p of lay.parts) if (p.L.type !== 'symbol') paintPrims(ctx, p.g.prims, th.ink);
-
-  const visible = state.prims.filter(p => !p.hidden);
   const hl = opt.interactive ? state.sel : null;
-  ctx.lineWidth = lw;
-  for (const p of visible) {
-    ctx.strokeStyle = th.ink;
-    ctx.globalAlpha = hl && !p.units.includes(hl) ? .28 : 1;
-    strokePrim(ctx, p);
-  }
-  ctx.globalAlpha = 1;
-
-  if (opt.interactive && state.hideMode) {
-    ctx.setLineDash([10, 10]); ctx.strokeStyle = th.faint; ctx.lineWidth = lw * .6;
+  paintScene(ctx, scene.fg, { minW: 2 / sc, dim: it => hl && it.units && !it.units.includes(hl) ? .28 : 1 });
+  if (!opt.interactive) return;
+  // marcas de edicion: solo en pantalla, nunca se exportan
+  const lw = LINE_W * state.style.width / 100;
+  if (state.hideMode) {
+    ctx.save(); ctx.setLineDash([10, 10]); ctx.strokeStyle = th.faint; ctx.lineWidth = lw * .6;
     state.prims.filter(p => p.hidden).forEach(p => strokePrim(ctx, p));
-    ctx.setLineDash([]);
+    ctx.restore();
   }
-  if (opt.interactive && state.colors) {
-    ctx.lineWidth = lw * .42;
-    activeLetters().forEach((l, i) => {
-      ctx.strokeStyle = LETTER_COLORS[i % LETTER_COLORS.length];
-      l.own.forEach(p => strokePrim(ctx, p));
-    });
+  if (state.colors) {
+    ctx.save(); ctx.lineWidth = lw * .42;
+    activeLetters().forEach((l, i) => { ctx.strokeStyle = LETTER_COLORS[i % LETTER_COLORS.length]; l.own.forEach(p => strokePrim(ctx, p)); });
+    ctx.restore();
   }
   if (hl) {
     const l = state.letters.find(x => x.ch === hl && !x.twin);
-    if (l) { ctx.strokeStyle = th.accent; ctx.lineWidth = lw * 1.15; l.own.forEach(p => strokePrim(ctx, p)); }
+    if (l) { ctx.save(); ctx.strokeStyle = th.ui; ctx.lineWidth = lw * 1.15; l.own.forEach(p => strokePrim(ctx, p)); ctx.restore(); }
   }
-
-  ctx.fillStyle = th.ink; ctx.strokeStyle = th.ink; ctx.lineWidth = lw * .8;
-  for (const t of terminalList(visible)) {
-    for (const sh of t.shapes) { const p2 = new Path2D(sh.d); if (sh.fill) ctx.fill(p2); else ctx.stroke(p2); }
-  }
-  if (opt.interactive && state.termPick) {
+  if (state.termPick) {
     // en modo uno a uno se marcan los extremos libres que se pueden tocar
-    ctx.save(); ctx.strokeStyle = th.accent; ctx.lineWidth = 2; ctx.setLineDash([4, 4]);
-    for (const e of freeEnds(visible)) { const q = toCanvas(e); ctx.beginPath(); ctx.arc(q.x, q.y, 14, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.save(); ctx.strokeStyle = th.ui; ctx.lineWidth = 2; ctx.setLineDash([4, 4]);
+    for (const e of freeEnds(state.prims.filter(p => !p.hidden))) { const q = toCanvas(e); ctx.beginPath(); ctx.arc(q.x, q.y, 14, 0, Math.PI * 2); ctx.stroke(); }
     ctx.restore();
   }
-  for (const p of lay.parts) if (p.L.type === 'symbol') paintPrims(ctx, p.g.prims, th.ink);
-  if (opt.interactive) { paintLayerSelection(ctx, th, 'letters'); paintGuides(ctx, th); }
+  paintLayerSelection(ctx, th, 'letters'); paintGuides(ctx, th);
 }
 
 const canvas = $('canvas'), ctx = canvas.getContext('2d');
@@ -1631,27 +1671,13 @@ function primPath(p) {
 function buildSVG() {
   const th = THEMES[state.theme];
   const out = [`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SIZE} ${SIZE}" width="${SIZE}" height="${SIZE}">`];
-  if (!state.transparent) out.push(`<rect width="${SIZE}" height="${SIZE}" fill="${th.bg}"/>`);
+  if (!state.transparent && state.family !== 'personal' && state.family !== 'compare') out.push(sceneSVG(bgScene(th)));
   if (state.family === 'rosa') { out.push(roseSVG(th)); out.push('</svg>'); return out.join(''); }
   if (state.family === 'kamea') { out.push(kameaSVG(th)); out.push('</svg>'); return out.join(''); }
   if (state.family === 'seal') { out.push(sealSVG(th)); out.push('</svg>'); return out.join(''); }
   if (state.family === 'personal') return personalSVG() || out.concat('</svg>').join('');
   if (state.family === 'compare') return compareSVG() || out.concat('</svg>').join('');
-  const lay = layoutLayers(state.layers, layerCtx('letters'));
-  out.push(layersSVG(lay.parts, th.ink, p => p.L.type !== 'symbol'));
-  const visible = state.prims.filter(p => !p.hidden);
-  out.push(`<g data-layer="core" fill="none" stroke="${th.ink}" stroke-width="${LINE_W}" stroke-linecap="round" stroke-linejoin="round">`);
-  visible.forEach(p => out.push(`<path d="${primPath(p)}"/>`));
-  out.push('</g>');
-  const terms = terminalList(visible);
-  if (terms.length) {
-    out.push(`<g data-layer="terminals" stroke-width="${f2(LINE_W * .8)}" stroke-linecap="round" stroke-linejoin="round">`);
-    for (const t of terms) for (const sh of t.shapes) {
-      out.push(sh.fill ? `<path d="${sh.d}" fill="${th.ink}"/>` : `<path d="${sh.d}" fill="none" stroke="${th.ink}"/>`);
-    }
-    out.push('</g>');
-  }
-  out.push(layersSVG(lay.parts, th.ink, p => p.L.type === 'symbol'));
+  if (state.prims.length && state.view) out.push(sceneSVG(lettersScene(th, true).fg));
   out.push('</svg>');
   return out.join('');
 }
@@ -1921,40 +1947,6 @@ function roseDiagram(used) {
   return Object.values(PETALS).map(p => ({ he: p.he, d: petalPath(p), used: used.has(p.he), x: p.x, y: p.y, label: roseLabel(p.he) }));
 }
 
-function paintRose(ctx, th) {
-  const ro = state.rosa, used = new Set(ro.trace.map(v => v.he));
-  if (ro.diagram) {
-    ctx.lineWidth = 1.2;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    for (const p of roseDiagram(used)) {
-      const path = new Path2D(p.d);
-      if (ro.colors) { ctx.save(); ctx.globalAlpha = p.used ? .55 : .22; ctx.fillStyle = ROSE_COLORS[p.he][1]; ctx.fill(path); ctx.restore(); }
-      else if (p.used) { ctx.fillStyle = th.faint; ctx.fill(path); }
-      ctx.strokeStyle = th.faint; ctx.stroke(path);
-      ctx.fillStyle = th.ink; ctx.font = '20px "Segoe UI", "Arial Hebrew", serif'; ctx.fillText(p.he, p.x, p.y - 4);
-      if (hasGlyph(p.label)) paintGlyph(ctx, p.label, p.x, p.y + 15, 12, 0, th.frame);
-      else { ctx.fillStyle = th.frame; ctx.font = '11px Georgia, serif'; ctx.fillText(p.label, p.x, p.y + 15); }
-    }
-  }
-  ctx.strokeStyle = th.accent; ctx.lineWidth = 3.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  for (const w of ro.words) {
-    const shapes = roseSigilShapes(w, ro.endBar);
-    if (!ro.colors) { for (const s of shapes) { ctx.lineWidth = s.mark === 'line' ? 3.2 : 2.4; ctx.stroke(new Path2D(s.d)); } continue; }
-    // colores del Lamen: cada tramo va del color de su letra de salida al de llegada
-    ctx.lineWidth = 4.2;
-    for (const g of roseSegments(w)) {
-      const grad = ctx.createLinearGradient(g.x1, g.y1, g.x2, g.y2);
-      grad.addColorStop(0, ROSE_COLORS[g.from][1]); grad.addColorStop(1, ROSE_COLORS[g.to][1]);
-      ctx.strokeStyle = grad; ctx.stroke(new Path2D(g.d));
-    }
-    ctx.lineWidth = 3;
-    for (const s of shapes) {
-      if (s.mark === 'line') continue;
-      const he = s.mark === 'start' ? w[0].he : s.mark === 'end' ? w[w.length - 1].he : null;
-      ctx.strokeStyle = he ? ROSE_COLORS[he][1] : th.accent; ctx.stroke(new Path2D(s.d));
-    }
-  }
-}
 function roseSVG(th) {
   const ro = state.rosa, used = new Set(ro.trace.map(v => v.he)), out = [];
   if (ro.diagram) {
@@ -2213,32 +2205,6 @@ function kameaShapes(steps, ends, look) {
   return shapes;
 }
 
-function paintKamea(ctx, th) {
-  const km = state.kamea, k = KAMEA_BY_ID[km.planet], g = kameaGeom(k);
-  const used = new Set(km.words.flat().map(s => s.cell));
-  if (km.grid) {
-    ctx.lineWidth = 1.2; ctx.strokeStyle = th.faint;
-    for (let i = 0; i <= g.n; i++) {
-      ctx.beginPath(); ctx.moveTo(g.x0 + i * g.cell, g.y0); ctx.lineTo(g.x0 + i * g.cell, g.y0 + KAMEA_SIZE); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(g.x0, g.y0 + i * g.cell); ctx.lineTo(g.x0 + KAMEA_SIZE, g.y0 + i * g.cell); ctx.stroke();
-    }
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = `${Math.round(g.cell * .32)}px Georgia, serif`;
-    for (const [v, p] of Object.entries(g.pos)) {
-      if (used.has(Number(v))) { ctx.fillStyle = th.faint; ctx.fillRect(p.x - g.cell / 2, p.y - g.cell / 2, g.cell, g.cell); }
-      ctx.fillStyle = th.frame; ctx.fillText(v, p.x, p.y);
-    }
-  }
-  const wd = kameaLook(km.grid), words = km.grid ? km.words : kameaFit(km.words);
-  ctx.strokeStyle = km.grid ? th.accent : th.ink; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  for (const w of words) for (const s of kameaShapes(w, km.ends, wd)) { ctx.lineWidth = s.mark === 'line' ? wd.line : wd.mark; ctx.stroke(new Path2D(s.d)); }
-  const cap = kameaCaption();
-  if (cap && !km.grid) {
-    ctx.fillStyle = th.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-    ctx.font = 'italic 26px Georgia, serif'; ctx.fillText(cap.title, C, 72);
-    ctx.font = '17px Georgia, serif'; ctx.fillStyle = th.frame; ctx.fillText(cap.sub, C, SIZE - 44);
-  }
-}
 function kameaSVG(th) {
   const km = state.kamea, k = KAMEA_BY_ID[km.planet], g = kameaGeom(k), out = [];
   const used = new Set(km.words.flat().map(s => s.cell));
@@ -2361,17 +2327,6 @@ const sealRef = s => s.src === 'goetia1916' ? `${sealSrc(s).short} · figura ${s
 function sealFit(s, box = 600, top = 70) {
   const k = Math.min(box / s.w, (box - 40) / s.h);
   return { k, x: C - s.w * k / 2, y: top + (box - 40 - s.h * k) / 2 + 20 };
-}
-function paintSeal(ctx, th) {
-  const s = SEAL_BY_ID[state.seal.id];
-  if (!s) return;
-  const f = sealFit(s);
-  ctx.save(); ctx.translate(f.x, f.y); ctx.scale(f.k, f.k); ctx.fillStyle = th.ink;
-  for (const [d, tx, ty] of s.paths) { ctx.save(); ctx.translate(tx, ty); ctx.fill(new Path2D(d)); ctx.restore(); }
-  ctx.restore();
-  ctx.fillStyle = th.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  ctx.font = 'italic 24px Georgia, serif'; ctx.fillText(s.title, C, 52);
-  ctx.font = '14px Georgia, serif'; ctx.fillStyle = th.frame; ctx.fillText(sealRef(s), C, SIZE - 28);
 }
 function sealSVG(th) {
   const s = SEAL_BY_ID[state.seal.id];
@@ -2979,12 +2934,14 @@ function captureState() {
   return JSON.parse(JSON.stringify({
     intention: state.intention, method: state.method, mode: state.mode, overlap: state.overlap, absorb: state.absorb,
     users: Object.fromEntries(state.letters.map(l => [l.ch, l.user])), hidden: state.hidden, decisions: state.decisions,
-    theme: state.theme, terminals: state.terminals, layers: state.layers,
+    theme: state.theme, style: state.style, terminals: state.terminals, layers: state.layers,
     termScale: state.termScale, endStyles: state.endStyles,
   }));
 }
 function restoreState(s) {
-  Object.assign(state, { method: s.method, mode: s.mode, overlap: s.overlap, absorb: s.absorb, theme: s.theme, terminals: s.terminals, termScale: s.termScale || 100, endStyles: { ...(s.endStyles || {}) } });
+  Object.assign(state, { method: s.method, mode: s.mode, overlap: s.overlap, absorb: s.absorb, terminals: s.terminals, termScale: s.termScale || 100, endStyles: { ...(s.endStyles || {}) } });
+  // guardados antiguos: construccion = pergamino liso, presentacion = oro y negro
+  applyStyle(s.style || presetStyle(s.theme === 'present' ? 'oro' : 'papel'), true);
   // capas (o, si es un guardado antiguo, su borde, estrella, inscripcion y estampas)
   state.layers = s.layers ? JSON.parse(JSON.stringify(s.layers)) : legacyLayers(s);
   layerSeq = Math.max(layerSeq, ...state.layers.map(L => Number(String(L.id).replace(/\D/g, '')) || 0));
@@ -3185,6 +3142,7 @@ function setFamily(f) {
   $('famPersonal').classList.toggle('active', f === 'personal');
   $('famCompare').classList.toggle('active', f === 'compare');
   $('comparePanel').hidden = f !== 'compare';
+  $('stylePanel').hidden = f === 'personal' || f === 'compare';
   $('btnGrid').hidden = f !== 'letters' && f !== 'personal';
   closePalettes();
   $('personalPanel').hidden = f !== 'personal';
@@ -3208,7 +3166,6 @@ function syncControls() {
   $('compactRow').style.display = state.mode === 'fusion' ? 'flex' : 'none';
   $('chkCompact').checked = state.compact;
   $('rngOverlap').value = Math.round(state.overlap * 100); $('overlapVal').textContent = Math.round(state.overlap * 100) + '%';
-  $('selTheme').value = state.theme;
   // en uno a uno se resalta el pincel; si no, el remate general
   const termOn = state.termPick ? state.termBrush : state.terminals;
   document.querySelectorAll('.term-btn').forEach(b => b.classList.toggle('active', b.dataset.t === termOn));
@@ -3241,7 +3198,6 @@ $('btnSmaller').addEventListener('click', () => editSelected(u => { u.ds = Math.
 $('btnBigger').addEventListener('click', () => editSelected(u => { u.ds = Math.min(2, u.ds * 1.15); }, 'escalar'));
 $('btnLetterReset').addEventListener('click', () => editSelected(u => Object.assign(u, newUser()), 'restaurar'));
 $('btnHideMode').addEventListener('click', () => { state.hideMode = !state.hideMode; state.stampMode = false; state.termPick = false; syncControls(); render(); showToast(state.hideMode ? 'Toca un trazo para ocultarlo o recuperarlo' : 'Modo ocultar desactivado'); });
-$('selTheme').addEventListener('change', e => { state.theme = e.target.value; render(); });
 // Terminales: cada boton muestra su remate dibujado con la misma geometria
 for (const t of TERMINALS) {
   const b = document.createElement('button');
@@ -3366,6 +3322,8 @@ document.querySelectorAll('.step').forEach(step => {
 let toastTimer;
 function showToast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 1900); }
 
+buildStylePanel();
+applyStyle(presetStyle('pergamino'), true);
 state.personal.layers = LAYER_PRESETS.goetia.make('personal');
 mountLayerPanel('letters', $('layersHost_letters'));
 mountLayerPanel('personal', $('layersHost_personal'));
