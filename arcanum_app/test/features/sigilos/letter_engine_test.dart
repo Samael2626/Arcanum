@@ -18,10 +18,14 @@ final _num = RegExp(r'-?\d+(?:\.\d+)?');
 String? diffNumeric(String a, String b, {double tol = 0.011}) {
   final ta = a.split(_num), tb = b.split(_num);
   if (ta.join('#') != tb.join('#')) return 'texto distinto:\n  dart: $a\n  js:   $b';
-  final na = _num.allMatches(a).map((m) => double.parse(m[0]!)).toList();
-  final nb = _num.allMatches(b).map((m) => double.parse(m[0]!)).toList();
-  for (var i = 0; i < na.length; i++) {
-    if ((na[i] - nb[i]).abs() > tol) return 'numero ${na[i]} frente a ${nb[i]}:\n  dart: $a\n  js:   $b';
+  final sa = _num.allMatches(a).map((m) => m[0]!).toList(), sb = _num.allMatches(b).map((m) => m[0]!).toList();
+  for (var i = 0; i < sa.length; i++) {
+    if (sa[i] == sb[i]) continue;
+    final x = double.parse(sa[i]), y = double.parse(sb[i]);
+    // mismo valor escrito distinto (7 frente a 7.00) es un fallo de formato
+    if (x == y) return 'formato ${sa[i]} frente a ${sb[i]}:\n  dart: $a\n  js:   $b';
+    // la tolerancia es solo para el ultimo decimal de seno y coseno
+    if ((x - y).abs() > tol) return 'numero ${sa[i]} frente a ${sb[i]}:\n  dart: $a\n  js:   $b';
   }
   return null;
 }

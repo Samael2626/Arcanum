@@ -85,10 +85,32 @@ const capas = await page2.evaluate(({ STACKS, TRANSLIT_NAMES }) => {
     generate();
     return { stack: i, contentR: layoutLayers(state.layers, layerCtx('letters')).contentR, k: state.view.k, cx: state.view.cx, cy: state.view.cy };
   });
-  return { stacks, translit, framed };
+  // ── SVG completo: el mismo que se exporta ──
+  const SIG = [['Mi practica mantiene enfoque sereno', 'cooper', 'fusion'], ['KAROLVS', 'unique', 'cross'], ['AMOR DIOS', 'unique', 'block']];
+  const LAYERSETS = [[], [['circle']], [['ringLatin', { symbol: 'jupiter', sep: 'cross' }], ['star', { points: 7 }]],
+    [['ringHebrew'], ['inscription', { text: 'VOLUNTAS' }], ['caption'], ['symbol', { sym: '♃︎', x: 400, y: 150, rot: 20 }]]];
+  const STYLES = [presetStyle('pergamino'), presetStyle('papel'), presetStyle('lacre'), presetStyle('oro'), presetStyle('burdeos'), presetStyle('plata'),
+    { ...STYLE_BASE, ...metalStyle('mars') }, presetStyle('flash-venus'), presetStyle('flash-saturn'),
+    { ...presetStyle('papel'), preset: 'propio', line: 'double', cap: 'square', width: 150 }, { ...presetStyle('lacre'), preset: 'propio', relief: true, glow: true, width: 80 }];
+  const svgs = [];
+  let n = 0;
+  for (const [text, method, mode] of SIG) for (const ls of LAYERSETS) for (const st of STYLES) {
+    n++;
+    if ((n % 3) && st.preset !== 'pergamino' && ls.length !== 3) continue; // muestra, no producto completo
+    const terminals = ['none', 'pattee', 'star', 'ring'][n % 4];
+    Object.assign(state, { method, mode, absorb: true, compact: true, overlap: 0, intention: '', hidden: [], endStyles: {}, terminals, termScale: 100, transparent: n % 17 === 0 });
+    state.layers = ls.map(([t, extra]) => newLayer(t, extra || {}));
+    applyStyle(st, true);
+    document.getElementById('intention').value = text;
+    generate();
+    if (n % 5 === 0) { const e = freeEnds(state.prims.filter(p => !p.hidden))[0]; if (e) state.endStyles = { [e.key]: 'lance' }; }
+    svgs.push({ text, method, mode, layers: state.layers, style: state.style, terminals, endStyles: state.endStyles, transparent: state.transparent, svg: buildSVG() });
+  }
+  state.transparent = false;
+  return { stacks, translit, framed, svgs };
 }, { STACKS, TRANSLIT_NAMES });
 await b.close();
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, JSON.stringify(out));
 fs.writeFileSync(OUT.replace('letras.json', 'capas.json'), JSON.stringify(capas));
-console.log(`${out.length} casos de letras y ${capas.stacks.length} pilas de capas -> ${path.relative(process.cwd(), path.dirname(OUT))}`);
+console.log(`${out.length} casos de letras, ${capas.stacks.length} pilas de capas y ${capas.svgs.length} SVG completos -> ${path.relative(process.cwd(), path.dirname(OUT))}`);
