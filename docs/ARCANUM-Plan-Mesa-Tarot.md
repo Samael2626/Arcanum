@@ -124,7 +124,7 @@
 | D2 | ¿Dónde entra el módulo en la app? | **Decidido: pestaña propia «Tarot»** en la navegación principal. |
 | D3 | ¿Todo de golpe o por entregas? | **Decidido: por fases.** Primera entrega = fases 1–5 (mesa y ritual) a la prueba cerrada. Segunda = fase 6 (efectos, sonido, háptica). |
 | D4 | ¿Oráculo con IA en la mesa? | **Decidido: solo Tradición en la primera versión.** El Oráculo, más adelante, con `arcanum-voz` y el cupo de Groq resuelto. |
-| D6 | ¿Sobre qué base va la migración de sesiones? | Abierta. `main` está en 012 y `release/1.0.6` en 014. Propuesta: que la migración de la mesa sea la **015**, colgando de la 014, y que la rama se rebase sobre `release/1.0.6` (o sobre `main` cuando esa rama se mezcle). |
+| D6 | ¿Sobre qué base va la migración de sesiones? | **Cerrada el 29-sep-2026.** `release/1.0.6` se mezcló en `main` (PR #9, `3ebf688`) y Railway lo desplegó: producción está en la **014** con `sendero_progress`, comprobado leyendo `alembic_version`. Esta rama se rebasó sobre ese `main`; la migración de la mesa es la **015**, colgando de la 014. |
 | D5 | ¿La pregunta de la lectura se cifra? | Abierta. El modelo anota «texto plano; en el cliente se cifra». **Sin comprobar** qué hace hoy la app: verificarlo en la fase 3 y aplicar lo mismo a la pregunta sellada. |
 
 ## Entorno de pruebas de esta rama
@@ -142,7 +142,7 @@ Además, el JSON de la biblioteca se copia desde la carpeta principal: está en 
 
 ## Riesgos
 
-- **Numeración de migraciones:** `release/1.0.6` trae la 013 (créditos) y la 014 (Sendero), que no están en `main`. Si esta rama crea su migración como 013 partiendo de `main`, chocará al mezclar. **Hay que decidirlo antes de la fase 2** (ver D6).
+- **Numeración de migraciones:** resuelto (D6). `main` y producción están en la 014; la de sesiones de la mesa es la 015.
 
 - **Mezclar a `main` despliega.** Toda la API nueva es aditiva y va detrás de rutas nuevas.
 - **Rendimiento de Flutter con muchas cartas en `Transform`:** por eso la prueba va al principio de la fase 4.
