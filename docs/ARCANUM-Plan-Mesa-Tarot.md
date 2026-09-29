@@ -74,11 +74,21 @@
 
 ## Fase 3: base de la app
 
-- [ ] `lib/features/tarot/` con la estructura de la especificación (§10).
-- [ ] Cliente de la API nueva en `arcanum_api.dart` y modelos.
-- [ ] `TableState`: el equivalente de `serialize`, con providers de Riverpod (`@riverpod` + codegen).
-- [ ] Autoguardado local **cifrado**, igual que el Grimorio.
-- [ ] Tests unitarios de `TableState`: serializar y restaurar, y deshacer con copias reales, no referencias.
+- [x] `lib/features/tarot/` con la estructura de la especificación (§10).
+- [x] Cliente de la API nueva en `arcanum_api.dart` y modelos.
+- [x] `TableState`: el equivalente de `serialize`, con providers de Riverpod (`@riverpod` + codegen).
+- [x] Autoguardado local **cifrado**, igual que el Grimorio.
+- [x] Tests unitarios de `TableState`: serializar y restaurar, y deshacer con copias reales, no referencias.
+
+**Hecha el 29-sep** (`lib/features/tarot/`: `domain/table_models.dart`, `domain/table_state.dart`, `data/table_store.dart`, `application/table_controller.dart`; tests en `test/features/tarot/`). Lo que conviene saber para la fase 4:
+
+- **Sin generación de código de Riverpod.** `AGENTS.md` pide `@riverpod` + codegen, pero el repo no lo usa en ningún sitio (ni `riverpod_annotation` ni `build_runner` en `pubspec.yaml`): todo es `Notifier`/`AsyncNotifier` a mano. Se siguió lo que hay para no meter una cadena de build nueva por un módulo.
+- **`TableState` es inmutable:** cada cambio devuelve una mesa nueva y las listas no se pueden modificar. Así, la foto de deshacer no puede compartir arrays con la mesa viva, que fue el fallo del prototipo. Hay un test que lo vigila.
+- **Guarda la vista pública, no el mazo:** `ServerView` (cuántas quedan y en qué posiciones) más la disposición local. `withServer()` reconcilia: montones nuevos tras un corte, montones que desaparecen al unir y cartas que vuelven al mazo.
+- **Operaciones en fila:** dos toques seguidos se aplican en orden. Los errores de red no se tragan; llegan a la pantalla.
+- **Autoguardado cifrado** con el mismo AES-256-GCM y la misma clave del dispositivo que el Grimorio, uno por usuario. `flush()` guarda en el acto (para cuando la app pasa a segundo plano). Si el servidor ya no tiene esa mesa, la foto se olvida. Borrar la cuenta borra las mesas guardadas.
+- **Deshacer es local:** vuelve a la disposición de antes del gesto, 5 s, una vez. **El mazo del servidor no retrocede**, así que deshacer un corte o una unión no los deshace en el servidor. Para la fase 5 hay que decidir si el servidor guarda un paso de deshacer o si esos gestos no se ofrecen para deshacer.
+- **Puerta:** `flutter analyze` limpio; `flutter test` 675 pasan (22 nuevos, tres pasadas seguidas sin fallos intermitentes).
 
 ## Fase 4: la mesa
 
@@ -136,7 +146,7 @@
 | D3 | ¿Todo de golpe o por entregas? | **Decidido: por fases.** Primera entrega = fases 1–5 (mesa y ritual) a la prueba cerrada. Segunda = fase 6 (efectos, sonido, háptica). |
 | D4 | ¿Oráculo con IA en la mesa? | **Decidido: solo Tradición en la primera versión.** El Oráculo, más adelante, con `arcanum-voz` y el cupo de Groq resuelto. |
 | D6 | ¿Sobre qué base va la migración de sesiones? | **Cerrada el 29-sep-2026.** `release/1.0.6` se mezcló en `main` (PR #9, `3ebf688`) y Railway lo desplegó: producción está en la **014** con `sendero_progress`, comprobado leyendo `alembic_version`. Esta rama se rebasó sobre ese `main`; la migración de la mesa es la **015**, colgando de la 014. |
-| D5 | ¿La pregunta de la lectura se cifra? | Abierta. El modelo anota «texto plano; en el cliente se cifra». **Sin comprobar** qué hace hoy la app: verificarlo en la fase 3 y aplicar lo mismo a la pregunta sellada. |
+| D5 | ¿La pregunta de la lectura se cifra? | **Cerrada el 29-sep: se hace lo mismo que la app de hoy.** Comprobado: `/tarot/spread` y `/tarot/draw-one` reciben la pregunta **en claro** y el servidor la guarda así. El comentario del modelo que decía «en el cliente se cifra» era falso y está corregido. La mesa manda la pregunta en claro al interpretar (el Oráculo, cuando llegue, la necesita legible). En el móvil, en cambio, el autoguardado de la mesa va **cifrado**. Si algún día se quiere la pregunta cifrada también en el servidor, es un cambio para todas las tiradas, no solo para la mesa. |
 
 ## Entorno de pruebas de esta rama
 

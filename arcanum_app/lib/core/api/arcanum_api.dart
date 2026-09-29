@@ -389,6 +389,95 @@ class ArcanumApi {
     return res.data as Map<String, dynamic>;
   }
 
+  // ── Mesa de tarot (sesion de sorteo en el servidor) ─────────────────────
+  //
+  // El servidor guarda el orden del mazo y las invertidas; la app solo recibe
+  // cuantas cartas quedan en cada monton y en que posiciones. Todas las
+  // operaciones son libres salvo interpretar, que gasta el cupo de tarot.
+
+  Future<List<Map<String, dynamic>>> tarotDecks() async {
+    final res = await _dio.get('/tarot/decks');
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<List<Map<String, dynamic>>> tarotSpreads() async {
+    final res = await _dio.get('/tarot/spreads');
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> tarotOpenTable(String deck) async {
+    final res = await _dio.post('/tarot/sessions', data: {'deck': deck});
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Mesa activa, o null si no hay ninguna (o caduco).
+  Future<Map<String, dynamic>?> tarotCurrentTable() async {
+    try {
+      final res = await _dio.get('/tarot/sessions/current');
+      return res.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
+  /// Operacion libre sobre la mesa: shuffle | cut | merge | take | return | gather.
+  Future<Map<String, dynamic>> tarotTableOp(
+    String sessionId,
+    String op,
+    Map<String, dynamic> body,
+  ) async {
+    final res = await _dio.post('/tarot/sessions/$sessionId/$op', data: body);
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Interpretacion de Tradicion. Gasta el cupo: 402 si no queda.
+  Future<Map<String, dynamic>> tarotInterpret(
+    String sessionId, {
+    required String spread,
+    required List<Map<String, dynamic>> placements,
+    String? question,
+    String? idempotencyKey,
+  }) async {
+    final q = question?.trim();
+    final res = await _dio.post(
+      '/tarot/sessions/$sessionId/interpret',
+      data: {
+        'spread': spread,
+        'placements': placements,
+        if (q != null && q.isNotEmpty) 'question': q,
+      },
+      options: _idempotentOptions(idempotencyKey),
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Cierra el circulo: guarda la lectura con la foto de la mesa. Repetirlo
+  /// devuelve la misma lectura.
+  Future<Map<String, dynamic>> tarotCloseTable(
+    String sessionId, {
+    Map<String, dynamic>? table,
+  }) async {
+    final res = await _dio.post(
+      '/tarot/sessions/$sessionId/close',
+      data: {'table': ?table},
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<List<Map<String, dynamic>>> tarotReadings({int limit = 20}) async {
+    final res = await _dio.get(
+      '/tarot/readings',
+      queryParameters: {'limit': limit},
+    );
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> tarotReading(String id) async {
+    final res = await _dio.get('/tarot/readings/$id');
+    return res.data as Map<String, dynamic>;
+  }
+
   /// Saldo de créditos del usuario. Solo lectura: la app lo consulta al abrir
   /// el paywall y después de un 402.
   Future<Map<String, dynamic>> creditsBalance() async {

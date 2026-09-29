@@ -6,6 +6,8 @@ import '../../core/auth/auth_controller.dart';
 import '../../core/crypto/grimoire_crypto.dart';
 import '../onboarding/application/onboarding_controller.dart';
 import '../sendero/application/sendero_controller.dart';
+import '../tarot/application/table_controller.dart';
+import '../tarot/data/table_store.dart';
 
 abstract interface class AccountDeletionService {
   Future<void> deleteAccount();
@@ -31,10 +33,12 @@ class DefaultAccountDeletionService implements AccountDeletionService {
         _ref.read(grimoireCryptoProvider).clearLocalKey(),
         clearOnboardingLocalData(),
         clearSenderoLocalData(),
+        clearTarotLocalData(),
       ]);
       _ref.invalidate(onboardingProvider);
       _ref.invalidate(onboardingCompletedProvider);
       _ref.invalidate(senderoControllerProvider);
+      _ref.invalidate(tableControllerProvider);
     } on Object catch (error, stackTrace) {
       FlutterError.reportError(
         FlutterErrorDetails(

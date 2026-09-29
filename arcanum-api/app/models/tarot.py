@@ -64,7 +64,9 @@ class TarotReading(Base):
     user_id = Column(PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"),
                      nullable=False, index=True)
     spread_type = Column(String(50), nullable=False)   # 'one_card' | 'three_card' | 'celtic_cross'
-    question = Column(String, nullable=True)           # texto plano; en el cliente se cifra
+    # Texto plano, y en el cliente TAMPOCO se cifra (comprobado 29-sep: /tarot/spread,
+    # /tarot/draw-one y la mesa la mandan en claro). Decision D5 del plan de la mesa.
+    question = Column(String, nullable=True)
     # Cartas sacadas: array de {slug, position, reversed, orientation}
     cards_drawn = Column(JSONB, nullable=False)
     moon_phase = Column(String(30), nullable=True)
