@@ -747,6 +747,54 @@ for (const f of ['famRosa', 'famKamea', 'famSeal', 'famPersonal', 'famCompare'])
 }
 await page.click('#famLetters');
 
+// 16) Deshacer y rehacer, cache de capas, galeria de todas las familias
+await forge('LUZ Y SOMBRA', 'fusion');
+await page.evaluate(() => { state.layers = []; layersChanged('letters'); histCommit(); });
+const h0 = (await snap()).svg;
+await addL('star');
+await page.evaluate(() => histCommit());
+const h1 = (await snap()).svg;
+await page.click('#btnUndo');
+const hu = (await snap()).svg;
+await page.click('#btnRedo');
+const hr = (await snap()).svg;
+check('deshacer quita la estrella y rehacer la devuelve', h1 !== h0 && hu === h0 && hr === h1);
+await page.keyboard.press('Control+z');
+check('Ctrl+Z deshace', (await snap()).svg === h0);
+const stable = await page.evaluate(() => { const n = hist.past.length; histCommit(); return hist.past.length === n && hist.future.length === 1; });
+check('restaurar no ensucia el historial (rehacer sigue disponible)', stable);
+await page.keyboard.press('Control+y');
+check('Ctrl+Y rehace', (await snap()).svg === h1);
+// arrastrar una letra es un solo paso
+const nPast = await page.evaluate(() => hist.past.length);
+const lp = await page.evaluate(() => { const l = activeLetters()[0], q = toCanvas({ x: l.base.tx, y: l.base.ty }), p = state.prims.find(x => x.units.length === 1 && x.units[0] === l.ch && x.t === 'L'); const a = toCanvas(p.a), b = toCanvas(p.b), r = canvas.getBoundingClientRect(); return { x: r.left + (a.x + b.x) / 2 / SIZE * r.width, y: r.top + (a.y + b.y) / 2 / SIZE * r.height }; });
+await page.mouse.move(lp.x, lp.y); await page.mouse.down(); await page.mouse.move(lp.x + 40, lp.y + 20, { steps: 8 }); await page.mouse.up();
+await page.waitForTimeout(500);
+check('arrastrar una letra entra como un solo paso', await page.evaluate(n => hist.past.length === n + 1, nPast));
+await page.click('#btnUndo');
+check('y se deshace de una vez', (await snap()).svg === h1);
+// rosa: el historial cubre las otras familias
+await page.click('#famRosa'); await page.fill('#rosaName', 'Rafael'); await page.click('#btnRosaGenerate');
+await page.evaluate(() => histCommit());
+const r1 = await page.evaluate(() => state.rosa.hebrew);
+await page.fill('#rosaName', 'Gabriel'); await page.click('#btnRosaGenerate');
+await page.evaluate(() => histCommit());
+await page.click('#btnUndo');
+check('deshacer en Rosa-Cruz vuelve al nombre anterior', await page.evaluate(r => state.rosa.hebrew === r && document.getElementById('rosaHebrew').value === r, r1), r1);
+// galeria de Kamea: guarda y vuelve con planeta y hebreo
+await page.evaluate(() => localStorage.clear());
+await page.click('#famKamea'); await page.selectOption('#selKameaPlanet', 'jupiter'); await page.fill('#kameaName', 'Samuel'); await page.click('#btnKameaGenerate');
+const kSvg = (await snap()).svg;
+await page.evaluate(() => saveSigil());
+await page.selectOption('#selKameaPlanet', 'moon'); await page.fill('#kameaName', 'Otro'); await page.click('#btnKameaGenerate');
+await page.click('#famLetters');
+await page.evaluate(() => { toggleGallery(true); document.querySelector('#galleryGrid img').click(); });
+const kBack = await page.evaluate(() => ({ fam: state.family, planet: state.kamea.planet, svg: buildSVG(), fam0: readGallery()[0].family }));
+check('galeria guarda y restaura una Kamea (familia, planeta, trazo)', kBack.fam === 'kamea' && kBack.planet === 'jupiter' && kBack.svg === kSvg && kBack.fam0 === 'kamea', JSON.stringify({ fam: kBack.fam, planet: kBack.planet }));
+check('los sellos historicos no se guardan', await page.evaluate(() => { setFamily('seal'); const n = readGallery().length; saveSigil(); const ok = readGallery().length === n; setFamily('letters'); return ok; }));
+check('cache de capas: misma entrada, mismo objeto', await page.evaluate(() => { const c = layerCtx('letters'), L = [newLayer('star')]; return layoutLayers(L, c) === layoutLayers(JSON.parse(JSON.stringify(L)), c); }));
+await page.evaluate(() => localStorage.clear());
+
 check('sin errores de pagina', errors.length === 0, errors.slice(0, 2).join(' | '));
 await browser.close();
 const fails = results.filter(x => !x.ok).length;

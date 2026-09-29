@@ -148,6 +148,8 @@ body:not(.adv) [data-adv]{display:none!important}
 .pal-grid{display:grid;gap:3px;grid-template-columns:repeat(3,1fr);margin:2px 0}
 .pal-grid .btn-dim{font-size:.7rem;min-height:36px;padding:2px}
 .canvas-tools{display:flex;gap:4px;position:absolute;right:8px;top:8px;z-index:5}
+.canvas-tools-left{left:8px;right:auto}
+.tool:disabled{cursor:default;opacity:.35}
 .tool{align-items:center;background:rgba(12,11,15,.8);border:1px solid var(--border);border-radius:5px;color:var(--dim);cursor:pointer;display:flex;font-family:var(--font);font-size:.74rem;justify-content:center;min-height:48px;min-width:48px;padding:2px 8px}
 .tool:hover,.tool.on{border-color:var(--gold);color:var(--gold)}
 .ctx-bar{align-items:center;background:rgba(21,18,26,.95);border:1px solid var(--gold);border-radius:6px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center;max-width:96%;padding:4px;position:absolute;z-index:6}
@@ -372,6 +374,10 @@ body:not(.adv) [data-adv]{display:none!important}
 </aside>
 
 <div class="canvas-wrap"><canvas id="canvas" width="800" height="800"></canvas><img id="sealFacsimile" class="seal-facsimile" hidden alt="">
+  <div class="canvas-tools canvas-tools-left">
+    <button class="tool" id="btnUndo" title="Deshacer (Ctrl+Z)" aria-label="Deshacer" disabled>↶</button>
+    <button class="tool" id="btnRedo" title="Rehacer (Ctrl+Y)" aria-label="Rehacer" disabled>↷</button>
+  </div>
   <div class="canvas-tools">
     <button class="tool" id="btnGrid" title="Rejilla de ayuda (no se exporta)">⌗</button>
     <button class="tool" id="btnProvenance" title="Procedencia: fuentes y decisiones">Fuentes</button>
@@ -1130,7 +1136,20 @@ function layerGeom(L, R, ctx) {
   return out;
 }
 // Pila completa: cada marco se encaja en el hueco del anterior
+// La geometria de capas es pura (capas + contexto): se calcula una vez por
+// estado y la reusan pintado, toque, guias y barra
+const layCache = new Map();
 function layoutLayers(layers, ctx) {
+  const key = JSON.stringify([layers, ctx]);
+  let v = layCache.get(key);
+  if (!v) {
+    v = layoutLayersRaw(layers, ctx);
+    layCache.set(key, v);
+    if (layCache.size > 12) layCache.delete(layCache.keys().next().value);
+  }
+  return v;
+}
+function layoutLayersRaw(layers, ctx) {
   let avail = 345;
   const parts = [];
   for (const L of layers) {
@@ -1585,6 +1604,7 @@ function render() {
   paint(previewCtx, { size: 80, theme: state.theme });
   renderChips();
   syncCtxBar();
+  histSchedule();
 }
 function snapshot(size, theme = state.theme, transparent = false) {
   const off = document.createElement('canvas');
@@ -2968,18 +2988,40 @@ function restoreState(s) {
   $('intention').value = s.intention;
   state.intention = '';
   syncControls();
+  if (!s.intention) {
+    Object.assign(state, { reduction: null, letters: [], extra: [], prims: [], hidden: [], decisions: [], sel: null });
+    $('reductionBox').textContent = '—';
+    render();
+    return;
+  }
   generate();
   state.letters.forEach(l => { if (s.users[l.ch]) l.user = s.users[l.ch]; });
   state.hidden = [...s.hidden]; state.decisions = [...s.decisions];
   state.endStyles = { ...(s.endStyles || {}) };
   rebuild();
 }
+const svgURL = svg => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+const FAMILY_NAMES = { letters: 'Letras', rosa: 'Rosa-Cruz', kamea: 'Kamea', personal: 'Sello', compare: 'Comparar' };
+function galleryLabel() {
+  const f = state.family;
+  if (f === 'letters') return state.letters.map(l => l.ch).join('');
+  if (f === 'rosa') return state.rosa.name || state.rosa.hebrew;
+  if (f === 'kamea') return `${KAMEA_BY_ID[state.kamea.planet].name} · ${state.kamea.hebrew}`;
+  if (f === 'personal') return personalName();
+  return state.compare.name;
+}
 function saveSigil() {
-  if (state.family !== 'letters' || !state.prims.length) { showToast('Forja primero un sigilo'); return; }
-  const now = new Date();
+  // la consulta de sellos historicos no es obra del usuario: no se guarda
+  if (state.family === 'seal' || !exportReady()) { showToast(state.family === 'seal' ? 'Los sellos históricos se consultan, no se guardan' : 'Forja primero un sigilo'); return; }
+  const now = new Date(), f = state.family;
   const items = readGallery();
-  items.unshift({ id: 'sigil-' + now.getTime(), name: now.toLocaleDateString('es-CO') + ' · ' + state.letters.map(l => l.ch).join(''), thumb: snapshot(120).toDataURL('image/png'), state: captureState() });
-  if (writeGallery(items)) { renderGallery(); showToast('Sigilo guardado'); }
+  items.unshift({
+    id: 'sigil-' + now.getTime(), family: f,
+    name: now.toLocaleDateString('es-CO') + ' · ' + FAMILY_NAMES[f] + ' · ' + galleryLabel(),
+    thumb: f === 'letters' ? snapshot(120).toDataURL('image/png') : svgURL(buildSVG()),
+    state: captureState(), doc: docSnapshot()
+  });
+  if (writeGallery(items)) { renderGallery(); showToast('Guardado en la galería'); }
 }
 function renderGallery() {
   const grid = $('galleryGrid');
@@ -2989,7 +3031,7 @@ function renderGallery() {
   for (const it of items) {
     const card = document.createElement('div'); card.className = 'g-item';
     const img = document.createElement('img'); img.src = it.thumb; img.alt = it.name;
-    img.addEventListener('click', () => { setFamily('letters'); restoreState(it.state); toggleGallery(false); });
+    img.addEventListener('click', () => { setFamily(it.family || 'letters'); if (it.doc) docRestore(it.doc); else restoreState(it.state); toggleGallery(false); });
     const name = document.createElement('div'); name.textContent = it.name;
     const del = document.createElement('button'); del.textContent = 'X'; del.title = 'Eliminar';
     del.addEventListener('click', () => { writeGallery(readGallery().filter(x => x.id !== it.id)); renderGallery(); });
@@ -3007,9 +3049,9 @@ let gnosisTimer = null;
 function setGnosisTime(s) { $('gnosisTimer').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(Math.ceil(s % 60)).padStart(2, '0'); }
 function stopGnosis() { clearInterval(gnosisTimer); gnosisTimer = null; $('gnosisOverlay').classList.remove('running'); $('btnStartCharge').disabled = false; }
 function openGnosis() {
-  if (state.family !== 'letters' || !state.prims.length) { showToast('Forja primero un sigilo'); return; }
+  if (state.family === 'seal' || !exportReady()) { showToast('Forja primero un sigilo'); return; }
   stopGnosis();
-  $('gnosisSigil').src = snapshot(600, 'present', true).toDataURL('image/png');
+  $('gnosisSigil').src = state.family === 'letters' ? snapshot(600, 'present', true).toDataURL('image/png') : svgURL(buildSVG());
   setGnosisTime(Number($('gnosisDuration').value));
   $('btnForget').classList.remove('ready');
   $('gnosisOverlay').classList.add('open');
@@ -3051,6 +3093,81 @@ function exportPNG() {
   c.width = c.height = SIZE;
   img.onload = () => { c.getContext('2d').drawImage(img, 0, 0); c.toBlob(b => download(b, exportName() + '.png')); };
   img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(buildSVG());
+}
+
+// ── Historial: deshacer y rehacer ───────────────────────────────
+// Se fotografia el documento (lo que decide el usuario, no lo derivado)
+// cuando la pantalla queda quieta un instante: cualquier cambio entra en
+// el historial sin tocar cada boton. Arrastrar cuenta como un solo paso.
+const HIST_MAX = 100;
+const hist = { past: [], future: [], timer: null, restoring: false };
+function docSnapshot() {
+  const p = state.personal, ro = state.rosa, km = state.kamea;
+  return JSON.stringify({
+    letters: captureState(),
+    personal: { source: p.source, template: p.template, layers: p.layers, name: p.name, planet: p.planet, view: p.view },
+    rosa: { name: ro.name, method: ro.method, hebrew: ro.hebrew, tokens: ro.tokens, tokensFor: ro.tokensFor, colors: ro.colors, diagram: ro.diagram, endBar: ro.endBar },
+    kamea: { planet: km.planet, reduce: km.reduce, ends: km.ends, grid: km.grid, hebrew: km.hebrew, name: $('kameaName').value },
+    style: state.style || null
+  });
+}
+function docRestore(json) {
+  const d = JSON.parse(json);
+  hist.restoring = true;
+  try {
+    const bump = list => { layerSeq = Math.max(layerSeq, ...list.map(L => Number(String(L.id).replace(/\D/g, '')) || 0)); };
+    Object.assign(state.personal, JSON.parse(JSON.stringify(d.personal)));
+    bump(state.personal.layers);
+    state.layerSel.personal = null;
+    $('personalName').value = d.personal.name; $('selPersonalSource').value = d.personal.source;
+    $('selPersonalPlanet').value = d.personal.planet; $('selPersonalView').value = d.personal.view;
+    renderLayerPanel('personal');
+    Object.assign(state.rosa, JSON.parse(JSON.stringify(d.rosa)));
+    $('rosaName').value = d.rosa.name; $('rosaHebrew').value = d.rosa.hebrew; $('selTranslit').value = d.rosa.method;
+    $('chkRosaColors').checked = d.rosa.colors; $('chkRosaDiagram').checked = d.rosa.diagram; $('chkRosaEndBar').checked = d.rosa.endBar;
+    rosaTraceFromHebrew();
+    Object.assign(state.kamea, { planet: d.kamea.planet, reduce: d.kamea.reduce, ends: d.kamea.ends, grid: d.kamea.grid });
+    $('selKameaPlanet').value = d.kamea.planet; $('selKameaReduce').value = d.kamea.reduce; $('selKameaEnds').value = d.kamea.ends; $('chkKameaGrid').checked = d.kamea.grid;
+    $('kameaHebrew').value = d.kamea.hebrew; $('kameaName').value = d.kamea.name || '';
+    renderKameaPresets(); kameaTraceFromHebrew();
+    if (d.style && typeof applyStyle === 'function') applyStyle(d.style, true);
+    restoreState(d.letters);
+    if (state.family === 'personal') renderPersonalInfo();
+  } finally { hist.restoring = false; }
+  render();
+}
+function histSchedule() {
+  if (hist.restoring) return;
+  clearTimeout(hist.timer);
+  hist.timer = setTimeout(histCommit, 400);
+}
+function histCommit() {
+  clearTimeout(hist.timer);
+  if (hist.restoring || state.dragging || layerDrag) return;
+  const snap = docSnapshot();
+  if (hist.past[hist.past.length - 1] === snap) return;
+  hist.past.push(snap);
+  if (hist.past.length > HIST_MAX) hist.past.shift();
+  hist.future = [];
+  syncHistButtons();
+}
+function undo() {
+  histCommit();
+  if (hist.past.length < 2) { showToast('Nada que deshacer'); return; }
+  hist.future.push(hist.past.pop());
+  docRestore(hist.past[hist.past.length - 1]);
+  syncHistButtons();
+}
+function redo() {
+  if (!hist.future.length) { showToast('Nada que rehacer'); return; }
+  const snap = hist.future.pop();
+  hist.past.push(snap);
+  docRestore(snap);
+  syncHistButtons();
+}
+function syncHistButtons() {
+  $('btnUndo').disabled = hist.past.length < 2;
+  $('btnRedo').disabled = !hist.future.length;
 }
 
 // ── UI ──────────────────────────────────────────────────────────
@@ -3151,6 +3268,8 @@ $('btnGnosisClose').addEventListener('click', closeGnosis);
 $('gnosisDuration').addEventListener('change', e => setGnosisTime(Number(e.target.value)));
 $('btnSave').addEventListener('click', saveSigil);
 $('btnGallery').addEventListener('click', () => toggleGallery());
+$('btnUndo').addEventListener('click', undo);
+$('btnRedo').addEventListener('click', redo);
 $('btnGalleryClose').addEventListener('click', () => toggleGallery(false));
 $('btnProvenance').addEventListener('click', showProvenance);
 $('btnProvClose').addEventListener('click', () => $('provModal').classList.remove('open'));
@@ -3197,6 +3316,8 @@ window.addEventListener('resize', syncCtxBar);
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate();
   const typing = ['TEXTAREA', 'INPUT', 'SELECT'].includes(document.activeElement.tagName);
+  if ((e.ctrlKey || e.metaKey) && !typing && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; }
+  if ((e.ctrlKey || e.metaKey) && !typing && (e.key === 'y' || e.key === 'Y')) { e.preventDefault(); redo(); return; }
   if ((e.key === 'Delete' || e.key === 'Backspace') && !typing && state.layerSel[scopeNow()]) removeLayer(scopeNow(), state.layerSel[scopeNow()]);
   if (e.key === 'Escape') { closeGnosis(); toggleGallery(false); $('provModal').classList.remove('open'); state.hideMode = false; state.stampMode = false; state.termPick = false; syncControls(); render(); }
 });
@@ -3248,6 +3369,7 @@ syncControls();
 setLevel((() => { try { return localStorage.getItem('arcanum_taller_nivel') === 'adv'; } catch { return false; } })());
 $('intention').value = 'Mi práctica mantiene enfoque sereno';
 generate();
+histCommit();
 </script>
 </body>
 </html>
