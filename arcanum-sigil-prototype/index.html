@@ -2763,14 +2763,17 @@ canvas.addEventListener('pointerdown', e => {
     return;
   }
   if (fam === 'letters' && state.hideMode) { const p = primAt(pt, state.prims); if (p) toggleHidden(p.key); return; }
+  // un simbolo ya puesto se toca antes que nada: se selecciona y se arrastra,
+  // aunque «Colocar» este activo (si no, cada intento de moverlo crea otro)
+  const hit = layerAt(pt, scope);
+  if (hit && hit.type === 'symbol') { state.stampMode = false; syncControls(); startLayerDrag(scope, hit, pt, e); return; }
   if (state.stampMode) {
     const q = snapPoint(pt, scope, null, e);
     addLayer(scope, 'symbol', { sym: state.stampSym, x: q.x, y: q.y });
+    // un toque, un simbolo: para poner otro se vuelve a elegir en el catalogo
+    state.stampMode = false; syncControls();
     state.guides = []; render(); return;
   }
-  // los simbolos estan encima: se tocan antes que las letras
-  const hit = layerAt(pt, scope);
-  if (hit && hit.type === 'symbol') { startLayerDrag(scope, hit, pt, e); return; }
   if (fam === 'letters') {
     const p = primAt(pt, state.prims.filter(q => !q.hidden));
     if (p && p.units.length) {

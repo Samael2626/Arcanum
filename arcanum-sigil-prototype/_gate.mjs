@@ -216,7 +216,6 @@ await page.click('.stamp-btn[title="Júpiter"]');
 const box = await page.locator('#canvas').boundingBox();
 const at = (fx, fy) => [box.x + box.width * fx, box.y + box.height * fy];
 await page.mouse.click(...at(.15, .15));
-await page.click('#btnStamp');
 let st1 = await syms();
 const info1 = await page.evaluate(() => document.getElementById('stampInfo').textContent);
 check('jupiter colocado como capa', st1.length === 1 && st1[0].sym.startsWith('♃') && (await page.evaluate(() => buildSVG().includes('data-layer="symbol"'))) && /Júpiter/.test(info1), info1);
@@ -227,10 +226,23 @@ await page.click('#btnStampBigger');
 check('ampliar simbolo', await page.evaluate(() => { const L = state.layers.find(q => q.type === 'symbol'); return L.size > STAMP_SIZE && buildSVG().includes(`font-size="${L.size}.00"`); }));
 await page.click('#btnStampDelete');
 check('quitar simbolo', (await syms()).length === 0 && !(await page.evaluate(() => buildSVG().includes('data-layer="symbol"'))));
+// regresion: con «Colocar» activo, tocar un simbolo existente lo mueve, no crea otro
+await page.click('.stamp-btn[title="Marte"]');
+await page.mouse.click(...at(.2, .8));
+const mars = (await syms()).find(q => q.sym.startsWith('♂'));
+check('colocar se apaga solo tras poner un simbolo', await page.evaluate(() => !state.stampMode));
+await page.click('.stamp-btn[title="Marte"]');
+const nBefore = (await syms()).length;
+const mx = box.x + box.width * mars.x / 800, my = box.y + box.height * mars.y / 800;
+await page.mouse.move(mx, my); await page.mouse.down(); await page.mouse.move(mx + 60, my - 40, { steps: 4 }); await page.mouse.up();
+const aft = await syms();
+check('con colocar activo, arrastrar un simbolo lo mueve sin duplicarlo', aft.length === nBefore && aft.some(q => q.sym.startsWith('♂') && Math.abs(q.x - mars.x) > 20), `${nBefore} -> ${aft.length}`);
+await page.keyboard.press('Delete');
+check('Supr borra el simbolo seleccionado', (await syms()).length === nBefore - 1);
+
 // guias: arrastrado cerca de la vertical del centro, se pega a x = 400
 await page.click('.stamp-btn[title="Saturno"]');
 await page.mouse.click(...at(.3, .1));
-await page.click('#btnStamp');
 const s0 = (await syms())[0];
 const cx0 = box.x + box.width * s0.x / 800, cy0 = box.y + box.height * s0.y / 800;
 await page.mouse.move(cx0, cy0); await page.mouse.down();
