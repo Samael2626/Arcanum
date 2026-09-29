@@ -1,0 +1,82 @@
+{
+  "id": "arcanum-generate-draft-v1",
+  "name": "ARCANUM 02 - Generar borrador",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "8955036c-5ef6-4ed3-bd12-a45df520060d",
+      "name": "Ejecutar manualmente",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-620, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { external_key: 'demo-manifiesto-001', pillar: 'manifiesto', premise: 'ARCANUM es un instrumento de practica y reflexion, no una maquina de predicciones.', facts: [{ claim: 'ARCANUM no promete predecir el futuro.', source_id: 'play-ficha' }, { claim: 'La app ofrece Tarot, carta natal y grimorio cifrado.', source_id: 'play-ficha' }], sources: [{ id: 'play-ficha', kind: 'repo', reference: 'docs/play-ficha.md' }], warnings: ['No presentar la app como servicio predictivo.', 'No prometer resultados personales.'], asset: null } }];"
+      },
+      "id": "f95c144c-5c4c-4ac7-8f97-5516e8153fba",
+      "name": "Preparar paquete factual",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-380, 0]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Convierte este paquete factual en una pieza maestra de contenido para ARCANUM. Usa solamente los hechos entregados. Devuelve JSON valido, sin markdown.\n\nPAQUETE FACTUAL:\n{{ JSON.stringify($json) }}\n\nFORMATO DE SALIDA:\n{\"hook\":\"\",\"script\":\"\",\"carousel\":[],\"caption\":\"\",\"cta\":\"\",\"alt_text\":\"\",\"compliance\":{\"claims_supported\":true,\"warnings_applied\":true}}",
+        "hasOutputParser": false,
+        "messages": {
+          "messageValues": [
+            {
+              "type": "SystemMessagePromptTemplate",
+              "messageType": "text",
+              "message": "Eres el editor de ARCANUM. Voz seria, simbolica y precisa: un grimorio bien encuadernado, no un banner de rebajas. Prohibido inventar hechos, predecir el futuro, dar consejo medico, legal, financiero o psicologico, usar urgencia falsa, superlativos vacios o emojis genericos. Cada pieza debe ser comprensible para principiantes sin infantilizar a quien practica. El CTA solo puede invitar a conocer una funcion confirmada en el paquete factual."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "013f12d9-7084-4f9d-b909-711848842d28",
+      "name": "Generar pieza maestra",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [-100, 0]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.8-flash",
+        "options": {
+          "maxOutputTokens": 1800,
+          "temperature": 0.4,
+          "topP": 0.9
+        }
+      },
+      "id": "b1117a79-1290-4815-8832-341351777f4e",
+      "name": "Gemini editorial",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [-100, 220]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Ejecutar manualmente": {
+      "main": [[{ "node": "Preparar paquete factual", "type": "main", "index": 0 }]]
+    },
+    "Preparar paquete factual": {
+      "main": [[{ "node": "Generar pieza maestra", "type": "main", "index": 0 }]]
+    },
+    "Gemini editorial": {
+      "ai_languageModel": [[{ "node": "Generar pieza maestra", "type": "ai_languageModel", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "19051636-23e7-40c2-b42c-8087efcc984d",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}
