@@ -46,14 +46,19 @@ const _strip = {
   'ŕ': 'r', 'ŗ': 'r', 'ř': 'r', 'ś': 's', 'ŝ': 's', 'ş': 's', 'š': 's', 'ţ': 't', 'ť': 't',
   'ù': 'u', 'ú': 'u', 'û': 'u', 'ü': 'u', 'ũ': 'u', 'ū': 'u', 'ŭ': 'u', 'ů': 'u', 'ű': 'u', 'ų': 'u',
   'ŵ': 'w', 'ý': 'y', 'ÿ': 'y', 'ŷ': 'y', 'ź': 'z', 'ż': 'z', 'ž': 'z',
-  // toUpperCase de JS expande estas; el de Dart no
-  'ß': 'SS', 'ﬀ': 'FF', 'ﬁ': 'FI', 'ﬂ': 'FL', 'ﬃ': 'FFI', 'ﬄ': 'FFL', 'ﬅ': 'ST', 'ﬆ': 'ST',
 };
+// toUpperCase de JS expande estas; el de Dart no (toLowerCase no las toca)
+const _upperExpand = {'ß': 'SS', 'ﬀ': 'FF', 'ﬁ': 'FI', 'ﬂ': 'FL', 'ﬃ': 'FFI', 'ﬄ': 'FFL', 'ﬅ': 'ST', 'ﬆ': 'ST'};
 final _combining = RegExp('[\u0300-\u036f]');
 final _nonLetters = RegExp('[^A-Z]+');
 
-String foldLatin(String text) =>
-    text.split('').map((c) => _strip[c] ?? c).join().replaceAll(_combining, '').toUpperCase();
+/// normalize('NFD') + quitar marcas combinantes.
+String stripMarks(String text) => text.split('').map((c) => _strip[c] ?? c).join().replaceAll(_combining, '');
+
+/// toUpperCase con la semantica de JS.
+String jsUpper(String text) => text.split('').map((c) => _upperExpand[c] ?? c).join().toUpperCase();
+
+String foldLatin(String text) => jsUpper(stripMarks(text));
 
 List<String> _uniq(Iterable<String> s) => <String>{...s}.toList();
 

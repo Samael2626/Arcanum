@@ -51,7 +51,44 @@ const out = await page.evaluate(cases => cases.map(cs => {
     terms, perEnd, endStyles: state.endStyles
   };
 }), cases);
+// ── capas, transliteracion y encuadre dentro de los marcos ──
+const STACKS = [
+  [['circle']], [['square', { rot: 15 }], ['triangle']], [['ringLatin', { sep: 'cross', symbol: 'jupiter' }]],
+  [['ringLatin', { text: 'Straße ÁNGEL', sep: 'dot' }]], [['ringHebrew']], [['ringHebrew', { text: 'Metatron', sep: 'cross' }]],
+  [['ringHebrew', { text: 'שְׁמוּאֵל' }]], [['ringHebrew', { text: 'Miguel Angel', symbol: 'moon' }]],
+  [['star']], [['star', { points: 7, shape: 'wide', inner: 40, chords: false }]], [['star', { points: 9, contain: true }]],
+  [['star', { points: 6 }]], [['star', { points: 8, rot: 22.5, width: 4 }]],
+  [['inscription', { text: 'VOLUNTAS' }]], [['inscription', { pos: 'lowerArc', text: 'lux in tenebris', size: 18, spacing: 6 }]],
+  [['inscription', { pos: 'top', text: 'Straße' }]], [['inscription', { pos: 'bottom' }]],
+  [['caption']], [['caption', { title: 'Mi sello', sub: 'con ♄ Saturno' }]],
+  [['symbol', { sym: '♃︎', x: 300, y: 200, size: 80, rot: 30 }]], [['symbol', { sym: '★', x: 500, y: 600 }]],
+  [['circle', { scale: 90 }], ['ringLatin', { symbol: 'auto' }], ['star', { points: 7, dx: 12, dy: -8 }], ['inscription', { text: 'AMOR' }], ['triangle', { visible: false }], ['caption'], ['symbol', { sym: '☉︎', x: 400, y: 700 }]],
+];
+const TRANSLIT_NAMES = ['Samuel', 'Metatron', 'Marc', 'Isaac', 'Chesed', 'Sophia', 'Tzadkiel', 'Rafael Arcangel', 'Xavier', 'Anna', 'Óscar', 'Llull', 'Straße Ñoño', 'Yves', 'Cecilia', 'Joshua Ben'];
+const page2 = await b.newPage();
+await page2.goto(INDEX); await page2.waitForTimeout(300);
+const capas = await page2.evaluate(({ STACKS, TRANSLIT_NAMES }) => {
+  const ser = g => ({ inner: g.inner, center: g.center, vertices: g.vertices, radii: g.radii, prims: g.prims });
+  const ctxs = [{ text: 'Mi practica mantiene enfoque sereno', planet: null, title: 'Mi practica', sub: '' }, { text: 'Samuel', planet: 'mars', title: 'Sello de Samuel', sub: '♂︎ Marte · hierro' }];
+  const stacks = [];
+  for (const ctx of ctxs) for (const st of STACKS) {
+    const layers = st.map(([t, extra]) => newLayer(t, extra || {}));
+    const lay = layoutLayersRaw(layers, ctx);
+    stacks.push({ ctx, layers, contentR: lay.contentR, parts: lay.parts.map(p => ({ id: p.L.id, R: p.R ?? null, g: ser(p.g) })) });
+  }
+  const translit = TRANSLIT_NAMES.map(n => ({ name: n, consonantal: transliterate(n, 'consonantal').hebrew, full: transliterate(n, 'full').hebrew }));
+  // encuadre del sigilo dentro de los marcos
+  const framed = [0, 2, 21].map(i => {
+    Object.assign(state, { method: 'cooper', mode: 'fusion', absorb: true, compact: true, overlap: 0, intention: '', hidden: [], endStyles: {} });
+    state.layers = STACKS[i].map(([t, extra]) => newLayer(t, extra || {}));
+    document.getElementById('intention').value = 'Mi practica mantiene enfoque sereno';
+    generate();
+    return { stack: i, contentR: layoutLayers(state.layers, layerCtx('letters')).contentR, k: state.view.k, cx: state.view.cx, cy: state.view.cy };
+  });
+  return { stacks, translit, framed };
+}, { STACKS, TRANSLIT_NAMES });
 await b.close();
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, JSON.stringify(out));
-console.log(`${out.length} casos -> ${path.relative(process.cwd(), OUT)}`);
+fs.writeFileSync(OUT.replace('letras.json', 'capas.json'), JSON.stringify(capas));
+console.log(`${out.length} casos de letras y ${capas.stacks.length} pilas de capas -> ${path.relative(process.cwd(), path.dirname(OUT))}`);
