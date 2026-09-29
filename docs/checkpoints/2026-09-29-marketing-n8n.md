@@ -46,6 +46,9 @@ para convertir un paquete factual en borrador mediante Gemini.
 ## Decisiones y notas
 
 - Gemini se usa para marketing, separado de la cuota Groq de usuarios.
+- El primer ensayo confirmo clave y red funcionales. `gemini-3.8-flash`
+  devolvio `503` por alta demanda; la plantilla usa `gemini-3.5-flash`, que
+  respondio `200` desde el mismo contenedor.
 - La IA redacta; las efemerides y hechos llegan calculados y citados.
 - Ningun dato de usuarios entra a esta base o a Gemini.
 - La automatizacion empieza como fabrica de borradores, no como autopublicador.
