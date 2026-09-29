@@ -224,7 +224,7 @@ for (let step = 0; step < N * 2; step++) {
   const h = handles[Math.floor(rnd() * handles.length)];
   const info = await h.evaluate(e => ({ tag: e.tagName, type: e.type, id: e.id, n: e.options ? e.options.length : 0, min: e.min, max: e.max }));
   // descargas y galeria no aportan al estres
-  if (['btnSVG', 'btnPNG', 'btnRosaSVG', 'btnKameaSVG', 'btnSave'].includes(info.id)) continue;
+  if (['btnSVG', 'btnPNG', 'btnSave'].includes(info.id)) continue;
   try {
     if (info.tag === 'SELECT') await h.selectOption({ index: Math.floor(rnd() * info.n) });
     else if (info.type === 'range') await h.fill(String(Math.round(Number(info.min) + rnd() * (Number(info.max) - Number(info.min)))));

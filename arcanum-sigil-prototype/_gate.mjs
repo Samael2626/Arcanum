@@ -22,6 +22,14 @@ page.on('pageerror', e => errors.push(String(e)));
 page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 await page.goto(INDEX);
 await page.waitForTimeout(400);
+// la interfaz arranca en basico: se comprueba y se pasa a avanzado para los tests
+const basic = await page.evaluate(() => ({ adv: document.body.classList.contains('adv'), reduc: !!document.getElementById('selReduction').offsetParent, intent: !!document.getElementById('intention').offsetParent }));
+await page.evaluate(() => setLevel(true));
+// paletas: el catalogo se abre con su boton
+const addL = async (t, scope = 'letters') => { await page.click(`#btnAddLayer_${scope}`); await page.click(`#addPalette_${scope} [data-add="${t}"]`); };
+const stamp = async name => { await page.click('#btnAddLayer_letters'); await page.click(`#stampCatalog .stamp-btn[title="${name}"]`); };
+const term = async id => { await page.click('#btnTermPalette'); await page.click(`.term-btn[data-t="${id}"]`); };
+const preset = async (fmt, scope = 'personal') => { await page.click(`#btnAddLayer_${scope}`); await page.click(`#layersHost_${scope} [data-preset="${fmt}"]`); };
 
 async function forge(text, mode = 'fusion', method = 'cooper') {
   await page.selectOption('#selReduction', method);
@@ -160,11 +168,11 @@ check('ocultar trazo baja legibilidad', hid.legible < 1 && hid.inSvg < hid.after
 // 9) Capas: marcos anidados, estrellas, inscripcion y simbolos
 const layerSvg = type => page.evaluate(t => (buildSVG().match(new RegExp(`<g data-layer="${t}">[\\s\\S]*?</g>`)) || [''])[0], type);
 const noBorder = (await snap()).svg;
-await page.selectOption('#selAddLayer_letters', 'circle'); await page.click('#btnAddLayer_letters');
+await addL('circle');
 const withBorder = (await snap()).svg;
 check('capa circulo on/off', !noBorder.includes('data-layer="circle"') && withBorder.includes('data-layer="circle"'));
 // varias capas a la vez, cada una dentro de la anterior
-for (const t of ['square', 'triangle', 'ringLatin', 'ringHebrew', 'star', 'inscription']) { await page.selectOption('#selAddLayer_letters', t); await page.click('#btnAddLayer_letters'); }
+for (const t of ['square', 'triangle', 'ringLatin', 'ringHebrew', 'star', 'inscription']) await addL(t);
 const nest = await page.evaluate(() => {
   const lay = layoutLayers(state.layers, layerCtx('letters'));
   const Rs = lay.parts.filter(p => p.R).map(p => p.R);
@@ -212,26 +220,26 @@ const cat = await page.evaluate(() => ({
 check('catalogo de simbolos por grupos con nombre', cat.groups === 6 && cat.btns >= 39 && cat.named, `${cat.groups} grupos, ${cat.btns} simbolos`);
 check('solo planetas clasicos', !cat.modern);
 const syms = () => page.evaluate(() => state.layers.filter(L => L.type === 'symbol').map(L => ({ sym: L.sym, x: L.x, y: L.y, size: L.size })));
-await page.click('.stamp-btn[title="Júpiter"]');
+await stamp('Júpiter');
 const box = await page.locator('#canvas').boundingBox();
 const at = (fx, fy) => [box.x + box.width * fx, box.y + box.height * fy];
 await page.mouse.click(...at(.15, .15));
 let st1 = await syms();
-const info1 = await page.evaluate(() => document.getElementById('stampInfo').textContent);
+const info1 = await page.evaluate(() => document.getElementById('ctxBar').hidden ? '' : document.getElementById('ctxName').textContent);
 check('jupiter colocado como capa', st1.length === 1 && st1[0].sym.startsWith('♃') && (await page.evaluate(() => buildSVG().includes('data-layer="symbol"'))) && /Júpiter/.test(info1), info1);
 await page.mouse.move(...at(.15, .15)); await page.mouse.down(); await page.mouse.move(...at(.85, .2), { steps: 5 }); await page.mouse.up();
 st1 = await syms();
 check('arrastrar simbolo lo mueve', st1[0].x > 600 && st1.length === 1, `x=${st1[0].x.toFixed(0)}`);
-await page.click('#btnStampBigger');
+await page.click('#btnLayerBigger');
 check('ampliar simbolo', await page.evaluate(() => { const L = state.layers.find(q => q.type === 'symbol'); return L.size > STAMP_SIZE && buildSVG().includes(`font-size="${L.size}.00"`); }));
-await page.click('#btnStampDelete');
+await page.click('#btnLayerDelete');
 check('quitar simbolo', (await syms()).length === 0 && !(await page.evaluate(() => buildSVG().includes('data-layer="symbol"'))));
 // regresion: con «Colocar» activo, tocar un simbolo existente lo mueve, no crea otro
-await page.click('.stamp-btn[title="Marte"]');
+await stamp('Marte');
 await page.mouse.click(...at(.2, .8));
 const mars = (await syms()).find(q => q.sym.startsWith('♂'));
 check('colocar se apaga solo tras poner un simbolo', await page.evaluate(() => !state.stampMode));
-await page.click('.stamp-btn[title="Marte"]');
+await stamp('Marte');
 const nBefore = (await syms()).length;
 const mx = box.x + box.width * mars.x / 800, my = box.y + box.height * mars.y / 800;
 await page.mouse.move(mx, my); await page.mouse.down(); await page.mouse.move(mx + 60, my - 40, { steps: 4 }); await page.mouse.up();
@@ -241,7 +249,7 @@ await page.keyboard.press('Delete');
 check('Supr borra el simbolo seleccionado', (await syms()).length === nBefore - 1);
 
 // guias: arrastrado cerca de la vertical del centro, se pega a x = 400
-await page.click('.stamp-btn[title="Saturno"]');
+await stamp('Saturno');
 await page.mouse.click(...at(.3, .1));
 const s0 = (await syms())[0];
 const cx0 = box.x + box.width * s0.x / 800, cy0 = box.y + box.height * s0.y / 800;
@@ -263,9 +271,10 @@ check('guias: Alt mueve libre (sin pegarse)', await page.evaluate(() => Math.abs
 // giro con iman a multiplos de 15
 check('giro con iman: 43 grados se pega a 45', await page.evaluate(() => snapAngle(43) === 45 && snapAngle(37) === 37));
 // rejilla: solo en pantalla, nunca en el SVG
-await page.selectOption('#layersHost_letters .grid-sel', 'polar');
+await page.click('#btnGrid');
 check('rejilla polar visible y fuera del SVG', await page.evaluate(() => state.grid === 'polar' && !/data-layer="grid"/.test(buildSVG())));
-await page.selectOption('#layersHost_letters .grid-sel', 'none');
+await page.click('#btnGrid'); await page.click('#btnGrid');
+check('rejilla: el icono del lienzo recorre polar, cuadrada y ninguna', await page.evaluate(() => state.grid === 'none'));
 await shot('marco-completo');
 // galeria: guarda y recupera las capas
 await page.evaluate(() => { addLayer('letters', 'star', { points: 9 }); addLayer('letters', 'inscription', { text: 'VOLUNTAS' }); });
@@ -285,7 +294,7 @@ const termIds = await page.evaluate(() => TERMINALS.map(t => t.id).filter(id => 
 check('catalogo de remates', termIds.length >= 13, termIds.join(','));
 const freeN = await page.evaluate(() => freeEnds(state.prims.filter(p => !p.hidden)).length);
 for (const id of termIds) {
-  await page.click(`.term-btn[data-t="${id}"]`);
+  await term(id);
   const t = await page.evaluate(() => {
     const s = buildSVG(), g = s.match(/<g data-layer="terminals"[\s\S]*?<\/g>/);
     return { det: s === buildSVG(), groups: terminalList(state.prims.filter(p => !p.hidden)).length, paths: g ? (g[0].match(/<path/g) || []).length : 0, nan: /NaN/.test(s) };
@@ -303,7 +312,7 @@ await page.click('#btnTermClear');
 check('quitar todos los remates', await page.evaluate(() => !buildSVG().includes('data-layer="terminals"')));
 // uno a uno: una sola punta con cruz patada, como el ejemplo
 await page.click('#btnTermPick');
-await page.click('.term-btn[data-t="pattee"]');
+await term('pattee');
 const endPx = await page.evaluate(() => {
   const e = freeEnds(state.prims.filter(p => !p.hidden))[0], q = toCanvas(e), r = canvas.getBoundingClientRect();
   return { x: r.left + q.x / SIZE * r.width, y: r.top + q.y / SIZE * r.height };
@@ -532,7 +541,7 @@ await page.selectOption('#selKameaPlanet', 'moon');
 await page.click('#kameaPresets button >> nth=1');
 const rtl = await page.evaluate(() => { const w = kameaFit(state.kamea.words).map(ws => ws.reduce((a, q) => a + q.x, 0) / ws.length); return w; });
 check('kamea: varias palabras de derecha a izquierda (Schedbarschemoth a la derecha)', rtl.length === 2 && rtl[0] > rtl[1], rtl.map(x => x.toFixed(0)).join(' > '));
-await page.click('#btnKameaProv');
+await page.click('#btnProvenance');
 const kprov = await page.evaluate(() => document.getElementById('provBody').innerText + '\n' + document.getElementById('kameaBox').innerText);
 await page.click('#btnProvClose');
 const mk = kprov.match(/\[(HP|OM|RC|AR)\]|\b(the|with|of the|shall|wise searcher)\b/i);
@@ -592,7 +601,7 @@ await page.click('#btnSealKamea');
 check('sello -> kamea: Agiel sobre Saturno', await page.evaluate(() => state.family === 'kamea' && state.kamea.planet === 'saturn' && state.kamea.hebrew === 'אגיאל'));
 await page.click('#kameaBox button');
 check('kamea -> sello: vuelve al caracter original de Agrippa', await page.evaluate(() => state.family === 'seal' && state.seal.id === 'saturno-inteligencia'));
-await page.click('#btnSealProv');
+await page.click('#btnProvenance');
 const stext = await page.evaluate(() => document.getElementById('provBody').innerText + document.getElementById('sealBox').innerText);
 await page.click('#btnProvClose');
 const ms = stext.match(/\[(HP|OM|RC|AR)\]|(the|of the|with)/i);
@@ -604,7 +613,7 @@ await forge('Samuel', 'fusion', 'cooper');
 await page.click('#famPersonal');
 const pers = {};
 for (const fmt of ['goetia', 'pentaculo', 'agrippa']) {
-  await page.click(`#layersHost_personal [data-preset="${fmt}"]`);
+  await preset(fmt);
   pers[fmt] = await page.evaluate(() => { const s = buildSVG(); return { s, det: s === buildSVG(), ok: !new DOMParser().parseFromString(s, 'image/svg+xml').querySelector('parsererror'), nan: /NaN|undefined/.test(s), texts: (s.match(/<g data-layer="personal-name"[^>]*>[\s\S]*?<\/g>/) || [''])[0].split('<text').length - 1, sigil: /data-layer="personal-sigil"[\s\S]*<path/.test(s), honest: /No es un sello histórico/.test(s) }; });
 }
 check('sello personal: 3 plantillas distintas, deterministas y validas', new Set(Object.values(pers).map(x => x.s)).size === 3 && Object.values(pers).every(x => x.det && x.ok && !x.nan && x.sigil));
@@ -622,7 +631,7 @@ const kp = await page.evaluate(() => ({ planet: personalPlanet(), locked: docume
 check('sello personal: con Kamea el planeta es el de la tabla (Marte, hierro)', kp.planet === 'mars' && kp.locked && kp.metal, JSON.stringify(kp));
 await page.selectOption('#selPersonalSource', 'letters');
 // capas en el sello: plantilla Goetia + cruces + estrella de 7 + anillo hebreo por dentro
-await page.click('#layersHost_personal [data-preset="goetia"]');
+await preset('goetia');
 const po = await page.evaluate(() => {
   state.personal.layers[0].sep = 'cross';
   addLayer('personal', 'star', { points: 7 });
@@ -632,7 +641,7 @@ const po = await page.evaluate(() => {
 });
 check('sello personal: capas combinadas (anillo con cruces, estrella de 7, anillo hebreo)', po.cross === 5 && po.star === 8 && po.heb, JSON.stringify(po));
 check('sello personal: la descripcion nombra sus capas', await page.evaluate(() => /capas: Anillo latino, Estrella 7, Anillo hebreo/.test(buildSVG())));
-await page.click('#layersHost_personal [data-preset="goetia"]');
+await preset('goetia');
 await page.click('#famLetters');
 // Sigilo de letras: anillos con nombre
 await forge('Amor', 'fusion', 'cooper');
@@ -665,7 +674,7 @@ async function visibleText() {
 }
 await forge('HACIA EL HORIZONTE', 'cross');
 await page.click('#btnTermPick');
-await page.click('.term-btn[data-t="pattee"]');
+await term('pattee');
 const endPx2 = await page.evaluate(() => {
   const e = freeEnds(state.prims.filter(p => !p.hidden))[0], q = toCanvas(e), r = canvas.getBoundingClientRect();
   return { x: r.left + q.x / SIZE * r.width, y: r.top + q.y / SIZE * r.height };
@@ -678,7 +687,7 @@ check('procedencia de letras en espanol', !m1, m1 ? 'encontrado: ' + m1[0] : '')
 await page.click('#famRosa');
 await page.fill('#rosaName', 'Metatron');
 await page.click('#btnRosaGenerate');
-await page.click('#btnRosaProv');
+await page.click('#btnProvenance');
 await page.waitForTimeout(80);
 const tRosa = await page.evaluate(() => document.getElementById('provBody').innerText + '\n' + document.getElementById('rosaBox').innerText);
 await shot('prov-rosa');
@@ -689,6 +698,53 @@ const origs = await page.evaluate(() => [...document.querySelectorAll('#provBody
 check('citas con original en tooltip', origs);
 const termTitles = await page.evaluate(() => [...document.querySelectorAll('.term-btn')].map(b => b.title).join(' | '));
 check('tooltips de remates sin codigos', !/\[/.test(termTitles), termTitles.slice(0, 60));
+await page.click('#famLetters');
+
+// 15) Interfaz simplificada: basico, paletas, barra contextual, ayuda
+check('arranca en basico: intencion visible, reduccion oculta', !basic.adv && basic.intent && !basic.reduc, JSON.stringify(basic));
+await page.evaluate(() => setLevel(false));
+const nBasic = await page.evaluate(() => [...document.querySelectorAll('#controlPanel button, #controlPanel select, #controlPanel input')].filter(e => e.offsetParent).length);
+await page.evaluate(() => setLevel(true));
+const nAdv = await page.evaluate(() => [...document.querySelectorAll('#controlPanel button, #controlPanel select, #controlPanel input')].filter(e => e.offsetParent).length);
+check('basico muestra muchos menos controles que avanzado', nBasic <= 22 && nBasic < nAdv / 2, `basico ${nBasic}, avanzado ${nAdv}`);
+check('sin numeros de paso ni boton de iman', await page.evaluate(() => !document.querySelector('.step-num') && !document.querySelector('.magnet-btn') && state.magnet === true));
+check('paletas cerradas por defecto', await page.evaluate(() => [...document.querySelectorAll('.palette')].every(p => p.hidden)));
+await page.click('#btnAddLayer_letters');
+check('Añadir abre su paleta', await page.evaluate(() => !document.getElementById('addPalette_letters').hidden));
+await page.mouse.click(5, 5);
+check('tocar fuera cierra la paleta', await page.evaluate(() => document.getElementById('addPalette_letters').hidden));
+const helpStep = page.locator('#lettersPanel .step').first();
+const helpBefore = await helpStep.locator('p.helper').first().isVisible();
+await helpStep.locator('.info-btn').click();
+const helpAfter = await helpStep.locator('p.helper').first().isVisible();
+check('ayuda oculta tras el boton i y visible al tocarlo', !helpBefore && helpAfter);
+await helpStep.locator('.info-btn').click();
+await forge('AMOR DIOS', 'fusion');
+await page.evaluate(() => { state.sel = null; state.layerSel.letters = null; render(); });
+check('sin seleccion no hay barra contextual', await page.evaluate(() => document.getElementById('ctxBar').hidden));
+const dpt = await page.evaluate(() => { const p = state.prims.find(q => q.units.length === 1 && q.units[0] === 'D' && q.t === 'L'); const a = toCanvas(p.a), b = toCanvas(p.b), r = canvas.getBoundingClientRect(); return { x: r.left + (a.x + b.x) / 2 / SIZE * r.width, y: r.top + (a.y + b.y) / 2 / SIZE * r.height }; });
+await page.mouse.click(dpt.x, dpt.y);
+const cb = await page.evaluate(() => { const b = document.getElementById('ctxBar'), w = b.parentElement.getBoundingClientRect(), r = b.getBoundingClientRect(); return { shown: !b.hidden, name: document.getElementById('ctxName').textContent, letter: !document.getElementById('ctxLetter').hidden, inside: r.left >= w.left && r.right <= w.right && r.top >= w.top && r.bottom <= w.bottom }; });
+check('tocar una letra en el lienzo muestra su barra, dentro del lienzo', cb.shown && cb.name === 'D' && cb.letter && cb.inside, JSON.stringify(cb));
+const beforeRot = (await snap()).svg;
+await page.click('#btnRotL');
+check('la barra gira la letra', (await snap()).svg !== beforeRot);
+await page.click('#btnLetterReset');
+check('y la restaura', (await snap()).svg === beforeRot);
+await page.evaluate(() => { state.sel = null; state.layers = []; layersChanged('letters'); });
+await addL('star');
+const lb = await page.evaluate(() => ({ shown: !document.getElementById('ctxBar').hidden, layer: !document.getElementById('ctxLayer').hidden, scale: state.layers[0].scale }));
+await page.click('#btnLayerSmaller'); await page.click('#btnLayerRotR');
+const la = await page.evaluate(() => ({ scale: state.layers[0].scale, rot: state.layers[0].rot }));
+check('capa nueva seleccionada: su barra escala y gira', lb.shown && lb.layer && la.scale === lb.scale - 10 && la.rot === 15, JSON.stringify([lb, la]));
+await page.click('#btnLayerDelete');
+check('la barra quita la capa', await page.evaluate(() => state.layers.length === 0 && document.getElementById('ctxBar').hidden));
+check('botones de la barra y del lienzo de 48 px o mas', await page.evaluate(() => { document.getElementById('ctxBar').hidden = false; document.getElementById('ctxLetter').hidden = false; document.getElementById('ctxLayer').hidden = false; const ok = [...document.querySelectorAll('.canvas-tools .tool:not([hidden]), #ctxBar .tool')].every(b => { const r = b.getBoundingClientRect(); return r.width >= 48 && r.height >= 48; }); render(); return ok; }));
+for (const f of ['famRosa', 'famKamea', 'famSeal', 'famPersonal', 'famCompare']) {
+  await page.click('#' + f);
+  const ok = await page.evaluate(() => !!document.getElementById('btnProvenance').offsetParent && !!document.getElementById('btnSVG').offsetParent && !!document.getElementById('btnPNG').offsetParent);
+  check(`${f}: fuentes y descargas en la esquina del lienzo`, ok);
+}
 await page.click('#famLetters');
 
 check('sin errores de pagina', errors.length === 0, errors.slice(0, 2).join(' | '));
