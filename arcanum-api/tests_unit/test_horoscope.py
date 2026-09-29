@@ -309,6 +309,12 @@ def test_el_horoscopo_generado_se_captura_con_su_transito(monkeypatch):
 
     resultado = astral.horoscope(archivo=_ArchivoFalso(), current_user=_user(), repo=_Repo(_chart()), db=None)
 
-    assert resultado["text"] == "Saturno sobre tu Sol."
+
+    # El texto entregado lleva DETRAS la nota que compone el codigo
+    # (`horoscope.con_nota`, 28-sep-2026), asi que ya no es igual palabra
+    # por palabra a lo que dijo el modelo. Lo que este test defiende no
+    # cambia: que el texto del modelo llega entero y sin tocar.
+    assert resultado["text"].startswith("Saturno sobre tu Sol.")
+    assert "El cielo de hoy:" in resultado["text"]
     assert "primary" in resultado and "total_aspects" in resultado
     assert capturadas == [resultado]

@@ -129,7 +129,12 @@ def test_un_fallo_libera_la_reserva_y_la_misma_clave_vuelve_a_generar(
     resultado = astral.horoscope(current_user=usuario, repo=repo,
                          archivo=HoroscopeReadingRepository(db), db=db)
 
-    assert resultado["text"] == ENTERO
+
+    # El texto entregado lleva DETRAS la nota que compone el codigo
+    # (`horoscope.con_nota`, 28-sep-2026), asi que ya no es igual palabra
+    # por palabra a lo que dijo el modelo. Lo que este test defiende no
+    # cambia: que el texto del modelo llega entero y sin tocar.
+    assert resultado["text"].startswith(ENTERO)
     assert _estado(db, user_id) == "captured"
     assert _archivadas(db, user_id) == 1
 
@@ -137,7 +142,7 @@ def test_un_fallo_libera_la_reserva_y_la_misma_clave_vuelve_a_generar(
     monkeypatch.setattr(cs, "_get_client", lambda: _FakeGroq())
     assert astral.horoscope(current_user=usuario, repo=repo,
                          archivo=HoroscopeReadingRepository(db),
-                         db=db)["text"] == ENTERO
+                         db=db)["text"].startswith(ENTERO)
     assert _archivadas(db, user_id) == 1, (
         "un replay no genera nada, asi que tampoco puede archivar otra fila"
     )
