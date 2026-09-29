@@ -291,6 +291,10 @@ header{position:relative}
 .help-btn{border-color:rgba(201,168,76,.3);font-size:18px;background:rgba(13,12,18,.7)}
 .undo-dot{width:44px;height:44px}
 .undo-dot .ring{width:48px;height:48px}
+.moonlight{position:absolute;inset:0;z-index:2;pointer-events:none;transition:background 2.5s}
+.moon-btn{position:absolute;right:64px;top:calc(env(safe-area-inset-top,0px) + 12px);width:44px;height:44px;border-radius:50%;padding:0;cursor:pointer;
+  display:grid;place-items:center;background:none;border:0}
+.moon-btn svg{width:24px;height:24px;filter:drop-shadow(0 0 6px rgba(200,215,255,.35))}
 </style>
 </head>
 <body>
@@ -300,6 +304,7 @@ header{position:relative}
     <h1>Mesa de tarot</h1>
     <div class="status" id="status">Ningún mazo en juego</div>
   </div>
+  <button class="moon-btn" id="moon-btn" aria-label="Fase lunar"></button>
   <button class="help-btn" id="help-btn" aria-label="Cómo se usa la mesa" hidden>?</button>
 </header>
 
@@ -319,6 +324,7 @@ header{position:relative}
     </ul>
     <div class="row"><div class="bar"><i></i></div><button class="act" id="help-ok">Entendido</button></div>
   </div>
+  <div class="moonlight" id="moonlight"></div>
   <canvas class="fxcanvas" id="fxbody"></canvas>
   <canvas class="fxcanvas" id="fx"></canvas>
   <div class="table" id="table">
@@ -448,10 +454,24 @@ function tween(ms, fn, done, e = ease.out, delay = 0){
   tweens.add(tw); return tw;
 }
 function moveTo(p, to, ms = 380, e = ease.out, delay = 0, done){
+  if (wobble.has(p)){ delete to.tx; delete to.ty; }
   const from = {}; for (const k in to) from[k] = p[k];
   return tween(ms, v => { for (const k in to) p[k] = from[k] + (to[k] - from[k]) * v; p.render(); }, done, e, delay);
 }
 const wait = ms => new Promise(r => tween(ms, () => {}, r, ease.linear));
+// Peso: la inclinacion de lo que se arrastra es un muelle que persigue la velocidad del dedo.
+// Al soltar, el objetivo vuelve a cero y el muelle se pasa de largo un par de veces, como algo con masa.
+const wobble = new Set();
+function stepWobble(){
+  for (const q of wobble){
+    const dragging = g && g.piece === q;
+    if (!dragging){ q.ttx = (q.ttx || 0) * .8; q.tty = (q.tty || 0) * .8; }
+    q.wvx = (q.wvx || 0) * .74 + ((q.ttx || 0) - q.tx) * .16; q.wvy = (q.wvy || 0) * .74 + ((q.tty || 0) - q.ty) * .16;
+    q.tx += q.wvx; q.ty += q.wvy;
+    if (!dragging && Math.abs(q.tx) + Math.abs(q.ty) + Math.abs(q.wvx) + Math.abs(q.wvy) < .05){ q.tx = q.ty = 0; wobble.delete(q); }
+    q.render();
+  }
+}
 
 // ================= piezas =================
 const pieces = new Map(); let uid = 0, zTop = 2;
@@ -570,7 +590,7 @@ const cardAt = i => tableCards().find(c => c.slot === i);
 function hotSlot(i){ slotEls.forEach(e => e.classList && e.classList.remove('hot')); if (i >= 0) slotEls.filter(e => e.classList.contains('slot'))[i].classList.add('hot'); }
 function place(c, i, ms = 360, delay = 0){
   const s = slotPos(spread, i); c.slot = i; c.toFront();
-  if (!reading.ctx) reading.ctx = astralNow();   // el momento de la tirada queda registrado con la primera carta
+  if (!reading.ctx){ reading.ctx = astralNow(); moonLight(); }   // el momento de la tirada queda registrado con la primera carta
   return new Promise(r => moveTo(c, { x: s.x, y: s.y, rot: s.rot, sc: spread.s, lift: 0, tx: 0, ty: 0 }, ms, ease.out, delay, () => { sfx.play('thud'); sfx.vib(8); r(); }));
 }
 function dropCard(c, origin){
@@ -615,7 +635,7 @@ function flip(c, from = 0, dir = -1){
     c.diag = (sp.diag || 0) / D2R * bump(Math.abs(c.angle) / 180);
     c.render();
   // la carta queda libre al acabar el giro; el asentamiento (halo, temblor) sigue solo y no bloquea toques
-  }, () => { c.angle = end; c.diag = 0; c.render(); showPips(c); busyCard.delete(c); settleFx(c, sp); }, sp.e);
+  }, () => { c.angle = end; c.diag = 0; c.render(); showPips(c); suitMark(c); busyCard.delete(c); settleFx(c, sp); }, sp.e);
 }
 const busyCard = new Set();
 function settleFx(c, sp){
@@ -1193,7 +1213,7 @@ function astralNow(d = new Date()){
   const out = { at: d.toISOString(), fecha, luna: null, ilum: null, hora: null, lugar: PLACE.name };
   const A = window.Astronomy; if (!A) return out;
   try {
-    const el = A.MoonPhase(d);
+    const el = A.MoonPhase(d); out.el = el;
     out.luna = PHASES.find(([lim]) => el < lim)[1];
     out.ilum = Math.round(A.Illumination(A.Body.Moon, d).phase_fraction * 100);
     // hora planetaria: dia de amanecer a ocaso y noche de ocaso a amanecer, 12 horas desiguales cada uno
@@ -1210,6 +1230,26 @@ function astralNow(d = new Date()){
 const astralText = x => !x ? '' : [x.fecha, x.luna && `${x.luna} (${x.ilum} %)`, x.hora && horaDe(x.hora)].filter(Boolean).join(' · ');
 if (navigator.geolocation) navigator.geolocation.getCurrentPosition(
   pos => { PLACE.lat = pos.coords.latitude; PLACE.lon = pos.coords.longitude; PLACE.name = 'tu ubicación'; }, () => {}, { timeout: 5000, maximumAge: 36e5 });
+
+// ================= luz de la Luna: la mesa se tine segun la fase registrada =================
+// Llena: luz plateada que baja sobre la mesa. Nueva: casi a oscuras. Se usa la fase de la lectura si la hay.
+const moonEl = $('moonlight'), moonBtn = $('moon-btn');
+function moonGlyph(ctx){
+  const f = (ctx.ilum ?? 50) / 100, waxing = (ctx.el ?? 90) < 180, r = 10, rx = Math.abs(1 - 2 * f) * r;
+  const lit = `M0 ${-r} A${r} ${r} 0 0 1 0 ${r} A${rx} ${r} 0 0 ${f > .5 ? 1 : 0} 0 ${-r}Z`;
+  return `<svg viewBox="-12 -12 24 24" aria-hidden="true"><circle r="${r}" fill="#1c1f2e" stroke="rgba(200,215,255,.35)" stroke-width=".8"/>
+    <path d="${lit}" fill="#dfe6f7" transform="scale(${waxing ? 1 : -1},1)"/></svg>`;
+}
+function moonLight(){
+  const ctx = (contemplating && contemplating.ctx) || reading.ctx || astralNow();
+  if (ctx.ilum == null){ moonEl.style.background = 'none'; moonBtn.hidden = true; return; }
+  const f = ctx.ilum / 100;
+  moonEl.style.background = `radial-gradient(ellipse 85% 55% at 50% -5%, rgba(205,218,255,${(.2 * f).toFixed(3)}), rgba(205,218,255,0) 70%),
+    linear-gradient(rgba(3,3,10,${(.34 * (1 - f)).toFixed(3)}), rgba(3,3,10,${(.34 * (1 - f)).toFixed(3)}))`;
+  moonBtn.hidden = false; moonBtn.innerHTML = moonGlyph(ctx); moonBtn.dataset.info = `${ctx.luna} · ${ctx.ilum} %`;
+}
+moonBtn.onclick = () => toast(`${moonBtn.dataset.info}. La luz de la mesa sigue a la Luna${reading.ctx ? ' de esta lectura' : ''}.`);
+setInterval(moonLight, 10 * 60 * 1000);
 
 // ================= pregunta sellada =================
 const SEAL_AT = { x: 88, y: 712 };
@@ -1332,6 +1372,7 @@ function restore(st){
     if (st.fan){ const fp = piles.find(q => q.pid === st.fan.pid); if (openFan(fp)){ fan.start = st.fan.start; layoutFan(st.fan.end); } }
   }
   restoring = false;
+  moonLight();
   refresh();
 }
 
@@ -1680,13 +1721,39 @@ const fx = {
     });
     // el lienzo grande solo trabaja mientras hay humo
     if (this.parts.length || this.dirtyBig){ g2.clearRect(0, 0, r.width, r.height); this.dirtyBig = this.parts.length > 0; }
-    // humo: se expande, deriva y se apaga
+    // humo y huellas del palo; cada particula sabe como moverse y pintarse
     this.parts = this.parts.filter(q => (q.life -= q.dl) > 0);
     this.parts.forEach(q => {
-      q.x += q.vx + Math.sin(this.t * 2 + q.y * .05) * .25; q.y += q.vy; q.r += .22;
-      const gr = g2.createRadialGradient(q.x, q.y, 0, q.x, q.y, q.r);
-      gr.addColorStop(0, `rgba(215,205,190,${.22 * q.life})`); gr.addColorStop(1, 'rgba(215,205,190,0)');
-      g2.globalAlpha = 1; g2.fillStyle = gr; g2.beginPath(); g2.arc(q.x, q.y, q.r, 0, 7); g2.fill();
+      const a = Math.min(1, q.life);
+      if (q.k === 'ember'){
+        q.x += q.vx + Math.sin(this.t * 9 + q.y * .1) * .3; q.y += q.vy; q.vy *= .985;
+        g2.globalCompositeOperation = 'lighter'; g2.globalAlpha = a;
+        g2.fillStyle = a > .5 ? '#ffc861' : '#ff6a2a'; g2.beginPath(); g2.arc(q.x, q.y, q.r * (.5 + a * .5), 0, 7); g2.fill();
+        g2.globalCompositeOperation = 'source-over';
+      } else if (q.k === 'ring'){
+        if (q.life > 1) return;                              // las ondas salen escalonadas
+        const t = 1 - q.life, rr = q.r0 + (q.r1 - q.r0) * t;
+        g2.globalAlpha = .55 * q.life; g2.strokeStyle = '#b9d8ff'; g2.lineWidth = 1.4; g2.beginPath();
+        for (let i = 0; i <= 28; i++){ const an = i / 28 * Math.PI * 2, pt = tableToScreen(q.cx + Math.cos(an) * rr, q.cy + Math.sin(an) * rr * 1.2); i ? g2.lineTo(pt.x, pt.y) : g2.moveTo(pt.x, pt.y); }
+        g2.stroke();
+      } else if (q.k === 'streak'){
+        const t = 1 - q.life, gr = g2.createLinearGradient(q.x0, q.y0, q.x1, q.y1);
+        gr.addColorStop(Math.max(0, t - .25), 'rgba(220,235,255,0)'); gr.addColorStop(t, 'rgba(240,248,255,.95)'); gr.addColorStop(Math.min(1, t + .05), 'rgba(220,235,255,0)');
+        g2.globalAlpha = 1; g2.strokeStyle = gr; g2.lineWidth = 2; g2.beginPath(); g2.moveTo(q.x0, q.y0); g2.lineTo(q.x1, q.y1); g2.stroke();
+      } else if (q.k === 'shard'){
+        q.x += q.vx; q.y += q.vy; q.vx *= .9; q.vy *= .9;
+        g2.globalAlpha = a; g2.strokeStyle = '#e4efff'; g2.lineWidth = 1.2; g2.beginPath(); g2.moveTo(q.x, q.y); g2.lineTo(q.x - q.vx * 2.2, q.y - q.vy * 2.2); g2.stroke();
+      } else if (q.k === 'dust'){
+        // polvo sobre el pano: sale a ras de mesa, se eleva un poco y se asienta
+        q.x += q.vx; q.y += q.vy; q.vx *= .95; q.vy *= .95; q.z = Math.max(0, q.z + q.vz); q.vz -= .04;
+        const pt = tableToScreen(q.x, q.y, q.z);
+        g2.globalAlpha = a * .8; g2.fillStyle = a > .5 ? '#d8b36a' : '#8a6a3a'; g2.beginPath(); g2.arc(pt.x, pt.y, q.r, 0, 7); g2.fill();
+      } else {
+        q.x += q.vx + Math.sin(this.t * 2 + q.y * .05) * .25; q.y += q.vy; q.r += .22;
+        const gr = g2.createRadialGradient(q.x, q.y, 0, q.x, q.y, q.r);
+        gr.addColorStop(0, `rgba(215,205,190,${.22 * q.life})`); gr.addColorStop(1, 'rgba(215,205,190,0)');
+        g2.globalAlpha = 1; g2.fillStyle = gr; g2.beginPath(); g2.arc(q.x, q.y, q.r, 0, 7); g2.fill();
+      }
     });
     g2.globalAlpha = 1;
     // la luz de las velas respira; al cerrar el circulo se aviva y vuelve a calmarse
@@ -1697,6 +1764,26 @@ const fx = {
   },
 };
 new ResizeObserver(() => fx.fit()).observe(scene);
+
+// ================= huella del palo: el pano reacciona un instante bajo la carta desvelada =================
+// Bastos: brasas que suben. Copas: ondas en el pano. Espadas: un destello frio que corta. Oros: polvo de tierra.
+function suitMark(c){
+  if (!c.data || c.data.major || reduced || quality >= 2) return;
+  const P2 = fx.parts, rs = scene.getBoundingClientRect(), b = c.el.getBoundingClientRect();
+  const bx = b.left - rs.left, by = b.top - rs.top, rnd = (a, z) => a + Math.random() * (z - a);
+  if (c.data.suit === 'bastos') for (let i = 0; i < 22; i++)
+    P2.push({ k: 'ember', x: bx + rnd(.1, .9) * b.width, y: by + rnd(.55, 1) * b.height, vx: rnd(-.4, .4), vy: rnd(-2.4, -1), r: rnd(1.2, 2.4), life: 1, dl: rnd(.012, .022) });
+  else if (c.data.suit === 'copas') [0, 1, 2].forEach(i =>
+    P2.push({ k: 'ring', cx: c.x, cy: c.y, r0: c.hw * .9, r1: c.hw * 3.4, life: 1 + i * .35, dl: .014 }));
+  else if (c.data.suit === 'espadas'){
+    P2.push({ k: 'streak', x0: bx - 10, y0: by + b.height * .8, x1: bx + b.width + 10, y1: by + b.height * .2, life: 1, dl: .06 });
+    for (let i = 0; i < 9; i++){ const a = rnd(0, Math.PI * 2); P2.push({ k: 'shard', x: bx + b.width / 2, y: by + b.height / 2, vx: Math.cos(a) * rnd(2, 4), vy: Math.sin(a) * rnd(2, 4), life: 1, dl: .045 }); }
+  }
+  else if (c.data.suit === 'oros') for (let i = 0; i < 26; i++){
+    const a = rnd(0, Math.PI * 2), sp = rnd(.6, 1.6);
+    P2.push({ k: 'dust', x: c.x + Math.cos(a) * c.hw * .6, y: c.y + Math.sin(a) * c.hh * .6, z: 2, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, vz: rnd(.3, .9), r: rnd(1, 2.2), life: 1, dl: rnd(.012, .02) });
+  }
+}
 
 // ================= volver al monton mas cercano =================
 function returnToPile(c){
@@ -1810,7 +1897,8 @@ scene.addEventListener('pointermove', e => {
   if (g.mode === 'move' || g.mode === 'cut'){
     const vx = p.x - g.last.x, vy = p.y - g.last.y;
     pc.x = p.x + g.off.x; pc.y = p.y + g.off.y;
-    pc.ty = clamp(pc.ty * .6 + vx * 1.1, -16, 16); pc.tx = clamp(pc.tx * .6 - vy * 1.1, -16, 16); pc.render();
+    // el muelle persigue la velocidad: la carta se inclina hacia donde va y se endereza con retraso
+    pc.tty = clamp(vx * 1.3, -15, 15); pc.ttx = clamp(-vy * 1.3, -15, 15); wobble.add(pc); pc.render();
     if (pc.kind === 'card') hotSlot(nearestSlot(pc));
   } else if (g.mode === 'fan'){
     layoutFan(p);
@@ -1860,12 +1948,11 @@ function endGesture(cancel, e){
   if (G.embro && G.mode === 'pending' && !cancel) return openInterp();
   if (G.mode === 'pending' && !cancel) return tap(pc, e, G);
   if (G.mode === 'move'){
-    pc.tx = pc.ty = 0;
     if (pc.kind === 'deck'){ pc.z = 1; dropDeck(pc, G.from); }
     else dropCard(pc, G.from);
     if (pieces.has(pc.id)) offerUndo(pc);
   } else if (G.mode === 'cut'){
-    pc.tx = pc.ty = 0; endCutDrag(pc, G.src);
+    endCutDrag(pc, G.src);
   } else if (G.mode === 'fan'){
     if (!fan || fan.len < 90){ closeFan(260); undoSnap = null; }
     else offerUndo(fan.pile);
@@ -1981,6 +2068,7 @@ function frame(now){
   camMoving = camMoved;
   if (wasMoving && !camMoved) candlesDirty = true;   // al pararse, velas en calidad completa
   if (quality < 2 || (fxSkip ^= 1)) fx.step();   // en calidad minima los efectos van a medio ritmo
+  stepWobble();
   adapt(now);
   if (fpsEl){ fpsN++; if (now - fpsT > 1000){ fpsEl.textContent = `${fpsN} fps`; fpsN = 0; fpsT = now; } }
   // Interpretacion flota sobre el centro del hexagrama del pano
@@ -2001,6 +2089,7 @@ function hideHelp(){ helpEl.hidden = true; helpBtn.hidden = false; clearTimeout(
 $('help-ok').onclick = hideHelp; helpBtn.onclick = showHelp;
 let seenHelp = false; try { seenHelp = localStorage.getItem('arcanum.ayuda') === '1'; } catch {}
 seenHelp ? hideHelp() : showHelp();
+moonLight();
 requestAnimationFrame(frame);
 </script>
 </body>
