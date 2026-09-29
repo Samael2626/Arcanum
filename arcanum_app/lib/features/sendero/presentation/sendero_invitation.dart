@@ -8,6 +8,7 @@ import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
 import '../../../shared/widgets/gold_button.dart';
 import '../application/sendero_controller.dart';
+import '../application/sendero_guide_controller.dart';
 
 class SenderoInvitationGate extends ConsumerStatefulWidget {
   const SenderoInvitationGate({super.key, required this.child});
@@ -32,10 +33,11 @@ class _SenderoInvitationGateState extends ConsumerState<SenderoInvitationGate> {
 
   Future<void> _offerIfNeeded() async {
     if (!mounted) return;
+    if (ref.read(senderoGuideProvider) != null) return;
     final userId = ref.read(authProvider).user?['id']?.toString();
     if (userId == null) return;
     final progress = await ref.read(senderoControllerProvider.future);
-    if (progress.isNotEmpty) return;
+    if (progress.isNotEmpty || ref.read(senderoGuideProvider) != null) return;
 
     final prefs = await SharedPreferences.getInstance();
     final hiddenKey = 'sendero_offer_hidden_$userId';

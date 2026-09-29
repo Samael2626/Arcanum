@@ -12,6 +12,8 @@ import '../theme/arcanum_colors.dart';
 import '../theme/arcanum_theme.dart';
 import '../../shared/widgets/info_dot.dart';
 import '../../features/sendero/presentation/sendero_invitation.dart';
+import '../../features/sendero/application/sendero_guide_controller.dart';
+import '../../features/sendero/presentation/sendero_spotlight.dart';
 
 /// Carcasa con barra superior contextual. YA NO HAY BARRA INFERIOR.
 ///
@@ -28,40 +30,47 @@ import '../../features/sendero/presentation/sendero_invitation.dart';
 /// Lo que se pierde, dicho en voz alta: la barra marcaba la seccion abierta
 /// sin que nadie hiciera nada, y ahora hay que abrir el cajon para saber donde
 /// estas. Y lo diario pasa de 4 toques a 8. Se decidio a sabiendas.
-class AppShell extends StatelessWidget {
+class AppShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
   const AppShell({super.key, required this.navigationShell});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final router = GoRouter.of(context);
+    final guide = ref.watch(senderoGuideProvider);
 
     return SenderoInvitationGate(
-      child: Scaffold(
-        drawer: ArcanumDrawer(navigationShell: navigationShell),
-        // Se abre SOLO por sus dos tiradores, nunca arrastrando desde el borde:
-        // ese gesto es el de volver atras del sistema, y ahora que el cajon
-        // cuelga del lado izquierdo los dos caerian en el mismo sitio.
-        drawerEnableOpenDragGesture: false,
-        body: SafeArea(
-          child: Column(
-            children: [
-              // Se reconstruye en cada navegación para saber si estamos en una
-              // raíz de sección (mostrar barra) o en una sub-ruta (ocultarla).
-              AnimatedBuilder(
-                animation: router.routerDelegate,
-                builder: (context, _) {
-                  final location =
-                      router.routerDelegate.currentConfiguration.uri.path;
-                  final section = arcanumSectionForRoute(location);
-                  if (section == null) return const SizedBox.shrink();
-                  return _SectionBar(section: section);
-                },
+      child: Stack(
+        children: [
+          Scaffold(
+            drawer: ArcanumDrawer(navigationShell: navigationShell),
+            // Se abre SOLO por sus dos tiradores, nunca arrastrando desde el borde:
+            // ese gesto es el de volver atras del sistema, y ahora que el cajon
+            // cuelga del lado izquierdo los dos caerian en el mismo sitio.
+            drawerEnableOpenDragGesture: false,
+            body: SafeArea(
+              child: Column(
+                children: [
+                  // Se reconstruye en cada navegación para saber si estamos en una
+                  // raíz de sección (mostrar barra) o en una sub-ruta (ocultarla).
+                  AnimatedBuilder(
+                    animation: router.routerDelegate,
+                    builder: (context, _) {
+                      final location =
+                          router.routerDelegate.currentConfiguration.uri.path;
+                      final section = arcanumSectionForRoute(location);
+                      if (section == null) return const SizedBox.shrink();
+                      return _SectionBar(section: section);
+                    },
+                  ),
+                  Expanded(child: navigationShell),
+                ],
               ),
-              Expanded(child: navigationShell),
-            ],
+            ),
           ),
-        ),
+          if (guide != null)
+            Positioned.fill(child: SenderoSpotlight(guide: guide)),
+        ],
       ),
     );
   }
@@ -69,12 +78,13 @@ class AppShell extends StatelessWidget {
 
 /// Barra superior de una sección: la hamburguesa, identidad, qué es, ayuda y
 /// avatar.
-class _SectionBar extends StatelessWidget {
+class _SectionBar extends ConsumerWidget {
   final ArcanumSection section;
   const _SectionBar({required this.section});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final targets = ref.read(senderoGuideTargetsProvider);
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
       child: Row(
@@ -106,7 +116,21 @@ class _SectionBar extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           // "?" — explica a fondo esta sección (misma hoja del glosario).
-          InfoDot(section.helpKey, size: 22),
+          SizedBox(
+            width: 44,
+            height: 44,
+            child: Center(
+              child: KeyedSubtree(
+                key: targets.keyFor('help'),
+                child: InfoDot(
+                  section.helpKey,
+                  size: 22,
+                  onOpened: () =>
+                      ref.read(senderoGuideProvider.notifier).onAction('help'),
+                ),
+              ),
+            ),
+          ),
           const SizedBox(width: 12),
           const _ProfileAvatar(),
         ],
@@ -125,11 +149,11 @@ class _SectionBar extends StatelessWidget {
 /// las secciones.
 ///
 /// Sin filete, como todo. Su zona tactil son 48 aunque el icono mida 22.
-class _MenuPrincipal extends StatelessWidget {
+class _MenuPrincipal extends ConsumerWidget {
   const _MenuPrincipal();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Tooltip(
       message: 'Navegación',
       child: Semantics(
@@ -137,7 +161,11 @@ class _MenuPrincipal extends StatelessWidget {
         label: 'Abrir el menú',
         child: InkWell(
           customBorder: const CircleBorder(),
-          onTap: Scaffold.of(context).openDrawer,
+          key: ref.read(senderoGuideTargetsProvider).keyFor('menu'),
+          onTap: () {
+            Scaffold.of(context).openDrawer();
+            ref.read(senderoGuideProvider.notifier).onAction('menu');
+          },
           child: ExcludeSemantics(
             child: SizedBox(
               width: 48,

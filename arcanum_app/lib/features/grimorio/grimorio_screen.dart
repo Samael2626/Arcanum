@@ -11,6 +11,7 @@ import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_resin.dart';
 import '../../shared/widgets/login_prompt.dart';
+import '../sendero/application/sendero_guide_controller.dart';
 import 'grimorio_atmosphere.dart';
 import 'grimorio_detail.dart';
 import 'grimorio_editor.dart';
@@ -88,7 +89,15 @@ class _GrimorioScreenState extends ConsumerState<GrimorioScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      floatingActionButton: _QuillFab(onPressed: _newEntry),
+      floatingActionButton: KeyedSubtree(
+        key: ref.read(senderoGuideTargetsProvider).keyFor('grimorio_new'),
+        child: _QuillFab(
+          onPressed: () {
+            ref.read(senderoGuideProvider.notifier).onAction('grimorio_new');
+            _newEntry();
+          },
+        ),
+      ),
       body: Stack(
         children: [
           const Positioned.fill(child: GrimoireSky()),

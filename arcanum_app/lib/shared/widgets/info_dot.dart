@@ -36,14 +36,24 @@ class InfoDot extends StatelessWidget {
   final String entryKey;
   final String symbol;
   final double size;
-  const InfoDot(this.entryKey, {super.key, this.symbol = '?', this.size = 18});
+  final VoidCallback? onOpened;
+  const InfoDot(
+    this.entryKey, {
+    super.key,
+    this.symbol = '?',
+    this.size = 18,
+    this.onOpened,
+  });
 
   @override
   Widget build(BuildContext context) {
     final entry = _lookup(entryKey);
     if (entry == null) return const SizedBox.shrink();
     return GestureDetector(
-      onTap: () => _show(context, entry),
+      onTap: () {
+        onOpened?.call();
+        _show(context, entry);
+      },
       behavior: HitTestBehavior.opaque,
       child: Container(
         width: size,
@@ -69,9 +79,13 @@ class InfoDot extends StatelessWidget {
   }
 }
 
-void _show(BuildContext context, GlossaryEntry entry) =>
-    showConceptSheet(context, titulo: entry.title, que: entry.what,
-        comoLabel: 'CÓMO USARLO', como: entry.howTo);
+void _show(BuildContext context, GlossaryEntry entry) => showConceptSheet(
+  context,
+  titulo: entry.title,
+  que: entry.what,
+  comoLabel: 'CÓMO USARLO',
+  como: entry.howTo,
+);
 
 /// La hoja explicativa de CUALQUIER concepto, con la forma de siempre.
 ///

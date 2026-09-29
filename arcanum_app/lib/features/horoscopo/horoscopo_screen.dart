@@ -13,32 +13,37 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../sendero/application/sendero_guide_controller.dart';
 import '../hoy/presentation/widgets/sky_today_card.dart';
 import 'widgets/agenda_del_cielo.dart';
 import 'widgets/historial_horoscopo.dart';
 
-class HoroscopoScreen extends StatelessWidget {
+class HoroscopoScreen extends ConsumerWidget {
   const HoroscopoScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context, WidgetRef ref) => Scaffold(
     backgroundColor: Colors.transparent,
     body: ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-      children: const [
+      children: [
         // SIN ENTRADILLA, desde el 12-sep-2026. Decia "Tu cielo de hoy, leido
         // sobre tu carta natal: el transito que aprieta, el anio que gobierna
         // y lo que eso dice hoy" -- justo debajo del subtitulo de la barra,
         // que dice "Tu cielo de hoy, sobre tu carta". La misma idea estirada,
         // dos veces seguidas. Se escribio cuando la seccion no tenia subtitulo
         // visible.
-        SkyTodayCard(),
+        KeyedSubtree(
+          key: ref.read(senderoGuideTargetsProvider).keyFor('horoscope_card'),
+          child: const SkyTodayCard(),
+        ),
         // La agenda va justo detras del dia: se lee "hoy, y luego esto".
-        AgendaDelCielo(),
+        const AgendaDelCielo(),
         // El archivo va DEBAJO del de hoy y plegado: se viene a leer el de
         // hoy, y mirar atras es una segunda intencion.
-        HistorialHoroscopo(),
+        const HistorialHoroscopo(),
       ],
     ),
   );

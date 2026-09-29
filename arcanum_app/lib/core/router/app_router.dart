@@ -89,11 +89,7 @@ final arcanumRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/perfil', builder: (c, s) => const PerfilScreen()),
       GoRoute(path: '/paywall', builder: (c, s) => const PaywallScreen()),
       GoRoute(path: '/sendero', builder: (c, s) => const SenderoScreen()),
-      GoRoute(
-        path: '/sendero/:journey',
-        builder: (c, s) =>
-            SenderoLessonScreen(journeyId: s.pathParameters['journey']!),
-      ),
+      GoRoute(path: '/sendero/:journey', redirect: (c, s) => '/sendero'),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             AppShell(navigationShell: navigationShell),

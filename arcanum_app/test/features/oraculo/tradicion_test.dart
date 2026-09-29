@@ -13,6 +13,8 @@ import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/core/theme/arcanum_theme.dart';
 import 'package:arcanum_app/features/oraculo/oraculo_screen.dart';
+import 'package:arcanum_app/features/sendero/application/sendero_guide_controller.dart';
+import 'package:arcanum_app/features/sendero/domain/sendero_catalog.dart';
 import 'package:dio/dio.dart';
 import 'package:arcanum_app/features/oraculo/widgets/tarot_card.dart';
 import 'package:flutter/material.dart';
@@ -32,6 +34,22 @@ class _Api extends ArcanumApi {
   final bool fallaLaPrimera;
   final List<String?> clavesClasicas = [];
   int llamadasAlOraculo = 0;
+
+  @override
+  Future<List<Map<String, dynamic>>> senderoProgress() async => [];
+
+  @override
+  Future<Map<String, dynamic>> updateSenderoProgress({
+    required String journeyId,
+    required int version,
+    required int step,
+    required String status,
+  }) async => {
+    'journey_id': journeyId,
+    'version': version,
+    'step': step,
+    'status': status,
+  };
 
   @override
   Future<Map<String, dynamic>> tarotDrawOne({
@@ -101,6 +119,35 @@ Future<void> _elegirTradicion(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('Sendero exige aceptar el coste antes de tirar', (tester) async {
+    final api = _Api();
+    await _abrir(tester, api);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(OraculoScreen)),
+    );
+    final guide = container.read(senderoGuideProvider.notifier);
+    guide.start(senderoJourneyById('oraculo')!);
+    guide.onAction('help');
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Consultar al oráculo'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Consultar al oráculo'));
+    await tester.pumpAndSettle();
+    expect(find.text('Antes de continuar'), findsOneWidget);
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+    expect(api.llamadasAlOraculo, 0);
+    expect(container.read(senderoGuideProvider)?.step, 1);
+
+    await tester.tap(find.text('Consultar al oráculo'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Aceptar y continuar'));
+    await tester.pumpAndSettle();
+    expect(api.llamadasAlOraculo, 1);
+    expect(container.read(senderoGuideProvider), isNull);
+  });
+
   testWidgets('la puerta existe y arranca en el oráculo', (tester) async {
     await _abrir(tester, _Api());
 
