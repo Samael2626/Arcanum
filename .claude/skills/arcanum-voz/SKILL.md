@@ -280,12 +280,35 @@ Lo pararon dos tests que ya estaban escritos, con su fecha dentro:
 `test_un_horoscopo_generico_dispara_el_reintento`. Defendian la decision del
 26-sep y tenian razon.
 
-**La red anti-generico sigue rota, y hay que buscarla por otro lado.** La idea
-que queda sin medir: exigir que el cuerpo toque el DOMINIO de los cuerpos en
-juego --"los pactos", "el corte", "el limite"-- en vez de su NOMBRE.
-`correspondences.PLANET_DOMAINS` ya los trae escritos. Eso ata el texto a lo
-concreto sin meter una sola palabra de oficio, que es justo lo que se busca.
-Sin medir: es un guard nuevo y sube la superficie de reintento.
+**Y LA VIA DEL DOMINIO TAMPOCO SIRVE.** Estaba anotada aqui como la idea que
+quedaba: exigir que el cuerpo toque el DOMINIO de los cuerpos en juego --"los
+pactos", "el corte", "el limite", que `PLANET_DOMAINS` ya trae-- en vez de su
+NOMBRE. Medida el 29-sep-2026 SIN gastar un token, pasando el detector por seis
+salidas reales guardadas mas dos controles genericos.
+
+Resultado: **deja pasar el generico**. "El tiron que hoy se siente en tus
+decisiones aprieta con fuerza..." --la salida del 26-sep que el guard aprobo sin
+un solo defecto-- pasa por la palabra **"fuerza"**, que sale del dominio de
+Marte "lo que se separa por fuerza" y en el texto es uso corriente del
+castellano.
+
+No es un problema de umbral, y por eso no se arregla afinandolo: **las palabras
+de dominio son palabras normales**. "fuerza", "camino", "corte", "trato",
+"filo", "pueblo". Ningun detector de vocabulario distingue "el corte de Marte"
+de "un corte de pelo". Seguir ajustando el umbral hasta que cuadre con los
+ejemplos de uno es ajustarlo a la muestra, no construir una red.
+
+**CONCLUSION, y es la que cierra el asunto:** lo generico es un juicio de
+SENTIDO, no de vocabulario, y esta skill ya lo dice en su propia regla --- las
+guardas son puras y deterministas, y lo que exige juicio de estilo se queda en
+el prompt. `expected_terms` solo funcionaba porque un nombre SE PUEDE
+comprobar. No hay red determinista que no rompa la voz (exigir el nombre) o
+deje pasar lo que viene a cazar (buscar palabras).
+
+**Y la red NO esta muerta, esta SOMERA**, que es una correccion a lo que yo
+mismo escribi arriba: caza el texto que no nombra ningun cuerpo en NINGUN sitio
+--lo prueba `test_un_horoscopo_generico_dispara_el_reintento`-- y deja pasar el
+que nombra en la nota y no dice nada. Ese es el limite real, y es conocido.
 
 ### La receta medida, para cuando se implemente
 
