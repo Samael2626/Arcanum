@@ -53,5 +53,5 @@ const out = await page.evaluate(cases => cases.map(cs => {
 }), cases);
 await b.close();
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
-fs.writeFileSync(OUT, JSON.stringify(out, null, 1));
+fs.writeFileSync(OUT, JSON.stringify(out));
 console.log(`${out.length} casos -> ${path.relative(process.cwd(), OUT)}`);
