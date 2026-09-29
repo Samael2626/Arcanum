@@ -269,6 +269,28 @@ header{position:relative}
   background:rgba(18,18,26,.96);border:1px solid var(--line);border-radius:10px;padding:10px 16px;font-size:15px;color:var(--gold-light);text-align:center;
   transition:opacity .25s;pointer-events:none}
 @media (max-width:420px){.titles h1{font-size:21px}}
+/* v2.1: cada accion es un circulo pequeno suelto, sin disco comun; botones mas finos */
+.radial .disk{display:none}
+.rbtn{width:52px;height:52px;padding:0;display:grid;grid-template-rows:none;place-items:center;overflow:visible;
+  background:radial-gradient(circle at 50% 32%,rgba(52,45,36,.96),rgba(13,12,18,.96));border:1px solid rgba(201,168,76,.5);
+  box-shadow:0 6px 18px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,236,190,.14)}
+.rbtn svg{width:22px;height:22px}
+.rbtn svg.thumb{width:40px;height:22px}
+.rbtn span{position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);max-width:none;white-space:nowrap;pointer-events:none;
+  font:600 10.5px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--gold-light);text-shadow:0 1px 3px #000,0 0 10px #000}
+.rbtn.hot{transform:translate(-50%,-50%) scale(1.18)!important;background:radial-gradient(circle at 50% 32%,#6d5424,#2b2112);
+  border-color:#f3dc9a;box-shadow:0 0 0 3px rgba(236,215,154,.2),0 0 22px rgba(237,174,48,.5)}
+.rbtn[aria-current="true"]{border-color:var(--gold);background:radial-gradient(circle at 50% 32%,#5a4520,#221a0f)}
+.rclose{width:44px;height:44px;background:rgba(13,12,18,.9);border-color:rgba(201,168,76,.3)}
+.rclose svg{width:15px;height:15px}
+.rclose.undo{width:52px;height:52px}
+.rtitle{width:240px;font-size:11px;letter-spacing:.22em;text-shadow:0 1px 3px #000,0 0 10px #000}
+.radial.open .rbtn:disabled{opacity:.28}
+.act{min-height:44px;border-radius:999px;font-size:15px;letter-spacing:.03em;border-color:rgba(201,168,76,.32);padding-inline:14px}
+.act.primary{background:linear-gradient(180deg,rgba(201,168,76,.22),rgba(201,168,76,.1))}
+.help-btn{border-color:rgba(201,168,76,.3);font-size:18px;background:rgba(13,12,18,.7)}
+.undo-dot{width:44px;height:44px}
+.undo-dot .ring{width:48px;height:48px}
 </style>
 </head>
 <body>
@@ -953,11 +975,11 @@ addEventListener('keydown', e => { if (e.key === 'Escape'){ closeMenu(); cancelU
 // items: [{ id, label, icon | svg, off, cur }]
 function radial(anchor, title, items, onPick){
   closeMenu(); menuFor = anchor; toastEl.style.opacity = 0;
-  const r = anchorRect(anchor), n = items.length, R = n > 6 ? 116 : 98, pad = R + 46;
+  const r = anchorRect(anchor), n = items.length, R = n > 6 ? 100 : 86, pad = R + 44;
   const cx = clamp(r.left + r.width / 2, pad, innerWidth - pad), cy = clamp(r.top + r.height / 2, pad - 6, innerHeight - pad - 16);
   menuEl = document.createElement('div'); menuEl.className = 'radial'; menuEl.setAttribute('role', 'menu'); menuEl.setAttribute('aria-label', title);
   menuEl.innerHTML = `<div class="disk" style="left:${cx}px;top:${cy}px;width:${(R + 78) * 2}px;height:${(R + 78) * 2}px"></div>
-    <div class="rtitle" style="left:${cx}px;top:${cy - 40}px">${title}</div>
+    <div class="rtitle" style="left:${cx}px;top:${cy - R - 44}px">${title}</div>
     ${canUndo()
       ? `<button class="rclose undo" style="left:${cx}px;top:${cy}px" aria-label="Deshacer">${svgIcon('undo')}<span>Deshacer</span></button>`
       : `<button class="rclose" style="left:${cx}px;top:${cy}px" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>`}` +
@@ -975,7 +997,8 @@ function radial(anchor, title, items, onPick){
     const b = e.target.closest('[data-m]'); if (!b || b.disabled) return;
     closeMenu(); onPick(b.dataset.m);
   });
-  const f = menuEl.querySelector('.rbtn:not(:disabled)'); f && f.focus({ preventScroll: true });
+  // el foco automatico pintaba un aro que parecia una seleccion: solo se enfoca si se abrio con teclado
+  if (!g){ const f = menuEl.querySelector('.rbtn:not(:disabled)'); f && f.focus({ preventScroll: true }); }
 }
 const posLabel = c => c.slot !== null && spread ? `${c.slot + 1} · ${spread.pos[c.slot][3]}` : c.aside ? 'Apartada' : 'Fuera de la tirada';
 function openCardRadial(c){
@@ -1802,7 +1825,7 @@ scene.addEventListener('pointermove', e => {
   } else if (g.mode === 'orbit'){
     // arrastrar el marco o el pano mueve el destino; el bucle lo alcanza con suavidad
     const dx = e.clientX - (g.px ?? g.sx), dy = e.clientY - (g.py ?? g.sy); g.px = e.clientX; g.py = e.clientY;
-    g.vyaw = dx * .22; g.vth = -dy * .2;
+    g.vyaw = -dx * .22; g.vth = dy * .2;   // invertido a peticion de Samuel
     cam.tYaw = clamp(cam.tYaw + g.vyaw, -40, 40);
     cam.tTheta = clamp(cam.tTheta + g.vth, 16, 56);
   }
