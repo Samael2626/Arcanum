@@ -30,6 +30,9 @@ assert.equal(
   1,
   'El modelo de respaldo debe usar la entrada 1',
 );
+const factPreparer = workflow.nodes.find((node) => node.name === 'Preparar paquete factual');
+assert.match(factPreparer.parameters.jsCode, /práctica y reflexión/);
+assert.doesNotMatch(factPreparer.parameters.jsCode, /practica y reflexion/);
 
 const brief = {
   external_key: 'demo-manifiesto-001',

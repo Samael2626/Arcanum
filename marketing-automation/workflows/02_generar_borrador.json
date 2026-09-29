@@ -12,7 +12,7 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { external_key: 'demo-manifiesto-001', pillar: 'manifiesto', premise: 'ARCANUM es un instrumento de practica y reflexion, no una maquina de predicciones.', facts: [{ claim: 'ARCANUM no promete predecir el futuro.', source_id: 'play-ficha' }, { claim: 'La app ofrece Tarot, carta natal y grimorio cifrado.', source_id: 'play-ficha' }], sources: [{ id: 'play-ficha', kind: 'repo', reference: 'docs/play-ficha.md' }], warnings: ['No presentar la app como servicio predictivo.', 'No prometer resultados personales.'], asset: null } }];"
+        "jsCode": "return [{ json: { external_key: 'demo-manifiesto-001', pillar: 'manifiesto', premise: 'ARCANUM es un instrumento de práctica y reflexión, no una máquina de predicciones.', facts: [{ claim: 'ARCANUM no promete predecir el futuro.', source_id: 'play-ficha' }, { claim: 'La app ofrece Tarot, carta natal y grimorio cifrado.', source_id: 'play-ficha' }], sources: [{ id: 'play-ficha', kind: 'repo', reference: 'docs/play-ficha.md' }], warnings: ['No presentar la app como servicio predictivo.', 'No prometer resultados personales.'], asset: null } }];"
       },
       "id": "f95c144c-5c4c-4ac7-8f97-5516e8153fba",
       "name": "Preparar paquete factual",

@@ -67,6 +67,9 @@ para convertir un paquete factual en borrador mediante Gemini.
 - Prueba viva posterior: `gemini-3.6-flash` devolvio 503, el fallback
   `gemini-3.5-flash-lite` completo el flujo y la validacion de estructura/voz
   dio 100. El resultado final quedo en 95 por un aviso de tildes, sin publicarse.
+- El aviso venia del paquete factual de demostracion, que entregaba palabras sin
+  tildes y Gemini copiaba literalmente. La semilla ya usa espanol correcto y el
+  test impide que esa regresion vuelva.
 - Esta decision actualiza el plan del 28-sep: la automatizacion si comienza, pero
   todavia no abre TikTok, Instagram o YouTube como canales de publicacion.
 
