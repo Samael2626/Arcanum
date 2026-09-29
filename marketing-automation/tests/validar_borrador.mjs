@@ -9,8 +9,20 @@ const validator = workflow.nodes.find((node) => node.name === 'Parsear y validar
 assert.ok(validator, 'Falta el nodo validador');
 const orthographyReviewer = workflow.nodes.find((node) => node.name === 'Revisar ortografia');
 assert.ok(orthographyReviewer, 'Falta el nodo de ortografia');
+const structuredParser = workflow.nodes.find((node) => node.name === 'Forzar salida JSON');
+assert.equal(structuredParser.parameters.autoFix, false, 'La autorreparacion puede inventar hechos');
+assert.doesNotThrow(() => JSON.parse(structuredParser.parameters.inputSchema));
+const normalizer = workflow.nodes.find((node) => node.name === 'Normalizar salida estructurada');
+assert.ok(normalizer, 'Falta normalizar la salida estructurada');
 const generator = workflow.nodes.find((node) => node.name === 'Generar pieza maestra');
 assert.equal(generator.parameters.needsFallback, true, 'Falta activar el modelo de respaldo');
+assert.equal(generator.retryOnFail, true, 'Falta reintentar la generacion completa');
+assert.equal(generator.maxTries, 2, 'El reintento debe estar acotado');
+assert.equal(
+  workflow.nodes.some((node) => node.name === 'Gemini reparador JSON'),
+  false,
+  'No se permite reparar contenido truncado con otro LLM',
+);
 assert.equal(
   workflow.connections['Gemini editorial respaldo'].ai_languageModel[0][0].index,
   1,
@@ -39,6 +51,11 @@ async function reviewOrthography(item) {
   return new vm.Script(`(async () => { ${orthographyReviewer.parameters.jsCode} })()`).runInNewContext(context);
 }
 
+async function normalize(item) {
+  const context = { $input: { first: () => ({ json: structuredClone(item) }) } };
+  return new vm.Script(`(async () => { ${normalizer.parameters.jsCode} })()`).runInNewContext(context);
+}
+
 const validDraft = {
   hook: 'Tu práctica merece algo más que respuestas automáticas.',
   script: 'ARCANUM reúne herramientas para estudiar símbolos con intención. Consulta el Tarot, observa tu carta natal y conserva notas privadas dentro de un grimorio cifrado.',
@@ -56,6 +73,9 @@ const validDraft = {
 const accepted = await execute(JSON.stringify(validDraft));
 assert.equal(accepted[0].json.status, 'ready_for_review');
 assert.equal(accepted[0].json.validation.valid, true);
+
+const normalized = await normalize({ output: validDraft });
+assert.deepEqual(JSON.parse(normalized[0].json.text), validDraft);
 
 const repetitiveDraft = {
   hook: 'El porvenir no es un mapa predeterminado, sino un espacio de contemplación.',
@@ -86,4 +106,4 @@ assert.ok(missingAccents[0].json.validation.warnings.includes('ortografia: revis
 
 await assert.rejects(() => execute('{no es json}'), /JSON editorial invalido/);
 
-console.log('Validador editorial: 4 casos verdes');
+console.log('Validador editorial: 5 casos verdes');

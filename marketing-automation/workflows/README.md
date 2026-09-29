@@ -10,6 +10,9 @@ Orden previsto:
 El flujo usa `gemini-3.6-flash` como editor y `gemini-3.5-flash-lite` como
 respaldo cuando Google devuelve `503`. El resultado queda en
 `ready_for_review` o `needs_revision`; nunca se aprueba ni publica solo.
+La salida pasa primero por JSON Schema. Si llega truncada o invalida, n8n
+regenera la pieza completa un maximo de dos veces; no completa huecos con otro
+modelo porque eso puede inventar hechos, fuentes o recursos visuales.
 3. `03_validar_contenido.json`
 4. `04_aprobar_contenido.json`
 5. `05_renderizar.json`

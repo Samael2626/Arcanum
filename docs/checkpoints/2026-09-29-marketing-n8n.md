@@ -52,6 +52,10 @@ para convertir un paquete factual en borrador mediante Gemini.
 - El flujo vivo tiene fallback real: `gemini-3.6-flash` fallo con `503` y
   `gemini-3.5-flash-lite` completo la misma ejecucion. Despues nodos de codigo
   parsearon y validaron estructura, fuentes, repeticion, CTA, alt text y tildes.
+- La salida estructurada usa JSON Schema sin autorreparacion semantica. Una
+  prueba demostro que reparar texto truncado con otro LLM inventaba `src_001` y
+  una imagen inexistente. Ahora un fallo regenera la pieza completa, maximo dos
+  intentos, y el validador factual conserva el bloqueo final.
 - La IA redacta; las efemerides y hechos llegan calculados y citados.
 - Ningun dato de usuarios entra a esta base o a Gemini.
 - La automatizacion empieza como fabrica de borradores, no como autopublicador.
