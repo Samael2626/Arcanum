@@ -76,6 +76,8 @@ class TarotReadingResponse(BaseModel):
     moon_phase: Optional[str] = None
     planetary_hour: Optional[str] = None
     created_at: datetime
+    # Foto de la mesa al cerrar el circulo; solo en lecturas hechas en la mesa
+    table_snapshot: Optional[Dict[str, Any]] = None
     # Cartas resueltas con interpretación (las mismas que ya están en
     # cards_drawn pero hidratadas con el dataset completo de tarot_cards).
     resolved: List[TarotCardInDeck] = Field(default_factory=list)

@@ -7,6 +7,7 @@ Tipado contra entidades de dominio puras, nunca contra modelos ORM.
 """
 
 from __future__ import annotations
+from datetime import datetime
 from typing import Protocol, runtime_checkable
 from uuid import UUID
 
@@ -21,6 +22,7 @@ from app.domain.entities import (
     RefreshTokenEntity,
     TarotCardEntity,
     TarotReadingEntity,
+    TarotTableEntity,
     TraditionEntity,
     UserEntity,
 )
@@ -48,6 +50,7 @@ class TarotCardRepository(Protocol):
     def list(self, *, arcana: str | None = None, suit: str | None = None) -> list[TarotCardEntity]: ...
     def get_by_slug(self, slug: str) -> TarotCardEntity | None: ...
     def deck(self) -> list[TarotCardEntity]: ...
+    def by_slugs(self, slugs: list[str]) -> dict[str, TarotCardEntity]: ...
 
 
 @runtime_checkable
@@ -62,6 +65,15 @@ class TarotReadingRepository(Protocol):
         planetary_hour: str | None = None,
     ) -> TarotReadingEntity: ...
     def list_by_user(self, user_id: UUID, *, limit: int = 20) -> list[TarotReadingEntity]: ...
+    def get_owned(self, reading_id: UUID, user_id: UUID) -> TarotReadingEntity | None: ...
+
+
+@runtime_checkable
+class TarotTableRepository(Protocol):
+    def active(self, user_id: UUID, *, lock: bool = False) -> TarotTableEntity | None: ...
+    def get_owned(self, session_id: UUID, user_id: UUID, *, lock: bool = False) -> TarotTableEntity | None: ...
+    def create(self, user_id: UUID, deck: str, state: dict, expires_at: datetime) -> TarotTableEntity: ...
+    def save(self, entity: TarotTableEntity, *, commit: bool = True) -> TarotTableEntity: ...
 
 
 @runtime_checkable

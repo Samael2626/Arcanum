@@ -46,20 +46,31 @@
 
 ## Fase 2: persistencia y API
 
-- [ ] **Migración 015:** tabla `tarot_sessions` (usuario, mazo, estado JSONB, estado de la sesión, creada/actualizada, caducidad). Como mucho una sesión activa por usuario.
-- [ ] Repositorio y servicio de aplicación, con la misma estructura en capas que ya usa el módulo.
-- [ ] **Rutas nuevas:**
-  - [ ] `GET /tarot/decks` y `GET /tarot/spreads`: catálogos.
-  - [ ] `POST /tarot/sessions`: abrir con un mazo. `GET /tarot/sessions/current`: estado sin revelar el orden.
-  - [ ] `POST /tarot/sessions/{id}/shuffle | cut | merge | take | return | gather`: libres, sin cupo.
-  - [ ] `POST /tarot/sessions/{id}/interpret`: gasta el cupo (D1) y devuelve la interpretación de Tradición.
-  - [ ] `POST /tarot/sessions/{id}/close`: cierra el círculo y guarda la lectura.
-  - [ ] **El cliente nunca recibe el orden de los montones:** solo cuántas cartas quedan y las que ya sacó.
-- [ ] **Cupo (D1):** la sesión y sus operaciones son libres; el cupo se reserva en `POST /tarot/sessions/{id}/interpret`, con `Idempotency-Key` como hoy. Esa misma ruta devuelve la interpretación de Tradición y deja la lectura lista para guardarse.
-- [ ] **Cerrar el círculo:** guarda la lectura en `tarot_readings` con fase, hora planetaria, pregunta, tirada, cartas y aclaratorias.
-- [ ] **Historial:** listar y leer lecturas guardadas para contemplarlas y continuarlas.
-- [ ] Tests con base de datos (`tests_pg`) de rutas, cupo, idempotencia y permisos (un usuario no toca la sesión de otro).
-- [ ] **Puerta:** suite completa con las dos bases + `verify_migrations`.
+- [x] **Migración 015:** tabla `tarot_sessions` (usuario, mazo, estado JSONB, estado de la sesión, creada/actualizada, caducidad). Como mucho una sesión activa por usuario.
+- [x] Repositorio y servicio de aplicación, con la misma estructura en capas que ya usa el módulo.
+- [x] **Rutas nuevas:**
+  - [x] `GET /tarot/decks` y `GET /tarot/spreads`: catálogos.
+  - [x] `POST /tarot/sessions`: abrir con un mazo. `GET /tarot/sessions/current`: estado sin revelar el orden.
+  - [x] `POST /tarot/sessions/{id}/shuffle | cut | merge | take | return | gather`: libres, sin cupo.
+  - [x] `POST /tarot/sessions/{id}/interpret`: gasta el cupo (D1) y devuelve la interpretación de Tradición.
+  - [x] `POST /tarot/sessions/{id}/close`: cierra el círculo y guarda la lectura.
+  - [x] **El cliente nunca recibe el orden de los montones:** solo cuántas cartas quedan y las que ya sacó.
+- [x] **Cupo (D1):** la sesión y sus operaciones son libres; el cupo se reserva en `POST /tarot/sessions/{id}/interpret`, con `Idempotency-Key` como hoy. Esa misma ruta devuelve la interpretación de Tradición y deja la lectura lista para guardarse.
+- [x] **Cerrar el círculo:** guarda la lectura en `tarot_readings` con fase, hora planetaria, pregunta, tirada, cartas y aclaratorias.
+- [x] **Historial:** listar y leer lecturas guardadas para contemplarlas y continuarlas.
+- [x] Tests con base de datos (`tests_pg`) de rutas, cupo, idempotencia y permisos (un usuario no toca la sesión de otro).
+- [x] **Puerta:** suite completa con las dos bases + `verify_migrations`.
+
+**Hecha el 29-sep** (`migrations/versions/015_add_tarot_sessions.py`, `app/application/services/tarot_table_service.py`, `app/routers/tarot_table.py`, `tests_pg/test_tarot_table_pg.py`). Lo que conviene saber para la fase 3:
+
+- **Estados de la mesa:** `open` → `interpreted` → `closed`, o `abandoned` si se abre otra o pasan **12 h** sin tocarla. Abandonada o caducada responde **404**; cerrada, **409**. El índice único parcial `uq_tarot_sessions_one_active` impide dos activas aunque falle el código.
+- **Bloqueo:** cada operación bloquea la fila de la mesa (`FOR UPDATE`). Probado: ocho peticiones a la vez por la misma carta, una sale 200 y siete 400.
+- **Estilos de barajar:** `cascada`, `por_encima`, `sobre_el_pano` (los tres del radial del prototipo).
+- **Interpretar** recibe `{spread, question, placements: [{slug, slot}] + aclaratorias [{slug, clarifies}]}`. Valida **antes** de cobrar (una tirada mal formada no gasta cupo), pone las invertidas que decidió el servidor y devuelve la lectura de Tradición: nombre y significado de cada hueco y el significado de la carta según su sentido. Máximo 3 aclaratorias por hueco. Se puede interpretar otra vez tras sacar aclaratorias, y cada vez gasta cupo.
+- **Cerrar** exige una lectura interpretada, guarda en `tarot_readings` (con `slot` y `clarifies` en `cards_drawn`, y la foto de la mesa en `table_snapshot`, hasta 64 KB) y es idempotente: repetirlo devuelve la misma lectura.
+- **Historial:** `GET /tarot/readings` y `GET /tarot/readings/{id}`. Solo las del usuario; las de otro dan 404.
+- **La pregunta** se guarda como hoy en `/tarot/spread`, en claro. D5 sigue abierta.
+- **Puerta:** `verify_migrations` hasta 015 y vuelta; 1251 pasan y 2 saltados; `tests_pg` 119 (21 nuevos).
 
 ## Fase 3: base de la app
 
@@ -120,7 +131,7 @@
 
 | # | Decisión | Estado |
 |---|---|---|
-| D1 | ¿Cuándo se gasta el cupo diario de tarot? (gratis 1 al día, premium 50) | **Decidido por Samuel (29-sep): al pulsar Interpretar.** Barajar, cortar, sacar y desvelar son libres. Consecuencia: se pueden ver cartas sin gastar cupo, pero la lectura guardada y la interpretación sí lo gastan. La reserva con `Idempotency-Key` va en la ruta de interpretar. |
+| D1 | ¿Cuándo se gasta el cupo diario de tarot? (gratis 1 al día, premium 10: `TAROT_FREE_DAILY` / `TAROT_PREMIUM_DAILY` en `config.py`; el 50 que ponía aquí era un error) | **Decidido por Samuel (29-sep): al pulsar Interpretar.** Barajar, cortar, sacar y desvelar son libres. Consecuencia: se pueden ver cartas sin gastar cupo, pero la lectura guardada y la interpretación sí lo gastan. La reserva con `Idempotency-Key` va en la ruta de interpretar. |
 | D2 | ¿Dónde entra el módulo en la app? | **Decidido: pestaña propia «Tarot»** en la navegación principal. |
 | D3 | ¿Todo de golpe o por entregas? | **Decidido: por fases.** Primera entrega = fases 1–5 (mesa y ritual) a la prueba cerrada. Segunda = fase 6 (efectos, sonido, háptica). |
 | D4 | ¿Oráculo con IA en la mesa? | **Decidido: solo Tradición en la primera versión.** El Oráculo, más adelante, con `arcanum-voz` y el cupo de Groq resuelto. |
@@ -129,7 +140,7 @@
 
 ## Entorno de pruebas de esta rama
 
-`main` va por la migración **012**, pero las bases de pruebas compartidas vienen de `release/1.0.6` (013 y 014, y la tabla `sendero_progress`). Con ellas, los `tests_pg` se saltan y un test de la voz del Oráculo falla al limpiar. Esta rama usa bases propias en los mismos contenedores, sin tocar las compartidas:
+Esta rama va por la **015** y las bases de pruebas compartidas están en la 014 (lo que hay en `main`). Con ellas, los `tests_pg` se saltan porque la cabeza no coincide. Esta rama usa bases propias en los mismos contenedores, sin tocar las compartidas:
 
 ```
 TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5434/arcanum_test_mesa

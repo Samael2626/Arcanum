@@ -9,7 +9,7 @@ from app.core.exceptions import http_exception_handler, generic_exception_handle
 from app.db.seed import run_seeds
 from app.db.migrate import run_migrations
 from app.db.session import get_engine
-from app.routers import auth, users, astral, materia, grimoire, oracle, tarot, admin, geo, library, reading, reports, revenuecat, credits, consents, sendero
+from app.routers import auth, users, astral, materia, grimoire, oracle, tarot, tarot_table, admin, geo, library, reading, reports, revenuecat, credits, consents, sendero
 
 # Importar todos los modelos para que Alembic los detecte
 from app.models import user, refresh_token, natal_chart, grimoire_entry  # noqa: F401
@@ -73,6 +73,7 @@ app.include_router(credits.router)
 app.include_router(grimoire.router, prefix="/grimoire", tags=["grimoire"])
 app.include_router(oracle.router, prefix="/oracle", tags=["oracle"])
 app.include_router(tarot.router, tags=["tarot"])
+app.include_router(tarot_table.router, tags=["tarot"])
 app.include_router(admin.router, tags=["admin"])
 app.include_router(geo.router, prefix="/geo", tags=["geo"])
 app.include_router(library.router, prefix="/library", tags=["library"])

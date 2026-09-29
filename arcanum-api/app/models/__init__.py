@@ -6,7 +6,7 @@ from app.models.tradition import Tradition
 from app.models.materia_item import MateriaItem
 from app.models.divination_session import DivinationSession
 from app.models.oracle_conversation import OracleConversation
-from app.models.tarot import TarotCard, TarotReading
+from app.models.tarot import TarotCard, TarotReading, TarotTableSession
 from app.models.library import LibraryWork, LibraryChapter, LibraryParagraph
 from app.models.credit_ledger import CreditLedger
 from app.models.usage_operation import UsageOperation

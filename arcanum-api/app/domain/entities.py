@@ -122,7 +122,27 @@ class TarotReadingEntity:
     cards_drawn: list[dict] | None = None
     moon_phase: str | None = None
     planetary_hour: str | None = None
+    table_snapshot: dict | None = None
     created_at: datetime | None = None
+
+
+@dataclass
+class TarotTableEntity:
+    """Fila de `tarot_sessions`. `state` es el mazo del servidor: no sale al cliente."""
+    id: UUID
+    user_id: UUID
+    deck: str
+    state: dict
+    status: str
+    expires_at: datetime
+    interpretation: dict | None = None
+    reading_id: UUID | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+    @property
+    def active(self) -> bool:
+        return self.status in ("open", "interpreted")
 
 
 @dataclass

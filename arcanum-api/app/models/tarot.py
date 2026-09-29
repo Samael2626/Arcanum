@@ -10,6 +10,7 @@ TarotReading: lectura concreta de un usuario. `cards_drawn` es un array JSONB
    solo el resultado del sorteo.
 """
 from sqlalchemy import (
+    CheckConstraint,
     Column,
     DateTime,
     Integer,
@@ -68,6 +69,8 @@ class TarotReading(Base):
     cards_drawn = Column(JSONB, nullable=False)
     moon_phase = Column(String(30), nullable=True)
     planetary_hour = Column(String(20), nullable=True)
+    # Foto de la mesa al cerrar el circulo (solo lecturas de la mesa), para contemplarla
+    table_snapshot = Column(JSONB, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", back_populates="tarot_readings")
@@ -75,3 +78,31 @@ class TarotReading(Base):
 
 Index("ix_tarot_readings_user_created", TarotReading.__table__.columns.user_id,
       TarotReading.__table__.columns.created_at)
+
+
+class TarotTableSession(Base):
+    """Mesa en juego: el mazo del servidor (orden, invertidas, sacadas) en `state`.
+
+    `state` es `TarotSession.to_dict()` y NUNCA se devuelve tal cual al cliente.
+    Una sola sesion activa (`open` o `interpreted`) por usuario.
+    """
+    __tablename__ = "tarot_sessions"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('open', 'interpreted', 'closed', 'abandoned')",
+            name="ck_tarot_sessions_status",
+        ),
+        Index("uq_tarot_sessions_one_active", "user_id", unique=True,
+              postgresql_where=text("status IN ('open', 'interpreted')")),
+    )
+
+    id = Column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    user_id = Column(PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    deck = Column(String(40), nullable=False)
+    state = Column(JSONB, nullable=False)
+    status = Column(String(16), nullable=False, server_default="open")
+    interpretation = Column(JSONB, nullable=True)
+    reading_id = Column(PGUUID(as_uuid=True), ForeignKey("tarot_readings.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+    expires_at = Column(DateTime(timezone=True), nullable=False)

@@ -16,12 +16,14 @@ from app.adapters.repositories import (
     SavedPassageRepository,
     TarotCardRepository,
     TarotReadingRepository,
+    TarotTableRepository,
     TraditionRepository,
     UserRepository,
     HoroscopeReadingRepository,
 )
 from app.application.services.auth_service import AuthService
 from app.application.services.tarot_service import TarotService
+from app.application.services.tarot_table_service import TarotTableService
 from app.db.session import get_db
 
 
@@ -100,6 +102,11 @@ def get_tarot_service(
     reading_repo: TarotReadingRepository = Depends(get_tarot_reading_repo),
 ) -> TarotService:
     return TarotService(card_repo=card_repo, reading_repo=reading_repo)
+
+
+def get_tarot_table_service(db: Session = Depends(get_db)) -> TarotTableService:
+    # los tres repositorios comparten la sesion: interpretar y cerrar van en una transaccion
+    return TarotTableService(TarotCardRepository(db), TarotTableRepository(db), TarotReadingRepository(db))
 
 import secrets
 from fastapi import Header, HTTPException, status

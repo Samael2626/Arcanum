@@ -32,6 +32,7 @@ from app.domain.entities import (
     SavedPassageEntity,
     TarotCardEntity,
     TarotReadingEntity,
+    TarotTableEntity,
     TraditionEntity,
     UserEntity,
 )
@@ -44,7 +45,7 @@ from app.models.natal_chart import NatalChart
 from app.models.oracle_conversation import OracleConversation
 from app.models.reading import ReadingBookmark, ReadingProgress, SavedPassage
 from app.models.refresh_token import RefreshToken
-from app.models.tarot import TarotCard, TarotReading
+from app.models.tarot import TarotCard, TarotReading, TarotTableSession
 from app.models.tradition import Tradition
 from app.models.user import User
 
@@ -170,6 +171,12 @@ class TarotCardRepository:
             TarotCardEntity, self._db.query(TarotCard).order_by(TarotCard.number, TarotCard.id).all()
         )
 
+    def by_slugs(self, slugs: list[str]) -> dict[str, TarotCardEntity]:
+        if not slugs:
+            return {}
+        rows = self._db.query(TarotCard).filter(TarotCard.slug.in_(slugs)).all()
+        return {r.slug: _to_entity(TarotCardEntity, r) for r in rows}
+
 
 class TarotReadingRepository:
     def __init__(self, db: Session) -> None:
@@ -184,6 +191,7 @@ class TarotReadingRepository:
         moon_phase: str | None = None,
         planetary_hour: str | None = None,
         commit: bool = True,
+        table_snapshot: dict | None = None,
     ) -> TarotReadingEntity:
         """`commit=False` deja la escritura dentro de la transaccion del
         llamador: la ruta persiste el contenido y captura el consumo en un
@@ -196,6 +204,7 @@ class TarotReadingRepository:
             cards_drawn=cards,
             moon_phase=moon_phase,
             planetary_hour=planetary_hour,
+            table_snapshot=table_snapshot,
         )
         self._db.add(row)
         if commit:
@@ -214,6 +223,52 @@ class TarotReadingRepository:
             .limit(limit)
             .all(),
         )
+
+    def get_owned(self, reading_id: UUID, user_id: UUID) -> TarotReadingEntity | None:
+        row = self._db.query(TarotReading).filter(
+            TarotReading.id == reading_id, TarotReading.user_id == user_id
+        ).first()
+        return _to_entity(TarotReadingEntity, row)
+
+
+class TarotTableRepository:
+    """Sesiones de la mesa. Las lecturas de una sesion bloquean la fila (FOR UPDATE):
+    dos toques casi simultaneos no pueden sacar la misma carta ni pisarse el mazo."""
+
+    _ACTIVE = ("open", "interpreted")
+
+    def __init__(self, db: Session) -> None:
+        self._db = db
+
+    def active(self, user_id: UUID, *, lock: bool = False) -> TarotTableEntity | None:
+        q = self._db.query(TarotTableSession).filter(
+            TarotTableSession.user_id == user_id, TarotTableSession.status.in_(self._ACTIVE)
+        )
+        return _to_entity(TarotTableEntity, (q.with_for_update() if lock else q).first())
+
+    def get_owned(self, session_id: UUID, user_id: UUID, *, lock: bool = False) -> TarotTableEntity | None:
+        q = self._db.query(TarotTableSession).filter(
+            TarotTableSession.id == session_id, TarotTableSession.user_id == user_id
+        )
+        return _to_entity(TarotTableEntity, (q.with_for_update() if lock else q).first())
+
+    def create(self, user_id: UUID, deck: str, state: dict, expires_at: datetime) -> TarotTableEntity:
+        row = TarotTableSession(user_id=user_id, deck=deck, state=state, status="open", expires_at=expires_at)
+        self._db.add(row)
+        self._db.commit()
+        self._db.refresh(row)
+        return _to_entity(TarotTableEntity, row)
+
+    def save(self, entity: TarotTableEntity, *, commit: bool = True) -> TarotTableEntity:
+        row = self._db.get(TarotTableSession, entity.id)
+        for name in ("state", "status", "interpretation", "reading_id", "expires_at"):
+            setattr(row, name, getattr(entity, name))
+        row.updated_at = datetime.now(timezone.utc)
+        if commit:
+            self._db.commit()
+        else:
+            self._db.flush()
+        return entity
 
 
 # ── Grimorio ────────────────────────────────────────────────────────────────
