@@ -12,13 +12,33 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { external_key: 'demo-manifiesto-001', pillar: 'manifiesto', premise: 'ARCANUM es un panel de trabajo para quien practica, no una app de predicciones.', facts: [{ claim: 'ARCANUM no promete predecir el futuro ni resultados personales.', source_id: 'play-ficha' }, { claim: 'El Tarot reúne los 78 arcanos, varias tiradas e interpretaciones que parten de la pregunta del usuario.', source_id: 'play-ficha' }, { claim: 'La carta natal se calcula con Swiss Ephemeris, casas Placidus y un sistema configurable.', source_id: 'play-ficha' }, { claim: 'El cielo de hoy muestra tránsitos sobre la carta natal calculados con efemérides reales.', source_id: 'play-ficha' }, { claim: 'Las notas del grimorio se cifran con AES-256 en el teléfono; el servidor almacena texto cifrado y no puede leer el cuerpo.', source_id: 'play-ficha' }, { claim: 'Materia arcana reúne plantas, piedras, metales y perfumes con correspondencias tomadas de fuentes históricas.', source_id: 'play-ficha' }], sources: [{ id: 'play-ficha', kind: 'repo', reference: 'docs/play-ficha.md:95-129' }], warnings: ['No presentar la app como servicio predictivo.', 'No prometer resultados personales.', 'No inferir que todo es azar.', 'No afirmar que la app carece de automatización o interferencias automáticas.', 'No usar módulos específicos o módulos especializados como relleno.', 'No atribuir a una función un propósito que no aparezca en los hechos.'], asset: null } }];"
+        "operation": "executeQuery",
+        "query": "WITH recovered AS (\n  UPDATE marketing.content_items\n  SET status = 'queued',\n      last_error = 'Reclamacion expirada; el item volvio a la cola.',\n      claimed_at = NULL,\n      updated_at = now()\n  WHERE status = 'generating'\n    AND claimed_at < now() - interval '15 minutes'\n  RETURNING id\n), queued AS (\n  SELECT id\n  FROM marketing.content_items\n  WHERE status = 'queued'\n  ORDER BY scheduled_at NULLS FIRST, created_at, id\n  FOR UPDATE SKIP LOCKED\n  LIMIT 1\n), candidate AS (\n  SELECT id FROM recovered\n  UNION ALL\n  SELECT id FROM queued\n  LIMIT 1\n)\nUPDATE marketing.content_items AS item\nSET status = 'generating',\n    generation_attempts = item.generation_attempts + 1,\n    last_error = NULL,\n    claimed_at = now(),\n    updated_at = now()\nFROM candidate\nWHERE item.id = candidate.id\nRETURNING\n  item.id::text AS content_item_id,\n  item.external_key,\n  item.pillar,\n  item.objective,\n  item.audience,\n  item.angle,\n  item.primary_format,\n  item.derived_formats,\n  item.premise,\n  item.facts,\n  item.sources,\n  item.warnings,\n  item.asset;",
+        "options": {
+          "queryBatching": "single"
+        }
+      },
+      "id": "c291961d-8f2d-4bd8-9e71-0afe08477b21",
+      "name": "Reclamar siguiente brief",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [-420, 0],
+      "credentials": {
+        "postgres": {
+          "id": "arcanum-marketing-postgres",
+          "name": "ARCANUM Marketing Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const brief = $input.first().json;\nconst requiredText = ['content_item_id', 'external_key', 'pillar', 'objective', 'audience', 'angle', 'primary_format', 'premise'];\nfor (const field of requiredText) {\n  if (typeof brief[field] !== 'string' || !brief[field].trim()) throw new Error(`Brief invalido: falta ${field}`);\n}\nfor (const field of ['facts', 'sources', 'warnings', 'derived_formats']) {\n  if (!Array.isArray(brief[field])) throw new Error(`Brief invalido: ${field} debe ser una lista`);\n}\nif (!brief.facts.length || !brief.sources.length) throw new Error('Brief invalido: faltan hechos o fuentes');\nconst sourceIds = new Set(brief.sources.map((source) => source.id));\nif (brief.facts.some((fact) => !sourceIds.has(fact.source_id))) throw new Error('Brief invalido: un hecho referencia una fuente ausente');\nreturn [{ json: brief }];"
       },
       "id": "f95c144c-5c4c-4ac7-8f97-5516e8153fba",
       "name": "Preparar paquete factual",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-380, 0]
+      "position": [-180, 0]
     },
     {
       "parameters": {
@@ -41,10 +61,32 @@
       "name": "Generar pieza maestra",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
-      "position": [-100, 0],
+      "position": [100, 0],
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE marketing.content_items\nSET status = 'failed',\n    last_error = $2,\n    claimed_at = NULL,\n    updated_at = now()\nWHERE external_key = $1\nRETURNING id::text AS content_item_id, external_key, status::text, generation_attempts, last_error;",
+        "options": {
+          "queryBatching": "single",
+          "queryReplacement": "={{ [$('Preparar paquete factual').first().json.external_key, String($json.error?.message || $json.message || 'Error de generacion no especificado').slice(0, 2000)] }}"
+        }
+      },
+      "id": "3cae4e54-78f5-4c72-863e-d6f1f30adf54",
+      "name": "Registrar fallo editorial",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [380, -180],
+      "credentials": {
+        "postgres": {
+          "id": "arcanum-marketing-postgres",
+          "name": "ARCANUM Marketing Postgres"
+        }
+      }
     },
     {
       "parameters": {
@@ -59,7 +101,7 @@
       "name": "Gemini editorial",
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
-      "position": [-100, 220]
+      "position": [100, 220]
     },
     {
       "parameters": {
@@ -74,7 +116,7 @@
       "name": "Gemini editorial respaldo",
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
-      "position": [60, 220]
+      "position": [260, 220]
     },
     {
       "parameters": {
@@ -86,7 +128,7 @@
       "name": "Forzar salida JSON",
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
-      "position": [220, 300]
+      "position": [420, 300]
     },
     {
       "parameters": {
@@ -96,7 +138,7 @@
       "name": "Normalizar salida estructurada",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [180, 0]
+      "position": [380, 0]
     },
     {
       "parameters": {
@@ -106,17 +148,17 @@
       "name": "Parsear y validar borrador",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [440, 0]
+      "position": [640, 0]
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nconst draft = item.draft || {};\nconst corpus = [draft.hook, draft.script, draft.caption, draft.cta, ...(Array.isArray(draft.carousel) ? draft.carousel : [])].filter(Boolean).join(' ');\nconst missingAccents = /\\b(reflexion|proposito|comprension|tecnica|observacion|metodica|adivinacion|aplicacion|prediccion|simbolica|astrologia)\\b/i;\nif (missingAccents.test(corpus)) {\n  item.validation.warnings = [...new Set([...(item.validation.warnings || []), 'ortografia: revisar tildes frecuentes'])];\n  item.validation.score = Math.max(0, item.validation.score - 5);\n}\nreturn [{ json: item }];"
+        "jsCode": "const item = $input.first().json;\nconst draft = item.draft || {};\nconst corpus = [draft.hook, draft.script, draft.caption, draft.cta, ...(Array.isArray(draft.carousel) ? draft.carousel : [])].filter(Boolean).join(' ');\nconst missingAccents = /\\b(reflexion|proposito|comprension|tecnica|observacion|metodica|adivinacion|aplicacion|prediccion|simbolica|astrologia)\\b/i;\nif (missingAccents.test(corpus)) {\n  const error = 'ortografia: faltan tildes frecuentes';\n  item.validation.errors = [...new Set([...(item.validation.errors || []), error])];\n  item.validation.valid = false;\n  item.validation.score = Math.max(0, item.validation.score - 15);\n  item.status = 'needs_revision';\n}\nreturn [{ json: item }];"
       },
       "id": "b5dbbd47-9ab3-482f-8cbd-a3bff8087d92",
       "name": "Revisar ortografia",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [960, 0]
+      "position": [1300, 0]
     },
     {
       "parameters": {
@@ -126,19 +168,66 @@
       "name": "Validar voz editorial",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [700, 0]
+      "position": [900, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst brief = $('Preparar paquete factual').first().json;\nconst normalize = (value) => String(value || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();\nconst draft = item.draft || {};\nconst corpus = normalize([draft.hook, draft.script, draft.caption, draft.cta, ...(Array.isArray(draft.carousel) ? draft.carousel : [])].filter(Boolean).join(' '));\nconst factualCorpus = normalize([brief.premise, ...(brief.facts || []).map((fact) => fact.claim), ...(brief.warnings || [])].filter(Boolean).join(' '));\nconst rules = [\n  ['garantia o fidelidad no respaldada', /\\b(garanti(?:a|as|za|zar|zado)|fidelidad)\\b/i, /\\b(garanti(?:a|as|za|zar|zado)|fidelidad)\\b/i],\n  ['configuracion por defecto no respaldada', /\\bpor defecto\\b/i, /\\bpor defecto\\b/i],\n  ['influencia no respaldada', /\\binfluenci(?:a|an|ar|as)\\b/i, /\\binfluenci(?:a|an|ar|as)\\b/i],\n  ['efecto no respaldado', /\\b(efecto|efectos|produce|provoca)\\b/i, /\\b(efecto|efectos|produce|provoca)\\b/i],\n  ['exactitud no respaldada', /\\b(exactitud|exacto|exacta|exactos|exactas)\\b/i, /\\b(exactitud|exacto|exacta|exactos|exactas)\\b/i]\n];\nconst newErrors = [];\nfor (const [label, usedPattern, factPattern] of rules) {\n  if (usedPattern.test(corpus) && !factPattern.test(factualCorpus)) newErrors.push(`claim: ${label}`);\n}\nitem.validation.errors = [...new Set([...(item.validation.errors || []), ...newErrors])];\nitem.validation.valid = item.validation.errors.length === 0;\nitem.validation.score = Math.max(0, Number(item.validation.score ?? 100) - newErrors.length * 15);\nitem.status = item.validation.valid ? 'ready_for_review' : 'needs_revision';\nreturn [{ json: item }];"
+      },
+      "id": "950d00d3-b0fb-42ea-8140-52140e3c5ced",
+      "name": "Validar claims sensibles",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nlet generationModel = 'gemini-3.6-flash';\ntry {\n  if ($('Gemini editorial respaldo').isExecuted) generationModel = 'gemini-3.5-flash-lite';\n} catch {}\nitem.generation_model = generationModel;\nreturn [{ json: item }];"
+      },
+      "id": "6d73bef4-3925-4e23-b312-5e058fdb19a9",
+      "name": "Registrar modelo usado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 0]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE marketing.content_items\nSET generated_content = $2::jsonb,\n    status = $3::marketing.content_status,\n    generation_model = $4,\n    generated_at = now(),\n    claimed_at = NULL,\n    last_error = NULL,\n    updated_at = now()\nWHERE external_key = $1\nRETURNING id::text AS content_item_id, external_key, status::text, generation_attempts, generated_at;",
+        "options": {
+          "queryBatching": "single",
+          "queryReplacement": "={{ [$json.external_key, JSON.stringify({ draft: $json.draft, validation: $json.validation }), $json.status, $json.generation_model] }}"
+        }
+      },
+      "id": "1f71dbd3-b238-45cd-b191-69bad9b050a0",
+      "name": "Guardar resultado editorial",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [1700, 0],
+      "credentials": {
+        "postgres": {
+          "id": "arcanum-marketing-postgres",
+          "name": "ARCANUM Marketing Postgres"
+        }
+      }
     }
   ],
   "pinData": {},
   "connections": {
     "Ejecutar manualmente": {
+      "main": [[{ "node": "Reclamar siguiente brief", "type": "main", "index": 0 }]]
+    },
+    "Reclamar siguiente brief": {
       "main": [[{ "node": "Preparar paquete factual", "type": "main", "index": 0 }]]
     },
     "Preparar paquete factual": {
       "main": [[{ "node": "Generar pieza maestra", "type": "main", "index": 0 }]]
     },
     "Generar pieza maestra": {
-      "main": [[{ "node": "Normalizar salida estructurada", "type": "main", "index": 0 }]]
+      "main": [
+        [{ "node": "Normalizar salida estructurada", "type": "main", "index": 0 }],
+        [{ "node": "Registrar fallo editorial", "type": "main", "index": 0 }]
+      ]
     },
     "Normalizar salida estructurada": {
       "main": [[{ "node": "Parsear y validar borrador", "type": "main", "index": 0 }]]
@@ -147,7 +236,16 @@
       "main": [[{ "node": "Validar voz editorial", "type": "main", "index": 0 }]]
     },
     "Validar voz editorial": {
+      "main": [[{ "node": "Validar claims sensibles", "type": "main", "index": 0 }]]
+    },
+    "Validar claims sensibles": {
       "main": [[{ "node": "Revisar ortografia", "type": "main", "index": 0 }]]
+    },
+    "Revisar ortografia": {
+      "main": [[{ "node": "Registrar modelo usado", "type": "main", "index": 0 }]]
+    },
+    "Registrar modelo usado": {
+      "main": [[{ "node": "Guardar resultado editorial", "type": "main", "index": 0 }]]
     },
     "Gemini editorial": {
       "ai_languageModel": [[{ "node": "Generar pieza maestra", "type": "ai_languageModel", "index": 0 }]]

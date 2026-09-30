@@ -1,0 +1,340 @@
+[
+  {
+    "external_key": "tarot-78-arcanos-001",
+    "pillar": "tarot",
+    "objective": "education",
+    "audience": "personas que quieren estudiar Tarot sin respuestas enlatadas",
+    "angle": "function",
+    "primary_format": "carousel",
+    "derived_formats": ["story", "short_video"],
+    "premise": "El Tarot de ARCANUM reúne la baraja completa y varias tiradas.",
+    "facts": [
+      {
+        "claim": "El módulo de Tarot incluye los 78 arcanos y varias tiradas.",
+        "source_id": "play-ficha-tarot"
+      },
+      {
+        "claim": "La interpretación parte de la pregunta del usuario y no de un texto enlatado.",
+        "source_id": "play-ficha-tarot"
+      }
+    ],
+    "sources": [
+      {
+        "id": "play-ficha-tarot",
+        "kind": "repo",
+        "reference": "docs/play-ficha.md:110-111"
+      }
+    ],
+    "warnings": [
+      "No afirmar que una tirada predice el futuro.",
+      "No prometer exactitud ni resultados personales."
+    ],
+    "asset": null
+  },
+  {
+    "external_key": "tarot-pregunta-002",
+    "pillar": "tarot",
+    "objective": "consideration",
+    "audience": "practicantes que rechazan interpretaciones genéricas de Tarot",
+    "angle": "friction",
+    "primary_format": "static",
+    "derived_formats": ["carousel", "story"],
+    "premise": "La pregunta concreta diferencia una lectura situada de un texto genérico.",
+    "facts": [
+      {
+        "claim": "La interpretación de Tarot parte de la pregunta del usuario.",
+        "source_id": "play-ficha-tarot"
+      },
+      {
+        "claim": "ARCANUM no se presenta como una app de predicciones.",
+        "source_id": "play-ficha-positioning"
+      }
+    ],
+    "sources": [
+      {
+        "id": "play-ficha-tarot",
+        "kind": "repo",
+        "reference": "docs/play-ficha.md:110-111"
+      },
+      {
+        "id": "play-ficha-positioning",
+        "kind": "repo",
+        "reference": "docs/play-ficha.md:95-99"
+      }
+    ],
+    "warnings": [
+      "No asegurar que una pregunta mejor produce una respuesta verdadera.",
+      "No presentar la interpretación como consejo psicológico."
+    ],
+    "asset": null
+  },
+  {
+    "external_key": "astrologia-carta-natal-001",
+    "pillar": "astrologia",
+    "objective": "education",
+    "audience": "personas que quieren conocer la base técnica de su carta natal",
+    "angle": "technical_proof",
+    "primary_format": "carousel",
+    "derived_formats": ["story", "short_video"],
+    "premise": "La carta natal usa cálculos y parámetros astrológicos explícitos.",
+    "facts": [
+      {
+        "claim": "La carta natal se calcula con Swiss Ephemeris.",
+        "source_id": "play-ficha-carta"
+      },
+      {
+        "claim": "La carta natal usa casas Placidus y un sistema configurable.",
+        "source_id": "play-ficha-carta"
+      },
+      {
+        "claim": "Incluye planetas clásicos, ángulos, aspectos y sus orbes.",
+        "source_id": "play-ficha-carta"
+      }
+    ],
+    "sources": [
+      {
+        "id": "play-ficha-carta",
+        "kind": "repo",
+        "reference": "docs/play-ficha.md:107-108"
+      }
+    ],
+    "warnings": [
+      "No convertir una especificación técnica en una promesa de exactitud absoluta.",
+      "No afirmar que la carta determina personalidad o destino."
+    ],
+    "asset": null
+  },
+  {
+    "external_key": "cielo-transitos-hoy-002",
+    "pillar": "cielo",
+    "objective": "consideration",
+    "audience": "usuarios que quieren relacionar los tránsitos actuales con su carta natal",
+    "angle": "function",
+    "primary_format": "carousel",
+    "derived_formats": ["static", "story", "short_video"],
+    "premise": "El cielo de hoy organiza los tránsitos que tocan la carta natal.",
+    "facts": [
+      {
+        "claim": "El cielo de hoy muestra los tránsitos que tocan la carta natal del usuario.",
+        "source_id": "play-ficha-cielo"
+      },
+      {
+        "claim": "Los tránsitos se ordenan por peso entre procesos lentos y clima del día.",
+        "source_id": "play-ficha-cielo"
+      },
+      {
+        "claim": "Cada aspecto se representa de forma visual.",
+        "source_id": "play-ficha-cielo"
+      }
+    ],
+    "sources": [
+      {
+        "id": "play-ficha-cielo",
+        "kind": "repo",
+        "reference": "docs/play-ficha.md:103-105"
+      }
+    ],
+    "warnings": [
+      "No redactar los tránsitos como sucesos inevitables.",
+      "No usar el cielo de hoy como consejo médico, legal o financiero."
+    ],
+    "asset": null
+  },
+  {
+    "external_key": "grimorio-cifrado-local-001",
+    "pillar": "practica",
+    "objective": "education",
+    "audience": "personas que necesitan registrar su práctica sin exponer el cuerpo de sus notas",
+    "angle": "technical_proof",
+    "primary_format": "carousel",
+    "derived_formats": ["static", "story", "short_video"],
+    "premise": "El cuerpo del grimorio se cifra en el teléfono antes de llegar al servidor.",
+    "facts": [
+      {
+        "claim": "Las notas del grimorio se cifran con AES-256 en el teléfono.",
+        "source_id": "play-ficha-grimorio"
+      },
+      {
+        "claim": "El servidor guarda texto cifrado y no puede leer el cuerpo de la nota.",
+        "source_id": "play-ficha-grimorio"
+      }
+    ],
+    "sources": [
+      {
+        "id": "play-ficha-grimorio",
+        "kind": "repo",
+        "reference": "docs/play-ficha.md:116-117"
+      }
+    ],
+    "warnings": [
+      "Limitar el claim al cuerpo cifrado de las notas.",
+      "No afirmar que título y etiquetas están cifrados."
+    ],
+    "asset": null
+  },
+  {
+    "external_key": "grimorio-practica-002",
+    "pillar": "practica",
+    "objective": "consideration",
+    "audience": "practicantes que quieren conservar y revisar sus propios registros",
+    "angle": "practice",
+    "primary_format": "static",
+    "derived_formats": ["carousel", "story"],
+    "premise": "El grimorio permite conservar notas personales cifradas dentro de la app.",
+    "facts": [
+      {
+        "claim": "ARCANUM incluye un grimorio cifrado para las notas del usuario.",
+        "source_id": "play-ficha-grimorio"
+      },
+      {
+        "claim": "El cuerpo de las notas se cifra en el dispositivo con AES-256.",
+        "source_id": "play-ficha-grimorio"
+      }
+    ],
+    "sources": [
+      {
+        "id": "play-ficha-grimorio",
+        "kind": "repo",
+        "reference": "docs/play-ficha.md:116-117"
+      }
+    ],
+    "warnings": [
+      "No inventar funciones de diario, búsqueda o sincronización no citadas.",
+      "No afirmar anonimato total."
+    ],
+    "asset": null
+  },
+  {
+    "external_key": "materia-correspondencias-001",
+    "pillar": "materia",
+    "objective": "education",
+    "audience": "personas que estudian correspondencias de materia arcana",
+    "angle": "function",
+    "primary_format": "carousel",
+    "derived_formats": ["story", "short_video"],
+    "premise": "Materia arcana reúne distintas categorías de correspondencias.",
+    "facts": [
+      {
+        "claim": "Materia arcana reúne plantas, piedras, metales y perfumes.",
+        "source_id": "play-ficha-materia"
+      },
+      {
+        "claim": "El módulo presenta correspondencias para esas materias.",
+        "source_id": "play-ficha-materia"
+      }
+    ],
+    "sources": [
+      {
+        "id": "play-ficha-materia",
+        "kind": "repo",
+        "reference": "docs/play-ficha.md:113-114"
+      }
+    ],
+    "warnings": [
+      "Tratar plantas y sustancias como contenido histórico, no instrucciones de consumo.",
+      "No atribuir efectos físicos, médicos o sobrenaturales."
+    ],
+    "asset": null
+  },
+  {
+    "external_key": "materia-fuentes-historicas-002",
+    "pillar": "materia",
+    "objective": "consideration",
+    "audience": "lectores que valoran correspondencias vinculadas con fuentes históricas",
+    "angle": "technical_proof",
+    "primary_format": "carousel",
+    "derived_formats": ["static", "story"],
+    "premise": "Las correspondencias de Materia arcana declaran sus fuentes históricas.",
+    "facts": [
+      {
+        "claim": "Las correspondencias de Materia arcana se toman de fuentes históricas.",
+        "source_id": "play-ficha-materia"
+      },
+      {
+        "claim": "La ficha menciona a Agrippa, Culpeper y Dioscórides como fuentes.",
+        "source_id": "play-ficha-materia"
+      }
+    ],
+    "sources": [
+      {
+        "id": "play-ficha-materia",
+        "kind": "repo",
+        "reference": "docs/play-ficha.md:113-114"
+      }
+    ],
+    "warnings": [
+      "Una fuente histórica no demuestra eficacia práctica.",
+      "No presentar las correspondencias como hechos científicos."
+    ],
+    "asset": null
+  },
+  {
+    "external_key": "manifiesto-no-prediccion-001",
+    "pillar": "manifiesto",
+    "objective": "awareness",
+    "audience": "personas cansadas de aplicaciones que prometen certezas sobre el futuro",
+    "angle": "friction",
+    "primary_format": "static",
+    "derived_formats": ["carousel", "story", "short_video"],
+    "premise": "ARCANUM se presenta como instrumento de estudio y práctica, no como predictor.",
+    "facts": [
+      {
+        "claim": "ARCANUM es un panel de trabajo para quien practica.",
+        "source_id": "play-ficha-positioning"
+      },
+      {
+        "claim": "La aplicación no predice el futuro ni promete resultados.",
+        "source_id": "play-ficha-limits"
+      }
+    ],
+    "sources": [
+      {
+        "id": "play-ficha-positioning",
+        "kind": "repo",
+        "reference": "docs/play-ficha.md:95-99"
+      },
+      {
+        "id": "play-ficha-limits",
+        "kind": "repo",
+        "reference": "docs/play-ficha.md:126-129"
+      }
+    ],
+    "warnings": [
+      "No usar azar como opuesto de predicción.",
+      "No ridiculizar a usuarios ni competidores."
+    ],
+    "asset": null
+  },
+  {
+    "external_key": "producto-panel-herramientas-002",
+    "pillar": "producto",
+    "objective": "conversion",
+    "audience": "personas que buscan reunir Tarot, astrología y registro personal en una app",
+    "angle": "function",
+    "primary_format": "carousel",
+    "derived_formats": ["static", "story", "short_video"],
+    "premise": "ARCANUM reúne herramientas concretas de Tarot, astrología, materia y registro.",
+    "facts": [
+      {
+        "claim": "ARCANUM incluye Tarot, carta natal, cielo de hoy, Materia arcana y grimorio cifrado.",
+        "source_id": "play-ficha-features"
+      },
+      {
+        "claim": "También calcula la hora planetaria y el regente del día para la ubicación del usuario.",
+        "source_id": "play-ficha-features"
+      }
+    ],
+    "sources": [
+      {
+        "id": "play-ficha-features",
+        "kind": "repo",
+        "reference": "docs/play-ficha.md:101-119"
+      }
+    ],
+    "warnings": [
+      "No llamar completo o todo en uno al producto.",
+      "No convertir la lista de funciones en una promesa de resultados."
+    ],
+    "asset": null
+  }
+]

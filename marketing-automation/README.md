@@ -10,6 +10,7 @@ cd marketing-automation
 .\scripts\New-LocalEnv.ps1
 docker compose up -d
 docker compose ps
+.\scripts\Seed-ContentQueue.ps1
 ```
 
 Abrir `http://localhost:5678` y crear la cuenta propietaria local.
@@ -32,9 +33,18 @@ Abrir `http://localhost:5678` y crear la cuenta propietaria local.
 - Licencia y fuente obligatorias para cada activo.
 - La IA redacta; no inventa hechos.
 
-## Primer flujo
+## Cola editorial
 
-`semilla -> paquete factual -> Gemini -> validacion -> revision humana`
+`queued -> reclamar -> paquete factual -> Gemini -> validacion -> persistencia`
+
+`Seed-ContentQueue.ps1` aplica las migraciones pendientes y carga diez briefs
+idempotentes desde `seeds/content-briefs.json`. Una segunda ejecución actualiza
+los hechos sin reiniciar estados. Usar `-RequeueExisting` solo cuando se quiera
+regenerar deliberadamente contenido ya procesado.
+
+El workflow reclama un solo item con `FOR UPDATE SKIP LOCKED`, lo marca
+`generating` y guarda borrador, validación, ruta de modelos y fecha. Una
+reclamación abandonada vuelve a la cola después de quince minutos.
 
 El publicador queda fuera del MVP. Primero se producen borradores y se mide la
 calidad editorial.

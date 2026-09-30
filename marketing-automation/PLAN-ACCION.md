@@ -21,6 +21,8 @@ autoriza cualquier publicación externa.
 
 ### Fase 1 — Cola editorial
 
+**Estado:** completada el 30 de septiembre de 2026.
+
 - Leer el siguiente contenido con estado `queued`.
 - Adjuntar hechos, fuente, pilar, formato y objetivo.
 - Generar el paquete editorial actual.
@@ -29,6 +31,8 @@ autoriza cualquier publicación externa.
   `approved`, `rejected`, `rendered`, `scheduled`, `published`, `failed`.
 
 **Terminado cuando:** diez briefs distintos recorren el flujo sin editar nodos.
+Resultado vivo: diez procesados, ocho en `ready_for_review`, dos en
+`needs_revision`, cero atascados y cero fallos sin registrar.
 
 ### Fase 2 — Publicaciones de texto y carruseles
 

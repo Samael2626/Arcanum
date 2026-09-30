@@ -96,6 +96,26 @@ para convertir un paquete factual en borrador mediante Gemini.
   vertical 1080x1920. No tiene Git ni tests; por eso se recupera en la fase de
   video y no se usa como base de las primeras publicaciones.
 
+## Fase 1 completada - 30 sep 2026
+
+- PostgreSQL recibió una migración compatible para cola, reclamación, intentos,
+  modelo usado, error y fechas de generación.
+- `seeds/content-briefs.json` contiene diez briefs verificados contra
+  `docs/play-ficha.md`: dos Tarot, dos astrología/cielo, dos grimorio, dos
+  Materia y dos posicionamiento/producto.
+- `Seed-ContentQueue.ps1` aplica migraciones y semillas de forma idempotente. La
+  segunda ejecución conservó todos los estados.
+- El workflow reclama con `FOR UPDATE SKIP LOCKED`, valida el brief, genera,
+  bloquea claims sensibles y faltas frecuentes, registra el modelo realmente
+  usado y persiste el resultado.
+- Una ejecución falló porque Gemini no respetó el JSON Schema. Ese hallazgo creó
+  la rama terminal que marca `failed`, guarda el error y libera la reclamación.
+- Prueba viva final: diez briefs recorrieron el flujo sin editar nodos; ocho
+  quedaron `ready_for_review`, dos `needs_revision`, cero `queued`, cero
+  `generating` y cero `failed`.
+- Los dos bloqueos reales fueron una garantía no respaldada y tildes ausentes.
+  `ready_for_review` sigue sin equivaler a aprobado.
+
 ## Git
 
 - Rama: `release/1.0.6`.
