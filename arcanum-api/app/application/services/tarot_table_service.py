@@ -28,6 +28,11 @@ from app.schemas.tarot import TarotReadingResponse
 SESSION_TTL = timedelta(hours=12)
 # Aclaratorias por hueco; mas que eso ya no aclara nada
 MAX_CLARIFIERS_PER_SLOT = 3
+# Cuanto guarda el servidor el mazo de antes del ultimo gesto. La app ofrece
+# deshacer 5 s; el margen es para la red.
+UNDO_WINDOW = timedelta(seconds=30)
+# Lectura sin tirada elegida: cartas sueltas sobre el paño
+FREE_SPREAD = "free"
 
 # Orden de fabrica: mayores 0-21 y despues los palos
 _SUIT_ORDER = {"wands": 0, "bastos": 0, "cups": 1, "copas": 1, "swords": 2, "espadas": 2,
@@ -79,12 +84,21 @@ class TarotTableService:
         return [(d, sum(d.includes(c.arcana) for c in pool)) for d in list_decks()]
 
     # ---------- ciclo de la sesion ----------
-    def open(self, user_id: UUID, deck_slug: str) -> TarotTableEntity:
+    def open(self, user_id: UUID, deck_slug: str, from_reading: Optional[UUID] = None) -> TarotTableEntity:
+        """Abre una mesa. Con `from_reading`, continua esa lectura: sus cartas salen
+        del mazo con el sentido con que se leyeron y el resto queda para seguir."""
         deck = get_deck(deck_slug)
         if deck is None:
             raise SessionError(f"Mazo desconocido: {deck_slug}.")
-        cards = sorted((c for c in self._cards.deck() if deck.includes(c.arcana)), key=_factory_key)
-        session = TarotSession.open(deck, [c.slug for c in cards])
+        cards = [c.slug for c in sorted((c for c in self._cards.deck() if deck.includes(c.arcana)), key=_factory_key)]
+        if from_reading is None:
+            session = TarotSession.open(deck, cards)
+        else:
+            reading = self._readings.get_owned(from_reading, user_id)
+            if reading is None:
+                raise TableNotFound("Lectura no encontrada.")
+            drawn = [(c["slug"], bool(c.get("reversed"))) for c in reading.cards_drawn or []]
+            session = TarotSession.resume(deck, cards, drawn)
         previous = self._tables.active(user_id, lock=True)
         if previous is not None:
             # abrir otra mesa abandona la anterior: una activa por usuario
@@ -113,38 +127,59 @@ class TarotTableService:
             raise TableConflict("La mesa ya está cerrada.")
         return table
 
-    def _operate(self, session_id: UUID, user_id: UUID,
-                 op: Callable[[TarotSession], T]) -> tuple[TarotTableEntity, T]:
+    def _operate(self, session_id: UUID, user_id: UUID, op: Callable[[TarotSession], T],
+                 checkpoint: bool = True) -> tuple[TarotTableEntity, T]:
+        """Aplica una operacion al mazo. Con `checkpoint`, el mazo de antes queda
+        guardado para deshacer; sin el, se conserva el punto anterior: asi un gesto
+        de varias operaciones (unir y recoger, por ejemplo) se deshace entero."""
         table = self._load(session_id, user_id)
         session = TarotSession.from_dict(table.state)
         result = op(session)
+        if checkpoint:
+            table.previous_state = table.state
+            table.previous_until = self._now() + UNDO_WINDOW
         table.state = session.to_dict()
         table.expires_at = self._now() + SESSION_TTL
         self._tables.save(table)
         return table, result
 
     # ---------- operaciones libres (sin cupo) ----------
-    def shuffle(self, session_id: UUID, user_id: UUID, pile: str, style: str) -> TarotTableEntity:
-        return self._operate(session_id, user_id, lambda s: s.shuffle(pile, style=style))[0]
+    def shuffle(self, session_id: UUID, user_id: UUID, pile: str, style: str,
+                checkpoint: bool = True) -> TarotTableEntity:
+        return self._operate(session_id, user_id, lambda s: s.shuffle(pile, style=style), checkpoint)[0]
 
-    def cut(self, session_id: UUID, user_id: UUID, pile: str, n: int) -> tuple[TarotTableEntity, str]:
-        return self._operate(session_id, user_id, lambda s: s.cut(pile, n))
+    def cut(self, session_id: UUID, user_id: UUID, pile: str, n: int,
+            checkpoint: bool = True) -> tuple[TarotTableEntity, str]:
+        return self._operate(session_id, user_id, lambda s: s.cut(pile, n), checkpoint)
 
-    def merge(self, session_id: UUID, user_id: UUID, piles: list[str], into: str) -> TarotTableEntity:
-        return self._operate(session_id, user_id, lambda s: s.merge(piles, into))[0]
+    def merge(self, session_id: UUID, user_id: UUID, piles: list[str], into: str,
+              checkpoint: bool = True) -> TarotTableEntity:
+        return self._operate(session_id, user_id, lambda s: s.merge(piles, into), checkpoint)[0]
 
-    def take(self, session_id: UUID, user_id: UUID, pile: str, position: int) -> tuple[TarotTableEntity, dict]:
-        table, (slug, reversed_) = self._operate(session_id, user_id, lambda s: s.take(pile, position))
+    def take(self, session_id: UUID, user_id: UUID, pile: str, position: int,
+             checkpoint: bool = True) -> tuple[TarotTableEntity, dict]:
+        table, (slug, reversed_) = self._operate(session_id, user_id, lambda s: s.take(pile, position), checkpoint)
         card = self._cards.get_by_slug(slug)
         if card is None:
             raise SessionError(f"La carta {slug} no está en el catálogo.")
         return table, card_view(card, reversed_)
 
-    def give_back(self, session_id: UUID, user_id: UUID, slug: str, pile: str) -> TarotTableEntity:
-        return self._operate(session_id, user_id, lambda s: s.give_back(slug, pile))[0]
+    def give_back(self, session_id: UUID, user_id: UUID, slug: str, pile: str,
+                  checkpoint: bool = True) -> TarotTableEntity:
+        return self._operate(session_id, user_id, lambda s: s.give_back(slug, pile), checkpoint)[0]
 
-    def gather(self, session_id: UUID, user_id: UUID, pile: str) -> TarotTableEntity:
-        return self._operate(session_id, user_id, lambda s: s.gather(pile))[0]
+    def gather(self, session_id: UUID, user_id: UUID, pile: str, checkpoint: bool = True) -> TarotTableEntity:
+        return self._operate(session_id, user_id, lambda s: s.gather(pile), checkpoint)[0]
+
+    def undo(self, session_id: UUID, user_id: UUID) -> TarotTableEntity:
+        """Vuelve el mazo a como estaba antes del ultimo gesto. Una sola vez."""
+        table = self._load(session_id, user_id)
+        if table.previous_state is None or table.previous_until is None or table.previous_until <= self._now():
+            raise TableConflict("Ya no se puede deshacer.")
+        table.state = table.previous_state
+        table.previous_state = table.previous_until = None
+        self._tables.save(table)
+        return table
 
     # ---------- interpretar (la ruta reserva el cupo) ----------
     def build_interpretation(self, session_id: UUID, user_id: UUID, spread_slug: str,
@@ -156,63 +191,92 @@ class TarotTableService:
         pone el servidor; el cliente solo dice que carta va en que hueco.
         """
         table = self._load(session_id, user_id)
-        session = TarotSession.from_dict(table.state)
-        spread = get_spread(spread_slug)
-        if spread is None:
-            raise SessionError(f"Tirada desconocida: {spread_slug}.")
-        n = spread.card_count
+        name, cards = self._lay_out(TarotSession.from_dict(table.state), spread_slug, placements, complete=True)
+        return {
+            "session_id": str(table.id), "spread": spread_slug, "spread_name": name,
+            "question": question, "moon_phase": moon_phase, "planetary_hour": planetary_hour,
+            "cards": cards,
+        }
+
+    def _lay_out(self, session: TarotSession, spread_slug: Optional[str], placements: list[Placement],
+                 *, complete: bool) -> tuple[str, list[dict]]:
+        """Valida donde esta cada carta contra el mazo del servidor y arma su lectura.
+
+        `complete`: interpretar exige todos los huecos llenos; cerrar el circulo sin
+        interpretar admite una tirada a medias. Sin tirada (`None`), las cartas son
+        una lectura libre. Las invertidas las pone el servidor; girar una carta en
+        la mesa la invierte (salvo en un mazo sin invertidas).
+        """
         slugs = [p.slug for p in placements]
+        if not slugs:
+            raise SessionError("No hay cartas que leer.")
         if len(set(slugs)) != len(slugs):
             raise SessionError("Una carta no puede estar en dos sitios.")
         if any(s not in session.drawn for s in slugs):
-            raise SessionError("Solo se interpretan cartas sacadas del mazo.")
-        main = [p for p in placements if p.clarifies is None]
-        extra = [p for p in placements if p.clarifies is not None]
-        if any(p.slot is not None for p in extra) or any(p.slot is None for p in main):
-            raise SessionError("Cada carta va en un hueco o aclara uno, no las dos cosas.")
-        if sorted(p.slot for p in main) != list(range(n)):
-            raise SessionError(f"La tirada {spread.name} necesita sus {n} huecos llenos, una carta en cada uno.")
-        for p in extra:
-            if not 0 <= p.clarifies < n:
-                raise SessionError(f"No existe el hueco {p.clarifies}.")
-            if sum(q.clarifies == p.clarifies for q in extra) > MAX_CLARIFIERS_PER_SLOT:
-                raise SessionError(f"Como mucho {MAX_CLARIFIERS_PER_SLOT} aclaratorias por hueco.")
+            raise SessionError("Solo se leen cartas sacadas del mazo.")
         catalog = self._cards.by_slugs(slugs)
         if len(catalog) != len(slugs):
             raise SessionError("Hay cartas que no están en el catálogo.")
 
-        cards = []
-        for p in sorted(main, key=lambda q: q.slot) + extra:
-            # el servidor decide el sentido al barajar; girarla en la mesa lo invierte
+        def read(p: Placement, position: str, meaning: Optional[str]) -> dict:
             card = catalog[p.slug]
-            # (un mazo sin invertidas no las tiene aunque se gire)
             rev = session.allow_reversed and session.reversed_.get(p.slug, False) != p.turned
-            anchor = p.slot if p.slot is not None else p.clarifies
-            cards.append({
-                **card_view(card, rev),
-                "slot": p.slot, "clarifies": p.clarifies,
-                "position": spread.positions[anchor] if p.slot is not None
-                else f"Aclara: {spread.positions[anchor]}",
-                "position_meaning": spread.slots[anchor].meaning if p.slot is not None and spread.slots else None,
+            return {
+                **card_view(card, rev), "slot": p.slot, "clarifies": p.clarifies,
+                "position": position, "position_meaning": meaning,
                 "meaning": card.meaning_reversed if rev else card.meaning_upright,
-            })
-        return {
-            "session_id": str(table.id), "spread": spread.slug, "spread_name": spread.name,
-            "question": question, "moon_phase": moon_phase, "planetary_hour": planetary_hour,
-            "cards": cards,
-        }
+            }
+
+        if spread_slug is None:
+            if any(p.slot is not None or p.clarifies is not None for p in placements):
+                raise SessionError("Sin tirada no hay huecos.")
+            return "Lectura libre", [read(p, "Libre", None) for p in placements]
+
+        spread = get_spread(spread_slug)
+        if spread is None:
+            raise SessionError(f"Tirada desconocida: {spread_slug}.")
+        n = spread.card_count
+        main = [p for p in placements if p.clarifies is None]
+        extra = [p for p in placements if p.clarifies is not None]
+        if any(p.slot is not None for p in extra) or any(p.slot is None for p in main):
+            raise SessionError("Cada carta va en un hueco o aclara uno, no las dos cosas.")
+        slots = sorted(p.slot for p in main)
+        if len(set(slots)) != len(slots) or any(not 0 <= i < n for i in slots):
+            raise SessionError(f"La tirada {spread.name} tiene {n} huecos, una carta en cada uno.")
+        if complete and slots != list(range(n)):
+            raise SessionError(f"La tirada {spread.name} necesita sus {n} huecos llenos, una carta en cada uno.")
+        for p in extra:
+            if p.clarifies not in slots:
+                raise SessionError("Una aclaratoria aclara a una carta que está en su hueco.")
+            if sum(q.clarifies == p.clarifies for q in extra) > MAX_CLARIFIERS_PER_SLOT:
+                raise SessionError(f"Como mucho {MAX_CLARIFIERS_PER_SLOT} aclaratorias por hueco.")
+        cards = [
+            read(p, spread.positions[p.slot], spread.slots[p.slot].meaning if spread.slots else None)
+            for p in sorted(main, key=lambda q: q.slot)
+        ] + [read(p, f"Aclara: {spread.positions[p.clarifies]}", None) for p in extra]
+        return spread.name, cards
 
     def store_interpretation(self, session_id: UUID, user_id: UUID, interpretation: dict) -> None:
         """Deja la lectura en la mesa sin commit: la ruta captura el cupo en la misma transaccion."""
         table = self._load(session_id, user_id)
         table.interpretation = interpretation
         table.status = "interpreted"
+        # lo interpretado ya no se deshace: la lectura se quedaria sin sus cartas
+        table.previous_state = table.previous_until = None
         table.expires_at = self._now() + SESSION_TTL
         self._tables.save(table, commit=False)
 
     # ---------- cerrar el circulo ----------
-    def close(self, session_id: UUID, user_id: UUID, table_snapshot: Optional[dict]) -> TarotReadingResponse:
-        """Guarda la lectura interpretada. Repetir el cierre devuelve la misma lectura."""
+    def close(self, session_id: UUID, user_id: UUID, table_snapshot: Optional[dict], *,
+              spread_slug: Optional[str] = None, question: Optional[str] = None,
+              placements: Optional[list[Placement]] = None,
+              moon_phase: Optional[str] = None, planetary_hour: Optional[str] = None) -> TarotReadingResponse:
+        """Cierra el circulo y guarda la lectura. Repetirlo devuelve la misma lectura.
+
+        Interpretada, se guarda lo interpretado. Sin interpretar (decision de
+        Samuel, 30-sep) tambien se puede: se guarda gratis lo que hay en la mesa,
+        tirada completa, a medias o libre, con el sentido que decidio el servidor.
+        """
         table = self._tables.get_owned(session_id, user_id, lock=True)
         if table is None:
             raise TableNotFound("La mesa no existe.")
@@ -220,9 +284,16 @@ class TarotTableService:
             reading = self._readings.get_owned(table.reading_id, user_id)
             if reading is not None:
                 return self.reading_response(reading)
-        if table.status != "interpreted" or not table.interpretation:
-            raise TableConflict("Solo se cierra el círculo de una lectura ya interpretada.")
-        it = table.interpretation
+        if table.status == "interpreted" and table.interpretation:
+            it = table.interpretation
+        elif table.status == "open":
+            name, cards = self._lay_out(
+                TarotSession.from_dict(table.state), spread_slug, placements or [], complete=False,
+            )
+            it = {"spread": spread_slug or FREE_SPREAD, "spread_name": name, "question": question,
+                  "moon_phase": moon_phase, "planetary_hour": planetary_hour, "cards": cards}
+        else:
+            raise TableConflict("Esta mesa no se puede cerrar.")
         entity = self._readings.create(
             user_id=user_id, spread_type=it["spread"], question=it.get("question"),
             cards=[{k: c[k] for k in ("slug", "position", "reversed", "slot", "clarifies")} for c in it["cards"]],
@@ -230,6 +301,7 @@ class TarotTableService:
             table_snapshot=table_snapshot, commit=False,
         )
         table.status, table.reading_id = "closed", entity.id
+        table.previous_state = table.previous_until = None
         self._tables.save(table)
         return self.reading_response(entity)
 

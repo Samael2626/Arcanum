@@ -449,6 +449,69 @@ void main() {
     });
   });
 
+  group('decisiones del 30-sep', () {
+    Future<void> tapCenter() async {
+      final layout = dir.radial!;
+      dir.pointerDown(++pointer, layout.center, clock);
+      await settle();
+    }
+
+    test('deshacer un corte lo deshace tambien en el servidor', () async {
+      await openRws();
+      await holdAndPick(pileAt('p0'), 'cut');
+      expect(table().piles, hasLength(2));
+      // el centro del radial deshace
+      final id = ++pointer;
+      dir.pointerDown(id, screenOf(pileAt('p0')), clock);
+      clock += const Duration(milliseconds: 450);
+      dir.tick(clock, const Duration(milliseconds: 16));
+      dir.pointerUp(id, dir.radial!.center, clock);
+      await tapCenter();
+      expect(server.undos, 1);
+      expect(table().piles, hasLength(1));
+      expect(fx.toasts.last, 'Deshecho');
+    });
+
+    test('unir soltando un monton sobre otro se deshace entero', () async {
+      await openRws();
+      await holdAndPick(pileAt('p0'), 'cut');
+      await drag(pileAt('p1'), pileAt('p0'));
+      expect(table().piles, hasLength(1));
+      expect(c.read(tableControllerProvider.notifier).canUndo, isTrue);
+      expect(await c.read(tableControllerProvider.notifier).undo(), isTrue);
+      expect(table().piles, hasLength(2));
+    });
+
+    test('cerrar el circulo sin interpretar desde el paño', () async {
+      await openRws();
+      c
+          .read(tableControllerProvider.notifier)
+          .arrange((s) => s.copyWith(spread: () => 'one_card'));
+      await holdAndPick(pileAt('p0'), 'deal');
+      final slug = table().cardInSlot(0)!.slug;
+      c
+          .read(tableControllerProvider.notifier)
+          .arrange((s) => s.updateCard(slug, (k) => k.copyWith(faceUp: true)));
+      await holdAndPick(
+        const Offset(110, 560),
+        'all',
+      ); // paño libre, lejos de carta y montón
+      expect(dir.radialTitle, 'Recoger todo');
+      final layout = dir.radial!;
+      dir.pointerDown(
+        ++pointer,
+        layout.positions[0],
+        clock,
+      ); // Cerrar el círculo
+      await settle();
+      expect(server.status, 'closed');
+      expect(server.closedArgs!['placements'], [
+        {'slug': slug, 'slot': 0},
+      ]);
+      expect(fx.toasts.last, startsWith('Círculo cerrado'));
+    });
+  });
+
   group('errores', () {
     test('un fallo del servidor se dice y la mesa sigue usable', () async {
       await openRws();

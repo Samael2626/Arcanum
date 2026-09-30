@@ -92,7 +92,7 @@ def list_table_spreads():
 def open_session(body: OpenIn, user: UserEntity = Depends(get_current_user),
                  tables: TarotTableService = Depends(get_tarot_table_service)):
     with _errors():
-        return _view(tables.open(user.id, body.deck))
+        return _view(tables.open(user.id, body.deck, body.from_reading))
 
 
 @router.get("/sessions/current", response_model=TableView)
@@ -108,14 +108,14 @@ def current_session(user: UserEntity = Depends(get_current_user),
 def shuffle(session_id: UUID, body: ShuffleIn, user: UserEntity = Depends(get_current_user),
             tables: TarotTableService = Depends(get_tarot_table_service)):
     with _errors():
-        return _view(tables.shuffle(session_id, user.id, body.pile, body.style))
+        return _view(tables.shuffle(session_id, user.id, body.pile, body.style, body.checkpoint))
 
 
 @router.post("/sessions/{session_id}/cut", response_model=CutOut)
 def cut(session_id: UUID, body: CutIn, user: UserEntity = Depends(get_current_user),
         tables: TarotTableService = Depends(get_tarot_table_service)):
     with _errors():
-        table, pile = tables.cut(session_id, user.id, body.pile, body.n)
+        table, pile = tables.cut(session_id, user.id, body.pile, body.n, body.checkpoint)
         return CutOut(table=_view(table), pile=pile)
 
 
@@ -123,14 +123,14 @@ def cut(session_id: UUID, body: CutIn, user: UserEntity = Depends(get_current_us
 def merge(session_id: UUID, body: MergeIn, user: UserEntity = Depends(get_current_user),
           tables: TarotTableService = Depends(get_tarot_table_service)):
     with _errors():
-        return _view(tables.merge(session_id, user.id, body.piles, body.into))
+        return _view(tables.merge(session_id, user.id, body.piles, body.into, body.checkpoint))
 
 
 @router.post("/sessions/{session_id}/take", response_model=TakeOut)
 def take(session_id: UUID, body: TakeIn, user: UserEntity = Depends(get_current_user),
          tables: TarotTableService = Depends(get_tarot_table_service)):
     with _errors():
-        table, card = tables.take(session_id, user.id, body.pile, body.position)
+        table, card = tables.take(session_id, user.id, body.pile, body.position, body.checkpoint)
         return TakeOut(table=_view(table), card=card)
 
 
@@ -138,14 +138,14 @@ def take(session_id: UUID, body: TakeIn, user: UserEntity = Depends(get_current_
 def give_back(session_id: UUID, body: ReturnIn, user: UserEntity = Depends(get_current_user),
               tables: TarotTableService = Depends(get_tarot_table_service)):
     with _errors():
-        return _view(tables.give_back(session_id, user.id, body.slug, body.pile))
+        return _view(tables.give_back(session_id, user.id, body.slug, body.pile, body.checkpoint))
 
 
 @router.post("/sessions/{session_id}/gather", response_model=TableView)
 def gather(session_id: UUID, body: GatherIn, user: UserEntity = Depends(get_current_user),
            tables: TarotTableService = Depends(get_tarot_table_service)):
     with _errors():
-        return _view(tables.gather(session_id, user.id, body.pile))
+        return _view(tables.gather(session_id, user.id, body.pile, body.checkpoint))
 
 
 # ---------- interpretar: aqui se gasta el cupo ----------
@@ -181,11 +181,26 @@ def interpret(
         raise
 
 
+@router.post("/sessions/{session_id}/undo", response_model=TableView)
+def undo(session_id: UUID, user: UserEntity = Depends(get_current_user),
+         tables: TarotTableService = Depends(get_tarot_table_service)):
+    """Vuelve el mazo a como estaba antes del ultimo gesto (una vez, 30 s)."""
+    with _errors():
+        return _view(tables.undo(session_id, user.id))
+
+
 @router.post("/sessions/{session_id}/close", response_model=TarotReadingResponse)
 def close(session_id: UUID, body: CloseIn, user: UserEntity = Depends(get_current_user),
           tables: TarotTableService = Depends(get_tarot_table_service)):
+    """Cierra el circulo. Sin interpretar tambien vale, y no gasta cupo."""
+    moon, hour = _sky_snapshot(datetime.now(timezone.utc), user)
     with _errors():
-        return tables.close(session_id, user.id, body.table)
+        return tables.close(
+            session_id, user.id, body.table,
+            spread_slug=body.spread, question=body.question,
+            placements=[Placement(**p.model_dump()) for p in body.placements],
+            moon_phase=moon, planetary_hour=hour,
+        )
 
 
 # ---------- lecturas guardadas ----------

@@ -405,8 +405,22 @@ class ArcanumApi {
     return (res.data as List).cast<Map<String, dynamic>>();
   }
 
-  Future<Map<String, dynamic>> tarotOpenTable(String deck) async {
-    final res = await _dio.post('/tarot/sessions', data: {'deck': deck});
+  /// Abre una mesa. Con `fromReading`, continua esa lectura guardada: sus
+  /// cartas salen ya del mazo, con el sentido con que se leyeron.
+  Future<Map<String, dynamic>> tarotOpenTable(
+    String deck, {
+    String? fromReading,
+  }) async {
+    final res = await _dio.post(
+      '/tarot/sessions',
+      data: {'deck': deck, 'from_reading': ?fromReading},
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Vuelve el mazo del servidor a como estaba antes del ultimo gesto.
+  Future<Map<String, dynamic>> tarotUndo(String sessionId) async {
+    final res = await _dio.post('/tarot/sessions/$sessionId/undo');
     return res.data as Map<String, dynamic>;
   }
 
@@ -453,14 +467,24 @@ class ArcanumApi {
   }
 
   /// Cierra el circulo: guarda la lectura con la foto de la mesa. Repetirlo
-  /// devuelve la misma lectura.
+  /// devuelve la misma lectura. Si no se interpreto, guarda lo que hay en la
+  /// mesa (`spread`, `question`, `placements`) y no gasta cupo.
   Future<Map<String, dynamic>> tarotCloseTable(
     String sessionId, {
     Map<String, dynamic>? table,
+    String? spread,
+    String? question,
+    List<Map<String, dynamic>> placements = const [],
   }) async {
+    final q = question?.trim();
     final res = await _dio.post(
       '/tarot/sessions/$sessionId/close',
-      data: {'table': ?table},
+      data: {
+        'table': ?table,
+        'spread': ?spread,
+        if (q != null && q.isNotEmpty) 'question': q,
+        'placements': placements,
+      },
     );
     return res.data as Map<String, dynamic>;
   }

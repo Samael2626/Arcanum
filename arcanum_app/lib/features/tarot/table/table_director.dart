@@ -101,6 +101,9 @@ class _Drag {
   String? cutSource;
   Offset? last;
   bool ready = true;
+
+  /// El arrastre es un gesto deshacible que se abrio al empezar y se cierra al soltar.
+  bool gesture = false;
 }
 
 class _Radial {
@@ -354,7 +357,9 @@ class TableDirector extends ChangeNotifier {
       if (i == null &&
           (screen - r.layout.center).distance < 24 &&
           ops.canUndo) {
-        ops.undo();
+        _run(() async {
+          if (await ops.undo()) effects.toast('Deshecho');
+        });
       }
       if (i != null) _run(() => r.onPick(r.layout.items[i].id));
       notifyListeners();
@@ -461,6 +466,16 @@ class TableDirector extends ChangeNotifier {
     } finally {
       _busy = false;
       notifyListeners();
+    }
+  }
+
+  /// Un gesto que se deshace entero, aunque haga varias operaciones.
+  Future<void> _undoable(Future<void> Function() gesture) async {
+    ops.beginUndoable();
+    try {
+      await gesture();
+    } finally {
+      ops.commitUndoable();
     }
   }
 
@@ -654,14 +669,17 @@ class TableDirector extends ChangeNotifier {
     final src = _pile(pid);
     if (src == null) return;
     final spot = _freeSpot(src);
-    final np = await ops.cut(pid, _cutSize(_count(pid)));
-    ops.arrange(
-      (s) => s.copyWith(
-        piles: [
-          for (final p in s.piles) p.pid == np ? p.moved(spot.dx, spot.dy) : p,
-        ],
-      ),
-    );
+    await _undoable(() async {
+      final np = await ops.cut(pid, _cutSize(_count(pid)));
+      ops.arrange(
+        (s) => s.copyWith(
+          piles: [
+            for (final p in s.piles)
+              p.pid == np ? p.moved(spot.dx, spot.dy) : p,
+          ],
+        ),
+      );
+    });
     effects.toast(
       'Corte hecho. Mantén pulsado un montón para Unir, o arrástralo sobre otro.',
     );
@@ -693,7 +711,7 @@ class TableDirector extends ChangeNotifier {
     u.add(pid);
     if (u.length == table.piles.length) {
       _run(() async {
-        await _stack(List.of(u));
+        await _undoable(() => _stack(List.of(u)));
         effects.toast('Unidos en el orden que elegiste');
       });
     }
@@ -706,11 +724,12 @@ class TableDirector extends ChangeNotifier {
       for (final p in table.piles)
         if (p.pid != active) p.pid,
     ].reversed;
-    await _stack([...others, active]);
+    await _undoable(() => _stack([...others, active]));
     effects.toast('Unidos: lo de abajo pasa arriba');
   }
 
-  Future<void> _collectAll() async {
+  /// Recoger todo: une los montones y devuelve las cartas. Se deshace entero.
+  Future<void> _collectAll() => _undoable(() async {
     if (table.fan != null) ops.arrange((s) => s.copyWith(fan: () => null));
     if (table.piles.length > 1) {
       final active = table.activePid!;
@@ -722,11 +741,12 @@ class TableDirector extends ChangeNotifier {
     }
     await ops.gather(table.activePid!);
     ops.arrange((s) => s.copyWith(spread: () => null, seal: () => null));
-  }
+  });
 
   Future<void> _closeCircle() async {
-    if (table.server?.status != 'interpreted') {
-      return effects.toast('Interpreta la tirada antes de cerrar el círculo');
+    // sin interpretar tambien se guarda (decision del 30-sep): lo que haya en la mesa
+    if (!table.cards.any((c) => !c.aside)) {
+      return effects.toast('No hay cartas sobre el paño que guardar');
     }
     await ops.closeCircle();
     effects.toast('Círculo cerrado. La lectura quedó guardada en Lecturas.');
@@ -745,7 +765,7 @@ class TableDirector extends ChangeNotifier {
           ? a
           : b,
     );
-    _run(() => ops.giveBack(slug, target.pid));
+    _run(() => _undoable(() => ops.giveBack(slug, target.pid)));
   }
 
   void _setAside(String slug) {
@@ -1023,6 +1043,8 @@ class TableDirector extends ChangeNotifier {
           ..ready = false;
         _drag = d;
         _busy = true;
+        ops.beginUndoable();
+        d.gesture = true;
         ops
             .cut(pid, _cutSize(hit.count))
             .then(
@@ -1036,6 +1058,7 @@ class TableDirector extends ChangeNotifier {
               },
               onError: (Object e) {
                 _drag = null;
+                ops.commitUndoable();
                 effects.error(e);
               },
             )
@@ -1051,6 +1074,8 @@ class TableDirector extends ChangeNotifier {
           // sale del abanico al empezar a arrastrarla
           d.ready = false;
           final parts = hit.slug.split(':');
+          ops.beginUndoable();
+          d.gesture = true;
           ops
               .take(parts[1], int.parse(parts[2]))
               .then(
@@ -1074,6 +1099,8 @@ class TableDirector extends ChangeNotifier {
                 },
                 onError: (Object e) {
                   _drag = null;
+                  // cerrar dos veces no pasa nada: el segundo no encuentra gesto
+                  ops.commitUndoable();
                   effects.error(e);
                 },
               );
@@ -1129,6 +1156,15 @@ class TableDirector extends ChangeNotifier {
   }
 
   void _dragEnd(DragKind kind, Offset screen, bool cancelled) {
+    final gesture = _drag?.gesture ?? false;
+    try {
+      _dropDragged(kind, cancelled);
+    } finally {
+      if (gesture) ops.commitUndoable();
+    }
+  }
+
+  void _dropDragged(DragKind kind, bool cancelled) {
     final d = _drag;
     _drag = null;
     hotSlot = null;
@@ -1296,7 +1332,7 @@ class TableDirector extends ChangeNotifier {
       if ((Offset(q.x, q.y) - pose.offset).distance <
           TableGeometry.cardW * TableGeometry.deckScale * .8) {
         _run(() async {
-          await _stack([q.pid, pid]);
+          await _undoable(() => _stack([q.pid, pid]));
           effects.toast(
             table.piles.length > 1 ? 'Montones unidos' : 'Mazo entero de nuevo',
           );

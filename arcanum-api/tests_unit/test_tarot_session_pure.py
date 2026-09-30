@@ -212,3 +212,22 @@ def test_ninguna_secuencia_pierde_ni_duplica_cartas(seed):
             pass
         assert _todas(s) == Counter(cards)
         assert s.total() + len(s.drawn) == len(cards)
+
+
+# ---------- continuar una lectura guardada ----------
+def test_continuar_deja_fuera_las_cartas_leidas_con_su_sentido():
+    s = TarotSession.resume(get_deck("rws"), RWS, [(RWS[5], True), (RWS[40], False)])
+    assert s.drawn == [RWS[5], RWS[40]]
+    assert s.reversed_ == {RWS[5]: True, RWS[40]: False}
+    assert RWS[5] not in s.live("p0") and s.count("p0") == 76
+    assert _todas(s) == Counter(RWS) and s.state == "continuada"
+    s.gather("p0")
+    assert s.count("p0") == 78
+
+
+def test_continuar_rechaza_cartas_ajenas_o_repetidas():
+    with pytest.raises(SessionError):
+        TarotSession.resume(get_deck("rws"), RWS, [("no-existe", False)])
+    with pytest.raises(SessionError):
+        TarotSession.resume(get_deck("rws"), RWS, [(RWS[1], False), (RWS[1], True)])
+

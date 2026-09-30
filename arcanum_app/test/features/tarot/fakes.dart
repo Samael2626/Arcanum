@@ -12,11 +12,26 @@ class FakeServer extends ArcanumApi {
   String status = 'open';
   Map<String, dynamic>? lastInterpret;
   Map<String, dynamic>? closedWith;
+
+  /// Lo que se mando al cerrar sin interpretar.
+  Map<String, dynamic>? closedArgs;
+
+  /// Mazo guardado para deshacer (lo que hace el servidor con `checkpoint`).
+  ({Map<String, List<String?>> piles, List<String> drawn})? previous;
+  int undos = 0;
+  final List<bool> checkpoints = [];
+
+  /// Lecturas que se pueden continuar: id -> cartas con su sentido.
+  final Map<String, List<(String, bool)>> readings = {};
   int seq = 0;
   final List<String> shuffles = [];
 
   /// Si no es null, la proxima operacion de mesa falla con este error.
   Object? failNext;
+
+  /// Sentido impuesto al continuar una lectura (si no, c2 sale invertida).
+  Map<String, bool> forcedReversed = {};
+  bool _rev(String slug) => forcedReversed[slug] ?? slug == 'c2';
 
   Map<String, dynamic> _view() => {
     'id': id,
@@ -38,16 +53,30 @@ class FakeServer extends ArcanumApi {
         },
     },
     'drawn': [
-      for (final s in drawn) {'slug': s, 'reversed': s == 'c2'},
+      for (final s in drawn) {'slug': s, 'reversed': _rev(s)},
     ],
     'expires_at': '2026-09-30T12:00:00Z',
   };
 
   @override
-  Future<Map<String, dynamic>> tarotOpenTable(String deck) async {
+  Future<Map<String, dynamic>> tarotOpenTable(
+    String deck, {
+    String? fromReading,
+  }) async {
     id = 'mesa-${++opened}';
-    piles = {'p0': List.generate(6, (i) => 'c$i')};
-    drawn = [];
+    final out = fromReading == null
+        ? const <(String, bool)>[]
+        : readings[fromReading]!;
+    final outSlugs = {for (final (s, _) in out) s};
+    piles = {
+      'p0': [
+        for (var i = 0; i < 6; i++)
+          if (!outSlugs.contains('c$i')) 'c$i',
+      ],
+    };
+    drawn = [for (final (s, _) in out) s];
+    forcedReversed = {for (final (s, r) in out) s: r};
+    previous = null;
     status = 'open';
     return _view();
   }
@@ -68,6 +97,16 @@ class FakeServer extends ArcanumApi {
       failNext = null;
       throw fail;
     }
+    final cp = body['checkpoint'] as bool? ?? true;
+    checkpoints.add(cp);
+    if (cp) {
+      previous = (
+        piles: {
+          for (final e in piles.entries) e.key: List<String?>.of(e.value),
+        },
+        drawn: List.of(drawn),
+      );
+    }
     switch (op) {
       case 'take':
         final pile = piles[body['pile']]!;
@@ -76,7 +115,7 @@ class FakeServer extends ArcanumApi {
         drawn.add(slug);
         return {
           'table': _view(),
-          'card': {'slug': slug, 'reversed': slug == 'c2', 'name': slug},
+          'card': {'slug': slug, 'reversed': _rev(slug), 'name': slug},
         };
       case 'cut':
         final live = piles[body['pile']]!.whereType<String>().toList();
@@ -145,11 +184,31 @@ class FakeServer extends ArcanumApi {
   }
 
   @override
+  @override
+  Future<Map<String, dynamic>> tarotUndo(String sessionId) async {
+    final prev = previous;
+    if (prev == null) throw StateError('Ya no se puede deshacer.');
+    piles = prev.piles;
+    drawn = prev.drawn;
+    previous = null;
+    undos++;
+    return _view();
+  }
+
+  @override
   Future<Map<String, dynamic>> tarotCloseTable(
     String sessionId, {
     Map<String, dynamic>? table,
+    String? spread,
+    String? question,
+    List<Map<String, dynamic>> placements = const [],
   }) async {
     closedWith = table;
+    closedArgs = {
+      'spread': spread,
+      'question': question,
+      'placements': placements,
+    };
     status = 'closed';
     return {'id': 'lectura-1', 'spread_type': 'one_card'};
   }

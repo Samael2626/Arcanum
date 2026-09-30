@@ -3,6 +3,7 @@
 `tarot_sessions` guarda el mazo del servidor mientras se juega: montones con su
 orden, invertidas y cartas sacadas. Ese orden nunca sale hacia el cliente.
 Como mucho una sesion activa por usuario, forzado por un indice unico parcial.
+`previous_state` guarda el mazo de antes del ultimo gesto, para deshacerlo.
 
 `tarot_readings.table_snapshot` es la foto de la mesa al cerrar el circulo, para
 contemplar la lectura despues. Es aditiva y nula: las lecturas de `/tarot/spread`
@@ -35,6 +36,9 @@ def upgrade() -> None:
         sa.Column("state", postgresql.JSONB(), nullable=False),
         sa.Column("status", sa.String(16), nullable=False, server_default="open"),
         sa.Column("interpretation", postgresql.JSONB(), nullable=True),
+        # deshacer el ultimo gesto: el mazo de antes y hasta cuando se puede volver a el
+        sa.Column("previous_state", postgresql.JSONB(), nullable=True),
+        sa.Column("previous_until", sa.DateTime(timezone=True), nullable=True),
         sa.Column("reading_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),

@@ -104,6 +104,9 @@ class TarotTableSession(Base):
     state = Column(JSONB, nullable=False)
     status = Column(String(16), nullable=False, server_default="open")
     interpretation = Column(JSONB, nullable=True)
+    # deshacer: el mazo de antes del ultimo gesto y hasta cuando vale
+    previous_state = Column(JSONB, nullable=True)
+    previous_until = Column(DateTime(timezone=True), nullable=True)
     reading_id = Column(PGUUID(as_uuid=True), ForeignKey("tarot_readings.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())

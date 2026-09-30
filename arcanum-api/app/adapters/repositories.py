@@ -261,7 +261,8 @@ class TarotTableRepository:
 
     def save(self, entity: TarotTableEntity, *, commit: bool = True) -> TarotTableEntity:
         row = self._db.get(TarotTableSession, entity.id)
-        for name in ("state", "status", "interpretation", "reading_id", "expires_at"):
+        for name in ("state", "status", "interpretation", "previous_state", "previous_until",
+                     "reading_id", "expires_at"):
             setattr(row, name, getattr(entity, name))
         row.updated_at = datetime.now(timezone.utc)
         if commit:

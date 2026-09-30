@@ -271,7 +271,7 @@ def test_aclaratorias(client):
 # ---------- cerrar el circulo y lecturas ----------
 def test_cerrar_guarda_la_lectura_con_la_foto_y_es_idempotente(client, engine):
     sid, cards, placements = _three(client)
-    assert _post(client, sid, "close", {}).status_code == 409               # sin interpretar no se cierra
+    assert _post(client, sid, "close", {}).status_code == 400               # sin cartas no hay lectura
     _interpret(client, sid, placements)
     foto = {"camera": {"yaw": 12}, "cards": [{"slug": c["slug"], "x": 1} for c in cards]}
     r = _post(client, sid, "close", {"table": foto})
@@ -323,3 +323,104 @@ def test_la_base_impide_dos_mesas_activas(engine, who):
     with pytest.raises(IntegrityError):
         with engine.begin() as c:
             c.execute(insert, {"u": who["id"], "s": "interpreted"})
+
+
+
+# ---------- cerrar el circulo sin interpretar (decision del 30-sep) ----------
+def test_cerrar_sin_interpretar_guarda_lo_que_hay_y_no_gasta_cupo(client, engine, who):
+    sid, cards, placements = _three(client)
+    r = _post(client, sid, "close", {
+        "spread": "three_card", "question": " ¿Y ahora? ", "placements": placements[:2],
+        "table": {"camera": {"yaw": 3}},
+    })
+    assert r.status_code == 200, r.text
+    reading = r.json()
+    assert reading["spread_type"] == "three_card" and reading["question"] == "¿Y ahora?"
+    assert [c["slug"] for c in reading["cards_drawn"]] == [c["slug"] for c in cards[:2]]   # tirada a medias
+    assert [c["reversed"] for c in reading["cards_drawn"]] == [c["reversed"] for c in cards[:2]]
+    assert _one(engine, "SELECT count(*) FROM usage_operations WHERE user_id=:u", u=who["id"]) == 0
+    assert client.get("/tarot/sessions/current").status_code == 404
+
+
+def test_lectura_libre_sin_tirada(client):
+    sid, cards, _ = _three(client)
+    r = _post(client, sid, "close", {"placements": [{"slug": c["slug"]} for c in cards]})
+    assert r.status_code == 200, r.text
+    assert r.json()["spread_type"] == "free"
+    assert {c["position"] for c in r.json()["cards_drawn"]} == {"Libre"}
+
+
+def test_cerrar_sin_interpretar_valida_las_cartas(client):
+    sid, cards, placements = _three(client)
+    assert _post(client, sid, "close", {"placements": [{"slug": "no-sacada"}]}).status_code == 400
+    assert _post(client, sid, "close", {"spread": "three_card", "placements": [
+        {"slug": cards[0]["slug"], "slot": 0}, {"slug": cards[1]["slug"], "slot": 0},
+    ]}).status_code == 400                                                  # dos cartas en el mismo hueco
+    assert _post(client, sid, "close", {"placements": [{"slug": cards[0]["slug"], "slot": 0}]}).status_code == 400
+
+
+# ---------- deshacer en el servidor (decision del 30-sep) ----------
+def test_deshacer_un_corte_devuelve_el_mazo_de_antes(client):
+    sid = _open(client)["id"]
+    before = _post(client, sid, "shuffle", {"pile": "p0"}).json()
+    _post(client, sid, "cut", {"pile": "p0", "n": 20})
+    undone = _post(client, sid, "undo", {})
+    assert undone.status_code == 200, undone.text
+    assert undone.json()["piles"] == before["piles"]
+    assert _post(client, sid, "undo", {}).status_code == 409                # una sola vez
+    # el orden tambien vuelve: la primera carta es la misma que antes de cortar
+    a = _take(client, sid, [0])[0]
+    assert _post(client, sid, "undo", {}).status_code == 200
+    assert _take(client, sid, [0])[0]["slug"] == a["slug"]
+
+
+def test_un_gesto_de_varias_operaciones_se_deshace_entero(client):
+    sid = _open(client)["id"]
+    top = _post(client, sid, "cut", {"pile": "p0", "n": 30}).json()["pile"]
+    base = client.get("/tarot/sessions/current").json()
+    _post(client, sid, "merge", {"piles": ["p0", top], "into": "p0"})
+    _take(client, sid, [0])
+    assert _post(client, sid, "take", {"pile": "p0", "position": 1, "checkpoint": False}).status_code == 200
+    back = _post(client, sid, "undo", {}).json()
+    # la primera saca marco el punto y la segunda no: son un gesto y se deshacen
+    # las dos juntas, no solo la ultima
+    assert back["total"] == 78 and back["drawn"] == []
+    assert list(back["piles"]) == ["p0"] and base["piles"] != back["piles"]
+
+
+def test_deshacer_caduca(client, engine):
+    sid = _open(client)["id"]
+    _post(client, sid, "cut", {"pile": "p0", "n": 10})
+    with engine.begin() as c:
+        c.execute(text("UPDATE tarot_sessions SET previous_until = now() - interval '1 second' WHERE id=:i"),
+                  {"i": sid})
+    assert _post(client, sid, "undo", {}).status_code == 409
+
+
+def test_lo_interpretado_no_se_deshace(client):
+    sid, _, placements = _three(client)
+    assert _interpret(client, sid, placements).status_code == 200
+    assert _post(client, sid, "undo", {}).status_code == 409
+
+
+# ---------- continuar una lectura guardada (decision del 30-sep) ----------
+def test_continuar_coloca_las_mismas_cartas_con_su_sentido(client, who, engine):
+    sid, cards, placements = _three(client)
+    placements[1]["turned"] = True
+    reading = _post(client, sid, "close", {"spread": "three_card", "placements": placements}).json()
+    r = client.post("/tarot/sessions", json={"deck": "rws", "from_reading": reading["id"]})
+    assert r.status_code == 201, r.text
+    view = r.json()
+    assert view["state"] == "continuada" and view["total"] == 75
+    got = {d["slug"]: d["reversed"] for d in view["drawn"]}
+    saved = {c["slug"]: c["reversed"] for c in reading["cards_drawn"]}
+    assert got == saved
+    assert saved[cards[1]["slug"]] is (not cards[1]["reversed"])            # el giro quedo guardado
+
+
+def test_no_se_continua_la_lectura_de_otro(client, who, engine):
+    sid, cards, placements = _three(client)
+    reading = _post(client, sid, "close", {"spread": "three_card", "placements": placements}).json()
+    who["id"] = _user(engine)
+    r = client.post("/tarot/sessions", json={"deck": "rws", "from_reading": reading["id"]})
+    assert r.status_code == 404

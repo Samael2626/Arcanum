@@ -4,6 +4,7 @@ import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/features/tarot/application/table_controller.dart';
 import 'package:arcanum_app/features/tarot/data/table_store.dart';
+import 'package:arcanum_app/features/tarot/domain/table_models.dart';
 import 'package:arcanum_app/features/tarot/domain/table_state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -94,9 +95,9 @@ void main() {
     );
     expect(st().card('c0')!.x, 42);
     expect(ctl().canUndo, isTrue);
-    expect(ctl().undo(), isTrue);
+    expect(await ctl().undo(), isTrue);
     expect(st().card('c0')!.x, isNot(42));
-    expect(ctl().undo(), isFalse); // una sola vez
+    expect(await ctl().undo(), isFalse); // una sola vez
 
     ctl().arrange(
       (s) => s.updateCard('c0', (k) => k.copyWith(x: 7)),
@@ -104,7 +105,7 @@ void main() {
     );
     t = t.add(const Duration(seconds: 6));
     expect(ctl().canUndo, isFalse);
-    expect(ctl().undo(), isFalse);
+    expect(await ctl().undo(), isFalse);
   });
 
   test('deshacer no resucita una carta que ya volvio al mazo', () async {
@@ -113,8 +114,145 @@ void main() {
     await ctl().take('p0', 0);
     ctl().arrange((s) => s.putInSlot('c0', 0), undoable: true);
     await ctl().giveBack('c0', 'p0');
-    expect(ctl().undo(), isTrue);
+    expect(await ctl().undo(), isTrue);
     expect(st().card('c0'), isNull);
+  });
+
+  group('deshacer en el servidor', () {
+    test(
+      'un gesto con varias operaciones vuelve entero al mazo de antes',
+      () async {
+        await c.read(tableControllerProvider.future);
+        await ctl().openDeck('rws');
+        ctl().beginUndoable();
+        final top = await ctl().cut('p0', 2);
+        await ctl().merge(['p0', top], 'p0');
+        ctl().commitUndoable();
+        await ctl().flush();
+        expect(server.checkpoints, [
+          true,
+          false,
+        ]); // solo la primera marca punto
+        expect(ctl().canUndo, isTrue);
+        expect(await ctl().undo(), isTrue);
+        expect(server.undos, 1);
+        expect(st().piles.map((p) => p.pid), ['p0']);
+        expect(st().server!.piles['p0']!.count, 6);
+      },
+    );
+
+    test(
+      'si el servidor avanza fuera del gesto, ese deshacer se retira',
+      () async {
+        await c.read(tableControllerProvider.future);
+        await ctl().openDeck('rws');
+        ctl().beginUndoable();
+        await ctl().cut('p0', 2);
+        ctl().commitUndoable();
+        await ctl().shuffle('p0');
+        expect(ctl().canUndo, isFalse);
+        expect(server.undos, 0);
+      },
+    );
+
+    test('un gesto solo local no molesta al servidor al deshacerse', () async {
+      await c.read(tableControllerProvider.future);
+      await ctl().openDeck('rws');
+      await ctl().take('p0', 0);
+      ctl().arrange((s) => s.putInSlot('c0', 0), undoable: true);
+      expect(await ctl().undo(), isTrue);
+      expect(server.undos, 0);
+    });
+  });
+
+  group('cerrar sin interpretar', () {
+    test('manda la tirada, la pregunta y donde esta cada carta', () async {
+      await c.read(tableControllerProvider.future);
+      await ctl().openDeck('rws');
+      await ctl().take('p0', 0);
+      await ctl().take('p0', 2);
+      ctl().arrange(
+        (s) => s
+            .copyWith(
+              spread: () => 'three_card',
+              seal: () => const Seal(text: '¿Y ahora?'),
+            )
+            .putInSlot('c0', 0)
+            .putInSlot('c2', 1)
+            .updateCard('c2', (k) => k.copyWith(turned: true)),
+      );
+      await ctl().closeCircle();
+      expect(server.closedArgs, {
+        'spread': 'three_card',
+        'question': '¿Y ahora?',
+        'placements': [
+          {'slug': 'c0', 'slot': 0},
+          {'slug': 'c2', 'slot': 1, 'turned': true},
+        ],
+      });
+      // en la foto guardada el sello ya va abierto
+      expect((server.closedWith!['seal'] as Map)['open'], isTrue);
+      expect(st().hasTable, isFalse);
+    });
+
+    test(
+      'sin tirada guarda las cartas sueltas y deja fuera las apartadas',
+      () async {
+        await c.read(tableControllerProvider.future);
+        await ctl().openDeck('rws');
+        await ctl().take('p0', 0);
+        await ctl().take('p0', 1);
+        ctl().arrange(
+          (s) => s.updateCard('c1', (k) => k.copyWith(aside: true)),
+        );
+        await ctl().closeCircle();
+        expect(server.closedArgs!['spread'], isNull);
+        expect(server.closedArgs!['placements'], [
+          {'slug': 'c0'},
+        ]);
+      },
+    );
+  });
+
+  test(
+    'continuar recoloca la mesa guardada con el sentido del servidor',
+    () async {
+      await c.read(tableControllerProvider.future);
+      server.readings['r1'] = [('c3', true)];
+      final saved = TableState(
+        spread: 'one_card',
+        activePid: 'p0',
+        piles: const [PileLayout(pid: 'p0', x: 150, y: 700)],
+        cards: [
+          const TableCard(
+            face: CardFace(slug: 'c3', reversed: false, name: 'c3'),
+            x: 300,
+            y: 416,
+            slot: 0,
+            faceUp: true,
+            turned: true, // se giro al leerla: el servidor ya lo sabe
+          ),
+        ],
+      ).toJson();
+      await ctl().continueReading({'id': 'r1', 'table_snapshot': saved});
+      final card = st().card('c3')!;
+      expect(card.slot, 0);
+      expect(card.faceUp, isTrue);
+      expect(card.turned, isFalse);
+      expect(card.face.reversed, isTrue);
+      expect(card.reversed, isTrue); // se lee igual que cuando se guardo
+      expect(st().spread, 'one_card');
+      expect(st().server!.total, 5);
+      expect(st().piles.single.x, 150);
+    },
+  );
+
+  test('una lectura sin foto de mesa no se puede continuar', () async {
+    await c.read(tableControllerProvider.future);
+    expect(
+      () => ctl().continueReading({'id': 'r9', 'table_snapshot': null}),
+      throwsStateError,
+    );
   });
 
   test(

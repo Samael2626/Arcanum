@@ -136,6 +136,8 @@ class TarotTableEntity:
     status: str
     expires_at: datetime
     interpretation: dict | None = None
+    previous_state: dict | None = None
+    previous_until: datetime | None = None
     reading_id: UUID | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None

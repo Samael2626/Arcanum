@@ -46,6 +46,26 @@ class TarotSession:
             raise SessionError("El mazo tiene cartas repetidas.")
         return cls(deck=deck.slug, allow_reversed=deck.allow_reversed, piles={"p0": list(cards)})
 
+    @classmethod
+    def resume(cls, deck: Deck, cards: Sequence[str], drawn: Sequence[tuple[str, bool]]) -> "TarotSession":
+        """Mesa nueva con unas cartas ya fuera del mazo: continuar una lectura guardada.
+
+        Las sacadas conservan el sentido con el que se leyeron; el resto queda
+        en un monton en orden de fabrica, listo para barajar y seguir.
+        """
+        session = cls.open(deck, cards)
+        out = [slug for slug, _ in drawn]
+        if len(set(out)) != len(out):
+            raise SessionError("La lectura repite una carta.")
+        missing = set(out) - set(cards)
+        if missing:
+            raise SessionError("La lectura tiene cartas que no están en este mazo.")
+        session.piles["p0"] = [s for s in cards if s not in set(out)]
+        session.drawn = list(out)
+        session.reversed_ = {slug: deck.allow_reversed and rev for slug, rev in drawn}
+        session.state = "continuada"
+        return session
+
     def _pile(self, pid: str) -> list[Optional[str]]:
         if pid not in self.piles:
             raise SessionError(f"No existe el montón {pid}.")

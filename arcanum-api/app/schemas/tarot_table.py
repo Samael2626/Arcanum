@@ -82,14 +82,25 @@ class CardFace(BaseModel):
 
 class OpenIn(BaseModel):
     deck: str = Field("rws", max_length=40)
+    # continuar una lectura guardada: sus cartas salen ya del mazo
+    from_reading: Optional[UUID] = None
 
 
-class ShuffleIn(BaseModel):
+class _Op(BaseModel):
+    """Base de las operaciones sobre el mazo.
+
+    `checkpoint`: el mazo de antes queda guardado para deshacer. Un gesto de
+    varias operaciones manda true solo en la primera, para deshacerse entero.
+    """
+    checkpoint: bool = True
+
+
+class ShuffleIn(_Op):
     pile: PileId
     style: Literal["cascada", "por_encima", "sobre_el_pano"] = "cascada"
 
 
-class CutIn(BaseModel):
+class CutIn(_Op):
     pile: PileId
     n: int = Field(..., ge=1)
 
@@ -99,12 +110,12 @@ class CutOut(BaseModel):
     pile: str
 
 
-class MergeIn(BaseModel):
+class MergeIn(_Op):
     piles: list[PileId] = Field(..., min_length=2, max_length=78)
     into: PileId
 
 
-class TakeIn(BaseModel):
+class TakeIn(_Op):
     pile: PileId
     position: int = Field(..., ge=0)
 
@@ -114,12 +125,12 @@ class TakeOut(BaseModel):
     card: CardFace
 
 
-class ReturnIn(BaseModel):
+class ReturnIn(_Op):
     slug: str = Field(..., max_length=80)
     pile: PileId
 
 
-class GatherIn(BaseModel):
+class GatherIn(_Op):
     pile: PileId
 
 
@@ -162,7 +173,17 @@ class InterpretationOut(BaseModel):
 
 
 class CloseIn(BaseModel):
+    """Cerrar el circulo. Si la lectura no se interpreto, se guarda lo que hay en
+    la mesa: la tirada (o ninguna: lectura libre), la pregunta y donde esta cada carta."""
     table: Optional[dict[str, Any]] = None
+    spread: Optional[str] = Field(None, max_length=50)
+    question: Optional[str] = Field(None, max_length=1000)
+    placements: list[PlacementIn] = Field(default_factory=list, max_length=48)
+
+    @field_validator("question")
+    @classmethod
+    def _blank_is_none(cls, v: Optional[str]) -> Optional[str]:
+        return v.strip() or None if v is not None else None
 
     @model_validator(mode="after")
     def _snapshot_size(self) -> "CloseIn":

@@ -126,7 +126,11 @@
   - Ruta `/tarot` y entrada «Mesa de tarot · en pruebas» en el cajón, **solo fuera de release**.
 - [x] **Fallo encontrado de paso:** `seed_tarot.py` y `seed_materia.py` importaban `SessionLocal`, que vale None hasta crear la fábrica: la siembra del arranque fallaba siempre y en silencio. En producción no se notaba porque las cartas ya estaban. Corregido con test.
 - **Backend local para probar en el móvil:** base `arcanum_dev_mesa` en `arcanum-test-db` (5434), migrada y sembrada a mano, sin `GROQ_API_KEY`. **Nunca con el `.env` de `arcanum-api`, que apunta a la base de producción:** el arranque aplicaría la 015 allí. La app de depuración va con `--dart-define=API_BASE_URL=http://127.0.0.1:8000` y `adb reverse tcp:8000 tcp:8000`.
-- [ ] **Cerrar el círculo sin interpretar:** el prototipo lo permitía; el servidor exige lectura interpretada. Hoy el director avisa «Interpreta la tirada antes de cerrar el círculo». Decidirlo en la fase 5.
+- [x] **Decisiones de Samuel del 30-sep, hechas:**
+  - **Cerrar el círculo sin interpretar:** se guarda gratis lo que hay en la mesa: tirada completa, a medias o libre (`spread_type = free`, cartas sueltas no apartadas). El sello se abre al cerrar. Interpretado, se guarda lo interpretado.
+  - **Deshacer también en el servidor:** `tarot_sessions.previous_state` y `previous_until` (30 s; la app ofrece 5). Cada operación lleva `checkpoint`: en un gesto de varias, solo la primera marca punto, así se deshace entero. Lo interpretado o cerrado ya no se deshace. Si el servidor avanza fuera del gesto, ese deshacer se retira para no revertir otra cosa. Se deshacen: cortar (menú o borde), unir (soltar encima, por orden o automático), recoger todo, devolver una carta y sacar del abanico arrastrando.
+  - **Continuar una lectura:** `POST /tarot/sessions` con `from_reading` abre una mesa con esas cartas ya fuera del mazo y su sentido (un giro ya viene aplicado); la app recoloca la foto guardada. Solo se ofrece en lecturas hechas en la mesa (las de `/tarot/spread` no guardaron la foto). Si la mesa actual tiene cartas, se pide confirmación.
+  - Como la 015 no ha salido de esta rama, se amplió en vez de crear una 016.
 - [ ] **`TableCamera`:** `Matrix4` con perspectiva 1/1000, inclinación y giro. Inversa para convertir toques en unidades de mesa. Encuadre a 30° e inercia.
 - [ ] **`DeckPiece`:** caja con grosor según el número de cartas. **`CardPiece`:** envuelve `TarotCardView` y añade la bisagra de la esquina y el muelle de inclinación.
 - [ ] **Huecos de las 7 tiradas**, con imán, intercambio y aclaratorias.
@@ -140,7 +144,7 @@
 - [x] **Sellar la pregunta** y romper el sello al interpretar (30-sep): sello de cera en (88, 712) que entra con un golpe; sellado no enseña el texto al tocarlo; al interpretar da un respingo y lo cruza una grieta. Pregunta de hasta 300 caracteres, como el prototipo. **Falta** el vuelo del texto del panel al sello (fase 6).
 - [ ] **Interpretar bordado** en el paño. Mantener 1,3 s cierra el círculo.
 - [ ] **Interpretación de Tradición:** textos de `tarot_cards` por posición y sentido. El Oráculo queda fuera de esta versión (D4).
-- [ ] **Lecturas guardadas:** contemplar y continuar.
+- [x] **Lecturas guardadas:** continuar (30-sep). «Contemplar» sin tocar queda descartado por ahora: continuar ya enseña la mesa tal cual.
 - [x] **Deshacer:** botón abajo a la izquierda con su anillo de 5 s, y el centro del radial (30-sep). Deshace lo local; lo del servidor sigue pendiente de decidir.
 - [ ] **Contexto astral desde el backend**, con el lugar del usuario (`user_place.dart`).
 

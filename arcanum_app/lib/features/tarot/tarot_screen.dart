@@ -109,8 +109,12 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
               Positioned.fill(
                 child: UndoDot(
                   until: _ops.undoUntil,
-                  onUndo: () {
-                    if (_ops.undo()) toast('Deshecho');
+                  onUndo: () async {
+                    try {
+                      if (await _ops.undo()) toast('Deshecho');
+                    } on Object catch (e) {
+                      error(e);
+                    }
                   },
                 ),
               ),
@@ -322,6 +326,13 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
                     ].join(' · '),
                     style: _muted,
                   ),
+                  // solo las lecturas de la mesa guardaron la mesa: las demas no se recolocan
+                  trailing: r['table_snapshot'] == null
+                      ? null
+                      : TextButton(
+                          onPressed: () => _continue(context, r),
+                          child: const Text('Continuar'),
+                        ),
                 ),
             ],
           );
@@ -330,7 +341,47 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
     );
   }
 
+  /// Continuar: mesa nueva con las mismas cartas colocadas (decision del
+  /// 30-sep). Abrir otra mesa recoge la actual, asi que si tiene cartas se pregunta.
+  Future<void> _continue(
+    BuildContext sheet,
+    Map<String, dynamic> reading,
+  ) async {
+    final busy = _director?.table.cards.isNotEmpty ?? false;
+    if (busy) {
+      final ok = await showDialog<bool>(
+        context: sheet,
+        builder: (context) => AlertDialog(
+          backgroundColor: ArcanumColors.surfaceHigh,
+          title: const Text('Continuar esta lectura'),
+          content: const Text(
+            'La mesa que tienes ahora se recogerá sin guardar.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Continuar'),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
+    }
+    if (sheet.mounted) Navigator.pop(sheet);
+    try {
+      await _ops.continueReading(reading);
+      toast('La lectura vuelve a la mesa.');
+    } on Object catch (e) {
+      error(e);
+    }
+  }
+
   String _spreadName(String slug) {
+    if (slug == 'free') return 'Lectura libre';
     for (final s in _director?.spreads ?? const <SpreadDef>[]) {
       if (s.slug == slug) return s.name;
     }
