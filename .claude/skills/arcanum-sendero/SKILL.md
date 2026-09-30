@@ -35,9 +35,10 @@ contiene las decisiones de producto ya cerradas.
 6. Sincronizar progreso por cuenta en backend y conservar caché local para uso
    sin conexión. Resolver conflictos de forma monotónica: nunca perder un paso
    completado confirmado por servidor o dispositivo.
-7. Introducir Fragmentos Arcanos después de una práctica elegible, en el momento
-   en que la recompensa tiene sentido. Sendero nunca acuña moneda por su cuenta:
-   usa el servicio canónico de economía y muestra su resultado real.
+7. Al completar la orientación v2, el backend entrega 3 Fragmentos una sola
+   vez por cuenta. Sendero nunca acuña moneda en Flutter: usa el servicio
+   canónico y muestra solo el resultado confirmado. Estudiar cada carta real
+   del mazo concede 1 más la primera vez.
 8. Añadir pruebas del comportamiento observable y ejecutar los gates reales del
    repo antes de cerrar.
 
@@ -51,8 +52,8 @@ contiene las decisiones de producto ya cerradas.
   movimiento.
 - Funciones premium: mostrar valor por encima, sin fingir acceso. La llamada a
   mejorar el plan es opcional y secundaria.
-- Fragmentos Arcanos: explicar primero su origen en la práctica; después su uso.
-  No presentarlos como premio del tutorial ni como moneda comprable.
+- Fragmentos Arcanos: explicar el regalo único de Sendero, el estudio de cartas
+  y el canje. No presentarlos como moneda comprable.
 
 ## Contratos que no se rompen
 
@@ -74,8 +75,8 @@ contiene las decisiones de producto ya cerradas.
 - Confirmación previa al gasto y ausencia de débito al cancelar.
 - Recorrido nuevo mostrado una sola vez.
 - Vista premium informativa sin desbloqueo accidental.
-- Recompensa de Fragmentos Arcanos concedida una sola vez por el servicio
-  canónico; repetir Sendero no duplica saldo.
+- Recompensas de Sendero y estudio concedidas una sola vez por el servicio
+  canónico; repetir Sendero o volver a marcar una carta no duplica saldo.
 - Navegación y ayudas existentes intactas.
 
 No marcar terminado con tests saltados por bases ausentes. Seguir los gates y el
