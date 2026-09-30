@@ -22,6 +22,7 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
   final _rootKey = GlobalKey();
   Rect? _targetRect;
   String? _scrolledTarget;
+  Timer? _measureTimer;
 
   @override
   void initState() {
@@ -45,17 +46,15 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
 
   @override
   void dispose() {
+    _measureTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   void _scheduleMeasure() {
     WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
-    unawaited(
-      Future<void>.delayed(const Duration(milliseconds: 350), () {
-        if (mounted) _measure();
-      }),
-    );
+    _measureTimer?.cancel();
+    _measureTimer = Timer(const Duration(milliseconds: 350), _measure);
   }
 
   void _measure() {

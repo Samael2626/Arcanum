@@ -1,4 +1,5 @@
 from app.models.sendero_progress import SenderoProgress
+from app.models.fragment_movement import FragmentMovement
 
 
 def _auth_headers(client) -> dict[str, str]:
@@ -73,3 +74,18 @@ def test_sendero_rejects_unknown_id_format(client):
     )
 
     assert response.status_code == 422
+
+
+def test_orientation_grants_fragments_once_even_after_replay(client, db_session):
+    headers = _auth_headers(client)
+    payload = {"version": 2, "step": 2, "status": "completed"}
+
+    first = client.put("/sendero/progress/orientation", headers=headers, json=payload)
+    again = client.put("/sendero/progress/orientation", headers=headers, json=payload)
+    balance = client.get("/fragments/balance", headers=headers)
+
+    assert first.status_code == again.status_code == balance.status_code == 200
+    assert first.json()["reward_fragments"] == 3
+    assert again.json()["reward_fragments"] == 0
+    assert balance.json()["balance"] == 3
+    assert db_session.query(FragmentMovement).count() == 1

@@ -33,6 +33,16 @@ class _ApiConSaldo extends ArcanumApi {
   int llamadasBalance = 0;
 
   @override
+  Future<Map<String, dynamic>> fragmentsBalance() async => {
+    'balance': 3,
+    'credits_balance': creditos,
+    'conversion_rate': 12,
+    'weekly_conversions_remaining': 3,
+    'weekly_conversion_limit': 3,
+    'tutorial_reward': 3,
+  };
+
+  @override
   Future<Map<String, dynamic>> creditsBalance() async {
     llamadasBalance++;
     if (fallaTambienElSaldo) {
@@ -86,6 +96,7 @@ void main() {
       expect(find.text('7'), findsOneWidget);
       expect(find.text('créditos'), findsOneWidget);
       expect(find.text('Conseguir más'), findsOneWidget);
+      expect(find.text('3 Fragmentos Arcanos'), findsOneWidget);
     });
 
     testWidgets('en singular dice "crédito"', (tester) async {

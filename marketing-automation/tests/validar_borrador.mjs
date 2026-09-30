@@ -31,8 +31,13 @@ assert.equal(
   'El modelo de respaldo debe usar la entrada 1',
 );
 const factPreparer = workflow.nodes.find((node) => node.name === 'Preparar paquete factual');
-assert.match(factPreparer.parameters.jsCode, /práctica y reflexión/);
-assert.doesNotMatch(factPreparer.parameters.jsCode, /practica y reflexion/);
+assert.match(factPreparer.parameters.jsCode, /tránsitos sobre la carta natal/);
+assert.doesNotMatch(factPreparer.parameters.jsCode, /transitos sobre la carta natal/);
+assert.match(factPreparer.parameters.jsCode, /78 arcanos/);
+assert.match(factPreparer.parameters.jsCode, /Swiss Ephemeris/);
+assert.match(factPreparer.parameters.jsCode, /AES-256/);
+assert.match(factPreparer.parameters.jsCode, /fuentes históricas/);
+assert.match(generator.parameters.text, /No uses azar como opuesto de prediccion/);
 
 const brief = {
   external_key: 'demo-manifiesto-001',
@@ -116,6 +121,24 @@ assert.ok(rejected[0].json.validation.errors.includes('alt_text: debe quedar vac
 assert.ok(rejected[0].json.validation.errors.includes('cta: formula generica'));
 assert.ok(rejected[0].json.validation.errors.some((error) => error.startsWith('repeticion alta:')));
 
+const sharedFactsDraft = {
+  hook: 'Un panel de trabajo no necesita prometerte el futuro.',
+  script: 'ARCANUM integra el Tarot con 78 arcanos y calcula la carta natal mediante Swiss Ephemeris y casas Placidus. También muestra tránsitos actuales y protege las notas del grimorio con AES-256.',
+  carousel: [
+    'Carta natal calculada con Swiss Ephemeris y casas Placidus.',
+    'Tránsitos actuales sobre tu carta natal.',
+    'Notas cifradas con AES-256 en el teléfono.',
+  ],
+  caption: 'Herramientas verificables para la práctica diaria, reunidas en un solo panel.',
+  cta: 'Explora el Tarot en ARCANUM',
+  alt_text: '',
+  source_ids: ['play-ficha'],
+  compliance: { claims_supported: true, warnings_applied: true },
+};
+const sharedFacts = await execute(JSON.stringify(sharedFactsDraft));
+assert.equal(sharedFacts[0].json.status, 'ready_for_review');
+assert.equal(sharedFacts[0].json.validation.errors.length, 0);
+
 const inflatedDraft = {
   hook: 'El porvenir permanece velado; el presente exige un instrumento de precisión.',
   script: 'ARCANUM se establece como un espacio de rigor y disciplina interior. No existe en estas páginas artificio alguno para anticipar lo inescrutable. Su naturaleza es la del método metódico: un soporte para la lectura estructurada mediante Tarot, carta natal y grimorio cifrado.',
@@ -149,4 +172,4 @@ assert.ok(missingAccents[0].json.validation.warnings.includes('ortografia: revis
 
 await assert.rejects(() => execute('{no es json}'), /JSON editorial invalido/);
 
-console.log('Validador editorial: 7 casos verdes');
+console.log('Validador editorial: 8 casos verdes');

@@ -164,10 +164,18 @@ const senderoJourneys = <SenderoJourney>[
   SenderoJourney(
     id: 'fragmentos',
     title: 'Fragmentos Arcanos',
-    subtitle: 'Llegarán con una práctica elegible',
+    subtitle: 'Tu recompensa de Sendero y el camino al crédito',
     icon: Icons.auto_awesome_outlined,
-    available: false,
-    steps: [],
+    steps: [
+      SenderoStep(
+        title: 'Tu práctica deja huella',
+        body:
+            'Sendero te entrega Fragmentos una sola vez. Estudiar cada carta del mazo también suma uno la primera vez. Aquí ves tu saldo real.',
+        target: 'fragments_balance',
+        route: '/fragmentos',
+        buttonLabel: 'Entendido',
+      ),
+    ],
   ),
   SenderoJourney(
     id: 'account',

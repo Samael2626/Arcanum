@@ -3,6 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/sendero_catalog.dart';
 import 'sendero_controller.dart';
+import '../../fragmentos/application/fragment_balance.dart';
+
+class SenderoRewardController extends Notifier<int?> {
+  @override
+  int? build() => null;
+
+  void show(int amount) => state = amount;
+  void clear() => state = null;
+}
+
+final senderoRewardProvider = NotifierProvider<SenderoRewardController, int?>(
+  SenderoRewardController.new,
+);
 
 class SenderoGuideState {
   const SenderoGuideState({required this.journey, required this.step});
@@ -79,7 +92,7 @@ class SenderoGuideController extends Notifier<SenderoGuideState?> {
 
   Future<void> _save(SenderoGuideState active, bool isLast) async {
     try {
-      await ref
+      final reward = await ref
           .read(senderoControllerProvider.notifier)
           .advance(
             journeyId: active.journey.id,
@@ -87,6 +100,10 @@ class SenderoGuideController extends Notifier<SenderoGuideState?> {
             step: isLast ? active.step : active.step + 1,
             status: isLast ? 'completed' : 'in_progress',
           );
+      if (reward > 0) {
+        ref.invalidate(fragmentBalanceProvider);
+        ref.read(senderoRewardProvider.notifier).show(reward);
+      }
     } catch (error, stack) {
       FlutterError.reportError(
         FlutterErrorDetails(

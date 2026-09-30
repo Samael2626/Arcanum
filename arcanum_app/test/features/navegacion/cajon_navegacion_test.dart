@@ -38,6 +38,16 @@ class _AuthDePrueba extends AuthNotifier {
 class _ApiMuda extends ArcanumApi {
   _ApiMuda() : super(Dio());
 
+  @override
+  Future<Map<String, dynamic>> fragmentsBalance() async => {
+    'balance': 0,
+    'credits_balance': 0,
+    'conversion_rate': 12,
+    'weekly_conversions_remaining': 3,
+    'weekly_conversion_limit': 3,
+    'tutorial_reward': 3,
+  };
+
   /// Este arnes prueba navegacion de una cuenta existente, no el primer uso.
   /// Sin progreso, Sendero abre su invitacion y la barrera modal absorbe el
   /// toque de la hamburguesa antes de que el cajon llegue a existir.

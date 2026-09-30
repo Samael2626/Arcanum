@@ -38,6 +38,24 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = GoRouter.of(context);
     final guide = ref.watch(senderoGuideProvider);
+    ref.listen<int?>(senderoRewardProvider, (_, reward) {
+      if (reward == null) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '$reward Fragmentos Arcanos despertaron en tu saldo.',
+            ),
+            action: SnackBarAction(
+              label: 'Ver',
+              onPressed: () => context.push('/fragmentos'),
+            ),
+          ),
+        );
+        ref.read(senderoRewardProvider.notifier).clear();
+      });
+    });
 
     return SenderoInvitationGate(
       child: Stack(

@@ -11,6 +11,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../shared/widgets/arcanum_toggle.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../fragmentos/application/fragment_balance.dart';
 
 import '../../core/api/arcanum_api.dart';
 import '../../core/theme/arcanum_colors.dart';
@@ -126,12 +127,78 @@ void showTarotCardSheet(BuildContext context, Map<String, dynamic> card) {
                 ),
                 const SizedBox(height: 22),
                 _attributions(card),
+                const SizedBox(height: 24),
+                _StudyButton(slug: card['slug'] as String),
               ],
             ),
           ),
         ),
       ),
     ),
+  );
+}
+
+class _StudyButton extends ConsumerStatefulWidget {
+  const _StudyButton({required this.slug});
+
+  final String slug;
+
+  @override
+  ConsumerState<_StudyButton> createState() => _StudyButtonState();
+}
+
+class _StudyButtonState extends ConsumerState<_StudyButton> {
+  bool _saving = false;
+  String? _message;
+
+  Future<void> _markStudied() async {
+    setState(() => _saving = true);
+    try {
+      final result = await ref
+          .read(arcanumApiProvider)
+          .studyTarotCard(widget.slug);
+      if (!mounted) return;
+      final granted = result['granted'] as int;
+      ref.invalidate(fragmentBalanceProvider);
+      setState(() {
+        _message = granted > 0
+            ? '+$granted Fragmento Arcano. Esta carta ya forma parte de tu estudio.'
+            : 'Esta carta ya estaba en tu estudio. No se repite la recompensa.';
+      });
+    } catch (error, stack) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stack,
+          library: 'fragmentos',
+          context: ErrorDescription('registrando carta estudiada'),
+        ),
+      );
+      if (mounted) {
+        setState(
+          () =>
+              _message = 'No pudimos registrar esta carta. Inténtalo de nuevo.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      OutlinedButton(
+        onPressed: _saving ? null : _markStudied,
+        child: Text(_saving ? 'Guardando…' : 'Marcar carta estudiada'),
+      ),
+      if (_message != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(_message!, style: ArcanumText.body(14)),
+        ),
+    ],
   );
 }
 
