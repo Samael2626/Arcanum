@@ -20,6 +20,7 @@ import '../../features/lecturas/presentation/indice_screen.dart';
 import '../../features/saber/saber_screen.dart';
 import '../../features/settings/privacy_screen.dart';
 import '../../features/settings/settings_screen.dart';
+import '../../features/tarot/tarot_screen.dart';
 import '../../features/sendero/presentation/sendero_screen.dart';
 import 'app_shell.dart';
 
@@ -89,6 +90,8 @@ final arcanumRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/perfil', builder: (c, s) => const PerfilScreen()),
       GoRoute(path: '/paywall', builder: (c, s) => const PaywallScreen()),
       GoRoute(path: '/sendero', builder: (c, s) => const SenderoScreen()),
+      // Mesa de tarot en construccion: la pestaña propia llega en la fase 8.
+      GoRoute(path: '/tarot', builder: (c, s) => const TarotTableScreen()),
       GoRoute(
         path: '/sendero/:journey',
         builder: (c, s) =>

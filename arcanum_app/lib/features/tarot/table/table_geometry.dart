@@ -14,7 +14,9 @@ abstract final class TableGeometry {
   static const double width = 600;
   static const double height = 900;
   static const double cardW = 110;
-  static const double cardH = 190;
+  // la proporcion del naipe de la app (1:1,6), no la del prototipo (1:1,73):
+  // asi la lamina RWS no se deforma
+  static const double cardH = cardW * 1.6;
 
   /// Distancia de la camara (perspectiva CSS del prototipo).
   static const double perspective = 1000;

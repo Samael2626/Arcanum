@@ -177,7 +177,10 @@ void main() {
       const card = TablePose(300, 400, rot: 90);
       expect(localNormalized(card, const Offset(300, 400)), Offset.zero);
       // girada 90 grados en sentido horario, su borde de arriba mira a la derecha
-      final top = localNormalized(card, const Offset(300 + 95, 400));
+      final top = localNormalized(
+        card,
+        Offset(300 + TableGeometry.cardH / 2, 400),
+      );
       expect(top.dy, closeTo(-1, 1e-9));
       expect(top.dx, closeTo(0, 1e-9));
     });

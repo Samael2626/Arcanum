@@ -55,6 +55,7 @@ class PieceView {
     this.peelAngle = 0,
     this.peelHingeX = 0,
     this.label,
+    this.dragging = false,
   });
 
   final String id;
@@ -77,6 +78,9 @@ class PieceView {
   /// Volteo por la esquina en curso: angulo (grados) y bisagra (x local).
   final double peelAngle, peelHingeX;
   final String? label;
+
+  /// Va pegada al dedo: se dibuja sin animar el cambio de sitio.
+  final bool dragging;
 
   double get width =>
       (kind == PieceKind.card || kind == PieceKind.fanCard ? 1 : 1) *
@@ -175,6 +179,7 @@ class TableDirector extends ChangeNotifier {
               _overrides[id] ??
               shelfPose(decks.indexOf(shelf[i]), decks.length),
           lift: _lift[id] ?? 0,
+          dragging: _overrides.containsKey(id),
           count: shelf[i].cardCount,
           label: shelf[i].name,
         ),
@@ -193,6 +198,7 @@ class TableDirector extends ChangeNotifier {
                 _overrides[id] ??
                 TablePose(p.x, p.y, rot: p.rot, scale: TableGeometry.deckScale),
             lift: _lift[id] ?? 0,
+            dragging: _overrides.containsKey(id),
             // con el abanico abierto, sus cartas estan en la mesa y la caja queda vacia
             count: f?.pid == p.pid ? 0 : count,
             label: p.pid == table.activePid ? _deckName(open) : 'Montón',
@@ -231,6 +237,7 @@ class TableDirector extends ChangeNotifier {
                 _overrides[id] ??
                 TablePose(c.x, c.y, rot: c.rot, scale: c.scale),
             lift: (_lift[id] ?? 0) + (peel?.lift ?? 0),
+            dragging: _overrides.containsKey(id),
             card: c,
             peelAngle: peel?.angle ?? 0,
             peelHingeX: peel?.hingeX ?? 0,
@@ -257,6 +264,7 @@ class TableDirector extends ChangeNotifier {
       peelAngle: v.peelAngle,
       peelHingeX: v.peelHingeX,
       label: v.label,
+      dragging: v.dragging,
     );
   }
 
@@ -330,6 +338,12 @@ class TableDirector extends ChangeNotifier {
       // radial abierto para tocar: tocar una opcion la elige, tocar fuera lo cierra
       final i = r.layout.tappedAt(screen);
       _radial = null;
+      // el centro deshace el ultimo gesto si todavia se puede; si no, cierra
+      if (i == null &&
+          (screen - r.layout.center).distance < 24 &&
+          ops.canUndo) {
+        ops.undo();
+      }
       if (i != null) _run(() => r.onPick(r.layout.items[i].id));
       notifyListeners();
       return;
@@ -348,6 +362,14 @@ class TableDirector extends ChangeNotifier {
   }
 
   void pointerCancel(int pointer) => _apply(grammar.cancel(pointer));
+
+  /// Hay algo esperando al reloj (mantener, doble toque) o en movimiento.
+  /// Con la mesa quieta no se piden frames: la bateria lo agradece.
+  bool get needsTicks =>
+      grammar.deadline != null ||
+      _pendingCardTap != null ||
+      _wobble.isNotEmpty ||
+      _drag != null;
 
   /// Un frame: temporizadores de la gramatica, camara y peso de las cartas.
   /// Devuelve true si hay que repintar.

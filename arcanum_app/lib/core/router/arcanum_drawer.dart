@@ -1,5 +1,6 @@
 import 'dart:ui' show ImageFilter;
 
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -129,6 +130,15 @@ class ArcanumDrawer extends StatelessWidget {
                       padding: EdgeInsets.fromLTRB(20, 6, 20, 14),
                       child: SectionLabel('GUÍA Y CUENTA'),
                     ),
+                    // Solo en builds de desarrollo y perfil: la mesa esta a
+                    // medias y la version de la tienda no debe enseñarla.
+                    if (!kReleaseMode)
+                      _FilaRuta(
+                        icono: Icons.style_outlined,
+                        iconoActivo: Icons.style,
+                        rotulo: 'Mesa de tarot · en pruebas',
+                        ruta: '/tarot',
+                      ),
                     _FilaRuta(
                       icono: Icons.explore_outlined,
                       iconoActivo: Icons.explore,

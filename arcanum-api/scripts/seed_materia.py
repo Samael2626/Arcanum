@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.core.content import load_dataset  # noqa: E402
-from app.db.session import SessionLocal  # noqa: E402
+from app.db.session import get_session_factory  # noqa: E402
 from app.models.materia_item import MateriaItem  # noqa: E402
 
 _COLECCIONES = (
@@ -30,7 +30,9 @@ def cargar_items() -> list[dict]:
 
 
 def main() -> None:
-    db = SessionLocal()
+    # la fabrica se crea al pedirla: importar `SessionLocal` daba None y la
+    # siembra del arranque fallaba siempre, en silencio (no fatal por diseño)
+    db = get_session_factory()()
     created = 0
     try:
         for data in cargar_items():

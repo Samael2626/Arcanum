@@ -116,6 +116,16 @@
   - **Fallo cazado por los tests:** `setEntry(3, 2)` sobre una matriz ya trasladada dejaba el punto de fuga en la esquina y torcía la mesa. Corregido también en la APK de prueba.
   - **Girar** una carta viaja como `turned` al interpretar y el servidor invierte su sentido (salvo en mazos sin invertidas).
   - **A vigilar en el móvil:** en la tirada de tres los imanes de los huecos casi se tocan (158 entre huecos, 94 de imán): el sitio para soltar una aclaratoria es estrecho.
+- [x] **Dibujo de la mesa, técnica híbrida (30-sep)** (`table/table_painters.dart`, `table_pieces.dart`, `table_view.dart`, `table_icons.dart`, `tarot_screen.dart`):
+  - Paño, marco, huecos con su número o nombre, estante y «Interpretar» bordado, en un `CustomPainter`. El dorso se graba una vez en imagen y se estampa (abanico y montones).
+  - Cartas en juego como widgets: viajan animadas a su sitio, se voltean con los tiempos del palo del oráculo (`TarotFlipTiming`), siguen la esquina con su bisagra, giran 180° con un pequeño salto y se anuncian al lector de pantalla con nombre, sentido y hueco.
+  - Radial dibujado con los 21 iconos de trazo del prototipo, no con iniciales; el centro cierra o deshace.
+  - Solo se piden frames cuando algo se mueve o espera al reloj.
+  - `TarotCardFaceArt`, `TarotCardBack`, `paintTarotBack` y `TarotFlipTiming` se exponen desde `tarot_card.dart` sin tocar lo que usa el oráculo.
+  - La carta pasa a 110 × 176 (1:1,6, la del naipe de la app) para que la lámina no se deforme.
+  - Ruta `/tarot` y entrada «Mesa de tarot · en pruebas» en el cajón, **solo fuera de release**.
+- [x] **Fallo encontrado de paso:** `seed_tarot.py` y `seed_materia.py` importaban `SessionLocal`, que vale None hasta crear la fábrica: la siembra del arranque fallaba siempre y en silencio. En producción no se notaba porque las cartas ya estaban. Corregido con test.
+- **Backend local para probar en el móvil:** base `arcanum_dev_mesa` en `arcanum-test-db` (5434), migrada y sembrada a mano, sin `GROQ_API_KEY`. **Nunca con el `.env` de `arcanum-api`, que apunta a la base de producción:** el arranque aplicaría la 015 allí. La app de depuración va con `--dart-define=API_BASE_URL=http://127.0.0.1:8000` y `adb reverse tcp:8000 tcp:8000`.
 - [ ] **Cerrar el círculo sin interpretar:** el prototipo lo permitía; el servidor exige lectura interpretada. Hoy el director avisa «Interpreta la tirada antes de cerrar el círculo». Decidirlo en la fase 5.
 - [ ] **`TableCamera`:** `Matrix4` con perspectiva 1/1000, inclinación y giro. Inversa para convertir toques en unidades de mesa. Encuadre a 30° e inercia.
 - [ ] **`DeckPiece`:** caja con grosor según el número de cartas. **`CardPiece`:** envuelve `TarotCardView` y añade la bisagra de la esquina y el muelle de inclinación.

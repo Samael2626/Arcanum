@@ -2805,3 +2805,100 @@ class _ShuffleDeckState extends State<ShuffleDeck>
     );
   }
 }
+
+// ── Piezas sueltas para otras superficies (la mesa de tarot) ───────────────
+//
+// La mesa no usa [TarotCardView]: tiene sus propios gestos y tamaños. Pero el
+// arte y los tiempos son los mismos, asi que salen de aqui y no se copian.
+
+/// Pinta el dorso del naipe en `canvas`, en un rectangulo de `size`.
+void paintTarotBack(Canvas canvas, Size size) =>
+    const _TarotBackPainter().paint(canvas, size);
+
+/// Dorso del naipe como widget.
+class TarotCardBack extends StatelessWidget {
+  const TarotCardBack({super.key, required this.size});
+  final Size size;
+
+  @override
+  Widget build(BuildContext context) =>
+      CustomPaint(size: size, painter: const _TarotBackPainter());
+}
+
+/// Cara del naipe: la lamina Rider-Waite-Smith, o la cara vectorial si no hay
+/// lamina. Estatica: el volteo lo anima quien la usa.
+class TarotCardFaceArt extends StatelessWidget {
+  const TarotCardFaceArt({super.key, required this.face, required this.size});
+  final TarotFace face;
+  final Size size;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget vectorial() => CustomPaint(
+      size: size,
+      painter: TarotFacePainter(face, detail: size.width >= 96),
+    );
+    final asset = face.rwsAsset;
+    if (asset == null) return vectorial();
+    final dpr = MediaQuery.maybeOf(context)?.devicePixelRatio ?? 2.0;
+    final pad = size.width * .045;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(size.width * .08),
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF1D1A24), Color(0xFF121019)],
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(pad),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(size.width * .05),
+            border: Border.all(
+              color: ArcanumColors.gold.withValues(alpha: 0.55),
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(size.width * .045),
+            child: Image.asset(
+              asset,
+              width: size.width - pad * 2,
+              height: size.height - pad * 2,
+              fit: BoxFit.cover,
+              // se pide al tamaño en que se ve: sin esto cada lamina ocupa 1,18 MB
+              cacheWidth: math.min(
+                _TarotCardViewState._rwsAssetWidth,
+                (size.width * dpr).round(),
+              ),
+              filterQuality: FilterQuality.medium,
+              errorBuilder: (_, _, _) => vectorial(),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Tiempos del volteo segun el palo, los mismos del oraculo.
+@immutable
+class TarotFlipTiming {
+  const TarotFlipTiming._(this._spec);
+  final _FlipSpec _spec;
+
+  factory TarotFlipTiming.of(TarotFace face) =>
+      TarotFlipTiming._(_FlipSpec.of(_FlipSpec.styleOf(face)));
+
+  Duration get flip => Duration(milliseconds: _spec.flipMs);
+  Duration get settle => Duration(milliseconds: _spec.settleMs);
+  Curve get curve => _spec.curve;
+
+  /// Escala de mas (Mayores) o de menos (Oros) al asentarse.
+  double get overshoot => _spec.overshoot - _spec.squash;
+
+  /// Giro en Z durante el volteo (el corte diagonal de Espadas), en radianes.
+  double get diagonal => _spec.diagonal;
+  bool get halo => _spec.halo;
+}

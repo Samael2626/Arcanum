@@ -15,7 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.core.content import load_dataset  # noqa: E402
-from app.db.session import SessionLocal  # noqa: E402
+from app.db.session import get_session_factory  # noqa: E402
 from app.models.tarot import TarotCard  # noqa: E402
 
 # Significados de respaldo para los Mayores: el catalogo premium de los 22 vive
@@ -48,7 +48,9 @@ def _enrich_majors(cartas: list[dict] | None = None) -> list[dict]:
 
 
 def main() -> None:
-    db = SessionLocal()
+    # la fabrica se crea al pedirla: importar `SessionLocal` daba None y la
+    # siembra del arranque fallaba siempre, en silencio (no fatal por diseño)
+    db = get_session_factory()()
     inserted = 0
     skipped = 0
     try:
