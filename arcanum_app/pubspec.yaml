@@ -47,6 +47,8 @@ dependencies:
   crypto: ^3.0.3
   shared_preferences: ^2.5.5
   flutter_svg: ^2.3.0
+  # caminos SVG (d) -> Path del lienzo del taller de sigilos; ya venia con flutter_svg
+  path_parsing: ^1.1.0
   path_provider: ^2.1.6
   # rive: ^0.14.8
   # model_viewer_plus: ^1.10.0
@@ -140,5 +142,12 @@ flutter:
     - family: ArcanumGlifos
       fonts:
         - asset: assets/fonts/ArcanumGlifos-Regular.ttf
+    # Hebreo del taller de sigilos (anillo hebreo, Rosa-Cruz, Kamea). Noto Serif
+    # Hebrew, peso 400, recortada a las 27 letras y el espacio (7,6 KB). SIL OFL
+    # 1.1, Noto Project Authors: ver OFL-Noto.txt. Sin ella, cada movil pone la
+    # suya (o cajas).
+    - family: Noto Serif Hebrew
+      fonts:
+        - asset: assets/fonts/NotoSerifHebrew-Regular.ttf
   # shaders:
   #   - shaders/nebula.frag

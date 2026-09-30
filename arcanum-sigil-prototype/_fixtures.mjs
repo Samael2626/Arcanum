@@ -109,8 +109,24 @@ const capas = await page2.evaluate(({ STACKS, TRANSLIT_NAMES }) => {
   state.transparent = false;
   return { stacks, translit, framed, svgs };
 }, { STACKS, TRANSLIT_NAMES });
+// ── imagen de referencia: el navegador rasteriza los SVG sin texto ──
+// (el texto depende de la fuente de cada lado; la geometria no)
+const conTexto = c => c.layers.some(L => ['ringLatin', 'ringHebrew', 'inscription', 'caption'].includes(L.type));
+const sinTexto = capas.svgs.map((c, i) => [c, i]).filter(([c]) => !conTexto(c));
+const PNG_DIR = path.join(path.dirname(OUT), 'png');
+fs.mkdirSync(PNG_DIR, { recursive: true });
+for (const f of fs.readdirSync(PNG_DIR)) fs.unlinkSync(path.join(PNG_DIR, f));
+const page3 = await b.newPage();
+for (const [c, i] of sinTexto) {
+  const url = await page3.evaluate(svg => new Promise(res => {
+    const img = new Image();
+    img.onload = () => { const cv = document.createElement('canvas'); cv.width = cv.height = 400; cv.getContext('2d').drawImage(img, 0, 0, 400, 400); res(cv.toDataURL('image/png')); };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }), c.svg);
+  fs.writeFileSync(path.join(PNG_DIR, `svg${i}.png`), Buffer.from(url.split(',')[1], 'base64'));
+}
 await b.close();
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, JSON.stringify(out));
 fs.writeFileSync(OUT.replace('letras.json', 'capas.json'), JSON.stringify(capas));
-console.log(`${out.length} casos de letras, ${capas.stacks.length} pilas de capas y ${capas.svgs.length} SVG completos -> ${path.relative(process.cwd(), path.dirname(OUT))}`);
+console.log(`${out.length} casos de letras, ${capas.stacks.length} pilas de capas, ${capas.svgs.length} SVG completos y ${sinTexto.length} imagenes de referencia -> ${path.relative(process.cwd(), path.dirname(OUT))}`);
