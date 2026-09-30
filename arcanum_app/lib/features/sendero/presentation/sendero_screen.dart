@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
 import '../../../shared/widgets/arcanum_card.dart';
+import '../../../shared/widgets/arcane_currency_emblem.dart';
 import '../application/sendero_controller.dart';
 import '../application/sendero_guide_controller.dart';
 import '../domain/sendero_catalog.dart';
@@ -130,13 +131,19 @@ class _JourneyCard extends ConsumerWidget {
             : null,
         child: Row(
           children: [
-            Icon(
-              completed ? Icons.check_circle_outline : journey.icon,
-              color: journey.available
-                  ? ArcanumColors.gold
-                  : ArcanumColors.ivoryMuted,
-              size: 26,
-            ),
+            if (journey.id == 'fragmentos')
+              const ArcaneCurrencyEmblem(
+                currency: ArcaneCurrency.fragment,
+                size: 26,
+              )
+            else
+              Icon(
+                completed ? Icons.check_circle_outline : journey.icon,
+                color: journey.available
+                    ? ArcanumColors.gold
+                    : ArcanumColors.ivoryMuted,
+                size: 26,
+              ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(

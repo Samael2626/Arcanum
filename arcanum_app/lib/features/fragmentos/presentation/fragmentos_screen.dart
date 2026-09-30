@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
+import '../../../shared/widgets/arcane_currency_emblem.dart';
 import '../../sendero/application/sendero_guide_controller.dart';
 import '../../sendero/presentation/sendero_spotlight.dart';
 import '../application/fragment_balance.dart';
@@ -137,9 +138,20 @@ class _FragmentosScreenState extends ConsumerState<FragmentosScreen> {
                               children: [
                                 Text('TU PRÁCTICA', style: ArcanumText.label()),
                                 const SizedBox(height: 12),
-                                Text(
-                                  '${balance.balance} Fragmentos',
-                                  style: ArcanumText.heading(32),
+                                Row(
+                                  children: [
+                                    const ArcaneCurrencyEmblem(
+                                      currency: ArcaneCurrency.fragment,
+                                      size: 36,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Flexible(
+                                      child: Text(
+                                        '${balance.balance} Fragmentos',
+                                        style: ArcanumText.heading(32),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
@@ -152,9 +164,23 @@ class _FragmentosScreenState extends ConsumerState<FragmentosScreen> {
                             ),
                           ),
                           const SizedBox(height: 24),
-                          Text(
-                            '${balance.conversionRate} Fragmentos = 1 crédito',
-                            style: ArcanumText.heading(22),
+                          Row(
+                            children: [
+                              const ArcaneCurrencyEmblem(
+                                currency: ArcaneCurrency.fragment,
+                              ),
+                              const SizedBox(width: 9),
+                              Expanded(
+                                child: Text(
+                                  '${balance.conversionRate} Fragmentos = 1 crédito',
+                                  style: ArcanumText.heading(22),
+                                ),
+                              ),
+                              const SizedBox(width: 9),
+                              const ArcaneCurrencyEmblem(
+                                currency: ArcaneCurrency.credit,
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 8),
                           Text(

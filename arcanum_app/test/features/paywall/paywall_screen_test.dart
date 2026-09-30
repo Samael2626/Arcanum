@@ -1,6 +1,7 @@
 import 'package:arcanum_app/core/monetization/saldo.dart';
 import 'package:arcanum_app/core/monetization/monetization_service.dart';
 import 'package:arcanum_app/features/paywall/paywall_screen.dart';
+import 'package:arcanum_app/shared/widgets/arcane_currency_emblem.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -82,6 +83,14 @@ void main() {
     // rechazo en ambas tiendas: si la tienda calla, no hay cifra que ensenar.
     expect(find.textContaining(r'$'), findsNothing);
     expect(find.textContaining('/mes'), findsNothing);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is ArcaneCurrencyEmblem &&
+            widget.currency == ArcaneCurrency.credit,
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('sin precio, la tarjeta dice por que no hay precio', (

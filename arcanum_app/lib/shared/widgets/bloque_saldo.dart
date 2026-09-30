@@ -20,6 +20,7 @@ import '../../core/monetization/saldo.dart';
 import '../../features/fragmentos/application/fragment_balance.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
+import 'arcane_currency_emblem.dart';
 
 /// `push` y no `go`: la tienda es un recado del que se VUELVE a lo que estabas
 /// haciendo. Es la misma regla de `shared/creditos.dart`.
@@ -136,7 +137,7 @@ class _FragmentBalanceTile extends ConsumerWidget {
         ),
         child: Row(
           children: [
-            const Icon(Icons.auto_awesome_outlined, color: ArcanumColors.gold),
+            const ArcaneCurrencyEmblem(currency: ArcaneCurrency.fragment),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -174,9 +175,10 @@ class _Cifra extends StatelessWidget {
       );
     }
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
+        const ArcaneCurrencyEmblem(currency: ArcaneCurrency.credit, size: 27),
+        const SizedBox(width: 9),
         Text(
           '${estado.creditos}',
           style: ArcanumText.heading(34, color: ArcanumColors.goldLight),
@@ -309,9 +311,10 @@ class _Coste extends StatelessWidget {
         ? ' · esta lectura gasta 1'
         : ' · esta lectura entra en tu cupo de hoy';
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
+        const ArcaneCurrencyEmblem(currency: ArcaneCurrency.credit, size: 22),
+        const SizedBox(width: 8),
         Text(
           '${estado!.creditos}',
           style: ArcanumText.heading(26, color: ArcanumColors.goldLight),

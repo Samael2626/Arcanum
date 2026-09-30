@@ -2,6 +2,7 @@ import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/features/fragmentos/presentation/fragmentos_screen.dart';
 import 'package:arcanum_app/features/sendero/application/sendero_guide_controller.dart';
 import 'package:arcanum_app/features/sendero/domain/sendero_catalog.dart';
+import 'package:arcanum_app/shared/widgets/arcane_currency_emblem.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -71,6 +72,22 @@ void main() {
     final api = _Api();
     await _mount(tester, api);
     expect(find.text('15 Fragmentos'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is ArcaneCurrencyEmblem &&
+            widget.currency == ArcaneCurrency.fragment,
+      ),
+      findsNWidgets(2),
+    );
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is ArcaneCurrencyEmblem &&
+            widget.currency == ArcaneCurrency.credit,
+      ),
+      findsOneWidget,
+    );
     expect(find.textContaining('Sendero te da 3'), findsOneWidget);
 
     await tester.ensureVisible(find.text('Convertir en crédito'));
