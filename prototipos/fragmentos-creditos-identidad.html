@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ARCANUM · Fragmentos y créditos</title>
+  <style>
+    @font-face { font-family: Cormorant; src: url('../arcanum_app/assets/fonts/CormorantGaramond-600.ttf'); font-weight: 600; }
+    @font-face { font-family: Crimson; src: url('../arcanum_app/assets/fonts/CrimsonPro-400.ttf'); font-weight: 400; }
+    @font-face { font-family: Crimson; src: url('../arcanum_app/assets/fonts/CrimsonPro-600.ttf'); font-weight: 600; }
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface-high: #1c1c28;
+      --gold: #c9a84c;
+      --gold-light: #ecd79a;
+      --gold-muted: #8a6e32;
+      --ivory: #f5f0e8;
+      --muted: #b8b0a0;
+      --line: rgba(201,168,76,.25);
+      --display: Cormorant, Georgia, serif;
+      --body: Crimson, Georgia, serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ivory);
+      font-family: var(--body);
+      background: radial-gradient(ellipse at 72% 0%, rgba(74,14,26,.20), transparent 38rem), var(--bg);
+    }
+    button, select { font: inherit; }
+    button:focus-visible, select:focus-visible { outline: 2px solid var(--gold-light); outline-offset: 4px; }
+    .wrap { width: min(1320px, calc(100% - 48px)); margin-inline: auto; }
+    header { border-bottom: 1px solid var(--line); }
+    .topline { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .brand { color: var(--ivory); font: 600 29px/1 var(--display); letter-spacing: .04em; }
+    .topnote, .eyebrow { color: var(--gold); text-transform: uppercase; letter-spacing: .19em; font: 600 11px/1.4 var(--body); }
+    .topnote { color: var(--muted); letter-spacing: .11em; }
+    .intro { padding: 62px 0 45px; display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 60px; align-items: end; }
+    h1 { font: 600 clamp(51px, 6vw, 88px)/.88 var(--display); letter-spacing: -.035em; margin: 16px 0 23px; max-width: 900px; }
+    .intro p, .side-note p { color: var(--muted); font-size: 18px; line-height: 1.45; margin: 0; }
+    .intro aside { border-left: 1px solid var(--gold-muted); padding-left: 23px; }
+    .intro aside strong { display: block; color: var(--gold-light); font-size: 19px; font-weight: 400; margin-bottom: 8px; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 390px; gap: 34px; align-items: start; padding-bottom: 65px; }
+    .section-head { display: flex; justify-content: space-between; gap: 15px; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 17px; }
+    .section-head h2 { font: 600 29px/1 var(--display); margin: 0; }
+    .section-head span { color: var(--muted); font-size: 14px; }
+    .concept {
+      width: 100%; text-align: left; cursor: pointer; display: grid;
+      grid-template-columns: 58px minmax(0, 1fr) auto; align-items: center; gap: 18px;
+      border: 1px solid var(--line); background: var(--surface);
+      color: var(--ivory); padding: 20px 21px; margin-bottom: 10px;
+      transition: border-color .25s, background .25s, transform .25s;
+    }
+    .concept:hover { border-color: var(--gold); transform: translateX(3px); }
+    .concept[aria-pressed="true"] { background: linear-gradient(115deg, #241920, var(--surface-high)); border-color: var(--gold); }
+    .concept .pair { display: flex; align-items: center; width: 62px; position: relative; }
+    .concept .pair svg { width: 38px; height: 38px; flex: none; }
+    .concept .pair svg + svg { margin-left: -11px; margin-top: 18px; }
+    .concept h3 { font: 600 26px/1 var(--display); margin: 0 0 5px; }
+    .concept p { color: var(--muted); font-size: 15px; line-height: 1.2; margin: 0; }
+    .concept .index { color: var(--gold); font: 600 14px var(--display); align-self: start; }
+    .detail { margin-top: 22px; padding: 26px; background: var(--surface-high); border-left: 2px solid var(--gold); }
+    .detail h3 { font: 600 28px var(--display); margin: 6px 0; }
+    .detail p { color: var(--muted); font-size: 16px; line-height: 1.4; margin: 0; }
+    .detail .duo { display: flex; gap: 29px; flex-wrap: wrap; margin-top: 20px; }
+    .detail .emblem { display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 135px; }
+    .detail svg { width: 118px; height: 118px; }
+    .detail .emblem span { color: var(--gold-light); font-size: 14px; }
+    .detail .tiny { display: flex; align-items: center; gap: 11px; border-top: 1px solid var(--line); padding-top: 16px; margin-top: 19px; color: var(--muted); font-size: 14px; }
+    .detail .tiny svg { width: 24px; height: 24px; }
+    .preview-wrap { position: sticky; top: 22px; }
+    .phone {
+      width: min(100%, 355px); margin: 0 auto; border: 1px solid #66545a;
+      border-radius: 34px; background: #08070b; padding: 8px;
+      box-shadow: 0 35px 85px rgba(0,0,0,.47);
+    }
+    .screen { min-height: 622px; border-radius: 27px; overflow: hidden; background: var(--bg); position: relative; }
+    .screen::before { content: ''; display: block; width: 74px; height: 16px; border-radius: 0 0 11px 11px; background: #08070b; position: absolute; top: 0; left: calc(50% - 37px); z-index: 1; }
+    .mobile-top { padding: 29px 24px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; font: 600 25px var(--display); }
+    .mobile-top span:last-child { color: var(--gold); font: 15px var(--body); align-self: center; }
+    .mobile-content { padding: 28px 22px; }
+    .mobile-content h2 { font: 600 38px/1 var(--display); margin: 12px 0 7px; }
+    .mobile-content > p { color: var(--muted); font-size: 16px; line-height: 1.35; margin: 0 0 22px; }
+    .balance { padding: 18px; border: 1px solid var(--line); background: linear-gradient(130deg, #261b23, var(--surface)); }
+    .balance + .balance { margin-top: 10px; }
+    .balance-head { display: flex; align-items: center; gap: 13px; }
+    .balance-head svg { width: 44px; height: 44px; }
+    .balance-head strong { font: 600 28px/1 var(--display); }
+    .balance-head small { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
+    .balance-caption { color: var(--muted); font-size: 14px; line-height: 1.28; margin: 11px 0 0; }
+    .exchange { margin: 20px 0 13px; padding: 14px 0; border-block: 1px solid var(--line); display: flex; align-items: center; justify-content: center; gap: 7px; }
+    .exchange svg { width: 19px; height: 19px; }
+    .exchange span { color: var(--gold-light); font: 600 16px var(--body); }
+    .mobile-button { width: 100%; border: 1px solid var(--gold-muted); background: transparent; color: var(--gold-light); min-height: 44px; cursor: default; }
+    .preview-note { color: var(--muted); font-size: 13px; text-align: center; margin: 15px 0 0; }
+    .questions { border-top: 1px solid var(--line); padding: 45px 0 70px; }
+    .questions h2 { font: 600 37px/1 var(--display); margin: 10px 0; }
+    .questions > p { color: var(--muted); font-size: 17px; margin: 0 0 26px; }
+    .question-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .question { background: var(--surface); border: 1px solid var(--line); padding: 18px; }
+    .question label { display: block; min-height: 54px; font-size: 17px; line-height: 1.2; margin-bottom: 15px; }
+    .question select { background: var(--surface-high); color: var(--ivory); border: 1px solid var(--gold-muted); padding: 10px; width: 100%; border-radius: 0; }
+    .decision { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 22px; }
+    .copy { background: var(--gold); color: #120e0a; border: 0; padding: 11px 17px; font-weight: 600; cursor: pointer; }
+    .copy:hover { background: var(--gold-light); }
+    .copy-state { color: var(--muted); font-size: 15px; }
+    footer { border-top: 1px solid var(--line); color: var(--muted); padding: 23px 0 30px; font-size: 14px; }
+    @media (max-width: 1050px) { .workspace { grid-template-columns: minmax(0, 1fr) 340px; } .intro { grid-template-columns: 1fr; gap: 22px; } }
+    @media (max-width: 760px) { .wrap { width: min(100% - 32px, 580px); } .topline { min-height: 60px; } .topnote { display: none; } .intro { padding: 42px 0 32px; } .workspace { grid-template-columns: 1fr; } .preview-wrap { position: static; } .question-grid { grid-template-columns: 1fr; } .question label { min-height: 0; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">
+    <defs>
+      <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ecd79a"/><stop offset=".47" stop-color="#c9a84c"/><stop offset="1" stop-color="#795b29"/></linearGradient>
+      <linearGradient id="shard" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f1e3b7"/><stop offset=".38" stop-color="#bd9550"/><stop offset="1" stop-color="#503f40"/></linearGradient>
+      <symbol id="fragment-a" viewBox="0 0 100 100">
+        <path d="M53 6 74 34 67 73 44 95 20 54 31 20Z" fill="url(#shard)" stroke="#ecd79a" stroke-width="1.7"/>
+        <path d="M53 6 49 47 44 95M31 20 49 47 74 34M49 47 67 73M20 54 49 47" fill="none" stroke="#342635" stroke-width="2"/>
+        <path d="M53 6 49 47 31 20M49 47 67 73 44 95" fill="#fff4d2" opacity=".22"/>
+        <path d="M80 9v13m-6-6h12M15 78v8m-4-4h8" stroke="#c9a84c" stroke-width="1.4" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="credit-a" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="43" fill="#15121b" stroke="url(#metal)" stroke-width="3"/>
+        <circle cx="50" cy="50" r="36" fill="none" stroke="#8a6e32" stroke-width="1"/>
+        <path d="M50 18 77 50 50 82 23 50Z" fill="none" stroke="url(#metal)" stroke-width="1.5"/>
+        <path d="M50 22 64 46 57 69 50 77 37 54 42 34Z" fill="url(#shard)" stroke="#ecd79a" stroke-width="1"/>
+        <path d="M50 22 49 49 50 77M42 34 49 49 64 46M49 49 57 69M37 54 49 49" fill="none" stroke="#4b3940" stroke-width="1.3"/>
+        <path d="M50 8v7m0 70v7M8 50h7m70 0h7" stroke="#ecd79a" stroke-width="1.5"/>
+      </symbol>
+      <symbol id="fragment-b" viewBox="0 0 100 100">
+        <path d="M49 11 66 19 67 39 85 47 78 68 60 70 49 89 29 78 25 57 12 46 30 32Z" fill="#17131b" stroke="url(#metal)" stroke-width="2.4"/>
+        <path d="M49 11 49 42 67 39M12 46 49 42 25 57M49 42 60 70 49 89M49 42 85 47M49 42 29 78" fill="none" stroke="#c9a84c" stroke-width="1.3"/>
+        <circle cx="49" cy="42" r="5" fill="#ecd79a"/>
+        <path d="M31 13v12m-6-6h12M77 80v8m-4-4h8" stroke="#b79845" stroke-width="1.4"/>
+      </symbol>
+      <symbol id="credit-b" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="42" fill="#17131b" stroke="url(#metal)" stroke-width="3"/>
+        <circle cx="50" cy="50" r="33" fill="none" stroke="#8a6e32" stroke-width="1.4" stroke-dasharray="2 4"/>
+        <path d="M50 22 65 30 76 50 64 70 50 78 35 70 24 50 35 30Z" fill="none" stroke="url(#metal)" stroke-width="2"/>
+        <path d="M50 22v56M24 50h52M35 30l30 40M65 30 35 70" stroke="#9b7937" stroke-width="1"/>
+        <circle cx="50" cy="50" r="8" fill="#211923" stroke="#ecd79a" stroke-width="1.7"/>
+        <circle cx="50" cy="50" r="2.4" fill="#ecd79a"/>
+      </symbol>
+      <symbol id="fragment-c" viewBox="0 0 100 100">
+        <path d="M18 28 50 11 77 24 61 49 38 51Z" fill="url(#shard)" stroke="#ecd79a" stroke-width="1.8"/>
+        <path d="M21 55 38 57 59 55 70 84 45 91 25 77Z" fill="#9a7949" stroke="#d1b16e" stroke-width="1.7"/>
+        <path d="M38 51 50 11 61 49M25 77l20 14 14-36" fill="none" stroke="#3b2e36" stroke-width="1.8"/>
+        <path d="M61 49 82 37M21 55 9 49M70 84l14 7" fill="none" stroke="#c9a84c" stroke-width="1.4"/>
+      </symbol>
+      <symbol id="credit-c" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="42" fill="#211923" stroke="url(#metal)" stroke-width="4"/>
+        <circle cx="50" cy="50" r="35" fill="none" stroke="#ecd79a" stroke-width=".9"/>
+        <path d="M28 29 50 17 72 29 72 69 50 83 28 69Z" fill="#a77e3d" stroke="#ecd79a" stroke-width="1.2"/>
+        <path d="M28 29 50 49 72 29M28 69 50 49 72 69M50 17v66" fill="none" stroke="#47303a" stroke-width="2"/>
+        <path d="M36 33 50 24 64 33 50 46Z" fill="#f0dda8" opacity=".32"/>
+      </symbol>
+    </defs>
+  </svg>
+  <header><div class="wrap topline"><span class="brand">ARCANUM</span><span class="topnote">Estudio de identidad · Fragmentos y créditos</span></div></header>
+  <main class="wrap">
+    <section class="intro">
+      <div><span class="eyebrow">Dos valores · una misma historia</span><h1>Lo que aprendes<br>deja una huella.</h1><p>Los Fragmentos Arcanos nacen de explorar y estudiar. El crédito es el valor completo que puedes usar. Tres pares de símbolos originales para elegir.</p></div>
+      <aside><strong>Estado real de la app</strong><p>Hoy no existe un logo propio de ninguno. Fragmentos usa una chispa genérica; Créditos solo muestra su cifra. Esta página es una propuesta, no una pantalla implementada.</p></aside>
+    </section>
+    <section class="workspace" aria-label="Comparador de símbolos">
+      <div>
+        <div class="section-head"><h2>Elige un lenguaje</h2><span>Selecciona para verlo en contexto</span></div>
+        <button type="button" class="concept" data-variant="a" aria-pressed="true"><span class="pair"><svg aria-hidden="true"><use href="#fragment-a"/></svg><svg aria-hidden="true"><use href="#credit-a"/></svg></span><span><h3>Astilla y sello</h3><p>Un fragmento tallado vive dentro del crédito.</p></span><span class="index">01</span></button>
+        <button type="button" class="concept" data-variant="b" aria-pressed="false"><span class="pair"><svg aria-hidden="true"><use href="#fragment-b"/></svg><svg aria-hidden="true"><use href="#credit-b"/></svg></span><span><h3>Runa y círculo</h3><p>La práctica traza una forma que se completa.</p></span><span class="index">02</span></button>
+        <button type="button" class="concept" data-variant="c" aria-pressed="false"><span class="pair"><svg aria-hidden="true"><use href="#fragment-c"/></svg><svg aria-hidden="true"><use href="#credit-c"/></svg></span><span><h3>Reliquia partida</h3><p>Más objeto, más peso; recuerda una pieza acuñada.</p></span><span class="index">03</span></button>
+        <article class="detail" aria-live="polite">
+          <span class="eyebrow">Propuesta seleccionada</span><h3 id="detail-title">Astilla y sello</h3><p id="detail-description">Es la más clara a tamaño pequeño. El fragmento tiene una silueta propia; el crédito lo reúne dentro de un sello, sin parecer otra moneda distinta.</p>
+          <div class="duo"><div class="emblem"><svg role="img" aria-label="Símbolo de Fragmentos Arcanos" id="large-fragment"><use href="#fragment-a"/></svg><span>Fragmentos Arcanos</span></div><div class="emblem"><svg role="img" aria-label="Símbolo de Créditos" id="large-credit"><use href="#credit-a"/></svg><span>Créditos</span></div></div>
+          <div class="tiny"><span>24 px</span><svg aria-hidden="true" id="tiny-fragment"><use href="#fragment-a"/></svg><svg aria-hidden="true" id="tiny-credit"><use href="#credit-a"/></svg><span>Prueba de lectura en menú y saldo</span></div>
+        </article>
+      </div>
+      <aside class="preview-wrap" aria-label="Vista previa en la app"><div class="section-head"><h2>Dentro de la app</h2><span>Ejemplo visual</span></div><div class="phone"><div class="screen"><div class="mobile-top"><span>Sendero</span><span>Salir</span></div><div class="mobile-content"><span class="eyebrow">Tu práctica</span><h2>Fragmentos Arcanos</h2><p>Cada carta estudiada por primera vez deja un Fragmento. Completar la orientación de Sendero te entrega tres.</p><div class="balance"><div class="balance-head"><svg aria-hidden="true" id="phone-fragment"><use href="#fragment-a"/></svg><div><strong>7 Fragmentos</strong><small>Se ganan practicando. No se compran.</small></div></div></div><div class="balance"><div class="balance-head"><svg aria-hidden="true" id="phone-credit"><use href="#credit-a"/></svg><div><strong>2 créditos</strong><small>Disponibles para lecturas.</small></div></div></div><div class="exchange"><svg aria-hidden="true" id="exchange-fragment"><use href="#fragment-a"/></svg><span>12 Fragmentos</span><span aria-hidden="true">→</span><svg aria-hidden="true" id="exchange-credit"><use href="#credit-a"/></svg><span>1 crédito</span></div><button type="button" class="mobile-button" disabled>Reúne 5 Fragmentos más</button><p class="balance-caption">Cifras de muestra para juzgar los símbolos; la app consulta el saldo real.</p></div></div></div><p class="preview-note">Vista de concepto · no modifica la app.</p></aside>
+    </section>
+    <section class="questions" aria-label="Preguntas de diseño">
+      <span class="eyebrow">Ajustemos juntos</span><h2>Seis decisiones que cambian el resultado</h2><p>Responde aquí y copia tus elecciones. También puedes contestarme directamente en el chat.</p>
+      <div class="question-grid">
+        <div class="question"><label for="q1">1. ¿Fragmento material o energía?</label><select id="q1"><option>Pieza material</option><option>Luz / energía</option><option>Ambos</option></select></div>
+        <div class="question"><label for="q2">2. ¿Crédito: sello o moneda?</label><select id="q2"><option>Sello ritual</option><option>Moneda reconocible</option><option>Mitad y mitad</option></select></div>
+        <div class="question"><label for="q3">3. ¿Dónde importa más leerlo?</label><select id="q3"><option>Icono pequeño del menú</option><option>Revelación grande en Sendero</option><option>Los dos igual</option></select></div>
+        <div class="question"><label for="q4">4. ¿Cuánta relación entre ambos?</label><select id="q4"><option>El crédito contiene el fragmento</option><option>Familia visual, símbolos distintos</option><option>Completamente distintos</option></select></div>
+        <div class="question"><label for="q5">5. ¿Acabado del oro?</label><select id="q5"><option>Oro mate envejecido</option><option>Oro luminoso</option><option>Bronce oscuro</option></select></div>
+        <div class="question"><label for="q6">6. ¿Símbolo con imperfección?</label><select id="q6"><option>Sí, tallado a mano</option><option>No, geometría exacta</option><option>Un poco de ambos</option></select></div>
+      </div>
+      <div class="decision"><button type="button" class="copy" id="copy-answers">Copiar mis respuestas</button><span class="copy-state" id="copy-state" aria-live="polite">Nada se envía fuera de tu navegador.</span></div>
+    </section>
+  </main>
+  <footer><div class="wrap">ARCANUM · Propuesta de identidad, pendiente de elección. Fragmentos ≠ créditos: se ganan y se usan de manera distinta.</div></footer>
+  <script>
+    const variants = {
+      a: { title: 'Astilla y sello', description: 'Es la más clara a tamaño pequeño. El fragmento tiene una silueta propia; el crédito lo reúne dentro de un sello, sin parecer otra moneda distinta.' },
+      b: { title: 'Runa y círculo', description: 'La alternativa más ritual y geométrica. El fragmento es una runa incompleta; el crédito cierra la figura. Menos objeto, más símbolo.' },
+      c: { title: 'Reliquia partida', description: 'La alternativa más tangible. El fragmento parece una pieza desprendida y el crédito, una reliquia acuñada. Más peso material, menos delicadeza.' }
+    };
+    const symbolTargets = [
+      ['large-fragment', 'fragment'], ['large-credit', 'credit'],
+      ['tiny-fragment', 'fragment'], ['tiny-credit', 'credit'],
+      ['phone-fragment', 'fragment'], ['phone-credit', 'credit'],
+      ['exchange-fragment', 'fragment'], ['exchange-credit', 'credit']
+    ];
+    let selectedVariant = 'a';
+    document.querySelectorAll('.concept').forEach(button => {
+      button.addEventListener('click', () => {
+        selectedVariant = button.dataset.variant;
+        document.querySelectorAll('.concept').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+        document.getElementById('detail-title').textContent = variants[selectedVariant].title;
+        document.getElementById('detail-description').textContent = variants[selectedVariant].description;
+        symbolTargets.forEach(([target, symbol]) => document.querySelector(`#${target} use`).setAttribute('href', `#${symbol}-${selectedVariant}`));
+      });
+    });
+    document.getElementById('copy-answers').addEventListener('click', async () => {
+      const answers = Array.from(document.querySelectorAll('.question')).map(item => `${item.querySelector('label').textContent} ${item.querySelector('select').value}`);
+      const message = `ARCANUM: prefiero «${variants[selectedVariant].title}».\n${answers.join('\n')}`;
+      try {
+        await navigator.clipboard.writeText(message);
+        document.getElementById('copy-state').textContent = 'Copiado. Pégalo en el chat.';
+      } catch {
+        document.getElementById('copy-state').textContent = 'Tu navegador no permitió copiar. Contéstame en el chat.';
+      }
+    });
+  </script>
+</body>
+</html>
