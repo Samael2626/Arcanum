@@ -82,6 +82,20 @@ para convertir un paquete factual en borrador mediante Gemini.
 - Esta decision actualiza el plan del 28-sep: la automatizacion si comienza, pero
   todavia no abre TikTok, Instagram o YouTube como canales de publicacion.
 
+## Ruta operativa de contenido
+
+- El plan ejecutable vive en `marketing-automation/PLAN-ACCION.md` y avanza de
+  cola editorial a carruseles, arte, stories, video corto, publicacion y metricas.
+- Se crearon cuatro skills separadas por responsabilidad:
+  `arcanum-content-plan`, `arcanum-content-visual`, `arcanum-video-short` y
+  `arcanum-content-release`.
+- La fuente canonica esta en `.claude/skills/` y el espejo compatible con Codex
+  en `.agents/skills/`. Las ocho carpetas pasan `quick_validate.py`.
+- El prototipo anterior de video sigue en
+  `D:/Proyectos/Youtube/video-assembler`: FastAPI + MoviePy + Pexels, salida
+  vertical 1080x1920. No tiene Git ni tests; por eso se recupera en la fase de
+  video y no se usa como base de las primeras publicaciones.
+
 ## Git
 
 - Rama: `release/1.0.6`.
