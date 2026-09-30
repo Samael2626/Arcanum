@@ -125,8 +125,91 @@ for (const [c, i] of sinTexto) {
   }), c.svg);
   fs.writeFileSync(path.join(PNG_DIR, `svg${i}.png`), Buffer.from(url.split(',')[1], 'base64'));
 }
+// ── interaccion: guias, que hay bajo el dedo y gestos grabados ──
+const page4 = await b.newPage({ viewport: { width: 1400, height: 1000 } });
+await page4.goto(INDEX); await page4.waitForTimeout(300);
+const setup = async () => page4.evaluate(() => {
+  setLevel(true); setTab('crear');
+  Object.assign(state, { method: 'cooper', mode: 'fusion', absorb: true, compact: true, overlap: 0, intention: '', hidden: [], endStyles: {}, terminals: 'none', termPick: false, hideMode: false, stampMode: false, sel: null, magnet: true });
+  state.layerSel.letters = null;
+  state.layers = [newLayer('circle'), newLayer('star', { points: 7, rot: 10 }), newLayer('symbol', { sym: '♃︎', x: 250, y: 180 })];
+  applyStyle(presetStyle('pergamino'), true);
+  document.getElementById('intention').value = 'Mi practica mantiene enfoque sereno';
+  generate();
+  // se graban los eventos en coordenadas de lienzo, antes del manejador
+  window.__ev = [];
+  if (!window.__rec) {
+    window.__rec = true;
+    for (const t of ['pointerdown', 'pointermove', 'pointerup']) canvas.addEventListener(t, e => { const p = canvasPoint(e); window.__ev.push([t, p.x, p.y, e.altKey]); }, true);
+  }
+  const r = canvas.getBoundingClientRect();
+  return { left: r.left, top: r.top, width: r.width, pxScale: SIZE / r.width, doc: { layers: state.layers } };
+});
+const geo = await setup();
+const toClient = (x, y) => [geo.left + x / geo.pxScale, geo.top + y / geo.pxScale];
+const probes = await page4.evaluate(() => {
+  let seed = 11; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+  const pts = Array.from({ length: 300 }, () => ({ x: 40 + rnd() * 720, y: 40 + rnd() * 720 }));
+  // puntos cerca de cosas: centro, vertices de la estrella, anillo
+  const lay = layoutLayers(state.layers, layerCtx('letters'));
+  lay.parts.forEach(p => { p.g.vertices.slice(0, 6).forEach(([x, y]) => { pts.push({ x: x + 4, y: y - 3 }, { x: x + 7, y: y + 30 }); }); });
+  pts.push({ x: 403, y: 250 }, { x: 396, y: 610 }, { x: 405, y: 405 }, { x: 250 + 3, y: 180 - 2 });
+  const sym = state.layers.find(L => L.type === 'symbol').id, star = state.layers.find(L => L.type === 'star').id;
+  const ex = [null, sym, star, 'letter:' + activeLetters()[0].ch];
+  const snap = pts.map((pt, i) => { const e = ex[i % ex.length]; const q = snapPoint(pt, 'letters', e, null); return { pt, ex: e, q, guides: state.guides }; });
+  const hits = pts.map(pt => (layerAt(pt, 'letters') || {}).id || null);
+  const prims = pts.map(pt => { const p = primAt(pt, state.prims.filter(q => !q.hidden)); return p ? p.key : null; });
+  const angles = []; for (let d = -30; d <= 400; d += 1) angles.push([d, snapAngle(d, null)]);
+  state.guides = [];
+  return { pts, snap, hits, prims, angles };
+});
+const snapshotState = () => page4.evaluate(() => ({
+  sel: state.sel, layerSel: state.layerSel.letters, termPick: state.termPick, hideMode: state.hideMode, stampMode: state.stampMode,
+  users: Object.fromEntries(state.letters.map(l => [l.ch, l.user])), hidden: [...state.hidden], endStyles: { ...state.endStyles },
+  layers: state.layers.map(L => ({ id: L.id, type: L.type, x: L.x, y: L.y, dx: L.dx, dy: L.dy, sym: L.sym })), view: state.view,
+  svg: buildSVG()
+}));
+const gestures = [];
+// antes de cada gesto: sin seleccion (el radial no tapa nada) y modos fijados
+const record = async (name, modes, fn) => {
+  await page4.evaluate(m => { state.sel = null; state.layerSel.letters = null; Object.assign(state, { termPick: false, hideMode: false, stampMode: false }, m); document.getElementById('provModal').classList.remove('open'); render(); window.__ev = []; }, modes);
+  const before = await page4.evaluate(() => ({ termPick: state.termPick, hideMode: state.hideMode, stampMode: state.stampMode, termBrush: state.termBrush, stampSym: state.stampSym }));
+  await fn();
+  const events = await page4.evaluate(() => window.__ev);
+  if (!events.length) throw new Error(`el gesto «${name}» no llego al lienzo`);
+  gestures.push({ name, before, events, after: await snapshotState() });
+};
+const drag = async (x0, y0, dx, dy, steps = 6, alt = false) => {
+  const [cx, cy] = toClient(x0, y0);
+  await page4.mouse.move(cx, cy); await page4.mouse.down();
+  if (alt) await page4.keyboard.down('Alt');
+  await page4.mouse.move(cx + dx, cy + dy, { steps });
+  if (alt) await page4.keyboard.up('Alt');
+  await page4.mouse.up();
+};
+const click = async (x, y) => { const [cx, cy] = toClient(x, y); await page4.mouse.click(cx, cy); };
+const letterPt = () => page4.evaluate(() => { const p = state.prims.find(q => q.units.length === 1 && q.t === 'L' && !q.hidden && Math.hypot(q.b.x - q.a.x, q.b.y - q.a.y) > .3); const a = toCanvas(p.a), c = toCanvas(p.b); return { x: (a.x + c.x) / 2, y: (a.y + c.y) / 2 }; });
+let lp = await letterPt();
+await record('arrastrar una letra', {}, () => drag(lp.x, lp.y, 47, 23));
+lp = await letterPt();
+await record('arrastrar una letra con Alt (sin iman)', {}, () => drag(lp.x, lp.y, -31, 17, 5, true));
+await record('arrastrar el simbolo hacia la vertical del centro', {}, () => drag(250, 180, (396 - 250) / geo.pxScale, 12, 6));
+// la estrella se agarra por una punta de abajo, lejos del simbolo
+const starPt = await page4.evaluate(() => { const lay = layoutLayers(state.layers, layerCtx('letters')); const p = lay.parts.find(q => q.L.type === 'star'); const v = p.g.vertices.reduce((b, q) => q[1] > b[1] ? q : b); return { x: v[0], y: v[1] - 2 }; });
+await record('arrastrar la estrella', {}, () => drag(starPt.x, starPt.y, 30, -20, 5));
+await record('tocar el vacio deselecciona', {}, async () => { await click(470, 300); await click(130, 130); });
+const endPt = await page4.evaluate(() => toCanvas(freeEnds(state.prims.filter(p => !p.hidden))[0]));
+await record('remate por punta', { termPick: true, termBrush: 'pattee' }, () => click(endPt.x, endPt.y));
+await record('otra vez en la misma punta lo quita', { termPick: true, termBrush: 'pattee' }, () => click(endPt.x, endPt.y));
+lp = await letterPt();
+await record('ocultar un trazo', { hideMode: true }, () => click(lp.x, lp.y));
+await record('colocar un simbolo con iman', { stampMode: true, stampSym: '♂︎' }, () => click(560, 603));
+// regresion (aa9ea1a): con «colocar» activo, arrastrar un simbolo ya puesto lo mueve y no crea otro
+await record('con colocar activo, arrastrar un simbolo lo mueve sin duplicarlo', { stampMode: true, stampSym: '☉︎' }, () => drag(558.6, 603, -40, -35, 5));
+const interaction = { pxScale: geo.pxScale, doc: geo.doc, intention: 'Mi practica mantiene enfoque sereno', probes, gestures };
 await b.close();
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
+fs.writeFileSync(OUT.replace('letras.json', 'interaccion.json'), JSON.stringify(interaction));
 fs.writeFileSync(OUT, JSON.stringify(out));
 fs.writeFileSync(OUT.replace('letras.json', 'capas.json'), JSON.stringify(capas));
-console.log(`${out.length} casos de letras, ${capas.stacks.length} pilas de capas, ${capas.svgs.length} SVG completos y ${sinTexto.length} imagenes de referencia -> ${path.relative(process.cwd(), path.dirname(OUT))}`);
+console.log(`${out.length} casos de letras, ${capas.stacks.length} pilas de capas, ${capas.svgs.length} SVG completos y ${sinTexto.length} imagenes de referencia; interaccion: ${interaction.probes.pts.length} puntos y ${interaction.gestures.length} gestos -> ${path.relative(process.cwd(), path.dirname(OUT))}`);
