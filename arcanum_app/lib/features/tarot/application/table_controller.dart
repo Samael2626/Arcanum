@@ -24,6 +24,9 @@ abstract interface class TableOps {
   Future<void> gather(String pile);
   void arrange(TableState Function(TableState) change, {bool undoable});
   bool get canUndo;
+
+  /// Hasta cuando se ofrece deshacer, o null si no hay nada que deshacer.
+  DateTime? get undoUntil;
   bool undo();
   Future<Interpretation> interpret({String? idempotencyKey});
   Future<Map<String, dynamic>> closeCircle();
@@ -215,6 +218,9 @@ class TableController extends AsyncNotifier<TableState> implements TableOps {
     }
     _set(next);
   }
+
+  @override
+  DateTime? get undoUntil => canUndo ? _undoUntil : null;
 
   @override
   bool get canUndo =>

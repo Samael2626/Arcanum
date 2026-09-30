@@ -13,6 +13,7 @@ import 'application/table_controller.dart';
 import 'domain/table_models.dart';
 import 'domain/table_state.dart';
 import 'table/table_director.dart';
+import 'table/table_overlays.dart';
 import 'table/table_view.dart';
 
 /// Mazos y tiradas del servidor: la app y el Oraculo leen la misma definicion.
@@ -102,6 +103,18 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
         child: Stack(
           children: [
             Positioned.fill(child: body),
+            // encima de la mesa y fuera de su Listener: sus toques no tocan el paño
+            if (_director != null) ...[
+              const Positioned.fill(child: TableHelp()),
+              Positioned.fill(
+                child: UndoDot(
+                  until: _ops.undoUntil,
+                  onUndo: () {
+                    if (_ops.undo()) toast('Deshecho');
+                  },
+                ),
+              ),
+            ],
             Positioned(
               top: 4,
               left: 4,
