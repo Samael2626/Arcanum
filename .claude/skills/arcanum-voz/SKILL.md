@@ -87,6 +87,44 @@ Y la trampa de medicion que se lleva media hora: en local `.env` no define
 `ORACLE_SYSTEM_PROMPT`, asi que `muestra_voz.py oraculo` mide el **catalogo**.
 Lo que sale en esa pantalla no es lo que sirve la app.
 
+### RESUELTO EL 29-SEP: NO ERAN LOS TRAMOS, ERA LA SINTESIS
+
+El diagnostico del 26-sep --"salen diez fichas"-- dejo de ser cierto en cuanto
+entraron la poda del contexto y la regla de la geometria. Medido el 29 con el
+prompt vivo: **los tramos YA salen de una oracion**. Acortarlos no habria
+arreglado nada.
+
+Lo que fallaba era el parrafo de cierre, que se habia convertido en el
+vertedero del cielo justo donde tenia que responder:
+
+> "En la danza de los astros, el Sol que confronta a tu Venus natal ilumina...
+> Mercurio frente a su propio espejo... la hora de Venus y el dia regido por
+> Mercurio invitan a meditar."
+
+Arreglado diciendole lo que es: **la respuesta, no un resumen**, y que ahi no
+entra ni un nombre de cuerpo, ni de signo, ni de figura, ni de hora planetaria.
+
+**Y HIZO FALTA UNA SEGUNDA PASADA, por un efecto que conviene conocer: al
+pedirle que RESPONDA, empieza a DECIDIR.** La primera version salio con "el
+momento llama a soltar la comodidad y aceptar la oferta" --- la decision que la
+persona vino a consultar, dicha como invitacion en vez de como orden. El
+prompt ya lo prohibia; lo que faltaba era decirlo EN el sitio donde tienta.
+
+**Y el guard no lo caza:** `_DECIDE_POR_TI` exige un modal delante (`debes`,
+`tienes que`, `la decision correcta es`), asi que "llama a ... aceptar la
+oferta" pasa limpio. Queda anotado como limite conocido y NO se ensancha el
+guard todavia: el prompt lo arreglo en la corrida siguiente, y la regla de la
+casa es que se comprueba en codigo lo que el prompt pide tres veces y no
+consigue. Si vuelve a salir, ya tiene su sitio.
+
+Medido, tres corridas:
+
+| | llamadas | defectos entregados | responde | decide |
+|---|---|---|---|---|
+| base | 2 | 3 (energia, "el logro sera", "te llevara a") | no | no |
+| con la regla de la sintesis | 1 | 0 | si | **si** |
+| + el aviso de no decidir | 2 | 0 | si | no |
+
 ### MEDIDO EL 26-SEP: LA CRUZ CELTA PIERDE LA PREGUNTA
 
 Primera medida de las diez posiciones (`muestra_voz.py oraculo --cruz`), contra
