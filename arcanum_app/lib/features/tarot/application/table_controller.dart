@@ -11,12 +11,30 @@ import '../domain/table_state.dart';
 /// Cuanto dura la oferta de deshacer, como en el prototipo.
 const undoWindow = Duration(seconds: 5);
 
+/// Lo que la mesa (el director de gestos) necesita del estado. Lo implementa
+/// `TableController`; los tests lo pueden falsear sin red ni Riverpod.
+abstract interface class TableOps {
+  TableState get table;
+  Future<void> openDeck(String deck);
+  Future<void> shuffle(String pile, {String style});
+  Future<String> cut(String pile, int n);
+  Future<void> merge(List<String> topFirst, String into);
+  Future<TableCard> take(String pile, int position);
+  Future<void> giveBack(String slug, String pile);
+  Future<void> gather(String pile);
+  void arrange(TableState Function(TableState) change, {bool undoable});
+  bool get canUndo;
+  bool undo();
+  Future<Interpretation> interpret({String? idempotencyKey});
+  Future<Map<String, dynamic>> closeCircle();
+}
+
 /// Estado de la mesa: la API manda sobre el mazo, lo local sobre la disposicion.
 ///
 /// Las operaciones sobre el mazo van en fila (una detras de otra): dos toques
 /// seguidos no pueden aplicar vistas del servidor fuera de orden. Los errores
 /// de red NO se tragan: los recibe la pantalla, que tiene que decirlo.
-class TableController extends AsyncNotifier<TableState> {
+class TableController extends AsyncNotifier<TableState> implements TableOps {
   Future<void> _queue = Future.value();
   Timer? _saveTimer;
   TableState? _undo;
@@ -58,6 +76,9 @@ class TableController extends AsyncNotifier<TableState> {
   }
 
   TableState get _current => state.value ?? TableState.empty;
+
+  @override
+  TableState get table => _current;
 
   void _set(TableState next) {
     state = AsyncData(next);
@@ -101,6 +122,7 @@ class TableController extends AsyncNotifier<TableState> {
   }
 
   // ---------- mazo (servidor) ----------
+  @override
   Future<void> openDeck(String deck) => _serial(() async {
     final view = ServerView.fromJson(await _api.tarotOpenTable(deck));
     _forgetUndo();
@@ -112,6 +134,7 @@ class TableController extends AsyncNotifier<TableState> {
     );
   });
 
+  @override
   Future<void> shuffle(String pile, {String style = 'cascada'}) =>
       _serial(() async {
         final view = await _op('shuffle', {'pile': pile, 'style': style});
@@ -119,6 +142,7 @@ class TableController extends AsyncNotifier<TableState> {
       });
 
   /// Corta las `n` de arriba a un monton nuevo y devuelve su id.
+  @override
   Future<String> cut(String pile, int n) => _serial(() async {
     final raw = await _api.tarotTableOp(_sessionId(), 'cut', {
       'pile': pile,
@@ -132,12 +156,14 @@ class TableController extends AsyncNotifier<TableState> {
     return raw['pile'] as String;
   });
 
+  @override
   Future<void> merge(List<String> topFirst, String into) => _serial(() async {
     final view = await _op('merge', {'piles': topFirst, 'into': into});
     _set(_current.withServer(view));
   });
 
   /// Saca la carta de `position` y la deja boca abajo junto al monton.
+  @override
   Future<TableCard> take(String pile, int position) => _serial(() async {
     final raw = await _api.tarotTableOp(_sessionId(), 'take', {
       'pile': pile,
@@ -159,11 +185,13 @@ class TableController extends AsyncNotifier<TableState> {
     return card;
   });
 
+  @override
   Future<void> giveBack(String slug, String pile) => _serial(() async {
     final view = await _op('return', {'slug': slug, 'pile': pile});
     _set(_current.withServer(view));
   });
 
+  @override
   Future<void> gather(String pile) => _serial(() async {
     final view = await _op('gather', {'pile': pile});
     _set(_current.withServer(view).copyWith(spread: () => null));
@@ -173,6 +201,7 @@ class TableController extends AsyncNotifier<TableState> {
 
   /// Cambia la disposicion (mover, voltear, elegir tirada...). Con
   /// `undoable`, la mesa de antes queda ofrecida para deshacer.
+  @override
   void arrange(
     TableState Function(TableState) change, {
     bool undoable = false,
@@ -187,6 +216,7 @@ class TableController extends AsyncNotifier<TableState> {
     _set(next);
   }
 
+  @override
   bool get canUndo =>
       _undo != null && _undoUntil != null && now().isBefore(_undoUntil!);
 
@@ -194,6 +224,7 @@ class TableController extends AsyncNotifier<TableState> {
   ///
   /// Deshace lo LOCAL. El mazo del servidor no retrocede: la foto se reconcilia
   /// con la vista actual, asi que una carta que ya volvio al mazo no reaparece.
+  @override
   bool undo() {
     if (!canUndo) return false;
     final snap = _undo!;
@@ -212,6 +243,7 @@ class TableController extends AsyncNotifier<TableState> {
 
   /// Pide la lectura de Tradicion. Gasta cupo: un 402 llega tal cual a la
   /// pantalla, que abre el paywall.
+  @override
   Future<Interpretation> interpret({String? idempotencyKey}) =>
       _serial(() async {
         final s = _current;
@@ -241,6 +273,7 @@ class TableController extends AsyncNotifier<TableState> {
 
   /// Cierra el circulo: el servidor guarda la lectura con la foto de la mesa
   /// y la mesa local queda vacia. Devuelve la lectura guardada.
+  @override
   Future<Map<String, dynamic>> closeCircle() => _serial(() async {
     final s = _current;
     final reading = await _api.tarotCloseTable(_sessionId(), table: s.toJson());

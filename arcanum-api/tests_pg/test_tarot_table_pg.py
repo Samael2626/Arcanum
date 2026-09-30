@@ -247,6 +247,16 @@ def test_sin_cupo_ni_creditos_devuelve_402_y_la_mesa_sigue_abierta(client, engin
     assert client.get("/tarot/sessions/current").status_code == 200
 
 
+def test_girar_una_carta_invierte_su_sentido(client):
+    sid, cards, placements = _three(client)
+    placements[1]["turned"] = True
+    body = _interpret(client, sid, placements).json()
+    assert [c["reversed"] for c in body["cards"]] == [
+        cards[0]["reversed"], not cards[1]["reversed"], cards[2]["reversed"],
+    ]
+    assert body["cards"][1]["meaning"] == ("invertida" if not cards[1]["reversed"] else "derecha")
+
+
 def test_aclaratorias(client):
     sid = _open(client)["id"]
     _post(client, sid, "shuffle", {"pile": "p0"})

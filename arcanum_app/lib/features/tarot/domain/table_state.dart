@@ -10,6 +10,8 @@
 /// cada carta, la tirada, el sello y la camara.
 library;
 
+import 'dart:ui' show Offset;
+
 import 'table_models.dart';
 
 List<T> _frozen<T>(Iterable<T> items) => List.unmodifiable(items);
@@ -82,21 +84,38 @@ class PileLayout {
   );
 }
 
-/// Abanico abierto de un monton: que tramo de posiciones se ve.
+/// Abanico abierto de un monton: una linea sobre la mesa, del monton
+/// (`start`) hasta donde se solto el dedo (`end`), en unidades de mesa. Las
+/// cartas que quedan en el monton se reparten a lo largo de ella.
 class FanLayout {
   const FanLayout({required this.pid, required this.start, required this.end});
 
   final String pid;
-  final int start;
-  final int end;
+  final Offset start;
+  final Offset end;
 
-  Map<String, dynamic> toJson() => {'pid': pid, 'start': start, 'end': end};
+  double get length => (end - start).distance;
 
-  factory FanLayout.fromJson(Map<String, dynamic> j) => FanLayout(
-    pid: j['pid'] as String,
-    start: j['start'] as int,
-    end: j['end'] as int,
-  );
+  FanLayout to(Offset end) => FanLayout(pid: pid, start: start, end: end);
+
+  Map<String, dynamic> toJson() => {
+    'pid': pid,
+    'start': [_round(start.dx), _round(start.dy)],
+    'end': [_round(end.dx), _round(end.dy)],
+  };
+
+  factory FanLayout.fromJson(Map<String, dynamic> j) {
+    Offset at(Object? v) {
+      final l = (v as List).cast<num>();
+      return Offset(l[0].toDouble(), l[1].toDouble());
+    }
+
+    return FanLayout(
+      pid: j['pid'] as String,
+      start: at(j['start']),
+      end: at(j['end']),
+    );
+  }
 }
 
 /// Carta sacada y puesta en la mesa.
@@ -112,6 +131,7 @@ class TableCard {
     this.faceUp = false,
     this.dir = -1,
     this.host,
+    this.turned = false,
   });
 
   final CardFace face;
@@ -133,6 +153,13 @@ class TableCard {
   /// Slug de la carta a la que aclara, o null.
   final String? host;
 
+  /// El lector la giro 180 grados: su sentido es el contrario al que decidio
+  /// el servidor. Viaja al interpretar para que la lectura lo respete.
+  final bool turned;
+
+  /// Sentido con el que se lee: el del servidor, invertido si se giro.
+  bool get reversed => face.reversed != turned;
+
   String get slug => face.slug;
 
   TableCard copyWith({
@@ -145,6 +172,7 @@ class TableCard {
     bool? faceUp,
     int? dir,
     String? Function()? host,
+    bool? turned,
   }) => TableCard(
     face: face,
     x: x ?? this.x,
@@ -156,6 +184,7 @@ class TableCard {
     faceUp: faceUp ?? this.faceUp,
     dir: dir ?? this.dir,
     host: host != null ? host() : this.host,
+    turned: turned ?? this.turned,
   );
 
   Map<String, dynamic> toJson() => {
@@ -169,6 +198,7 @@ class TableCard {
     'face_up': faceUp,
     'dir': dir,
     'host': host,
+    'turned': turned,
   };
 
   factory TableCard.fromJson(Map<String, dynamic> j) => TableCard(
@@ -182,6 +212,7 @@ class TableCard {
     faceUp: j['face_up'] as bool? ?? false,
     dir: j['dir'] as int? ?? -1,
     host: j['host'] as String?,
+    turned: j['turned'] as bool? ?? false,
   );
 }
 
@@ -356,10 +387,15 @@ class TableState {
     };
     return [
       for (final c in cards)
-        if (c.slot != null) {'slug': c.slug, 'slot': c.slot},
+        if (c.slot != null)
+          {'slug': c.slug, 'slot': c.slot, if (c.turned) 'turned': true},
       for (final c in cards)
         if (c.host != null && slotOf.containsKey(c.host))
-          {'slug': c.slug, 'clarifies': slotOf[c.host]},
+          {
+            'slug': c.slug,
+            'clarifies': slotOf[c.host],
+            if (c.turned) 'turned': true,
+          },
     ];
   }
 

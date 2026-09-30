@@ -52,7 +52,11 @@ void main() {
     final full = TableState(
       activePid: 'p0',
       piles: const [PileLayout(pid: 'p0', x: 300, y: 720)],
-      fan: const FanLayout(pid: 'p0', start: 0, end: 2),
+      fan: const FanLayout(
+        pid: 'p0',
+        start: Offset(300, 700),
+        end: Offset(60, 700),
+      ),
       cards: [
         card('a', slot: 0),
         card('b', host: 'a'),
@@ -137,7 +141,13 @@ void main() {
               },
             ),
           )
-          .copyWith(fan: () => const FanLayout(pid: 'p1', start: 0, end: 1))
+          .copyWith(
+            fan: () => const FanLayout(
+              pid: 'p1',
+              start: Offset(300, 700),
+              end: Offset(500, 700),
+            ),
+          )
           .withServer(
             view(
               piles: {
@@ -208,6 +218,23 @@ void main() {
         expect(t.putInSlot('d', 2).readyToInterpret(three), isTrue);
       },
     );
+
+    test('girar una carta invierte su sentido y viaja al interpretar', () {
+      final t = s
+          .putInSlot('a', 0)
+          .putInSlot('cr', 1)
+          .updateCard('cr', (c) => c.copyWith(turned: true));
+      expect(t.card('cr')!.face.reversed, isTrue);
+      expect(t.card('cr')!.reversed, isFalse);
+      expect(t.placements(), [
+        {'slug': 'a', 'slot': 0},
+        {'slug': 'cr', 'slot': 1, 'turned': true},
+      ]);
+      final back = TableState.fromJson(
+        jsonDecode(jsonEncode(t.toJson())) as Map<String, dynamic>,
+      )!;
+      expect(back.card('cr')!.turned, isTrue);
+    });
 
     test('solo aclara a una carta que esta en un hueco', () {
       expect(s.clarify('d', 'a').card('d')!.host, isNull);

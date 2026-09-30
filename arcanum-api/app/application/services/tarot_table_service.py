@@ -49,6 +49,7 @@ class Placement:
     slug: str
     slot: Optional[int] = None       # hueco de la tirada
     clarifies: Optional[int] = None  # hueco al que aclara (aclaratoria)
+    turned: bool = False             # el lector la giro 180 grados en la mesa
 
 
 def _factory_key(card: TarotCardEntity) -> tuple:
@@ -182,7 +183,10 @@ class TarotTableService:
 
         cards = []
         for p in sorted(main, key=lambda q: q.slot) + extra:
-            card, rev = catalog[p.slug], session.reversed_.get(p.slug, False)
+            # el servidor decide el sentido al barajar; girarla en la mesa lo invierte
+            card = catalog[p.slug]
+            # (un mazo sin invertidas no las tiene aunque se gire)
+            rev = session.allow_reversed and session.reversed_.get(p.slug, False) != p.turned
             anchor = p.slot if p.slot is not None else p.clarifies
             cards.append({
                 **card_view(card, rev),

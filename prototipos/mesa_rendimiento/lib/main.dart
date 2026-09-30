@@ -129,9 +129,12 @@ class Pose {
 
 Matrix4 cameraMatrix(Size screen, double yawDeg, double thetaDeg) {
   final s = math.min(screen.width / tableW, screen.height / tableH) * .92;
+  // la perspectiva se multiplica como matriz propia: poner la entrada (3, 2)
+  // sobre una matriz ya trasladada deja el punto de fuga en la esquina
+  final perspective = Matrix4.identity()..setEntry(3, 2, -1 / 1000);
   return Matrix4.identity()
     ..translateByDouble(screen.width / 2, screen.height / 2, 0, 1)
-    ..setEntry(3, 2, -1 / 1000)
+    ..multiply(perspective)
     ..rotateX(thetaDeg * math.pi / 180)
     ..rotateZ(yawDeg * math.pi / 180)
     ..scaleByDouble(s, s, s, 1)

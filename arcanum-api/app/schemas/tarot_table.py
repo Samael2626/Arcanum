@@ -128,6 +128,8 @@ class PlacementIn(BaseModel):
     slug: str = Field(..., max_length=80)
     slot: Optional[int] = Field(None, ge=0)
     clarifies: Optional[int] = Field(None, ge=0)
+    # «Girar» en la mesa: el lector volteo la carta 180 grados y su sentido se invierte
+    turned: bool = False
 
 
 class InterpretIn(BaseModel):

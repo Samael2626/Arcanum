@@ -289,7 +289,8 @@ void main() {
       'tarot_table_v1_u1',
     )!;
     expect(raw, isNot(contains('secreto de la mesa')));
-    expect(raw, isNot(contains('c4')));
+    // con comillas: el base64 del cifrado no las lleva, asi que no puede coincidir por azar
+    expect(raw, isNot(contains('"slug":"c4"')));
     expect(jsonDecode(raw), containsPair('ciphertext', startsWith('v2:')));
 
     c.dispose();
