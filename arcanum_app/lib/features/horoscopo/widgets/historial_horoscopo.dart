@@ -21,6 +21,7 @@ import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
 import '../../../shared/astro_symbols.dart';
 import '../../../shared/widgets/ai_output.dart';
+import '../../../shared/widgets/nota_del_cielo.dart';
 import '../../../shared/widgets/prosa_generada.dart';
 import '../../hoy/sky_today_state.dart';
 
@@ -321,10 +322,28 @@ class _DiaArchivado extends StatelessWidget {
           // Que el de hoy ya lo cumpla no cubre esto: la persona que abre el
           // archivo puede no haber pasado por la tarjeta de hoy en esta
           // sesion, y es justo el texto viejo el que se lee sin contexto.
+          // Y la nota se pliega igual que en el de hoy. En el archivo hay
+          // lecturas de antes del 26-sep-2026 que no la traen: `partir`
+          // devuelve nota nula y entonces no se pinta la linea.
           AiOutput(
             text: texto,
             surface: 'horoscopo',
-            child: ProsaGenerada(texto),
+            child: Builder(
+              builder: (_) {
+                final partido = TextoConNota.partir(texto);
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ProsaGenerada(partido.cuerpo),
+                    if (partido.nota != null) ...[
+                      const SizedBox(height: 6),
+                      NotaDelCielo(partido.nota!),
+                    ],
+                  ],
+                );
+              },
+            ),
           ),
         ],
       ),
