@@ -95,6 +95,16 @@
 - [ ] **Prueba de rendimiento primero:** 78 cartas en `Transform` sobre un `Stack` en el móvil real con Impeller. Si no llega a 60 fps, se decide ya entre `Stack` de widgets y pintar las cartas del abanico con `CustomPainter`.
   - [x] APK de prueba lista (29-sep): `prototipos/mesa_rendimiento/`, proyecto aparte con id propio. Mide widgets frente a pintor en cinco escenas.
   - [ ] Samuel la corre en su móvil y manda la captura de resultados. **Con eso se elige la técnica.**
+- [x] **Lógica sin dibujo, adelantada mientras llega la medición** (`lib/features/tarot/table/`, 30-sep):
+  - `table_camera.dart`: encuadre del prototipo, matriz con perspectiva y toque a mesa por homografía inversa; órbita invertida, inercia, pellizco y recentrado. Suavizado independiente de los Hz.
+  - `gesture_grammar.dart`: máquina de estados pura (tocar, mantener 430 ms, arrastrar, cortar, abanico, esquina, órbita, pellizco, bordado 1,3 s).
+  - `radial_logic.dart`: disposición, elección por ángulo con zona muerta de 46 y los menús en orden fijo.
+  - `table_geometry.dart` y `card_physics.dart`: huecos, imán, aclaratorias, abanico, estante, volteo por esquina y peso.
+  - `table_director.dart`: traduce gestos en acciones contra `TableOps` (que implementa el controlador) y expone `pieces()` para cualquiera de las dos técnicas de dibujo. Errores a la pantalla; un 402 abre la tienda.
+  - **Fallo cazado por los tests:** `setEntry(3, 2)` sobre una matriz ya trasladada dejaba el punto de fuga en la esquina y torcía la mesa. Corregido también en la APK de prueba.
+  - **Girar** una carta viaja como `turned` al interpretar y el servidor invierte su sentido (salvo en mazos sin invertidas).
+  - **A vigilar en el móvil:** en la tirada de tres los imanes de los huecos casi se tocan (158 entre huecos, 94 de imán): el sitio para soltar una aclaratoria es estrecho.
+- [ ] **Cerrar el círculo sin interpretar:** el prototipo lo permitía; el servidor exige lectura interpretada. Hoy el director avisa «Interpreta la tirada antes de cerrar el círculo». Decidirlo en la fase 5.
 - [ ] **`TableCamera`:** `Matrix4` con perspectiva 1/1000, inclinación y giro. Inversa para convertir toques en unidades de mesa. Encuadre a 30° e inercia.
 - [ ] **`DeckPiece`:** caja con grosor según el número de cartas. **`CardPiece`:** envuelve `TarotCardView` y añade la bisagra de la esquina y el muelle de inclinación.
 - [ ] **Huecos de las 7 tiradas**, con imán, intercambio y aclaratorias.

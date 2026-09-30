@@ -1,0 +1,457 @@
+import 'dart:ui';
+
+import 'package:arcanum_app/core/api/arcanum_api.dart';
+import 'package:arcanum_app/core/auth/auth_controller.dart';
+import 'package:arcanum_app/features/tarot/application/table_controller.dart';
+import 'package:arcanum_app/features/tarot/domain/table_models.dart';
+import 'package:arcanum_app/features/tarot/domain/table_state.dart';
+import 'package:arcanum_app/features/tarot/table/gesture_grammar.dart';
+import 'package:arcanum_app/features/tarot/table/table_director.dart';
+import 'package:arcanum_app/features/tarot/table/table_geometry.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'fakes.dart';
+
+class _Auth extends AuthNotifier {
+  @override
+  AuthState build() => const AuthState(AuthStatus.authenticated, {'id': 'u1'});
+}
+
+class _Effects extends TableEffects {
+  final toasts = <String>[];
+  final flips = <String>[];
+  final errors = <Object>[];
+  var paywall = 0;
+  var interpretation = 0;
+
+  @override
+  void toast(String message) => toasts.add(message);
+  @override
+  void flipped(TableCard card) => flips.add(card.slug);
+  @override
+  void error(Object error) => errors.add(error);
+  @override
+  void creditsRequired() => paywall++;
+  @override
+  void openInterpretation() => interpretation++;
+}
+
+const phone = Size(390, 844);
+
+SpreadDef spread(String slug, List<(double, double)> xy) => SpreadDef(
+  slug: slug,
+  name: slug,
+  description: '',
+  cardScale: .9,
+  labelByName: true,
+  slots: [
+    for (var i = 0; i < xy.length; i++)
+      SpreadSlotDef(
+        x: xy[i].$1,
+        y: xy[i].$2,
+        rotation: 0,
+        name: 'Hueco ${i + 1}',
+        meaning: 'm.',
+      ),
+  ],
+);
+
+final one = spread('one_card', [(.5, .5)]);
+final three = spread('three_card', [(.2, .46), (.5, .46), (.8, .46)]);
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  late FakeServer server;
+  late ProviderContainer c;
+  late _Effects fx;
+  late TableDirector dir;
+  var clock = Duration.zero;
+  var pointer = 0;
+
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    FlutterSecureStorage.setMockInitialValues({});
+    server = FakeServer();
+    c = ProviderContainer(
+      overrides: [
+        arcanumApiProvider.overrideWithValue(server),
+        authProvider.overrideWith(_Auth.new),
+      ],
+    );
+    await c.read(tableControllerProvider.future);
+    fx = _Effects();
+    dir = TableDirector(
+      ops: c.read(tableControllerProvider.notifier),
+      effects: fx,
+      decks: const [
+        DeckInfo(
+          slug: 'rws',
+          name: 'Rider–Waite–Smith',
+          description: '',
+          allowReversed: true,
+          art: 'rws',
+          cardCount: 78,
+        ),
+        DeckInfo(
+          slug: 'mayores',
+          name: 'Arcanos Mayores',
+          description: '',
+          allowReversed: true,
+          art: 'rws',
+          cardCount: 22,
+        ),
+      ],
+      spreads: [one, three],
+    )..setViewport(phone);
+    clock = Duration.zero;
+  });
+  tearDown(() => c.dispose());
+
+  TableState table() => dir.table;
+  Offset screenOf(Offset tablePoint) => dir.camera.toScreen(tablePoint);
+  Offset pileAt(String pid) {
+    final p = table().piles.firstWhere((p) => p.pid == pid);
+    return Offset(p.x, p.y);
+  }
+
+  Future<void> settle() async {
+    for (var i = 0; i < 20; i++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+  }
+
+  /// Toque corto en un punto de la mesa.
+  Future<void> tap(Offset at) async {
+    final id = ++pointer;
+    dir.pointerDown(id, screenOf(at), clock);
+    clock += const Duration(milliseconds: 60);
+    dir.pointerUp(id, screenOf(at), clock);
+    clock += const Duration(milliseconds: 400);
+    dir.tick(clock, const Duration(milliseconds: 16));
+    await settle();
+  }
+
+  /// Arrastre de un punto a otro de la mesa, en pasos.
+  Future<void> drag(Offset from, Offset to, {int steps = 8}) async {
+    final id = ++pointer;
+    dir.pointerDown(id, screenOf(from), clock);
+    for (var i = 1; i <= steps; i++) {
+      clock += const Duration(milliseconds: 16);
+      dir.pointerMove(id, screenOf(Offset.lerp(from, to, i / steps)!), clock);
+      await settle();
+    }
+    dir.pointerUp(id, screenOf(to), clock);
+    clock += const Duration(milliseconds: 100);
+    await settle();
+  }
+
+  /// Mantener hasta abrir el radial y soltar sobre la opcion `id`.
+  Future<void> holdAndPick(Offset at, String id) async {
+    final p = ++pointer;
+    dir.pointerDown(p, screenOf(at), clock);
+    clock += const Duration(milliseconds: 450);
+    dir.tick(clock, const Duration(milliseconds: 16));
+    final layout = dir.radial!;
+    final target = layout.positions[layout.items.indexWhere((i) => i.id == id)];
+    dir.pointerMove(p, target, clock);
+    expect(
+      dir.radialHot,
+      layout.items.indexWhere((i) => i.id == id),
+      reason: 'opcion $id',
+    );
+    dir.pointerUp(p, target, clock);
+    clock += const Duration(milliseconds: 100);
+    await settle();
+  }
+
+  Future<void> openRws() async {
+    await tap(shelfPose(0, 2).offset);
+    expect(table().hasTable, isTrue);
+  }
+
+  group('mazos', () {
+    test('tocar un mazo del estante lo pone en juego en su sitio', () async {
+      await openRws();
+      expect(pileAt('p0'), TableGeometry.homeSpot);
+      expect(
+        dir.pieces().where((p) => p.kind == PieceKind.shelfDeck).single.id,
+        'shelf:mayores',
+      );
+      expect(fx.toasts.last, contains('en juego'));
+    });
+
+    test(
+      'arrastrar un mazo del estante al paño lo abre donde se suelta',
+      () async {
+        await drag(shelfPose(0, 2).offset, const Offset(200, 600));
+        expect((pileAt('p0') - const Offset(200, 600)).distance, lessThan(1));
+      },
+    );
+
+    test('tocar el monton extiende el abanico con todas sus cartas', () async {
+      await openRws();
+      await tap(pileAt('p0'));
+      expect(table().fan, isNotNull);
+      expect(
+        dir.pieces().where((p) => p.kind == PieceKind.fanCard),
+        hasLength(6),
+      );
+      final pile = dir.pieces().firstWhere((p) => p.id == 'pile:p0');
+      expect(pile.count, 0); // sus cartas estan en el abanico
+    });
+
+    test(
+      'mantener el monton y soltar sobre Cortar hace dos montones',
+      () async {
+        await openRws();
+        await holdAndPick(pileAt('p0'), 'cut');
+        expect(table().piles, hasLength(2));
+        expect(table().server!.total, 6);
+      },
+    );
+
+    test('arrastrar un monton sobre otro los une', () async {
+      await openRws();
+      await holdAndPick(pileAt('p0'), 'cut');
+      await drag(pileAt('p1'), pileAt('p0'));
+      expect(table().piles, hasLength(1));
+      expect(table().server!.piles.values.single.count, 6);
+    });
+
+    test(
+      'tirar del borde de arriba del monton corta; soltarlo encima lo deshace',
+      () async {
+        await openRws();
+        final p = pileAt('p0');
+        final top = p.translate(
+          0,
+          -TableGeometry.cardH * TableGeometry.deckScale / 2 * .8,
+        );
+        await drag(top, top.translate(0, -4 - 20), steps: 4);
+        expect(
+          table().piles,
+          hasLength(1),
+          reason: 'soltado casi encima: el corte se deshace',
+        );
+        await drag(top, top.translate(-200, -120));
+        expect(table().piles, hasLength(2));
+      },
+    );
+
+    test(
+      'Barajar desde el radial llama al servidor con el estilo elegido',
+      () async {
+        await openRws();
+        await holdAndPick(pileAt('p0'), 'shuffle');
+        expect(dir.radialTitle, 'Barajar');
+        final layout = dir.radial!;
+        final id = ++pointer;
+        dir.pointerDown(
+          id,
+          layout.positions[1],
+          clock,
+        ); // tocar la opcion con el radial abierto
+        await settle();
+        expect(server.shuffles, ['p0:por_encima']);
+      },
+    );
+  });
+
+  group('cartas', () {
+    test('Sacar con tirada llena los huecos en orden', () async {
+      await openRws();
+      await holdAndPick(pileAt('p0'), 'spread');
+      final layout = dir.radial!;
+      dir.pointerDown(++pointer, layout.positions[1], clock); // tres cartas
+      await settle();
+      expect(table().spread, 'three_card');
+      await holdAndPick(pileAt('p0'), 'deal');
+      expect(
+        [for (var i = 0; i < 3; i++) table().cardInSlot(i)?.slug],
+        ['c0', 'c1', 'c2'],
+      );
+      final c = table().cardInSlot(1)!;
+      expect(Offset(c.x, c.y), slotPose(three, 1).offset);
+    });
+
+    test(
+      'tocar una carta del abanico la pone en el primer hueco libre',
+      () async {
+        await openRws();
+        dir.spreads = [one];
+        c
+            .read(tableControllerProvider.notifier)
+            .arrange((s) => s.copyWith(spread: () => 'one_card'));
+        await tap(pileAt('p0'));
+        final fanCard = dir.pieces().firstWhere(
+          (p) => p.kind == PieceKind.fanCard,
+        );
+        await tap(fanCard.pose.offset);
+        expect(table().cardInSlot(0), isNotNull);
+      },
+    );
+
+    test(
+      'arrastrar una carta a un hueco la coloca; cerca de otra, la aclara',
+      () async {
+        await openRws();
+        c
+            .read(tableControllerProvider.notifier)
+            .arrange((s) => s.copyWith(spread: () => 'three_card'));
+        await holdAndPick(pileAt('p0'), 'deal');
+        final free = await c
+            .read(tableControllerProvider.notifier)
+            .take('p0', 3);
+        await drag(Offset(free.x, free.y), slotPose(three, 1).offset);
+        expect(table().cardInSlot(1)!.slug, free.slug);
+        // la que estaba en el hueco 1 queda donde estaba la que llego
+        final displaced = table().card('c1')!;
+        expect(displaced.slot, isNull);
+
+        final host = slotPose(three, 0).offset;
+        // debajo: fuera del iman de todos los huecos (94) pero junto a la carta (hasta 179)
+        await drag(Offset(displaced.x, displaced.y), host.translate(0, 130));
+        expect(table().card('c1')!.host, table().cardInSlot(0)!.slug);
+        expect(fx.toasts.last, startsWith('Aclaratoria de 1'));
+      },
+    );
+
+    test(
+      'carta suelta: un toque la devuelve al monton, dos la desvelan',
+      () async {
+        await openRws();
+        final a = await c.read(tableControllerProvider.notifier).take('p0', 0);
+        final b = await c.read(tableControllerProvider.notifier).take('p0', 1);
+        c
+            .read(tableControllerProvider.notifier)
+            .arrange(
+              (s) => s.updateCard(b.slug, (k) => k.copyWith(x: 150, y: 400)),
+            );
+        await tap(Offset(a.x, a.y)); // uno y espera: vuelve al mazo
+        expect(table().card(a.slug), isNull);
+
+        final id = ++pointer;
+        dir.pointerDown(id, screenOf(const Offset(150, 400)), clock);
+        dir.pointerUp(
+          id,
+          screenOf(const Offset(150, 400)),
+          clock += const Duration(milliseconds: 50),
+        );
+        dir.pointerDown(
+          id,
+          screenOf(const Offset(150, 400)),
+          clock += const Duration(milliseconds: 100),
+        );
+        dir.pointerUp(
+          id,
+          screenOf(const Offset(150, 400)),
+          clock += const Duration(milliseconds: 50),
+        );
+        await settle();
+        expect(table().card(b.slug)!.faceUp, isTrue);
+        expect(fx.flips, [b.slug]);
+      },
+    );
+
+    test('tirar de la esquina de una carta boca abajo la voltea', () async {
+      await openRws();
+      c
+          .read(tableControllerProvider.notifier)
+          .arrange((s) => s.copyWith(spread: () => 'one_card'));
+      await holdAndPick(pileAt('p0'), 'deal');
+      final card = table().cardInSlot(0)!;
+      final hw = TableGeometry.cardW * card.scale / 2,
+          hh = TableGeometry.cardH * card.scale / 2;
+      final corner = Offset(card.x + hw * .85, card.y + hh * .85);
+      await drag(corner, corner.translate(-hw * 1.6, 0));
+      expect(table().cardInSlot(0)!.faceUp, isTrue);
+      expect(fx.flips, [card.slug]);
+    });
+
+    test('Girar invierte el sentido con que se lee', () async {
+      await openRws();
+      final card = await c.read(tableControllerProvider.notifier).take('p0', 0);
+      await holdAndPick(Offset(card.x, card.y), 'turn');
+      expect(table().card(card.slug)!.turned, isTrue);
+      expect(
+        table().placements(),
+        isEmpty,
+      ); // suelta: no cuenta para la lectura
+    });
+  });
+
+  group('paño y camara', () {
+    test(
+      'arrastrar el paño gira la mesa y el doble toque la recentra',
+      () async {
+        await drag(const Offset(300, 520), const Offset(420, 520));
+        expect(dir.camera.tYaw, lessThan(0));
+        final id = ++pointer;
+        final at = screenOf(const Offset(300, 520));
+        dir.pointerDown(id, at, clock);
+        dir.pointerUp(id, at, clock += const Duration(milliseconds: 40));
+        dir.pointerDown(id, at, clock += const Duration(milliseconds: 120));
+        dir.pointerUp(id, at, clock += const Duration(milliseconds: 40));
+        expect(dir.camera.tYaw, 0);
+      },
+    );
+
+    test(
+      'el bordado solo se toca con la tirada completa y desvelada',
+      () async {
+        await openRws();
+        expect(
+          dir.hitAt(TableDirector.embroideryAt),
+          isNot(isA<HitEmbroidery>()),
+        );
+        c
+            .read(tableControllerProvider.notifier)
+            .arrange((s) => s.copyWith(spread: () => 'one_card'));
+        await holdAndPick(pileAt('p0'), 'deal');
+        c
+            .read(tableControllerProvider.notifier)
+            .arrange(
+              (s) => s.updateCard(
+                s.cardInSlot(0)!.slug,
+                (k) => k.copyWith(faceUp: true),
+              ),
+            );
+        await tap(TableDirector.embroideryAt);
+        expect(fx.interpretation, 1);
+      },
+    );
+  });
+
+  group('errores', () {
+    test('un fallo del servidor se dice y la mesa sigue usable', () async {
+      await openRws();
+      server.failNext = DioException(
+        requestOptions: RequestOptions(path: '/x'),
+        message: 'sin red',
+      );
+      await holdAndPick(pileAt('p0'), 'cut');
+      expect(fx.errors, hasLength(1));
+      expect(dir.busy, isFalse);
+      await holdAndPick(pileAt('p0'), 'cut');
+      expect(table().piles, hasLength(2));
+    });
+
+    test('un 402 abre la tienda en vez de mostrar un error', () async {
+      await openRws();
+      server.failNext = DioException(
+        requestOptions: RequestOptions(path: '/x'),
+        response: Response(
+          requestOptions: RequestOptions(path: '/x'),
+          statusCode: 402,
+        ),
+      );
+      await holdAndPick(pileAt('p0'), 'cut');
+      expect(fx.paywall, 1);
+      expect(fx.errors, isEmpty);
+    });
+  });
+}
