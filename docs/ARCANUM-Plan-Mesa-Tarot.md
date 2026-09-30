@@ -93,6 +93,8 @@
 ## Fase 4: la mesa
 
 - [ ] **Prueba de rendimiento primero:** 78 cartas en `Transform` sobre un `Stack` en el móvil real con Impeller. Si no llega a 60 fps, se decide ya entre `Stack` de widgets y pintar las cartas del abanico con `CustomPainter`.
+  - [x] APK de prueba lista (29-sep): `prototipos/mesa_rendimiento/`, proyecto aparte con id propio. Mide widgets frente a pintor en cinco escenas.
+  - [ ] Samuel la corre en su móvil y manda la captura de resultados. **Con eso se elige la técnica.**
 - [ ] **`TableCamera`:** `Matrix4` con perspectiva 1/1000, inclinación y giro. Inversa para convertir toques en unidades de mesa. Encuadre a 30° e inercia.
 - [ ] **`DeckPiece`:** caja con grosor según el número de cartas. **`CardPiece`:** envuelve `TarotCardView` y añade la bisagra de la esquina y el muelle de inclinación.
 - [ ] **Huecos de las 7 tiradas**, con imán, intercambio y aclaratorias.
