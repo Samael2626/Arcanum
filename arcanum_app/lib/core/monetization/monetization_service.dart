@@ -34,7 +34,42 @@ class SubscriptionState {
   bool get isPremium => tier == SubscriptionTier.premium && isActive;
 }
 
+/// El id del producto SIN el plan base que le pega Google.
+///
+/// EN GOOGLE, UNA SUSCRIPCION NO SE IDENTIFICA POR SU ID A SECAS. Desde 2023
+/// los productos de RevenueCat mapean a **base plans**, y el identificador que
+/// llega es `<subscription_id>:<base_plan_id>` -- `arcanum_premium_anual:anual`.
+/// Los productos de una sola compra (los consumibles) NO llevan sufijo: su
+/// identificador es el SKU pelado.
+///
+/// Buscar por el id sin plan base dejaba las dos suscripciones fuera del mapa
+/// de precios, y con ellas su precio Y su boton de compra: el anual avisaba de
+/// que "no hay ofertas" y el mensual no se pintaba siquiera. Se vendian cero
+/// suscripciones, no por la tienda, sino por una cadena que no casaba.
+///
+/// El backend ya hacia esto mismo desde antes (`revenuecat.py:52`); era el
+/// cliente el que no se habia enterado.
+String idBaseDeProducto(String identifier) => identifier.split(':').first;
+
+/// Anade a cada precio su clave de id base, conservando la de la tienda.
+///
+/// Separado de [MonetizationService.storePrices] para que se pueda probar sin
+/// el SDK nativo: es la regla que decide si una suscripcion se encuentra o no,
+/// y merece test propio con los dos formatos.
+Map<String, String> expandirPreciosPorIdBase(Map<String, String> deLaTienda) {
+  final precios = <String, String>{};
+  for (final e in deLaTienda.entries) {
+    precios[e.key] = e.value;
+    precios[idBaseDeProducto(e.key)] = e.value;
+  }
+  return precios;
+}
+
 /// IDs de los productos en RevenueCat / Play Console.
+///
+/// Se guardan SIN plan base a proposito: es lo que se lee en Play Console y lo
+/// que entiende el backend. Quien compare contra un identificador de la tienda
+/// pasa antes por [idBaseDeProducto].
 class ProductIds {
   static const premiumMonthly = 'arcanum_premium_monthly';
   static const premiumAnnual = 'arcanum_premium_annual';
@@ -135,13 +170,24 @@ class MonetizationService {
   ///
   /// Devuelve un mapa vacio si las ofertas no cargan; quien lo consuma debe
   /// tratar la ausencia de precio como "no vendible todavia", no rellenarla.
+  /// Se indexa por las DOS claves: la que da la tienda y la del id base.
+  ///
+  /// La completa, porque es la verdad de la tienda y alguien puede tenerla a
+  /// mano. La base, porque es la que usa la app en `ProductIds` y la que se lee
+  /// en Play Console. Con una sola de las dos, algo se queda fuera.
+  ///
+  /// OJO si algun dia dos base plans cuelgan del MISMO subscription id
+  /// (`arcanum_premium:mensual` y `arcanum_premium:anual`): la clave base seria
+  /// ambigua y una de las dos ganaria. Hoy no pasa -- mensual y anual son
+  /// subscription ids distintos -- y si llega a pasar, lo que hay que usar son
+  /// los paquetes (`current.monthly` / `.annual`), no este mapa.
   Future<Map<String, String>> storePrices() async {
     final offerings = await getOfferings();
     final paquetes = offerings?.current?.availablePackages ?? const <Package>[];
-    return {
+    return expandirPreciosPorIdBase({
       for (final p in paquetes)
         p.storeProduct.identifier: p.storeProduct.priceString,
-    };
+    });
   }
 
   /// Comprar una suscripción.
@@ -184,8 +230,12 @@ class MonetizationService {
     try {
       final offerings = await Purchases.getOfferings();
       final all = offerings.current?.availablePackages ?? [];
+      // Se compara por el id base: los consumibles no llevan plan base, pero
+      // este metodo no tiene por que saberlo, y el dia que se venda una
+      // suscripcion por aqui seguiria funcionando.
       final pkg = all.firstWhere(
-        (p) => p.storeProduct.identifier == productId,
+        (p) => idBaseDeProducto(p.storeProduct.identifier) ==
+            idBaseDeProducto(productId),
         orElse: () => throw StateError('Product not found: $productId'),
       );
       await Purchases.purchase(PurchaseParams.package(pkg));

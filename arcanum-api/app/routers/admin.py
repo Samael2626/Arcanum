@@ -8,15 +8,22 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.core.config import settings
 from app.db.session import get_engine
 from app.db.migrate import run_migrations, check_migration_status
-from app.api.deps import verify_admin_token
+from app.api.deps import require_migrations_enabled, verify_admin_token
 
 # La autenticacion va en el router, no dentro de cada funcion. Antes se
 # llamaba a `verify_admin_token(...)` en el cuerpo: funcionaba, pero no
 # aparecia como protegido en OpenAPI y el endpoint que se anadiese manana
 # podia olvidarlo sin que nada avisara. Declarado aqui, no hay forma de
 # colgar una ruta de este router sin token.
+#
+# Y APAGADO POR DEFECTO desde el 26-sep-2026. `require_migrations_enabled` va
+# PRIMERO en la lista: se evalua antes que el token, asi que con la bandera en
+# false estas rutas responden 404 sin llegar a mirar la cabecera. Produccion no
+# las necesita -- `start.sh` migra en cada arranque --, y lo que aportaban era
+# superficie: DDL contra la base de produccion a un HTTP de distancia.
 router = APIRouter(prefix="/admin", tags=["admin"],
-                   dependencies=[Depends(verify_admin_token)])
+                   dependencies=[Depends(require_migrations_enabled),
+                                 Depends(verify_admin_token)])
 
 
 @router.get("/migrate/status")
