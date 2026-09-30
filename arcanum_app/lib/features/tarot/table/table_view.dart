@@ -175,6 +175,9 @@ class _TarotTableViewState extends State<TarotTableView>
             ),
           ),
         ),
+        // el sello va sobre el paño y bajo las piezas: las cartas pueden taparlo
+        if (table.seal case final seal?)
+          SealPiece(at: TableDirector.sealAt, open: seal.open),
         for (final p in pieces)
           if (p.kind == PieceKind.shelfDeck || p.kind == PieceKind.pile)
             PilePiece(

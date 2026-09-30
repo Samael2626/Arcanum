@@ -2,6 +2,7 @@ import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/features/tarot/application/table_controller.dart';
 import 'package:arcanum_app/features/tarot/domain/table_models.dart';
+import 'package:arcanum_app/features/tarot/domain/table_state.dart';
 import 'package:arcanum_app/features/tarot/table/table_director.dart';
 import 'package:arcanum_app/features/tarot/table/table_geometry.dart';
 import 'package:arcanum_app/features/tarot/table/table_view.dart';
@@ -209,4 +210,21 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('el sello se dibuja sobre el paño y se rompe al abrirse', (
+    tester,
+  ) async {
+    await pumpTable(tester);
+    await tap(tester, shelfPose(0, 2).offset);
+    final ops = c.read(tableControllerProvider.notifier);
+    ops.arrange((s) => s.copyWith(seal: () => const Seal(text: 'x')));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.bySemanticsLabel('Pregunta sellada'), findsOneWidget);
+    ops.arrange(
+      (s) => s.copyWith(seal: () => const Seal(text: 'x', open: true)),
+    );
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.bySemanticsLabel('Pregunta abierta'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

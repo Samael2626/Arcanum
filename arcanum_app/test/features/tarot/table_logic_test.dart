@@ -349,6 +349,17 @@ void main() {
       expect(g.up(2, const Offset(250, 0), ms(110)), isEmpty);
     });
 
+    test('el sello solo se toca: mantenerlo no abre radial ni arrastra', () {
+      final g = GestureGrammar();
+      g.down(1, Offset.zero, ms(0), const HitSeal());
+      expect(g.deadline, isNull);
+      expect(g.tick(ms(2000)), isEmpty);
+      expect(g.move(1, const Offset(40, 0), ms(2100)), isEmpty);
+      expect(g.up(1, const Offset(40, 0), ms(2200)), isEmpty);
+      g.down(2, Offset.zero, ms(3000), const HitSeal());
+      expect(g.up(2, Offset.zero, ms(3050)).single, isA<TapIntent>());
+    });
+
     test('tocar donde no hay nada no hace nada', () {
       final g = GestureGrammar();
       g.down(1, Offset.zero, ms(0), const HitNothing());

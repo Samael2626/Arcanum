@@ -216,10 +216,13 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
         content: TextField(
           controller: text,
           autofocus: true,
-          maxLength: 1000,
+          maxLength: 300,
           maxLines: 3,
           decoration: const InputDecoration(
-            hintText: 'Escríbela antes de tirar',
+            hintText: '¿Qué quieres preguntar?',
+            helperText:
+                'Quedará sellada sobre el paño y se abrirá al interpretar.',
+            helperMaxLines: 2,
           ),
         ),
         actions: [
@@ -241,6 +244,18 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
       ),
     ).whenComplete(text.dispose);
   }
+
+  @override
+  void openSealInfo(Seal seal) => _sheet(
+    title: seal.open ? 'Pregunta abierta' : 'Pregunta sellada',
+    children: [
+      // sellada no se enseña: para eso se sello
+      if (seal.open)
+        Text('«${seal.text}»', style: _body)
+      else
+        Text('Se abre al interpretar.', style: _muted),
+    ],
+  );
 
   @override
   void openInterpretation() {

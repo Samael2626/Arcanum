@@ -27,6 +27,7 @@ class _Effects extends TableEffects {
   final errors = <Object>[];
   var paywall = 0;
   var interpretation = 0;
+  final seals = <Seal>[];
 
   @override
   void toast(String message) => toasts.add(message);
@@ -38,6 +39,8 @@ class _Effects extends TableEffects {
   void creditsRequired() => paywall++;
   @override
   void openInterpretation() => interpretation++;
+  @override
+  void openSealInfo(Seal seal) => seals.add(seal);
 }
 
 const phone = Size(390, 844);
@@ -424,6 +427,26 @@ void main() {
         expect(fx.interpretation, 1);
       },
     );
+  });
+
+  group('sello', () {
+    test('tocarlo sellado no enseña la pregunta; roto, si', () async {
+      await openRws();
+      final ops = c.read(tableControllerProvider.notifier);
+      ops.arrange((s) => s.copyWith(seal: () => const Seal(text: 'secreto')));
+      await tap(TableDirector.sealAt);
+      expect(fx.seals.single.open, isFalse);
+      ops.arrange(
+        (s) => s.copyWith(seal: () => const Seal(text: 'secreto', open: true)),
+      );
+      await tap(TableDirector.sealAt);
+      expect(fx.seals.last.open, isTrue);
+    });
+
+    test('sin sello, ese sitio es paño', () async {
+      await openRws();
+      expect(dir.hitAt(TableDirector.sealAt), isA<HitSurface>());
+    });
   });
 
   group('errores', () {

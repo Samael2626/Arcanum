@@ -30,6 +30,11 @@ class HitEmbroidery extends Hit {
   const HitEmbroidery();
 }
 
+/// El sello de la pregunta: solo se toca (dice si esta sellada o la enseña).
+class HitSeal extends Hit {
+  const HitSeal();
+}
+
 class HitDeck extends Hit {
   const HitDeck({
     required this.pid,
@@ -194,7 +199,7 @@ class GestureGrammar {
 
   /// Cuando vence el temporizador de mantener, o null. Quien use la gramatica
   /// llama a `tick` en ese momento (o en cada frame, que tambien vale).
-  Duration? get deadline => _mode == _Mode.pending
+  Duration? get deadline => _mode == _Mode.pending && _hit is! HitSeal
       ? _downAt + (_hit is HitEmbroidery ? sealHold : hold)
       : null;
 
@@ -343,7 +348,7 @@ class GestureGrammar {
   /// Que arrastre empieza segun lo que se agarro y por donde (reglas del prototipo).
   DragKind? _dragKind() => switch (_hit) {
     HitSurface() => DragKind.orbit,
-    HitEmbroidery() || HitNothing() => null,
+    HitEmbroidery() || HitSeal() || HitNothing() => null,
     HitDeck(:final local, :final count, :final inPlay) =>
       !inPlay
           ? DragKind.move

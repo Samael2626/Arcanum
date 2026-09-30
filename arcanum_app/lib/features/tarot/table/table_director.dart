@@ -32,6 +32,9 @@ abstract class TableEffects {
   void openReading(TableCard card) {}
   void openInterpretation() {}
   void openSeal() {}
+
+  /// Se toco el sello: sellado no enseña la pregunta; roto, si.
+  void openSealInfo(Seal seal) {}
   void openHistory() {}
   void toggleSound() {}
   void creditsRequired() {}
@@ -283,6 +286,10 @@ class TableDirector extends ChangeNotifier {
 
   static const Offset embroideryAt = Offset(300, 716);
 
+  /// El sello de la pregunta, abajo a la izquierda del paño (como el prototipo).
+  static const Offset sealAt = Offset(88, 712);
+  static const double sealRadius = 42;
+
   // ---------- que hay bajo el dedo ----------
   Hit hitAt(Offset tablePoint) {
     final list = pieces();
@@ -316,6 +323,11 @@ class TableDirector extends ChangeNotifier {
             faceUp: v.card!.faceUp,
           );
       }
+    }
+    // el sello esta encima del paño pero debajo de las cartas: se mira despues
+    if (table.seal != null &&
+        (tablePoint - sealAt).distance <= sealRadius + 8) {
+      return const HitSeal();
     }
     if (readyToInterpret &&
         (tablePoint - embroideryAt).dx.abs() < 90 &&
@@ -460,6 +472,9 @@ class TableDirector extends ChangeNotifier {
         if (_union != null) _union = null;
       case HitEmbroidery():
         if (readyToInterpret) effects.openInterpretation();
+      case HitSeal():
+        final seal = table.seal;
+        if (seal != null) effects.openSealInfo(seal);
       case HitDeck(inPlay: false, :final pid):
         _run(() => _openDeck(pid, TableGeometry.homeSpot));
       case HitDeck(:final pid, :final count):
@@ -908,7 +923,7 @@ class TableDirector extends ChangeNotifier {
             _ => null,
           },
         );
-      case HitDeck() || HitEmbroidery() || HitNothing():
+      case HitDeck() || HitEmbroidery() || HitSeal() || HitNothing():
         break;
     }
   }

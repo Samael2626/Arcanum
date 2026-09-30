@@ -137,11 +137,11 @@
 
 ## Fase 5: el ritual
 
-- [ ] **Sellar la pregunta** (animación hasta el sello) y romper el sello al interpretar.
+- [x] **Sellar la pregunta** y romper el sello al interpretar (30-sep): sello de cera en (88, 712) que entra con un golpe; sellado no enseña el texto al tocarlo; al interpretar da un respingo y lo cruza una grieta. Pregunta de hasta 300 caracteres, como el prototipo. **Falta** el vuelo del texto del panel al sello (fase 6).
 - [ ] **Interpretar bordado** en el paño. Mantener 1,3 s cierra el círculo.
 - [ ] **Interpretación de Tradición:** textos de `tarot_cards` por posición y sentido. El Oráculo queda fuera de esta versión (D4).
 - [ ] **Lecturas guardadas:** contemplar y continuar.
-- [ ] **Deshacer:** botón en la esquina con su anillo, y el centro del radial.
+- [x] **Deshacer:** botón abajo a la izquierda con su anillo de 5 s, y el centro del radial (30-sep). Deshace lo local; lo del servidor sigue pendiente de decidir.
 - [ ] **Contexto astral desde el backend**, con el lugar del usuario (`user_place.dart`).
 
 ## Fase 6: efectos, sonido y háptica

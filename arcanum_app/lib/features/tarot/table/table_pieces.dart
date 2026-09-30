@@ -314,3 +314,168 @@ class PilePiece extends StatelessWidget {
     );
   }
 }
+
+/// El sello de cera de la pregunta. Aparece con un golpe al sellar y, al
+/// interpretar, se rompe: da un respingo y le cruza una grieta.
+class SealPiece extends StatefulWidget {
+  const SealPiece({super.key, required this.at, required this.open});
+
+  final Offset at;
+  final bool open;
+
+  @override
+  State<SealPiece> createState() => _SealPieceState();
+}
+
+class _SealPieceState extends State<SealPiece> with TickerProviderStateMixin {
+  late final AnimationController _press;
+  late final AnimationController _crack;
+
+  static const double _d = 84;
+
+  @override
+  void initState() {
+    super.initState();
+    _press = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 520),
+    )..forward();
+    _crack = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+      value: widget.open ? 1 : 0,
+    );
+  }
+
+  @override
+  void didUpdateWidget(SealPiece old) {
+    super.didUpdateWidget(old);
+    if (widget.open && !old.open) _crack.forward(from: 0);
+    if (!widget.open && old.open) _crack.value = 0;
+  }
+
+  @override
+  void dispose() {
+    _press.dispose();
+    _crack.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: widget.at.dx - _d / 2,
+      top: widget.at.dy - _d / 2,
+      child: Semantics(
+        label: widget.open ? 'Pregunta abierta' : 'Pregunta sellada',
+        button: true,
+        child: AnimatedBuilder(
+          animation: Listenable.merge([_press, _crack]),
+          builder: (context, _) {
+            // golpe al sellar: entra grande y se asienta
+            final press = Curves.elasticOut.transform(_press.value);
+            // respingo al romperse: 1,2 y -6 grados que vuelven a su sitio
+            final jolt = math.sin(math.pi * _crack.value);
+            return Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.identity()
+                ..scaleByDouble(
+                  press * (1 + .2 * jolt),
+                  press * (1 + .2 * jolt),
+                  1,
+                  1,
+                )
+                ..rotateZ(-6 * math.pi / 180 * jolt),
+              child: CustomPaint(
+                size: const Size.square(_d),
+                painter: _SealPainter(crack: widget.open ? _crack.value : 0),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _SealPainter extends CustomPainter {
+  _SealPainter({required this.crack});
+
+  /// 0 sellado; hasta 1, la grieta avanzando.
+  final double crack;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = size.center(Offset.zero);
+    final r = size.width / 2;
+    final open = crack > 0;
+    canvas.drawCircle(
+      c.translate(0, 5),
+      r,
+      Paint()
+        ..color = Colors.black.withValues(alpha: .55)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+    );
+    canvas.drawCircle(
+      c,
+      r,
+      Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(-.24, -.36),
+          colors: open
+              ? const [Color(0xFF6D2030), Color(0xFF3A0B16), Color(0xFF1D050A)]
+              : const [Color(0xFF9B2A3D), Color(0xFF5A1422), Color(0xFF2A0610)],
+          stops: const [0, .55, 1],
+        ).createShader(Rect.fromCircle(center: c, radius: r)),
+    );
+    canvas.drawCircle(
+      c,
+      r - 1.5,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..color = const Color(0xBFC9A84C),
+    );
+    // el emblema: circulo y dos triangulos entrelazados, como el prototipo
+    final k = (r - 14) / 12;
+    final gold = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.1 * k
+      ..color = const Color(0xFFECD79A).withValues(alpha: open ? .6 : 1);
+    canvas
+      ..save()
+      ..translate(c.dx, c.dy)
+      ..scale(k)
+      ..drawCircle(Offset.zero, 10.5, gold..strokeWidth = 1.1)
+      ..drawPath(
+        Path()
+          ..moveTo(0, -8)
+          ..lineTo(6.9, 4)
+          ..lineTo(-6.9, 4)
+          ..close()
+          ..moveTo(0, 8)
+          ..lineTo(-6.9, -4)
+          ..lineTo(6.9, -4)
+          ..close(),
+        gold,
+      )
+      ..restore();
+    if (open) {
+      // la grieta cruza en diagonal a 118 grados, como el corte del prototipo
+      final a = 118 * math.pi / 180;
+      final dir = Offset(math.cos(a), math.sin(a));
+      final from = c - dir * r, to = c + dir * r;
+      canvas.drawLine(
+        from,
+        Offset.lerp(from, to, crack)!,
+        Paint()
+          ..strokeWidth = 2.6
+          ..strokeCap = StrokeCap.round
+          ..color = const Color(0xF20A0406),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SealPainter old) => old.crack != crack;
+}
