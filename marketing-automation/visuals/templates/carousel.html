@@ -46,7 +46,6 @@
       position: absolute;
       inset: 0;
       z-index: -3;
-      background-image: url("../../assets/generated/natal-chart-background-v1.png");
       background-size: cover;
       background-position: center;
     }
@@ -88,6 +87,22 @@
     .closing h2 { max-width: 850px; }
     .closing p { margin-top: 36px; max-width: 760px; color: #c9bea8; }
     .cta { display: inline-block; margin-top: 54px; padding-top: 24px; border-top: 2px solid var(--gold); color: var(--gold); font-size: 32px; letter-spacing: .09em; text-transform: uppercase; }
+    .preview-mark { position: absolute; right: 40px; top: 34px; z-index: 20; padding: 10px 16px 8px; border: 1px solid rgba(227,215,189,.46); color: rgba(227,215,189,.72); background: rgba(9,11,17,.68); font: 600 18px/1 "Crimson Pro", serif; letter-spacing: .2em; }
+    .copy-right.cover .veil { background: linear-gradient(270deg, rgba(7,10,16,.98) 0%, rgba(7,10,16,.82) 46%, rgba(7,10,16,.12) 82%, rgba(7,10,16,.05) 100%); }
+    .copy-right.cover .safe { align-items: flex-end; text-align: right; }
+    .copy-right.cover h1, .copy-right.cover p { max-width: 680px; }
+    .copy-right.proof .art { inset: 0 390px 0 0; transform: scale(1.2) rotate(-1deg); background-position: 28% 50%; }
+    .copy-right.proof .veil { background: linear-gradient(270deg, rgba(8,11,17,1) 0 42%, rgba(8,11,17,.82) 60%, rgba(8,11,17,.1) 100%); }
+    .copy-right.proof .index { left: auto; right: -18px; }
+    .copy-right.proof .copy { left: auto; right: 82px; text-align: right; }
+    .copy-right.proof .rule { margin-left: auto; }
+    .copy-right.split .panel { left: auto; right: -80px; padding: 130px 165px 110px 105px; clip-path: polygon(6% 0, 100% 6%, 92% 100%, 0 91%); transform: rotate(1.4deg); text-align: right; }
+    .copy-right.split .panel > * { transform: rotate(-1.4deg); }
+    .copy-right.catalog .art { left: 0; right: auto; background-position: 28% center; clip-path: polygon(0 0, 84% 0, 100% 90%, 0 100%); }
+    .copy-right.catalog .veil { background: linear-gradient(270deg, rgba(11,17,27,1) 0 56%, rgba(11,17,27,.62) 72%, rgba(11,17,27,.08) 100%); }
+    .copy-right.catalog .safe { align-items: flex-end; padding-left: 280px; padding-right: 0; text-align: right; }
+    .copy-right.catalog .index { left: auto; right: -25px; }
+    .copy-right.closing .safe { align-items: flex-end; text-align: right; }
   </style>
 </head>
 <body>
@@ -105,15 +120,20 @@
       slide.append(text('div', 'brand', 'ARCANUM'));
       slide.append(text('div', 'folio', `${String(page).padStart(2, '0')} / ${String(total).padStart(2, '0')}`));
     };
-    const art = () => text('div', 'art', '');
+    const art = (assetUri) => {
+      const element = text('div', 'art', '');
+      element.style.backgroundImage = `url("${assetUri}")`;
+      return element;
+    };
     const veil = () => text('div', 'veil', '');
     window.renderCarousel = (content) => {
       stage.replaceChildren();
       const total = content.slides.length;
       content.slides.forEach((item, position) => {
-        const slide = text('section', `slide ${item.layout}`, '');
+        const copySide = content.copy_side === 'right' ? 'copy-right' : 'copy-left';
+        const slide = text('section', `slide ${item.layout} ${copySide}`, '');
         slide.dataset.alt = item.alt_text;
-        slide.append(art(), veil());
+        slide.append(art(content._asset_uri), veil());
         if (item.layout === 'cover') {
           const safe = text('div', 'safe', '');
           safe.append(text('div', 'eyebrow', item.eyebrow), text('h1', '', item.title), text('p', '', item.body));
@@ -138,6 +158,7 @@
           slide.append(safe);
         }
         decorate(slide, position + 1, total);
+        if (content._preview) slide.append(text('div', 'preview-mark', 'PREVIEW'));
         stage.append(slide);
       });
     };

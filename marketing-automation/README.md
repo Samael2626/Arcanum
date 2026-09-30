@@ -67,6 +67,15 @@ D:\Python312\python.exe scripts\render_carousel.py `
 El segundo comando registra aprobador, fecha, manifiesto y estado `rendered`.
 No programa ni publica la pieza.
 
+El modo preview acepta `ready_for_review`, añade una marca visible y no habilita
+el registro final:
+
+```powershell
+D:\Python312\python.exe scripts\render_carousel.py --preview `
+  --content visuals\carousels\tarot-78-arcanos-001\content.json `
+  --output-dir output\previews\tarot-78-arcanos-001
+```
+
 Antes de aprobar, completar
 [`checklists/revision-editorial.md`](checklists/revision-editorial.md).
 `ready_for_review` abre la revisión humana; no autoriza publicación.

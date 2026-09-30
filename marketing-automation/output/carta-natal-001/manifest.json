@@ -4,6 +4,8 @@
   "source": "marketing-automation/visuals/carousels/carta-natal-001/content.json",
   "template": "marketing-automation/visuals/templates/carousel.html",
   "asset_id": "natal-chart-background-v1",
+  "content_status": "approved",
+  "render_mode": "final",
   "files": [
     {
       "file": "01.png",

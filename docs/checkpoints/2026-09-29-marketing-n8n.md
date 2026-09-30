@@ -134,6 +134,11 @@ para convertir un paquete factual en borrador mediante Gemini.
 - La cola guarda aprobador, fecha de aprobacion, fecha de render y manifiesto.
 - Estado final de `astrologia-carta-natal-001`: `rendered`. No fue programado ni
   publicado.
+- La misma plantilla quedó validada con dos direcciones visuales: copy a la
+  izquierda para grimorio y a la derecha para Tarot.
+- `tarot-78-arcanos-001` y `grimorio-cifrado-local-001` tienen previews de cinco
+  tarjetas, con marca visible y estado `ready_for_review`. No se registran como
+  renders finales hasta recibir aprobación humana explícita.
 
 ## Relacionado
 

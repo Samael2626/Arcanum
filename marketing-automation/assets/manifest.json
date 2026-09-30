@@ -10,6 +10,28 @@
       "attribution": null,
       "contains_text": false,
       "prompt_summary": "Grabado astronómico oscuro y asimétrico, sin texto, preparado como fondo editorial."
+    },
+    {
+      "id": "tarot-study-background-v1",
+      "path": "assets/generated/tarot-study-background-v1.png",
+      "kind": "ai_generated_illustration",
+      "generator": "OpenAI built-in image_gen",
+      "created_at": "2026-09-30",
+      "license": "original_generated_asset",
+      "attribution": null,
+      "contains_text": false,
+      "prompt_summary": "Mesa de estudio de Tarot con baraja sin texto legible, mano humana y espacio negativo editorial."
+    },
+    {
+      "id": "grimorio-private-background-v1",
+      "path": "assets/generated/grimorio-private-background-v1.png",
+      "kind": "ai_generated_illustration",
+      "generator": "OpenAI built-in image_gen",
+      "created_at": "2026-09-30",
+      "license": "original_generated_asset",
+      "attribution": null,
+      "contains_text": false,
+      "prompt_summary": "Naturaleza muerta de un cuaderno privado, sin texto legible ni clichés digitales de ciberseguridad."
     }
   ]
 }
