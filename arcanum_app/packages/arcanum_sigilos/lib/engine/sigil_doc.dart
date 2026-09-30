@@ -1,6 +1,8 @@
 // Documento del sigilo de letras: letras + capas + remates + estilo. Produce
 // la escena (lienzo) y el SVG exportado desde la misma lista de grupos
 // (lettersScene y buildSVG del prototipo, familia «letras»).
+import 'dart:convert';
+
 import 'geometry.dart';
 import 'layers.dart';
 import 'letter_sigil.dart';
@@ -29,8 +31,29 @@ class SigilDoc {
         endStyles = endStyles ?? {};
 
   LayerCtx get ctx => LayerCtx.letters(sigil.intention);
-  LayerLayout get layout => layoutLayers(layers, ctx);
+
+  // la disposicion de capas es pura (capas + texto): se calcula una vez por
+  // estado y la reusan pintado, toque, guias y radial
+  String? _layKey;
+  LayerLayout? _lay;
+  LayerLayout get layout {
+    final key = '${sigil.intention}|${jsonEncode([for (final l in layers) l.toJson()])}';
+    if (key != _layKey) {
+      _lay = layoutLayers(layers, ctx);
+      _layKey = key;
+    }
+    return _lay!;
+  }
   SigilTheme get theme => themeFor(style);
+
+  /// Claves de lo que no cambia mientras se arrastra una letra: permiten
+  /// guardar grabados el soporte y las capas.
+  String get layoutKey {
+    layout;
+    return _layKey!;
+  }
+
+  String get styleKey => jsonEncode(style.toJson());
 
   /// Reduce y compone la intencion dentro del hueco que dejan los marcos.
   bool generate(String text) {

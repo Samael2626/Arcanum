@@ -3,9 +3,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:arcanum_app/features/sigilos/engine/hebrew.dart';
-import 'package:arcanum_app/features/sigilos/engine/layers.dart';
-import 'package:arcanum_app/features/sigilos/engine/letter_sigil.dart';
+import 'package:arcanum_sigilos/engine/hebrew.dart';
+import 'package:arcanum_sigilos/engine/layers.dart';
+import 'package:arcanum_sigilos/engine/letter_sigil.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _tol = 1e-6;

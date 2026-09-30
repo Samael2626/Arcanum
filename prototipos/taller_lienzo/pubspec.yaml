@@ -1,0 +1,37 @@
+name: taller_lienzo
+description: "Prueba en movil del lienzo del taller de sigilos de ARCANUM: tacto, guias y rendimiento."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # el mismo motor y el mismo lienzo que la app
+  arcanum_sigilos:
+    path: ../../arcanum_app/packages/arcanum_sigilos
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  # las fuentes se copian de arcanum_app con preparar.sh (no se versionan)
+  fonts:
+    - family: Crimson Pro
+      fonts:
+        - asset: assets/fonts/CrimsonPro-400.ttf
+          weight: 400
+        - asset: assets/fonts/CrimsonPro-400italic.ttf
+          weight: 400
+          style: italic
+    - family: ArcanumGlifos
+      fonts:
+        - asset: assets/fonts/ArcanumGlifos-Regular.ttf
+    - family: Noto Serif Hebrew
+      fonts:
+        - asset: assets/fonts/NotoSerifHebrew-Regular.ttf

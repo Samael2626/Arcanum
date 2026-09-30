@@ -5,10 +5,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:arcanum_app/features/sigilos/engine/geometry.dart';
-import 'package:arcanum_app/features/sigilos/engine/interaction.dart';
-import 'package:arcanum_app/features/sigilos/engine/layers.dart';
-import 'package:arcanum_app/features/sigilos/engine/sigil_doc.dart';
+import 'package:arcanum_sigilos/engine/geometry.dart';
+import 'package:arcanum_sigilos/engine/interaction.dart';
+import 'package:arcanum_sigilos/engine/layers.dart';
+import 'package:arcanum_sigilos/engine/sigil_doc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'svg_parity_test.dart' show diffNumeric, diffSvg;

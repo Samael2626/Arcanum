@@ -59,6 +59,17 @@ TextStyle _textStyle(TextPrim t, Color color) {
   );
 }
 
+// Maquetar texto es caro: el anillo repite las mismas letras en cada frame (y
+// tres veces con relieve). Se guarda cada letra ya maquetada.
+final _texts = <(String, double, String, int), TextPainter>{};
+TextPainter _textPainter(TextPrim t, Color c) {
+  final key = (t.ch, t.size, t.font, c.toARGB32());
+  final hit = _texts[key];
+  if (hit != null) return hit;
+  if (_texts.length > 600) _texts.clear();
+  return _texts[key] = TextPainter(text: TextSpan(text: t.ch, style: _textStyle(t, c)), textDirection: TextDirection.ltr)..layout();
+}
+
 void _paintPrims(Canvas canvas, List<LayerPrim> prims, String color, double gop) {
   for (final p in prims) {
     final c = parseColor(color, p.op * gop);
@@ -80,7 +91,7 @@ void _paintPrims(Canvas canvas, List<LayerPrim> prims, String color, double gop)
       case GlyphLayerPrim g:
         paintGlyph(canvas, g.ch, g.x, g.y, g.size, g.rot, c);
       case TextPrim t:
-        final tp = TextPainter(text: TextSpan(text: t.ch, style: _textStyle(t, c)), textDirection: TextDirection.ltr)..layout();
+        final tp = _textPainter(t, c);
         final base = tp.computeDistanceToActualBaseline(TextBaseline.alphabetic);
         canvas.save();
         canvas.translate(t.x, t.y);
@@ -151,6 +162,38 @@ void paintScene(Canvas canvas, List<SceneGroup> groups, {double? minW, double Fu
     }
     canvas.restore();
   }
+}
+
+/// Grabacion guardada de una parte de la escena que no cambia en cada frame
+/// (soporte, marcos, simbolos): se regraba solo cuando cambia su clave.
+class ScenePictureCache {
+  String? _key;
+  ui.Picture? _pic;
+
+  ui.Picture get(String key, void Function(Canvas canvas) draw) {
+    if (key != _key || _pic == null) {
+      _pic?.dispose();
+      final rec = ui.PictureRecorder();
+      draw(Canvas(rec));
+      _pic = rec.endRecording();
+      _key = key;
+    }
+    return _pic!;
+  }
+
+  void dispose() {
+    _pic?.dispose();
+    _pic = null;
+    _key = null;
+  }
+}
+
+/// Parte la escena en lo de debajo del sigilo, el sigilo (con sus efectos) y
+/// lo de encima. Solo el sigilo cambia al arrastrar una letra.
+(List<SceneGroup>, List<SceneGroup>, List<SceneGroup>) splitAroundSigil(List<SceneGroup> fg) {
+  final i0 = fg.indexWhere((g) => g.sigil), i1 = fg.lastIndexWhere((g) => g.sigil);
+  if (i0 < 0) return (fg, const [], const []);
+  return (fg.sublist(0, i0), fg.sublist(i0, i1 + 1), fg.sublist(i1 + 1));
 }
 
 /// CustomPainter del lienzo: escena y, encima, lo que pinte [overlay].

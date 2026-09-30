@@ -47,8 +47,10 @@ dependencies:
   crypto: ^3.0.3
   shared_preferences: ^2.5.5
   flutter_svg: ^2.3.0
-  # caminos SVG (d) -> Path del lienzo del taller de sigilos; ya venia con flutter_svg
-  path_parsing: ^1.1.0
+  # taller de sigilos: motor y lienzo en un paquete propio (lo usa tambien la
+  # prueba en movil, que no puede ser una ruta de la app por Firebase)
+  arcanum_sigilos:
+    path: packages/arcanum_sigilos
   path_provider: ^2.1.6
   # rive: ^0.14.8
   # model_viewer_plus: ^1.10.0

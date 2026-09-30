@@ -46,9 +46,9 @@ class SigilLetter {
   }
 }
 
-class View {
+class SigilView {
   final double cx, cy, k, oy;
-  const View(this.cx, this.cy, this.k, [this.oy = 0]);
+  const SigilView(this.cx, this.cy, this.k, [this.oy = 0]);
   Pt toCanvas(Pt p) => Pt(kC + (p.x - cx) * k, kC + oy + (p.y - cy) * k);
   Pt toWorld(double x, double y) => Pt((x - kC) / k + cx, (y - kC - oy) / k + cy);
 }
@@ -96,7 +96,7 @@ class LetterSigil {
   List<Prim> extra = [];
   List<Prim> prims = [];
   List<String> hidden = [];
-  View? view;
+  SigilView? view;
 
   Iterable<SigilLetter> get active => letters.where((l) => l.twin == null);
 
@@ -188,16 +188,16 @@ class LetterSigil {
   }
 
   /// Encuadre: el cuadro del sigilo cabe en el hueco que dejan los marcos.
-  View fitView(double contentR) {
+  SigilView fitView(double contentR) {
     var x0 = double.infinity, x1 = double.negativeInfinity, y0 = double.infinity, y1 = double.negativeInfinity;
     for (final p in prims) {
       for (final q in primPoints(p)) {
         x0 = math.min(x0, q.x); x1 = math.max(x1, q.x); y0 = math.min(y0, q.y); y1 = math.max(y1, q.y);
       }
     }
-    if (!x0.isFinite) return const View(0, 0, kCoreR);
+    if (!x0.isFinite) return const SigilView(0, 0, kCoreR);
     final kf = math.min(1.0, contentR * .99 / math.sqrt2 / kCoreR);
-    return View((x0 + x1) / 2, (y0 + y1) / 2, kCoreR * kf / (math.max(math.max(x1 - x0, y1 - y0), .5) / 2));
+    return SigilView((x0 + x1) / 2, (y0 + y1) / 2, kCoreR * kf / (math.max(math.max(x1 - x0, y1 - y0), .5) / 2));
   }
 
   List<Prim> get visible => prims.where((p) => !p.hidden).toList();

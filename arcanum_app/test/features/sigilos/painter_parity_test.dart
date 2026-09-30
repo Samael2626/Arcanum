@@ -7,7 +7,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:arcanum_app/features/sigilos/ui/scene_painter.dart';
+import 'package:arcanum_sigilos/ui/scene_painter.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'svg_parity_test.dart' show docFor;

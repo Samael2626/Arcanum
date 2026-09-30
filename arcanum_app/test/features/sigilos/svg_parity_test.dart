@@ -3,12 +3,12 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:arcanum_app/features/sigilos/engine/layers.dart';
-import 'package:arcanum_app/features/sigilos/engine/letter_sigil.dart';
-import 'package:arcanum_app/features/sigilos/engine/reduction.dart';
-import 'package:arcanum_app/features/sigilos/engine/sigil_doc.dart';
-import 'package:arcanum_app/features/sigilos/engine/style.dart';
-import 'package:arcanum_app/features/sigilos/engine/terminals.dart';
+import 'package:arcanum_sigilos/engine/layers.dart';
+import 'package:arcanum_sigilos/engine/letter_sigil.dart';
+import 'package:arcanum_sigilos/engine/reduction.dart';
+import 'package:arcanum_sigilos/engine/sigil_doc.dart';
+import 'package:arcanum_sigilos/engine/style.dart';
+import 'package:arcanum_sigilos/engine/terminals.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 final _num = RegExp(r'-?\d+(?:\.\d+)?');

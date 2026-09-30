@@ -125,7 +125,14 @@ SigilTheme themeFor(SigilStyle st) {
 }
 
 // ── Soporte ─────────────────────────────────────────────────────
+final _bgCache = <String, List<SceneGroup>>{};
 List<SceneGroup> bgScene(SigilStyle st, SigilTheme th) {
+  // el soporte solo cambia con el estilo: las fibras no se regeneran por frame
+  final key = '${st.bg}|${st.ink}|${st.metal}|${st.texture}';
+  return _bgCache.putIfAbsent(key, () => _bgScene(st, th));
+}
+
+List<SceneGroup> _bgScene(SigilStyle st, SigilTheme th) {
   const full = 'M 0 0 H 800 V 800 H 0 Z';
   final g = <SceneGroup>[];
   if (st.metal != null) {
