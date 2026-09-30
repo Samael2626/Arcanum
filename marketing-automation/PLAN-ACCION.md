@@ -36,6 +36,11 @@ Resultado vivo: diez procesados, ocho en `ready_for_review`, dos en
 
 ### Fase 2 — Publicaciones de texto y carruseles
 
+**Estado:** en curso. Primer carrusel aprobado y renderizado el 30 de septiembre
+de 2026 (`astrologia-carta-natal-001`), con cinco tarjetas 1080x1350, arte
+original trazable, alt text y hashes SHA-256. Faltan dos carruseles para cerrar
+la fase.
+
 - Crear una plantilla ARCANUM determinista en 1080×1350.
 - Renderizar portada y 3–6 tarjetas desde el JSON aprobado.
 - Exportar PNG, manifiesto de assets y alt text real.

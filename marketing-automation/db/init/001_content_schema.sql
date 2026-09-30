@@ -40,6 +40,10 @@ CREATE TABLE marketing.content_items (
     last_error text,
     claimed_at timestamptz,
     generated_at timestamptz,
+    approved_at timestamptz,
+    approved_by text,
+    rendered_at timestamptz,
+    rendered_assets jsonb,
     scheduled_at timestamptz,
     published_at timestamptz,
     created_at timestamptz NOT NULL DEFAULT now(),
@@ -47,7 +51,12 @@ CREATE TABLE marketing.content_items (
     CONSTRAINT content_items_derived_formats_array
         CHECK (jsonb_typeof(derived_formats) = 'array'),
     CONSTRAINT content_items_generation_attempts_nonnegative
-        CHECK (generation_attempts >= 0)
+        CHECK (generation_attempts >= 0),
+    CONSTRAINT content_items_rendered_assets_object
+        CHECK (
+            rendered_assets IS NULL
+            OR jsonb_typeof(rendered_assets) = 'object'
+        )
 );
 
 CREATE TABLE marketing.publications (

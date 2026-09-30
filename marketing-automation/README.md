@@ -49,6 +49,24 @@ reclamación abandonada vuelve a la cola después de quince minutos.
 El publicador queda fuera del MVP. Primero se producen borradores y se mide la
 calidad editorial.
 
+## Render de carrusel
+
+El render final solo acepta copy con `status: approved`. Genera PNG de
+1080x1350, alt text por tarjeta y un manifiesto con hashes SHA-256.
+
+```powershell
+D:\Python312\python.exe scripts\render_carousel.py `
+  --content visuals\carousels\carta-natal-001\content.json `
+  --output-dir output\carta-natal-001
+
+.\scripts\Register-CarouselRender.ps1 `
+  -ContentPath visuals\carousels\carta-natal-001\content.json `
+  -ManifestPath output\carta-natal-001\manifest.json
+```
+
+El segundo comando registra aprobador, fecha, manifiesto y estado `rendered`.
+No programa ni publica la pieza.
+
 Antes de aprobar, completar
 [`checklists/revision-editorial.md`](checklists/revision-editorial.md).
 `ready_for_review` abre la revisión humana; no autoriza publicación.

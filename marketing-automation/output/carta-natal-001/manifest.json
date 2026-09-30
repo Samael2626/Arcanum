@@ -1,0 +1,44 @@
+{
+  "external_key": "astrologia-carta-natal-001",
+  "format": "carousel",
+  "source": "marketing-automation/visuals/carousels/carta-natal-001/content.json",
+  "template": "marketing-automation/visuals/templates/carousel.html",
+  "asset_id": "natal-chart-background-v1",
+  "files": [
+    {
+      "file": "01.png",
+      "sha256": "c86e5fd63a75ac1112728c764d1469510223416394f614b626aef59fbd02dcb1",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Gráfico astronómico antiguo sobre papel oscuro, recortado hacia la derecha; a la izquierda aparece el título sobre el cálculo de la carta natal."
+    },
+    {
+      "file": "02.png",
+      "sha256": "bc6ee6c806b4f0b61c081071bddffb0c4a82dd243ecdbd92d975590a7fdc4736",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Detalle de un instrumento astronómico grabado junto al texto que identifica Swiss Ephemeris como base de cálculo."
+    },
+    {
+      "file": "03.png",
+      "sha256": "59825304fc60c2655c737b0e64e6d57433671e6c0a639afdcf4206cc40a74836",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Carta astronómica antigua atravesada por un panel borgoña con texto sobre casas Placidus y configuración."
+    },
+    {
+      "file": "04.png",
+      "sha256": "856257bf0c61c0a4a0ed2723e6426d951a7e4d4484050de436a66b8057837ab0",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Composición tipográfica con una carta celeste recortada; enumera planetas, ángulos, aspectos y orbes."
+    },
+    {
+      "file": "05.png",
+      "sha256": "b54811e53e82d6e31a4b785863c9d5c617f6846e956f8025b4807199faa50fd2",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Carta astronómica dorada sobre fondo azul oscuro con cierre editorial y llamado a calcular la carta natal."
+    }
+  ]
+}

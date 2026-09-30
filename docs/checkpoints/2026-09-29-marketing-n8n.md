@@ -122,6 +122,19 @@ para convertir un paquete factual en borrador mediante Gemini.
 - El commit incluye solo `marketing-automation/` y este checkpoint.
 - Los cambios previos de creditos, sigilos y Flutter quedan fuera.
 
+## Fase 2 iniciada - 30 sep 2026
+
+- Samuel aprobo de forma explicita el copy tecnico de carta natal.
+- Se produjo un carrusel de cinco tarjetas en 1080x1350 con composiciones
+  asimetricas, tipografia local y paleta old money de ARCANUM.
+- El fondo es una ilustracion original generada para esta pieza; su procedencia
+  queda en `marketing-automation/assets/manifest.json`.
+- El render es determinista: Playwright compone texto real sobre HTML y exporta
+  PNG con alt text y SHA-256 por archivo.
+- La cola guarda aprobador, fecha de aprobacion, fecha de render y manifiesto.
+- Estado final de `astrologia-carta-natal-001`: `rendered`. No fue programado ni
+  publicado.
+
 ## Relacionado
 
 - [[MOC-ARCANUM]]
