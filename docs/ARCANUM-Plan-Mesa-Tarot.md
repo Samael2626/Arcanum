@@ -94,7 +94,19 @@
 
 - [ ] **Prueba de rendimiento primero:** 78 cartas en `Transform` sobre un `Stack` en el móvil real con Impeller. Si no llega a 60 fps, se decide ya entre `Stack` de widgets y pintar las cartas del abanico con `CustomPainter`.
   - [x] APK de prueba lista (29-sep): `prototipos/mesa_rendimiento/`, proyecto aparte con id propio. Mide widgets frente a pintor en cinco escenas.
-  - [ ] Samuel la corre en su móvil y manda la captura de resultados. **Con eso se elige la técnica.**
+  - [x] **Medida el 30-sep en el móvil de Samuel** (GN2200, Android 12, pantalla a 60 Hz, Impeller), leída por `adb logcat`:
+
+    | Escena | Widgets: fps · montaje p90 · dibujo p90 | Pintor: fps · montaje p90 · dibujo p90 |
+    |---|---|---|
+    | Abanico | 59,9 · 6,6 ms · 12,6 ms | 60,6 · 10,2 ms · 12,1 ms |
+    | Volteos | 59,6 · 4,5 ms · 11,4 ms | 60,7 · 10,5 ms · 12,0 ms |
+    | Arrastre | 59,9 · 6,9 ms · 12,7 ms | 60,2 · 10,3 ms · 12,0 ms |
+    | Cámara | 59,7 · 4,5 ms · 11,6 ms | 59,6 · 10,4 ms · 12,0 ms |
+    | Todo a la vez | 58,4 · 10,6 ms · 13,2 ms | 59,6 · 10,6 ms · 12,1 ms |
+
+    **Las dos técnicas llegan a 60 fps** (el prototipo DOM daba ~18 con movimiento). El margen está en el dibujo: 12–13 ms de 16,7.
+  - [x] **Decisión: híbrido.** Las 78 cartas del **abanico** (solo dorso, todas iguales) se pintan con `CustomPainter`: es lo que más pesa y el pintor lo aguanta estable. Las cartas **en juego** (una docena como mucho) van como **widgets** con `Transform`: reutilizan `TarotCardView` con su arte y sus volteos por palo, tienen `Semantics` para lectores de pantalla y su toque es por pieza. Así no se pierde nada de lo visual por rendimiento.
+  - **Ojo:** las cartas de la prueba eran más ligeras que `TarotCardView`. Si la mesa real baja de 60, lo primero es envolver cada carta quieta en `RepaintBoundary`.
 - [x] **Lógica sin dibujo, adelantada mientras llega la medición** (`lib/features/tarot/table/`, 30-sep):
   - `table_camera.dart`: encuadre del prototipo, matriz con perspectiva y toque a mesa por homografía inversa; órbita invertida, inercia, pellizco y recentrado. Suavizado independiente de los Hz.
   - `gesture_grammar.dart`: máquina de estados pura (tocar, mantener 430 ms, arrastrar, cortar, abanico, esquina, órbita, pellizco, bordado 1,3 s).
