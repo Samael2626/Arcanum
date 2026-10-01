@@ -148,6 +148,38 @@ class TableDirector extends ChangeNotifier {
 
   static const looseDoubleTap = Duration(milliseconds: 280);
 
+  // ---------- movimiento: de donde nace y a donde va cada pieza ----------
+  //
+  // El estado de la mesa salta de golpe (una carta esta o no esta). Para que se
+  // VEA viajar, el director anota de donde sale lo que aparece y a donde va lo
+  // que se marcha, y la vista lo anima. Se consume al leerlo.
+  final Map<String, ({TablePose from, Duration delay})> _births = {};
+  final Map<String, TablePose> _exits = {};
+
+  /// Barajado en curso, para que la vista lo represente. `epoch` cambia en
+  /// cada barajado, aunque sea del mismo monton y con el mismo estilo.
+  ({String pid, String style, int epoch})? shuffling;
+  int _shuffleEpoch = 0;
+
+  ({TablePose from, Duration delay})? takeBirth(String id) =>
+      _births.remove(id);
+  TablePose? takeExit(String id) => _exits.remove(id);
+
+  void _born(String id, TablePose from, [Duration delay = Duration.zero]) =>
+      _births[id] = (from: from, delay: delay);
+
+  TablePose _pilePose(PileLayout p) =>
+      TablePose(p.x, p.y, rot: p.rot, scale: TableGeometry.deckScale);
+
+  /// Todo lo que hay fuera del mazo vuelve volando al monton `pid`.
+  void _allExitTo(String pid) {
+    final target = _pile(pid);
+    if (target == null) return;
+    for (final c in table.cards) {
+      _exits['card:${c.slug}'] = _pilePose(target);
+    }
+  }
+
   TableState get table => ops.table;
   bool get busy => _busy;
   RadialLayout? get radial => _radial?.layout;
@@ -164,6 +196,9 @@ class TableDirector extends ChangeNotifier {
   }
 
   FanLayout? get fan => _fanDraft ?? table.fan;
+
+  /// El abanico sigue al dedo: se dibuja sin animar el despliegue.
+  bool get fanDragging => _fanDraft != null;
 
   void setViewport(Size size) => camera.fit(size);
 
@@ -532,8 +567,12 @@ class TableDirector extends ChangeNotifier {
         'Recoge las cartas y une los montones antes de cambiar de mazo',
       );
     }
+    final shelf = decks.indexWhere((d) => d.slug == deck);
     await ops.openDeck(deck);
     final pid = table.activePid;
+    if (pid != null && shelf >= 0) {
+      _born('pile:$pid', shelfPose(shelf, decks.length));
+    }
     if (pid != null) {
       ops.arrange(
         (s) => s.copyWith(
@@ -578,7 +617,9 @@ class TableDirector extends ChangeNotifier {
   Future<void> _takeFromFan(String fanId) async {
     final parts = fanId.split(':');
     final pid = parts[1], pos = int.parse(parts[2]);
+    final from = _poseOf(fanId);
     final card = await ops.take(pid, pos);
+    if (from != null) _born('card:${card.slug}', from);
     if (_count(pid) == 0) ops.arrange((s) => s.copyWith(fan: () => null));
     final sp = spread;
     final empty = sp == null ? null : _firstEmptySlot(sp);
@@ -631,12 +672,21 @@ class TableDirector extends ChangeNotifier {
         if (table.cardInSlot(i) == null) i,
     ];
     if (empty.isEmpty) return effects.toast('La tirada ya está completa');
+    var dealt = 0;
     for (final slot in empty) {
       final positions = table.server?.piles[pid]?.positions ?? const [];
       if (positions.isEmpty) {
         return effects.toast('No quedan cartas en este montón');
       }
+      final pile = _pile(pid);
       final card = await ops.take(pid, positions.first);
+      if (pile != null) {
+        _born(
+          'card:${card.slug}',
+          _pilePose(pile),
+          Duration(milliseconds: 110 * dealt++),
+        );
+      }
       _place(card.slug, sp, slot);
     }
   }
@@ -671,6 +721,7 @@ class TableDirector extends ChangeNotifier {
     final spot = _freeSpot(src);
     await _undoable(() async {
       final np = await ops.cut(pid, _cutSize(_count(pid)));
+      _born('pile:$np', _pilePose(src));
       ops.arrange(
         (s) => s.copyWith(
           piles: [
@@ -693,6 +744,9 @@ class TableDirector extends ChangeNotifier {
         ? table.activePid!
         : bottomToTop.first;
     final base = _pile(bottomToTop.first)!;
+    for (final pid in bottomToTop) {
+      if (pid != keeper) _exits['pile:$pid'] = _pilePose(base);
+    }
     await ops.merge(bottomToTop.reversed.toList(), keeper);
     ops.arrange(
       (s) => s.copyWith(
@@ -739,6 +793,7 @@ class TableDirector extends ChangeNotifier {
           if (p.pid != active) p.pid,
       ]);
     }
+    _allExitTo(table.activePid!);
     await ops.gather(table.activePid!);
     ops.arrange((s) => s.copyWith(spread: () => null, seal: () => null));
   });
@@ -765,6 +820,7 @@ class TableDirector extends ChangeNotifier {
           ? a
           : b,
     );
+    _exits['card:$slug'] = _pilePose(target);
     _run(() => _undoable(() => ops.giveBack(slug, target.pid)));
   }
 
@@ -950,6 +1006,8 @@ class TableDirector extends ChangeNotifier {
 
   void _openShuffleRadial(String pid, Offset screen) {
     _openRadial(screen, 'Barajar', RadialMenus.shuffle, (style) async {
+      shuffling = (pid: pid, style: style, epoch: ++_shuffleEpoch);
+      notifyListeners();
       await ops.shuffle(pid, style: style);
       effects.shuffled(pid, style);
       effects.toast(
@@ -1331,6 +1389,15 @@ class TableDirector extends ChangeNotifier {
       if (q.pid == pid || q.pid == fan?.pid) continue;
       if ((Offset(q.x, q.y) - pose.offset).distance <
           TableGeometry.cardW * TableGeometry.deckScale * .8) {
+        // se queda donde se solto y desde ahi vuela a unirse: sin volver atras
+        ops.arrange(
+          (st) => st.copyWith(
+            piles: [
+              for (final p in st.piles)
+                p.pid == pid ? p.moved(pose.x, pose.y) : p,
+            ],
+          ),
+        );
         _run(() async {
           await _undoable(() => _stack([q.pid, pid]));
           effects.toast(

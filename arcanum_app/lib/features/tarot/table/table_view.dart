@@ -15,10 +15,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../../../core/theme/arcanum_colors.dart';
+import '../domain/table_state.dart';
 import 'radial_logic.dart';
 import 'table_director.dart';
 import 'table_geometry.dart';
 import 'table_icons.dart';
+import 'table_motion.dart';
 import 'table_painters.dart';
 import 'table_pieces.dart';
 
@@ -35,11 +37,30 @@ class TarotTableView extends StatefulWidget {
 }
 
 class _TarotTableViewState extends State<TarotTableView>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final Ticker _ticker = createTicker(_onTick);
   final Stopwatch _clock = Stopwatch()..start();
   Duration _lastTick = Duration.zero;
   ui.Image? _back;
+
+  // ---------- movimiento ----------
+  /// Piezas del fotograma anterior: lo que falta ahora se ha ido; lo que
+  /// sobra, acaba de nacer.
+  Map<String, PieceView> _last = {};
+  final Map<String, Birth?> _births = {};
+  final Map<String, ({PieceView view, TablePose to})> _ghosts = {};
+
+  /// El abanico se despliega al abrirse y se pliega al recogerse.
+  late final AnimationController _fanCtl;
+  String? _fanPid;
+  bool _fanJustOpened = false;
+  ({FanLayout fan, int count})? _closingFan;
+  ({FanLayout fan, int count})? _lastFan;
+
+  /// El barajado en escena.
+  late final AnimationController _shuffleCtl;
+  ({String pid, String style, int epoch})? _shuffle;
+  int _seenShuffle = 0;
 
   TableDirector get _dir => widget.director;
   Duration get _now => widget.clock?.call() ?? _clock.elapsed;
@@ -47,6 +68,8 @@ class _TarotTableViewState extends State<TarotTableView>
   @override
   void initState() {
     super.initState();
+    _fanCtl = AnimationController(vsync: this);
+    _shuffleCtl = AnimationController(vsync: this);
     _dir.addListener(_changed);
   }
 
@@ -71,6 +94,8 @@ class _TarotTableViewState extends State<TarotTableView>
   @override
   void dispose() {
     _dir.removeListener(_changed);
+    _fanCtl.dispose();
+    _shuffleCtl.dispose();
     _ticker.dispose();
     _back?.dispose();
     super.dispose();
@@ -148,12 +173,150 @@ class _TarotTableViewState extends State<TarotTableView>
     );
   }
 
-  Widget _table(ui.Image back) {
-    final pieces = _dir.pieces();
-    final fan = [
+  /// Despues del fotograma: arrancar animaciones desde `build` avisaria a sus
+  /// oyentes en plena construccion.
+  void _afterFrame(VoidCallback start) =>
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) start();
+      });
+
+  /// Compara con el fotograma anterior: anota quien nace (y de donde) y deja
+  /// un fantasma volando por cada pieza que se fue a algun sitio.
+  void _trackMotion(List<PieceView> pieces) {
+    final now = {for (final p in pieces) p.id: p};
+    for (final id in now.keys) {
+      if (!_last.containsKey(id)) _births[id] = _dir.takeBirth(id);
+    }
+    for (final e in _last.entries) {
+      if (now.containsKey(e.key)) continue;
+      _births.remove(e.key);
+      final to = _dir.takeExit(e.key);
+      if (to != null) _ghosts[e.key] = (view: e.value, to: to);
+    }
+    _last = now;
+  }
+
+  void _trackFan(int count) {
+    final f = _dir.fan;
+    if (f != null) {
+      _lastFan = (fan: f, count: count);
+      if (_dir.fanDragging) {
+        _fanPid = f.pid;
+        _fanJustOpened = false;
+        if (_fanCtl.value != 1) _afterFrame(() => _fanCtl.value = 1);
+      } else if (f.pid != _fanPid) {
+        _fanPid = f.pid;
+        _closingFan = null;
+        _fanJustOpened = true;
+        _afterFrame(() {
+          _fanJustOpened = false;
+          _fanCtl
+            ..duration = const Duration(milliseconds: 780)
+            ..forward(from: 0);
+        });
+      }
+    } else if (_fanPid != null) {
+      _fanPid = null;
+      _closingFan = _lastFan;
+      _afterFrame(() {
+        _fanCtl.duration = const Duration(milliseconds: 460);
+        _fanCtl.reverse(from: 1).whenComplete(() {
+          if (mounted) setState(() => _closingFan = null);
+        });
+      });
+    }
+  }
+
+  void _trackShuffle() {
+    final sh = _dir.shuffling;
+    if (sh == null || sh.epoch == _seenShuffle) return;
+    _seenShuffle = sh.epoch;
+    _shuffle = sh;
+    _afterFrame(() {
+      _shuffleCtl
+        ..duration = shuffleDuration(shuffleStyleOf(sh.style))
+        ..forward(from: 0).whenComplete(() {
+          if (mounted) setState(() => _shuffle = null);
+        });
+    });
+  }
+
+  Widget _fanLayer(ui.Image back, List<PieceView> pieces) {
+    final open = [
       for (final p in pieces)
         if (p.kind == PieceKind.fanCard) p.pose,
     ];
+    final f = _dir.fan ?? _closingFan?.fan;
+    if (f == null) return const SizedBox.shrink();
+    final count = open.isNotEmpty ? open.length : (_closingFan?.count ?? 0);
+    if (count == 0) return const SizedBox.shrink();
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _fanCtl,
+        builder: (context, _) {
+          final t = _fanJustOpened
+              ? 0.0
+              : Curves.easeOutCubic.transform(_fanCtl.value);
+          final poses = t >= 1 && open.isNotEmpty
+              ? open
+              : fanPoses(f.start, Offset.lerp(f.start, f.end, t)!, count);
+          return CustomPaint(
+            size: const Size(TableGeometry.width, TableGeometry.height),
+            painter: FanPainter(poses, back),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _shuffleLayer(ui.Image back) {
+    final sh = _shuffle;
+    final pile = sh == null ? null : _last['pile:${sh.pid}'];
+    if (sh == null || pile == null) return const SizedBox.shrink();
+    return IgnorePointer(
+      child: AnimatedBuilder(
+        animation: _shuffleCtl,
+        builder: (context, _) => CustomPaint(
+          size: const Size(TableGeometry.width, TableGeometry.height),
+          painter: ShuffleTheaterPainter(
+            pile: pile.pose,
+            style: shuffleStyleOf(sh.style),
+            t: _shuffleCtl.value,
+            back: back,
+            count: pile.count,
+            seed: sh.epoch,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _ghost(String id, PieceView view, TablePose to, ui.Image back) =>
+      DepartingPiece(
+        key: ValueKey('ghost:$id'),
+        from: view.pose,
+        to: to,
+        onDone: () {
+          if (mounted) setState(() => _ghosts.remove(id));
+        },
+        child: view.kind == PieceKind.pile
+            ? CustomPaint(
+                size: const Size(TableGeometry.cardW, TableGeometry.cardH),
+                painter: PilePainter(count: view.count, back: back),
+              )
+            : RawImage(
+                image: back,
+                width: TableGeometry.cardW,
+                height: TableGeometry.cardH,
+                fit: BoxFit.fill,
+              ),
+      );
+
+  Widget _table(ui.Image back) {
+    final pieces = _dir.pieces();
+    _trackMotion(pieces);
+    _trackFan(pieces.where((p) => p.kind == PieceKind.fanCard).length);
+    _trackShuffle();
     final table = _dir.table;
     final sp = _dir.spread;
     // el mazo recien abierto y sin tocar brilla: es por donde se empieza
@@ -185,14 +348,18 @@ class _TarotTableViewState extends State<TarotTableView>
               view: p,
               back: back,
               glow: fresh && p.kind == PieceKind.pile,
+              birth: _births[p.id],
+              // mientras se baraja, la caja muestra pocas: el resto esta en el aire
+              shownCount:
+                  _shuffle?.pid == p.id.substring(5) && p.id.startsWith('pile:')
+                  ? (p.count * .25).round().clamp(2, p.count)
+                  : null,
             ),
-        if (fan.isNotEmpty)
-          RepaintBoundary(
-            child: CustomPaint(
-              size: const Size(TableGeometry.width, TableGeometry.height),
-              painter: FanPainter(fan, back),
-            ),
-          ),
+        _fanLayer(back, pieces),
+        _shuffleLayer(back),
+        for (final e in _ghosts.entries)
+          if (e.value.view.kind == PieceKind.pile)
+            _ghost(e.key, e.value.view, e.value.to, back),
         for (final p in pieces)
           if (p.kind == PieceKind.card)
             TableCardPiece(
@@ -200,7 +367,11 @@ class _TarotTableViewState extends State<TarotTableView>
               view: p,
               back: back,
               positionLabel: _positionLabel(p),
+              birth: _births[p.id],
             ),
+        for (final e in _ghosts.entries)
+          if (e.value.view.kind == PieceKind.card)
+            _ghost(e.key, e.value.view, e.value.to, back),
       ],
     );
   }
@@ -274,10 +445,25 @@ class _RadialOverlay extends StatelessWidget {
           ),
         ),
         for (var i = 0; i < l.items.length; i++)
-          Positioned(
-            left: l.positions[i].dx - 45,
-            top: l.positions[i].dy - s / 2,
-            width: 90,
+          // cada circulo sale del centro, uno detras de otro, como en el prototipo
+          TweenAnimationBuilder<double>(
+            key: ValueKey((identityHashCode(l), i)),
+            tween: Tween(begin: 0, end: 1),
+            duration: Duration(milliseconds: 170 + 28 * i),
+            curve: Interval(
+              i * .08 / (1 + i * .08),
+              1,
+              curve: Curves.easeOutBack,
+            ),
+            builder: (context, t, child) {
+              final at = Offset.lerp(l.center, l.positions[i], t)!;
+              return Positioned(
+                left: at.dx - 45,
+                top: at.dy - s / 2,
+                width: 90,
+                child: Opacity(opacity: t.clamp(0.0, 1.0), child: child),
+              );
+            },
             child: _RadialButton(item: l.items[i], hot: i == hot),
           ),
       ],

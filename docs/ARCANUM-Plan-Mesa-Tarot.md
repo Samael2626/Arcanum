@@ -139,6 +139,14 @@
 - [ ] **Paneles compactos:** Leer, pregunta, interpretación y lecturas.
 - [ ] **Widget tests:** tocar, mantener abre el radial, arrastrar encaja en el hueco, esquina voltea pasados 70°.
 
+- [x] **Movimiento (30-sep, `table/table_motion.dart`):** las piezas viajan en vez de aparecer.
+  - Cartas que nacen volando desde el montón o el abanico (al repartir, escalonadas cada 110 ms) y fantasmas que vuelan al montón al devolver o recoger.
+  - Montones que se mueven: el corte sale del original, el mazo abierto sale del estante, y al unir el de encima vuela sobre el otro, desde donde se soltó.
+  - Abanico que se despliega en 780 ms y se pliega en 460 ms.
+  - Barajado en escena con los tres estilos del prototipo: es teatro, el orden lo fija el servidor.
+  - Radial que se abre con los círculos saliendo del centro.
+  - Las animaciones arrancan después del fotograma: desde `build` avisarían a sus oyentes en plena construcción.
+
 ## Fase 5: el ritual
 
 - [x] **Sellar la pregunta** y romper el sello al interpretar (30-sep): sello de cera en (88, 712) que entra con un golpe; sellado no enseña el texto al tocarlo; al interpretar da un respingo y lo cruza una grieta. Pregunta de hasta 300 caracteres, como el prototipo. **Falta** el vuelo del texto del panel al sello (fase 6).

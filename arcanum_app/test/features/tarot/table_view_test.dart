@@ -5,6 +5,7 @@ import 'package:arcanum_app/features/tarot/domain/table_models.dart';
 import 'package:arcanum_app/features/tarot/domain/table_state.dart';
 import 'package:arcanum_app/features/tarot/table/table_director.dart';
 import 'package:arcanum_app/features/tarot/table/table_geometry.dart';
+import 'package:arcanum_app/features/tarot/table/table_motion.dart';
 import 'package:arcanum_app/features/tarot/table/table_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -226,5 +227,80 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(find.bySemanticsLabel('Pregunta abierta'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  group('movimiento', () {
+    testWidgets('una carta devuelta vuela al monton y luego desaparece', (
+      tester,
+    ) async {
+      await pumpTable(tester);
+      await tap(tester, shelfPose(0, 2).offset);
+      final ops = c.read(tableControllerProvider.notifier);
+      final card = (await tester.runAsync(() => ops.take('p0', 0)))!;
+      await tester.pump(const Duration(seconds: 1));
+      // un toque y esperar: tras la ventana del doble toque vuelve al monton
+      final g = await tester.startGesture(screen(Offset(card.x, card.y)));
+      now += const Duration(milliseconds: 60);
+      await g.up();
+      var seen = false, gone = false;
+      for (var i = 0; i < 40 && !gone; i++) {
+        now += const Duration(milliseconds: 50);
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 5)),
+        );
+        await tester.pump(const Duration(milliseconds: 50));
+        final flying = find.byType(DepartingPiece).evaluate().isNotEmpty;
+        seen |= flying;
+        gone = seen && !flying;
+      }
+      expect(dir.table.card(card.slug), isNull);
+      expect(seen, isTrue, reason: 'la carta tenia que verse volando');
+      expect(gone, isTrue, reason: 'y desaparecer al llegar');
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('barajar entra en escena y sale al terminar', (tester) async {
+      await pumpTable(tester);
+      await tap(tester, shelfPose(0, 2).offset);
+      final g = await tester.startGesture(screen(TableGeometry.homeSpot));
+      now += const Duration(milliseconds: 460);
+      await tester.pump(const Duration(milliseconds: 16));
+      await tester.pump(const Duration(milliseconds: 16));
+      await g.moveTo(dir.radial!.positions[0]); // Barajar
+      await g.up();
+      await tester.pump();
+      // el radial de estilos: tocar Cascada
+      await tester.tapAt(dir.radial!.positions[0]);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      bool onStage() => tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .any((w) => w.painter is ShuffleTheaterPainter);
+      expect(onStage(), isTrue);
+      await settle(tester);
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump();
+      expect(onStage(), isFalse);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('el abanico se despliega sin romper nada', (tester) async {
+      await pumpTable(tester);
+      await tap(tester, shelfPose(0, 2).offset);
+      await tap(tester, TableGeometry.homeSpot);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(seconds: 1));
+      expect(dir.table.fan, isNotNull);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  test('el giro va por el camino corto', () {
+    final p = lerpPose(
+      const TablePose(0, 0, rot: 350),
+      const TablePose(0, 0, rot: 10),
+      .5,
+    );
+    expect(p.rot % 360, closeTo(0, 1e-9));
   });
 }

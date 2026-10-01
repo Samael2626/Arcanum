@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import '../../oraculo/widgets/tarot_card.dart';
 import 'table_director.dart';
 import 'table_geometry.dart';
+import 'table_motion.dart';
 import 'table_painters.dart';
 
 const _cardSize = Size(TableGeometry.cardW, TableGeometry.cardH);
@@ -35,18 +36,6 @@ Matrix4 pieceMatrix(
     ..translateByDouble(-_cardSize.width / 2, -_cardSize.height / 2, 0, 1);
 }
 
-TablePose _lerp(TablePose a, TablePose b, double t) {
-  // el giro va por el camino corto: de 350 a 10 no da la vuelta entera
-  var dr = (b.rot - a.rot) % 360;
-  if (dr > 180) dr -= 360;
-  return TablePose(
-    a.x + (b.x - a.x) * t,
-    a.y + (b.y - a.y) * t,
-    rot: a.rot + dr * t,
-    scale: a.scale + (b.scale - a.scale) * t,
-  );
-}
-
 /// Carta en juego.
 class TableCardPiece extends StatefulWidget {
   const TableCardPiece({
@@ -54,6 +43,7 @@ class TableCardPiece extends StatefulWidget {
     required this.view,
     required this.back,
     this.positionLabel,
+    this.birth,
   });
 
   final PieceView view;
@@ -62,24 +52,19 @@ class TableCardPiece extends StatefulWidget {
   /// Donde esta (hueco, apartada...), para el lector de pantalla.
   final String? positionLabel;
 
+  /// De donde sale volando al aparecer (el monton, el abanico), o null.
+  final Birth? birth;
+
   @override
   State<TableCardPiece> createState() => _TableCardPieceState();
 }
 
 class _TableCardPieceState extends State<TableCardPiece>
-    with TickerProviderStateMixin {
-  late final AnimationController _move = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 380),
-  );
-  late final AnimationController _flip = AnimationController(vsync: this);
-  late final AnimationController _turn = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 420),
-  );
+    with TickerProviderStateMixin, PoseMotion {
+  // se crean al montar, no al primer uso (ver PoseMotion.motionStart)
+  late final AnimationController _flip;
+  late final AnimationController _turn;
 
-  late TablePose _from = widget.view.pose;
-  late TablePose _to = widget.view.pose;
   late TarotFace _face = _resolve();
   double _flipFrom = 0;
   late bool _reversed = widget.view.card!.reversed;
@@ -98,29 +83,24 @@ class _TableCardPieceState extends State<TableCardPiece>
   @override
   void initState() {
     super.initState();
-    if (widget.view.card!.faceUp) _flip.value = 1;
-    _turn.value = _reversed ? 1 : 0;
+    motionStart(widget.view.pose, widget.birth);
+    _flip = AnimationController(
+      vsync: this,
+      value: widget.view.card!.faceUp ? 1 : 0,
+    );
+    _turn = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+      value: _reversed ? 1 : 0,
+    );
   }
-
-  TablePose get _shown => _move.isAnimating
-      ? _lerp(_from, _to, Curves.easeOutCubic.transform(_move.value))
-      : _to;
 
   @override
   void didUpdateWidget(TableCardPiece old) {
     super.didUpdateWidget(old);
     final v = widget.view, c = v.card!;
     if (c.slug != old.view.card!.slug) _face = _resolve();
-    if (v.pose != _to) {
-      if (v.dragging) {
-        _move.stop();
-        _from = _to = v.pose;
-      } else {
-        _from = _shown;
-        _to = v.pose;
-        _move.forward(from: 0);
-      }
-    }
+    motionUpdate(v.pose, dragging: v.dragging);
     final wasUp = old.view.card!.faceUp;
     if (c.faceUp && !wasUp) {
       // si venia de la esquina, el volteo sigue desde donde la solto el dedo
@@ -142,7 +122,7 @@ class _TableCardPieceState extends State<TableCardPiece>
 
   @override
   void dispose() {
-    _move.dispose();
+    motionDispose();
     _flip.dispose();
     _turn.dispose();
     super.dispose();
@@ -167,7 +147,7 @@ class _TableCardPieceState extends State<TableCardPiece>
         label: _semantics(),
         button: true,
         child: AnimatedBuilder(
-          animation: Listenable.merge([_move, _flip, _turn]),
+          animation: Listenable.merge([motion, _flip, _turn]),
           builder: (context, _) {
             // grados de volteo: la esquina manda mientras el dedo tira de ella
             final peel = v.peelAngle;
@@ -179,7 +159,7 @@ class _TableCardPieceState extends State<TableCardPiece>
             final turnBump = math.sin(math.pi * _turn.value);
             return Transform(
               transform: pieceMatrix(
-                _shown,
+                shownPose,
                 lift:
                     v.lift +
                     turnBump * 20 +
@@ -248,21 +228,53 @@ class _TableCardPieceState extends State<TableCardPiece>
   }
 }
 
-/// Un monton (o un mazo del estante), con su nombre debajo.
-class PilePiece extends StatelessWidget {
+/// Un monton (o un mazo del estante), con su nombre debajo. Viaja como las
+/// cartas: el corte sale del monton original y el mazo abierto, del estante.
+class PilePiece extends StatefulWidget {
   const PilePiece({
     super.key,
     required this.view,
     required this.back,
     this.glow = false,
+    this.birth,
+    this.shownCount,
   });
 
   final PieceView view;
   final ui.Image back;
   final bool glow;
+  final Birth? birth;
+
+  /// Cartas que se ven en la caja (menos mientras se baraja), o las reales.
+  final int? shownCount;
+
+  @override
+  State<PilePiece> createState() => _PilePieceState();
+}
+
+class _PilePieceState extends State<PilePiece>
+    with SingleTickerProviderStateMixin, PoseMotion {
+  @override
+  void initState() {
+    super.initState();
+    motionStart(widget.view.pose, widget.birth);
+  }
+
+  @override
+  void didUpdateWidget(PilePiece old) {
+    super.didUpdateWidget(old);
+    motionUpdate(widget.view.pose, dragging: widget.view.dragging);
+  }
+
+  @override
+  void dispose() {
+    motionDispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final view = widget.view;
     final label = view.label;
     return Positioned(
       left: 0,
@@ -270,12 +282,16 @@ class PilePiece extends StatelessWidget {
       child: Semantics(
         label: '${label ?? 'Montón'}, ${view.count} cartas',
         button: true,
-        child: Transform(
-          transform: pieceMatrix(
-            view.pose,
-            lift: view.lift,
-            tiltX: view.tiltX,
-            tiltY: view.tiltY,
+        child: AnimatedBuilder(
+          animation: motion,
+          builder: (context, child) => Transform(
+            transform: pieceMatrix(
+              shownPose,
+              lift: view.lift + motionLift,
+              tiltX: view.tiltX,
+              tiltY: view.tiltY,
+            ),
+            child: child,
           ),
           child: SizedBox.fromSize(
             size: _cardSize,
@@ -285,9 +301,9 @@ class PilePiece extends StatelessWidget {
                 CustomPaint(
                   size: _cardSize,
                   painter: PilePainter(
-                    count: view.count,
-                    back: back,
-                    glow: glow,
+                    count: widget.shownCount ?? view.count,
+                    back: widget.back,
+                    glow: widget.glow,
                   ),
                 ),
                 if (label != null)
