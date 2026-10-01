@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ARCANUM · QA real de Sendero · 01 oct 2026</title>
+  <style>
+    :root { color-scheme: dark; --ink:#0a0a0e; --paper:#ebe5d9; --muted:#b5ada2; --gold:#c6a54c; --blue:#7fb5d7; --red:#da8479; --line:#40372b; }
+    * { box-sizing:border-box }
+    html { scroll-behavior:smooth }
+    body { margin:0; background:var(--ink); color:var(--paper); font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif }
+    body:before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.09; background-image:repeating-linear-gradient(92deg,transparent 0 2px,#aaa 3px,transparent 4px 7px) }
+    a { color:var(--gold) }
+    .wrap { max-width:1180px; margin:auto; padding:0 28px }
+    header { min-height:460px; display:grid; grid-template-columns:minmax(0,1.15fr) minmax(220px,.55fr); align-items:end; gap:40px; border-bottom:1px solid var(--line); padding:88px 0 54px }
+    .eyebrow,.kicker { color:var(--gold); text-transform:uppercase; letter-spacing:.24em; font-size:.75rem; font-weight:700 }
+    h1,h2,h3 { font-family:Georgia,"Times New Roman",serif; font-weight:400; line-height:1.08 }
+    h1 { font-size:clamp(4rem,10vw,9rem); letter-spacing:-.07em; margin:18px 0 8px }
+    header p { max-width:640px; font-size:1.22rem; color:var(--muted) }
+    .verdict { border-left:2px solid var(--red); padding:14px 0 14px 22px; align-self:end }
+    .verdict strong { display:block; color:var(--red); font-size:1.15rem; text-transform:uppercase; letter-spacing:.14em }
+    .verdict span { color:var(--muted); font-size:.9rem }
+    .rail { display:flex; flex-wrap:wrap; gap:8px 22px; padding:18px 0; border-bottom:1px solid var(--line); color:var(--muted); font-size:.85rem }
+    .rail b { color:var(--paper); font-weight:500 }
+    main section { padding:62px 0; border-bottom:1px solid var(--line) }
+    h2 { font-size:clamp(2.4rem,5vw,4.6rem); letter-spacing:-.045em; margin:8px 0 24px }
+    h3 { font-size:2rem; margin:0 0 14px }
+    p { margin:0 0 17px }
+    .lede { font-size:1.13rem; max-width:770px; color:var(--muted) }
+    .finding { display:grid; grid-template-columns:minmax(0,.72fr) minmax(0,1.28fr); gap:48px; align-items:start; padding:44px 0; border-top:1px solid var(--line) }
+    .finding:nth-of-type(even) { grid-template-columns:minmax(0,1.28fr) minmax(0,.72fr) }
+    .finding:nth-of-type(even) .copy { order:2 }
+    .finding:nth-of-type(even) .shots { order:1 }
+    .number { display:block; color:var(--gold); font:normal 4rem/1 Georgia,serif; opacity:.65; margin-bottom:20px }
+    .severity { display:inline-block; margin-bottom:18px; padding:4px 9px; border:1px solid currentColor; color:var(--gold); font-size:.7rem; text-transform:uppercase; letter-spacing:.16em }
+    .severity.blocker { color:var(--red) }
+    .copy p { color:var(--muted) }
+    .copy strong { color:var(--paper); font-weight:600 }
+    .shots { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px }
+    .shots.one { grid-template-columns:minmax(0,1fr) }
+    figure { margin:0; min-width:0 }
+    figure img { display:block; width:100%; max-height:560px; object-fit:contain; object-position:top; background:#111117; border:1px solid var(--line) }
+    figcaption { padding:8px 1px 0; color:var(--muted); font-size:.8rem }
+    .proof { display:grid; grid-template-columns:repeat(3,1fr); gap:26px; margin-top:40px }
+    .proof article { border-top:2px solid var(--gold); padding-top:17px }
+    .proof h3 { font-size:1.5rem }
+    .proof p { color:var(--muted) }
+    .method { display:grid; grid-template-columns:1fr 1fr; gap:40px; color:var(--muted) }
+    .method strong { color:var(--paper) }
+    footer { padding:40px 0 70px; color:var(--muted); font-size:.85rem }
+    @media (max-width:800px) {
+      header,.finding,.finding:nth-of-type(even),.method { grid-template-columns:1fr }
+      header { min-height:auto; padding-top:72px }
+      .finding:nth-of-type(even) .copy,.finding:nth-of-type(even) .shots { order:initial }
+      .proof { grid-template-columns:1fr }
+      .shots figure img { max-height:430px }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="eyebrow">ARCANUM / Sendero / GN2200</div>
+        <h1>La guía,<br>en mano.</h1>
+        <p>Recorrido real en Android 12 con una cuenta nueva sin datos natales sensibles. Capturas del aparato, no de tests sintéticos.</p>
+      </div>
+      <div class="verdict"><strong>No dar visto bueno</strong><span>El servidor entregó 3 Fragmentos cuando la regla vigente es 1. Además, el foco del cajón señala la fila equivocada.</span></div>
+    </header>
+    <div class="rail">
+      <span><b>Fecha:</b> 01 oct 2026</span><span><b>Dispositivo:</b> OnePlus GN2200</span><span><b>APK:</b> debug 1.0.7+16</span><span><b>Rama app:</b> release/1.0.6</span><span><b>Créditos gastados:</b> 0</span>
+    </div>
+    <main>
+      <section>
+        <div class="kicker">01 / Fallos</div>
+        <h2>Lo que rompe la promesa.</h2>
+        <p class="lede">Ordenado por impacto: economía primero; después navegación y contexto. Ningún hallazgo depende de una captura de Flutter test.</p>
+        <div class="finding">
+          <div class="copy"><span class="number">01</span><span class="severity blocker">Bloqueante · economía</span><h3>Promete uno.<br>Entrega tres.</h3><p>El cajón tenía <strong>0 Fragmentos</strong> antes de terminar Primer umbral. La tarjeta final anunció <strong>un Fragmento</strong>. Después, cajón y pantalla de Fragmentos mostraron <strong>3</strong>; esta última afirma «3 Fragmento por cada lección».</p><p><strong>Causa verificada:</strong> Railway tenía activo <code>2a76e1e</code>, cuyo <code>FragmentService.TUTORIAL_REWARD</code> vale 3. La rama de la app define 1. No se completaron más lecciones para no acuñar más Fragmentos bajo la regla vieja.</p></div>
+          <div class="shots">
+            <figure><img src="12_recompensa.png" alt="La tarjeta confirma un Fragmento"><figcaption>La tarjeta anuncia uno.</figcaption></figure>
+            <figure><img src="13_saldo_cajon.png" alt="Cajón con tres Fragmentos tras completar la lección"><figcaption>El cajón pasa de cero a tres.</figcaption></figure>
+            <figure><img src="14_fragmentos_regla.png" alt="Saldo de tres y texto de tres por lección"><figcaption>El saldo y la regla servida dicen tres.</figcaption></figure>
+          </div>
+        </div>
+        <div class="finding">
+          <div class="copy"><span class="number">02</span><span class="severity">Alta · navegación</span><h3>El foco no apunta<br>al Horóscopo.</h3><p>En el paso 2/3 de Primer umbral, el contorno dorado queda sobre <strong>Cielo</strong> y apenas alcanza Horóscopo. Esperar a que termine la transición no lo corrige. Tocar la fila real de Horóscopo sí avanza; el problema es visual y guía hacia el lugar incorrecto.</p></div>
+          <div class="shots one"><figure><img src="10b_menu_estable.png" alt="El foco resalta Cielo aunque el cartel pide Horóscopo"><figcaption>Captura estable, más de un segundo después de abrir el cajón.</figcaption></figure></div>
+        </div>
+        <div class="finding">
+          <div class="copy"><span class="number">03</span><span class="severity">Alta · contexto</span><h3>Ofrece una lectura<br>que no existe.</h3><p>La cuenta eligió <strong>continuar sin datos sensibles</strong>. Horóscopo pide calcular la carta natal y no permite abrir lectura. Sendero, encima, dice «Puedes abrir tu lectura si quieres». «Terminar sin gastar» funciona, pero el texto debe reconocer ese estado vacío; no debe empujar a entregar datos natales.</p></div>
+          <div class="shots one"><figure><img src="11_horoscopo_sin_carta.png" alt="Horóscopo exige carta natal y Sendero ofrece lectura"><figcaption>Estado vacío real y promesa incompatible en la misma pantalla.</figcaption></figure></div>
+        </div>
+        <div class="finding">
+          <div class="copy"><span class="number">04</span><span class="severity">Media · decisión</span><h3>El desvío no ofrece volver.</h3><p>Al salir de Cielo hacia Saber, la tarjeta conserva el recorrido, pero solo ofrece <strong>«Explorar Saber»</strong> y <strong>«Pausar»</strong>. Falta «Volver a Cielo», una de las dos opciones prometidas para este estado. La navegación libre por el menú sí permite volver manualmente.</p></div>
+          <div class="shots one"><figure><img src="16_desvio_saber.png" alt="Tarjeta de desvío en Saber sin opción de volver a Cielo"><figcaption>Desvío no modal; retorno no está en la tarjeta.</figcaption></figure></div>
+        </div>
+        <div class="finding">
+          <div class="copy"><span class="number">05</span><span class="severity">Media · visual</span><h3>La portada aún<br>pisotea su texto.</h3><p>El marco ornamental de la tarjeta «A tu lado» solapa rótulo, cifra y párrafo. Ya estaba en el QA del 30 de septiembre y sigue en la build probada. El velo de los pasos también oscurece mucho la app; la tarjeta 3/3 ocupa el centro con bastante texto.</p></div>
+          <div class="shots"><figure><img src="17_indice.png" alt="Marco ornamental superpuesto al texto del índice"><figcaption>Problema de composición repetido.</figcaption></figure><figure><img src="09_menu_paso.png" alt="Velo oscuro sobre la app durante el primer paso"><figcaption>App real visible, pero muy apagada.</figcaption></figure></div>
+        </div>
+      </section>
+      <section>
+        <div class="kicker">02 / Lo que sí funcionó</div><h2>Menos ceremonia,<br>más uso.</h2>
+        <div class="proof">
+          <article><h3>Invitación opcional</h3><p>Apareció sobre Cielo después del onboarding, sin bloquear el menú. La cuenta continuó sin datos natales sensibles.</p><figure><img src="08_invitacion.png" alt="Invitación opcional de Sendero sobre Cielo"><figcaption>Invitación inicial real.</figcaption></figure></article>
+          <article><h3>Pistas una vez</h3><p>«Sendero en Cielo» apareció sin velo; al salir y volver ya no se repitió. Horóscopo mostró su propia pista después.</p><figure><img src="15_pista_cielo.png" alt="Pista discreta en Cielo"><figcaption>Pista contextual no modal.</figcaption></figure><p><a href="19_pista_horoscopo.png">Ver pista de Horóscopo</a></p></article>
+          <article><h3>Progreso conservado</h3><p>Se abrió el menú durante Cielo, se entró a Saber, se pausó y se volvió. El índice ofreció continuar y reapareció <strong>Cielo · 2 de 2</strong>. La sugerencia de próxima lección tampoco abrió Cielo sola.</p><figure><img src="18_retoma_cielo.png" alt="Cielo retomado en el paso dos de dos"><figcaption>Retoma en el paso guardado.</figcaption></figure></article>
+        </div>
+      </section>
+      <section>
+        <div class="kicker">03 / Alcance</div><h2>Qué se probó.<br>Qué no.</h2>
+        <div class="method"><p><strong>Probado:</strong> registro de cuenta genérica, rechazo de datos sensibles, invitación, tres pasos de orientación, cajón, Horóscopo vacío, finalización sin gasto, saldo y regla de Fragmentos, pista de Cielo y Horóscopo, desvío a Saber, pausa, índice y retoma. Cero créditos en todo momento.</p><p><strong>No probado:</strong> lectura real ni su confirmación de gasto, canje, segunda recompensa, persistencia entre dispositivos, lector de pantalla, texto grande, movimiento reducido y todos los recorridos. El fallo económico impidió completar más lecciones sin alterar más el saldo.</p></div>
+      </section>
+    </main>
+    <footer>Capturas tomadas con ADB directamente del GN2200. La cuenta de prueba no contiene fecha, hora ni lugar de nacimiento. Este reporte diagnostica; no cambia app ni backend.</footer>
+  </div>
+</body>
+</html>
