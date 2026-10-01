@@ -31,6 +31,7 @@ un solo acierto. Ver la nota del vault.
 from __future__ import annotations
 
 import logging
+import re
 import threading
 import time
 from dataclasses import dataclass, field
@@ -47,30 +48,55 @@ logger = logging.getLogger("arcanum.groq")
 ENFRIADO_POR_DEFECTO = 60.0
 
 
+# Como se puede separar una clave de la siguiente. Coma, punto y coma, espacio
+# o salto de linea: cualquiera de las cuatro, porque quien pega tres claves
+# seguidas desde la consola usa la que le sale, y el modo en que esto falla si
+# no se acepta es SILENCIOSO --- ver `_PREFIJO`.
+_SEPARADORES = re.compile(r"[,;\s]+")
+
+# Toda clave de Groq empieza asi. No es cosmetica: sin esta comprobacion, dos
+# claves pegadas sin separador valido entran como UNA sola de 113 caracteres,
+# se construye un cliente con ella, y cada llamada que le toque falla con un
+# error de autenticacion --- que NO es un 429 y por tanto el salto a otra clave
+# no lo cubre. Paso de verdad el 29-sep-2026 al configurarlas con ";".
+_PREFIJO = "gsk_"
+
+
 def claves_configuradas() -> list[str]:
-    """Las claves, sin repetidas y en orden estable.
+    """Las claves, sin repetidas, sin basura y en orden estable.
 
     `GROQ_API_KEY` sigue siendo la principal y se mantiene la primera: quien
     tenga una sola configurada no nota nada, que es la condicion para que esto
     se pueda desplegar sin tocar el entorno.
 
-    `GROQ_API_KEYS` admite varias separadas por comas. Se acepta que venga con
-    espacios y con la principal repetida dentro, porque escribir las tres en la
-    misma variable es lo que va a hacer quien las pegue de la consola.
+    `GROQ_API_KEYS` admite varias. Se acepta que vengan con espacios, con
+    cualquiera de los separadores habituales y con la principal repetida
+    dentro, porque escribir las tres en la misma variable es lo que va a hacer
+    quien las pegue de la consola.
+
+    Lo que NO se acepta es algo que no parezca una clave: se descarta con un
+    aviso en el log en vez de montar un cliente que va a fallar cada vez que le
+    toque el turno.
     """
     crudas: list[str] = []
     if settings.GROQ_API_KEY:
         crudas.append(settings.GROQ_API_KEY)
-    extra = getattr(settings, "GROQ_API_KEYS", None) or ""
-    crudas.extend(extra.split(","))
+    crudas.extend(_SEPARADORES.split(getattr(settings, "GROQ_API_KEYS", None) or ""))
 
     vistas: set[str] = set()
     limpias: list[str] = []
     for c in crudas:
         c = c.strip()
-        if c and c not in vistas:
-            vistas.add(c)
-            limpias.append(c)
+        if not c or c in vistas:
+            continue
+        vistas.add(c)
+        if not c.startswith(_PREFIJO):
+            logger.error(
+                "Clave de Groq descartada: no empieza por %r (%d caracteres). "
+                "Separa las claves con coma.", _PREFIJO, len(c),
+            )
+            continue
+        limpias.append(c)
     return limpias
 
 

@@ -5,9 +5,10 @@
 Enseñar todas las funciones reales de ARCANUM mediante uso guiado, sin forzar al
 usuario ni convertir su primera sesión en una clase larga.
 
-**Sendero es la guía. Fragmentos Arcanos es la moneda ganada practicando.**
-Sendero introduce la moneda dentro de una práctica real, pero no reemplaza ni
-duplica su sistema económico.
+**Sendero es la guía. Fragmentos Arcanos es la moneda de práctica.**
+Completar la orientación v2 da 3 Fragmentos una sola vez por cuenta. Después,
+marcar cada carta real estudiada en Oráculo → Aprender da 1 la primera vez.
+El servicio económico del backend concede ambos premios; Flutter no acuña.
 
 ## Decisiones cerradas
 
@@ -25,8 +26,9 @@ duplica su sistema económico.
 - Funciones nuevas: mini recorrido opcional, mostrado una sola vez y repetible.
 - Premium: explicación breve orientada a despertar interés; no simular acceso ni
   convertir el recorrido en un muro de pago.
-- Fragmentos Arcanos: aparecen al completar una práctica que cumpla las reglas
-  reales de la economía. La revelación explica cómo se ganan y para qué sirven.
+- Fragmentos Arcanos: regalo único de 3 al cerrar la primera orientación,
+  más 1 por cada carta real marcada estudiada por primera vez. La revelación
+  muestra el incremento confirmado por backend y el canje de 12 por crédito.
 
 ## Currículo inicial
 
@@ -39,8 +41,8 @@ El inventario definitivo sale del código vivo. La estructura acordada parte de:
    una lectura real.
 4. Grimorio: crear una entrada y comprender su protección.
 5. Saber: explorar plantas y libros, leer y guardar pasajes.
-6. Fragmentos Arcanos: revelar la recompensa tras la primera práctica elegible,
-   explicar acumulación y conversión usando cifras del servicio canónico.
+6. Fragmentos Arcanos: revelar el regalo de Sendero y explicar estudio,
+   acumulación y conversión con cifras del servicio canónico.
 7. Cuenta: perfil, ajustes, privacidad, saldo y plan.
 
 Antes de implementar, confrontar esta lista con rutas, capacidades y permisos
@@ -57,7 +59,7 @@ artificiales.
 El progreso se muestra como recorridos completados, no como obligación. Debe ser
 accesible desde navegación o ajustes para continuar y repetir.
 
-La primera recompensa de Fragmentos Arcanos merece una revelación breve y
+El regalo de Fragmentos Arcanos merece una revelación breve y
 serena. Muestra el incremento confirmado por backend, no una animación optimista
 antes de persistirlo.
 

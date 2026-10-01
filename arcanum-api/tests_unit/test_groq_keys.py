@@ -39,31 +39,56 @@ def test_sin_ninguna_clave_no_hay_de_donde_tirar(monkeypatch):
 
 def test_con_una_sola_clave_nada_cambia(monkeypatch):
     # La condicion para poder desplegar esto sin tocar el entorno.
-    _config(monkeypatch, "k1")
+    _config(monkeypatch, "gsk_k1")
     rot = gk.rotador()
     assert len(rot) == 1
-    assert rot.siguiente().cliente == "cliente:k1"
-    assert rot.siguiente().cliente == "cliente:k1"
+    assert rot.siguiente().cliente == "cliente:gsk_k1"
+    assert rot.siguiente().cliente == "cliente:gsk_k1"
 
 
 def test_las_tres_se_reparten_por_turnos(monkeypatch):
     # Si no rotara, la primera agotaria su minuto y las otras dos mirarian.
-    _config(monkeypatch, "k1", "k2,k3")
+    _config(monkeypatch, "gsk_k1", "gsk_k2,gsk_k3")
     rot = gk.rotador()
     assert len(rot) == 3
     vistas = [rot.siguiente().valor for _ in range(6)]
-    assert vistas == ["k1", "k2", "k3", "k1", "k2", "k3"]
+    assert vistas == ["gsk_k1", "gsk_k2", "gsk_k3", "gsk_k1", "gsk_k2", "gsk_k3"]
+
+
+def test_valen_los_cuatro_separadores(monkeypatch):
+    # Quien pega tres claves de la consola usa el separador que le sale. El
+    # 29-sep-2026 se configuraron con ";" y entraron como UNA sola clave de 113
+    # caracteres, que es el fallo silencioso que esto evita.
+    for sep in (",", ";", " ", chr(10)):
+        _config(monkeypatch, "gsk_1", f"gsk_2{sep}gsk_3")
+        assert [c.valor for c in gk.rotador()._claves] == ["gsk_1", "gsk_2", "gsk_3"], sep
+
+
+def test_lo_que_no_parece_una_clave_se_descarta(monkeypatch):
+    # Y no se monta un cliente con ello: ese cliente fallaria con un error de
+    # autenticacion cada vez que le tocase el turno, y eso NO es un 429, asi
+    # que el salto a otra clave no lo cubriria.
+    _config(monkeypatch, "gsk_1", "gsk_2,basura,gsk_3")
+    assert [c.valor for c in gk.rotador()._claves] == ["gsk_1", "gsk_2", "gsk_3"]
+
+
+def test_dos_claves_pegadas_sin_separador_no_entran_como_una(monkeypatch):
+    # Empieza por gsk_ y tiene el doble de largo: es lo que pasaba con ";".
+    # Se acepta porque el prefijo es correcto, y por eso el separador tenia que
+    # arreglarse en el split y no solo en la validacion.
+    _config(monkeypatch, None, "gsk_2;gsk_3")
+    assert len(gk.rotador()) == 2
 
 
 def test_la_principal_va_primera_y_no_se_duplica(monkeypatch):
     # Pegar las tres en GROQ_API_KEYS incluyendo la principal es lo que va a
     # pasar en la consola, y no puede acabar con la misma clave dos veces.
-    _config(monkeypatch, "k1", " k1 , k2 ,, k3 ")
-    assert [c.valor for c in gk.rotador()._claves] == ["k1", "k2", "k3"]
+    _config(monkeypatch, "gsk_k1", " gsk_k1 , gsk_k2 ,, gsk_k3 ")
+    assert [c.valor for c in gk.rotador()._claves] == ["gsk_k1", "gsk_k2", "gsk_k3"]
 
 
 def test_una_clave_con_429_se_aparta_el_tiempo_que_pide(monkeypatch):
-    _config(monkeypatch, "k1", "k2,k3")
+    _config(monkeypatch, "gsk_k1", "gsk_k2,gsk_k3")
     rot = gk.rotador()
     primera = rot.siguiente()
     rot.enfriar(primera, 30)
@@ -73,7 +98,7 @@ def test_una_clave_con_429_se_aparta_el_tiempo_que_pide(monkeypatch):
 
 
 def test_el_enfriado_caduca_y_la_clave_vuelve(monkeypatch):
-    _config(monkeypatch, "k1", "k2")
+    _config(monkeypatch, "gsk_k1", "gsk_k2")
     rot = gk.rotador()
     c = rot.siguiente()
     rot.enfriar(c, 0.05)
@@ -85,7 +110,7 @@ def test_el_enfriado_caduca_y_la_clave_vuelve(monkeypatch):
 def test_sin_retry_after_se_aparta_poco(monkeypatch):
     # Un castigo largo cuando falta el dato regalaria capacidad que quiza ya
     # estaba: el 429 de minuto se apaga en segundos.
-    _config(monkeypatch, "k1", "k2")
+    _config(monkeypatch, "gsk_k1", "gsk_k2")
     rot = gk.rotador()
     c = rot.siguiente()
     rot.enfriar(c, None)
@@ -95,7 +120,7 @@ def test_sin_retry_after_se_aparta_poco(monkeypatch):
 
 
 def test_con_todas_frias_no_queda_ninguna(monkeypatch):
-    _config(monkeypatch, "k1", "k2")
+    _config(monkeypatch, "gsk_k1", "gsk_k2")
     rot = gk.rotador()
     for c in list(rot._claves):
         rot.enfriar(c, 60)
@@ -105,10 +130,10 @@ def test_con_todas_frias_no_queda_ninguna(monkeypatch):
 
 def test_alternativas_no_repite_las_ya_probadas(monkeypatch):
     # Sin esto, una racha de 429 daria vueltas sobre las mismas claves.
-    _config(monkeypatch, "k1", "k2,k3")
+    _config(monkeypatch, "gsk_k1", "gsk_k2,gsk_k3")
     rot = gk.rotador()
     restantes = rot.alternativas({0, 1})
-    assert [c.valor for c in restantes] == ["k3"]
+    assert [c.valor for c in restantes] == ["gsk_k3"]
 
 
 def test_un_cliente_de_fuera_no_pertenece_a_la_rotacion(monkeypatch):
@@ -118,11 +143,11 @@ def test_un_cliente_de_fuera_no_pertenece_a_la_rotacion(monkeypatch):
     # Groq con la misma clave son objetos distintos con su propio pool de
     # conexiones, y confundirlos enfriaria la clave equivocada. Por eso aqui se
     # pasa el objeto que el rotador guarda, no uno igual.
-    _config(monkeypatch, "k1", "k2")
+    _config(monkeypatch, "gsk_k1", "gsk_k2")
     rot = gk.rotador()
     suyo = rot._claves[1].cliente
     assert rot.por_cliente(suyo) is not None
-    assert rot.por_cliente(suyo).valor == "k2"
+    assert rot.por_cliente(suyo).valor == "gsk_k2"
     assert rot.por_cliente(object()) is None
 
 
@@ -178,10 +203,10 @@ def _rotador_con(monkeypatch, clientes):
     gk.reiniciar()
     it = iter(clientes)
     monkeypatch.setattr(gk, "Groq", lambda api_key: next(it))
-    monkeypatch.setattr(gk.settings, "GROQ_API_KEY", "k1", raising=False)
+    monkeypatch.setattr(gk.settings, "GROQ_API_KEY", "gsk_k1", raising=False)
     monkeypatch.setattr(
         gk.settings, "GROQ_API_KEYS",
-        ",".join(f"k{i + 2}" for i in range(len(clientes) - 1)) or None,
+        ",".join(f"gsk_k{i + 2}" for i in range(len(clientes) - 1)) or None,
         raising=False,
     )
     return gk.rotador()

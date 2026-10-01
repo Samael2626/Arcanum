@@ -1,6 +1,7 @@
 import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/features/sendero/application/sendero_controller.dart';
+import 'package:arcanum_app/features/sendero/application/sendero_guide_controller.dart';
 import 'package:arcanum_app/features/sendero/domain/sendero_catalog.dart';
 import 'package:arcanum_app/features/sendero/presentation/sendero_invitation.dart';
 import 'package:arcanum_app/features/sendero/presentation/sendero_screen.dart';
@@ -78,6 +79,54 @@ void main() {
     expect(prefs.containsKey('sendero_progress_v1_sendero-test-user'), isTrue);
   });
 
+  test('guia avanza solo por el gesto esperado y permite repetir', () async {
+    final api = _SenderoApi();
+    final container = ProviderContainer(
+      overrides: [
+        arcanumApiProvider.overrideWithValue(api),
+        authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+      ],
+    );
+    addTearDown(container.dispose);
+    await container.read(senderoControllerProvider.future);
+
+    final journey = senderoJourneyById('orientation')!;
+    final guide = container.read(senderoGuideProvider.notifier);
+    guide.start(journey);
+    guide.onAction('help');
+    expect(container.read(senderoGuideProvider)?.step, 0);
+    guide.onAction('menu');
+    expect(container.read(senderoGuideProvider)?.step, 1);
+    guide.pause();
+    expect(container.read(senderoGuideProvider), isNull);
+
+    await guide.idle;
+    guide.start(
+      journey,
+      saved: container.read(senderoControllerProvider).value?['orientation:2'],
+    );
+    expect(container.read(senderoGuideProvider)?.step, 0);
+    guide.onAction('menu');
+    guide.onAction('section_horoscopo');
+    guide.onAction('help');
+    expect(container.read(senderoGuideProvider), isNull);
+    await guide.idle;
+    expect(
+      container
+          .read(senderoControllerProvider)
+          .value?['orientation:2']
+          ?.isCompleted,
+      isTrue,
+    );
+
+    guide.start(
+      journey,
+      saved: container.read(senderoControllerProvider).value?['orientation:2'],
+    );
+    expect(container.read(senderoGuideProvider)?.step, 0);
+    guide.pause();
+  });
+
   testWidgets('hub muestra todas las camaras y estado completado', (
     tester,
   ) async {
@@ -85,7 +134,7 @@ void main() {
       ..remote = [
         {
           'journey_id': 'orientation',
-          'version': 1,
+          'version': 2,
           'step': 2,
           'status': 'completed',
         },
@@ -102,7 +151,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text('1 de ${senderoJourneys.length} cámaras recorridas.'),
+      find.text(
+        '1 de ${senderoJourneys.where((journey) => journey.available).length} recorridos explorados.',
+      ),
       findsOneWidget,
     );
     expect(find.text('Primer umbral'), findsOneWidget);
@@ -115,7 +166,7 @@ void main() {
     expect(find.text('Fragmentos Arcanos'), findsOneWidget);
   });
 
-  testWidgets('primera entrada permite salir aunque no exista ruta anterior', (
+  testWidgets('primera entrada lleva la guia a Cielo y permite pausarla', (
     tester,
   ) async {
     final api = _SenderoApi();
@@ -142,10 +193,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('sendero_leave')), findsOneWidget);
-    await tester.tap(find.text('Salir'));
-    await tester.pumpAndSettle();
-
+    expect(find.text('CIELO'), findsOneWidget);
+    final container = ProviderScope.containerOf(
+      tester.element(find.text('CIELO')),
+    );
+    expect(container.read(senderoGuideProvider)?.journey.id, 'orientation');
+    container.read(senderoGuideProvider.notifier).pause();
+    await tester.pump();
+    expect(container.read(senderoGuideProvider), isNull);
     expect(find.text('CIELO'), findsOneWidget);
   });
 

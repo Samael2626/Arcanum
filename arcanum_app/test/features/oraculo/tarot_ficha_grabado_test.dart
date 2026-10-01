@@ -8,6 +8,7 @@ import 'package:arcanum_app/features/oraculo/tarot_learn.dart';
 import 'package:arcanum_app/features/oraculo/widgets/tarot_card.dart';
 import 'package:arcanum_app/core/theme/arcanum_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 final _carta = <String, dynamic>{
@@ -22,13 +23,15 @@ final _carta = <String, dynamic>{
 /// Abre la ficha y deja la hoja quieta.
 Future<void> _abrirFicha(WidgetTester tester) async {
   await tester.pumpWidget(
-    MaterialApp(
-      theme: buildArcanumTheme(),
-      home: Scaffold(
-        body: Builder(
-          builder: (context) => TextButton(
-            onPressed: () => showTarotCardSheet(context, _carta),
-            child: const Text('abrir'),
+    ProviderScope(
+      child: MaterialApp(
+        theme: buildArcanumTheme(),
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showTarotCardSheet(context, _carta),
+              child: const Text('abrir'),
+            ),
           ),
         ),
       ),

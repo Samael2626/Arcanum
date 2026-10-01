@@ -4,14 +4,16 @@ class SenderoStep {
   const SenderoStep({
     required this.title,
     required this.body,
+    required this.target,
     this.route,
-    this.creditNotice = false,
+    this.buttonLabel,
   });
 
   final String title;
   final String body;
+  final String target;
   final String? route;
-  final bool creditNotice;
+  final String? buttonLabel;
 }
 
 class SenderoJourney {
@@ -22,6 +24,7 @@ class SenderoJourney {
     required this.icon,
     required this.steps,
     this.version = 1,
+    this.available = true,
   });
 
   final String id;
@@ -29,6 +32,7 @@ class SenderoJourney {
   final String subtitle;
   final IconData icon;
   final int version;
+  final bool available;
   final List<SenderoStep> steps;
 }
 
@@ -36,24 +40,26 @@ const senderoJourneys = <SenderoJourney>[
   SenderoJourney(
     id: 'orientation',
     title: 'Primer umbral',
-    subtitle: 'Orientación y libertad de movimiento',
+    subtitle: 'Descubre el menú y las ayudas sobre la app',
     icon: Icons.explore_outlined,
+    version: 2,
     steps: [
       SenderoStep(
-        title: 'Nada te encierra',
-        body:
-            'Sendero acompaña, no manda. Puedes cerrar, pausar o repetir cualquier guía cuando quieras.',
-      ),
-      SenderoStep(
-        title: 'Las cinco cámaras',
-        body:
-            'El menú abre Cielo, Horóscopo, Grimorio, Saber y Oráculo. Tu perfil, ajustes y privacidad viven debajo.',
+        title: 'Todo empieza en el menú',
+        body: 'Ábrelo. Sendero esperará tu gesto antes de continuar.',
+        target: 'menu',
         route: '/hoy',
       ),
       SenderoStep(
-        title: 'Las marcas de ayuda',
-        body:
-            'Cuando veas un signo de interrogación, tócalo. Explica el concepto sin sacarte de tu práctica.',
+        title: 'Entra al Horóscopo',
+        body: 'Toca su nombre. Conocerás cada cámara dentro de ella.',
+        target: 'section_horoscopo',
+      ),
+      SenderoStep(
+        title: 'Las ayudas viven aquí',
+        body: 'Toca el signo. Aclara un concepto sin detener tu práctica.',
+        target: 'help',
+        route: '/horoscopo',
       ),
     ],
   ),
@@ -62,17 +68,18 @@ const senderoJourneys = <SenderoJourney>[
     title: 'Cielo',
     subtitle: 'Carta natal, tránsitos y hora planetaria',
     icon: Icons.wb_twilight_outlined,
+    version: 2,
     steps: [
       SenderoStep(
-        title: 'Tu mapa natal',
-        body:
-            'Cielo conserva la figura del instante en que naciste. Tu fecha, hora y lugar determinan el mapa.',
+        title: 'Mira tu carta',
+        body: 'Toca «Tu carta» para ver el cielo del instante en que naciste.',
+        target: 'cielo_toggle',
         route: '/hoy',
       ),
       SenderoStep(
-        title: 'Lo que toca hoy',
-        body:
-            'Los tránsitos muestran la relación entre el cielo actual y tu carta. La hora planetaria depende de tu lugar actual.',
+        title: 'Una palabra, una ayuda',
+        body: 'El signo ? explica tu carta sin sacarte de Cielo.',
+        target: 'help',
         route: '/hoy',
       ),
     ],
@@ -82,19 +89,21 @@ const senderoJourneys = <SenderoJourney>[
     title: 'Horóscopo',
     subtitle: 'Una lectura diaria sobre tu propia carta',
     icon: Icons.brightness_4_outlined,
+    version: 2,
     steps: [
       SenderoStep(
-        title: 'No es un texto por signo',
-        body:
-            'La lectura nace de tus tránsitos reales. El sello muestra primero el cielo; abrirlo revela la interpretación.',
+        title: 'Tu lectura tiene contexto',
+        body: 'Abre la ayuda para conocer los tránsitos de tu carta.',
+        target: 'help',
         route: '/horoscopo',
       ),
       SenderoStep(
-        title: 'Antes de consumir',
+        title: 'La lectura es tu decisión',
         body:
-            'Generar una lectura nueva puede usar tu cupo diario o créditos. ARCANUM debe advertírtelo antes; tú decides.',
+            'Abrir el sello puede gastar cupo diario o créditos. Puedes explorar sin gastarlos ahora.',
+        target: 'horoscope_card',
         route: '/horoscopo',
-        creditNotice: true,
+        buttonLabel: 'Seguir sin gastar',
       ),
     ],
   ),
@@ -103,18 +112,13 @@ const senderoJourneys = <SenderoJourney>[
     title: 'Grimorio',
     subtitle: 'Diario privado y pasajes guardados',
     icon: Icons.menu_book_outlined,
+    version: 2,
     steps: [
       SenderoStep(
-        title: 'Tu cámara privada',
-        body:
-            'Escribe observaciones, sueños y prácticas. El contenido personal se cifra antes de salir del dispositivo.',
+        title: 'Abre una página nueva',
+        body: 'Toca la pluma. Nada se guarda hasta que tú lo decidas.',
+        target: 'grimorio_new',
         route: '/grimorio',
-      ),
-      SenderoStep(
-        title: 'Pasajes que regresan',
-        body:
-            'Desde Saber puedes guardar fragmentos de una obra y encontrarlos después junto a tus notas.',
-        route: '/grimorio/pasajes',
       ),
     ],
   ),
@@ -123,17 +127,12 @@ const senderoJourneys = <SenderoJourney>[
     title: 'Saber',
     subtitle: 'Plantas, correspondencias y obras clásicas',
     icon: Icons.local_library_outlined,
+    version: 2,
     steps: [
       SenderoStep(
-        title: 'Materia y biblioteca',
-        body:
-            'Explora correspondencias tradicionales o entra en una obra. Tu posición de lectura se conserva.',
-        route: '/saber',
-      ),
-      SenderoStep(
-        title: 'Leer con memoria',
-        body:
-            'Marca la página estable, guarda un pasaje y añade una nota cifrada. Así una lectura se vuelve práctica.',
+        title: 'De las plantas a los libros',
+        body: 'Toca «Biblioteca» para explorar las obras y guardar pasajes.',
+        target: 'saber_toggle',
         route: '/saber',
       ),
     ],
@@ -143,37 +142,38 @@ const senderoJourneys = <SenderoJourney>[
     title: 'Oráculo',
     subtitle: 'Tarot, consulta y estudio del mazo',
     icon: Icons.style_outlined,
+    version: 2,
     steps: [
       SenderoStep(
-        title: 'Elige la vía',
+        title: 'Conoce el tarot',
         body:
-            'Puedes tirar cartas, formular una pregunta o estudiar el mazo. La consulta interpreta; no reemplaza tu juicio.',
+            'Abre la ayuda. Luego puedes estudiar el mazo en «Aprender» o consultar; una tirada usa cupo diario o créditos.',
+        target: 'help',
         route: '/oraculo',
       ),
       SenderoStep(
-        title: 'Toda tirada tiene peso',
+        title: 'Una tirada, solo si tú quieres',
         body:
-            'Una tirada puede usar cupo diario o créditos según su tamaño. Revisa el coste y acéptalo antes de confirmar.',
+            'Elige cartas y pregunta. Antes de tirar verás el coste y podrás cancelar sin gastar.',
+        target: 'oracle_draw',
         route: '/oraculo',
-        creditNotice: true,
+        buttonLabel: 'Seguir sin gastar',
       ),
     ],
   ),
   SenderoJourney(
     id: 'fragmentos',
     title: 'Fragmentos Arcanos',
-    subtitle: 'Huella de una práctica real',
+    subtitle: 'Tu recompensa de Sendero y el camino al crédito',
     icon: Icons.auto_awesome_outlined,
     steps: [
       SenderoStep(
-        title: 'No son un premio por mirar',
+        title: 'Tu práctica deja huella',
         body:
-            'Los Fragmentos reconocen prácticas válidas dentro de ARCANUM. Sendero los presenta, pero nunca fabrica saldo.',
-      ),
-      SenderoStep(
-        title: 'Una sola huella',
-        body:
-            'Repetir una guía no repite recompensas. Cuando una práctica otorgue Fragmentos, verás la razón y el movimiento.',
+            'Sendero te entrega Fragmentos una sola vez. Estudiar cada carta del mazo también suma uno la primera vez. Aquí ves tu saldo real.',
+        target: 'fragments_balance',
+        route: '/fragmentos',
+        buttonLabel: 'Entendido',
       ),
     ],
   ),
@@ -182,18 +182,18 @@ const senderoJourneys = <SenderoJourney>[
     title: 'Tu cuenta',
     subtitle: 'Perfil, permisos, privacidad y repetición',
     icon: Icons.shield_outlined,
+    version: 2,
     steps: [
       SenderoStep(
-        title: 'Tú conservas el mando',
-        body:
-            'En Ajustes revisas permisos y cuenta. En Privacidad encuentras el uso de datos y sus controles.',
-        route: '/settings',
+        title: 'La cuenta vive en el menú',
+        body: 'Ábrelo para encontrar perfil, ajustes y privacidad.',
+        target: 'menu',
+        route: '/hoy',
       ),
       SenderoStep(
-        title: 'Regresa cuando quieras',
-        body:
-            'Sendero queda disponible en el menú y en Ajustes. Repetir una guía no borra tu avance.',
-        route: '/settings',
+        title: 'Tus decisiones están en Ajustes',
+        body: 'Toca Ajustes. Sendero seguirá disponible cuando lo necesites.',
+        target: 'settings',
       ),
     ],
   ),

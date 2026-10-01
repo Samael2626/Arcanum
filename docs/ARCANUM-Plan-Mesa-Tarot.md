@@ -9,7 +9,7 @@
 - **Tiradas:** `app/domain/spreads.py` tiene 3 (`one_card`, `three_card`, `celtic_cross`) en un registro en código. Faltan Cruz simple, Relación, Herradura y Rueda del año.
 - **Sorteo:** `TarotService.draw_spread` sortea con `random.sample` en el momento, sin sesión, sin montones y sin elegir posiciones. `random` no sirve para un sorteo que queramos poder defender: hay que usar `secrets.SystemRandom`.
 - **Cupo:** `/tarot/spread` y `/tarot/draw-one` reservan el cupo diario (`TAROT_FREE_DAILY` / `TAROT_PREMIUM_DAILY`) con `Idempotency-Key`. Las lecturas se guardan en `tarot_readings` con fase lunar y hora planetaria.
-- **Migraciones:** la última es la 014. La nueva será la 015.
+- **Migraciones:** la última era la 014. La nueva fue la 015; el 01-oct pasó a **016** al traer `main`, que ya había desplegado su 015 de fragmentos (ver D6).
 - **App:** las rutas están en `lib/core/router/app_router.dart` y las cartas en `lib/features/oraculo/widgets/tarot_card.dart` (`TarotCardView`, volteos por palo). El módulo nuevo irá en `lib/features/tarot/`.
 
 ## Reglas que no se saltan
@@ -46,7 +46,7 @@
 
 ## Fase 2: persistencia y API
 
-- [x] **Migración 015:** tabla `tarot_sessions` (usuario, mazo, estado JSONB, estado de la sesión, creada/actualizada, caducidad). Como mucho una sesión activa por usuario.
+- [x] **Migración 015 (hoy 016, ver D6):** tabla `tarot_sessions` (usuario, mazo, estado JSONB, estado de la sesión, creada/actualizada, caducidad). Como mucho una sesión activa por usuario.
 - [x] Repositorio y servicio de aplicación, con la misma estructura en capas que ya usa el módulo.
 - [x] **Rutas nuevas:**
   - [x] `GET /tarot/decks` y `GET /tarot/spreads`: catálogos.
@@ -125,12 +125,12 @@
   - La carta pasa a 110 × 176 (1:1,6, la del naipe de la app) para que la lámina no se deforme.
   - Ruta `/tarot` y entrada «Mesa de tarot · en pruebas» en el cajón, **solo fuera de release**.
 - [x] **Fallo encontrado de paso:** `seed_tarot.py` y `seed_materia.py` importaban `SessionLocal`, que vale None hasta crear la fábrica: la siembra del arranque fallaba siempre y en silencio. En producción no se notaba porque las cartas ya estaban. Corregido con test.
-- **Backend local para probar en el móvil:** base `arcanum_dev_mesa` en `arcanum-test-db` (5434), migrada y sembrada a mano, sin `GROQ_API_KEY`. **Nunca con el `.env` de `arcanum-api`, que apunta a la base de producción:** el arranque aplicaría la 015 allí. La app de depuración va con `--dart-define=API_BASE_URL=http://127.0.0.1:8000` y `adb reverse tcp:8000 tcp:8000`.
+- **Backend local para probar en el móvil:** base `arcanum_dev_mesa` en `arcanum-test-db` (5434), migrada y sembrada a mano, sin `GROQ_API_KEY`. **Nunca con el `.env` de `arcanum-api`, que apunta a la base de producción:** el arranque aplicaría la 016 allí. La app de depuración va con `--dart-define=API_BASE_URL=http://127.0.0.1:8000` y `adb reverse tcp:8000 tcp:8000`.
 - [x] **Decisiones de Samuel del 30-sep, hechas:**
   - **Cerrar el círculo sin interpretar:** se guarda gratis lo que hay en la mesa: tirada completa, a medias o libre (`spread_type = free`, cartas sueltas no apartadas). El sello se abre al cerrar. Interpretado, se guarda lo interpretado.
   - **Deshacer también en el servidor:** `tarot_sessions.previous_state` y `previous_until` (30 s; la app ofrece 5). Cada operación lleva `checkpoint`: en un gesto de varias, solo la primera marca punto, así se deshace entero. Lo interpretado o cerrado ya no se deshace. Si el servidor avanza fuera del gesto, ese deshacer se retira para no revertir otra cosa. Se deshacen: cortar (menú o borde), unir (soltar encima, por orden o automático), recoger todo, devolver una carta y sacar del abanico arrastrando.
   - **Continuar una lectura:** `POST /tarot/sessions` con `from_reading` abre una mesa con esas cartas ya fuera del mazo y su sentido (un giro ya viene aplicado); la app recoloca la foto guardada. Solo se ofrece en lecturas hechas en la mesa (las de `/tarot/spread` no guardaron la foto). Si la mesa actual tiene cartas, se pide confirmación.
-  - Como la 015 no ha salido de esta rama, se amplió en vez de crear una 016.
+  - Como la migración de la mesa no ha salido de esta rama, se amplió en vez de crear otra.
 - [ ] **`TableCamera`:** `Matrix4` con perspectiva 1/1000, inclinación y giro. Inversa para convertir toques en unidades de mesa. Encuadre a 30° e inercia.
 - [ ] **`DeckPiece`:** caja con grosor según el número de cartas. **`CardPiece`:** envuelve `TarotCardView` y añade la bisagra de la esquina y el muelle de inclinación.
 - [ ] **Huecos de las 7 tiradas**, con imán, intercambio y aclaratorias.
@@ -191,12 +191,14 @@
 | D2 | ¿Dónde entra el módulo en la app? | **Decidido: pestaña propia «Tarot»** en la navegación principal. |
 | D3 | ¿Todo de golpe o por entregas? | **Decidido: por fases.** Primera entrega = fases 1–5 (mesa y ritual) a la prueba cerrada. Segunda = fase 6 (efectos, sonido, háptica). |
 | D4 | ¿Oráculo con IA en la mesa? | **Decidido: solo Tradición en la primera versión.** El Oráculo, más adelante, con `arcanum-voz` y el cupo de Groq resuelto. |
-| D6 | ¿Sobre qué base va la migración de sesiones? | **Cerrada el 29-sep-2026.** `release/1.0.6` se mezcló en `main` (PR #9, `3ebf688`) y Railway lo desplegó: producción está en la **014** con `sendero_progress`, comprobado leyendo `alembic_version`. Esta rama se rebasó sobre ese `main`; la migración de la mesa es la **015**, colgando de la 014. |
+| D6 | ¿Sobre qué base va la migración de sesiones? | **Cerrada el 29-sep-2026.** `release/1.0.6` se mezcló en `main` (PR #9, `3ebf688`) y Railway lo desplegó: producción está en la **014** con `sendero_progress`, comprobado leyendo `alembic_version`. Esta rama se rebasó sobre ese `main`; la migración de la mesa es la **015**, colgando de la 014. **Reabierta y cerrada el 01-oct-2026:** mientras tanto `main` sacó a producción su propia 015 (`015_add_fragments.py`, `fragment_movements`). Al traer `main` a esta rama, la de la mesa pasó a **016** (`016_add_tarot_sessions.py`), colgando de la 015 de fragmentos. Las dos no tocan las mismas tablas. |
 | D5 | ¿La pregunta de la lectura se cifra? | **Cerrada el 29-sep: se hace lo mismo que la app de hoy.** Comprobado: `/tarot/spread` y `/tarot/draw-one` reciben la pregunta **en claro** y el servidor la guarda así. El comentario del modelo que decía «en el cliente se cifra» era falso y está corregido. La mesa manda la pregunta en claro al interpretar (el Oráculo, cuando llegue, la necesita legible). En el móvil, en cambio, el autoguardado de la mesa va **cifrado**. Si algún día se quiere la pregunta cifrada también en el servidor, es un cambio para todas las tiradas, no solo para la mesa. |
 
 ## Entorno de pruebas de esta rama
 
-Esta rama va por la **015** y las bases de pruebas compartidas están en la 014 (lo que hay en `main`). Con ellas, los `tests_pg` se saltan porque la cabeza no coincide. Esta rama usa bases propias en los mismos contenedores, sin tocar las compartidas:
+Esta rama va por la **016** y las bases de pruebas compartidas están en la 015 (lo que hay en `main`).
+
+> **Desde el 01-oct, las bases propias de esta rama están en una 015 que NO es la de `main`:** su `alembic_version` dice 015 pero tienen `tarot_sessions`, no `fragment_movements`. Hay que vaciarlas y migrar de cero (`DROP SCHEMA public CASCADE; CREATE SCHEMA public;`). Lo mismo con `arcanum_dev_mesa`. Con ellas, los `tests_pg` se saltan porque la cabeza no coincide. Esta rama usa bases propias en los mismos contenedores, sin tocar las compartidas:
 
 ```
 TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5434/arcanum_test_mesa
@@ -209,7 +211,7 @@ Además, el JSON de la biblioteca se copia desde la carpeta principal: está en 
 
 ## Riesgos
 
-- **Numeración de migraciones:** resuelto (D6). `main` y producción están en la 014; la de sesiones de la mesa es la 015.
+- **Numeración de migraciones:** resuelto (D6). `main` y producción están en la 015 (fragmentos); la de sesiones de la mesa es la 016. Si `main` saca otra migración antes de mezclar, volver a renumerar.
 
 - **Mezclar a `main` despliega.** Toda la API nueva es aditiva y va detrás de rutas nuevas.
 - **Rendimiento de Flutter con muchas cartas en `Transform`:** por eso la prueba va al principio de la fase 4.

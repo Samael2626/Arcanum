@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/state/flow_providers.dart';
+import '../sendero/application/sendero_guide_controller.dart';
 import '../../shared/widgets/arcanum_toggle.dart';
 import '../cielos/cielos_screen.dart';
 import '../hoy/hoy_screen.dart';
@@ -47,13 +48,31 @@ class _CieloScreenState extends ConsumerState<CieloScreen> {
   @override
   Widget build(BuildContext context) {
     final cara = ref.watch(cieloCaraProvider);
+    final guide = ref.watch(senderoGuideProvider);
+    if (cara == 1 && guide?.current.target == 'cielo_toggle') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(senderoGuideProvider.notifier).onAction('cielo_toggle');
+        }
+      });
+    }
     if (cara == 1) _cartaMontada = true;
     return Column(
       children: [
         const SizedBox(height: 10),
-        _Caras(
-          cara: cara,
-          onChanged: (i) => ref.read(cieloCaraProvider.notifier).set(i),
+        KeyedSubtree(
+          key: ref.read(senderoGuideTargetsProvider).keyFor('cielo_toggle'),
+          child: _Caras(
+            cara: cara,
+            onChanged: (i) {
+              ref.read(cieloCaraProvider.notifier).set(i);
+              if (i == 1) {
+                ref
+                    .read(senderoGuideProvider.notifier)
+                    .onAction('cielo_toggle');
+              }
+            },
+          ),
         ),
         const SizedBox(height: 6),
         Expanded(

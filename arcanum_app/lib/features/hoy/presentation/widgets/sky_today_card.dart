@@ -28,6 +28,8 @@ import 'banda_del_anio.dart';
 import 'sello_del_cielo.dart';
 import '../../../horoscopo/compartir_horoscopo.dart';
 import '../../../horoscopo/widgets/tarjeta_compartir.dart';
+import '../../../sendero/application/sendero_guide_controller.dart';
+import '../../../sendero/presentation/sendero_spend_confirmation.dart';
 
 /// "Tu cielo de hoy": el transito dominante de esta persona, leido por la IA.
 ///
@@ -108,7 +110,19 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
         return;
       }
       if (!mounted) return;
+      final accepted = await confirmSenderoSpend(
+        context,
+        ref,
+        target: 'horoscope_card',
+        action: 'horoscope',
+      );
+      if (!accepted) {
+        if (mounted) setState(() => _abriendo = false);
+        return;
+      }
+      if (!mounted) return;
       final lectura = _api.horoscope();
+      unawaited(_completeGuideAfter(lectura));
       setState(() {
         _lectura = lectura;
         _overview = null;
@@ -122,6 +136,17 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
       });
     } catch (_) {
       if (mounted) setState(() => _abriendo = false);
+    }
+  }
+
+  Future<void> _completeGuideAfter(Future<Map<String, dynamic>> reading) async {
+    try {
+      await reading;
+      if (mounted) {
+        ref.read(senderoGuideProvider.notifier).onAction('horoscope_card');
+      }
+    } catch (_) {
+      // El FutureBuilder muestra el error; Sendero no marca una lectura fallida.
     }
   }
 

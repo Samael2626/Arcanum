@@ -1,4 +1,4 @@
-"""Mesa de tarot contra PostgreSQL real (esquema de Alembic hasta la 015).
+"""Mesa de tarot contra PostgreSQL real (esquema de Alembic hasta la 016).
 
 Rutas de sesion, cupo al interpretar (D1), idempotencia, permisos entre
 usuarios, caducidad y que el orden del mazo nunca salga hacia el cliente.

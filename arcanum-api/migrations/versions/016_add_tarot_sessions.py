@@ -9,15 +9,16 @@ Como mucho una sesion activa por usuario, forzado por un indice unico parcial.
 contemplar la lectura despues. Es aditiva y nula: las lecturas de `/tarot/spread`
 no la tienen.
 
-Revision ID: 015
+Revision ID: 016
+Revises: 015
 """
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-revision = "015"
-down_revision = "014"
+revision = "016"
+down_revision = "015"
 branch_labels = None
 depends_on = None
 

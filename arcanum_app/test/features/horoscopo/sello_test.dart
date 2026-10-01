@@ -13,6 +13,8 @@ import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/core/privacy/ai_consent_service.dart';
 import 'package:arcanum_app/features/hoy/presentation/widgets/level_three_aspects.dart';
 import 'package:arcanum_app/features/hoy/presentation/widgets/sky_today_card.dart';
+import 'package:arcanum_app/features/sendero/application/sendero_guide_controller.dart';
+import 'package:arcanum_app/features/sendero/domain/sendero_catalog.dart';
 import 'package:arcanum_app/shared/widgets/ai_output.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -37,6 +39,35 @@ class _TodayApi extends ArcanumApi {
   var calls = 0;
   var horoscopeCalls = 0;
   final consentimientos = <bool>[];
+
+  @override
+  Future<List<Map<String, dynamic>>> senderoProgress() async => [];
+
+  @override
+  Future<Map<String, dynamic>> updateSenderoProgress({
+    required String journeyId,
+    required int version,
+    required int step,
+    required String status,
+  }) async => {
+    'journey_id': journeyId,
+    'version': version,
+    'step': step,
+    'status': status,
+  };
+
+  @override
+  Future<Map<String, dynamic>> usageToday() async => {
+    'balance': 3,
+    'acciones': {
+      'horoscope': {
+        'limite_diario': 1,
+        'usado': 0,
+        'restante': 1,
+        'siguiente_gasta_credito': false,
+      },
+    },
+  };
 
   /// El consentimiento se persiste en el SERVIDOR, no solo en el dispositivo.
   ///
@@ -260,6 +291,56 @@ void main() {
     expect(find.text('Abrir el sello del Sol'), findsOneWidget);
     expect(api.horoscopeCalls, 0);
     expect(api.celestialOverviewCalls, 0);
+  });
+
+  testWidgets('Sendero cancela el gasto antes de pedir el horoscopo', (
+    tester,
+  ) async {
+    final api = _TodayApi();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          arcanumApiProvider.overrideWithValue(api),
+          authProvider.overrideWith(_AuthWithPlace.new),
+        ],
+        child: MaterialApp(
+          home: Scaffold(body: ListView(children: const [SkyTodayCard()])),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(SkyTodayCard)),
+    );
+    final guide = container.read(senderoGuideProvider.notifier);
+    guide.start(senderoJourneyById('horoscopo')!);
+    guide.onAction('help');
+    await guide.idle;
+
+    await tester.ensureVisible(find.text('Abrir el sello del Sol'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Abrir el sello del Sol'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Acepto'));
+    await tester.pump();
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Antes de continuar'), findsOneWidget);
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+
+    expect(api.horoscopeCalls, 0);
+    expect(container.read(senderoGuideProvider)?.step, 1);
+
+    await tester.tap(find.text('Abrir el sello del Sol'));
+    await tester.pump();
+    await tester.pump();
+    await tester.tap(find.text('Aceptar y continuar'));
+    await tester.pump();
+    await tester.pump();
+    expect(api.horoscopeCalls, 1);
+    expect(container.read(senderoGuideProvider), isNull);
   });
 
   testWidgets('aceptar abre una vez y retrasa el texto 400 ms', (tester) async {

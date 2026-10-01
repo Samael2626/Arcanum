@@ -16,6 +16,7 @@ from app.models.content_report import ContentReport
 from app.models.horoscope_reading import HoroscopeReading
 from app.models.user_consent import UserConsent
 from app.models.sendero_progress import SenderoProgress
+from app.models.fragment_movement import FragmentMovement
 
 __all__ = [
     "User",
@@ -41,4 +42,5 @@ __all__ = [
     "UserConsent",
     "HoroscopeReading",
     "SenderoProgress",
+    "FragmentMovement",
 ]
