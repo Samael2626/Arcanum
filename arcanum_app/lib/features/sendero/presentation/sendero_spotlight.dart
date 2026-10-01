@@ -179,11 +179,21 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
                         const SizedBox(height: 4),
                         Text(step.body, style: ArcanumText.body(14)),
                         const SizedBox(height: 6),
-                        if (rect == null)
+                        if (rect == null &&
+                            (step.target.startsWith('section_') ||
+                                step.target == 'settings'))
+                          Text(
+                            'Abre el menú para continuar',
+                            style: ArcanumText.body(
+                              13,
+                              color: ArcanumColors.gold,
+                            ),
+                          )
+                        else if (rect == null)
                           TextButton(
-                            onPressed: step.route == null
+                            onPressed: widget.guide.expectedRoute == null
                                 ? null
-                                : () => context.go(step.route!),
+                                : () => context.go(widget.guide.expectedRoute!),
                             child: const Text('Ir a esta parte'),
                           )
                         else if (step.buttonLabel != null)

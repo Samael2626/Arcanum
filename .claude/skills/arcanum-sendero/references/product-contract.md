@@ -24,6 +24,12 @@ El servicio económico del backend concede ambos premios; Flutter no acuña.
   local para continuar sin conexión.
 - Usuarios actuales: invitación única y opcional para recordar cómo usar la app.
 - Funciones nuevas: mini recorrido opcional, mostrado una sola vez y repetible.
+- Descubrimiento contextual: tras completar la orientación, la primera visita a
+  cada sección puede ofrecer una pista compacta y descartable. Verla no avanza
+  la lección ni entrega Fragmentos. La guía solo comienza si se acepta.
+- Cambio de ruta: si hay una lección activa y el usuario explora otra sección,
+  conservar el paso exacto y ofrecer explorar la nueva sección o volver.
+- Siguiente lección: al completar una, sugerir otra sin abrirla automáticamente.
 - Premium: explicación breve orientada a despertar interés; no simular acceso ni
   convertir el recorrido en un muro de pago.
 - Fragmentos Arcanos: 1 por cada lección completada por primera vez,

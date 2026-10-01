@@ -136,8 +136,7 @@ void main() {
       journey,
       saved: container.read(senderoControllerProvider).value?['orientation:2'],
     );
-    expect(container.read(senderoGuideProvider)?.step, 0);
-    guide.onAction('menu');
+    expect(container.read(senderoGuideProvider)?.step, 1);
     guide.onAction('section_horoscopo');
     guide.onAction('horoscope_card');
     expect(container.read(senderoGuideProvider), isNull);
@@ -148,6 +147,10 @@ void main() {
           .value?['orientation:2']
           ?.isCompleted,
       isTrue,
+    );
+    expect(
+      container.read(senderoCompletionProvider)?.journey.id,
+      'orientation',
     );
 
     guide.start(

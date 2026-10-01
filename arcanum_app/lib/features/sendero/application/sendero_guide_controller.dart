@@ -5,17 +5,26 @@ import '../domain/sendero_catalog.dart';
 import 'sendero_controller.dart';
 import '../../fragmentos/application/fragment_balance.dart';
 
-class SenderoRewardController extends Notifier<int?> {
-  @override
-  int? build() => null;
+class SenderoCompletion {
+  const SenderoCompletion({required this.journey, required this.fragments});
 
-  void show(int amount) => state = amount;
+  final SenderoJourney journey;
+  final int fragments;
+}
+
+class SenderoCompletionController extends Notifier<SenderoCompletion?> {
+  @override
+  SenderoCompletion? build() => null;
+
+  void show(SenderoJourney journey, int fragments) =>
+      state = SenderoCompletion(journey: journey, fragments: fragments);
   void clear() => state = null;
 }
 
-final senderoRewardProvider = NotifierProvider<SenderoRewardController, int?>(
-  SenderoRewardController.new,
-);
+final senderoCompletionProvider =
+    NotifierProvider<SenderoCompletionController, SenderoCompletion?>(
+      SenderoCompletionController.new,
+    );
 
 class SenderoGuideState {
   const SenderoGuideState({required this.journey, required this.step});
@@ -24,6 +33,14 @@ class SenderoGuideState {
   final int step;
 
   SenderoStep get current => journey.steps[step];
+
+  String? get expectedRoute {
+    for (var index = step; index >= 0; index--) {
+      final route = journey.steps[index].route;
+      if (route != null) return route;
+    }
+    return null;
+  }
 }
 
 class SenderoGuideTargets {
@@ -46,14 +63,10 @@ class SenderoGuideController extends Notifier<SenderoGuideState?> {
 
   void start(SenderoJourney journey, {SenderoProgress? saved}) {
     if (!journey.available || journey.steps.isEmpty) return;
-    var step =
+    final step =
         saved != null && !saved.isCompleted && saved.status == 'in_progress'
         ? saved.step.clamp(0, journey.steps.length - 1)
         : 0;
-    if (journey.steps[step].target.startsWith('section_') ||
-        journey.steps[step].target == 'settings') {
-      step = 0;
-    }
     final active = SenderoGuideState(journey: journey, step: step);
     state = active;
     if (saved == null) _enqueue(active, false);
@@ -100,9 +113,11 @@ class SenderoGuideController extends Notifier<SenderoGuideState?> {
             step: isLast ? active.step : active.step + 1,
             status: isLast ? 'completed' : 'in_progress',
           );
-      if (reward > 0) {
-        ref.invalidate(fragmentBalanceProvider);
-        ref.read(senderoRewardProvider.notifier).show(reward);
+      if (reward > 0) ref.invalidate(fragmentBalanceProvider);
+      if (isLast) {
+        ref
+            .read(senderoCompletionProvider.notifier)
+            .show(active.journey, reward);
       }
     } catch (error, stack) {
       FlutterError.reportError(
