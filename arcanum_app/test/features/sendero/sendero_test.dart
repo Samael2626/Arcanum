@@ -76,6 +76,71 @@ class _SpotlightFixture extends ConsumerWidget {
   }
 }
 
+class _MovingSpotlightFixture extends ConsumerWidget {
+  const _MovingSpotlightFixture({required this.targetTop});
+
+  final ValueNotifier<double> targetTop;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final targetKey = ref.read(senderoGuideTargetsProvider).keyFor('menu');
+    return Scaffold(
+      body: Stack(
+        children: [
+          ValueListenableBuilder<double>(
+            valueListenable: targetTop,
+            builder: (_, top, _) => Positioned(
+              top: top,
+              left: 40,
+              child: SizedBox(key: targetKey, width: 48, height: 48),
+            ),
+          ),
+          Positioned.fill(
+            child: SenderoSpotlight(
+              guide: SenderoGuideState(
+                journey: senderoJourneyById('orientation')!,
+                step: 0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HoroscopeSpotlightFixture extends ConsumerWidget {
+  const _HoroscopeSpotlightFixture();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          Positioned(
+            top: 100,
+            child: SizedBox(
+              key: ref
+                  .read(senderoGuideTargetsProvider)
+                  .keyFor('horoscope_card'),
+              width: 120,
+              height: 48,
+            ),
+          ),
+          Positioned.fill(
+            child: SenderoSpotlight(
+              guide: SenderoGuideState(
+                journey: senderoJourneyById('orientation')!,
+                step: 2,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
@@ -381,4 +446,46 @@ void main() {
       },
     );
   }
+
+  testWidgets(
+    'el foco sigue una fila que cambia de lugar tras cargar el cajon',
+    (tester) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final top = ValueNotifier<double>(40);
+      addTearDown(top.dispose);
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(home: _MovingSpotlightFixture(targetTop: top)),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      top.value = 700;
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      final card = tester.getRect(
+        find.byKey(const ValueKey('sendero_guide_card')),
+      );
+      expect(card.bottom, lessThan(700));
+    },
+  );
+
+  testWidgets('sin datos natales Sendero no ofrece una lectura imposible', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [authProvider.overrideWith(_AuthenticatedAuthNotifier.new)],
+        child: const MaterialApp(home: _HoroscopeSpotlightFixture()),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.textContaining('Puedes abrir tu lectura'), findsNothing);
+    expect(
+      find.textContaining('Necesitas completar tu carta natal'),
+      findsOneWidget,
+    );
+    expect(find.text('Terminar sin gastar'), findsOneWidget);
+  });
 }

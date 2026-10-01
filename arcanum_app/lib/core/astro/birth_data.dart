@@ -1,5 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../api/arcanum_api.dart';
 import '../auth/auth_controller.dart';
 
 /// Firma de los datos de nacimiento de la sesion actual, o null si faltan.
@@ -48,3 +50,19 @@ String? birthSignatureOf(Map<String, dynamic>? user) {
 final birthSignatureProvider = Provider<String?>(
   (ref) => birthSignatureOf(ref.watch(authProvider).user),
 );
+
+final natalOverviewProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+  final userId = ref.watch(authProvider.select((state) => state.user?['id']));
+  final signature = ref.watch(birthSignatureProvider);
+  if (userId == null || signature == null) {
+    throw StateError('La carta natal requiere datos de nacimiento completos.');
+  }
+  final api = ref.read(arcanumApiProvider);
+  try {
+    return await api.celestialOverview();
+  } on DioException catch (error) {
+    if (error.response?.statusCode != 404) rethrow;
+    await api.natalChart();
+    return api.celestialOverview();
+  }
+});

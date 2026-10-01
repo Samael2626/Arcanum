@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/astro/birth_data.dart';
 import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
 import '../application/sendero_guide_controller.dart';
@@ -57,7 +58,10 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
   void _scheduleMeasure() {
     WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
     _measureTimer?.cancel();
-    _measureTimer = Timer(const Duration(milliseconds: 350), _measure);
+    _measureTimer = Timer.periodic(
+      const Duration(milliseconds: 250),
+      (_) => _measure(),
+    );
   }
 
   void _measure() {
@@ -99,6 +103,10 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
   @override
   Widget build(BuildContext context) {
     final step = widget.guide.current;
+    final hasNatalData = ref.watch(birthSignatureProvider) != null;
+    final body = step.target == 'horoscope_card' && !hasNatalData
+        ? 'Necesitas completar tu carta natal para abrir una lectura. Puedes terminar esta guía sin gastar nada.'
+        : step.body;
     final rect = _targetRect;
     final targets = ref.watch(senderoGuideTargetsProvider);
     if (targets.keyFor(step.target).currentContext == null && rect != null) {
@@ -177,7 +185,7 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
                         const SizedBox(height: 6),
                         Text(step.title, style: ArcanumText.heading(23)),
                         const SizedBox(height: 4),
-                        Text(step.body, style: ArcanumText.body(14)),
+                        Text(body, style: ArcanumText.body(14)),
                         const SizedBox(height: 6),
                         if (rect == null &&
                             (step.target.startsWith('section_') ||

@@ -178,11 +178,31 @@ void main() {
         .show(senderoJourneyById('cielo')!, 1);
     await tester.pump();
     expect(find.text('Lección recorrida'), findsOneWidget);
+    expect(find.textContaining('Un Fragmento Arcano despertó'), findsOneWidget);
     expect(find.text('Explorar Horóscopo'), findsOneWidget);
     expect(container.read(senderoGuideProvider), isNull);
     await tester.tap(find.text('Ahora no'));
     await tester.pump();
     expect(container.read(senderoGuideProvider), isNull);
+  });
+
+  testWidgets('la revelacion usa el incremento confirmado por servidor', (
+    tester,
+  ) async {
+    final router = _router();
+    addTearDown(router.dispose);
+    final container = await _mount(tester, _Api([]), router);
+
+    container
+        .read(senderoCompletionProvider.notifier)
+        .show(senderoJourneyById('orientation')!, 3);
+    await tester.pump();
+
+    expect(
+      find.textContaining('3 Fragmentos Arcanos despertaron'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Un Fragmento Arcano despertó'), findsNothing);
   });
 
   test('borrar cuenta limpia las pistas locales', () async {

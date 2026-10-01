@@ -59,6 +59,11 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
   /// que puede llegar despues de construirse esta tarjeta.
   Future<Map<String, dynamic>> _pedirCielo() {
     _firma = ref.read(birthSignatureProvider);
+    return _loadSky();
+  }
+
+  Future<Map<String, dynamic>> _loadSky() async {
+    if (_firma != null) await ref.read(natalOverviewProvider.future);
     return _api.skyToday();
   }
 

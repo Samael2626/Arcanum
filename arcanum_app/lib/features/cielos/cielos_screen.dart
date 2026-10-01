@@ -113,6 +113,13 @@ class _NatalViewState extends ConsumerState<_NatalView> {
 
   Future<(Map<String, dynamic>, Map<String, dynamic>)> _load() async {
     _firma = ref.read(birthSignatureProvider);
+    if (_firma != null) {
+      final data = await ref.read(natalOverviewProvider.future);
+      return (
+        data['natal_chart'] as Map<String, dynamic>,
+        data['transits'] as Map<String, dynamic>,
+      );
+    }
     try {
       final data = await _api.celestialOverview();
       return (
@@ -156,7 +163,10 @@ class _NatalViewState extends ConsumerState<_NatalView> {
         child: RefreshIndicator(
           color: ArcanumColors.gold,
           backgroundColor: ArcanumColors.surface,
-          onRefresh: () async => setState(() => _future = _load()),
+          onRefresh: () async {
+            ref.invalidate(natalOverviewProvider);
+            setState(() => _future = _load());
+          },
           child: FutureBuilder<(Map<String, dynamic>, Map<String, dynamic>)>(
             future: _future,
             builder: (context, snap) {

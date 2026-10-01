@@ -168,6 +168,15 @@ class _SenderoCoachGateState extends ConsumerState<SenderoCoachGate> {
     });
   }
 
+  String _completionBody(_CoachOffer offer) {
+    final fragments = offer.fragments!;
+    if (fragments == 0) return 'Puedes seguir explorando a tu ritmo.';
+    final reward = fragments == 1
+        ? 'Un Fragmento Arcano despertó en tu saldo.'
+        : '$fragments Fragmentos Arcanos despertaron en tu saldo.';
+    return offer.journey == null ? reward : '$reward ¿Exploramos otra cámara?';
+  }
+
   @override
   Widget build(BuildContext context) {
     final guide = ref.watch(senderoGuideProvider);
@@ -221,11 +230,7 @@ class _SenderoCoachGateState extends ConsumerState<SenderoCoachGate> {
                 ? 'Lección recorrida'
                 : 'Sendero en ${offer.journey!.title}',
             body: offer.isCompletion
-                ? offer.fragments! > 0
-                      ? offer.journey == null
-                            ? 'Un Fragmento Arcano despertó en tu saldo.'
-                            : 'Un Fragmento Arcano despertó en tu saldo. ¿Exploramos otra cámara?'
-                      : 'Puedes seguir explorando a tu ritmo.'
+                ? _completionBody(offer)
                 : 'Hay una guía breve para descubrir esta sección mientras la usas.',
             primaryLabel: offer.journey == null
                 ? null
