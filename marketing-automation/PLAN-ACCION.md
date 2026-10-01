@@ -72,8 +72,16 @@ recurso.
 
 ### Fase 5 — Reel, TikTok y Short
 
-- Mover `video-assembler` a un repositorio o módulo versionado.
-- Añadir pruebas de health, contrato, render y duración.
+**Estado:** iniciada el 1 de octubre de 2026.
+
+- [x] Mover `video-assembler` a `marketing-automation/video-assembler` y
+  ejecutarlo desde el compose.
+- [x] Añadir pruebas de health, procedencia, branding y reutilización de clips.
+- [x] Probar render real con fixture audiovisual: H.264 + AAC, 1080×1920,
+  30 fps, descarga HTTP y subtítulos visibles.
+- [ ] Automatizar el smoke render y el gate de duración de 15–45 segundos.
+- [ ] Bajar el tiempo de render: el smoke de 2 s tarda 61 s aun sin grading;
+  MoviePy a 1080×1920 no sirve todavía para producir lotes.
 - Definir preset ARCANUM vertical: tipografía, color, subtítulos y zona segura.
 - Conectar guion aprobado → TTS → segmentos visuales → ensamblaje → MP4.
 - Validar licencias de clips, música y voz.

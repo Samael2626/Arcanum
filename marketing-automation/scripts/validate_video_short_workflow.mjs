@@ -17,6 +17,7 @@ assert.ok(serialized.includes("approved_at IS NOT NULL"));
 assert.ok(serialized.includes("derived_formats ? 'short_video'"));
 assert.ok(serialized.includes('/healthz'));
 assert.ok(serialized.includes('/api/visuals/generate'));
+assert.ok(serialized.includes('item.license'));
 assert.ok(!serialized.includes('/tts'));
 assert.ok(!serialized.includes('/merge-audio'));
 assert.ok(!serialized.includes('/create-video'));

@@ -15,6 +15,10 @@ docker compose ps
 
 Abrir `http://localhost:5678` y crear la cuenta propietaria local.
 
+El compose también levanta `video-assembler` en `http://localhost:3001`. Para
+preparar clips hay que definir `PEXELS_API_KEY` en `.env`; la respuesta conserva
+autor, página de origen y licencia. Los videos finales quedan en `output/video/`.
+
 ## Configurar Gemini
 
 1. Revocar cualquier clave expuesta en chat, capturas o terminales.

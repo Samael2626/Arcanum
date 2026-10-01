@@ -51,6 +51,22 @@ services:
       - ./exchange:/files
       - ./workflows:/workflow-import:ro
 
+  video-assembler:
+    build:
+      context: ./video-assembler
+    restart: unless-stopped
+    environment:
+      PEXELS_API_KEY: ${PEXELS_API_KEY}
+    ports:
+      - "127.0.0.1:3001:3001"
+    volumes:
+      - ./output/video:/app/output
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:3001/healthz', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   marketing_postgres_data:
   marketing_n8n_data:

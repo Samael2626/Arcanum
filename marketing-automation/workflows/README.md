@@ -25,6 +25,6 @@ modelo porque eso puede inventar hechos, fuentes o recursos visuales.
 Ningun workflow publica sin estado `approved`. La credencial Gemini vive solo
 en el almacen cifrado de n8n y nunca dentro del JSON exportado.
 
-El workflow 05 se importa inactivo, usa solo disparador manual y consulta
-`D:/Proyectos/Youtube/video-assembler` por `/healthz` y
+El workflow 05 se importa inactivo, usa solo disparador manual y consulta el
+servicio versionado `marketing-automation/video-assembler` por `/healthz` y
 `/api/visuals/generate`. Las claves de proveedores nunca viven en el export.
