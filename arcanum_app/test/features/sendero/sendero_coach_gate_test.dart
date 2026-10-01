@@ -145,8 +145,12 @@ void main() {
 
     expect(find.text('Sendero te sigue'), findsOneWidget);
     expect(container.read(senderoGuideProvider)?.step, 1);
-    router.go('/hoy');
+    expect(find.text('Volver a Cielo'), findsOneWidget);
+    expect(find.text('Explorar Saber'), findsOneWidget);
+    expect(find.text('Pausar'), findsOneWidget);
+    await tester.tap(find.text('Volver a Cielo'));
     await tester.pumpAndSettle();
+    expect(router.routeInformationProvider.value.uri.path, '/hoy');
     expect(container.read(senderoGuideProvider)?.step, 1);
     expect(find.text('Abre el menú para continuar'), findsOneWidget);
     router.go('/saber');

@@ -65,7 +65,12 @@ class _SenderoScreenState extends ConsumerState<SenderoScreen> {
               const ArcanumHeader(subtitle: 'Una guía que espera tu paso'),
               const SizedBox(height: 24),
               ArcanumCard(
+                key: const ValueKey('sendero_summary_card'),
                 frame: true,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 36,
+                  vertical: 40,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

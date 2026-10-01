@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/auth/auth_controller.dart';
+import '../../../core/content/sections.dart';
 import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
 import '../application/sendero_controller.dart';
@@ -195,6 +196,9 @@ class _SenderoCoachGateState extends ConsumerState<SenderoCoachGate> {
     });
 
     final expected = guide?.expectedRoute;
+    final returnTitle = expected == null
+        ? null
+        : arcanumSectionForRoute(expected)?.title;
     final detour = guide != null && expected != null && expected != _route;
     final localJourney = detour ? _journeyForRoute(_route) : null;
     final offer = _offer;
@@ -212,17 +216,26 @@ class _SenderoCoachGateState extends ConsumerState<SenderoCoachGate> {
             body: localJourney == null
                 ? 'Tu recorrido ${guide.journey.title} sigue guardado.'
                 : 'Estás en ${localJourney.title}. Tu recorrido ${guide.journey.title} queda guardado.',
-            primaryLabel: localJourney == null
+            primaryLabel: returnTitle == null
                 ? 'Volver al recorrido'
+                : 'Volver a $returnTitle',
+            onPrimary: () => context.go(expected),
+            secondaryLabel: localJourney == null
+                ? 'Pausar'
                 : 'Explorar ${localJourney.title}',
-            onPrimary: () => localJourney == null
-                ? context.go(expected)
-                : _start(localJourney),
-            secondaryLabel: 'Pausar',
-            onSecondary: () {
-              ref.read(senderoGuideProvider.notifier).pause();
-              _dismiss();
-            },
+            onSecondary: localJourney == null
+                ? () {
+                    ref.read(senderoGuideProvider.notifier).pause();
+                    _dismiss();
+                  }
+                : () => _start(localJourney),
+            tertiaryLabel: localJourney == null ? null : 'Pausar',
+            onTertiary: localJourney == null
+                ? null
+                : () {
+                    ref.read(senderoGuideProvider.notifier).pause();
+                    _dismiss();
+                  },
           )
         else if (guide == null && offer != null)
           _NudgeCard(
@@ -256,6 +269,8 @@ class _NudgeCard extends StatelessWidget {
     required this.onPrimary,
     required this.secondaryLabel,
     required this.onSecondary,
+    this.tertiaryLabel,
+    this.onTertiary,
   });
 
   final String title;
@@ -264,6 +279,8 @@ class _NudgeCard extends StatelessWidget {
   final VoidCallback? onPrimary;
   final String secondaryLabel;
   final VoidCallback onSecondary;
+  final String? tertiaryLabel;
+  final VoidCallback? onTertiary;
 
   @override
   Widget build(BuildContext context) => Positioned(
@@ -293,20 +310,24 @@ class _NudgeCard extends StatelessWidget {
                   Text(title, style: ArcanumText.heading(21)),
                   const SizedBox(height: 5),
                   Text(body, style: ArcanumText.body(14)),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: 2,
                     children: [
                       if (primaryLabel != null)
-                        Flexible(
-                          child: TextButton(
-                            onPressed: onPrimary,
-                            child: Text(primaryLabel!),
-                          ),
+                        TextButton(
+                          onPressed: onPrimary,
+                          child: Text(primaryLabel!),
                         ),
                       TextButton(
                         onPressed: onSecondary,
                         child: Text(secondaryLabel),
                       ),
+                      if (tertiaryLabel != null)
+                        TextButton(
+                          onPressed: onTertiary,
+                          child: Text(tertiaryLabel!),
+                        ),
                     ],
                   ),
                 ],

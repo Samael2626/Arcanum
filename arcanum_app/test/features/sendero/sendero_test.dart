@@ -256,6 +256,11 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Primer umbral'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Cielo'),
+      150,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('Cielo'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('Fragmentos Arcanos'),
@@ -263,6 +268,39 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Fragmentos Arcanos'), findsOneWidget);
+  });
+
+  testWidgets('marco del indice deja espacio al texto en movil', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(360, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final api = _SenderoApi()
+      ..remote = [
+        {
+          'journey_id': 'orientation',
+          'version': 2,
+          'step': 2,
+          'status': 'completed',
+        },
+      ];
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          arcanumApiProvider.overrideWithValue(api),
+          authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+        ],
+        child: const MaterialApp(home: SenderoScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final card = tester.getRect(
+      find.byKey(const ValueKey('sendero_summary_card')),
+    );
+    final label = tester.getRect(find.text('A TU LADO'));
+    expect(label.left - card.left, greaterThanOrEqualTo(32));
+    expect(label.top - card.top, greaterThanOrEqualTo(36));
   });
 
   testWidgets('primera entrada lleva la guia a Cielo y permite pausarla', (
