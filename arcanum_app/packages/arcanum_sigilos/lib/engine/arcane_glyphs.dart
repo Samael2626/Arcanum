@@ -77,3 +77,24 @@ final Map<String, ArcaneGlyph> kArcaneGlyphs = {
 final _variation = RegExp('[${String.fromCharCode(0xfe0e)}${String.fromCharCode(0xfe0f)}]');
 String glyphKey(String sym) => sym.replaceAll(_variation, '');
 bool hasGlyph(String sym) => kArcaneGlyphs.containsKey(glyphKey(sym));
+
+/// Simbolos arcanos del catalogo, por grupos, con su nombre (STAMP_CATALOG
+/// del prototipo). Solo los 7 planetas clasicos, como el resto de ARCANUM.
+const kStampCatalog = <(String, List<(String, String)>)>[
+  ('Planetas', [('♄', 'Saturno'), ('♃', 'Júpiter'), ('♂', 'Marte'), ('☉', 'Sol'), ('♀', 'Venus'), ('☿', 'Mercurio'), ('☽', 'Luna')]),
+  ('Zodiaco', [('♈', 'Aries'), ('♉', 'Tauro'), ('♊', 'Géminis'), ('♋', 'Cáncer'), ('♌', 'Leo'), ('♍', 'Virgo'), ('♎', 'Libra'), ('♏', 'Escorpio'), ('♐', 'Sagitario'), ('♑', 'Capricornio'), ('♒', 'Acuario'), ('♓', 'Piscis')]),
+  ('Elementos', [('🜂', 'Fuego'), ('🜄', 'Agua'), ('🜁', 'Aire'), ('🜃', 'Tierra')]),
+  ('Principios alquímicos', [('🜍', 'Azufre'), ('☿', 'Mercurio'), ('🜔', 'Sal')]),
+  ('Nodos y aspectos', [('☊', 'Nodo norte'), ('☋', 'Nodo sur'), ('☌', 'Conjunción'), ('☍', 'Oposición'), ('△', 'Trígono'), ('□', 'Cuadratura'), ('⚹', 'Sextil')]),
+  ('Signos', [('✦', 'Estrella'), ('✧', 'Estrella abierta'), ('◎', 'Círculo doble'), ('⊕', 'Cruz en círculo'), ('✠', 'Cruz patada'), ('☥', 'Anj')]),
+];
+
+String? stampName(String sym) {
+  final k = glyphKey(sym);
+  for (final (_, items) in kStampCatalog) {
+    for (final (s, n) in items) {
+      if (s == k) return n;
+    }
+  }
+  return null;
+}

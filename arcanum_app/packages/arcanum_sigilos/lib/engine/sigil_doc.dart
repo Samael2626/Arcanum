@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import 'geometry.dart';
 import 'layers.dart';
+import 'reduction.dart';
 import 'letter_sigil.dart';
 import 'scene.dart';
 import 'style.dart';
@@ -97,6 +98,60 @@ class SigilDoc {
       if (p.layer.type == LayerType.symbol) fg.add(SceneGroup(layer: 'symbol', color: th.ink, prims: p.g.prims));
     }
     return LettersScene(transparent ? const [] : bgScene(style, th), applyFx(fg.where((g) => !g.isEmpty).toList(), style, th));
+  }
+
+  // ── Guardado ────────────────────────────────────────────────────
+  // Se guarda el documento (lo que decide el usuario), no el dibujo: el motor
+  // es determinista y lo regenera identico al abrirlo, y se puede seguir
+  // editando. Pesa unos KB; el SVG, decenas.
+  static const kVersion = 1;
+
+  Map<String, Object?> toJson() => {
+        'v': kVersion,
+        'intention': sigil.intention,
+        'method': sigil.method.name,
+        'mode': sigil.mode.name,
+        'overlap': sigil.overlap,
+        'absorb': sigil.absorb,
+        'compact': sigil.compact,
+        'edits': {for (final l in sigil.letters) l.ch: l.user.toJson()},
+        'hidden': [...sigil.hidden],
+        'layers': [for (final l in layers) l.toJson()],
+        'style': style.toJson(),
+        'terminals': terminals,
+        'endStyles': {...endStyles},
+        'termScale': termScale,
+        'transparent': transparent,
+      };
+
+  factory SigilDoc.fromJson(Map<String, dynamic> j) {
+    final v = j['v'] as int? ?? 0;
+    if (v > kVersion) throw FormatException('Sigilo guardado con una version mas nueva ($v) que esta app ($kVersion).');
+    final doc = SigilDoc(
+      layers: [for (final l in (j['layers'] as List? ?? const [])) Layer.fromJson(l as Map<String, dynamic>)],
+      style: SigilStyle.fromJson(j['style'] as Map<String, dynamic>),
+      terminals: j['terminals'] as String? ?? 'none',
+      termScale: (j['termScale'] as num? ?? 100).toDouble(),
+      transparent: j['transparent'] as bool? ?? false,
+    );
+    doc.sigil
+      ..method = ReductionMethod.values.byName(j['method'] as String)
+      ..mode = ComposeMode.values.byName(j['mode'] as String)
+      ..overlap = (j['overlap'] as num? ?? 0).toDouble()
+      ..absorb = j['absorb'] as bool? ?? true
+      ..compact = j['compact'] as bool? ?? true;
+    final intention = j['intention'] as String? ?? '';
+    if (intention.isNotEmpty) doc.generate(intention);
+    // las ediciones y los ocultos se aplican despues de componer
+    final edits = (j['edits'] as Map<String, dynamic>? ?? const {});
+    for (final l in doc.sigil.letters) {
+      final e = edits[l.ch];
+      if (e != null) l.user = LetterEdit.fromJson(e as Map<String, dynamic>);
+    }
+    doc.sigil.hidden = [for (final h in (j['hidden'] as List? ?? const [])) h as String];
+    doc.endStyles = {for (final e in (j['endStyles'] as Map<String, dynamic>? ?? const {}).entries) e.key: e.value as String};
+    if (doc.sigil.letters.isNotEmpty) doc.rebuild();
+    return doc;
   }
 
   /// SVG exportado: el mismo que dibuja el lienzo, sin marcas de edicion.

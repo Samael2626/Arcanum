@@ -206,7 +206,29 @@ await record('ocultar un trazo', { hideMode: true }, () => click(lp.x, lp.y));
 await record('colocar un simbolo con iman', { stampMode: true, stampSym: '♂︎' }, () => click(560, 603));
 // regresion (aa9ea1a): con «colocar» activo, arrastrar un simbolo ya puesto lo mueve y no crea otro
 await record('con colocar activo, arrastrar un simbolo lo mueve sin duplicarlo', { stampMode: true, stampSym: '☉︎' }, () => drag(558.6, 603, -40, -35, 5));
-const interaction = { pxScale: geo.pxScale, doc: geo.doc, intention: 'Mi practica mantiene enfoque sereno', probes, gestures };
+// ── radial: los mismos botones del prototipo, pulsados en orden ──
+const radial = await page4.evaluate(() => {
+  Object.assign(state, { method: 'unique', mode: 'fusion', absorb: true, compact: true, overlap: 0, intention: '', hidden: [], endStyles: {}, terminals: 'none', termPick: false, hideMode: false, stampMode: false, sel: null });
+  state.layers = [newLayer('circle'), newLayer('inscription', { text: 'LUX' }), newLayer('symbol', { sym: '♃︎', x: 300, y: 160 })];
+  state.layerSel.letters = null;
+  document.getElementById('intention').value = 'AMOR DIOS';
+  generate();
+  const docIn = { intention: 'AMOR DIOS', method: 'unique', mode: 'fusion', layers: JSON.parse(JSON.stringify(state.layers)) };
+  const steps = [];
+  const snap = label => { const t = ctxTarget(); steps.push({ label, anchor: t && { kind: t.kind, x: t.x, top: t.top, bottom: t.bottom }, users: Object.fromEntries(state.letters.map(l => [l.ch, { ...l.user }])), layers: state.layers.map(L => ({ id: L.id, size: L.size, scale: L.scale, rot: L.rot })), svg: buildSVG() }); };
+  const ids = state.layers.map(L => L.id);
+  const letter = activeLetters()[1].ch;
+  state.sel = letter; render(); snap('elegir letra');
+  for (const b of ['btnRotR', 'btnRotR', 'btnFlipV', 'btnBigger', 'btnBigger', 'btnSmaller', 'btnFlipH', 'btnRotL']) { document.getElementById(b).click(); snap(b); }
+  document.getElementById('btnLetterReset').click(); snap('btnLetterReset');
+  state.sel = null;
+  for (const [id, btns] of [[ids[2], ['btnLayerBigger', 'btnLayerBigger', 'btnLayerRotL', 'btnLayerSmaller']], [ids[1], ['btnLayerBigger', 'btnLayerRotR']], [ids[0], ['btnLayerSmaller', 'btnLayerSmaller', 'btnLayerRotR', 'btnLayerDelete']]]) {
+    state.layerSel.letters = id; render(); snap('elegir capa ' + id);
+    for (const b of btns) { document.getElementById(b).click(); snap(b); }
+  }
+  return { docIn, letter, ids, steps };
+});
+const interaction = { pxScale: geo.pxScale, doc: geo.doc, intention: 'Mi practica mantiene enfoque sereno', probes, gestures, radial };
 await b.close();
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT.replace('letras.json', 'interaccion.json'), JSON.stringify(interaction));

@@ -303,6 +303,101 @@ class CanvasController {
     doc.rebuild();
   }
 
+  // ── Radial: donde se ancla y que hace cada boton ──────────────
+  /// Elemento elegido y su caja en el lienzo (ctxTarget del prototipo), o null
+  /// si no hay nada elegido o hay un modo activo.
+  SelectionAnchor? anchor() {
+    if (dragging || termPick || hideMode || stampMode) return null;
+    final sg = doc.sigil, view = sg.view;
+    if (sel != null && sg.prims.isNotEmpty && view != null) {
+      final l = sg.active.where((x) => x.ch == sel).firstOrNull;
+      if (l != null) {
+        final xs = <double>[], ys = <double>[];
+        for (final p in sg.prims) {
+          if (p.hidden || !p.units.contains(l.ch)) continue;
+          if (p is LinePrim) {
+            for (final q in [view.toCanvas(p.a), view.toCanvas(p.b)]) {
+              xs.add(q.x);
+              ys.add(q.y);
+            }
+          } else if (p is ArcPrim) {
+            final c = view.toCanvas(p.c), r = p.r * view.k;
+            xs.addAll([c.x - r, c.x + r]);
+            ys.addAll([c.y - r, c.y + r]);
+          }
+        }
+        if (xs.isNotEmpty) return SelectionAnchor.letter(l.ch, (xs.reduce(math.min) + xs.reduce(math.max)) / 2, ys.reduce(math.min), ys.reduce(math.max));
+      }
+    }
+    final id = layerSel;
+    if (id == null) return null;
+    final part = doc.layout.parts.where((p) => p.layer.id == id).firstOrNull;
+    if (part == null || !part.layer.visible) return null;
+    final l = part.layer;
+    if (l.type == LayerType.symbol) return SelectionAnchor.layer(l, l.x, l.y - l.size * .75, l.y + l.size * .75);
+    if (part.r != null) return SelectionAnchor.layer(l, part.g.center.$1, part.g.center.$2 - part.r!, part.g.center.$2 + part.r!);
+    final ys = [
+      for (final q in part.g.prims)
+        if (q is TextPrim) ...[q.y - q.size, q.y] else if (q is PolyPrim) ...q.pts.map((v) => v.$2),
+    ];
+    return SelectionAnchor.layer(l, kC, ys.isEmpty ? kC : ys.reduce(math.min), ys.isEmpty ? kC : ys.reduce(math.max));
+  }
+
+  SigilLetter? get _selLetter => doc.sigil.active.where((x) => x.ch == sel).firstOrNull;
+
+  void _editLetter(void Function(LetterEdit u) fn, String what) {
+    final l = _selLetter;
+    if (l == null) return;
+    fn(l.user);
+    decisions.add('$what ${l.ch}');
+    doc.rebuild();
+  }
+
+  void rotateLetter(double deg) => _editLetter((u) => u.drot += deg, 'girar');
+  void flipLetterH() => _editLetter((u) => u.fx = !u.fx, 'reflejar');
+  void flipLetterV() => _editLetter((u) => u.fy = !u.fy, 'reflejar');
+  void scaleLetter(bool bigger) => _editLetter((u) => u.ds = bigger ? math.min(2, u.ds * 1.15) : math.max(.4, u.ds / 1.15), 'escalar');
+  void resetLetter() => _editLetter((u) => u
+    ..dx = 0
+    ..dy = 0
+    ..ds = 1
+    ..drot = 0
+    ..fx = false
+    ..fy = false, 'restaurar');
+
+  Layer? get selectedLayer => doc.layers.where((l) => l.id == layerSel).firstOrNull;
+
+  /// Solo se escalan los simbolos, los marcos anidados y las inscripciones.
+  bool get selectedLayerScales {
+    final l = selectedLayer;
+    return l != null && (l.type == LayerType.symbol || l.isNested || l.type == LayerType.inscription);
+  }
+
+  void scaleLayer(bool bigger) {
+    final l = selectedLayer;
+    if (l == null) return;
+    if (l.type == LayerType.symbol) {
+      l.size = bigger ? math.min(160, jsRound(l.size * 1.2)) : math.max(18, jsRound(l.size / 1.2));
+    } else if (l.isNested) {
+      l.scale = bigger ? math.min(160, l.scale + 10) : math.max(40, l.scale - 10);
+    } else {
+      l.size = bigger ? math.min(40, l.size + 3) : math.max(12, l.size - 3);
+    }
+    doc.refit();
+  }
+
+  void rotateLayer(double deg) {
+    final l = selectedLayer;
+    if (l == null) return;
+    l.rot = (l.rot + deg + 360) % 360;
+    doc.refit();
+  }
+
+  void deleteSelectedLayer() {
+    final id = layerSel;
+    if (id != null) removeLayer(id);
+  }
+
   // ── Capas ─────────────────────────────────────────────────────
   int _seq = 0;
   String _newId() {
@@ -356,4 +451,22 @@ class CanvasController {
     list[j] = t;
     doc.refit();
   }
+}
+
+/// Elemento elegido y su caja vertical en el lienzo: el radial se ancla ahi.
+class SelectionAnchor {
+  final String? letter;
+  final Layer? layer;
+  final double x, top, bottom;
+  const SelectionAnchor.letter(String ch, this.x, this.top, this.bottom)
+      : letter = ch,
+        layer = null;
+  const SelectionAnchor.layer(Layer l, this.x, this.top, this.bottom)
+      : letter = null,
+        layer = l;
+  bool get isLetter => letter != null;
+  double get cy => (top + bottom) / 2;
+
+  /// Clave para saber si el punto tocado es de este elemento.
+  String get key => letter != null ? 'L:$letter' : layer!.id;
 }

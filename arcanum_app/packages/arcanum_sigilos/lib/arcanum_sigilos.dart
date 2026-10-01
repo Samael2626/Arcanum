@@ -18,3 +18,4 @@ export 'engine/style.dart';
 export 'engine/terminals.dart';
 export 'ui/scene_painter.dart';
 export 'ui/sigil_canvas.dart';
+export 'ui/icons.dart';
