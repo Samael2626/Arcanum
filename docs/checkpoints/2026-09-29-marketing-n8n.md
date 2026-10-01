@@ -139,6 +139,9 @@ para convertir un paquete factual en borrador mediante Gemini.
 - `tarot-78-arcanos-001` y `grimorio-cifrado-local-001` tienen previews de cinco
   tarjetas, con marca visible y estado `ready_for_review`. No se registran como
   renders finales hasta recibir aprobación humana explícita.
+- Grimorio recibió una V2 tras revisión visual: composición a la derecha como
+  Tarot, paleta exacta de `ArcanumColors`, sigilo dorado coherente, neblina azul,
+  resina borgoña y marco inspirado en `ArcanumFrame`. La V1 permanece intacta.
 
 ## Relacionado
 

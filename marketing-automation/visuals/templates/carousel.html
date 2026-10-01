@@ -87,6 +87,9 @@
     .closing h2 { max-width: 850px; }
     .closing p { margin-top: 36px; max-width: 760px; color: #c9bea8; }
     .cta { display: inline-block; margin-top: 54px; padding-top: 24px; border-top: 2px solid var(--gold); color: var(--gold); font-size: 32px; letter-spacing: .09em; text-transform: uppercase; }
+    .theme-app { --ink: #0a0a0f; --navy: #12121a; --burgundy: #4a0e1a; --gold: #c9a84c; --parchment: #f5f0e8; --muted: #b8b0a0; }
+    .theme-app .grain { opacity: .28; mix-blend-mode: color-dodge; }
+    .theme-app .eyebrow, .theme-app .cta, .theme-app .folio { text-shadow: 0 0 18px rgba(201,168,76,.18); }
     .preview-mark { position: absolute; right: 40px; top: 34px; z-index: 20; padding: 10px 16px 8px; border: 1px solid rgba(227,215,189,.46); color: rgba(227,215,189,.72); background: rgba(9,11,17,.68); font: 600 18px/1 "Crimson Pro", serif; letter-spacing: .2em; }
     .copy-right.cover .veil { background: linear-gradient(270deg, rgba(7,10,16,.98) 0%, rgba(7,10,16,.82) 46%, rgba(7,10,16,.12) 82%, rgba(7,10,16,.05) 100%); }
     .copy-right.cover .safe { align-items: flex-end; text-align: right; }
@@ -131,7 +134,8 @@
       const total = content.slides.length;
       content.slides.forEach((item, position) => {
         const copySide = content.copy_side === 'right' ? 'copy-right' : 'copy-left';
-        const slide = text('section', `slide ${item.layout} ${copySide}`, '');
+        const theme = content.theme === 'app' ? 'theme-app' : '';
+        const slide = text('section', `slide ${item.layout} ${copySide} ${theme}`, '');
         slide.dataset.alt = item.alt_text;
         slide.append(art(content._asset_uri), veil());
         if (item.layout === 'cover') {

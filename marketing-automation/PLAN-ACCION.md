@@ -41,6 +41,10 @@ aprobado y renderizado; Tarot y grimorio tienen previews de cinco tarjetas
 pendientes de aprobación humana. Los tres usan arte original trazable, alt text
 y hashes SHA-256. Ninguno fue publicado.
 
+El preview V2 de grimorio adopta la dirección asimétrica de Tarot y traduce la
+UI real de la app: negro `#0A0A0F`, oro `#C9A84C`, borgoña `#4A0E1A`, marco
+biselado y atmósfera de grimorio vivo. La V1 se conserva para comparación.
+
 - Crear una plantilla ARCANUM determinista en 1080×1350.
 - Renderizar portada y 3–6 tarjetas desde el JSON aprobado.
 - Exportar PNG, manifiesto de assets y alt text real.

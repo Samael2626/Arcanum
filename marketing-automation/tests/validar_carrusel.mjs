@@ -32,6 +32,12 @@ const cases = [
     mode: 'preview',
     status: 'ready_for_review',
   },
+  {
+    content: '../visuals/carousels/grimorio-cifrado-local-001-v2/content.json',
+    output: '../output/previews/grimorio-cifrado-local-001-v2',
+    mode: 'preview',
+    status: 'ready_for_review',
+  },
 ];
 
 function pngDimensions(buffer) {
@@ -77,4 +83,4 @@ for (const currentCase of cases) {
   }
 }
 
-console.log('Carruseles: 1 final y 2 previews con archivos, dimensiones y hashes verificados');
+console.log('Carruseles: 1 final y 3 previews con archivos, dimensiones y hashes verificados');
