@@ -1,6 +1,8 @@
 {
   "external_key": "tarot-78-arcanos-001",
-  "status": "ready_for_review",
+  "status": "approved",
+  "approved_at": "2026-09-30",
+  "approved_by": "human:samuel",
   "format": "carousel",
   "canvas": {
     "width": 1080,
@@ -9,7 +11,7 @@
   "source_ids": ["play-ficha-tarot"],
   "asset_id": "tarot-study-background-v1",
   "copy_side": "right",
-  "review_copy": {
+  "approved_copy": {
     "script": "ARCANUM reúne los 78 arcanos y varias tiradas en un mismo módulo. La interpretación parte de la pregunta que introduces: ese contexto orienta la lectura en lugar de recurrir a un texto enlatado.",
     "caption": "Los 78 arcanos, varias tiradas y una pregunta concreta como punto de partida. Una herramienta para estudiar la lectura sin reducirla a respuestas repetidas.",
     "cta": "Explora el módulo de Tarot"

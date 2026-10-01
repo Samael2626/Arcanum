@@ -1,7 +1,9 @@
 {
   "external_key": "grimorio-cifrado-local-001",
   "version": 2,
-  "status": "ready_for_review",
+  "status": "approved",
+  "approved_at": "2026-09-30",
+  "approved_by": "human:samuel",
   "format": "carousel",
   "canvas": {
     "width": 1080,
@@ -11,7 +13,7 @@
   "asset_id": "grimorio-arcane-ui-background-v2",
   "copy_side": "right",
   "theme": "app",
-  "review_copy": {
+  "approved_copy": {
     "script": "Las notas del grimorio se cifran con AES-256 en el teléfono antes de llegar al servidor. La infraestructura externa guarda texto cifrado y no puede leer el cuerpo de la nota.",
     "caption": "Antes de cruzar la red, el cuerpo de cada nota ya está cifrado. ARCANUM conserva el límite entre tu práctica y la infraestructura que la almacena.",
     "cta": "Conoce el grimorio cifrado"

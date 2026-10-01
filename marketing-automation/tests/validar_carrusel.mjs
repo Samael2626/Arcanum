@@ -22,9 +22,9 @@ const cases = [
   },
   {
     content: '../visuals/carousels/tarot-78-arcanos-001/content.json',
-    output: '../output/previews/tarot-78-arcanos-001',
-    mode: 'preview',
-    status: 'ready_for_review',
+    output: '../output/tarot-78-arcanos-001',
+    mode: 'final',
+    status: 'approved',
   },
   {
     content: '../visuals/carousels/grimorio-cifrado-local-001/content.json',
@@ -34,9 +34,9 @@ const cases = [
   },
   {
     content: '../visuals/carousels/grimorio-cifrado-local-001-v2/content.json',
-    output: '../output/previews/grimorio-cifrado-local-001-v2',
-    mode: 'preview',
-    status: 'ready_for_review',
+    output: '../output/grimorio-cifrado-local-001',
+    mode: 'final',
+    status: 'approved',
   },
 ];
 
@@ -83,4 +83,4 @@ for (const currentCase of cases) {
   }
 }
 
-console.log('Carruseles: 1 final y 3 previews con archivos, dimensiones y hashes verificados');
+console.log('Carruseles: 3 finales y 1 preview historico con dimensiones y hashes verificados');

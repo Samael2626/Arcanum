@@ -142,6 +142,9 @@ para convertir un paquete factual en borrador mediante Gemini.
 - Grimorio recibió una V2 tras revisión visual: composición a la derecha como
   Tarot, paleta exacta de `ArcanumColors`, sigilo dorado coherente, neblina azul,
   resina borgoña y marco inspirado en `ArcanumFrame`. La V1 permanece intacta.
+- Samuel aprobó Tarot y Grimorio V2. Se retiró la marca `PREVIEW`, se generaron
+  diez PNG finales y ambos items quedaron `rendered` con aprobador, fechas y
+  manifiestos en PostgreSQL. Fase 2 cerrada con tres carruseles finales.
 
 ## Relacionado
 

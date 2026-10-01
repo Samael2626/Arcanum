@@ -36,10 +36,9 @@ Resultado vivo: diez procesados, ocho en `ready_for_review`, dos en
 
 ### Fase 2 — Publicaciones de texto y carruseles
 
-**Estado:** composición completada el 30 de septiembre de 2026. Carta natal está
-aprobado y renderizado; Tarot y grimorio tienen previews de cinco tarjetas
-pendientes de aprobación humana. Los tres usan arte original trazable, alt text
-y hashes SHA-256. Ninguno fue publicado.
+**Estado:** completada el 30 de septiembre de 2026. Carta natal, Tarot y
+Grimorio V2 están aprobados y renderizados, con cinco tarjetas 1080x1350 cada
+uno, arte original trazable, alt text y hashes SHA-256. Ninguno fue publicado.
 
 El preview V2 de grimorio adopta la dirección asimétrica de Tarot y traduce la
 UI real de la app: negro `#0A0A0F`, oro `#C9A84C`, borgoña `#4A0E1A`, marco
