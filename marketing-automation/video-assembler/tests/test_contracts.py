@@ -13,7 +13,113 @@ sys.path.insert(0, str(ASSEMBLER_ROOT))
 import main
 from services import video_maker, visuals_generator
 
+
+class FakeResponse:
+    def __init__(self, payload: dict) -> None:
+        self.payload = payload
+
+    def raise_for_status(self) -> None:
+        return None
+
+    def json(self) -> dict:
+        return self.payload
+
+
 class VisualProvenanceTests(unittest.TestCase):
+    def setUp(self) -> None:
+        visuals_generator.SEARCH_CACHE.clear()
+
+    def test_search_uses_current_api_and_parses_documented_video_fields(self) -> None:
+        response = FakeResponse(
+            {
+                "videos": [
+                    {
+                        "id": 123,
+                        "url": "https://www.pexels.com/video/123/",
+                        "duration": 8,
+                        "image": "https://images.pexels.com/videos/123/preview.jpeg",
+                        "user": {"name": "Example Author"},
+                        "video_files": [
+                            {
+                                "id": 456,
+                                "quality": "hd",
+                                "file_type": "video/mp4",
+                                "width": 1080,
+                                "height": 1920,
+                                "fps": 30.0,
+                                "link": "https://videos.pexels.com/video-123-1080.mp4",
+                            }
+                        ],
+                    }
+                ]
+            }
+        )
+
+        with (
+            patch.dict(os.environ, {"PEXELS_API_KEY": "test-only"}, clear=True),
+            patch.object(visuals_generator.requests, "get", return_value=response) as get,
+        ):
+            videos = visuals_generator.search_pexels(query="tarot", per_page=1)
+
+        self.assertEqual(
+            get.call_args.args[0],
+            "https://api.pexels.com/v1/videos/search",
+        )
+        self.assertEqual(videos[0]["user"], "Example Author")
+        self.assertEqual(videos[0]["files"][0]["width"], 1080)
+
+    def test_select_video_uses_closest_documented_mp4_above_minimum(self) -> None:
+        videos = [
+            {
+                "id": 123,
+                "files": [
+                    {
+                        "file_type": "video/mp4",
+                        "width": 2160,
+                        "height": 3840,
+                        "link": "https://cdn.example/2160.mp4",
+                    },
+                    {
+                        "file_type": "video/mp4",
+                        "width": 1080,
+                        "height": 1920,
+                        "link": "https://cdn.example/1080.mp4",
+                    },
+                    {
+                        "file_type": "video/mp4",
+                        "width": 720,
+                        "height": 1280,
+                        "link": "https://cdn.example/720.mp4",
+                    },
+                ],
+            }
+        ]
+
+        selected = visuals_generator.select_video(videos=videos, min_width=1080)
+
+        self.assertIsNotNone(selected)
+        self.assertEqual(selected["download_link"], "https://cdn.example/1080.mp4")
+        self.assertEqual(selected["selected_file"]["width"], 1080)
+
+    def test_select_video_rejects_files_below_minimum(self) -> None:
+        videos = [
+            {
+                "id": 123,
+                "files": [
+                    {
+                        "file_type": "video/mp4",
+                        "width": 720,
+                        "height": 1280,
+                        "link": "https://cdn.example/720.mp4",
+                    }
+                ],
+            }
+        ]
+
+        self.assertIsNone(
+            visuals_generator.select_video(videos=videos, min_width=1080)
+        )
+
     def test_download_keeps_author_source_and_license(self) -> None:
         selection = {
             "slug": "tarot-study",

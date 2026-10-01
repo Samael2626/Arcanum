@@ -4,7 +4,6 @@ import logging
 import os
 import re
 import tempfile
-import urllib.parse
 from pathlib import Path
 from typing import Any
 
@@ -12,11 +11,9 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-PEXELS_BASE = "https://api.pexels.com/v3"
+PEXELS_BASE = "https://api.pexels.com/v1"
 VISUALS_CACHE_DIR = Path(tempfile.gettempdir()) / "video-assembler" / "visuals_cache"
-SEARCH_CACHE: dict[tuple[str, str], dict[str, Any]] = {}
-
-SEARCH_PATH_RE = re.compile(r"^/videos?/(?P<id>\d+)/?$")
+SEARCH_CACHE: dict[tuple[str, str, int], list[dict[str, Any]]] = {}
 
 
 def _pexels_headers() -> dict[str, str]:
@@ -39,7 +36,7 @@ def search_pexels(*, query: str, orientation: str = "portrait", per_page: int = 
         raise ValueError("Empty visual search query")
 
     normalized = re.sub(r"\s+", " ", query.strip()).lower()
-    cache_key = (normalized, orientation)
+    cache_key = (normalized, orientation, per_page)
     if cache_key in SEARCH_CACHE:
         return SEARCH_CACHE[cache_key]
 
@@ -61,18 +58,8 @@ def search_pexels(*, query: str, orientation: str = "portrait", per_page: int = 
                 "source_url": video.get("url"),
                 "duration": video.get("duration"),
                 "image": video.get("image"),
-                "preferred_width": next((f.get("width") for f in (video.get("video_files") or []) if f.get("preferred")), None),
                 "files": video.get("video_files", []) or [],
                 "user": (video.get("user") or {}).get("name"),
-                "download_link": next((f.get("link") for f in (video.get("video_files") or []) if f.get("link")), None),
-                "video_search_path": next(
-                    (
-                        f"/videos/{SEARCH_PATH_RE.match(item.get('link', '')).group('id')}/download"
-                        for item in (video.get("related_assets") or [])
-                        if SEARCH_PATH_RE.match(item.get("link", ""))
-                    ),
-                    None,
-                ),
                 "source": "pexels",
             }
         )
@@ -81,26 +68,52 @@ def search_pexels(*, query: str, orientation: str = "portrait", per_page: int = 
     return processed
 
 
-def select_video(*, videos: list[dict[str, Any]], min_width: int = 1080) -> dict[str, Any] | None:
-    candidates = sorted(
-        (
-            video
-            for video in videos
-            if video.get("preferred_width") and (video.get("preferred_width") >= min_width or video.get("preferred"))
-        ),
-        key=lambda video: video.get("preferred_width") or 0,
-        reverse=True,
-    )
+def _matches_orientation(*, width: int, height: int, orientation: str) -> bool:
+    if orientation == "portrait":
+        return height > width
+    if orientation == "landscape":
+        return width > height
+    if orientation == "square":
+        return width == height
+    raise ValueError(f"Unsupported orientation: {orientation}")
 
-    for candidate in candidates:
-        if candidate.get("download_link"):
-            return candidate
 
-    for candidate in candidates:
-        if candidate.get("files"):
-            return candidate
+def select_video(
+    *,
+    videos: list[dict[str, Any]],
+    min_width: int = 1080,
+    orientation: str = "portrait",
+) -> dict[str, Any] | None:
+    candidates: list[tuple[int, int, dict[str, Any], dict[str, Any]]] = []
+    for video in videos:
+        for video_file in video.get("files") or []:
+            width = video_file.get("width")
+            height = video_file.get("height")
+            if not isinstance(width, int) or not isinstance(height, int):
+                continue
+            if width < min_width or not video_file.get("link"):
+                continue
+            if video_file.get("file_type") != "video/mp4":
+                continue
+            if not _matches_orientation(
+                width=width,
+                height=height,
+                orientation=orientation,
+            ):
+                continue
+            candidates.append((width - min_width, -height, video, video_file))
 
-    return None
+    if not candidates:
+        return None
+
+    _, _, video, video_file = min(candidates, key=lambda candidate: candidate[:2])
+    return {
+        **video,
+        "download_link": video_file["link"],
+        "preferred_width": video_file["width"],
+        "preferred_height": video_file["height"],
+        "selected_file": video_file,
+    }
 
 
 def _download_mp4(url: str, destination: Path) -> Path:
@@ -119,11 +132,16 @@ def download_selected(video_selection: dict[str, Any], *, segment_index: int, pr
     _ensure_dirs()
     slug = _safe_filename(video_selection.get("slug") or f"pexels_{segment_index}")
     destination = VISUALS_CACHE_DIR / f"{segment_index:03d}_{slug}.mp4"
-    download_urls = [
-        video_selection.get("download_link"),
-        *[item.get("link") for item in (video_selection.get("files") or [])[:4]],
-    ]
-    download_urls = [url for url in download_urls if url]
+    download_urls = list(
+        dict.fromkeys(
+            url
+            for url in [
+                video_selection.get("download_link"),
+                *[item.get("link") for item in (video_selection.get("files") or [])[:4]],
+            ]
+            if url
+        )
+    )
 
     errors = []
     for download_url in download_urls:
@@ -171,7 +189,11 @@ def visualize_segments(
             logger.exception("Failed searching visuals for segment %d", index)
             continue
 
-        selected = select_video(videos=videos, min_width=min_width)
+        selected = select_video(
+            videos=videos,
+            min_width=min_width,
+            orientation=orientation,
+        )
         if not selected:
             logger.warning("No Pexels result for segment %d: %s", index, prompt)
             continue
