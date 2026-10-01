@@ -72,6 +72,11 @@ class CrearPanel extends StatelessWidget {
         minLines: 1,
         maxLines: 3,
         textCapitalization: TextCapitalization.sentences,
+        // la intencion es intima y se suelta: el teclado no la sugiere, no la
+        // corrige y no aprende de ella
+        enableSuggestions: false,
+        autocorrect: false,
+        enableIMEPersonalizedLearning: false,
         style: ArcanumText.body(16),
         decoration: const InputDecoration(hintText: 'Una frase en presente, propia y sin daño a terceros'),
         onSubmitted: (_) => onForge(),
@@ -100,7 +105,7 @@ class CrearPanel extends StatelessWidget {
           sg.letters.map((l) => l.twin != null ? '${l.ch} (dentro de ${l.twin!.by})' : '${l.ch} ${(l.legible * 100).round()} %').join('   '),
           style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
         ),
-        Text('Toca una letra en el lienzo para girarla, reflejarla o escalarla; arrástrala para moverla.', style: ArcanumText.body(12, color: ArcanumColors.goldMuted, italic: true)),
+        Text('Toca una letra en el lienzo para girarla, reflejarla o escalarla; arrástrala para moverla. Con dos dedos la escalas y la giras a la vez.', style: ArcanumText.body(12, color: ArcanumColors.goldMuted, italic: true)),
       ],
       Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -316,7 +321,7 @@ class _LayerEditor extends StatelessWidget {
           Wrap(spacing: 8, children: [
             for (final (k, n) in const [('upperArc', 'Arco superior'), ('lowerArc', 'Arco inferior'), ('top', 'Arriba'), ('bottom', 'Abajo')]) _chip(n, l.pos == k, () => set(() => l.pos = k)),
           ]),
-        Text('En el lienzo: arrástrala para moverla y toca para escalarla o girarla.', style: ArcanumText.body(12, color: ArcanumColors.goldMuted, italic: true)),
+        Text('En el lienzo: arrástrala para moverla y tócala para escalarla o girarla. Con dos dedos, las dos cosas a la vez.', style: ArcanumText.body(12, color: ArcanumColors.goldMuted, italic: true)),
       ]),
     );
   }

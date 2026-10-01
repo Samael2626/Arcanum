@@ -307,7 +307,7 @@ class CanvasController {
   /// Elemento elegido y su caja en el lienzo (ctxTarget del prototipo), o null
   /// si no hay nada elegido o hay un modo activo.
   SelectionAnchor? anchor() {
-    if (dragging || termPick || hideMode || stampMode) return null;
+    if (dragging || pinching || termPick || hideMode || stampMode) return null;
     final sg = doc.sigil, view = sg.view;
     if (sel != null && sg.prims.isNotEmpty && view != null) {
       final l = sg.active.where((x) => x.ch == sel).firstOrNull;
@@ -396,6 +396,68 @@ class CanvasController {
   void deleteSelectedLayer() {
     final id = layerSel;
     if (id != null) removeLayer(id);
+  }
+
+  // ── Pellizco con dos dedos: escala y giro del elemento elegido ──
+  // Los limites son los mismos que los botones del radial; el giro se pega a
+  // multiplos de 15 grados con el iman.
+  ({double ds, double drot})? _pinchLetter;
+  ({double size, double scale, double rot})? _pinchLayer;
+
+  bool get pinching => _pinchLetter != null || _pinchLayer != null;
+
+  /// Empieza el pellizco si hay algo elegido. Corta un arrastre en curso.
+  bool beginPinch() {
+    if (dragging) pointerUp();
+    final l = _selLetter;
+    if (l != null) {
+      _pinchLetter = (ds: l.user.ds, drot: l.user.drot);
+      return true;
+    }
+    final layer = selectedLayer;
+    if (layer != null) {
+      _pinchLayer = (size: layer.size, scale: layer.scale, rot: layer.rot);
+      return true;
+    }
+    return false;
+  }
+
+  /// [ratio]: distancia entre dedos / distancia inicial. [deg]: giro de la
+  /// linea entre dedos desde el inicio (horario).
+  void updatePinch(double ratio, double deg, {bool alt = false}) {
+    final mag = magnet && !alt;
+    final pl = _pinchLetter, pg = _pinchLayer;
+    if (pl != null) {
+      final u = _selLetter?.user;
+      if (u == null) return;
+      u
+        ..ds = (pl.ds * ratio).clamp(.4, 2.0)
+        ..drot = snapAngle(pl.drot + deg, magnet: mag);
+      doc.sigil.rebuild(keepView: true);
+      return;
+    }
+    final layer = selectedLayer;
+    if (pg == null || layer == null) return;
+    if (layer.type == LayerType.symbol) {
+      layer.size = (pg.size * ratio).clamp(18.0, 160.0);
+    } else if (layer.isNested) {
+      layer.scale = (pg.scale * ratio).clamp(40.0, 160.0);
+    } else if (layer.type == LayerType.inscription) {
+      layer.size = (pg.size * ratio).clamp(12.0, 40.0);
+    }
+    layer.rot = (snapAngle(pg.rot + deg, magnet: mag) % 360 + 360) % 360;
+  }
+
+  void endPinch() {
+    if (_pinchLetter != null) {
+      decisions.add('escalar y girar ${sel ?? ''}');
+      doc.rebuild();
+    } else if (_pinchLayer != null) {
+      decisions.add('escalar y girar capa');
+      doc.refit();
+    }
+    _pinchLetter = null;
+    _pinchLayer = null;
   }
 
   // ── Capas ─────────────────────────────────────────────────────

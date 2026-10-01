@@ -17,8 +17,18 @@ import 'scene_painter.dart';
 enum GridMode { none, polar, square }
 
 const kLetterColors = [
-  '#1f5fa8', '#c77700', '#2e7d32', '#8e44ad', '#b3261e', '#00838f',
-  '#6d4c41', '#ad1457', '#558b2f', '#283593', '#e64a19', '#00695c',
+  '#1f5fa8',
+  '#c77700',
+  '#2e7d32',
+  '#8e44ad',
+  '#b3261e',
+  '#00838f',
+  '#6d4c41',
+  '#ad1457',
+  '#558b2f',
+  '#283593',
+  '#e64a19',
+  '#00695c',
 ];
 
 class SigilCanvas extends StatefulWidget {
@@ -35,7 +45,14 @@ class SigilCanvas extends StatefulWidget {
   /// Aviso externo para repintar tras cambiar el documento por codigo.
   final Listenable? repaint;
 
-  const SigilCanvas({super.key, required this.controller, this.grid = GridMode.none, this.letterColors = false, this.onChanged, this.repaint});
+  const SigilCanvas({
+    super.key,
+    required this.controller,
+    this.grid = GridMode.none,
+    this.letterColors = false,
+    this.onChanged,
+    this.repaint,
+  });
 
   @override
   State<SigilCanvas> createState() => _SigilCanvasState();
@@ -43,8 +60,17 @@ class SigilCanvas extends StatefulWidget {
 
 class _SigilCanvasState extends State<SigilCanvas> {
   int? _pointer;
+  // dedos en pantalla (para el pellizco) y su posicion al empezarlo
+  final _fingers = <int, Offset>{};
+  ({double dist, double angle})? _pinch0;
+  bool _hadGuides = false;
+
+  // eleccion antes del primer dedo: si llega un segundo, se pellizca esa
+  (String?, String?) _selBefore = (null, null);
   final _tick = ValueNotifier<int>(0);
-  final _bg = ScenePictureCache(), _under = ScenePictureCache(), _over = ScenePictureCache();
+  final _bg = ScenePictureCache(),
+      _under = ScenePictureCache(),
+      _over = ScenePictureCache();
 
   @override
   void dispose() {
@@ -59,7 +85,8 @@ class _SigilCanvasState extends State<SigilCanvas> {
 
   CanvasController get _c => widget.controller;
 
-  Pt _toCanvas(Offset local, double side) => Pt(local.dx * kSize / side, local.dy * kSize / side);
+  Pt _toCanvas(Offset local, double side) =>
+      Pt(local.dx * kSize / side, local.dy * kSize / side);
   bool get _alt => HardwareKeyboard.instance.isAltPressed;
 
   void _changed() {
@@ -71,41 +98,115 @@ class _SigilCanvasState extends State<SigilCanvas> {
   Widget build(BuildContext context) {
     return AspectRatio(
       aspectRatio: 1,
-      child: LayoutBuilder(builder: (context, box) {
-        final side = box.maxWidth, pxScale = kSize / side;
-        return Listener(
-          behavior: HitTestBehavior.opaque,
-          // solo el primer dedo: un segundo dedo no debe arrastrar otra cosa
-          onPointerDown: (e) {
-            if (_pointer != null) return;
-            _pointer = e.pointer;
-            _c.pointerDown(_toCanvas(e.localPosition, side), pxScale: pxScale, alt: _alt);
-            _changed();
-          },
-          onPointerMove: (e) {
-            if (e.pointer != _pointer || !_c.dragging) return;
-            _c.pointerMove(_toCanvas(e.localPosition, side), pxScale: pxScale, alt: _alt);
-            _repaint();
-          },
-          onPointerUp: (e) {
-            if (e.pointer != _pointer) return;
-            _pointer = null;
-            _c.pointerUp();
-            _changed();
-          },
-          onPointerCancel: (e) {
-            if (e.pointer != _pointer) return;
-            _pointer = null;
-            _c.pointerUp();
-            _changed();
-          },
-          child: CustomPaint(
-            size: Size.square(side),
-            painter: _LivePainter(this, widget.repaint == null ? _tick : Listenable.merge([_tick, widget.repaint])),
-          ),
-        );
-      }),
+      child: LayoutBuilder(
+        builder: (context, box) {
+          final side = box.maxWidth, pxScale = kSize / side;
+          return Semantics(
+            label: describeSigil(_c),
+            child: Listener(
+              behavior: HitTestBehavior.opaque,
+              onPointerDown: (e) {
+                _fingers[e.pointer] = e.localPosition;
+                // segundo dedo: pellizco para escalar y girar. El primer dedo
+                // ya actuo (elegir, deseleccionar, empezar a arrastrar): se
+                // corta, y se pellizca lo que estaba elegido antes del gesto;
+                // si no habia nada, lo que eligio el primer dedo
+                if (_fingers.length == 2 && _pinch0 == null) {
+                  if (_c.dragging) _c.pointerUp();
+                  if (_selBefore.$1 != null || _selBefore.$2 != null) {
+                    _c
+                      ..sel = _selBefore.$1
+                      ..layerSel = _selBefore.$2;
+                  }
+                  if (_c.beginPinch()) {
+                    final (a, b) = (
+                      _fingers.values.first,
+                      _fingers.values.last,
+                    );
+                    _pinch0 = (
+                      dist: (b - a).distance,
+                      angle: (b - a).direction,
+                    );
+                    _pointer = null;
+                    _repaint();
+                    return;
+                  }
+                }
+                // un solo dedo manda: otro dedo no arrastra otra cosa
+                if (_pointer != null || _pinch0 != null) return;
+                _pointer = e.pointer;
+                _selBefore = (_c.sel, _c.layerSel);
+                _c.pointerDown(
+                  _toCanvas(e.localPosition, side),
+                  pxScale: pxScale,
+                  alt: _alt,
+                );
+                _hadGuides = false;
+                _changed();
+              },
+              onPointerMove: (e) {
+                if (_fingers.containsKey(e.pointer)) {
+                  _fingers[e.pointer] = e.localPosition;
+                }
+                final p0 = _pinch0;
+                if (p0 != null && _fingers.length >= 2) {
+                  final (a, b) = (_fingers.values.first, _fingers.values.last);
+                  final d = (b - a).distance;
+                  if (p0.dist > 0 && d > 0) {
+                    _c.updatePinch(
+                      d / p0.dist,
+                      ((b - a).direction - p0.angle) * 180 / math.pi,
+                      alt: _alt,
+                    );
+                    _repaint();
+                  }
+                  return;
+                }
+                if (e.pointer != _pointer || !_c.dragging) return;
+                _c.pointerMove(
+                  _toCanvas(e.localPosition, side),
+                  pxScale: pxScale,
+                  alt: _alt,
+                );
+                // un toque leve cuando el iman engancha una guia: se nota sin mirar
+                final has = _c.guides.isNotEmpty;
+                if (has && !_hadGuides) HapticFeedback.selectionClick();
+                _hadGuides = has;
+                _repaint();
+              },
+              onPointerUp: _lift,
+              onPointerCancel: _lift,
+              child: CustomPaint(
+                size: Size.square(side),
+                painter: _LivePainter(
+                  this,
+                  widget.repaint == null
+                      ? _tick
+                      : Listenable.merge([_tick, widget.repaint]),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
+  }
+
+  void _lift(PointerEvent e) {
+    _fingers.remove(e.pointer);
+    if (_pinch0 != null) {
+      // el pellizco acaba al levantar un dedo; el otro no arrastra nada
+      if (_c.pinching) {
+        _c.endPinch();
+        _changed();
+      }
+      if (_fingers.isEmpty) _pinch0 = null;
+      return;
+    }
+    if (e.pointer != _pointer) return;
+    _pointer = null;
+    _c.pointerUp();
+    _changed();
   }
 
   /// Pinta el frame: lo quieto sale de grabaciones guardadas y solo el sigilo
@@ -119,7 +220,14 @@ class _SigilCanvasState extends State<SigilCanvas> {
     canvas.scale(size.width / kSize);
     canvas.drawPicture(_bg.get(sk, (c) => paintScene(c, scene.bg)));
     canvas.drawPicture(_under.get('$sk|$lk', (c) => paintScene(c, under)));
-    paintScene(canvas, mid, minW: 2 * kSize / size.width, dim: hl == null ? null : (it) => it.units != null && !it.units!.contains(hl) ? .28 : 1);
+    paintScene(
+      canvas,
+      mid,
+      minW: 2 * kSize / size.width,
+      dim: hl == null
+          ? null
+          : (it) => it.units != null && !it.units!.contains(hl) ? .28 : 1,
+    );
     canvas.drawPicture(_over.get('$sk|$lk', (c) => paintScene(c, over)));
     _paintOverlay(canvas, sg);
     canvas.restore();
@@ -129,7 +237,9 @@ class _SigilCanvasState extends State<SigilCanvas> {
   void _paintOverlay(Canvas canvas, LetterSigil sg) {
     final doc = _c.doc, th = doc.theme, ui = parseColor(th.ui);
     final lw = kLineW * doc.style.width / 100;
-    if (widget.grid != GridMode.none) _paintGrid(canvas, parseColor(th.ink, .16 * .7));
+    if (widget.grid != GridMode.none) {
+      _paintGrid(canvas, parseColor(th.ink, .16 * .7));
+    }
     if (sg.view == null) return;
     if (_c.hideMode) {
       final p = Paint()
@@ -177,7 +287,13 @@ class _SigilCanvasState extends State<SigilCanvas> {
         ..color = ui;
       for (final e in freeEnds(sg.visible)) {
         final q = sg.view!.toCanvas(e);
-        _dashed(canvas, Path()..addOval(Rect.fromCircle(center: Offset(q.x, q.y), radius: 14)), p, const [4, 4]);
+        _dashed(
+          canvas,
+          Path()
+            ..addOval(Rect.fromCircle(center: Offset(q.x, q.y), radius: 14)),
+          p,
+          const [4, 4],
+        );
       }
     }
     _paintLayerSelection(canvas, ui);
@@ -196,9 +312,18 @@ class _SigilCanvasState extends State<SigilCanvas> {
       ..color = ui;
     Path? ring;
     if (l.type == LayerType.symbol) {
-      ring = Path()..addOval(Rect.fromCircle(center: Offset(l.x, l.y), radius: l.size * .72));
+      ring = Path()
+        ..addOval(
+          Rect.fromCircle(center: Offset(l.x, l.y), radius: l.size * .72),
+        );
     } else if (part.r != null) {
-      ring = Path()..addOval(Rect.fromCircle(center: Offset(part.g.center.$1, part.g.center.$2), radius: part.r! + 6));
+      ring = Path()
+        ..addOval(
+          Rect.fromCircle(
+            center: Offset(part.g.center.$1, part.g.center.$2),
+            radius: part.r! + 6,
+          ),
+        );
     }
     if (ring != null) _dashed(canvas, ring, p, const [4, 5]);
   }
@@ -212,14 +337,42 @@ class _SigilCanvasState extends State<SigilCanvas> {
     for (final g in _c.guides) {
       switch (g.kind) {
         case GuideKind.v:
-          _dashed(canvas, Path()..moveTo(g.x, 0)..lineTo(g.x, kSize), p, const [7, 6]);
+          _dashed(
+            canvas,
+            Path()
+              ..moveTo(g.x, 0)
+              ..lineTo(g.x, kSize),
+            p,
+            const [7, 6],
+          );
         case GuideKind.h:
-          _dashed(canvas, Path()..moveTo(0, g.y)..lineTo(kSize, g.y), p, const [7, 6]);
+          _dashed(
+            canvas,
+            Path()
+              ..moveTo(0, g.y)
+              ..lineTo(kSize, g.y),
+            p,
+            const [7, 6],
+          );
         case GuideKind.ray:
           final a = g.a * math.pi / 180;
-          _dashed(canvas, Path()..moveTo(kC, kC)..lineTo(kC + math.cos(a) * 400, kC + math.sin(a) * 400), p, const [7, 6]);
+          _dashed(
+            canvas,
+            Path()
+              ..moveTo(kC, kC)
+              ..lineTo(kC + math.cos(a) * 400, kC + math.sin(a) * 400),
+            p,
+            const [7, 6],
+          );
         case GuideKind.circle:
-          _dashed(canvas, Path()..addOval(Rect.fromCircle(center: const Offset(kC, kC), radius: g.r)), p, const [7, 6]);
+          _dashed(
+            canvas,
+            Path()..addOval(
+              Rect.fromCircle(center: const Offset(kC, kC), radius: g.r),
+            ),
+            p,
+            const [7, 6],
+          );
         case GuideKind.point:
           canvas.drawCircle(Offset(g.x, g.y), 7, p);
       }
@@ -237,7 +390,11 @@ class _SigilCanvasState extends State<SigilCanvas> {
       }
       for (var a = 0; a < 360; a += 15) {
         final t = a * math.pi / 180;
-        canvas.drawLine(const Offset(kC, kC), Offset(kC + math.cos(t) * 350, kC + math.sin(t) * 350), p);
+        canvas.drawLine(
+          const Offset(kC, kC),
+          Offset(kC + math.cos(t) * 350, kC + math.sin(t) * 350),
+          p,
+        );
       }
     } else {
       for (var v = 0.0; v <= kSize; v += 50) {
@@ -254,7 +411,9 @@ void _dashed(Canvas canvas, Path path, Paint paint, List<double> pattern) {
     var d = 0.0, i = 0;
     while (d < m.length) {
       final seg = pattern[i % pattern.length];
-      if (i.isEven) canvas.drawPath(m.extractPath(d, math.min(d + seg, m.length)), paint);
+      if (i.isEven) {
+        canvas.drawPath(m.extractPath(d, math.min(d + seg, m.length)), paint);
+      }
       d += seg;
       i++;
     }
@@ -271,4 +430,18 @@ class _LivePainter extends CustomPainter {
   // el aviso de repintado manda; si el widget se reconstruye, se repinta
   @override
   bool shouldRepaint(_LivePainter old) => true;
+}
+
+/// Descripcion del lienzo para el lector de pantalla.
+String describeSigil(CanvasController c) {
+  final sg = c.doc.sigil;
+  if (sg.prims.isEmpty) return 'Lienzo del sigilo, vacío.';
+  final letters = sg.active.map((l) => l.ch).join(', ');
+  final layers = c.doc.layers.where((l) => l.visible).length;
+  final sel = c.sel != null
+      ? ' Elegida la letra ${c.sel}.'
+      : c.selectedLayer != null
+      ? ' Elegida la capa ${c.selectedLayer!.name}.'
+      : '';
+  return 'Sigilo de ${sg.active.length} letras: $letters.${layers > 0 ? ' $layers capas.' : ''}$sel';
 }
