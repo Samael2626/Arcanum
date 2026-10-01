@@ -1,4 +1,4 @@
-"""Siembra el modulo Tarot: 22 Arcanos Mayores + 56 Arcanos Menores (Book T / GD).
+r"""Siembra el modulo Tarot: 22 Arcanos Mayores + 56 Arcanos Menores (Book T / GD).
 
 Los datos NO viven aqui: el catalogo esta en el repositorio privado
 Arcanum-datos (tarot/majors.json, tarot/minors.json), localizado por

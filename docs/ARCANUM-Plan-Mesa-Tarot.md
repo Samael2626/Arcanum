@@ -92,7 +92,7 @@
 
 ## Fase 4: la mesa
 
-- [ ] **Prueba de rendimiento primero:** 78 cartas en `Transform` sobre un `Stack` en el móvil real con Impeller. Si no llega a 60 fps, se decide ya entre `Stack` de widgets y pintar las cartas del abanico con `CustomPainter`.
+- [x] **Prueba de rendimiento primero:** 78 cartas en `Transform` sobre un `Stack` en el móvil real con Impeller. Si no llega a 60 fps, se decide ya entre `Stack` de widgets y pintar las cartas del abanico con `CustomPainter`.
   - [x] APK de prueba lista (29-sep): `prototipos/mesa_rendimiento/`, proyecto aparte con id propio. Mide widgets frente a pintor en cinco escenas.
   - [x] **Medida el 30-sep en el móvil de Samuel** (GN2200, Android 12, pantalla a 60 Hz, Impeller), leída por `adb logcat`:
 
@@ -131,13 +131,13 @@
   - **Deshacer también en el servidor:** `tarot_sessions.previous_state` y `previous_until` (30 s; la app ofrece 5). Cada operación lleva `checkpoint`: en un gesto de varias, solo la primera marca punto, así se deshace entero. Lo interpretado o cerrado ya no se deshace. Si el servidor avanza fuera del gesto, ese deshacer se retira para no revertir otra cosa. Se deshacen: cortar (menú o borde), unir (soltar encima, por orden o automático), recoger todo, devolver una carta y sacar del abanico arrastrando.
   - **Continuar una lectura:** `POST /tarot/sessions` con `from_reading` abre una mesa con esas cartas ya fuera del mazo y su sentido (un giro ya viene aplicado); la app recoloca la foto guardada. Solo se ofrece en lecturas hechas en la mesa (las de `/tarot/spread` no guardaron la foto). Si la mesa actual tiene cartas, se pide confirmación.
   - Como la migración de la mesa no ha salido de esta rama, se amplió en vez de crear otra.
-- [ ] **`TableCamera`:** `Matrix4` con perspectiva 1/1000, inclinación y giro. Inversa para convertir toques en unidades de mesa. Encuadre a 30° e inercia.
-- [ ] **`DeckPiece`:** caja con grosor según el número de cartas. **`CardPiece`:** envuelve `TarotCardView` y añade la bisagra de la esquina y el muelle de inclinación.
-- [ ] **Huecos de las 7 tiradas**, con imán, intercambio y aclaratorias.
-- [ ] **Gestos de la tabla de la especificación (§3):** tocar, mantener 430 ms, arrastrar, esquina, doble toque, pellizcar. Zona de toque de 48 dp.
-- [ ] **`RadialMenu`:** círculos sueltos de 52 dp, elección por ángulo deslizando y soltando, orden fijo.
-- [ ] **Paneles compactos:** Leer, pregunta, interpretación y lecturas.
-- [ ] **Widget tests:** tocar, mantener abre el radial, arrastrar encaja en el hueco, esquina voltea pasados 70°.
+- [x] **`TableCamera`:** `Matrix4` con perspectiva 1/1000, inclinación y giro. Inversa para convertir toques en unidades de mesa. Encuadre a 30° e inercia. *(Repasado el 01-oct: `table_camera.dart`, inversa por homografía.)*
+- [x] **`DeckPiece`:** caja con grosor según el número de cartas. **`CardPiece`:** envuelve `TarotCardView` y añade la bisagra de la esquina y el muelle de inclinación. *(01-oct: se llaman `PilePiece`/`PilePainter`, hasta 13 capas, y `TableCardPiece`.)*
+- [x] **Huecos de las 7 tiradas**, con imán, intercambio y aclaratorias.
+- [x] **Gestos de la tabla de la especificación (§3):** tocar, mantener 430 ms, arrastrar, esquina, doble toque, pellizcar. Zona de toque de 48 dp. *(01-oct: el toque de cada pieza se agranda 24 unidades de mesa por lado.)*
+- [x] **`RadialMenu`:** círculos sueltos de 52 dp, elección por ángulo deslizando y soltando, orden fijo.
+- [ ] **Paneles compactos:** Leer, pregunta, interpretación y lecturas. **Falta (repasado el 01-oct):** existen, pero como hojas desde abajo (`showModalBottomSheet`, 3 en `tarot_screen.dart`) y la pregunta como diálogo. La especificación (§«paneles») pide paneles compactos anclados a lo que se tocó, nunca hojas desde abajo.
+- [x] **Widget tests:** tocar, mantener abre el radial, arrastrar encaja en el hueco, esquina voltea pasados 70°. *(01-oct: los dos últimos, con dedo real, en `table_view_test.dart` «gestos con el dedo»; comprobado que fallan si el umbral baja de 70.)*
 
 - [x] **Movimiento (30-sep, `table/table_motion.dart`):** las piezas viajan en vez de aparecer.
   - Cartas que nacen volando desde el montón o el abanico (al repartir, escalonadas cada 110 ms) y fantasmas que vuelan al montón al devolver o recoger.

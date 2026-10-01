@@ -295,6 +295,65 @@ void main() {
     });
   });
 
+  group('gestos con el dedo', () {
+    /// Arrastra con el dedo de verdad, en pasos, como la pantalla los recibe.
+    Future<void> drag(WidgetTester tester, Offset from, Offset to) async {
+      final g = await tester.startGesture(screen(from));
+      for (var i = 1; i <= 8; i++) {
+        now += const Duration(milliseconds: 16);
+        await g.moveTo(screen(Offset.lerp(from, to, i / 8)!));
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await g.up();
+      await tester.pump();
+      await settle(tester);
+    }
+
+    Future<TableCard> looseCard(WidgetTester tester) async {
+      await tap(tester, shelfPose(0, 2).offset);
+      final ops = c.read(tableControllerProvider.notifier);
+      ops.arrange((s) => s.copyWith(spread: () => 'one_card'));
+      final card = (await tester.runAsync(() => ops.take('p0', 0)))!;
+      ops.arrange(
+        (s) => s.updateCard(card.slug, (k) => k.copyWith(x: 150, y: 420)),
+      );
+      await tester.pump(const Duration(seconds: 1));
+      return dir.table.card(card.slug)!;
+    }
+
+    testWidgets('arrastrar una carta suelta la encaja en el hueco', (
+      tester,
+    ) async {
+      await pumpTable(tester);
+      final card = await looseCard(tester);
+      expect(card.slot, isNull);
+      await drag(tester, Offset(card.x, card.y), slotPose(_one, 0).offset);
+      final placed = dir.table.cardInSlot(0);
+      expect(placed?.slug, card.slug);
+      expect(placed!.x, closeTo(slotPose(_one, 0).x, .5));
+      expect(placed.y, closeTo(slotPose(_one, 0).y, .5));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('la esquina voltea solo pasados 70 grados', (tester) async {
+      await pumpTable(tester);
+      final card = await looseCard(tester);
+      expect(card.faceUp, isFalse);
+      final hw = TableGeometry.cardW * card.scale / 2,
+          hh = TableGeometry.cardH * card.scale / 2;
+      final corner = Offset(card.x + hw * .85, card.y + hh * .85);
+
+      // un tiron corto no llega a 70 grados: la carta vuelve boca abajo
+      await drag(tester, corner, corner.translate(-hw * .4, 0));
+      expect(dir.table.card(card.slug)!.faceUp, isFalse);
+
+      // hasta el borde contrario pasa de 70 grados: se voltea
+      await drag(tester, corner, corner.translate(-hw * 1.6, 0));
+      expect(dir.table.card(card.slug)!.faceUp, isTrue);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   test('el giro va por el camino corto', () {
     final p = lerpPose(
       const TablePose(0, 0, rot: 350),
