@@ -5,6 +5,7 @@ import 'package:arcanum_app/features/sendero/application/sendero_guide_controlle
 import 'package:arcanum_app/features/sendero/domain/sendero_catalog.dart';
 import 'package:arcanum_app/features/sendero/presentation/sendero_invitation.dart';
 import 'package:arcanum_app/features/sendero/presentation/sendero_screen.dart';
+import 'package:arcanum_app/features/sendero/presentation/sendero_spotlight.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,6 +44,36 @@ class _AuthenticatedAuthNotifier extends AuthNotifier {
   @override
   AuthState build() =>
       const AuthState(AuthStatus.authenticated, {'id': 'sendero-test-user'});
+}
+
+class _SpotlightFixture extends ConsumerWidget {
+  const _SpotlightFixture({required this.targetAtBottom});
+
+  final bool targetAtBottom;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final targetKey = ref.read(senderoGuideTargetsProvider).keyFor('menu');
+    return Scaffold(
+      body: Stack(
+        children: [
+          Positioned(
+            top: targetAtBottom ? 700 : 40,
+            left: 40,
+            child: SizedBox(key: targetKey, width: 48, height: 48),
+          ),
+          Positioned.fill(
+            child: SenderoSpotlight(
+              guide: SenderoGuideState(
+                journey: senderoJourneyById('orientation')!,
+                step: 0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 void main() {
@@ -234,6 +265,46 @@ void main() {
     expect(find.text('CIELO'), findsOneWidget);
   });
 
+  testWidgets('invitacion no bloquea la app mientras el usuario explora', (
+    tester,
+  ) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          arcanumApiProvider.overrideWithValue(_SenderoApi()),
+          authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+        ],
+        child: MaterialApp(
+          home: SenderoInvitationGate(
+            child: Scaffold(
+              body: Align(
+                alignment: Alignment.topCenter,
+                child: TextButton(
+                  onPressed: () => taps++,
+                  child: const Text('Explorar Cielo'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('sendero_invitation_card')),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Explorar Cielo'));
+    await tester.pump();
+    expect(taps, 1);
+    expect(
+      find.byKey(const ValueKey('sendero_invitation_card')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('invitacion inicia guia sobre Cielo sin abrir el hub', (
     tester,
   ) async {
@@ -271,4 +342,40 @@ void main() {
     expect(container.read(senderoGuideProvider)?.journey.id, 'orientation');
     expect(container.read(senderoGuideProvider)?.step, 0);
   });
+
+  for (final targetAtBottom in [false, true]) {
+    testWidgets(
+      'el cartel sigue al objetivo sin taparlo: ${targetAtBottom ? 'abajo' : 'arriba'}',
+      (tester) async {
+        tester.view.physicalSize = const Size(400, 800);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          ProviderScope(
+            child: MaterialApp(
+              home: _SpotlightFixture(targetAtBottom: targetAtBottom),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(_SpotlightFixture)),
+        );
+        final target = tester.getRect(
+          find.byKey(
+            container.read(senderoGuideTargetsProvider).keyFor('menu'),
+          ),
+        );
+        final card = tester.getRect(
+          find.byKey(const ValueKey('sendero_guide_card')),
+        );
+        if (targetAtBottom) {
+          expect(card.bottom, lessThan(target.top));
+        } else {
+          expect(card.top, greaterThan(target.bottom));
+        }
+      },
+    );
+  }
 }

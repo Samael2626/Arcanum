@@ -23,6 +23,7 @@ class SenderoInvitationGate extends ConsumerStatefulWidget {
 
 class _SenderoInvitationGateState extends ConsumerState<SenderoInvitationGate> {
   bool _checked = false;
+  bool _offerVisible = false;
 
   @override
   void didChangeDependencies() {
@@ -47,52 +48,17 @@ class _SenderoInvitationGateState extends ConsumerState<SenderoInvitationGate> {
     final after = prefs.getInt(laterKey) ?? 0;
     if (DateTime.now().millisecondsSinceEpoch < after || !mounted) return;
 
-    final choice = await showModalBottomSheet<String>(
-      context: context,
-      isDismissible: true,
-      backgroundColor: ArcanumColors.surfaceHigh,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 26, 24, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Sendero', style: ArcanumText.heading(32)),
-              const SizedBox(height: 10),
-              Text(
-                'Una guía breve para recorrer ARCANUM a tu ritmo. Puedes dejarla en cualquier momento.',
-                style: ArcanumText.body(17),
-              ),
-              const SizedBox(height: 22),
-              GoldButton(
-                label: 'Empezar guía',
-                onPressed: () => Navigator.pop(sheetContext, 'open'),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(sheetContext, 'later'),
-                      child: const Text('Ahora no'),
-                    ),
-                  ),
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(sheetContext, 'hide'),
-                      child: const Text('No recordarlo'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    setState(() => _offerVisible = true);
+  }
 
-    if (!mounted) return;
+  Future<void> _choose(String choice) async {
+    if (!_offerVisible) return;
+    setState(() => _offerVisible = false);
+    final userId = ref.read(authProvider).user?['id']?.toString();
+    if (userId == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    final hiddenKey = 'sendero_offer_hidden_$userId';
+    final laterKey = 'sendero_offer_after_$userId';
     if (choice == 'open') {
       await prefs.remove(laterKey);
       if (mounted) {
@@ -116,5 +82,69 @@ class _SenderoInvitationGateState extends ConsumerState<SenderoInvitationGate> {
   }
 
   @override
-  Widget build(BuildContext context) => widget.child;
+  Widget build(BuildContext context) => Stack(
+    children: [
+      widget.child,
+      if (_offerVisible)
+        Positioned(
+          left: 12,
+          right: 12,
+          bottom: 12,
+          child: SafeArea(
+            top: false,
+            child: Center(
+              heightFactor: 1,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 380),
+                child: Material(
+                  key: const ValueKey('sendero_invitation_card'),
+                  color: ArcanumColors.surfaceHigh,
+                  elevation: 10,
+                  shape: RoundedRectangleBorder(
+                    side: const BorderSide(color: ArcanumColors.goldMuted),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Sendero', style: ArcanumText.heading(23)),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Una guía breve para recorrer ARCANUM a tu ritmo. Puedes dejarla en cualquier momento.',
+                          style: ArcanumText.body(14),
+                        ),
+                        const SizedBox(height: 10),
+                        GoldButton(
+                          label: 'Empezar guía',
+                          onPressed: () => _choose('open'),
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextButton(
+                                onPressed: () => _choose('later'),
+                                child: const Text('Ahora no'),
+                              ),
+                            ),
+                            Expanded(
+                              child: TextButton(
+                                onPressed: () => _choose('hide'),
+                                child: const Text('No recordarlo'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+    ],
+  );
 }

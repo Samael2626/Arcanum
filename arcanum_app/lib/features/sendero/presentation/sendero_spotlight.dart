@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,7 +21,9 @@ class SenderoSpotlight extends ConsumerStatefulWidget {
 class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
     with WidgetsBindingObserver {
   final _rootKey = GlobalKey();
+  final _cardKey = GlobalKey();
   Rect? _targetRect;
+  double? _cardHeight;
   String? _scrolledTarget;
   Timer? _measureTimer;
 
@@ -59,6 +62,13 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
 
   void _measure() {
     if (!mounted) return;
+    final card = _cardKey.currentContext?.findRenderObject();
+    if (card is RenderBox && card.hasSize) {
+      final height = card.size.height;
+      if (_cardHeight == null || (height - _cardHeight!).abs() > 1) {
+        setState(() => _cardHeight = height);
+      }
+    }
     final targetKey = ref
         .read(senderoGuideTargetsProvider)
         .keyFor(widget.guide.current.target);
@@ -95,26 +105,57 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
       WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
     }
 
-    return Stack(
-      key: _rootKey,
-      children: [
-        if (rect != null)
-          Positioned.fill(
-            child: IgnorePointer(
-              child: CustomPaint(painter: _VeilPainter(rect)),
-            ),
-          ),
-        Align(
-          alignment:
-              rect != null &&
-                  rect.center.dy > MediaQuery.sizeOf(context).height * .58
-              ? Alignment.topCenter
-              : Alignment.bottomCenter,
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
+    return LayoutBuilder(
+      builder: (context, bounds) {
+        final cardWidth = math.min(360.0, bounds.maxWidth - 24);
+        final cardHeight = _cardHeight ?? 200;
+        final safeTop = MediaQuery.paddingOf(context).top + 12;
+        final safeBottom =
+            bounds.maxHeight - MediaQuery.paddingOf(context).bottom - 12;
+        final maxTop = math.max(safeTop, safeBottom - cardHeight);
+        final top = switch (rect) {
+          null => maxTop,
+          _ => () {
+            final below = rect.bottom + 12;
+            final above = rect.top - cardHeight - 12;
+            final spaceBelow = safeBottom - below;
+            final spaceAbove = rect.top - safeTop - 12;
+            final preferred = spaceBelow >= cardHeight
+                ? below
+                : spaceAbove >= cardHeight
+                ? above
+                : spaceBelow >= spaceAbove
+                ? below
+                : above;
+            return preferred.clamp(safeTop, maxTop);
+          }(),
+        };
+        final left = rect == null
+            ? (bounds.maxWidth - cardWidth) / 2
+            : (rect.center.dx - cardWidth / 2).clamp(
+                12.0,
+                bounds.maxWidth - cardWidth - 12,
+              );
+
+        return Stack(
+          key: _rootKey,
+          children: [
+            if (rect != null)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(painter: _VeilPainter(rect)),
+                ),
+              ),
+            AnimatedPositioned(
+              duration: MediaQuery.of(context).disableAnimations
+                  ? Duration.zero
+                  : const Duration(milliseconds: 240),
+              curve: Curves.easeOutCubic,
+              top: top,
+              left: left,
+              width: cardWidth,
+              child: KeyedSubtree(
+                key: _cardKey,
                 child: Material(
                   key: const ValueKey('sendero_guide_card'),
                   color: ArcanumColors.surfaceHigh,
@@ -185,9 +226,9 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
                 ),
               ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }
