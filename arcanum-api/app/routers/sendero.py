@@ -19,6 +19,17 @@ from app.schemas.sendero import (
 
 router = APIRouter(prefix="/sendero", tags=["sendero"])
 
+REWARDED_LESSONS = {
+    "orientation": (2, 2),
+    "cielo": (2, 1),
+    "horoscopo": (2, 1),
+    "grimorio": (2, 0),
+    "saber": (2, 0),
+    "oraculo": (2, 1),
+    "fragmentos": (1, 0),
+    "account": (2, 1),
+}
+
 
 @router.get("/progress", response_model=list[SenderoProgressResponse])
 def list_sendero_progress(
@@ -88,8 +99,13 @@ def update_sendero_progress(
             progress.completed_at = datetime.now(timezone.utc)
 
     reward = 0
-    if normalized_id == "orientation" and payload.version == 2 and payload.step >= 2 and payload.status == SenderoStatus.completed:
-        reward = FragmentService().grant_tutorial(db, current_user.id)
+    lesson = REWARDED_LESSONS.get(normalized_id)
+    if (
+        lesson is not None
+        and (payload.version, payload.step) == lesson
+        and payload.status == SenderoStatus.completed
+    ):
+        reward = FragmentService().grant_lesson(db, current_user.id, normalized_id)
     db.commit()
     db.refresh(progress)
     return SenderoProgressResponse.model_validate(progress).model_copy(

@@ -45,7 +45,9 @@ class AppShell extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '$reward Fragmentos Arcanos despertaron en tu saldo.',
+              reward == 1
+                  ? 'Un Fragmento Arcano despertó en tu saldo.'
+                  : '$reward Fragmentos Arcanos despertaron en tu saldo.',
             ),
             action: SnackBarAction(
               label: 'Ver',

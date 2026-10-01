@@ -40,7 +40,7 @@ class _ApiConSaldo extends ArcanumApi {
     'conversion_rate': 12,
     'weekly_conversions_remaining': 3,
     'weekly_conversion_limit': 3,
-    'tutorial_reward': 3,
+    'tutorial_reward': 1,
   };
 
   @override

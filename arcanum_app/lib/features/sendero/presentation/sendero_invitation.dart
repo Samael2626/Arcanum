@@ -9,6 +9,7 @@ import '../../../core/theme/arcanum_theme.dart';
 import '../../../shared/widgets/gold_button.dart';
 import '../application/sendero_controller.dart';
 import '../application/sendero_guide_controller.dart';
+import '../domain/sendero_catalog.dart';
 
 class SenderoInvitationGate extends ConsumerStatefulWidget {
   const SenderoInvitationGate({super.key, required this.child});
@@ -65,7 +66,7 @@ class _SenderoInvitationGateState extends ConsumerState<SenderoInvitationGate> {
               ),
               const SizedBox(height: 22),
               GoldButton(
-                label: 'Abrir Sendero',
+                label: 'Empezar guía',
                 onPressed: () => Navigator.pop(sheetContext, 'open'),
               ),
               const SizedBox(height: 8),
@@ -94,7 +95,10 @@ class _SenderoInvitationGateState extends ConsumerState<SenderoInvitationGate> {
     if (!mounted) return;
     if (choice == 'open') {
       await prefs.remove(laterKey);
-      if (mounted) context.push('/sendero');
+      if (mounted) {
+        ref.read(senderoGuideProvider.notifier).start(senderoJourneys.first);
+        context.go('/hoy');
+      }
     } else if (choice == 'hide') {
       await prefs.setBool(hiddenKey, true);
       await ref

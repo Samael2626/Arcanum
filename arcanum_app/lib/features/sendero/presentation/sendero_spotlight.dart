@@ -112,7 +112,7 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
               : Alignment.bottomCenter,
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 420),
                 child: Material(
@@ -124,7 +124,7 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,11 +133,11 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
                           '${widget.guide.journey.title.toUpperCase()} · ${widget.guide.step + 1} DE ${widget.guide.journey.steps.length}',
                           style: ArcanumText.label(),
                         ),
-                        const SizedBox(height: 9),
-                        Text(step.title, style: ArcanumText.heading(27)),
                         const SizedBox(height: 6),
-                        Text(step.body, style: ArcanumText.body(16)),
-                        const SizedBox(height: 10),
+                        Text(step.title, style: ArcanumText.heading(23)),
+                        const SizedBox(height: 4),
+                        Text(step.body, style: ArcanumText.body(14)),
+                        const SizedBox(height: 6),
                         if (rect == null)
                           TextButton(
                             onPressed: step.route == null
@@ -204,7 +204,7 @@ class _VeilPainter extends CustomPainter {
       ..fillType = PathFillType.evenOdd
       ..addRect(Offset.zero & size)
       ..addRRect(cutout);
-    canvas.drawPath(veil, Paint()..color = const Color(0xB807060A));
+    canvas.drawPath(veil, Paint()..color = const Color(0x7607060A));
     canvas.drawRRect(
       cutout,
       Paint()

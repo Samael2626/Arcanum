@@ -17,13 +17,18 @@ class FragmentError(Exception):
 class FragmentService:
     CONVERSION_RATE = 12
     WEEKLY_CONVERSION_LIMIT = 3
-    TUTORIAL_REWARD = 3
+    TUTORIAL_REWARD = 1
     CARD_STUDY_REWARD = 1
 
-    def grant_tutorial(self, db: Session, user_id: UUID) -> int:
+    def grant_lesson(self, db: Session, user_id: UUID, journey_id: str) -> int:
+        event_key = (
+            "sendero:orientation:2"
+            if journey_id == "orientation"
+            else f"sendero:{journey_id}"
+        )
         return self._grant(
             db, user_id, self.TUTORIAL_REWARD,
-            "sendero_orientation", "sendero:orientation:2",
+            "sendero_lesson", event_key,
         )
 
     def grant_card_study(self, db: Session, user_id: UUID, slug: str) -> int:

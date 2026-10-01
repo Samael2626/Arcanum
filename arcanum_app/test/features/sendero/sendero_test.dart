@@ -93,7 +93,7 @@ void main() {
     final journey = senderoJourneyById('orientation')!;
     final guide = container.read(senderoGuideProvider.notifier);
     guide.start(journey);
-    guide.onAction('help');
+    guide.onAction('horoscope_card');
     expect(container.read(senderoGuideProvider)?.step, 0);
     guide.onAction('menu');
     expect(container.read(senderoGuideProvider)?.step, 1);
@@ -108,7 +108,7 @@ void main() {
     expect(container.read(senderoGuideProvider)?.step, 0);
     guide.onAction('menu');
     guide.onAction('section_horoscopo');
-    guide.onAction('help');
+    guide.onAction('horoscope_card');
     expect(container.read(senderoGuideProvider), isNull);
     await guide.idle;
     expect(
@@ -232,5 +232,43 @@ void main() {
 
     expect(api.saved.last['status'], 'dismissed');
     expect(find.text('CIELO'), findsOneWidget);
+  });
+
+  testWidgets('invitacion inicia guia sobre Cielo sin abrir el hub', (
+    tester,
+  ) async {
+    final api = _SenderoApi();
+    final router = GoRouter(
+      initialLocation: '/hoy',
+      routes: [
+        GoRoute(
+          path: '/hoy',
+          builder: (_, _) =>
+              const SenderoInvitationGate(child: Scaffold(body: Text('CIELO'))),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          arcanumApiProvider.overrideWithValue(api),
+          authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Empezar guía'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('CIELO'), findsOneWidget);
+    expect(find.byType(SenderoScreen), findsNothing);
+    final container = ProviderScope.containerOf(
+      tester.element(find.text('CIELO')),
+    );
+    expect(container.read(senderoGuideProvider)?.journey.id, 'orientation');
+    expect(container.read(senderoGuideProvider)?.step, 0);
   });
 }
