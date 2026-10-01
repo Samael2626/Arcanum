@@ -15,9 +15,16 @@ regenera la pieza completa un maximo de dos veces; no completa huecos con otro
 modelo porque eso puede inventar hechos, fuentes o recursos visuales.
 2. `03_validar_contenido.json`
 3. `04_aprobar_contenido.json`
-4. `05_renderizar.json`
+4. `05_preparar_video_short.json` - toma una pieza aprobada, construye un
+   storyboard vertical de 15-45 segundos y solicita clips trazables al
+   ensamblador local. No genera audio, no renderiza y no publica: termina con
+   los bloqueos de licencia/procedencia que falten.
 5. `06_publicar.json`
 6. `07_medir.json`
 
 Ningun workflow publica sin estado `approved`. La credencial Gemini vive solo
 en el almacen cifrado de n8n y nunca dentro del JSON exportado.
+
+El workflow 05 se importa inactivo, usa solo disparador manual y consulta
+`D:/Proyectos/Youtube/video-assembler` por `/healthz` y
+`/api/visuals/generate`. Las claves de proveedores nunca viven en el export.

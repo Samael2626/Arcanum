@@ -1,0 +1,170 @@
+{
+  "id": "ArcanumShort05V1",
+  "name": "ARCANUM 05 - Preparar video short",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Ejecutar manualmente",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-760, 180]
+    },
+    {
+      "parameters": {
+        "jsCode": "const config = {\n  external_key: 'tarot-78-arcanos-001',\n  assembler_url: 'http://host.docker.internal:3001',\n  target_duration_seconds: 30,\n  visual_queries: [\n    'antique tarot cards on a dark wooden table candlelight vertical',\n    'hands arranging tarot cards close up dark study vertical',\n    'antique tarot deck in occult library gold details vertical'\n  ]\n};\n\nif (!config.external_key || config.visual_queries.length !== 3) {\n  throw new Error('Configura una pieza y exactamente tres busquedas visuales.');\n}\n\nreturn [{ json: config }];"
+      },
+      "id": "select-content",
+      "name": "Seleccionar pieza",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-540, 180]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH requested AS (SELECT $1::text AS external_key)\nSELECT\n  requested.external_key AS requested_key,\n  item.external_key,\n  item.status::text AS status,\n  item.derived_formats,\n  item.generated_content,\n  item.approved_at,\n  item.approved_by\nFROM requested\nLEFT JOIN marketing.content_items AS item\n  ON item.external_key = requested.external_key\n AND item.status IN ('approved', 'rendered')\n AND item.approved_at IS NOT NULL\n AND item.approved_by IS NOT NULL\n AND item.derived_formats ? 'short_video'\nLIMIT 1;",
+        "options": {
+          "queryReplacement": "={{ [ $('Seleccionar pieza').first().json.external_key ] }}"
+        }
+      },
+      "id": "load-approved-content",
+      "name": "Cargar contenido aprobado",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [-300, 180],
+      "credentials": {
+        "postgres": {
+          "id": "arcanum-marketing-postgres",
+          "name": "ARCANUM Marketing Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const row = $input.first().json;\nconst config = $('Seleccionar pieza').first().json;\n\nif (!row.external_key) {\n  throw new Error(`La pieza ${row.requested_key} no existe, no esta aprobada o no declara short_video.`);\n}\n\nconst content = typeof row.generated_content === 'string'\n  ? JSON.parse(row.generated_content)\n  : row.generated_content;\nconst draft = content?.draft || {};\nconst slides = content?.visual?.slides || [];\n\nfor (const field of ['script', 'cta']) {\n  if (typeof draft[field] !== 'string' || !draft[field].trim()) {\n    throw new Error(`Falta draft.${field} aprobado.`);\n  }\n}\nif (slides.length < 3) {\n  throw new Error('Se requieren al menos tres slides visuales aprobados.');\n}\n\nconst selectedSlides = [slides[0], slides[Math.floor(slides.length / 2)], slides.at(-1)];\nconst coverText = [selectedSlides[0]?.title, selectedSlides[0]?.body].filter(Boolean).join('. ');\nconst narration = [coverText, draft.script, draft.cta].filter(Boolean).join(' ').replace(/\\s+/g, ' ').trim();\nconst wordCount = narration.split(/\\s+/).filter(Boolean).length;\nconst estimatedDuration = Math.round((wordCount / 130) * 60);\n\nif (estimatedDuration < 15 || estimatedDuration > 45) {\n  throw new Error(`La narracion estima ${estimatedDuration}s; el gate admite 15-45s.`);\n}\n\nconst sceneTexts = [coverText, draft.script, draft.cta];\nconst weights = sceneTexts.map(text => Math.max(1, text.split(/\\s+/).filter(Boolean).length));\nconst totalWeight = weights.reduce((sum, value) => sum + value, 0);\nlet cursor = 0;\nconst scenes = sceneTexts.map((text, index) => {\n  const isLast = index === sceneTexts.length - 1;\n  const duration = isLast\n    ? estimatedDuration - cursor\n    : Math.max(3, Math.round((weights[index] / totalWeight) * estimatedDuration));\n  const scene = {\n    index,\n    start_seconds: cursor,\n    end_seconds: cursor + duration,\n    duration_seconds: duration,\n    narration: text,\n    visual_query: config.visual_queries[index],\n    slide_id: selectedSlides[index]?.id || `scene-${index + 1}`\n  };\n  cursor += duration;\n  return scene;\n});\n\nreturn [{\n  json: {\n    workflow_contract: 'arcanum-video-short-preflight-v1',\n    external_key: row.external_key,\n    approval: { status: row.status, approved_at: row.approved_at, approved_by: row.approved_by },\n    assembler_url: config.assembler_url,\n    target: { format: 'vertical', width: 1080, height: 1920, fps: 30 },\n    estimated_duration_seconds: estimatedDuration,\n    narration,\n    cta: draft.cta,\n    scenes,\n    visual_request: {\n      segments: scenes.map(scene => ({ prompt: scene.visual_query, text: scene.narration })),\n      orientation: 'portrait',\n      min_width: 1080\n    },\n    audio_plan: {\n      status: 'required',\n      audio_url: null,\n      voice_provider: null,\n      voice_id: null,\n      license_or_consent: null\n    }\n  }\n}];"
+      },
+      "id": "build-storyboard",
+      "name": "Construir storyboard",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-40, 180]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.assembler_url + '/healthz' }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "health-check",
+      "name": "Comprobar ensamblador",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [200, 180],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "health-is-ok",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "ok",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "assembler-ready",
+      "name": "Ensamblador disponible",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [440, 180]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Construir storyboard').first().json.assembler_url + '/api/visuals/generate' }}",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($('Construir storyboard').first().json.visual_request) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "generate-visuals",
+      "name": "Obtener clips trazables",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 80]
+    },
+    {
+      "parameters": {
+        "jsCode": "const plan = $('Construir storyboard').first().json;\nconst response = $input.first().json;\nconst items = Array.isArray(response.items) ? response.items : [];\n\nif (items.length !== plan.scenes.length) {\n  throw new Error(`Se esperaban ${plan.scenes.length} clips y llegaron ${items.length}. No se repetiran clips para ocultarlo.`);\n}\n\nconst invalid = items.filter(item => !item.source || !item.video_path || !item.video_url || !item.slug);\nif (invalid.length) {\n  throw new Error('Uno o mas clips no incluyen fuente, URL de origen, slug y archivo local.');\n}\n\nconst authorMissing = items.some(item => !item.author && !item.user);\nconst blockers = [\n  'Falta generar y aprobar el audio TTS con licencia o consentimiento.',\n  ...(authorMissing ? ['El ensamblador actual no devuelve el autor de Pexels; completar procedencia antes del render.'] : [])\n];\n\nreturn [{\n  json: {\n    status: blockers.length ? 'needs_audio_and_asset_review' : 'ready_to_render',\n    render_ready: blockers.length === 0,\n    blockers,\n    ...plan,\n    visual_assets: items.map((item, index) => ({\n      scene_index: index,\n      source: item.source,\n      author: item.author || item.user || null,\n      source_url: item.video_url,\n      source_slug: item.slug,\n      local_path: item.video_path\n    }))\n  }\n}];"
+      },
+      "id": "validate-package",
+      "name": "Validar paquete visual",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 80]
+    },
+    {
+      "parameters": {
+        "jsCode": "const plan = $('Construir storyboard').first().json;\nreturn [{\n  json: {\n    status: 'blocked',\n    render_ready: false,\n    external_key: plan.external_key,\n    blocker: 'El ensamblador de video no responde en /healthz.',\n    next_action: 'Inicia D:/Proyectos/Youtube/video-assembler y relanza este workflow.',\n    storyboard: plan\n  }\n}];"
+      },
+      "id": "blocked-service",
+      "name": "Bloquear por servicio",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 300]
+    }
+  ],
+  "connections": {
+    "Ejecutar manualmente": {
+      "main": [[{"node": "Seleccionar pieza", "type": "main", "index": 0}]]
+    },
+    "Seleccionar pieza": {
+      "main": [[{"node": "Cargar contenido aprobado", "type": "main", "index": 0}]]
+    },
+    "Cargar contenido aprobado": {
+      "main": [[{"node": "Construir storyboard", "type": "main", "index": 0}]]
+    },
+    "Construir storyboard": {
+      "main": [[{"node": "Comprobar ensamblador", "type": "main", "index": 0}]]
+    },
+    "Comprobar ensamblador": {
+      "main": [[{"node": "Ensamblador disponible", "type": "main", "index": 0}]]
+    },
+    "Ensamblador disponible": {
+      "main": [
+        [{"node": "Obtener clips trazables", "type": "main", "index": 0}],
+        [{"node": "Bloquear por servicio", "type": "main", "index": 0}]
+      ]
+    },
+    "Obtener clips trazables": {
+      "main": [[{"node": "Validar paquete visual", "type": "main", "index": 0}]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "active": false,
+  "tags": []
+}
