@@ -173,7 +173,7 @@ function calliOutline(p, lw) {
   const pts = calliPts(p), L = [], R = [];
   pts.forEach((q, i) => {
     const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)];
-    const th = Math.atan2(b.y - a.y, b.x - a.x), h = lw / 2 * (.45 + .95 * Math.abs(Math.sin(th - CALLI_NIB)));
+    const th = Math.atan2(b.y - a.y, b.x - a.x), h = lw / 2 * (.6 + .8 * Math.abs(Math.sin(th - CALLI_NIB)));
     L.push(`${f2(q.x - Math.sin(th) * h)} ${f2(q.y + Math.cos(th) * h)}`);
     R.push(`${f2(q.x + Math.sin(th) * h)} ${f2(q.y - Math.cos(th) * h)}`);
   });
