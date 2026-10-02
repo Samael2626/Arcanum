@@ -75,6 +75,14 @@ final _reading = Interpretation.fromJson({
   ],
 });
 
+/// El fondo se mueve sin fin (ascuas, ondas…): no hay «quieto» que esperar.
+/// Se dejan pasar los fotogramas de la animacion de pagina.
+Future<void> settleFrames(WidgetTester tester) async {
+  for (var i = 0; i < 40; i++) {
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+}
+
 void main() {
   group('lectura revelada', () {
     late int closed, back;
@@ -106,7 +114,7 @@ void main() {
 
     Future<void> swipeUp(WidgetTester tester) async {
       await tester.fling(find.byType(PageView), const Offset(0, -400), 1500);
-      await tester.pumpAndSettle();
+      await settleFrames(tester);
     }
 
     testWidgets('empieza por la primera carta, con su posicion y su texto', (
@@ -145,7 +153,7 @@ void main() {
     testWidgets('tocar un hueco de la tirada salta a su carta', (tester) async {
       await pump(tester);
       await tester.tap(find.bySemanticsLabel('Ir a 3, Futuro'));
-      await tester.pumpAndSettle();
+      await settleFrames(tester);
       expect(find.text('3 / 3'), findsOneWidget);
       expect(find.text('El Sol'), findsOneWidget);
     });

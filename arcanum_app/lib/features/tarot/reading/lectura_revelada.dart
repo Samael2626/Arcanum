@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/arcanum_colors.dart';
 import '../../../shared/revelado/atmosphere.dart';
+import '../../../shared/revelado/element_motion.dart';
 import '../../../shared/revelado/reveal_pager.dart';
 import '../../oraculo/widgets/tarot_card.dart';
 import '../domain/table_models.dart';
@@ -79,6 +80,8 @@ class LecturaRevelada extends StatelessWidget {
               glow: a.glow,
               art: faces[i].rwsAsset,
               reversed: cards[i].face.reversed,
+              motion: MotionKind.fromName(a.motion),
+              accent: a.accent,
             );
           },
           page: (context, i, active) => i == last

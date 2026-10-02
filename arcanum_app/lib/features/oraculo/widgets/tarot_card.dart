@@ -524,11 +524,35 @@ String? _elementFromAstro(String? s) {
 
 /// La luz de la cara de una carta (borde, centro, bruma y acento), para teñir
 /// lo que la rodea: la «Lectura revelada» usa la misma atmosfera que su naipe.
-typedef TarotAtmosphere = ({Color edge, Color core, Color glow, Color accent});
+/// `motion` dice como se mueve su luz: fuego, agua, aire, tierra, sol o luna.
+typedef TarotAtmosphere = ({
+  Color edge,
+  Color core,
+  Color glow,
+  Color accent,
+  String motion,
+});
 
 TarotAtmosphere tarotAtmosphere(TarotFace face) {
   final s = _skinForFace(face);
-  return (edge: s.edge, core: s.core, glow: s.glow, accent: s.accent);
+  final motion = identical(s, _skinSun)
+      ? 'sol'
+      : identical(s, _skinMoon)
+      ? 'luna'
+      : identical(s, _skinFire)
+      ? 'fuego'
+      : identical(s, _skinWater)
+      ? 'agua'
+      : identical(s, _skinEarth)
+      ? 'tierra'
+      : 'aire';
+  return (
+    edge: s.edge,
+    core: s.core,
+    glow: s.glow,
+    accent: s.accent,
+    motion: motion,
+  );
 }
 
 _CardSkin _skinForFace(TarotFace f) {
