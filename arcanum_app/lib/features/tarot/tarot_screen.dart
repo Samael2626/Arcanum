@@ -176,6 +176,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
                     spread: _director?.spread,
                     onBack: () => setState(() => _revealing = false),
                     onCloseCircle: _closeCircle,
+                    entrance: _entranceOf(_reading!),
                   ),
                 ),
               if (panel != null)
@@ -344,6 +345,19 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
         },
       ),
     );
+  }
+
+  /// Donde esta en la mesa cada carta de la lectura: de ahi vuelan al abrirla.
+  List<Rect?> _entranceOf(Interpretation reading) {
+    final dir = _director;
+    if (dir == null) return const [];
+    return [
+      for (final c in reading.cards)
+        if (dir.table.card(c.face.slug) case final card?)
+          dir.screenRectOfCard(card)
+        else
+          null,
+    ];
   }
 
   Future<void> _closeCircle() async {

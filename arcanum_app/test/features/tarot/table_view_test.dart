@@ -4,8 +4,10 @@ import 'package:arcanum_app/features/tarot/application/table_controller.dart';
 import 'package:arcanum_app/features/tarot/domain/table_models.dart';
 import 'package:arcanum_app/features/tarot/domain/table_state.dart';
 import 'package:arcanum_app/features/tarot/table/table_director.dart';
+import 'package:arcanum_app/features/tarot/table/table_fx.dart';
 import 'package:arcanum_app/features/tarot/table/table_geometry.dart';
 import 'package:arcanum_app/features/tarot/table/table_motion.dart';
+import 'package:arcanum_app/features/tarot/table/table_painters.dart';
 import 'package:arcanum_app/features/tarot/table/table_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -62,7 +64,7 @@ void main() {
   late TableDirector dir;
   var now = Duration.zero;
 
-  Future<void> pumpTable(WidgetTester tester) async {
+  Future<void> pumpTable(WidgetTester tester, {bool still = false}) async {
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({});
     tester.view
@@ -87,6 +89,11 @@ void main() {
       UncontrolledProviderScope(
         container: c,
         child: MaterialApp(
+          // «reducir movimiento» del sistema
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: still),
+            child: child!,
+          ),
           home: Scaffold(
             // como la pantalla: se reconstruye cuando cambia la mesa del controlador
             body: Consumer(
@@ -352,6 +359,93 @@ void main() {
       expect(dir.table.card(card.slug)!.faceUp, isTrue);
       expect(tester.takeException(), isNull);
     });
+  });
+
+  group('tanda 1 de animaciones', () {
+    double embroidery(WidgetTester tester) => tester
+        .widgetList<CustomPaint>(find.byType(CustomPaint))
+        .map((w) => w.painter)
+        .whereType<EmbroideryPainter>()
+        .single
+        .t;
+
+    /// Una carta en la tirada de una, todavia boca abajo.
+    Future<TableCard> laid(WidgetTester tester) async {
+      await tap(tester, shelfPose(0, 2).offset);
+      final ops = c.read(tableControllerProvider.notifier);
+      ops.arrange((s) => s.copyWith(spread: () => 'one_card'));
+      final card = (await tester.runAsync(() => ops.take('p0', 0)))!;
+      ops.arrange((s) => s.putInSlot(card.slug, 0));
+      await tester.pump(const Duration(seconds: 1));
+      return card;
+    }
+
+    void reveal(TableCard card) => c
+        .read(tableControllerProvider.notifier)
+        .arrange(
+          (s) => s.updateCard(card.slug, (k) => k.copyWith(faceUp: true)),
+        );
+
+    Future<void> frames(WidgetTester tester, int ms) async {
+      for (var t = 0; t < ms; t += 50) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+    }
+
+    testWidgets('el bordado despierta poco a poco al quedar lista la tirada', (
+      tester,
+    ) async {
+      await pumpTable(tester);
+      final card = await laid(tester);
+      expect(dir.readyToInterpret, isFalse);
+      expect(embroidery(tester), 0);
+      reveal(card);
+      await frames(tester, 300);
+      expect(dir.readyToInterpret, isTrue);
+      expect(embroidery(tester), inExclusiveRange(0, 1));
+      await frames(tester, 1500);
+      expect(embroidery(tester), 1);
+      // si deja de estar lista, se apaga
+      c
+          .read(tableControllerProvider.notifier)
+          .arrange(
+            (s) => s.updateCard(card.slug, (k) => k.copyWith(faceUp: false)),
+          );
+      await frames(tester, 100);
+      expect(embroidery(tester), 0);
+      // deja guardar la mesa: el autoguardado espera un poco tras cada cambio
+      await tester.pump(const Duration(seconds: 2));
+    });
+
+    testWidgets('desvelar deja una huella bajo la carta que se va sola', (
+      tester,
+    ) async {
+      await pumpTable(tester);
+      final card = await laid(tester);
+      expect(find.byType(ImprintPiece), findsNothing);
+      reveal(card);
+      await tester.pump();
+      expect(find.byType(ImprintPiece), findsOneWidget);
+      // espera al volteo y dura 1,6 s
+      await frames(tester, 3500);
+      expect(find.byType(ImprintPiece), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+      'con «reducir movimiento»: bordado encendido de golpe y sin huellas',
+      (tester) async {
+        await pumpTable(tester, still: true);
+        final card = await laid(tester);
+        reveal(card);
+        await tester.pump();
+        await tester.pump();
+        expect(embroidery(tester), 1);
+        expect(find.byType(ImprintPiece), findsNothing);
+        // deja guardar la mesa: el autoguardado espera un poco tras cada cambio
+        await tester.pump(const Duration(seconds: 2));
+      },
+    );
   });
 
   test('el giro va por el camino corto', () {

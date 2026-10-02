@@ -17,7 +17,10 @@ import 'package:flutter/scheduler.dart';
 import '../../../core/theme/arcanum_colors.dart';
 import '../domain/table_state.dart';
 import 'radial_logic.dart';
+import '../../oraculo/widgets/tarot_card.dart';
+import '../reading/lectura_revelada.dart';
 import 'table_director.dart';
+import 'table_fx.dart';
 import 'table_geometry.dart';
 import 'table_icons.dart';
 import 'table_motion.dart';
@@ -57,6 +60,14 @@ class _TarotTableViewState extends State<TarotTableView>
   ({FanLayout fan, int count})? _closingFan;
   ({FanLayout fan, int count})? _lastFan;
 
+  /// El bordado «Interpretar» despierta cuando la tirada esta lista.
+  late final AnimationController _embroideryCtl;
+  bool _wasReady = false;
+
+  /// Huellas de las cartas que se acaban de desvelar.
+  final Map<String, Imprint> _imprints = {};
+  int _imprintSeq = 0;
+
   /// El barajado en escena.
   late final AnimationController _shuffleCtl;
   ({String pid, String style, int epoch})? _shuffle;
@@ -70,6 +81,10 @@ class _TarotTableViewState extends State<TarotTableView>
     super.initState();
     _fanCtl = AnimationController(vsync: this);
     _shuffleCtl = AnimationController(vsync: this);
+    _embroideryCtl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
     _dir.addListener(_changed);
   }
 
@@ -96,6 +111,7 @@ class _TarotTableViewState extends State<TarotTableView>
     _dir.removeListener(_changed);
     _fanCtl.dispose();
     _shuffleCtl.dispose();
+    _embroideryCtl.dispose();
     _ticker.dispose();
     _back?.dispose();
     super.dispose();
@@ -184,8 +200,27 @@ class _TarotTableViewState extends State<TarotTableView>
   /// un fantasma volando por cada pieza que se fue a algun sitio.
   void _trackMotion(List<PieceView> pieces) {
     final now = {for (final p in pieces) p.id: p};
-    for (final id in now.keys) {
-      if (!_last.containsKey(id)) _births[id] = _dir.takeBirth(id);
+    final still = MediaQuery.disableAnimationsOf(context);
+    for (final e in now.entries) {
+      final was = _last[e.key];
+      if (was == null) {
+        _births[e.key] = _dir.takeBirth(e.key);
+        continue;
+      }
+      // se acaba de desvelar: deja su huella cuando termine de voltearse
+      final card = e.value.card;
+      if (!still &&
+          card != null &&
+          card.faceUp &&
+          was.card != null &&
+          !was.card!.faceUp) {
+        final face = tarotFaceOf(card.face);
+        _imprints['${card.slug}#${_imprintSeq++}'] = Imprint.of(
+          face,
+          e.value.pose,
+          delay: TarotFlipTiming.of(face).flip,
+        );
+      }
     }
     for (final e in _last.entries) {
       if (now.containsKey(e.key)) continue;
@@ -225,6 +260,23 @@ class _TarotTableViewState extends State<TarotTableView>
         });
       });
     }
+  }
+
+  /// Enciende el bordado al quedar lista la tirada; lo apaga si deja de estarlo.
+  void _trackEmbroidery() {
+    final ready = _dir.readyToInterpret;
+    if (ready == _wasReady) return;
+    _wasReady = ready;
+    final still = MediaQuery.disableAnimationsOf(context);
+    _afterFrame(() {
+      if (!ready) {
+        _embroideryCtl.value = 0;
+      } else if (still) {
+        _embroideryCtl.value = 1;
+      } else {
+        _embroideryCtl.forward(from: 0);
+      }
+    });
   }
 
   void _trackShuffle() {
@@ -317,6 +369,7 @@ class _TarotTableViewState extends State<TarotTableView>
     _trackMotion(pieces);
     _trackFan(pieces.where((p) => p.kind == PieceKind.fanCard).length);
     _trackShuffle();
+    _trackEmbroidery();
     final table = _dir.table;
     final sp = _dir.spread;
     // el mazo recien abierto y sin tocar brilla: es por donde se empieza
@@ -331,10 +384,17 @@ class _TarotTableViewState extends State<TarotTableView>
         RepaintBoundary(
           child: CustomPaint(
             size: const Size(TableGeometry.width, TableGeometry.height),
-            painter: FeltPainter(
-              spread: sp,
-              hotSlot: _dir.hotSlot,
-              ready: _dir.readyToInterpret,
+            painter: FeltPainter(spread: sp, hotSlot: _dir.hotSlot),
+          ),
+        ),
+        IgnorePointer(
+          child: RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _embroideryCtl,
+              builder: (context, _) => CustomPaint(
+                size: const Size(TableGeometry.width, TableGeometry.height),
+                painter: EmbroideryPainter(_embroideryCtl.value),
+              ),
             ),
           ),
         ),
@@ -360,6 +420,15 @@ class _TarotTableViewState extends State<TarotTableView>
         for (final e in _ghosts.entries)
           if (e.value.view.kind == PieceKind.pile)
             _ghost(e.key, e.value.view, e.value.to, back),
+        // la huella va bajo la carta: sale de sus bordes
+        for (final e in _imprints.entries)
+          ImprintPiece(
+            key: ValueKey('imprint:${e.key}'),
+            imprint: e.value,
+            onDone: () {
+              if (mounted) setState(() => _imprints.remove(e.key));
+            },
+          ),
         for (final p in pieces)
           if (p.kind == PieceKind.card)
             TableCardPiece(

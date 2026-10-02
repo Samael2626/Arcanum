@@ -533,6 +533,11 @@ typedef TarotAtmosphere = ({
   String motion,
 });
 
+/// Glifo astrologico de un Arcano Mayor (su planeta o su signo), o null si no
+/// es Mayor o su atribucion es un elemento (el Loco, el Colgado, el Juicio).
+String? tarotMajorGlyph(TarotFace face) =>
+    face.kind == TarotFaceKind.major ? _majorGlyph[face.majorNum] : null;
+
 TarotAtmosphere tarotAtmosphere(TarotFace face) {
   final s = _skinForFace(face);
   final motion = identical(s, _skinSun)

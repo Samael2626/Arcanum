@@ -22,14 +22,20 @@ TarotFace tarotFaceOf(CardFace f) => TarotFace.resolve({
   'number': f.number,
 });
 
-class LecturaRevelada extends StatelessWidget {
+class LecturaRevelada extends StatefulWidget {
   const LecturaRevelada({
     super.key,
     required this.reading,
     required this.spread,
     required this.onCloseCircle,
     required this.onBack,
+    this.entrance = const [],
   });
+
+  /// Donde estaba cada carta en la mesa, en pantalla (mismo orden que
+  /// `reading.cards`; null si no se sabe). Al abrir, las cartas vuelan de
+  /// ahi a su hueco de la tirada de arriba mientras la lectura aparece.
+  final List<Rect?> entrance;
 
   final Interpretation reading;
 
@@ -42,8 +48,89 @@ class LecturaRevelada extends StatelessWidget {
 
   static const double headerHeight = 132;
 
+  /// Cuanto tarda una carta en volar y cuanto espera cada una a la anterior.
+  static const Duration flight = Duration(milliseconds: 650);
+  static const Duration stagger = Duration(milliseconds: 60);
+
+  @override
+  State<LecturaRevelada> createState() => _LecturaReveladaState();
+}
+
+class _LecturaReveladaState extends State<LecturaRevelada>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _intro;
+  bool _started = false;
+
+  Interpretation get reading => widget.reading;
+  SpreadDef? get spread => widget.spread;
+
+  bool get _flies => widget.entrance.any((r) => r != null);
+
+  @override
+  void initState() {
+    super.initState();
+    final n = widget.entrance.length;
+    _intro = AnimationController(
+      vsync: this,
+      duration:
+          LecturaRevelada.flight +
+          LecturaRevelada.stagger * (n > 0 ? n - 1 : 0),
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    if (!_flies || MediaQuery.disableAnimationsOf(context)) {
+      _intro.value = 1;
+    } else {
+      _intro.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _intro.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // la lectura aparece mientras las cartas vuelan: la mesa se ve debajo
+        FadeTransition(
+          opacity: CurvedAnimation(
+            parent: _intro,
+            curve: const Interval(0, .5, curve: Curves.easeOut),
+          ),
+          child: _reading(context),
+        ),
+        AnimatedBuilder(
+          animation: _intro,
+          builder: (context, _) => _intro.isAnimating
+              ? IgnorePointer(
+                  child: _Flight(
+                    t: _intro.value,
+                    total: _intro.duration!,
+                    entrance: widget.entrance,
+                    cards: reading.cards,
+                    spread: spread,
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+
+  Widget _reading(BuildContext context) {
+    final onBack = widget.onBack;
+    final onCloseCircle = widget.onCloseCircle;
+    const headerHeight = LecturaRevelada.headerHeight;
     final cards = reading.cards;
     final faces = [for (final c in cards) tarotFaceOf(c.face)];
     final last = cards.length; // la sintesis va despues de las cartas
@@ -98,6 +185,66 @@ class LecturaRevelada extends StatelessWidget {
                   active: active,
                   first: i == 0,
                 ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Las cartas volando de la mesa a su hueco de la tirada de arriba.
+class _Flight extends StatelessWidget {
+  const _Flight({
+    required this.t,
+    required this.total,
+    required this.entrance,
+    required this.cards,
+    required this.spread,
+  });
+
+  final double t;
+  final Duration total;
+  final List<Rect?> entrance;
+  final List<InterpretedCard> cards;
+  final SpreadDef? spread;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, box) {
+      final top = MediaQuery.paddingOf(context).top;
+      final ms = total.inMilliseconds;
+      return Stack(
+        children: [
+          for (var i = 0; i < cards.length && i < entrance.length; i++)
+            if (entrance[i] case final from?)
+              _card(
+                i,
+                from,
+                _SpreadStrip.target(spread, cards[i], box.maxWidth, top),
+                ((t * ms - i * LecturaRevelada.stagger.inMilliseconds) /
+                        LecturaRevelada.flight.inMilliseconds)
+                    .clamp(0.0, 1.0),
+              ),
+        ],
+      );
+    },
+  );
+
+  Widget _card(int i, Rect from, ({Offset at, double rotation}) to, double k) {
+    final e = Curves.easeInOutCubic.transform(k);
+    final size = Size.lerp(from.size, _MiniSlot.size, e)!;
+    final at = Offset.lerp(from.center, to.at, e)!;
+    final rev = cards[i].face.reversed ? 3.14159265 : 0.0;
+    return Positioned(
+      left: at.dx - size.width / 2,
+      top: at.dy - size.height / 2,
+      width: size.width,
+      height: size.height,
+      // al llegar se funde con su hueco
+      child: Opacity(
+        opacity: k < .85 ? 1 : (1 - k) / .15,
+        child: Transform.rotate(
+          angle: rev + to.rotation * 3.14159265 / 180 * e,
+          child: TarotCardFaceArt(face: tarotFaceOf(cards[i].face), size: size),
         ),
       ),
     );
@@ -414,6 +561,32 @@ class _SpreadStrip extends StatelessWidget {
   final ValueChanged<int> go;
   final VoidCallback onBack;
 
+  /// Donde queda la tirada en pequeño dentro de la franja.
+  static const double sideInset = 24, topInset = 44, bottomInset = 8;
+
+  /// Centro y giro del hueco de una carta en la franja, en coordenadas de la
+  /// lectura. Una aclaratoria va al hueco que aclara; sin tirada, al centro.
+  static ({Offset at, double rotation}) target(
+    SpreadDef? spread,
+    InterpretedCard card,
+    double width,
+    double safeTop,
+  ) {
+    final h = LecturaRevelada.headerHeight - safeTop - topInset - bottomInset;
+    final s = card.slot ?? card.clarifies;
+    if (spread == null || s == null || s >= spread.slots.length) {
+      return (at: Offset(width / 2, safeTop + topInset + h / 2), rotation: 0);
+    }
+    final slot = spread.slots[s];
+    return (
+      at: Offset(
+        sideInset + slot.x * (width - 2 * sideInset),
+        safeTop + topInset + slot.y * h,
+      ),
+      rotation: slot.rotation.toDouble(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final count = current < cards.length
@@ -478,10 +651,10 @@ class _SpreadStrip extends StatelessWidget {
               ),
             ),
             Positioned(
-              left: 24,
-              right: 24,
-              top: 44,
-              bottom: 8,
+              left: sideInset,
+              right: sideInset,
+              top: topInset,
+              bottom: bottomInset,
               child: spread == null || spread!.slots.isEmpty
                   ? _Dots(count: cards.length, current: current, go: go)
                   : LayoutBuilder(

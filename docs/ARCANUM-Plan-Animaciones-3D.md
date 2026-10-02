@@ -25,10 +25,12 @@
 
 Primera tanda, antes de instalar:
 
-- [ ] **Bordado que despierta:** con la tirada completa y desvelada, el «Interpretar» se ilumina hilo a hilo. Coste bajo.
-- [ ] **Huella del palo al desvelar:** ráfaga breve del elemento en el sitio de la carta (ascuas, ondas, polvo, motas), con `ElementMotion`. Coste bajo. *(Era de la fase 6.)*
-- [ ] **Mayor que llega:** un Arcano Mayor entra con un destello dorado y su glifo planetario aparece un instante (los glifos ya existen en `tarot_card.dart`). Coste bajo.
-- [ ] **De la mesa a la lectura:** las cartas de la tirada vuelan a la franja de arriba de la «Lectura revelada» en vez de cortar. Coste medio. Es el «wow».
+- [x] **Bordado que despierta:** con la tirada completa y desvelada, el «Interpretar» se ilumina hilo a hilo. Coste bajo.
+- [x] **Huella del palo al desvelar:** ráfaga breve del elemento en el sitio de la carta (ascuas, ondas, polvo, motas), con `ElementMotion`. Coste bajo. *(Era de la fase 6.)*
+- [x] **Mayor que llega:** un Arcano Mayor entra con un destello dorado y su glifo planetario aparece un instante (los glifos ya existen en `tarot_card.dart`). Coste bajo.
+- [x] **De la mesa a la lectura:** las cartas de la tirada vuelan a la franja de arriba de la «Lectura revelada» en vez de cortar. Coste medio. Es el «wow».
+
+*Tanda 1 hecha el 02-oct-2026:* `EmbroideryPainter` (el paño pinta el bordado apagado y esta capa lo enciende hilo a hilo en 1,4 s), `table/table_fx.dart` (`Imprint`, `ImprintPiece`, `ImprintPainter`: la huella espera a que termine el volteo de su palo y dura 1,6 s; los Mayores con glifo usan `tarotMajorGlyph`) y el vuelo de entrada de `LecturaRevelada` (`entrance`: 650 ms por carta, 60 ms entre una y otra, la lectura se funde encima de la mesa). Con «reducir movimiento», bordado encendido de golpe, sin huellas y sin vuelo. De paso, el texto bordado del paño usa la Cormorant de la app (antes salía con la letra del sistema). Mirado en capturas del motor; falta verlo en el GN2200.
 
 Segunda tanda:
 

@@ -53,14 +53,13 @@ void _stamp(Canvas canvas, ui.Image back, TablePose p, Paint paint) {
 }
 
 /// El paño: marco de madera, tela, huecos de la tirada y el «Interpretar»
-/// bordado. Solo se repinta si cambia la tirada, el hueco marcado o si ya se
-/// puede interpretar.
+/// bordado, apagado. Cuando se puede interpretar lo enciende `EmbroideryPainter`
+/// por encima. Solo se repinta si cambia la tirada o el hueco marcado.
 class FeltPainter extends CustomPainter {
-  FeltPainter({this.spread, this.hotSlot, this.ready = false});
+  FeltPainter({this.spread, this.hotSlot});
 
   final SpreadDef? spread;
   final int? hotSlot;
-  final bool ready;
 
   static const _frame = RRect.fromLTRBXY(
     0,
@@ -78,7 +77,6 @@ class FeltPainter extends CustomPainter {
     16,
     16,
   );
-  static const _embroideryCenter = Offset(300, 484);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -129,30 +127,25 @@ class FeltPainter extends CustomPainter {
     }
   }
 
+  static const embroideryCenter = Offset(300, 484);
+  static const embroideryText = Offset(300, 716);
+
   void _embroidery(Canvas canvas) {
     final thread = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = .9
-      ..color = ArcanumColors.gold.withValues(alpha: ready ? .55 : .18);
+      ..color = ArcanumColors.gold.withValues(alpha: .18);
     canvas
-      ..drawCircle(_embroideryCenter, 202, thread)
-      ..drawCircle(_embroideryCenter, 194, thread);
+      ..drawCircle(embroideryCenter, 202, thread)
+      ..drawCircle(embroideryCenter, 194, thread);
     _text(
       canvas,
       'Interpretar',
-      const Offset(300, 716),
+      embroideryText,
       TextStyle(
         fontSize: 26,
         letterSpacing: 3,
-        color: ArcanumColors.gold.withValues(alpha: ready ? .95 : .28),
-        shadows: ready
-            ? [
-                Shadow(
-                  color: ArcanumColors.gold.withValues(alpha: .6),
-                  blurRadius: 10,
-                ),
-              ]
-            : null,
+        color: ArcanumColors.gold.withValues(alpha: .28),
       ),
     );
   }
@@ -201,7 +194,13 @@ class FeltPainter extends CustomPainter {
     TextStyle style,
   ) {
     final tp = TextPainter(
-      text: TextSpan(text: text, style: style),
+      // el paño se borda con la letra de la app, no con la del sistema
+      text: TextSpan(
+        text: text,
+        style: style.copyWith(
+          fontFamily: style.fontFamily ?? 'Cormorant Garamond',
+        ),
+      ),
       textDirection: TextDirection.ltr,
       textAlign: TextAlign.center,
     )..layout(maxWidth: 220);
@@ -210,7 +209,77 @@ class FeltPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(FeltPainter old) =>
-      old.spread != spread || old.hotSlot != hotSlot || old.ready != ready;
+      old.spread != spread || old.hotSlot != hotSlot;
+}
+
+/// El bordado «Interpretar» que despierta cuando la tirada esta completa y
+/// desvelada: los dos hilos del circulo se encienden recorriendolo y la
+/// palabra se enciende de izquierda a derecha. `t` va de 0 (apagado) a 1.
+class EmbroideryPainter extends CustomPainter {
+  EmbroideryPainter(this.t);
+
+  final double t;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (t <= 0) return;
+    const c = FeltPainter.embroideryCenter;
+    // los hilos: el de fuera empieza antes; los dos arrancan arriba
+    for (final (r, delay) in [(202.0, 0.0), (194.0, .12)]) {
+      final k = ((t - delay) / (1 - delay) / .75).clamp(0.0, 1.0);
+      if (k == 0) continue;
+      final rect = Rect.fromCircle(center: c, radius: r);
+      canvas
+        ..drawArc(
+          rect,
+          -math.pi / 2,
+          2 * math.pi * k,
+          false,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 4
+            ..color = ArcanumColors.gold.withValues(alpha: .18 * k)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+        )
+        ..drawArc(
+          rect,
+          -math.pi / 2,
+          2 * math.pi * k,
+          false,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = .9
+            ..color = ArcanumColors.gold.withValues(alpha: .55),
+        );
+    }
+    // la palabra, de izquierda a derecha, en el ultimo tramo
+    final w = ((t - .45) / .55).clamp(0.0, 1.0);
+    if (w == 0) return;
+    const at = FeltPainter.embroideryText;
+    canvas
+      ..save()
+      ..clipRect(Rect.fromLTWH(at.dx - 120, at.dy - 30, 240 * w, 60));
+    FeltPainter._text(
+      canvas,
+      'Interpretar',
+      at,
+      TextStyle(
+        fontSize: 26,
+        letterSpacing: 3,
+        color: ArcanumColors.gold.withValues(alpha: .95),
+        shadows: [
+          Shadow(
+            color: ArcanumColors.gold.withValues(alpha: .6),
+            blurRadius: 10,
+          ),
+        ],
+      ),
+    );
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(EmbroideryPainter old) => old.t != t;
 }
 
 /// Las cartas del abanico: todas dorsos, estampados de la imagen grabada.

@@ -3,6 +3,7 @@ import 'dart:ui' show Tristate;
 import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/features/tarot/application/table_controller.dart';
+import 'package:arcanum_app/features/oraculo/widgets/tarot_card.dart';
 import 'package:arcanum_app/features/tarot/domain/table_models.dart';
 import 'package:arcanum_app/features/tarot/reading/lectura_revelada.dart';
 import 'package:arcanum_app/features/tarot/table/table_view.dart';
@@ -83,6 +84,13 @@ Future<void> settleFrames(WidgetTester tester) async {
   }
 }
 
+/// Donde estaban las tres cartas en la mesa, en pantalla.
+const _fromTable = [
+  Rect.fromLTWH(40, 380, 110, 176),
+  Rect.fromLTWH(140, 380, 110, 176),
+  Rect.fromLTWH(240, 380, 110, 176),
+];
+
 void main() {
   group('lectura revelada', () {
     late int closed, back;
@@ -111,6 +119,85 @@ void main() {
       );
       await tester.pump(const Duration(seconds: 1));
     }
+
+    /// Abre la lectura con las cartas saliendo de la mesa, sin esperar.
+    Future<void> open(WidgetTester tester, {bool still = false}) async {
+      tester.view
+        ..physicalSize = const Size(390, 844)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: MediaQueryData(
+              size: const Size(390, 844),
+              disableAnimations: still,
+            ),
+            child: LecturaRevelada(
+              reading: _reading,
+              spread: _three,
+              onCloseCircle: () {},
+              onBack: () {},
+              entrance: _fromTable,
+            ),
+          ),
+        ),
+      );
+    }
+
+    double readingOpacity(WidgetTester tester) => tester
+        .widget<FadeTransition>(
+          find
+              .ancestor(
+                of: find.byType(RevealPager),
+                matching: find.byType(FadeTransition),
+              )
+              // la mas cercana: la de la lectura, no la de la ruta
+              .first,
+        )
+        .opacity
+        .value;
+
+    testWidgets('las cartas vuelan de la mesa a la tirada mientras aparece', (
+      tester,
+    ) async {
+      await open(tester);
+      await tester.pump();
+      // salen de donde estaban en la mesa, con la mesa aun a la vista
+      final flying = find.byWidgetPredicate(
+        (w) => w is TarotCardFaceArt && w.size.width == _fromTable[0].width,
+      );
+      expect(flying, findsWidgets);
+      expect(readingOpacity(tester), lessThan(.2));
+      expect(
+        tester.getCenter(flying.first),
+        offsetMoreOrLessEquals(_fromTable[0].center, epsilon: 1),
+      );
+      await settleFrames(tester);
+      // al terminar ya no queda ninguna volando y la lectura se ve entera
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is TarotCardFaceArt && w.size.width > 104,
+        ),
+        findsNothing,
+      );
+      expect(readingOpacity(tester), 1);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('con «reducir movimiento» no vuelan: la lectura sale entera', (
+      tester,
+    ) async {
+      await open(tester, still: true);
+      await tester.pump();
+      expect(readingOpacity(tester), 1);
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is TarotCardFaceArt && w.size.width == _fromTable[0].width,
+        ),
+        findsNothing,
+      );
+    });
 
     Future<void> swipeUp(WidgetTester tester) async {
       await tester.fling(find.byType(PageView), const Offset(0, -400), 1500);
