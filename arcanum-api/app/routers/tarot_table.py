@@ -6,6 +6,7 @@ tarot se gasta al interpretar (decision D1), con `Idempotency-Key` como el resto
 """
 from __future__ import annotations
 
+import json
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Iterator, Optional
@@ -157,6 +158,19 @@ def _moon_illumination(now: datetime) -> Optional[float]:
         return None
 
 
+def _interpret_request(body: InterpretIn) -> dict:
+    """Lo que define una lectura: tirada, pregunta y donde va cada carta (y si se
+    giro). El orden en que llegan las cartas no cuenta."""
+    return {
+        "spread": body.spread,
+        "question": body.question,
+        "placements": sorted(
+            (p.model_dump(mode="json") for p in body.placements),
+            key=lambda p: json.dumps(p, sort_keys=True),
+        ),
+    }
+
+
 # ---------- interpretar: aqui se gasta el cupo ----------
 @router.post("/sessions/{session_id}/interpret", response_model=InterpretationOut)
 def interpret(
@@ -167,6 +181,13 @@ def interpret(
     db: Session = Depends(get_db),
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
 ):
+    # la misma lectura pedida otra vez (otra visita a la pantalla, otra clave) no
+    # es otra interpretacion: se devuelve la guardada sin tocar el cupo
+    request = _interpret_request(body)
+    with _errors():
+        stored = tables.stored_interpretation(session_id, user.id)
+    if stored is not None and stored.get("request") == request:
+        return stored
     placements = [Placement(**p.model_dump()) for p in body.placements]
     now = datetime.now(timezone.utc)
     moon, hour = _sky_snapshot(now, user)
@@ -177,6 +198,7 @@ def interpret(
     # van en el resultado guardado: repetir con la misma clave devuelve el mismo cielo
     result["moon_illumination"] = _moon_illumination(now)
     result["read_at"] = now.isoformat()
+    result["request"] = request
     reservation = UsageService().reserve(
         db, user.id, "tarot", idempotency_key,
         {"session_id": str(session_id), **body.model_dump()}, _limit(user),

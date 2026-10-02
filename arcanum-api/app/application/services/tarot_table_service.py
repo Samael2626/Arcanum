@@ -256,6 +256,13 @@ class TarotTableService:
         ] + [read(p, f"Aclara: {spread.positions[p.clarifies]}", None) for p in extra]
         return spread.name, cards
 
+    def stored_interpretation(self, session_id: UUID, user_id: UUID) -> Optional[dict]:
+        """La interpretacion ya pagada de esta mesa, o None si aun no se interpreto."""
+        table = self._tables.get_owned(session_id, user_id)
+        if table is None or table.status != "interpreted":
+            return None
+        return table.interpretation
+
     def store_interpretation(self, session_id: UUID, user_id: UUID, interpretation: dict) -> None:
         """Deja la lectura en la mesa sin commit: la ruta captura el cupo en la misma transaccion."""
         table = self._load(session_id, user_id)

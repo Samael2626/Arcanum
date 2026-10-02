@@ -251,9 +251,25 @@ def test_misma_clave_repite_la_respuesta_sin_cobrar_dos_veces(client, engine, wh
     assert _one(engine, "SELECT count(*) FROM usage_operations WHERE user_id=:u", u=who["id"]) == 1
 
 
+def test_reinterpretar_la_misma_tirada_no_cobra_otra_vez(client, engine, who):
+    # la app reabre la lectura con una clave nueva (otra visita a la pantalla)
+    sid, _, placements = _three(client)
+    a = _interpret(client, sid, placements, question="¿Qué viene?")
+    b = _interpret(client, sid, placements, question="¿Qué viene?")
+    assert a.status_code == b.status_code == 200
+    assert a.json() == b.json()
+    # las mismas cartas en otro orden son la misma lectura
+    c = _interpret(client, sid, placements[::-1], question="¿Qué viene?")
+    assert c.status_code == 200 and c.json() == a.json()
+    assert "request" not in a.json()
+    assert _one(engine, "SELECT count(*) FROM usage_operations WHERE user_id=:u", u=who["id"]) == 1
+
+
 def test_sin_cupo_ni_creditos_devuelve_402_y_la_mesa_sigue_abierta(client, engine, who):
     sid, _, placements = _three(client)
     assert _interpret(client, sid, placements).status_code == 200          # el cupo del dia
+    # otra lectura (una carta girada) si es otra interpretacion: ya no queda cupo
+    placements[0]["turned"] = True
     r = _interpret(client, sid, placements)
     assert r.status_code == 402
     assert _one(engine, "SELECT count(*) FROM usage_operations WHERE user_id=:u", u=who["id"]) == 1
