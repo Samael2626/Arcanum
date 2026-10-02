@@ -56,7 +56,7 @@ usuario son el material del signo; no es un generador de mandalas.
 | Export del catálogo: `_verify_export.mjs` | 12 checks, 0 FAIL (raster 0,000 %) |
 | Flutter, carpeta de sigilos | 410 tests, todos pasan |
 | Flutter, suite completa antes de fusionar con `main` | 1068 pasan, 8 saltados |
-| Flutter, suite completa tras fusionar con `main` | SUITE_FINAL |
+| Flutter, suite completa tras fusionar con `main` | 1087 pasan, 8 saltados (1068 + 19 de `main`) |
 
 Mutación: errores inyectados a propósito y detectados — caligrafía en JS (4 de 4),
 en el motor Dart (4 de 4, de 12 a 70 fallos), en la interfaz (1 de 1), y en Sellos
