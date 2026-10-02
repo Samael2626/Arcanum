@@ -188,6 +188,29 @@ class RequestContractTests(unittest.TestCase):
         self.assertEqual(payload["brand"]["visuals"]["ken_burns_zoom"], 1.03)
         self.assertEqual(payload["brand"]["subtitles"]["font_size"], 60)
 
+    def test_brand_uses_arcanum_palette_defaults(self) -> None:
+        payload = main._normalize_req({"brand": {}})
+
+        self.assertEqual(payload["brand"]["title_color"], "C9A84C")
+        self.assertEqual(payload["brand"]["caption_color"], "ECD79A")
+        self.assertEqual(payload["brand"]["subtitles"]["primary_color"], "F5F0E8")
+        self.assertEqual(payload["brand"]["subtitles"]["outline_color"], "210D1A")
+
+    def test_brand_style_fields_survive_request_normalization(self) -> None:
+        payload = main._normalize_req(
+            {
+                "brand": {
+                    "title_size": 88,
+                    "overlay_duration": 7,
+                    "accent_color": "A98746",
+                }
+            }
+        )
+
+        self.assertEqual(payload["brand"]["title_size"], 88)
+        self.assertEqual(payload["brand"]["overlay_duration"], 7)
+        self.assertEqual(payload["brand"]["accent_color"], "A98746")
+
     def test_subtitle_defaults_can_be_disabled(self) -> None:
         payload = main._normalize_req(
             {"brand": {"subtitles": {"enabled": "false"}}}

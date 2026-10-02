@@ -27,6 +27,8 @@ DEFAULT_FONT = os.getenv(
     "VIDEO_FONT_PATH",
     "/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf",
 )
+DEFAULT_TITLE_FONT = os.getenv("VIDEO_TITLE_FONT_PATH", DEFAULT_FONT)
+DEFAULT_BODY_FONT = os.getenv("VIDEO_BODY_FONT_PATH", DEFAULT_FONT)
 
 
 DEFAULT_BRAND: Dict[str, Any] = {
@@ -37,6 +39,15 @@ DEFAULT_BRAND: Dict[str, Any] = {
     "lower_third_bg": "00000066",
     "overlay_title": "",
     "overlay_caption": "",
+    "title_font": DEFAULT_TITLE_FONT,
+    "body_font": DEFAULT_BODY_FONT,
+    "title_color": "C9A84C",
+    "caption_color": "ECD79A",
+    "accent_color": "8A6E32",
+    "title_size": 76,
+    "caption_size": 36,
+    "top_margin": 92,
+    "overlay_duration": 5.0,
 }
 
 DEFAULT_VISUALS: Dict[str, Any] = {
@@ -51,12 +62,12 @@ DEFAULT_VISUALS: Dict[str, Any] = {
 
 DEFAULT_SUBTITLES: Dict[str, Any] = {
     "enabled": True,
-    "font": DEFAULT_FONT,
-    "font_size": 52,
-    "primary_color": "FFFFFF",
-    "outline_color": "000000",
-    "outline_width": 2,
-    "box_color": "00000044",
+    "font": DEFAULT_BODY_FONT,
+    "font_size": 56,
+    "primary_color": "F5F0E8",
+    "outline_color": "210D1A",
+    "outline_width": 4,
+    "box_color": "210D1ACC",
     "box_enabled": True,
     "position": "bottom",
     "top_margin": 120,
@@ -374,6 +385,11 @@ def _apply_subtitles(
         end = float(sub.get("end", start + 3.0))
         duration = max(float(end - start), 0.8)
 
+        box_color = (
+            "#" + str(style["box_color"]).lstrip("#")
+            if style.get("box_enabled") and style.get("box_color")
+            else None
+        )
         try:
             txt_clip = TextClip(
                 text=txt,
@@ -384,7 +400,10 @@ def _apply_subtitles(
                 stroke_width=int(style["outline_width"]),
                 method="caption",
                 size=(int(style["safe_zone_width"]), None),
+                margin=(24, 18),
                 text_align="center",
+                vertical_align="center",
+                bg_color=box_color,
             )
         except Exception as ex:
             logger.warning("TextClip failed, using fallback: %s", ex)
@@ -424,27 +443,34 @@ def _brand_text_overlay(
     title = (brand.get("overlay_title") or "").strip()
     caption = (brand.get("overlay_caption") or "").strip()
     lower = (brand.get("lower_third_text") or "").strip()
-    font = (brand.get("subtitles") or {}).get("font", DEFAULT_FONT)
+    title_font = brand.get("title_font") or DEFAULT_TITLE_FONT
+    body_font = brand.get("body_font") or DEFAULT_BODY_FONT
+    title_color = "#" + str(brand.get("title_color") or "C9A84C").lstrip("#")
+    caption_color = "#" + str(brand.get("caption_color") or "ECD79A").lstrip("#")
+    accent_color = "#" + str(brand.get("accent_color") or "8A6E32").lstrip("#")
+    overlay_duration = min(float(brand.get("overlay_duration") or 5.0), duration)
     if not title and not caption and not lower:
         return overlays
 
-    y_title = 90
+    y_title = int(brand.get("top_margin") or 92)
     if title:
         try:
             tc = TextClip(
                 text=title,
-                font_size=56,
-                font=font,
-                color="#FFFFFF",
-                stroke_color="#000000",
-                stroke_width=3,
+                font_size=int(brand.get("title_size") or 76),
+                font=title_font,
+                color=title_color,
+                stroke_color="#0A0A0F",
+                stroke_width=2,
                 method="caption",
                 size=(int(size[0] * 0.85), None),
+                margin=(16, 12),
                 text_align="center",
+                vertical_align="center",
             )
-            tc = tc.with_duration(min(4.0, duration)).with_position(("center", y_title))
+            tc = tc.with_duration(overlay_duration).with_position(("center", y_title))
             overlays.append(tc)
-            y_title += tc.h + 12
+            y_title += tc.h + 4
         except Exception as e:
             logger.warning("Title overlay failed: %s", e)
 
@@ -452,18 +478,32 @@ def _brand_text_overlay(
         try:
             cc = TextClip(
                 text=caption,
-                font_size=40,
-                font=font,
-                color="#EEEEEE",
-                stroke_color="#000000",
-                stroke_width=2,
+                font_size=int(brand.get("caption_size") or 36),
+                font=body_font,
+                color=caption_color,
+                stroke_color="#0A0A0F",
+                stroke_width=1,
                 method="caption",
                 size=(int(size[0] * 0.8), None),
+                margin=(12, 10),
                 text_align="center",
+                vertical_align="center",
             )
-            cc = cc.with_duration(min(4.5, duration)).with_position(("center", y_title))
+            cc = cc.with_duration(overlay_duration).with_position(("center", y_title))
             overlays.append(cc)
             y_title += cc.h + 12
+
+            ornament = TextClip(
+                text="—  ✦  —",
+                font_size=24,
+                font=body_font,
+                color=accent_color,
+                method="label",
+            )
+            ornament = ornament.with_duration(overlay_duration).with_position(
+                ("center", y_title)
+            )
+            overlays.append(ornament)
         except Exception as e:
             logger.warning("Caption overlay failed: %s", e)
 
@@ -472,13 +512,15 @@ def _brand_text_overlay(
             lc = TextClip(
                 text=lower,
                 font_size=44,
-                font=font,
-                color="#FFFFFF",
-                stroke_color="#000000",
-                stroke_width=2,
+                font=body_font,
+                color=caption_color,
+                stroke_color="#0A0A0F",
+                stroke_width=3,
                 method="caption",
                 size=(int(size[0] * 0.78), None),
+                margin=(16, 12),
                 text_align="center",
+                vertical_align="center",
             )
             lc = lc.with_duration(min(5.0, duration)).with_position(
                 (60, int(size[1] - lc.h - 140))
