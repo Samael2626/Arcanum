@@ -31,16 +31,19 @@ class PathItem {
 class SceneGroup {
   final String layer, color;
   final double? w, op, dx, dy;
+
+  /// Ancho base de los halos cuando el trazo real no es un `stroke` (la pluma).
+  final double? hw;
   final String? cap;
   final bool sigil;
   final List<PathItem> items;
   final List<LayerPrim>? prims;
-  const SceneGroup({required this.layer, required this.color, this.w, this.op, this.dx, this.dy, this.cap, this.sigil = false, this.items = const [], this.prims});
+  const SceneGroup({required this.layer, required this.color, this.w, this.op, this.dx, this.dy, this.hw, this.cap, this.sigil = false, this.items = const [], this.prims});
 
   bool get isEmpty => prims != null ? prims!.isEmpty : items.isEmpty;
 
   SceneGroup copyWith({String? layer, String? color, double? w, double? op, double? dx, double? dy}) => SceneGroup(
-      layer: layer ?? this.layer, color: color ?? this.color, w: w ?? this.w, op: op ?? this.op, dx: dx ?? this.dx, dy: dy ?? this.dy,
+      layer: layer ?? this.layer, color: color ?? this.color, w: w ?? this.w, op: op ?? this.op, dx: dx ?? this.dx, dy: dy ?? this.dy, hw: hw,
       cap: cap, sigil: sigil, items: items, prims: prims);
 }
 

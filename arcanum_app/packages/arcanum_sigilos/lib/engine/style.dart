@@ -62,24 +62,27 @@ String shade(String hex, double k) => '#${hexRGB(hex).map((v) => jsRound(v * k).
 
 class SigilStyle {
   final String preset, ink, bg, texture, line, cap;
+
+  /// Caligrafia del sigilo de letras: `none` (recta), `curva` o `pluma`.
+  final String calli;
   final String? metal, metalPlanet;
   final double width;
   final bool relief, glow;
   const SigilStyle({this.preset = 'pergamino', this.ink = '#1b1612', this.bg = '#efe6d2', this.metal, this.metalPlanet, this.texture = 'pergamino',
-      this.width = 100, this.line = 'single', this.cap = 'round', this.relief = false, this.glow = false});
+      this.width = 100, this.line = 'single', this.cap = 'round', this.calli = 'none', this.relief = false, this.glow = false});
 
   SigilStyle copyWith({String? preset, String? ink, String? bg, String? metal, String? metalPlanet, bool clearMetal = false, String? texture,
-          double? width, String? line, String? cap, bool? relief, bool? glow}) =>
+          double? width, String? line, String? cap, String? calli, bool? relief, bool? glow}) =>
       SigilStyle(preset: preset ?? this.preset, ink: ink ?? this.ink, bg: bg ?? this.bg, metal: clearMetal ? null : metal ?? this.metal,
           metalPlanet: clearMetal ? null : metalPlanet ?? this.metalPlanet, texture: texture ?? this.texture, width: width ?? this.width,
-          line: line ?? this.line, cap: cap ?? this.cap, relief: relief ?? this.relief, glow: glow ?? this.glow);
+          line: line ?? this.line, cap: cap ?? this.cap, calli: calli ?? this.calli, relief: relief ?? this.relief, glow: glow ?? this.glow);
 
   Map<String, Object?> toJson() => {'preset': preset, 'ink': ink, 'bg': bg, 'metal': metal, 'metalPlanet': metalPlanet, 'texture': texture,
-        'width': width, 'line': line, 'cap': cap, 'relief': relief, 'glow': glow};
+        'width': width, 'line': line, 'cap': cap, 'calli': calli, 'relief': relief, 'glow': glow};
   factory SigilStyle.fromJson(Map<String, dynamic> j) => SigilStyle(
       preset: j['preset'] as String? ?? 'propio', ink: j['ink'] as String, bg: j['bg'] as String, metal: j['metal'] as String?,
       metalPlanet: j['metalPlanet'] as String?, texture: j['texture'] as String? ?? 'none', width: (j['width'] as num? ?? 100).toDouble(),
-      line: j['line'] as String? ?? 'single', cap: j['cap'] as String? ?? 'round', relief: j['relief'] as bool? ?? false, glow: j['glow'] as bool? ?? false);
+      line: j['line'] as String? ?? 'single', cap: j['cap'] as String? ?? 'round', calli: j['calli'] as String? ?? 'none', relief: j['relief'] as bool? ?? false, glow: j['glow'] as bool? ?? false);
 }
 
 const kStylePresetLabels = {
@@ -171,7 +174,7 @@ List<SceneGroup> applyFx(List<SceneGroup> groups, SigilStyle st, SigilTheme th) 
   for (final g in groups) {
     var seq = [g];
     if (st.line == 'double' && g.layer == 'core') seq = [g.copyWith(w: g.w! * 1.9), g.copyWith(layer: 'core-hueco', color: th.bg, w: g.w! * .7)];
-    if (st.glow && g.sigil) seq = [g.copyWith(layer: '${g.layer}-halo', w: g.w! * 3.4, op: .12), g.copyWith(layer: '${g.layer}-halo2', w: g.w! * 2, op: .2), ...seq];
+    if (st.glow && g.sigil) seq = [g.copyWith(layer: '${g.layer}-halo', w: (g.hw ?? g.w!) * 3.4, op: .12), g.copyWith(layer: '${g.layer}-halo2', w: (g.hw ?? g.w!) * 2, op: .2), ...seq];
     if (st.relief) {
       seq = [
         for (final q in seq) q.copyWith(layer: '${q.layer}-sombra', color: '#000000', op: (q.op ?? 1) * .35, dx: 1.6, dy: 1.6),

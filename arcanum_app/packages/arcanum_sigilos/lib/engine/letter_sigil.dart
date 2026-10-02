@@ -220,4 +220,64 @@ class LetterSigil {
     final e = at(arc.a1);
     return 'M ${f2(s.x)} ${f2(s.y)} A ${f2(r)} ${f2(r)} 0 ${span > 180 ? 1 : 0} 1 ${f2(e.x)} ${f2(e.y)}';
   }
+
+  // ── Estilizacion caligrafica (puerto de js/lienzo.js) ─────────────
+  // Solo de dibujo: no toca los trazos, sus extremos ni sus cruces. Curva:
+  // cada recta se comba un poco, siempre hacia el mismo lado (se lee de
+  // izquierda a derecha), asi que dos trazos compartidos coinciden. Pluma:
+  // contorno relleno de punta ancha; el grosor depende de la direccion.
+  static const kCalliBow = .03;
+  static final kCalliNib = 40 * math.pi / 180;
+
+  ({Pt a, Pt b, double dx, double dy, double nx, double ny, double amp}) _calliLine(LinePrim p) {
+    var a = view!.toCanvas(p.a), b = view!.toCanvas(p.b);
+    if (a.x > b.x || (a.x == b.x && a.y > b.y)) {
+      final t = a;
+      a = b;
+      b = t;
+    }
+    final dx = b.x - a.x, dy = b.y - a.y, len = hypot(dx, dy);
+    final l = len == 0 ? 1.0 : len;
+    return (a: a, b: b, dx: dx, dy: dy, nx: dy / l, ny: -dx / l, amp: kCalliBow * l);
+  }
+
+  /// Trazo con las rectas combadas, como `d` de SVG (calliPath del prototipo).
+  String calliPath(Prim p) {
+    if (p is! LinePrim) return primPath(p);
+    final l = _calliLine(p), k = 2 * l.amp;
+    return 'M ${f2(l.a.x)} ${f2(l.a.y)} Q ${f2(l.a.x + l.dx / 2 + l.nx * k)} ${f2(l.a.y + l.dy / 2 + l.ny * k)} ${f2(l.b.x)} ${f2(l.b.y)}';
+  }
+
+  List<Pt> _calliPts(Prim p) {
+    final out = <Pt>[];
+    if (p is LinePrim) {
+      final l = _calliLine(p);
+      const n = 16;
+      for (var i = 0; i <= n; i++) {
+        final t = i / n, o = l.amp * math.sin(math.pi * t);
+        out.add(Pt(l.a.x + l.dx * t + l.nx * o, l.a.y + l.dy * t + l.ny * o));
+      }
+      return out;
+    }
+    final arc = p as ArcPrim;
+    final c = view!.toCanvas(arc.c), r = arc.r * view!.k;
+    final n = math.max(8, ((arc.a1 - arc.a0) / 10).ceil());
+    for (var i = 0; i <= n; i++) {
+      final a = rad(arc.a0 + (arc.a1 - arc.a0) * i / n);
+      out.add(Pt(c.x + math.cos(a) * r, c.y + math.sin(a) * r));
+    }
+    return out;
+  }
+
+  /// Contorno relleno de punta ancha de un trazo (calliOutline del prototipo).
+  String calliOutline(Prim p, double lw) {
+    final pts = _calliPts(p), left = <String>[], right = <String>[];
+    for (var i = 0; i < pts.length; i++) {
+      final q = pts[i], a = pts[math.max(0, i - 1)], b = pts[math.min(pts.length - 1, i + 1)];
+      final th = math.atan2(b.y - a.y, b.x - a.x), h = lw / 2 * (.6 + .8 * (math.sin(th - kCalliNib)).abs());
+      left.add('${f2(q.x - math.sin(th) * h)} ${f2(q.y + math.cos(th) * h)}');
+      right.add('${f2(q.x + math.sin(th) * h)} ${f2(q.y - math.cos(th) * h)}');
+    }
+    return 'M ${left.join(' L ')} L ${right.reversed.join(' L ')} Z';
+  }
 }

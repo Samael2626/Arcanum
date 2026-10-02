@@ -54,6 +54,22 @@ class _FakeCrypto extends GrimoireCrypto {
   Future<String> decryptText(String ciphertextB64, String ivB64) async => utf8.decode(base64Decode(ciphertextB64));
 }
 
+/// El panel del taller es una lista vertical: se arrastra con el dedo hasta que
+/// el rotulo entra en la zona visible (entre la barra de pestañas y el pie).
+Finder get _panelVertical => find.byWidgetPredicate((w) => w is Scrollable && w.axis == Axis.vertical).first;
+Future<void> _llevarA(WidgetTester t, String r) async {
+  final alto = t.view.physicalSize.height / t.view.devicePixelRatio;
+  for (var n = 0; n < 20; n++) {
+    final y = t.getRect(find.text(r)).center.dy;
+    if (y > 520 && y < alto - 80) return;
+    await t.drag(_panelVertical, Offset(0, y >= alto - 80 ? -250 : 250));
+    await t.pumpAndSettle();
+  }
+  fail('no se pudo llevar «$r» a la zona visible');
+}
+Future<void> _bajarA(WidgetTester t, String r) => _llevarA(t, r);
+Future<void> _subirA(WidgetTester t, String r) => _llevarA(t, r);
+
 Widget _app(Widget child, _FakeApi api) => ProviderScope(
       overrides: [
         arcanumApiProvider.overrideWithValue(api),
@@ -147,6 +163,62 @@ void main() {
     await tester.pump();
     expect(st.debugDoc.style.preset, 'oro');
     expect(st.debugDoc.buildSVG(), contains('#c99a1a'));
+  });
+
+  testWidgets('Caligrafía: Pluma y Curva cambian cómo se pinta, un estilo no la borra y se guarda', (tester) async {
+    final api = _FakeApi();
+    final st = await _forjar(tester, api);
+    final recta = st.debugDoc.buildSVG();
+    await tester.tap(find.text('Estilo'));
+    await tester.pump();
+    await tester.tap(find.text('Ajustar'));
+    await tester.pumpAndSettle();
+
+    // los tres rotulos se pueden tocar (>= 48 dp)
+    for (final r in ['Recta', 'Curva', 'Pluma']) {
+      final caja = tester.getRect(find.ancestor(of: find.text(r), matching: find.byType(ChoiceChip)).first);
+      expect(caja.height, greaterThanOrEqualTo(48), reason: r);
+    }
+
+    await _bajarA(tester, 'Pluma');
+    await tester.tap(find.text('Pluma'));
+    await tester.pump();
+    expect(st.debugDoc.style.calli, 'pluma');
+    final pluma = st.debugDoc.buildSVG();
+    expect(pluma, contains('data-layer="pluma"'));
+    expect(pluma, isNot(equals(recta)));
+
+    await _bajarA(tester, 'Curva');
+    await tester.tap(find.text('Curva'));
+    await tester.pump();
+    expect(st.debugDoc.buildSVG(), contains(' Q '));
+
+    // cambiar de estilo conserva la caligrafia
+    await _subirA(tester, 'Oro y negro');
+    await tester.tap(find.text('Oro y negro'));
+    await tester.pump();
+    expect(st.debugDoc.style.preset, 'oro');
+    expect(st.debugDoc.style.calli, 'curva');
+
+    // y vuelve a Recta con el SVG exacto del principio (mismo estilo base)
+    await _bajarA(tester, 'Recta');
+    await tester.tap(find.text('Recta'));
+    await tester.pump();
+    expect(st.debugDoc.style.calli, 'none');
+    expect(st.debugDoc.buildSVG(), isNot(contains(' Q ')));
+
+    // se guarda con el documento y se abre igual
+    await _bajarA(tester, 'Pluma');
+    await tester.tap(find.text('Pluma'));
+    await tester.pump();
+    final antes = st.debugDoc.buildSVG();
+    await tester.tap(find.text('Guardar'));
+    await tester.pump();
+    await tester.tap(find.text('Guardar en el Grimorio'));
+    await tester.pumpAndSettle();
+    final doc = decodeSigilEntry(utf8.decode(base64Decode(api.created.single['encrypted_content'] as String)))!;
+    expect(doc.style.calli, 'pluma');
+    expect(doc.buildSVG(), antes);
   });
 
   testWidgets('guardar cifra el documento entero y el titulo no lleva la intencion', (tester) async {

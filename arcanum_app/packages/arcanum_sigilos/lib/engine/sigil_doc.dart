@@ -83,9 +83,18 @@ class SigilDoc {
     final fg = <SceneGroup>[
       for (final p in lay.parts)
         if (p.layer.type != LayerType.symbol) SceneGroup(layer: p.layer.type.name, color: th.ink, prims: p.g.prims),
-      SceneGroup(layer: 'core', color: th.ink, w: lw, cap: style.cap, sigil: true, items: [
-        for (final p in visible) PathItem(sigil.primPath(p), units: p.units),
-      ]),
+      if (style.calli == 'pluma') ...[
+        // eje fino (lo usan resplandor y relieve) bajo el contorno relleno de la pluma
+        SceneGroup(layer: 'core-eje', color: th.ink, w: lw * .4, hw: lw, cap: 'round', sigil: true, items: [
+          for (final p in visible) PathItem(sigil.calliPath(p), units: p.units),
+        ]),
+        SceneGroup(layer: 'pluma', color: th.ink, items: [
+          for (final p in visible) PathItem(sigil.calliOutline(p, lw), fill: true, units: p.units),
+        ]),
+      ] else
+        SceneGroup(layer: 'core', color: th.ink, w: lw, cap: style.cap, sigil: true, items: [
+          for (final p in visible) PathItem(style.calli == 'curva' ? sigil.calliPath(p) : sigil.primPath(p), units: p.units),
+        ]),
     ];
     final marks = terminalMarks(visible);
     if (marks.isNotEmpty) {

@@ -341,6 +341,8 @@ class EstiloPanel extends StatelessWidget {
     }
 
     final st = doc.style;
+    // cambiar de estilo no borra la caligrafia elegida (como en el prototipo)
+    void setPreset(SigilStyle s) => set(s.copyWith(calli: st.calli));
     Widget swatch(SigilStyle s, String label, {String glyph = '✦'}) {
       final on = st.preset == s.preset;
       final bg = s.metal != null ? null : Color(0xFF000000 | int.parse(s.bg.substring(1), radix: 16));
@@ -349,7 +351,7 @@ class EstiloPanel extends StatelessWidget {
         button: true,
         label: label,
         child: InkWell(
-          onTap: () => set(s),
+          onTap: () => setPreset(s),
           child: SizedBox(
             width: 70,
             child: Column(children: [
@@ -410,6 +412,13 @@ class EstiloPanel extends StatelessWidget {
               Text('Grosor', style: ArcanumText.body(14)),
               Expanded(child: Slider(value: st.width, min: 50, max: 180, divisions: 26, label: '${st.width.round()} %', activeColor: ArcanumColors.gold, onChanged: (v) => set(st.copyWith(width: v, preset: 'propio')))),
             ]),
+            Align(alignment: Alignment.centerLeft, child: sectionTitle('Caligrafía')),
+            Wrap(spacing: 8, runSpacing: 4, children: [
+              for (final (k, n) in const [('none', 'Recta'), ('curva', 'Curva'), ('pluma', 'Pluma')])
+                _chip(n, st.calli == k, () => set(st.copyWith(calli: k, preset: 'propio'))),
+            ]),
+            Text('Solo cambia cómo se pinta: los trazos, sus extremos y sus cruces son los mismos. Con Pluma, la línea doble no se aplica.',
+                style: ArcanumText.body(12, color: ArcanumColors.goldMuted, italic: true)),
             _switch('Línea doble', st.line == 'double', (v) => set(st.copyWith(line: v ? 'double' : 'single', preset: 'propio'))),
             _switch('Punta recta', st.cap == 'square', (v) => set(st.copyWith(cap: v ? 'square' : 'round', preset: 'propio'))),
             _switch('Relieve (grabado)', st.relief, (v) => set(st.copyWith(relief: v, preset: 'propio'))),
