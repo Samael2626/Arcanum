@@ -3,6 +3,7 @@
 library;
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -221,6 +222,15 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
       if (error.response == null) {
         return 'No hay conexión con el servidor. Inténtalo de nuevo.';
       }
+    }
+    // fuera de la version de la tienda se dice que fallo: el mensaje generico
+    // no deja saber si fue la sesion, el servidor o la app
+    if (!kReleaseMode) {
+      final what = error is DioException
+          ? 'HTTP ${error.response?.statusCode ?? '-'} '
+                '${error.requestOptions.path}'
+          : '${error.runtimeType}: $error';
+      return 'No se pudo completar. Inténtalo de nuevo.\n\n[$what]';
     }
     return 'No se pudo completar. Inténtalo de nuevo.';
   }
