@@ -151,6 +151,8 @@ class _CardPage extends StatelessWidget {
           // pasa a la carta siguiente; solo se desplaza si no cabe
           SingleChildScrollView(
             primary: false,
+            // sin rebote: al llegar al borde avisa, y el pager pasa de carta
+            physics: const ClampingScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(22, 18, 22, 40),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -301,6 +303,8 @@ class _Synthesis extends StatelessWidget {
     return Center(
       child: SingleChildScrollView(
         primary: false,
+        // sin rebote: al llegar al borde avisa, y el pager pasa de carta
+        physics: const ClampingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,

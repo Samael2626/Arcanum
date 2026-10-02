@@ -175,7 +175,7 @@
 
 - [ ] Medir en el móvil real con Impeller: 60 fps quieta y con la Cruz Celta; el abanico sin tirones.
 - [ ] Accesibilidad: `Semantics` en cartas y radial, 48 dp, lectores de pantalla.
-- [ ] Probar en el móvil más pequeño de la prueba cerrada (360 dp).
+- [ ] Probar en el móvil más pequeño de la prueba cerrada (360 dp). *(02-oct, en tests: `pantalla_pequena_test.dart` abre la mesa, el panel de lecturas y una Cruz Celta con textos largos en 360×640 y 360×740, sin desbordes y con «Cerrar el círculo» al alcance. Cazó un fallo: con texto largo la carta se quedaba con el deslizamiento y no se podía pasar a la siguiente; ahora, al llegar al final del texto, seguir tirando pasa de carta. Falta verlo en un móvil real de 360 dp.)*
 - [ ] Revisión de código (`/code-review`) antes de mezclar.
 
 ## Fase 8: publicar

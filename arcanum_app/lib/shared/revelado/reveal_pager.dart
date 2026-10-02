@@ -57,6 +57,25 @@ class RevealPagerState extends State<RevealPager> {
     }
   }
 
+  /// Ya se paso de pieza en este arrastre: un solo salto por gesto.
+  bool _handedOff = false;
+
+  bool _handOff(ScrollNotification n, int i) {
+    if (n.depth != 0 || i != _current) return false;
+    if (n is ScrollStartNotification) _handedOff = false;
+    if (n is OverscrollNotification &&
+        n.dragDetails != null &&
+        !_handedOff &&
+        n.overscroll.abs() > 2) {
+      final next = i + (n.overscroll > 0 ? 1 : -1);
+      if (next >= 0 && next < widget.count) {
+        _handedOff = true;
+        go(next);
+      }
+    }
+    return false;
+  }
+
   @override
   void dispose() {
     _pages.dispose();
@@ -86,7 +105,13 @@ class RevealPagerState extends State<RevealPager> {
             scrollDirection: Axis.vertical,
             itemCount: widget.count,
             onPageChanged: (i) => setState(() => _current = i),
-            itemBuilder: (context, i) => widget.page(context, i, i == _current),
+            // una pieza con mucho texto se desplaza por dentro; al llegar a su
+            // final (o a su principio), seguir tirando pasa de pieza
+            itemBuilder: (context, i) =>
+                NotificationListener<ScrollNotification>(
+                  onNotification: (n) => _handOff(n, i),
+                  child: widget.page(context, i, i == _current),
+                ),
           ),
         ),
         if (widget.header case final header?)
