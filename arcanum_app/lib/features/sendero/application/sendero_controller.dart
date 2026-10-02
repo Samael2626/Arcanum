@@ -82,7 +82,7 @@ class SenderoController extends AsyncNotifier<Map<String, SenderoProgress>> {
   SenderoProgress? progress(String journeyId, int version) =>
       state.value?["$journeyId:$version"];
 
-  Future<void> advance({
+  Future<int> advance({
     required String journeyId,
     required int version,
     required int step,
@@ -90,7 +90,7 @@ class SenderoController extends AsyncNotifier<Map<String, SenderoProgress>> {
   }) async {
     final current = state.value ?? await future;
     final userId = ref.read(authProvider).user?['id']?.toString();
-    if (userId == null) return;
+    if (userId == null) return 0;
     final key = '$journeyId:$version';
     final next = _merge(
       current[key],
@@ -106,9 +106,11 @@ class SenderoController extends AsyncNotifier<Map<String, SenderoProgress>> {
     state = AsyncData(updated);
     await _writeLocal('$_storagePrefix$userId', updated);
     try {
-      await _sync(next);
+      final response = await _sync(next);
+      return response['reward_fragments'] as int? ?? 0;
     } catch (_) {
       // La copia local manda offline y se reintenta al abrir Sendero.
+      return 0;
     }
   }
 
@@ -149,8 +151,8 @@ class SenderoController extends AsyncNotifier<Map<String, SenderoProgress>> {
     );
   }
 
-  Future<void> _sync(SenderoProgress value) async {
-    await ref
+  Future<Map<String, dynamic>> _sync(SenderoProgress value) async {
+    return await ref
         .read(arcanumApiProvider)
         .updateSenderoProgress(
           journeyId: value.journeyId,

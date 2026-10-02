@@ -32,6 +32,23 @@ class Settings(BaseSettings):
 
     # Admin (migraciones on-demand, endpoints admin)
     ADMIN_TOKEN: Optional[str] = None
+
+    # Las rutas de migracion de /admin responden 404 salvo que esto sea true.
+    #
+    # POR QUE APAGADAS POR DEFECTO. Produccion NO las necesita: `start.sh` corre
+    # `alembic upgrade head` en cada arranque, con RUN_MIGRATIONS que vale
+    # "true" si nadie la toca. O sea que /admin/migrate hace, a mano y por HTTP,
+    # lo que el contenedor ya hizo solo al levantarse.
+    #
+    # Lo que si aportaban era superficie: dos rutas que ejecutan DDL contra la
+    # base de produccion, alcanzables desde internet con una sola cabecera. El
+    # token es fuerte y se compara en tiempo constante, pero la puerta mas
+    # segura es la que no esta.
+    #
+    # 404 y no 403: un 403 confirma que la ruta existe, y eso ya es informacion.
+    # Para encenderlas un rato --una migracion que hay que forzar a mano-- se
+    # pone ADMIN_MIGRATIONS_ENABLED=true, se hace, y se quita.
+    ADMIN_MIGRATIONS_ENABLED: bool = False
     RUN_STARTUP_MIGRATIONS: bool = False
     RUN_STARTUP_SEEDS: bool = False
 
@@ -61,15 +78,33 @@ class Settings(BaseSettings):
     CLAUDE_TEMPERATURE: float = 0.6
     CLAUDE_TIMEOUT_SECONDS: int = 30
     ORACLE_FREE_DAILY: int = 1
-    ORACLE_PREMIUM_DAILY: int = 20
+    # 10 y no 20 desde el 26-sep-2026: ver la nota del cupo de Groq mas abajo.
+    ORACLE_PREMIUM_DAILY: int = 10
 
     # Tarot
     TAROT_FREE_DAILY: int = 1
-    TAROT_PREMIUM_DAILY: int = 50
+    TAROT_PREMIUM_DAILY: int = 10
 
     # Cielos (transits)
     CIELOS_FREE_DAILY: int = 3
-    CIELOS_PREMIUM_DAILY: int = 50
+    CIELOS_PREMIUM_DAILY: int = 10
+
+    # LOS TOPES PREMIUM LOS FIJA GROQ, NO EL PRODUCTO.
+    #
+    # El plan gratuito de Groq da 200.000 tokens al DIA para toda la app. Una
+    # lectura ronda los 2.300, asi que son ~85 al dia entre todos los usuarios.
+    #
+    # Con los topes viejos (50 tarot + 20 oraculo) UN SOLO suscriptor podia
+    # gastar ~115.000 tokens/dia: mas de la mitad del cupo de la app entera. Dos
+    # suscriptores activos la dejaban seca antes del mediodia, y lo que ve la
+    # gente entonces es un 429.
+    #
+    # Con 10/10/10 el tope por suscriptor baja a ~69.000 y caben ~4 al maximo.
+    # No es un limite de producto: es lo que aguanta la cuenta. Sube cuando se
+    # active la facturacion de Groq, que Samuel dispara con la PRIMERA venta.
+    #
+    # Si se tocan estos numeros hay que tocar tambien el paywall, que los
+    # anuncia escritos a mano. `scripts/check_limites_paywall.py` lo vigila.
 
     # Horoscopo diario. No lo limita este numero sino la clave de idempotencia,
     # que lleva la fecha LOCAL de la persona: como mucho una generacion por dia.

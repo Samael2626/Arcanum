@@ -1,5 +1,23 @@
 # ARCANUM DB Migrations Setup
 
+> **EL TOKEN NO SE ESCRIBE AQUI.** Estos ejemplos llevaban un literal
+> (`arcanum-admin-...-2026`), que era el valor por defecto de desarrollo y NO el
+> de produccion -- el de Railway es otro, y nunca estuvo en este repo. Aun asi un
+> token de ejemplo en la documentacion se copia y se pega tal cual, asi que se
+> sustituye por la variable.
+>
+> El valor real vive en la variable `ADMIN_TOKEN` del servicio en Railway.
+> Exportala en tu terminal antes de correr estos comandos:
+>
+> ```bash
+> export ADMIN_TOKEN="...el valor de Railway..."
+> ```
+>
+> **Ojo:** desde el 26-sep-2026 las rutas de `/admin/migrate` responden **404**
+> salvo que `ADMIN_MIGRATIONS_ENABLED=true`. Produccion no las necesita:
+> `start.sh` corre `alembic upgrade head` en cada arranque.
+
+
 ## Status
 
 Auth endpoints (`/auth/register`, `/auth/login`) filan because **database tables don't exist** in Supabase.
@@ -8,7 +26,7 @@ Auth endpoints (`/auth/register`, `/auth/login`) filan because **database tables
 
 ### 1. Check migration status
 ```bash
-curl -H "X-Admin-Token: arcanum-admin-secret-change-in-prod-2026" \
+curl -H "X-Admin-Token: $ADMIN_TOKEN" \
   https://arcanum-1.onrender.com/admin/migrate/status
 ```
 
@@ -17,7 +35,7 @@ Expected: `"tables_count": 0` (tables missing)
 ### 2. Run migrations
 ```bash
 curl -X POST \
-  -H "X-Admin-Token: arcanum-admin-secret-change-in-prod-2026" \
+  -H "X-Admin-Token: $ADMIN_TOKEN" \
   https://arcanum-1.onrender.com/admin/migrate
 ```
 
@@ -25,7 +43,7 @@ Expected: All 8 tables created (users, refresh_tokens, natal_charts, etc.)
 
 ### 3. Verify
 ```bash
-curl -H "X-Admin-Token: arcanum-admin-secret-change-in-prod-2026" \
+curl -H "X-Admin-Token: $ADMIN_TOKEN" \
   https://arcanum-1.onrender.com/admin/migrate/status
 ```
 
@@ -71,7 +89,7 @@ python scripts/comprobar_endpoint_migracion.py --run     # MIGRA de verdad la ba
 
 Add to Render > Environment > Environment Variables:
 ```
-ADMIN_TOKEN=arcanum-admin-secret-change-in-prod-2026
+ADMIN_TOKEN=$ADMIN_TOKEN
 ```
 
 (Change to stronger token in production: `openssl rand -hex 32`)

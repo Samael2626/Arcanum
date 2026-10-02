@@ -17,6 +17,7 @@ import 'package:arcanum_app/core/router/app_router.dart';
 import 'package:arcanum_app/core/theme/arcanum_theme.dart';
 import 'package:arcanum_app/features/horoscopo/horoscopo_screen.dart';
 import 'package:arcanum_app/features/hoy/hoy_screen.dart';
+import 'package:arcanum_app/features/sendero/application/sendero_guide_controller.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -36,6 +37,16 @@ class _AuthDePrueba extends AuthNotifier {
 
 class _ApiMuda extends ArcanumApi {
   _ApiMuda() : super(Dio());
+
+  @override
+  Future<Map<String, dynamic>> fragmentsBalance() async => {
+    'balance': 0,
+    'credits_balance': 0,
+    'conversion_rate': 12,
+    'weekly_conversions_remaining': 3,
+    'weekly_conversion_limit': 3,
+    'tutorial_reward': 3,
+  };
 
   /// Este arnes prueba navegacion de una cuenta existente, no el primer uso.
   /// Sin progreso, Sendero abre su invitacion y la barrera modal absorbe el
@@ -145,7 +156,7 @@ class _ApiMuda extends ArcanumApi {
   };
 }
 
-Future<void> _montar(WidgetTester tester) async {
+Future<ProviderContainer> _montar(WidgetTester tester) async {
   // Con sesion: sin ella, el redirect central manda todo a /login y no habria
   // barra ni boton que probar. Ese camino tiene sus propios tests en
   // `core/router/redirect_sesion_test.dart`.
@@ -176,6 +187,7 @@ Future<void> _montar(WidgetTester tester) async {
     ),
   );
   await tester.pumpAndSettle();
+  return contenedor;
 }
 
 /// En que rama estamos. Sale del shell y no del cajon a proposito: el cajon
@@ -308,5 +320,35 @@ void main() {
     expect(find.byType(HoyScreen), findsOneWidget);
     expect(find.byType(HoroscopoScreen), findsNothing);
     expect(_rama(tester), 0);
+  });
+
+  testWidgets('Sendero avanza al tocar menu, seccion y ayuda reales', (
+    tester,
+  ) async {
+    final container = await _montar(tester);
+    await _abrirCajon(tester);
+    await tester.tap(find.text('Sendero'));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text('Primer umbral'));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byKey(const ValueKey('sendero_guide_card')), findsOneWidget);
+    expect(container.read(senderoGuideProvider)?.step, 0);
+
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(container.read(senderoGuideProvider)?.step, 1);
+    await tester.tap(find.text('Horóscopo').last);
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(container.read(senderoGuideProvider)?.step, 2);
+
+    final helpKey = container.read(senderoGuideTargetsProvider).keyFor('help');
+    await tester.tap(find.byKey(helpKey));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(container.read(senderoGuideProvider), isNull);
+    expect(find.byKey(const ValueKey('sendero_guide_card')), findsNothing);
   });
 }

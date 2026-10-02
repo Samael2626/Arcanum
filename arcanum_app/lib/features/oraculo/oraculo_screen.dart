@@ -22,6 +22,8 @@ import 'widgets/tarot_card.dart';
 import '../../shared/widgets/ai_output.dart';
 import '../../shared/widgets/texto_con_jerga.dart';
 import '../../shared/widgets/precio_lectura.dart';
+import '../sendero/application/sendero_guide_controller.dart';
+import '../sendero/presentation/sendero_spend_confirmation.dart';
 
 /// Quien lee las cartas. No son dos actividades: las dos TIRAN, y lo que
 /// cambia es de donde sale el significado.
@@ -286,6 +288,14 @@ class _OracleViewState extends ConsumerState<_OracleView> {
   }
 
   Future<void> _draw() async {
+    final accepted = await confirmSenderoSpend(
+      context,
+      ref,
+      target: 'oracle_draw',
+      action: 'tarot',
+      spread: _spread,
+    );
+    if (!accepted || !mounted) return;
     final key = _drawIdempotencyKey ??= IdempotencyKey.create();
     setState(() {
       _drawing = true;
@@ -323,6 +333,7 @@ class _OracleViewState extends ConsumerState<_OracleView> {
                 .cast<Map<String, dynamic>>();
       if (!mounted) return;
       _drawIdempotencyKey = null;
+      ref.read(senderoGuideProvider.notifier).onAction('oracle_draw');
       setState(() {
         _cards = cards;
         _readingId = esClasica ? data['id'] as String? : null;
@@ -542,14 +553,17 @@ class _OracleViewState extends ConsumerState<_OracleView> {
           ),
         ),
         const SizedBox(height: 20),
-        GoldButton(
-          label: switch ((_interprete, _spread)) {
-            (Interprete.oraculo, _) => 'Consultar al oráculo',
-            (Interprete.tradicion, 'one_card') => 'Sacar una carta',
-            (Interprete.tradicion, _) => 'Tirar las cartas',
-          },
-          loading: _drawing,
-          onPressed: _draw,
+        KeyedSubtree(
+          key: ref.read(senderoGuideTargetsProvider).keyFor('oracle_draw'),
+          child: GoldButton(
+            label: switch ((_interprete, _spread)) {
+              (Interprete.oraculo, _) => 'Consultar al oráculo',
+              (Interprete.tradicion, 'one_card') => 'Sacar una carta',
+              (Interprete.tradicion, _) => 'Tirar las cartas',
+            },
+            loading: _drawing,
+            onPressed: _draw,
+          ),
         ),
         const SizedBox(height: 8),
         // "Sin IA" no significa "gratis": las dos vias pasan por el mismo

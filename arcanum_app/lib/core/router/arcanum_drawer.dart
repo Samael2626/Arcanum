@@ -1,6 +1,7 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../content/sections.dart';
@@ -9,6 +10,7 @@ import '../../shared/widgets/bloque_saldo.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_resin.dart';
 import '../../shared/widgets/arcanum_toggle.dart';
+import '../../features/sendero/application/sendero_guide_controller.dart';
 
 /// El cajon: TODA la navegacion, desde que la barra de abajo dejo de existir.
 ///
@@ -48,7 +50,7 @@ import '../../shared/widgets/arcanum_toggle.dart';
 /// Si algun dia esto se nota, lo que se quita es el desenfoque y no la
 /// transparencia: el alfa del degradado ya deja ver lo de detras y ese no
 /// cuesta nada.
-class ArcanumDrawer extends StatelessWidget {
+class ArcanumDrawer extends ConsumerWidget {
   const ArcanumDrawer({super.key, required this.navigationShell});
 
   /// El mismo shell que dibuja el cuerpo. Hace falta para dos cosas: saber que
@@ -63,9 +65,10 @@ class ArcanumDrawer extends StatelessWidget {
   static const _blur = 14.0;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final base = ArcanumResin.gradient(mood: ArcanumMood.neutral);
     final indice = navigationShell.currentIndex;
+    final targets = ref.read(senderoGuideTargetsProvider);
 
     return Drawer(
       backgroundColor: Colors.transparent,
@@ -116,13 +119,23 @@ class ArcanumDrawer extends StatelessWidget {
                       _FilaSeccion(
                         seccion: arcanumSections[i],
                         activa: i == indice,
+                        tapKey: targets.keyFor(
+                          'section_${arcanumSections[i].route.substring(1)}',
+                        ),
                         // `initialLocation` solo cuando ya estas en esa rama:
                         // es lo que hacia la barra, y sirve para salir de una
                         // sub-ruta sin buscar el boton de volver.
-                        onTap: () => navigationShell.goBranch(
-                          i,
-                          initialLocation: i == indice,
-                        ),
+                        onTap: () {
+                          navigationShell.goBranch(
+                            i,
+                            initialLocation: i == indice,
+                          );
+                          ref
+                              .read(senderoGuideProvider.notifier)
+                              .onAction(
+                                'section_${arcanumSections[i].route.substring(1)}',
+                              );
+                        },
                       ),
                     const _Separador(),
                     const Padding(
@@ -146,6 +159,10 @@ class ArcanumDrawer extends StatelessWidget {
                       iconoActivo: Icons.tune,
                       rotulo: 'Ajustes',
                       ruta: '/settings',
+                      tapKey: targets.keyFor('settings'),
+                      onOpened: () => ref
+                          .read(senderoGuideProvider.notifier)
+                          .onAction('settings'),
                     ),
                     // Privacidad sube aqui: estaba a tres toques metida dentro
                     // de Ajustes, y es la pantalla que hay que poder encontrar
@@ -195,6 +212,7 @@ class _Fila extends StatelessWidget {
     required this.rotulo,
     required this.activa,
     required this.onTap,
+    this.tapKey,
   });
 
   final IconData icono;
@@ -202,6 +220,7 @@ class _Fila extends StatelessWidget {
   final String rotulo;
   final bool activa;
   final VoidCallback onTap;
+  final Key? tapKey;
 
   @override
   Widget build(BuildContext context) {
@@ -212,6 +231,7 @@ class _Fila extends StatelessWidget {
       selected: activa,
       label: rotulo,
       child: InkWell(
+        key: tapKey,
         // `closeDrawer` y no `Navigator.pop`: el pop depende de que el cajon
         // haya dejado una entrada de historial en la ruta, y dentro del shell
         // de go_router eso no se cumple -- el cajon se quedaba abierto encima
@@ -253,11 +273,13 @@ class _FilaSeccion extends StatelessWidget {
     required this.seccion,
     required this.activa,
     required this.onTap,
+    this.tapKey,
   });
 
   final ArcanumSection seccion;
   final bool activa;
   final VoidCallback onTap;
+  final Key? tapKey;
 
   @override
   Widget build(BuildContext context) => _Fila(
@@ -266,6 +288,7 @@ class _FilaSeccion extends StatelessWidget {
     rotulo: seccion.title,
     activa: activa,
     onTap: onTap,
+    tapKey: tapKey,
   );
 }
 
@@ -277,12 +300,16 @@ class _FilaRuta extends StatelessWidget {
     required this.iconoActivo,
     required this.rotulo,
     required this.ruta,
+    this.tapKey,
+    this.onOpened,
   });
 
   final IconData icono;
   final IconData iconoActivo;
   final String rotulo;
   final String ruta;
+  final Key? tapKey;
+  final VoidCallback? onOpened;
 
   @override
   Widget build(BuildContext context) {
@@ -292,8 +319,10 @@ class _FilaRuta extends StatelessWidget {
       iconoActivo: iconoActivo,
       rotulo: rotulo,
       activa: aqui,
+      tapKey: tapKey,
       onTap: () {
         if (!aqui) context.push(ruta);
+        onOpened?.call();
       },
     );
   }

@@ -156,6 +156,13 @@ GROQ_API_KEYS=gsk_la_segunda,gsk_la_tercera
 clave que devuelve 429 se aparta el tiempo que diga su `retry-after`; cada una
 se prueba como mucho UNA vez por llamada.
 
+Separa con coma, punto y coma, espacio o salto de linea: valen los cuatro. Y
+lo que no empieza por `gsk_` se descarta con un aviso en el log en vez de
+montar un cliente que fallaria cada vez que le tocase el turno --- paso el
+29-sep-2026 al configurarlas con `;`, que dejaba DOS claves pegadas como UNA
+sola de 113 caracteres. Ese fallo no es un 429, asi que el salto a otra clave
+no lo habria cubierto.
+
 > **Las claves tienen que ser de ORGANIZACIONES distintas.** El limite es de la
 > organizacion, no de la clave (ver abajo): tres claves de la misma cuenta
 > comparten los mismos 8.000 TPM y no multiplican nada.

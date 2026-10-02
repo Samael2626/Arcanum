@@ -12,7 +12,7 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { external_key: 'demo-manifiesto-001', pillar: 'manifiesto', premise: 'ARCANUM es un instrumento de practica y reflexion, no una maquina de predicciones.', facts: [{ claim: 'ARCANUM no promete predecir el futuro.', source_id: 'play-ficha' }, { claim: 'La app ofrece Tarot, carta natal y grimorio cifrado.', source_id: 'play-ficha' }], sources: [{ id: 'play-ficha', kind: 'repo', reference: 'docs/play-ficha.md' }], warnings: ['No presentar la app como servicio predictivo.', 'No prometer resultados personales.'], asset: null } }];"
+        "jsCode": "return [{ json: { external_key: 'demo-manifiesto-001', pillar: 'manifiesto', premise: 'ARCANUM es un panel de trabajo para quien practica, no una app de predicciones.', facts: [{ claim: 'ARCANUM no promete predecir el futuro ni resultados personales.', source_id: 'play-ficha' }, { claim: 'El Tarot reúne los 78 arcanos, varias tiradas e interpretaciones que parten de la pregunta del usuario.', source_id: 'play-ficha' }, { claim: 'La carta natal se calcula con Swiss Ephemeris, casas Placidus y un sistema configurable.', source_id: 'play-ficha' }, { claim: 'El cielo de hoy muestra tránsitos sobre la carta natal calculados con efemérides reales.', source_id: 'play-ficha' }, { claim: 'Las notas del grimorio se cifran con AES-256 en el teléfono; el servidor almacena texto cifrado y no puede leer el cuerpo.', source_id: 'play-ficha' }, { claim: 'Materia arcana reúne plantas, piedras, metales y perfumes con correspondencias tomadas de fuentes históricas.', source_id: 'play-ficha' }], sources: [{ id: 'play-ficha', kind: 'repo', reference: 'docs/play-ficha.md:95-129' }], warnings: ['No presentar la app como servicio predictivo.', 'No prometer resultados personales.', 'No inferir que todo es azar.', 'No afirmar que la app carece de automatización o interferencias automáticas.', 'No usar módulos específicos o módulos especializados como relleno.', 'No atribuir a una función un propósito que no aparezca en los hechos.'], asset: null } }];"
       },
       "id": "f95c144c-5c4c-4ac7-8f97-5516e8153fba",
       "name": "Preparar paquete factual",
@@ -23,14 +23,15 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=Convierte este paquete factual en una pieza maestra de contenido para ARCANUM. Usa solamente los hechos entregados. Devuelve JSON valido, sin markdown.\n\nPAQUETE FACTUAL:\n{{ JSON.stringify($json) }}\n\nFORMATO DE SALIDA:\n{\"hook\":\"\",\"script\":\"\",\"carousel\":[],\"caption\":\"\",\"cta\":\"\",\"alt_text\":\"\",\"compliance\":{\"claims_supported\":true,\"warnings_applied\":true}}",
-        "hasOutputParser": false,
+        "text": "=Convierte este paquete factual en una pieza maestra de contenido para ARCANUM. Usa solamente los hechos entregados. Devuelve JSON valido, sin markdown. Escribe espanol correcto, incluidas todas las tildes. Cada campo debe aportar algo distinto: no repitas frases ni reformules la misma idea. Una enumeracion de funciones puede aparecer una sola vez en toda la pieza; si el script las enumera, reparte una idea distinta por tarjeta y no vuelvas a enumerarlas en caption. Nombra el producto como app, aplicacion, panel o instrumento; nunca como paginas, volumen, capitulos ni libro. Evita tautologias, solemnidad artificial y relleno arcaizante. No inventes propositos, efectos, ausencia de automatizacion ni filosofias del usuario. No uses azar como opuesto de prediccion. No uses calificadores como preciso, estructurado, riguroso, profundo, metodico o fundamental salvo que aparezcan literalmente en los hechos. El hook debe plantear una tension concreta. carousel debe contener entre 3 y 6 textos no vacios. El CTA debe tener entre 3 y 10 palabras e invitar a una funcion confirmada. source_ids solo puede contener identificadores presentes en sources. Si asset es null, alt_text debe ser una cadena vacia porque la imagen aun no existe.\n\nPAQUETE FACTUAL:\n{{ JSON.stringify($json) }}\n\nFORMATO DE SALIDA:\n{\"hook\":\"\",\"script\":\"\",\"carousel\":[],\"caption\":\"\",\"cta\":\"\",\"alt_text\":\"\",\"source_ids\":[],\"compliance\":{\"claims_supported\":true,\"warnings_applied\":true}}",
+        "hasOutputParser": true,
+        "needsFallback": true,
         "messages": {
           "messageValues": [
             {
               "type": "SystemMessagePromptTemplate",
               "messageType": "text",
-              "message": "Eres el editor de ARCANUM. Voz seria, simbolica y precisa: un grimorio bien encuadernado, no un banner de rebajas. Prohibido inventar hechos, predecir el futuro, dar consejo medico, legal, financiero o psicologico, usar urgencia falsa, superlativos vacios o emojis genericos. Cada pieza debe ser comprensible para principiantes sin infantilizar a quien practica. El CTA solo puede invitar a conocer una funcion confirmada en el paquete factual."
+              "message": "Eres el editor de ARCANUM. Voz seria, simbolica y clara: alguien que conoce el oficio y habla sin disfrazarse de oraculo. Prohibido inventar hechos, predecir el futuro, dar consejo medico, legal, financiero o psicologico, usar urgencia falsa, superlativos vacios, emojis genericos, tautologias o prosa grandilocuente. No confundas la app con un libro. Una frase concreta vale mas que palabras como inescrutable, artificio, riguroso o metodico. Cada pieza debe ser comprensible para principiantes sin infantilizar a quien practica. El CTA solo puede invitar a conocer una funcion confirmada en el paquete factual."
             }
           ]
         },
@@ -40,13 +41,16 @@
       "name": "Generar pieza maestra",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
-      "position": [-100, 0]
+      "position": [-100, 0],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000
     },
     {
       "parameters": {
-        "modelName": "models/gemini-3.5-flash",
+        "modelName": "models/gemini-3.6-flash",
         "options": {
-          "maxOutputTokens": 1800,
+          "maxOutputTokens": 4096,
           "temperature": 0.4,
           "topP": 0.9
         }
@@ -56,6 +60,73 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [-100, 220]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {
+          "maxOutputTokens": 4096,
+          "temperature": 0.4,
+          "topP": 0.9
+        }
+      },
+      "id": "5fd8ca32-4d58-42cb-8f59-907dca89cdca",
+      "name": "Gemini editorial respaldo",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [60, 220]
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"hook\",\"script\",\"carousel\",\"caption\",\"cta\",\"alt_text\",\"source_ids\",\"compliance\"],\"properties\":{\"hook\":{\"type\":\"string\",\"minLength\":20,\"maxLength\":120},\"script\":{\"type\":\"string\",\"minLength\":100,\"maxLength\":700},\"carousel\":{\"type\":\"array\",\"minItems\":3,\"maxItems\":6,\"items\":{\"type\":\"string\",\"minLength\":1}},\"caption\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":900},\"cta\":{\"type\":\"string\",\"minLength\":3,\"maxLength\":120},\"alt_text\":{\"type\":\"string\",\"maxLength\":500},\"source_ids\":{\"type\":\"array\",\"minItems\":1,\"uniqueItems\":true,\"items\":{\"type\":\"string\",\"minLength\":1}},\"compliance\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"claims_supported\",\"warnings_applied\"],\"properties\":{\"claims_supported\":{\"type\":\"boolean\"},\"warnings_applied\":{\"type\":\"boolean\"}}}}}",
+        "autoFix": false
+      },
+      "id": "05fcb2c8-69ea-4cc9-960c-89e138939e73",
+      "name": "Forzar salida JSON",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const incoming = $input.first().json;\nlet value = incoming.text ?? incoming.output ?? incoming;\nif (value && typeof value === 'object' && value.output && typeof value.output === 'object') value = value.output;\nreturn [{ json: { text: typeof value === 'string' ? value : JSON.stringify(value) } }];"
+      },
+      "id": "303fa501-cc8f-4b8b-9692-f247ca181783",
+      "name": "Normalizar salida estructurada",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [180, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.text;\nconst brief = $('Preparar paquete factual').first().json;\nif (typeof raw !== 'string' || !raw.trim()) throw new Error('Gemini no devolvio texto.');\nconst cleaned = raw.trim().replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/, '');\nlet draft;\ntry { draft = JSON.parse(cleaned); } catch (error) { throw new Error(`JSON editorial invalido: ${error.message}`); }\nconst errors = [];\nconst warnings = [];\nconst requiredText = ['hook', 'script', 'caption', 'cta', 'alt_text'];\nfor (const field of requiredText) {\n  if (typeof draft[field] !== 'string') errors.push(`${field}: debe ser texto`);\n}\nif (typeof draft.hook === 'string' && (draft.hook.trim().length < 20 || draft.hook.length > 120)) errors.push('hook: longitud fuera de 20-120 caracteres');\nif (typeof draft.script === 'string' && (draft.script.trim().length < 100 || draft.script.length > 700)) errors.push('script: longitud fuera de 100-700 caracteres');\nif (!Array.isArray(draft.carousel) || draft.carousel.length < 3 || draft.carousel.length > 6 || draft.carousel.some((item) => typeof item !== 'string' || !item.trim())) errors.push('carousel: requiere 3-6 textos no vacios');\nconst ctaWords = typeof draft.cta === 'string' ? draft.cta.trim().split(/\\s+/).filter(Boolean).length : 0;\nif (ctaWords < 3 || ctaWords > 10) errors.push('cta: requiere 3-10 palabras');\nif (typeof draft.cta === 'string' && /(conoce las funciones|disponibles en la aplicacion|descubre mas)/i.test(draft.cta.normalize('NFD').replace(/[\\u0300-\\u036f]/g, ''))) errors.push('cta: formula generica');\nif (!brief.asset && typeof draft.alt_text === 'string' && draft.alt_text.trim()) errors.push('alt_text: debe quedar vacio hasta elegir un recurso visual');\nconst knownSources = new Set((brief.sources || []).map((source) => source.id));\nif (!Array.isArray(draft.source_ids) || !draft.source_ids.length) errors.push('source_ids: falta trazabilidad');\nelse if (draft.source_ids.some((sourceId) => !knownSources.has(sourceId))) errors.push('source_ids: contiene una fuente no entregada');\nif (draft.compliance?.claims_supported !== true) errors.push('compliance.claims_supported: debe ser true');\nif (draft.compliance?.warnings_applied !== true) errors.push('compliance.warnings_applied: debe ser true');\nconst stopWords = new Set(['para','como','esta','este','esto','desde','entre','sobre','cada','solo','sino','tambien','traves','aplicacion']);\nconst tokens = (value) => new Set(String(value).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\\s+/).filter((word) => word.length > 3 && !stopWords.has(word)));\nconst fragments = [\n  ['hook', draft.hook], ['script', draft.script], ['caption', draft.caption], ['cta', draft.cta],\n  ...(Array.isArray(draft.carousel) ? draft.carousel.map((item, index) => [`carousel[${index}]`, item]) : [])\n].filter(([, value]) => typeof value === 'string' && value.trim());\nfor (let i = 0; i < fragments.length; i++) {\n  for (let j = i + 1; j < fragments.length; j++) {\n    const left = tokens(fragments[i][1]);\n    const right = tokens(fragments[j][1]);\n    const smaller = Math.min(left.size, right.size);\n    if (smaller < 5) continue;\n    const shared = [...left].filter((token) => right.has(token)).length;\n    const overlap = shared / smaller;\n    const sizeRatio = smaller / Math.max(left.size, right.size);\n    const normalizeFragment = (value) => String(value).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\\s+/g, ' ').trim();\n    const leftText = normalizeFragment(fragments[i][1]);\n    const rightText = normalizeFragment(fragments[j][1]);\n    const exactReuse = smaller >= 4 && (leftText.includes(rightText) || rightText.includes(leftText));\n    if (exactReuse || (overlap >= 0.82 && sizeRatio >= 0.65)) errors.push(`repeticion alta: ${fragments[i][0]} y ${fragments[j][0]}`);\n  }\n}\nconst uniqueErrors = [...new Set(errors)];\nreturn [{ json: { external_key: brief.external_key, status: uniqueErrors.length ? 'needs_revision' : 'ready_for_review', draft, validation: { valid: uniqueErrors.length === 0, score: Math.max(0, 100 - uniqueErrors.length * 15 - warnings.length * 5), errors: uniqueErrors, warnings } } }];"
+      },
+      "id": "1e8e41eb-95ac-4aed-bacf-73b0bcdf7440",
+      "name": "Parsear y validar borrador",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst draft = item.draft || {};\nconst corpus = [draft.hook, draft.script, draft.caption, draft.cta, ...(Array.isArray(draft.carousel) ? draft.carousel : [])].filter(Boolean).join(' ');\nconst missingAccents = /\\b(reflexion|proposito|comprension|tecnica|observacion|metodica|adivinacion|aplicacion|prediccion|simbolica|astrologia)\\b/i;\nif (missingAccents.test(corpus)) {\n  item.validation.warnings = [...new Set([...(item.validation.warnings || []), 'ortografia: revisar tildes frecuentes'])];\n  item.validation.score = Math.max(0, item.validation.score - 5);\n}\nreturn [{ json: item }];"
+      },
+      "id": "b5dbbd47-9ab3-482f-8cbd-a3bff8087d92",
+      "name": "Revisar ortografia",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst brief = $('Preparar paquete factual').first().json;\nconst draft = item.draft || {};\nconst textFields = [draft.hook, draft.script, draft.caption, draft.cta, ...(Array.isArray(draft.carousel) ? draft.carousel : [])].filter((value) => typeof value === 'string');\nconst corpus = textFields.join(' ');\nconst normalize = (value) => String(value || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();\nconst normalizedCorpus = normalize(corpus);\nconst factualCorpus = normalize([brief.premise, ...(brief.facts || []).map((fact) => fact.claim), ...(brief.warnings || [])].filter(Boolean).join(' '));\nconst errors = [];\nconst forbiddenMedium = /\\b(estas paginas|sus paginas|cada apartado|capitulos?|volumen|libro)\\b/i;\nif (forbiddenMedium.test(normalizedCorpus)) errors.push('voz: la app se presenta como libro o paginas');\nif (/\\bmetodo metodico\\b/i.test(normalizedCorpus)) errors.push('voz: tautologia \"metodo metodico\"');\nif (/\\b(artificio alguno|lo inescrutable)\\b/i.test(normalizedCorpus)) errors.push('voz: grandilocuencia artificial');\nconst qualifiers = [\n  ['preciso', /\\bprecis[ao]s?\\b/i, /\\bprecis[ao]s?\\b/i],\n  ['estructurado', /\\bestructurad[ao]s?\\b/i, /\\bestructurad[ao]s?\\b/i],\n  ['riguroso', /\\briguros[ao]s?\\b/i, /\\briguros[ao]s?\\b/i],\n  ['profundo', /\\bprofund[ao]s?\\b/i, /\\bprofund[ao]s?\\b/i],\n  ['metodico', /\\bmetodic[ao]s?\\b/i, /\\bmetodic[ao]s?\\b/i],\n  ['fundamental', /\\bfundamentales?\\b/i, /\\bfundamentales?\\b/i]\n];\nfor (const [name, usedPattern, factPattern] of qualifiers) {\n  if (usedPattern.test(normalizedCorpus) && !factPattern.test(factualCorpus)) errors.push(`claim: calificador no respaldado: ${name}`);\n}\nconst newErrors = [...new Set(errors)].filter((error) => !(item.validation.errors || []).includes(error));\nitem.validation.errors = [...new Set([...(item.validation.errors || []), ...newErrors])];\nitem.validation.valid = item.validation.errors.length === 0;\nitem.validation.score = Math.max(0, Number(item.validation.score ?? 100) - newErrors.length * 15);\nitem.status = item.validation.valid ? 'ready_for_review' : 'needs_revision';\nreturn [{ json: item }];"
+      },
+      "id": "91fbe49f-77dd-42a5-8c24-0a4e51317269",
+      "name": "Validar voz editorial",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 0]
     }
   ],
   "pinData": {},
@@ -66,8 +137,26 @@
     "Preparar paquete factual": {
       "main": [[{ "node": "Generar pieza maestra", "type": "main", "index": 0 }]]
     },
+    "Generar pieza maestra": {
+      "main": [[{ "node": "Normalizar salida estructurada", "type": "main", "index": 0 }]]
+    },
+    "Normalizar salida estructurada": {
+      "main": [[{ "node": "Parsear y validar borrador", "type": "main", "index": 0 }]]
+    },
+    "Parsear y validar borrador": {
+      "main": [[{ "node": "Validar voz editorial", "type": "main", "index": 0 }]]
+    },
+    "Validar voz editorial": {
+      "main": [[{ "node": "Revisar ortografia", "type": "main", "index": 0 }]]
+    },
     "Gemini editorial": {
       "ai_languageModel": [[{ "node": "Generar pieza maestra", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Gemini editorial respaldo": {
+      "ai_languageModel": [[{ "node": "Generar pieza maestra", "type": "ai_languageModel", "index": 1 }]]
+    },
+    "Forzar salida JSON": {
+      "ai_outputParser": [[{ "node": "Generar pieza maestra", "type": "ai_outputParser", "index": 0 }]]
     }
   },
   "active": false,

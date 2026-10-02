@@ -33,6 +33,46 @@ Future<void> _montar(
 }
 
 void main() {
+  // EL CASO QUE ESTABA ROTO EN PRODUCCION. Google identifica las suscripciones
+  // como `<subscription_id>:<base_plan_id>`, y el paywall las buscaba por el id
+  // pelado: no encontraba precio, asi que el plan anual ofrecia "no hay
+  // ofertas" y el boton del mensual NI SE PINTABA. Cero suscripciones
+  // vendibles, con la tienda bien configurada.
+  //
+  // Se monta con el mapa tal y como lo deja `expandirPreciosPorIdBase`: las dos
+  // claves, la de la tienda y la base.
+  testWidgets('con el formato de Google, la suscripcion se vende', (
+    tester,
+  ) async {
+    await _montar(
+      tester,
+      precios: expandirPreciosPorIdBase(const {
+        'arcanum_premium_annual:anual': r'$ 39.900',
+        'arcanum_premium_monthly:mensual': r'$ 4.900',
+      }),
+    );
+
+    // El precio del anual, a la vista.
+    expect(find.textContaining(r'$ 39.900'), findsWidgets);
+
+    // Y el boton del mensual EXISTE: es el que desaparecia entero.
+    expect(find.textContaining(r'$ 4.900'), findsWidgets);
+  });
+
+  testWidgets('sin plan base tambien funciona, por si algun producto es viejo', (
+    tester,
+  ) async {
+    // Los productos dados de alta antes de febrero de 2023 llegan sin sufijo.
+    // El arreglo no puede romperlos.
+    await _montar(
+      tester,
+      precios: expandirPreciosPorIdBase(const {
+        'arcanum_premium_annual': r'$ 39.900',
+      }),
+    );
+    expect(find.textContaining(r'$ 39.900'), findsWidgets);
+  });
+
   testWidgets('sin respuesta de la tienda no se muestra ningun precio', (
     tester,
   ) async {

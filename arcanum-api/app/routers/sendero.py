@@ -3,12 +3,14 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from app.core.security import get_current_user
 from app.db.session import get_db
 from app.domain.entities import UserEntity
 from app.models.sendero_progress import SenderoProgress
+from app.application.services.fragment_service import FragmentService
 from app.schemas.sendero import (
     SenderoProgressResponse,
     SenderoProgressUpdate,
@@ -16,6 +18,17 @@ from app.schemas.sendero import (
 )
 
 router = APIRouter(prefix="/sendero", tags=["sendero"])
+
+REWARDED_LESSONS = {
+    "orientation": (2, 2),
+    "cielo": (2, 1),
+    "horoscopo": (2, 1),
+    "grimorio": (2, 0),
+    "saber": (2, 0),
+    "oraculo": (2, 1),
+    "fragmentos": (1, 0),
+    "account": (2, 1),
+}
 
 
 @router.get("/progress", response_model=list[SenderoProgressResponse])
@@ -41,7 +54,7 @@ def update_sendero_progress(
     payload: SenderoProgressUpdate,
     current_user: UserEntity = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> SenderoProgress:
+) -> SenderoProgressResponse:
     normalized_id = journey_id.strip().lower()
     if not re.fullmatch(r"[a-z0-9_-]{1,64}", normalized_id):
         raise HTTPException(status_code=422, detail="journey_id invalido")
@@ -57,19 +70,44 @@ def update_sendero_progress(
     ).scalar_one_or_none()
 
     if progress is None:
-        progress = SenderoProgress(
-            user_id=current_user.id,
-            journey_id=normalized_id,
-            version=payload.version,
+        db.execute(
+            insert(SenderoProgress)
+            .values(
+                user_id=current_user.id,
+                journey_id=normalized_id,
+                version=payload.version,
+            )
+            .on_conflict_do_nothing(
+                index_elements=["user_id", "journey_id", "version"]
+            )
         )
-        db.add(progress)
+        progress = db.execute(
+            select(SenderoProgress)
+            .where(
+                SenderoProgress.user_id == current_user.id,
+                SenderoProgress.journey_id == normalized_id,
+                SenderoProgress.version == payload.version,
+            )
+            .with_for_update()
+        ).scalar_one()
 
     progress.step = max(progress.step or 0, payload.step)
-    if progress.status != SenderoStatus.completed.value:
+    was_completed = progress.status == SenderoStatus.completed.value
+    if not was_completed:
         progress.status = payload.status.value
         if payload.status == SenderoStatus.completed:
             progress.completed_at = datetime.now(timezone.utc)
 
+    reward = 0
+    lesson = REWARDED_LESSONS.get(normalized_id)
+    if (
+        lesson is not None
+        and (payload.version, payload.step) == lesson
+        and payload.status == SenderoStatus.completed
+    ):
+        reward = FragmentService().grant_lesson(db, current_user.id, normalized_id)
     db.commit()
     db.refresh(progress)
-    return progress
+    return SenderoProgressResponse.model_validate(progress).model_copy(
+        update={"reward_fragments": reward}
+    )

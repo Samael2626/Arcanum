@@ -17,6 +17,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/monetization/saldo.dart';
+import '../../features/fragmentos/application/fragment_balance.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 
@@ -24,12 +25,7 @@ import '../../core/theme/arcanum_theme.dart';
 /// haciendo. Es la misma regla de `shared/creditos.dart`.
 void _abrirTienda(BuildContext context) => context.push('/paywall');
 
-/// El bloque del cajon: saldo y una via a la tienda. Nada mas.
-///
-/// Se deja deliberadamente sin hueco reservado para lo que venga despues. Cada
-/// elemento que se anade a una pantalla le quita sitio a otro, y un espacio
-/// vacio guardado "para los fragmentos" seria un elemento que hoy no dice nada.
-/// Cuando existan, se amplia.
+/// Creditos y Fragmentos tienen destinos distintos: tienda y conversion.
 class BloqueSaldoCajon extends ConsumerWidget {
   const BloqueSaldoCajon({super.key});
 
@@ -39,68 +35,121 @@ class BloqueSaldoCajon extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      child: Semantics(
-        button: true,
-        label: saldo.value == null
-            ? 'Créditos y suscripción'
-            : 'Tienes ${saldo.value!.creditos} créditos. Abrir la tienda.',
-        child: InkWell(
-          key: const Key('saldo-cajon'),
-          borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            Scaffold.of(context).closeDrawer();
-            _abrirTienda(context);
-          },
-          child: ExcludeSemantics(
-            child: Container(
-              constraints: const BoxConstraints(minHeight: 48),
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: ArcanumColors.gold.withValues(alpha: 0.38),
-                ),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    ArcanumColors.burgundy.withValues(alpha: 0.34),
-                    ArcanumColors.surfaceHigh.withValues(alpha: 0.5),
-                  ],
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'TU SALDO',
-                    style: ArcanumText.body(
-                      10,
-                      color: ArcanumColors.goldLabel,
-                    ).copyWith(letterSpacing: 2.2),
+      child: Column(
+        children: [
+          Semantics(
+            button: true,
+            label: saldo.value == null
+                ? 'Créditos y suscripción'
+                : 'Tienes ${saldo.value!.creditos} créditos. Abrir la tienda.',
+            child: InkWell(
+              key: const Key('saldo-cajon'),
+              borderRadius: BorderRadius.circular(16),
+              onTap: () {
+                Scaffold.of(context).closeDrawer();
+                _abrirTienda(context);
+              },
+              child: ExcludeSemantics(
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: ArcanumColors.gold.withValues(alpha: 0.38),
+                    ),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        ArcanumColors.burgundy.withValues(alpha: 0.34),
+                        ArcanumColors.surfaceHigh.withValues(alpha: 0.5),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 6),
-                  _Cifra(saldo: saldo),
-                  const SizedBox(height: 6),
-                  Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Conseguir más',
-                        style: ArcanumText.body(13, color: ArcanumColors.gold),
+                        'TU SALDO',
+                        style: ArcanumText.body(
+                          10,
+                          color: ArcanumColors.goldLabel,
+                        ).copyWith(letterSpacing: 2.2),
                       ),
-                      const SizedBox(width: 6),
-                      const Icon(
-                        Icons.arrow_forward,
-                        size: 14,
-                        color: ArcanumColors.gold,
+                      const SizedBox(height: 6),
+                      _Cifra(saldo: saldo),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Text(
+                            'Conseguir más',
+                            style: ArcanumText.body(
+                              13,
+                              color: ArcanumColors.gold,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Icon(
+                            Icons.arrow_forward,
+                            size: 14,
+                            color: ArcanumColors.gold,
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
+          const SizedBox(height: 8),
+          const _FragmentBalanceTile(),
+        ],
+      ),
+    );
+  }
+}
+
+class _FragmentBalanceTile extends ConsumerWidget {
+  const _FragmentBalanceTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final fragments = ref.watch(fragmentBalanceProvider);
+    final count = fragments.value?.balance;
+    return InkWell(
+      key: const Key('fragmentos-cajon'),
+      borderRadius: BorderRadius.circular(12),
+      onTap: () {
+        Scaffold.of(context).closeDrawer();
+        context.push('/fragmentos');
+      },
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 48),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: ArcanumColors.surfaceHigh,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.auto_awesome_outlined, color: ArcanumColors.gold),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                count == null
+                    ? fragments.hasError
+                          ? 'Fragmentos no disponibles'
+                          : 'Consultando Fragmentos…'
+                    : '$count Fragmentos Arcanos',
+                style: ArcanumText.body(15),
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: ArcanumColors.goldMuted),
+          ],
         ),
       ),
     );
@@ -201,7 +250,11 @@ class BloqueSaldoOraculo extends ConsumerWidget {
                         ).copyWith(letterSpacing: 2.2),
                       ),
                       const SizedBox(height: 2),
-                      _Coste(estado: estado, cupo: cupo, cargando: saldo.isLoading),
+                      _Coste(
+                        estado: estado,
+                        cupo: cupo,
+                        cargando: saldo.isLoading,
+                      ),
                     ],
                   ),
                 ),

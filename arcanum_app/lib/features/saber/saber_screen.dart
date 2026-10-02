@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../sendero/application/sendero_guide_controller.dart';
 import '../../shared/widgets/arcanum_toggle.dart';
 import '../arte/arte_screen.dart';
 import '../lecturas/presentation/lecturas_screen.dart';
@@ -14,14 +16,14 @@ import 'sellos/sellos_screen.dart';
 ///
 /// Sellos es la tercera cara: consulta de los sellos históricos de Agrippa y de
 /// la Goetia (obra de dominio público, con su procedencia a la vista).
-class SaberScreen extends StatefulWidget {
+class SaberScreen extends ConsumerStatefulWidget {
   const SaberScreen({super.key});
 
   @override
-  State<SaberScreen> createState() => _SaberScreenState();
+  ConsumerState<SaberScreen> createState() => _SaberScreenState();
 }
 
-class _SaberScreenState extends State<SaberScreen> {
+class _SaberScreenState extends ConsumerState<SaberScreen> {
   // 0 = Plantas (Materia), 1 = Biblioteca (obras que se leen), 2 = Sellos.
   int _tab = 0;
 
@@ -31,15 +33,33 @@ class _SaberScreenState extends State<SaberScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final guide = ref.watch(senderoGuideProvider);
+    if (_tab == 1 && guide?.current.target == 'saber_toggle') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(senderoGuideProvider.notifier).onAction('saber_toggle');
+        }
+      });
+    }
     return Column(
       children: [
         const SizedBox(height: 10),
-        _Toggle(
-          index: _tab,
-          onChanged: (i) => setState(() {
-            _tab = i;
-            if (i == 2) _sellosVisto = true;
-          }),
+        KeyedSubtree(
+          key: ref.read(senderoGuideTargetsProvider).keyFor('saber_toggle'),
+          child: _Toggle(
+            index: _tab,
+            onChanged: (i) {
+              setState(() {
+                _tab = i;
+                if (i == 2) _sellosVisto = true;
+              });
+              if (i == 1) {
+                ref
+                    .read(senderoGuideProvider.notifier)
+                    .onAction('saber_toggle');
+              }
+            },
+          ),
         ),
         const SizedBox(height: 6),
         // IndexedStack conserva el estado y el scroll de cada cara al alternar:
