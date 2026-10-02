@@ -3,9 +3,12 @@ from __future__ import annotations
 import asyncio
 import os
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+
+from PIL import Image
 
 ASSEMBLER_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ASSEMBLER_ROOT))
@@ -225,6 +228,38 @@ class RequestContractTests(unittest.TestCase):
 
         self.assertEqual(resolved, path)
         self.assertFalse(downloaded)
+
+    def test_segment_duration_accepts_explicit_or_timed_scene(self) -> None:
+        self.assertEqual(
+            video_maker._segment_duration({"duration_seconds": 4.5}),
+            4.5,
+        )
+        self.assertEqual(
+            video_maker._segment_duration(
+                {"start_seconds": 3, "end_seconds": 8.25}
+            ),
+            5.25,
+        )
+
+    def test_invalid_background_color_falls_back_to_arcanum_background(self) -> None:
+        self.assertEqual(video_maker._hex_rgb("not-a-color"), (10, 10, 15))
+        self.assertEqual(video_maker._hex_rgb("#C9A84C"), (201, 168, 76))
+
+    def test_static_image_becomes_timed_vertical_clip(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            image_path = Path(temp_dir) / "slide.png"
+            Image.new("RGB", (1080, 1350), color=(10, 10, 15)).save(image_path)
+            clip = video_maker._process_clip(
+                image_path,
+                index=0,
+                visuals={"ken_burns": False, "color_grade": {}},
+                target_duration=2.5,
+            )
+            try:
+                self.assertEqual(tuple(clip.size), (1080, 1920))
+                self.assertEqual(clip.duration, 2.5)
+            finally:
+                clip.close()
 
 
 if __name__ == "__main__":

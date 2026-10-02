@@ -10,6 +10,7 @@ import requests
 from moviepy import (
     VideoFileClip,
     AudioFileClip,
+    ColorClip,
     ImageClip,
     TextClip,
     CompositeVideoClip,
@@ -23,6 +24,7 @@ TEMP_DIR = Path(tempfile.gettempdir()) / "video-assembler"
 OUTPUT_DIR = Path(__file__).resolve().parent.parent / "output"
 TARGET_W, TARGET_H = 1080, 1920
 TARGET_FPS = 30
+IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp"}
 DEFAULT_FONT = os.getenv(
     "VIDEO_FONT_PATH",
     "/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf",
@@ -55,6 +57,9 @@ DEFAULT_VISUALS: Dict[str, Any] = {
     "ken_burns_zoom": 1.08,
     "ken_burns_drift_x": 0.04,
     "crossfade_duration": 0.6,
+    "image_fit_mode": "contain",
+    "video_fit_mode": "cover",
+    "background_color": "0A0A0F",
     # El grading NumPy por cuadro vuelve inviable un Short 1080x1920. Queda
     # desactivado hasta moverlo a un filtro FFmpeg acelerado.
     "color_grade": {},
@@ -130,25 +135,56 @@ def _process_clip(
     index: int,
     visuals: Optional[Dict[str, Any]] = None,
     subtitles: Optional[List[Dict[str, Any]]] = None,
-) -> VideoFileClip:
+    target_duration: Optional[float] = None,
+):
     v = visuals or DEFAULT_VISUALS
     subs = subtitles or []
     logger.info("Processing clip %d: %s", index, path)
-    clip = VideoFileClip(str(path))
+    is_image = path.suffix.lower() in IMAGE_SUFFIXES
+    if is_image:
+        clip = ImageClip(str(path)).with_duration(max(target_duration or 3.5, 0.8))
+    else:
+        clip = VideoFileClip(str(path))
+        if target_duration:
+            target_duration = max(float(target_duration), 0.8)
+            if clip.duration < target_duration:
+                clip = clip.with_effects([Loop(duration=target_duration)])
+            else:
+                clip = clip.subclipped(0, target_duration)
     src_w, src_h = clip.w, clip.h
     src_aspect = src_w / src_h
     target_aspect = TARGET_W / TARGET_H
+    fit_mode = str(
+        v.get("image_fit_mode" if is_image else "video_fit_mode", "contain" if is_image else "cover")
+    ).lower()
 
-    if src_aspect > target_aspect:
-        new_h = TARGET_H
-        new_w = int(new_h * src_aspect)
+    if fit_mode == "contain":
+        scale = min(TARGET_W / src_w, TARGET_H / src_h)
+        new_w = max(1, int(src_w * scale))
+        new_h = max(1, int(src_h * scale))
+        foreground = clip.resized(width=new_w, height=new_h).with_position("center")
+        background = ColorClip(
+            size=(TARGET_W, TARGET_H),
+            color=_hex_rgb(v.get("background_color", "0A0A0F")),
+        ).with_duration(clip.duration)
+        clip = CompositeVideoClip(
+            [background, foreground],
+            size=(TARGET_W, TARGET_H),
+        ).with_duration(clip.duration)
     else:
-        new_w = TARGET_W
-        new_h = int(new_w / src_aspect)
-    clip = clip.resized(width=new_w, height=new_h)
-    clip = clip.cropped(
-        x_center=new_w // 2, y_center=new_h // 2, width=TARGET_W, height=TARGET_H
-    )
+        if src_aspect > target_aspect:
+            new_h = TARGET_H
+            new_w = int(new_h * src_aspect)
+        else:
+            new_w = TARGET_W
+            new_h = int(new_w / src_aspect)
+        clip = clip.resized(width=new_w, height=new_h)
+        clip = clip.cropped(
+            x_center=new_w // 2,
+            y_center=new_h // 2,
+            width=TARGET_W,
+            height=TARGET_H,
+        )
 
     if visuals.get("ken_burns"):
         zoom = float(visuals.get("ken_burns_zoom", 1.08))
@@ -211,6 +247,16 @@ def _color_grade_frame(frame, brightness: float, contrast: float, saturation: fl
     return (_np.clip(img, 0.0, 1.0) * 255).astype(_np.uint8)
 
 
+def _hex_rgb(value: Any) -> tuple[int, int, int]:
+    raw = str(value or "0A0A0F").strip().lstrip("#")[:6]
+    if len(raw) != 6:
+        return (10, 10, 15)
+    try:
+        return tuple(int(raw[index : index + 2], 16) for index in (0, 2, 4))
+    except ValueError:
+        return (10, 10, 15)
+
+
 def _cleanup(paths: List[Path]):
     for p in set(paths):
         try:
@@ -247,16 +293,17 @@ def assemble_video(
             vpath, was_downloaded = _resolve_video(vurl)
             if was_downloaded:
                 downloaded.append(vpath)
+            segment = segment_timings[i] if segment_timings and i < len(segment_timings) else {}
             clip = _process_clip(
                 vpath,
                 i,
                 visuals=_merge(DEFAULT_VISUALS, brand.get("visuals")),
                 subtitles=subtitles or [],
+                target_duration=_segment_duration(segment),
             )
             clip_dur = float(clip.duration or 0.0)
-            if segment_timings and i < len(segment_timings):
-                seg = segment_timings[i]
-                seg_subs = seg.get("subtitles", []) or []
+            if segment:
+                seg_subs = segment.get("subtitles", []) or []
                 for sub in seg_subs:
                     timed_subs.append(
                         {
@@ -345,6 +392,19 @@ def assemble_video(
         raise
     finally:
         _cleanup(downloaded)
+
+
+def _segment_duration(segment: Optional[Dict[str, Any]]) -> Optional[float]:
+    if not segment:
+        return None
+    if segment.get("duration_seconds") is not None:
+        return max(float(segment["duration_seconds"]), 0.8)
+    if segment.get("start_seconds") is not None and segment.get("end_seconds") is not None:
+        return max(
+            float(segment["end_seconds"]) - float(segment["start_seconds"]),
+            0.8,
+        )
+    return None
 
 
 def _load_static(path: Optional[str], label: str = "static") -> Optional[ImageClip]:
