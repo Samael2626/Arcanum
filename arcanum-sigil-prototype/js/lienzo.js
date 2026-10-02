@@ -63,7 +63,11 @@ function lettersScene(th, transparent) {
   const visible = state.prims.filter(p => !p.hidden);
   const fg = [];
   for (const p of lay.parts) if (p.L.type !== 'symbol') fg.push({ layer: p.L.type, color: th.ink, items: p.g.prims });
-  fg.push({ layer: 'core', color: th.ink, w: lw, cap: st.cap, sigil: true, items: visible.map(p => ({ d: primPath(p), units: p.units })) });
+  if (st.calli === 'pluma') {
+    // eje fino (lo usan resplandor y relieve) bajo el contorno relleno de la pluma
+    fg.push({ layer: 'core-eje', color: th.ink, w: lw * .4, hw: lw, cap: 'round', sigil: true, items: visible.map(p => ({ d: calliPath(p, 'curva'), units: p.units })) });
+    fg.push({ layer: 'pluma', color: th.ink, items: visible.map(p => ({ d: calliOutline(p, lw), fill: true, units: p.units })) });
+  } else fg.push({ layer: 'core', color: th.ink, w: lw, cap: st.cap, sigil: true, items: visible.map(p => ({ d: st.calli === 'curva' ? calliPath(p, 'curva') : primPath(p), units: p.units })) });
   const terms = terminalList(visible);
   if (terms.length) fg.push({ layer: 'terminals', color: th.ink, w: lw * .8, cap: st.cap, sigil: true, items: terms.flatMap(t => t.shapes.map(sh => ({ d: sh.d, fill: !!sh.fill }))) });
   for (const p of lay.parts) if (p.L.type === 'symbol') fg.push({ layer: 'symbol', color: th.ink, items: p.g.prims });
@@ -134,6 +138,46 @@ function snapshot(size, theme = state.theme, transparent = false) {
   off.width = off.height = size;
   paint(off.getContext('2d'), { size, theme, transparent });
   return off;
+}
+
+// ── Estilizacion caligrafica (capa opcional, solo de dibujo) ─────
+// No toca la geometria del motor: los trazos, sus extremos y sus cruces son
+// los mismos; solo cambia como se pintan. Curva: cada recta se comba un poco,
+// siempre hacia el mismo lado (se lee de izquierda a derecha), asi que dos
+// trazos compartidos coinciden. Pluma: contorno relleno de punta ancha, el
+// grosor depende de la direccion del trazo respecto a la pluma. [AR]
+const CALLI_BOW = .03, CALLI_NIB = 40 * Math.PI / 180;
+function calliLine(p) {
+  let a = toCanvas(p.a), b = toCanvas(p.b);
+  if (a.x > b.x || (a.x === b.x && a.y > b.y)) [a, b] = [b, a];
+  const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+  return { a, b, dx, dy, nx: dy / len, ny: -dx / len, amp: CALLI_BOW * len };
+}
+function calliPath(p) {
+  if (p.t !== 'L') return primPath(p);
+  const l = calliLine(p), k = 2 * l.amp;
+  return `M ${f2(l.a.x)} ${f2(l.a.y)} Q ${f2(l.a.x + l.dx / 2 + l.nx * k)} ${f2(l.a.y + l.dy / 2 + l.ny * k)} ${f2(l.b.x)} ${f2(l.b.y)}`;
+}
+function calliPts(p) {
+  const out = [];
+  if (p.t === 'L') {
+    const l = calliLine(p), n = 16;
+    for (let i = 0; i <= n; i++) { const t = i / n, o = l.amp * Math.sin(Math.PI * t); out.push({ x: l.a.x + l.dx * t + l.nx * o, y: l.a.y + l.dy * t + l.ny * o }); }
+    return out;
+  }
+  const c = toCanvas(p.c), r = p.r * state.view.k, n = Math.max(8, Math.ceil((p.a1 - p.a0) / 10));
+  for (let i = 0; i <= n; i++) { const a = rad(p.a0 + (p.a1 - p.a0) * i / n); out.push({ x: c.x + Math.cos(a) * r, y: c.y + Math.sin(a) * r }); }
+  return out;
+}
+function calliOutline(p, lw) {
+  const pts = calliPts(p), L = [], R = [];
+  pts.forEach((q, i) => {
+    const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)];
+    const th = Math.atan2(b.y - a.y, b.x - a.x), h = lw / 2 * (.45 + .95 * Math.abs(Math.sin(th - CALLI_NIB)));
+    L.push(`${f2(q.x - Math.sin(th) * h)} ${f2(q.y + Math.cos(th) * h)}`);
+    R.push(`${f2(q.x + Math.sin(th) * h)} ${f2(q.y - Math.cos(th) * h)}`);
+  });
+  return `M ${L.join(' L ')} L ${R.reverse().join(' L ')} Z`;
 }
 
 // ── SVG real ────────────────────────────────────────────────────
