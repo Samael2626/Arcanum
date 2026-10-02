@@ -8,6 +8,7 @@ import 'package:arcanum_app/features/sendero/presentation/sendero_screen.dart';
 import 'package:arcanum_app/features/sendero/presentation/sendero_spotlight.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -132,6 +133,59 @@ class _HoroscopeSpotlightFixture extends ConsumerWidget {
               guide: SenderoGuideState(
                 journey: senderoJourneyById('orientation')!,
                 step: 2,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DrawerSpotlightFixture extends ConsumerWidget {
+  const _DrawerSpotlightFixture({required this.onSaberTap});
+
+  final VoidCallback onSaberTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final targets = ref.read(senderoGuideTargetsProvider);
+    return Scaffold(
+      body: Stack(
+        children: [
+          Positioned(
+            top: 240,
+            left: 0,
+            child: SizedBox(
+              key: targets.keyFor('section_hoy'),
+              width: 280,
+              height: 40,
+            ),
+          ),
+          Positioned(
+            top: 285,
+            left: 0,
+            child: SizedBox(
+              key: targets.keyFor('section_horoscopo'),
+              width: 280,
+              height: 40,
+            ),
+          ),
+          Positioned(
+            top: 350,
+            left: 0,
+            child: GestureDetector(
+              key: const ValueKey('saber_drawer_row'),
+              behavior: HitTestBehavior.opaque,
+              onTap: onSaberTap,
+              child: const SizedBox(width: 280, height: 40),
+            ),
+          ),
+          Positioned.fill(
+            child: SenderoSpotlight(
+              guide: SenderoGuideState(
+                journey: senderoJourneyById('orientation')!,
+                step: 1,
               ),
             ),
           ),
@@ -508,6 +562,46 @@ void main() {
       expect(card.bottom, lessThan(700));
     },
   );
+
+  testWidgets('guia del cajon deja libres todas las filas de seccion', (
+    tester,
+  ) async {
+    for (final (family, asset) in [
+      ('Cormorant Garamond', 'assets/fonts/CormorantGaramond-600.ttf'),
+      ('Crimson Pro', 'assets/fonts/CrimsonPro-400.ttf'),
+    ]) {
+      final loader = FontLoader(family)..addFont(rootBundle.load(asset));
+      await loader.load();
+    }
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    var saberTapped = false;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: _DrawerSpotlightFixture(onSaberTap: () => saberTapped = true),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 350));
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(_DrawerSpotlightFixture)),
+    );
+    final firstRow = tester.getRect(
+      find.byKey(
+        container.read(senderoGuideTargetsProvider).keyFor('section_hoy'),
+      ),
+    );
+    final card = tester.getRect(
+      find.byKey(const ValueKey('sendero_guide_card')),
+    );
+    expect(card.bottom, lessThan(firstRow.top));
+    await tester.tap(find.byKey(const ValueKey('saber_drawer_row')));
+    expect(saberTapped, isTrue);
+  });
 
   testWidgets('sin datos natales Sendero no ofrece una lectura imposible', (
     tester,

@@ -109,6 +109,13 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
         : step.body;
     final rect = _targetRect;
     final targets = ref.watch(senderoGuideTargetsProvider);
+    final root = _rootKey.currentContext?.findRenderObject();
+    final firstDrawerRow = step.target.startsWith('section_')
+        ? targets.keyFor('section_hoy').currentContext?.findRenderObject()
+        : null;
+    final firstDrawerRowTop = root is RenderBox && firstDrawerRow is RenderBox
+        ? root.globalToLocal(firstDrawerRow.localToGlobal(Offset.zero)).dy
+        : null;
     if (targets.keyFor(step.target).currentContext == null && rect != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
     }
@@ -121,9 +128,15 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
         final safeBottom =
             bounds.maxHeight - MediaQuery.paddingOf(context).bottom - 12;
         final maxTop = math.max(safeTop, safeBottom - cardHeight);
+        final drawerCardTop = firstDrawerRowTop == null
+            ? null
+            : firstDrawerRowTop - cardHeight - 12;
         final top = switch (rect) {
           null => maxTop,
           _ => () {
+            if (drawerCardTop != null && drawerCardTop >= safeTop) {
+              return drawerCardTop.clamp(safeTop, maxTop);
+            }
             final below = rect.bottom + 12;
             final above = rect.top - cardHeight - 12;
             final spaceBelow = safeBottom - below;
