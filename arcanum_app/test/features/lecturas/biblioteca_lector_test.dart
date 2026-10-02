@@ -323,7 +323,9 @@ void main() {
 
         expect(find.text('Sellos'), findsOneWidget);
         // el catálogo pesa ~2,9 MB: abrir Saber no debe pagarlo
-        expect(find.byType(SellosScreen), findsNothing);
+        // skipOffstage: false, porque el IndexedStack deja las otras caras fuera
+        // de pantalla y el buscador por defecto no las vería aunque existieran
+        expect(find.byType(SellosScreen, skipOffstage: false), findsNothing);
 
         await tester.tap(find.text('Sellos'));
         await tester.pump();

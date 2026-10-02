@@ -1,7 +1,14 @@
 # Spec: Catálogo histórico de sellos en Saber
 
-Estado: SPEC, nada implementado en Flutter. Escrita el 2-oct-2026 sin Flutter a
-mano: las firmas de Dart de abajo no se han compilado.
+Estado: IMPLEMENTADO el 2-oct-2026 en `feature/taller-sigilos` (`arcanum_app/lib/features/saber/sellos/`,
+asset `assets/sellos/catalogo-sellos.json`). Suite completa de la app: 992 pasan, 8 saltados.
+Decisiones tomadas al implementar:
+- Sin `url_launcher`: la ficha ofrece «Copiar enlace al escaneo» (portapapeles).
+- Sellos se construye solo al abrir esa cara (`_sellosVisto`); el catálogo se parsea con `compute`.
+- Las notas vacías del JSON (`""`) se tratan como ausentes; solo 5 piezas tienen nota.
+- El test de deriva compara el asset con `arcanum-sigil-prototype/export/` (si existe).
+Sin hacer: pasada de lector de pantalla en dispositivo, perfil de la rejilla en el GN2200,
+revisión con `arcanum-legal` antes de publicar.
 
 ## Qué es y dónde va
 
