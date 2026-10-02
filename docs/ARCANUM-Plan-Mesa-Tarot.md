@@ -136,7 +136,7 @@
 - [x] **Huecos de las 7 tiradas**, con imán, intercambio y aclaratorias.
 - [x] **Gestos de la tabla de la especificación (§3):** tocar, mantener 430 ms, arrastrar, esquina, doble toque, pellizcar. Zona de toque de 48 dp. *(01-oct: el toque de cada pieza se agranda 24 unidades de mesa por lado.)*
 - [x] **`RadialMenu`:** círculos sueltos de 52 dp, elección por ángulo deslizando y soltando, orden fijo.
-- [ ] **Paneles compactos:** Leer, pregunta y lecturas guardadas, anclados a lo que se tocó (D7). La interpretación no va en panel: va como «Lectura revelada» (fase 5). Hoy salen como hojas desde abajo (`showModalBottomSheet`, 3 en `tarot_screen.dart`) y la pregunta como diálogo.
+- [x] **Paneles compactos:** Leer, pregunta y lecturas guardadas, anclados a lo que se tocó (D7). *(02-oct: `table/table_panel.dart`. Encima de la pieza, debajo si arriba no cabe, dentro de la pantalla con 8 de margen, como mucho 360 de ancho y 60 % de alto. Tocar fuera o «atrás» lo cierra. Anclas: la carta con su giro (`screenRectOfCard`), el sello (`sealScreenRect`) y, para lo elegido en el radial del paño, donde se abrió (`menuAt`). La interpretación sigue en hoja hasta la «Lectura revelada».)*
 - [x] **Widget tests:** tocar, mantener abre el radial, arrastrar encaja en el hueco, esquina voltea pasados 70°. *(01-oct: los dos últimos, con dedo real, en `table_view_test.dart` «gestos con el dedo»; comprobado que fallan si el umbral baja de 70.)*
 
 - [x] **Movimiento (30-sep, `table/table_motion.dart`):** las piezas viajan en vez de aparecer.

@@ -449,6 +449,41 @@ void main() {
     });
   });
 
+  group('anclas de los paneles (D7)', () {
+    test('el panel de una carta se ancla a lo que ocupa en pantalla', () async {
+      await openRws();
+      final card = await c.read(tableControllerProvider.notifier).take('p0', 0);
+      final rect = dir.screenRectOfCard(table().card(card.slug)!);
+      expect(rect.contains(screenOf(Offset(card.x, card.y))), isTrue);
+      // ni un punto: tiene el tamaño de la carta, mas o menos segun la camara
+      expect(rect.width, greaterThan(TableGeometry.cardW * card.scale * .4));
+      expect(rect.height, greaterThan(rect.width));
+    });
+
+    test('una carta girada 90 grados ocupa mas ancho que alto', () async {
+      await openRws();
+      final ops = c.read(tableControllerProvider.notifier);
+      final card = await ops.take('p0', 0);
+      ops.arrange((s) => s.updateCard(card.slug, (k) => k.copyWith(rot: 90)));
+      final rect = dir.screenRectOfCard(table().card(card.slug)!);
+      expect(rect.width, greaterThan(rect.height));
+    });
+
+    test('lo elegido en un radial se ancla donde se abrio', () async {
+      await openRws();
+      expect(dir.menuAt, isNull);
+      await holdAndPick(pileAt('p0'), 'cut');
+      expect(dir.menuAt, screenOf(pileAt('p0')));
+    });
+
+    test('el sello se ancla a su sitio en el paño', () {
+      expect(
+        dir.sealScreenRect.contains(screenOf(TableDirector.sealAt)),
+        isTrue,
+      );
+    });
+  });
+
   group('decisiones del 30-sep', () {
     Future<void> tapCenter() async {
       final layout = dir.radial!;

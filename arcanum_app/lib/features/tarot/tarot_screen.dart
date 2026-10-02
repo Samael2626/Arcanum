@@ -14,6 +14,7 @@ import 'domain/table_models.dart';
 import 'domain/table_state.dart';
 import 'table/table_director.dart';
 import 'table/table_overlays.dart';
+import 'table/table_panel.dart';
 import 'table/table_view.dart';
 
 /// Mazos y tiradas del servidor: la app y el Oraculo leen la misma definicion.
@@ -43,6 +44,23 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
     with WidgetsBindingObserver
     implements TableEffects {
   TableDirector? _director;
+
+  /// Panel anclado abierto (D7): como mucho uno.
+  ({Rect anchor, String title, WidgetBuilder body})? _panel;
+
+  void _openPanel(Rect anchor, String title, WidgetBuilder body) =>
+      setState(() => _panel = (anchor: anchor, title: title, body: body));
+
+  void _closePanel() {
+    if (_panel != null) setState(() => _panel = null);
+  }
+
+  /// Ancla de lo elegido en un radial del paño: un punto donde se abrio.
+  Rect get _menuAnchor {
+    final at =
+        _director?.menuAt ?? MediaQuery.sizeOf(context).center(Offset.zero);
+    return Rect.fromCenter(center: at, width: 1, height: 1);
+  }
 
   TableController get _ops => ref.read(tableControllerProvider.notifier);
 
@@ -97,42 +115,59 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
         child: CircularProgressIndicator(color: ArcanumColors.gold),
       ),
     };
-    return Scaffold(
-      backgroundColor: ArcanumColors.background,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Positioned.fill(child: body),
-            // encima de la mesa y fuera de su Listener: sus toques no tocan el paño
-            if (_director != null) ...[
-              const Positioned.fill(child: TableHelp()),
-              Positioned.fill(
-                child: UndoDot(
-                  until: _ops.undoUntil,
-                  onUndo: () async {
-                    try {
-                      if (await _ops.undo()) toast('Deshecho');
-                    } on Object catch (e) {
-                      error(e);
-                    }
-                  },
+    final panel = _panel;
+    return PopScope(
+      // atras cierra el panel antes que la mesa
+      canPop: panel == null,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _closePanel();
+      },
+      child: Scaffold(
+        backgroundColor: ArcanumColors.background,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              Positioned.fill(child: body),
+              // encima de la mesa y fuera de su Listener: sus toques no tocan el paño
+              if (_director != null) ...[
+                const Positioned.fill(child: TableHelp()),
+                Positioned.fill(
+                  child: UndoDot(
+                    until: _ops.undoUntil,
+                    onUndo: () async {
+                      try {
+                        if (await _ops.undo()) toast('Deshecho');
+                      } on Object catch (e) {
+                        error(e);
+                      }
+                    },
+                  ),
+                ),
+              ],
+              Positioned(
+                top: 4,
+                left: 4,
+                child: IconButton(
+                  tooltip: 'Volver',
+                  icon: const Icon(
+                    Icons.arrow_back,
+                    color: ArcanumColors.goldLight,
+                  ),
+                  onPressed: () =>
+                      context.canPop() ? context.pop() : context.go('/hoy'),
                 ),
               ),
+              if (panel != null)
+                Positioned.fill(
+                  child: TablePanel(
+                    anchor: panel.anchor,
+                    title: panel.title,
+                    onClose: _closePanel,
+                    child: Builder(builder: panel.body),
+                  ),
+                ),
             ],
-            Positioned(
-              top: 4,
-              left: 4,
-              child: IconButton(
-                tooltip: 'Volver',
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: ArcanumColors.goldLight,
-                ),
-                onPressed: () =>
-                    context.canPop() ? context.pop() : context.go('/hoy'),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -189,77 +224,75 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
     final sp = dir.spread;
     final slot = card.slot;
     final f = card.face;
-    _sheet(
-      title: f.nameEs ?? f.name ?? 'Carta',
-      children: [
-        if (card.reversed) const _Note('Invertida'),
-        if (sp != null && slot != null && slot < sp.cardCount) ...[
-          _Label('${slot + 1} · ${sp.slots[slot].name}'),
-          Text(sp.slots[slot].meaning, style: _body),
-        ] else if (card.host != null)
-          const _Note('Aclaratoria')
-        else
-          const _Note('Fuera de la tirada: no cuenta para la lectura'),
-        const SizedBox(height: 12),
-        Text(
-          'El significado de la carta llega con la interpretación.',
-          style: _muted,
-        ),
-      ],
+    final inSpread = sp != null && slot != null && slot < sp.cardCount;
+    _openPanel(
+      dir.screenRectOfCard(card),
+      inSpread
+          ? '${slot + 1} · ${sp.slots[slot].name}'
+          : card.host != null
+          ? 'Aclaratoria'
+          : 'Fuera de la tirada',
+      (context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            f.nameEs ?? f.name ?? 'Carta',
+            style: const TextStyle(
+              fontSize: 22,
+              height: 1.1,
+              color: ArcanumColors.ivory,
+            ),
+          ),
+          Text(card.reversed ? 'Invertida' : 'Al derecho', style: _muted),
+          const SizedBox(height: 8),
+          if (inSpread)
+            Text(sp.slots[slot].meaning, style: _body)
+          else if (card.host == null)
+            Text(
+              'No cuenta para la lectura: arrástrala a un hueco.',
+              style: _muted,
+            ),
+          const SizedBox(height: 8),
+          Text(
+            'El significado de la carta llega con la interpretación.',
+            style: _muted,
+          ),
+        ],
+      ),
     );
   }
 
   @override
   void openSeal() {
-    final text = TextEditingController();
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: ArcanumColors.surfaceHigh,
-        title: const Text('Sellar la pregunta'),
-        content: TextField(
-          controller: text,
-          autofocus: true,
-          maxLength: 300,
-          maxLines: 3,
-          decoration: const InputDecoration(
-            hintText: '¿Qué quieres preguntar?',
-            helperText:
-                'Quedará sellada sobre el paño y se abrirá al interpretar.',
-            helperMaxLines: 2,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final q = text.text.trim();
-              if (q.isNotEmpty) {
-                _ops.arrange((s) => s.copyWith(seal: () => Seal(text: q)));
-              }
-              Navigator.pop(context);
-            },
-            child: const Text('Sellar'),
-          ),
-        ],
+    final dir = _director;
+    if (dir == null) return;
+    _openPanel(
+      dir.sealScreenRect,
+      'Sellar la pregunta',
+      (context) => _SealForm(
+        onCancel: _closePanel,
+        onSeal: (q) {
+          _ops.arrange((s) => s.copyWith(seal: () => Seal(text: q)));
+          _closePanel();
+        },
       ),
-    ).whenComplete(text.dispose);
+    );
   }
 
   @override
-  void openSealInfo(Seal seal) => _sheet(
-    title: seal.open ? 'Pregunta abierta' : 'Pregunta sellada',
-    children: [
+  void openSealInfo(Seal seal) {
+    final dir = _director;
+    if (dir == null) return;
+    _openPanel(
+      dir.sealScreenRect,
+      seal.open ? 'Pregunta abierta' : 'Pregunta sellada',
       // sellada no se enseña: para eso se sello
-      if (seal.open)
-        Text('«${seal.text}»', style: _body)
-      else
-        Text('Se abre al interpretar.', style: _muted),
-    ],
-  );
+      (context) => seal.open
+          ? Text('«${seal.text}»', style: _body)
+          : Text('Se abre al interpretar.', style: _muted),
+    );
+  }
 
   @override
   void openInterpretation() {
@@ -293,27 +326,31 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
 
   @override
   void openHistory() {
-    final api = ref.read(arcanumApiProvider);
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: ArcanumColors.surface,
-      builder: (context) => FutureBuilder(
-        future: api.tarotReadings(),
+    final readings = ref.read(arcanumApiProvider).tarotReadings();
+    _openPanel(
+      _menuAnchor,
+      'Lecturas guardadas',
+      (context) => FutureBuilder(
+        future: readings,
         builder: (context, snap) {
           final rows = snap.data;
-          return _SheetFrame(
-            title: 'Lecturas',
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
             children: [
               if (snap.hasError) Text(_describe(snap.error!), style: _muted),
               if (rows == null && !snap.hasError)
-                const Center(
-                  child: CircularProgressIndicator(color: ArcanumColors.gold),
+                const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: Center(
+                    child: CircularProgressIndicator(color: ArcanumColors.gold),
+                  ),
                 ),
               if (rows != null && rows.isEmpty)
                 Text('Todavía no has cerrado ningún círculo.', style: _muted),
               for (final r in rows ?? const <Map<String, dynamic>>[])
                 ListTile(
+                  dense: true,
                   contentPadding: EdgeInsets.zero,
                   title: Text(
                     _spreadName(r['spread_type'] as String),
@@ -330,7 +367,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
                   trailing: r['table_snapshot'] == null
                       ? null
                       : TextButton(
-                          onPressed: () => _continue(context, r),
+                          onPressed: () => _continue(r),
                           child: const Text('Continuar'),
                         ),
                 ),
@@ -343,14 +380,11 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
 
   /// Continuar: mesa nueva con las mismas cartas colocadas (decision del
   /// 30-sep). Abrir otra mesa recoge la actual, asi que si tiene cartas se pregunta.
-  Future<void> _continue(
-    BuildContext sheet,
-    Map<String, dynamic> reading,
-  ) async {
+  Future<void> _continue(Map<String, dynamic> reading) async {
     final busy = _director?.table.cards.isNotEmpty ?? false;
     if (busy) {
       final ok = await showDialog<bool>(
-        context: sheet,
+        context: context,
         builder: (context) => AlertDialog(
           backgroundColor: ArcanumColors.surfaceHigh,
           title: const Text('Continuar esta lectura'),
@@ -371,7 +405,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
       );
       if (ok != true) return;
     }
-    if (sheet.mounted) Navigator.pop(sheet);
+    _closePanel();
     try {
       await _ops.continueReading(reading);
       toast('La lectura vuelve a la mesa.');
@@ -394,14 +428,6 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
     String two(int v) => v.toString().padLeft(2, '0');
     return '${two(d.day)}/${two(d.month)}/${d.year} ${two(d.hour)}:${two(d.minute)}';
   }
-
-  void _sheet({required String title, required List<Widget> children}) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: ArcanumColors.surface,
-      builder: (context) => _SheetFrame(title: title, children: children),
-    );
-  }
 }
 
 const _body = TextStyle(fontSize: 15, height: 1.45, color: ArcanumColors.ivory);
@@ -410,6 +436,65 @@ const _muted = TextStyle(
   height: 1.4,
   color: ArcanumColors.ivoryMuted,
 );
+
+/// Escribir y sellar la pregunta, dentro del panel anclado al sello.
+class _SealForm extends StatefulWidget {
+  const _SealForm({required this.onCancel, required this.onSeal});
+  final VoidCallback onCancel;
+  final ValueChanged<String> onSeal;
+
+  @override
+  State<_SealForm> createState() => _SealFormState();
+}
+
+class _SealFormState extends State<_SealForm> {
+  final _text = TextEditingController();
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
+  void _seal() {
+    final q = _text.text.trim();
+    if (q.isEmpty) return widget.onCancel();
+    widget.onSeal(q);
+  }
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      TextField(
+        controller: _text,
+        autofocus: true,
+        maxLength: 300,
+        maxLines: 3,
+        minLines: 1,
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => _seal(),
+        style: _body,
+        decoration: const InputDecoration(
+          hintText: '¿Qué quieres preguntar?',
+          helperText:
+              'Quedará sellada sobre el paño y se abrirá al interpretar.',
+          helperMaxLines: 2,
+        ),
+      ),
+      const SizedBox(height: 6),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextButton(onPressed: widget.onCancel, child: const Text('Cancelar')),
+          const SizedBox(width: 6),
+          FilledButton(onPressed: _seal, child: const Text('Sellar')),
+        ],
+      ),
+    ],
+  );
+}
 
 class _Label extends StatelessWidget {
   const _Label(this.text);
@@ -424,24 +509,6 @@ class _Label extends StatelessWidget {
         fontSize: 13,
         letterSpacing: 1,
         color: ArcanumColors.gold,
-      ),
-    ),
-  );
-}
-
-class _Note extends StatelessWidget {
-  const _Note(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Text(
-      text,
-      style: const TextStyle(
-        fontSize: 13,
-        fontStyle: FontStyle.italic,
-        color: ArcanumColors.goldLight,
       ),
     ),
   );

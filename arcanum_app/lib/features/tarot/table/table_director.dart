@@ -187,6 +187,36 @@ class TableDirector extends ChangeNotifier {
   int? get radialHot => _radial?.hot;
   List<String>? get unionOrder => _union;
 
+  /// Donde se abrio el ultimo radial, en pantalla: ancla de lo que se elija en el.
+  Offset? get menuAt => _menuAt;
+  Offset? _menuAt;
+
+  /// Rectangulo de pantalla que ocupa una carta, girada incluida: ancla de su panel.
+  Rect screenRectOfCard(TableCard c) {
+    final hw = TableGeometry.cardW * c.scale / 2,
+        hh = TableGeometry.cardH * c.scale / 2;
+    final a = c.rot * math.pi / 180, cos = math.cos(a), sin = math.sin(a);
+    return _bounds([
+      for (final (dx, dy) in [(-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh)])
+        camera.toScreen(
+          Offset(c.x + dx * cos - dy * sin, c.y + dx * sin + dy * cos),
+        ),
+    ]);
+  }
+
+  /// Rectangulo de pantalla del sello: ancla del panel de la pregunta.
+  Rect get sealScreenRect => _bounds([
+    for (final (dx, dy) in [(-1, -1), (1, -1), (1, 1), (-1, 1)])
+      camera.toScreen(sealAt + Offset(dx * sealRadius, dy * sealRadius)),
+  ]);
+
+  static Rect _bounds(List<Offset> p) => Rect.fromLTRB(
+    p.map((o) => o.dx).reduce(math.min),
+    p.map((o) => o.dy).reduce(math.min),
+    p.map((o) => o.dx).reduce(math.max),
+    p.map((o) => o.dy).reduce(math.max),
+  );
+
   SpreadDef? get spread {
     final slug = table.spread;
     for (final s in spreads) {
@@ -885,6 +915,7 @@ class TableDirector extends ChangeNotifier {
     List<RadialItem> items,
     Future<void> Function(String) onPick,
   ) {
+    _menuAt = screen;
     _radial = _Radial(
       RadialLayout.at(screen, camera.viewport, items),
       title,
