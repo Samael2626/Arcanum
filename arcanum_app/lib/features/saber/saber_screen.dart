@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../shared/widgets/arcanum_toggle.dart';
 import '../arte/arte_screen.dart';
 import '../lecturas/presentation/lecturas_screen.dart';
+import 'sellos/sellos_screen.dart';
 
 /// "Saber": el conocimiento de la tradición, en dos caras de una misma cosa.
 ///
@@ -10,6 +11,9 @@ import '../lecturas/presentation/lecturas_screen.dart';
 /// dice que la ruda es del Sol, es Culpeper quien lo escribió. Antes eran dos
 /// pestañas separadas y esa relación no se veía. Juntas bajo un toggle, el
 /// puente Materia↔Culpeper vive en su casa natural.
+///
+/// Sellos es la tercera cara: consulta de los sellos históricos de Agrippa y de
+/// la Goetia (obra de dominio público, con su procedencia a la vista).
 class SaberScreen extends StatefulWidget {
   const SaberScreen({super.key});
 
@@ -18,22 +22,39 @@ class SaberScreen extends StatefulWidget {
 }
 
 class _SaberScreenState extends State<SaberScreen> {
-  // 0 = Plantas (Materia), 1 = Biblioteca (obras que se leen).
+  // 0 = Plantas (Materia), 1 = Biblioteca (obras que se leen), 2 = Sellos.
   int _tab = 0;
+
+  // Sellos carga ~2,9 MB de catálogo: no se construye hasta que se pide, y
+  // una vez abierto conserva su estado como las otras caras.
+  bool _sellosVisto = false;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         const SizedBox(height: 10),
-        _Toggle(index: _tab, onChanged: (i) => setState(() => _tab = i)),
+        _Toggle(
+          index: _tab,
+          onChanged: (i) => setState(() {
+            _tab = i;
+            if (i == 2) _sellosVisto = true;
+          }),
+        ),
         const SizedBox(height: 6),
         // IndexedStack conserva el estado y el scroll de cada cara al alternar:
         // vuelves a Plantas y sigue donde lo dejaste, sin recargar el catálogo.
         Expanded(
           child: IndexedStack(
             index: _tab,
-            children: const [ArteScreen(), LecturasScreen()],
+            children: [
+              const ArteScreen(),
+              const LecturasScreen(),
+              if (_sellosVisto)
+                const SellosScreen()
+              else
+                const SizedBox.shrink(),
+            ],
           ),
         ),
       ],
@@ -53,6 +74,7 @@ class _Toggle extends StatelessWidget {
     options: const [
       ArcanumToggleOption(label: 'Plantas'),
       ArcanumToggleOption(label: 'Biblioteca'),
+      ArcanumToggleOption(label: 'Sellos'),
     ],
   );
 }
