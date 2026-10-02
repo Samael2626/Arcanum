@@ -4,6 +4,7 @@ Rutas de sesion, cupo al interpretar (D1), idempotencia, permisos entre
 usuarios, caducidad y que el orden del mazo nunca salga hacia el cliente.
 """
 import uuid
+from datetime import datetime, timezone
 
 import pytest
 from fastapi.testclient import TestClient
@@ -15,6 +16,7 @@ from app.core.security import get_current_user
 from app.db.session import get_db
 from app.domain.entities import UserEntity
 from app.main import app
+from app.services import lunar_calendar as lc
 
 SUITS = ("wands", "cups", "swords", "pentacles")
 MAJORS = [f"mayor-{n}" for n in range(22)]
@@ -202,6 +204,17 @@ def test_interpretar_gasta_el_cupo_y_usa_las_invertidas_del_servidor(client, eng
     assert _one(engine, "SELECT count(*) FROM usage_operations WHERE user_id=:u AND state='captured' AND action='tarot'",
                 u=who["id"]) == 1
     assert client.get("/tarot/sessions/current").json()["status"] == "interpreted"
+
+
+def test_interpretar_anota_la_luz_de_la_luna_y_el_instante(client):
+    sid, _, placements = _three(client)
+    before = datetime.now(timezone.utc)
+    body = _interpret(client, sid, placements).json()
+    read_at = datetime.fromisoformat(body["read_at"])
+    assert before <= read_at <= datetime.now(timezone.utc)
+    # la iluminacion es la del mismo instante que se anota, no la de otro calculo
+    assert body["moon_illumination"] == round(lc.get_moon_info(read_at).illumination, 4)
+    assert 0 <= body["moon_illumination"] <= 1
 
 
 def test_las_operaciones_de_mesa_no_gastan_cupo(client, engine, who):

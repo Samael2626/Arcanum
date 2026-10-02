@@ -266,22 +266,65 @@ class Interpretation {
     required this.cards,
     this.question,
     this.moonPhase,
+    this.moonIllumination,
     this.planetaryHour,
+    this.readAt,
   });
 
   final String spread;
   final String spreadName;
   final String? question;
   final String? moonPhase;
+
+  /// Fraccion iluminada de la Luna al interpretar (0..1).
+  final double? moonIllumination;
   final String? planetaryHour;
+
+  /// Instante del cielo anotado: el de interpretar, en UTC.
+  final DateTime? readAt;
   final List<InterpretedCard> cards;
+
+  /// «Luna creciente · 63 % iluminada · hora de Venus · 2 de octubre de 2026, 21:14».
+  /// Solo lo que haya: sin lugar confirmado no hay hora planetaria.
+  String? get skyLine {
+    final at = readAt?.toLocal();
+    final parts = [
+      ?moonPhase,
+      if (moonIllumination != null)
+        '${(moonIllumination! * 100).round()} % iluminada',
+      if (planetaryHour != null) 'hora de $planetaryHour',
+      if (at != null)
+        '${at.day} de ${_months[at.month - 1]} de ${at.year}, '
+            '${_two(at.hour)}:${_two(at.minute)}',
+    ];
+    return parts.isEmpty ? null : parts.join(' · ');
+  }
+
+  static String _two(int n) => n.toString().padLeft(2, '0');
+
+  static const _months = [
+    'enero',
+    'febrero',
+    'marzo',
+    'abril',
+    'mayo',
+    'junio',
+    'julio',
+    'agosto',
+    'septiembre',
+    'octubre',
+    'noviembre',
+    'diciembre',
+  ];
 
   factory Interpretation.fromJson(Map<String, dynamic> j) => Interpretation(
     spread: j['spread'] as String,
     spreadName: j['spread_name'] as String? ?? '',
     question: j['question'] as String?,
     moonPhase: j['moon_phase'] as String?,
+    moonIllumination: (j['moon_illumination'] as num?)?.toDouble(),
     planetaryHour: j['planetary_hour'] as String?,
+    readAt: DateTime.tryParse(j['read_at'] as String? ?? ''),
     cards: _list(j['cards'], InterpretedCard.fromJson),
   );
 
@@ -290,7 +333,9 @@ class Interpretation {
     'spread_name': spreadName,
     'question': question,
     'moon_phase': moonPhase,
+    'moon_illumination': moonIllumination,
     'planetary_hour': planetaryHour,
+    'read_at': readAt?.toUtc().toIso8601String(),
     'cards': [for (final c in cards) c.toJson()],
   };
 }

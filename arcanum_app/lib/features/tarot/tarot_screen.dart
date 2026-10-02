@@ -537,16 +537,10 @@ class _InterpretationSheetState extends State<_InterpretationSheet> {
             child: Text(_working ? 'Interpretando…' : 'Interpretar'),
           ),
         ] else ...[
-          if (r.moonPhase != null || r.planetaryHour != null)
+          if (r.skyLine case final sky?)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: Text(
-                [
-                  if (r.moonPhase != null) r.moonPhase!,
-                  if (r.planetaryHour != null) 'hora de ${r.planetaryHour}',
-                ].join(' · '),
-                style: _muted,
-              ),
+              child: Text(sky, style: _muted),
             ),
           for (final c in r.cards) ...[
             _Label(c.position),

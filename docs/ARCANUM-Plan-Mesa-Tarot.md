@@ -154,7 +154,7 @@
 - [x] **Interpretación de Tradición:** textos de `tarot_cards` por posición y sentido. El Oráculo queda fuera de esta versión (D4). *(01-oct: `tarot_table_service` lee `meaning_upright`/`meaning_reversed` con el giro aplicado, más el significado de la posición y las aclaratorias; la app lo enseña en la hoja de interpretación.)*
 - [x] **Lecturas guardadas:** continuar (30-sep). «Contemplar» sin tocar queda descartado por ahora: continuar ya enseña la mesa tal cual.
 - [x] **Deshacer:** botón abajo a la izquierda con su anillo de 5 s, y el centro del radial (30-sep). Deshace lo local y, desde la decisión del 30-sep, también lo del servidor (ver fase 4).
-- [ ] **Contexto astral desde el backend**, con el lugar del usuario (`user_place.dart`).
+- [x] **Contexto astral desde el backend**, con el lugar del usuario (`user_place.dart`). *(02-oct, opción A con detalles de B, decidido con Samuel.)* El servidor calcula fase y hora planetaria con el lugar de residencia confirmado (sin lugar, sin hora: no se inventa) y lo guarda en la lectura. Añadido: `moon_illumination` (0..1) y `read_at` en la respuesta de interpretar, sin migración; la hoja lo enseña en una línea («Luna creciente · 63 % iluminada · hora de Venus · 2 de octubre de 2026, 21:14»). **Diferencias con la especificación que se aceptan:** el cielo se anota al interpretar (o al cerrar sin interpretar), no con la primera carta; y la iluminación no se guarda en `tarot_readings`, solo viaja en la interpretación. Las dos pedirían columnas nuevas.
 
 ## Fase 6: efectos, sonido y háptica
 

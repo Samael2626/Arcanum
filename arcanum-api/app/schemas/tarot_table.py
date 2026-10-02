@@ -168,7 +168,11 @@ class InterpretationOut(BaseModel):
     spread_name: str
     question: Optional[str] = None
     moon_phase: Optional[str] = None
+    # fraccion iluminada (0..1): como la fase, es la misma en todo el mundo
+    moon_illumination: Optional[float] = Field(None, ge=0, le=1)
     planetary_hour: Optional[str] = None
+    # instante del cielo que se anota: el de interpretar
+    read_at: Optional[datetime] = None
     cards: list[InterpretedCard]
 
 

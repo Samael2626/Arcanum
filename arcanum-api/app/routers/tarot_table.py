@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from datetime import datetime, timezone
-from typing import Iterator
+from typing import Iterator, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
@@ -29,6 +29,7 @@ from app.domain.spreads import list_spreads
 from app.domain.tarot_session import SessionError, TarotSession
 from app.routers.tarot import _limit, _sky_snapshot
 from app.schemas.tarot import TarotReadingResponse
+from app.services import lunar_calendar as lc
 from app.schemas.tarot_table import (
     CloseIn,
     CutIn,
@@ -148,6 +149,14 @@ def gather(session_id: UUID, body: GatherIn, user: UserEntity = Depends(get_curr
         return _view(tables.gather(session_id, user.id, body.pile, body.checkpoint))
 
 
+def _moon_illumination(now: datetime) -> Optional[float]:
+    """Fraccion iluminada de la Luna en `now`. Si el motor falla, sin dato, no un cero."""
+    try:
+        return round(lc.get_moon_info(now).illumination, 4)
+    except (AttributeError, ValueError):
+        return None
+
+
 # ---------- interpretar: aqui se gasta el cupo ----------
 @router.post("/sessions/{session_id}/interpret", response_model=InterpretationOut)
 def interpret(
@@ -159,11 +168,15 @@ def interpret(
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
 ):
     placements = [Placement(**p.model_dump()) for p in body.placements]
-    moon, hour = _sky_snapshot(datetime.now(timezone.utc), user)
+    now = datetime.now(timezone.utc)
+    moon, hour = _sky_snapshot(now, user)
     # se valida ANTES de cobrar: una tirada mal formada no gasta cupo
     with _errors():
         result = tables.build_interpretation(session_id, user.id, body.spread, body.question,
                                              placements, moon, hour)
+    # van en el resultado guardado: repetir con la misma clave devuelve el mismo cielo
+    result["moon_illumination"] = _moon_illumination(now)
+    result["read_at"] = now.isoformat()
     reservation = UsageService().reserve(
         db, user.id, "tarot", idempotency_key,
         {"session_id": str(session_id), **body.model_dump()}, _limit(user),
