@@ -977,12 +977,12 @@ const galCal = await page.evaluate(() => {
     setStyle({ calli: m }); const svg = buildSVG(); saveSigil();
     setStyle({ calli: 'none' });
     const it = readGallery()[0]; setFamily(it.family); docRestore(it.doc);
-    res.push(state.style.calli === m && buildSVG() === svg);
+    res.push(state.style.calli === m && buildSVG() === svg && it.name.endsWith(m === 'curva' ? ' · Curva' : ' · Pluma'));
   }
-  setStyle({ calli: 'none' });
+  setStyle({ calli: 'none' }); saveSigil(); res.push(!/ · (Curva|Pluma)$/.test(readGallery()[0].name));
   return { res, n: readGallery().length - antes };
 });
-check('caligrafia: la galeria guarda y reabre curva y pluma idénticas', galCal.res.every(Boolean) && galCal.n === 2, JSON.stringify(galCal));
+check('caligrafia: la galeria guarda y reabre curva y pluma idénticas', galCal.res.every(Boolean) && galCal.n === 3, JSON.stringify(galCal));
 
 check('sin errores de pagina', errors.length === 0, errors.slice(0, 2).join(' | '));
 await browser.close();
