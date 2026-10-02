@@ -58,6 +58,33 @@ usuario son el material del signo; no es un generador de mandalas.
 | Flutter, suite completa antes de fusionar con `main` | 1068 pasan, 8 saltados |
 | Flutter, suite completa tras fusionar con `main` | 1087 pasan, 8 saltados (1068 + 19 de `main`) |
 
+### Línea base del 2-oct en `feature/taller-sigilos-v2`
+
+Repetida desde `origin/main` (`3a13c05`): Flutter 1087 pasan y 8 saltados;
+prototipo `_gate` 249 checks, `_edge` 17 checks y `_fuzz.mjs 21` 0 fallos.
+Backend con `TEST_DATABASE_URL` y `MIGRATION_TEST_DATABASE_URL`, tras comprobar
+ambas bases: **1115 pasan, 17 saltados, 338 avisos**. Samuel acepta 1115/17 como
+nueva línea base: los saltos corresponden al catálogo privado no montado mediante
+`ARCANUM_DATA_DIR` y a `wordfreq` opcional; no son bases desconectadas. Este
+trabajo no toca el backend. No se instala `wordfreq` ni se monta el catálogo.
+
+### QA del GN2200: estado al 2-oct
+
+- `adb` detectó GN2200, Android 12, 1080 × 2400 y modo único de 60 Hz.
+  **90 Hz no se pueden medir en este teléfono.**
+- La APK `app-debug.apk` de `feature/taller-sigilos-v2` se construyó e instaló
+  con `adb install -r`: `Success`. `dumpsys package` confirma `DEBUGGABLE`.
+- La app abre en «Cruza el umbral», con correo y contraseña vacíos. No había
+  sesión iniciada; Samuel indicó que no puede entrar al teléfono ahora.
+  Captura real: [login en GN2200](qa-sigilos-v2/login-bloqueo-gn2200.png).
+- **Bloqueado por autenticación:** recorrido Grimorio → Taller → guardar y
+  reabrir; Saber → Sellos; TalkBack en esos controles; y medición de frames
+  en perfil. No se ejecutaron ni se declaran verificados. No se borraron datos
+  de la app ni se usaron credenciales ajenas.
+- La primera build falló por caché Gradle alterada. La segunda, con caché
+  aislada, detectó la falta del `google-services.json` local ignorado por Git.
+  Se copió la configuración local del proyecto y la tercera build terminó.
+
 Mutación: errores inyectados a propósito y detectados — caligrafía en JS (4 de 4),
 en el motor Dart (4 de 4, de 12 a 70 fallos), en la interfaz (1 de 1), y en Sellos
 (ficha sin licencia, pintor sin margen, carga no perezosa). Uno de ellos reveló
@@ -82,7 +109,8 @@ caligrafía, y el catálogo histórico en Saber.
 
 No verificado (necesita teléfono):
 1. QA en la app instalada (`com.arcanum.magick` de depuración).
-2. 90 Hz y arrastre con dedo real; rejilla de sellos en el GN2200.
+2. Arrastre con dedo real y rejilla de sellos en el GN2200 (60 Hz). Para 90 Hz
+   hace falta otro teléfono con ese modo de pantalla.
 3. Lector de pantalla del selector de caligrafía y de las celdas de Sellos.
 
 Pendiente de producto:
