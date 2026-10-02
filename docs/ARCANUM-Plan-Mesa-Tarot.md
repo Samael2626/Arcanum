@@ -150,10 +150,10 @@
 ## Fase 5: el ritual
 
 - [x] **Sellar la pregunta** y romper el sello al interpretar (30-sep): sello de cera en (88, 712) que entra con un golpe; sellado no enseña el texto al tocarlo; al interpretar da un respingo y lo cruza una grieta. Pregunta de hasta 300 caracteres, como el prototipo. **Falta** el vuelo del texto del panel al sello (fase 6).
-- [ ] **Interpretar bordado** en el paño. Mantener 1,3 s cierra el círculo.
-- [ ] **Interpretación de Tradición:** textos de `tarot_cards` por posición y sentido. El Oráculo queda fuera de esta versión (D4).
+- [x] **Interpretar bordado** en el paño. Mantener 1,3 s cierra el círculo. *(Repasado el 01-oct: `TableDirector.embroideryAt`, solo con la tirada completa y desvelada; tests en `table_logic_test` y `table_director_test`.)*
+- [x] **Interpretación de Tradición:** textos de `tarot_cards` por posición y sentido. El Oráculo queda fuera de esta versión (D4). *(01-oct: `tarot_table_service` lee `meaning_upright`/`meaning_reversed` con el giro aplicado, más el significado de la posición y las aclaratorias; la app lo enseña en la hoja de interpretación.)*
 - [x] **Lecturas guardadas:** continuar (30-sep). «Contemplar» sin tocar queda descartado por ahora: continuar ya enseña la mesa tal cual.
-- [x] **Deshacer:** botón abajo a la izquierda con su anillo de 5 s, y el centro del radial (30-sep). Deshace lo local; lo del servidor sigue pendiente de decidir.
+- [x] **Deshacer:** botón abajo a la izquierda con su anillo de 5 s, y el centro del radial (30-sep). Deshace lo local y, desde la decisión del 30-sep, también lo del servidor (ver fase 4).
 - [ ] **Contexto astral desde el backend**, con el lugar del usuario (`user_place.dart`).
 
 ## Fase 6: efectos, sonido y háptica
