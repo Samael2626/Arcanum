@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lectura revelada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap">
+<style>
+/* Layout: a la izquierda el móvil con la maqueta viva; a la derecha (debajo en pantalla estrecha) qué es y qué cuesta.
+   Aspecto único oscuro, el de la app (Grimorio Vivo). Atmósferas por elemento = las de ArcanumColors. */
+:root{
+  --bg:#0A0A0F; --surface:#12121A; --surface-high:#1C1C28;
+  --gold:#C9A84C; --gold-light:#ECD79A; --gold-muted:#8A6E32;
+  --ivory:#F5F0E8; --ivory-muted:#B8B0A0;
+  --line:rgba(201,168,76,.32);
+  --display:"Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --body:"Crimson Pro", Georgia, "Times New Roman", serif;
+  color-scheme:dark;
+}
+html,body{background:var(--bg);color:var(--ivory)}
+body{font-family:var(--body);font-size:17px;line-height:1.5;padding-inline:16px;padding-block:28px 48px}
+.wrap{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:40px;align-items:start}
+@media (max-width:820px){.wrap{grid-template-columns:minmax(0,1fr)}.stage{justify-self:center}}
+.eyebrow{font-family:var(--display);letter-spacing:.2em;text-transform:uppercase;font-size:13px;color:var(--gold)}
+h1{font-family:var(--display);font-weight:600;font-size:clamp(32px,5vw,46px);line-height:1.02;margin:.15em 0 .3em;color:var(--gold-light);text-wrap:balance}
+h2{font-family:var(--display);font-weight:600;font-size:23px;margin:0 0 .3em;color:var(--gold-light)}
+.copy{display:grid;gap:26px;min-width:0;max-width:62ch}
+.copy p{margin:0}
+.muted{color:var(--ivory-muted)}
+.copy ul{margin:0;padding-left:20px;display:grid;gap:7px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{display:inline-flex;align-items:center;gap:7px;font-size:14px;padding:3px 10px 3px 6px;border-radius:999px;border:1px solid var(--line);color:var(--ivory-muted)}
+.chip i{width:14px;height:14px;border-radius:50%;display:inline-block}
+.cost{border-collapse:collapse;width:100%;font-size:15.5px}
+.cost td{padding:7px 0;border-top:1px solid rgba(201,168,76,.14);vertical-align:top}
+.cost td:first-child{color:var(--gold-light);padding-right:14px;white-space:nowrap}
+.note{font-size:14px;color:var(--ivory-muted);border-left:2px solid var(--gold-muted);padding-left:12px}
+.stage{display:grid;gap:12px;justify-items:center;position:sticky;top:20px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+button{font:inherit}
+.ctl{font-family:var(--display);font-size:15px;font-weight:600;letter-spacing:.04em;color:var(--gold-light);background:transparent;border:1px solid var(--line);border-radius:999px;padding:5px 14px;cursor:pointer}
+.ctl:focus-visible,.mini button:focus-visible,.hold:focus-visible{outline:2px solid var(--gold-light);outline-offset:2px}
+.ctl[aria-pressed="true"]{background:var(--gold);color:var(--bg)}
+
+/* ---------- el móvil ---------- */
+.phone{position:relative;width:300px;max-width:100%;aspect-ratio:390/800;border-radius:34px;border:7px solid #191920;background:#000;overflow:hidden;box-shadow:0 22px 60px rgba(0,0,0,.6)}
+.top{position:absolute;inset:0 0 auto 0;height:17%;z-index:5;
+  background:radial-gradient(130% 120% at 50% 0%,#3A1020,#1F0610);box-shadow:inset 0 -1px 0 var(--line), 0 8px 20px rgba(0,0,0,.6)}
+.top .lbl{position:absolute;top:10px;left:14px;right:14px;display:flex;justify-content:space-between;font-family:var(--display);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+.mini{position:absolute;left:8%;right:8%;bottom:6px;height:66%;}
+.mini button{position:absolute;width:15px;height:24px;border-radius:3px;border:1px solid var(--gold-muted);background:repeating-linear-gradient(45deg,#2a1a40 0 3px,#1b1030 3px 6px);padding:0;cursor:pointer;transform:translate(-50%,-50%);transition:box-shadow .35s, transform .35s}
+.mini button.on{box-shadow:0 0 0 2px var(--gold-light),0 0 18px var(--glow,#C9A84C);transform:translate(-50%,-50%) scale(1.12)}
+.mini button.cross{transform:translate(-50%,-50%) rotate(90deg)}
+.mini button.cross.on{transform:translate(-50%,-50%) rotate(90deg) scale(1.12)}
+
+.reader{position:absolute;inset:17% 0 0 0;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;overscroll-behavior:contain}
+.reader::-webkit-scrollbar{display:none}
+.bgstack{position:absolute;inset:17% 0 0 0;z-index:0;pointer-events:none}
+.bg{position:absolute;inset:0;opacity:0;transition:opacity .9s ease}
+.bg.on{opacity:1}
+.bg .atm{position:absolute;inset:0;background:radial-gradient(90% 70% at 50% 38%,var(--glow) -40%,var(--core) 45%,var(--edge) 100%)}
+.bg .art{position:absolute;inset:-25%;background-size:cover;background-position:center;filter:blur(26px) saturate(1.35);opacity:.38;mix-blend-mode:screen}
+.bg.rev .art{transform:rotate(180deg)}
+.bg .vig{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 40%,transparent 40%,rgba(0,0,0,.65))}
+canvas.fx{position:absolute;inset:17% 0 0 0;width:100%;height:83%;z-index:1;pointer-events:none}
+.sec{position:relative;z-index:2;height:100%;scroll-snap-align:start;scroll-snap-stop:always;display:grid;grid-template-rows:auto auto 1fr;padding:16px 20px 18px;gap:6px}
+.num{position:absolute;right:14px;top:4px;font-family:var(--display);font-size:92px;line-height:1;font-weight:600;color:var(--accent);opacity:.16}
+.pos{font-family:var(--display);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
+.head{display:grid;grid-template-columns:96px minmax(0,1fr);gap:14px;align-items:end;margin-top:4px}
+.face{width:96px;aspect-ratio:440/704;border-radius:6px;background-size:cover;background-position:center;box-shadow:0 10px 28px rgba(0,0,0,.7),0 0 26px -4px var(--accent);border:1px solid rgba(255,255,255,.18);transform-origin:50% 50%}
+.rev .face{transform:rotate(180deg)}
+.name{font-family:var(--display);font-size:27px;font-weight:600;line-height:1;color:var(--ivory);text-wrap:balance}
+.meta{font-size:13px;color:var(--ivory-muted);margin-top:4px}
+.body{align-self:start;display:grid;gap:8px;margin-top:6px}
+.pm{font-family:var(--display);font-style:italic;font-size:17px;color:var(--accent)}
+.tx{font-size:15.5px;line-height:1.42;color:var(--ivory);text-shadow:0 1px 8px rgba(0,0,0,.6)}
+.hint{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:12px;color:var(--ivory-muted);opacity:.8}
+
+/* revelado al entrar */
+.sec .rv{opacity:0;transform:translateY(10px)}
+.sec.live .rv{opacity:1;transform:none;transition:opacity .7s ease, transform .7s ease;transition-delay:calc(var(--d,0) * 140ms)}
+.sec .face{opacity:0;transform:perspective(600px) rotateY(88deg)}
+.sec.live .face{opacity:1;transform:perspective(600px) rotateY(0);transition:transform .8s cubic-bezier(.2,.8,.2,1),opacity .3s}
+.sec.rev.live .face{transform:perspective(600px) rotateY(0) rotate(180deg)}
+.sec.rev .face{transform:perspective(600px) rotateY(88deg) rotate(180deg)}
+
+/* síntesis */
+.end{grid-template-rows:none;align-content:center;justify-items:center;text-align:center;gap:12px}
+.band{display:flex;gap:6px;align-items:center}
+.band span{flex:none;width:34px;height:54px;background-position:center;border-radius:3px;background-size:cover;box-shadow:0 0 16px -2px var(--a)}
+.band span.r{transform:rotate(180deg)}
+.sky{font-size:13px;font-style:italic;color:var(--ivory-muted);max-width:28ch}
+.q{font-family:var(--display);font-size:21px;font-style:italic;color:var(--gold-light);max-width:22ch}
+.hold{position:relative;width:96px;height:96px;border-radius:50%;border:1px solid var(--line);background:rgba(10,10,15,.55);color:var(--gold-light);font-family:var(--display);font-size:15px;font-weight:600;line-height:1.1;cursor:pointer;touch-action:none;user-select:none}
+.hold svg{position:absolute;inset:-4px;width:104px;height:104px;transform:rotate(-90deg)}
+.hold circle{fill:none;stroke:var(--gold);stroke-width:2.5;stroke-dasharray:314;stroke-dashoffset:314}
+.hold.go circle{stroke-dashoffset:0;transition:stroke-dashoffset 1.3s linear}
+.done{font-family:var(--display);font-size:20px;color:var(--gold-light)}
+@media (prefers-reduced-motion:reduce){.bg,.sec .rv,.sec .face{transition:none!important}}
+</style>
+</head><body>
+
+<div class="wrap">
+  <div class="stage">
+    <div class="phone" id="phone" aria-label="Maqueta: interpretación de una Cruz Celta, una carta por pantalla">
+      <div class="bgstack" id="bgs"></div>
+      <canvas class="fx" id="fx" aria-hidden="true"></canvas>
+      <div class="top">
+        <div class="lbl"><span>Cruz Celta</span><span id="count">1 / 5</span></div>
+        <div class="mini" id="mini"></div>
+      </div>
+      <div class="reader" id="reader"></div>
+    </div>
+    <div class="controls">
+      <button class="ctl" id="prev" type="button">Anterior</button>
+      <button class="ctl" id="next" type="button">Siguiente</button>
+      <button class="ctl" id="calm" type="button" aria-pressed="false">Sin movimiento</button>
+    </div>
+  </div>
+
+  <div class="copy">
+    <div>
+      <div class="eyebrow">Mesa de tarot · propuesta para la interpretación</div>
+      <h1>Lectura revelada</h1>
+      <p>La interpretación deja de ser una lista. Cada carta ocupa la pantalla, una tras otra, y el fondo se tiñe con su elemento y con su propia lámina, difuminada. Desliza hacia arriba dentro del móvil, o toca una carta de la tirada en la franja de arriba para saltar a ella.</p>
+    </div>
+
+    <div>
+      <h2>Qué pasa al llegar a cada carta</h2>
+      <ul>
+        <li>La carta se voltea al entrar, con su lámina real. Si salió invertida, entra invertida y su bruma cae hacia abajo.</li>
+        <li>El fondo funde la atmósfera de su elemento con la lámina desenfocada, y cambia suave de una carta a la siguiente.</li>
+        <li>Cada elemento tiene su movimiento: ascuas que suben en fuego, ondas en agua, polvo de luz en aire, motas que caen en tierra, rayos en el Sol.</li>
+        <li>Arriba asoma la tirada: la carta que lees brilla en su hueco, así nunca pierdes dónde está en la mesa.</li>
+        <li>Al final, la síntesis: las cinco cartas juntas, el cielo del momento y «Cerrar el círculo», que se mantiene pulsado 1,3 s, el mismo gesto que el bordado del paño.</li>
+      </ul>
+      <div class="chips" aria-label="Atmósferas usadas">
+        <span class="chip"><i style="background:#E0561F"></i>Fuego</span>
+        <span class="chip"><i style="background:#3A8FAC"></i>Agua</span>
+        <span class="chip"><i style="background:#D8BE72"></i>Aire</span>
+        <span class="chip"><i style="background:#6FA24A"></i>Tierra</span>
+        <span class="chip"><i style="background:#EDAE30"></i>Sol</span>
+      </div>
+    </div>
+
+    <div>
+      <h2>Qué costaría en la app</h2>
+      <table class="cost">
+        <tr><td>Atmósferas</td><td>Ya existen: son las de las caras de las cartas (borde, centro, bruma y acento por elemento, más Luna y Sol).</td></tr>
+        <tr><td>Lámina difuminada</td><td>Se difumina una vez por carta al abrir la interpretación, no en cada fotograma. Desenfocar en vivo costaría demasiado en un móvil como el GN2200.</td></tr>
+        <tr><td>Movimiento por elemento</td><td>Es la «huella del palo» de la fase 6 (brasas, ondas, destello, polvo). Se haría una vez y serviría para la mesa y para aquí.</td></tr>
+        <tr><td>Una carta por pantalla</td><td>Un paginado vertical de Flutter; lo difícil no es esto.</td></tr>
+        <tr><td>Reducir movimiento</td><td>Con el ajuste del sistema activado, sin ascuas ni volteo: solo el color.</td></tr>
+      </table>
+    </div>
+
+    <p class="note">Maqueta en el navegador para decidir, no la app. Las láminas sí son las de la app; los textos de las cartas y la pregunta son de ejemplo, no los de Tradición. Riesgo a pesar: con 10 cartas son 10 pantallas. Se podría añadir «verlo todo» para quien quiera la lista.</p>
+  </div>
+</div>
+
+<script>
+const ART = {"la-torre": "../arcanum_app/assets/tarot/la-torre.webp", "cinco-de-copas": "../arcanum_app/assets/tarot/cinco-de-copas.webp", "la-emperatriz": "../arcanum_app/assets/tarot/la-emperatriz.webp", "as-de-espadas": "../arcanum_app/assets/tarot/as-de-espadas.webp", "el-sol": "../arcanum_app/assets/tarot/el-sol.webp"};
+const ATM = {
+  fuego:{edge:'#180806',core:'#3A1109',glow:'#E0561F',accent:'#F0854A'},
+  agua:{edge:'#03111B',core:'#0B2A3A',glow:'#3A8FAC',accent:'#78C2D6'},
+  aire:{edge:'#161207',core:'#38311C',glow:'#D8BE72',accent:'#F2E2A6'},
+  tierra:{edge:'#070D06',core:'#182611',glow:'#6FA24A',accent:'#C99B44'},
+  sol:{edge:'#201002',core:'#552F06',glow:'#EDAE30',accent:'#FAD26A'},
+};
+const CARDS = [
+  {pos:'Situación actual',pm:'Lo que ocupa tu momento.',name:'La Torre',art:'la-torre',rev:true,el:'fuego',meta:'Invertida · Arcano Mayor · Marte',x:.34,y:.5,
+   tx:'Lo que tenía que caer se resiste. El derrumbe se vive por dentro o se aplaza, y cuanto más se sostiene, más cuesta.'},
+  {pos:'El desafío',pm:'El desafío inmediato.',name:'Cinco de Copas',art:'cinco-de-copas',rev:false,el:'agua',meta:'Al derecho · Copas',x:.34,y:.5,cross:true,
+   tx:'Mirar solo las copas derramadas. Detrás quedan dos en pie, esperando a que te des la vuelta.'},
+  {pos:'Fundamento',pm:'La raíz de la situación.',name:'La Emperatriz',art:'la-emperatriz',rev:false,el:'tierra',meta:'Al derecho · Arcano Mayor · Venus',x:.34,y:.86,
+   tx:'Debajo de todo hay algo fértil: lo que cuidaste sigue creciendo, aunque ahora no se vea.'},
+  {pos:'Pasado reciente',pm:'Lo que se está yendo.',name:'As de Espadas',art:'as-de-espadas',rev:false,el:'aire',meta:'Al derecho · Espadas',x:.13,y:.5,
+   tx:'Una idea clara cortó la niebla. De ahí viene la decisión que ahora pesa.'},
+  {pos:'Lo que corona',pm:'Lo mejor que puede salir.',name:'El Sol',art:'el-sol',rev:false,el:'sol',meta:'Al derecho · Arcano Mayor · Sol',x:.34,y:.14,
+   tx:'Claridad y una alegría sencilla, si se suelta lo que ya cayó.'},
+];
+const $ = id => document.getElementById(id);
+const reader = $('reader'), bgs = $('bgs'), mini = $('mini');
+let calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let cur = 0;
+
+CARDS.forEach((c, i) => {
+  const a = ATM[c.el];
+  const bg = document.createElement('div');
+  bg.className = 'bg' + (c.rev ? ' rev' : '') + (i === 0 ? ' on' : '');
+  bg.style.cssText = `--edge:${a.edge};--core:${a.core};--glow:${a.glow}`;
+  bg.innerHTML = `<div class="atm"></div><div class="art" style="background-image:url(${ART[c.art]})"></div><div class="vig"></div>`;
+  bgs.appendChild(bg);
+
+  const s = document.createElement('section');
+  s.className = 'sec' + (c.rev ? ' rev' : '') + (i === 0 ? ' live' : '');
+  s.style.setProperty('--accent', a.accent);
+  s.innerHTML = `<div class="num">${i + 1}</div>
+    <div class="pos rv" style="--d:0">${i + 1} · ${c.pos}</div>
+    <div class="head"><div class="face" style="background-image:url(${ART[c.art]})"></div>
+      <div class="rv" style="--d:2"><div class="name">${c.name}</div><div class="meta">${c.meta}</div></div></div>
+    <div class="body"><div class="pm rv" style="--d:3">${c.pm}</div><div class="tx rv" style="--d:4">${c.tx}</div></div>
+    ${i === 0 ? '<div class="hint">Desliza hacia arriba</div>' : ''}`;
+  reader.appendChild(s);
+
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = (c.cross ? 'cross' : '') + (i === 0 ? ' on' : '');
+  b.style.cssText = `left:${c.x * 100}%;top:${c.y * 100}%;--glow:${a.glow}`;
+  if (c.cross) b.style.left = `calc(${c.x * 100}% + 3px)`;
+  b.setAttribute('aria-label', `Ir a ${i + 1}, ${c.pos}`);
+  b.onclick = () => go(i);
+  mini.appendChild(b);
+});
+// los demas huecos de la Cruz Celta, sin interpretar en la maqueta
+[[.55,.5],[.86,.82],[.86,.6],[.86,.38],[.86,.16]].forEach(([x,y]) => {
+  const d = document.createElement('span');
+  d.style.cssText = `position:absolute;left:${x*100}%;top:${y*100}%;width:15px;height:24px;transform:translate(-50%,-50%);border:1px dashed rgba(201,168,76,.35);border-radius:3px`;
+  mini.appendChild(d);
+});
+// sintesis
+const end = document.createElement('section');
+end.className = 'sec end live';
+end.style.setProperty('--accent', '#ECD79A');
+end.innerHTML = `<div class="pos">El círculo</div>
+  <div class="q">«¿Sigo en este trabajo?»</div>
+  <div class="band">${CARDS.map(c => `<span class="${c.rev ? 'r' : ''}" style="background-image:url(${ART[c.art]});--a:${ATM[c.el].glow}"></span>`).join('')}</div>
+  <div class="sky">Luna creciente · 63 % iluminada · hora de Venus · 2 de octubre de 2026, 21:14</div>
+  <button class="hold" id="hold" type="button"><svg viewBox="0 0 104 104" aria-hidden="true"><circle cx="52" cy="52" r="50"/></svg>Mantén para cerrar el círculo</button>`;
+reader.appendChild(end);
+const endBg = document.createElement('div');
+endBg.className = 'bg';
+endBg.innerHTML = `<div class="atm" style="--edge:#0A0A0F;--core:#1C1C28;--glow:#8A6E32"></div><div class="vig"></div>`;
+bgs.appendChild(endBg);
+
+const secs = [...reader.children], bgList = [...bgs.children], minis = [...mini.querySelectorAll('button')];
+function setCur(i){
+  if (i === cur) return;
+  cur = i;
+  bgList.forEach((b, k) => b.classList.toggle('on', k === i));
+  minis.forEach((b, k) => b.classList.toggle('on', k === i));
+  secs.forEach((s, k) => { if (k === i) { s.classList.remove('live'); void s.offsetWidth; s.classList.add('live'); } });
+  $('count').textContent = i < CARDS.length ? `${i + 1} / ${CARDS.length}` : 'Síntesis';
+}
+reader.addEventListener('scroll', () => {
+  const i = Math.round(reader.scrollTop / reader.clientHeight);
+  setCur(Math.max(0, Math.min(secs.length - 1, i)));
+}, {passive:true});
+function go(i){ reader.scrollTo({top: i * reader.clientHeight, behavior: calm ? 'auto' : 'smooth'}); }
+$('prev').onclick = () => go(Math.max(0, cur - 1));
+$('next').onclick = () => go(Math.min(secs.length - 1, cur + 1));
+const calmBtn = $('calm');
+calmBtn.setAttribute('aria-pressed', String(calm));
+calmBtn.onclick = () => { calm = !calm; calmBtn.setAttribute('aria-pressed', String(calm)); };
+
+// mantener para cerrar
+const hold = $('hold'); let ht = null;
+function release(){ clearTimeout(ht); hold.classList.remove('go'); }
+hold.addEventListener('pointerdown', e => { e.preventDefault(); hold.classList.add('go'); ht = setTimeout(() => {
+  hold.outerHTML = '<div class="done">Círculo cerrado.<br><span class="sky">La lectura queda guardada.</span></div>'; }, 1300); });
+['pointerup','pointerleave','pointercancel'].forEach(t => hold.addEventListener(t, release));
+hold.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!ht || !hold.classList.contains('go')) hold.dispatchEvent(new PointerEvent('pointerdown')); } });
+hold.addEventListener('keyup', release);
+
+// huella del elemento
+const cv = $('fx'), cx = cv.getContext('2d');
+let W = 0, H = 0, parts = [], mode = null, t0 = performance.now();
+function size(){ const r = cv.getBoundingClientRect(), d = devicePixelRatio || 1; W = r.width; H = r.height; cv.width = W * d; cv.height = H * d; cx.setTransform(d,0,0,d,0,0); }
+size(); addEventListener('resize', size);
+function spawn(m){
+  parts = [];
+  const n = {fuego:38, agua:5, aire:44, tierra:30, sol:12}[m] || 0;
+  for (let k = 0; k < n; k++) parts.push({x:Math.random()*W, y:Math.random()*H, r:Math.random(), v:Math.random(), p:Math.random()*6.28});
+}
+function frame(now){
+  const c = CARDS[cur], m = c ? c.el : null, rev = c && c.rev, t = (now - t0) / 1000;
+  if (m !== mode) { mode = m; spawn(m); }
+  cx.clearRect(0, 0, W, H);
+  if (!calm && m) {
+    const a = ATM[m];
+    for (const q of parts) {
+      if (m === 'fuego') {
+        q.y -= (0.4 + q.v * 0.9) * (rev ? -1 : 1); q.x += Math.sin(t * 2 + q.p) * 0.3;
+        if (q.y < -10) q.y = H + 10; if (q.y > H + 10) q.y = -10;
+        cx.globalAlpha = 0.35 + 0.55 * Math.abs(Math.sin(t * 5 + q.p));
+        cx.fillStyle = q.r > .7 ? a.accent : a.glow; cx.beginPath(); cx.arc(q.x, q.y, 0.8 + q.r * 1.8, 0, 6.28); cx.fill();
+      } else if (m === 'agua') {
+        const ph = ((t * 0.25 + q.v) % 1);
+        cx.globalAlpha = 0.45 * (1 - ph); cx.strokeStyle = a.accent; cx.lineWidth = 1;
+        cx.beginPath(); cx.ellipse(q.x, q.y, 10 + ph * 90, (10 + ph * 90) * 0.35, 0, 0, 6.28); cx.stroke();
+        if (ph > 0.985) { q.x = Math.random() * W; q.y = Math.random() * H; }
+      } else if (m === 'aire') {
+        q.x += 0.25 + q.v * 0.5; q.y += Math.sin(t + q.p) * 0.2; if (q.x > W + 5) q.x = -5;
+        cx.globalAlpha = 0.2 + 0.7 * Math.max(0, Math.sin(t * 3 + q.p * 3)); cx.fillStyle = a.accent;
+        cx.fillRect(q.x, q.y, 1.6, 1.6);
+      } else if (m === 'tierra') {
+        q.y += 0.15 + q.v * 0.35; q.x += Math.sin(t * 0.6 + q.p) * 0.15; if (q.y > H + 5) q.y = -5;
+        cx.globalAlpha = 0.25 + q.r * 0.45; cx.fillStyle = q.r > .6 ? a.accent : a.glow;
+        cx.beginPath(); cx.arc(q.x, q.y, 0.8 + q.r * 1.6, 0, 6.28); cx.fill();
+      } else if (m === 'sol') {
+        const ang = q.p + t * 0.08, ox = W * 0.5, oy = H * 0.12;
+        const g = cx.createLinearGradient(ox, oy, ox + Math.cos(ang) * H, oy + Math.sin(ang) * H);
+        g.addColorStop(0, a.glow + '55'); g.addColorStop(1, a.glow + '00');
+        cx.globalAlpha = 0.5 + 0.3 * Math.sin(t * 0.8 + q.p); cx.strokeStyle = g; cx.lineWidth = 10 + q.r * 16;
+        cx.beginPath(); cx.moveTo(ox, oy); cx.lineTo(ox + Math.cos(ang) * H, oy + Math.sin(ang) * H); cx.stroke();
+      }
+    }
+    cx.globalAlpha = 1;
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+
+</body></html>

@@ -136,7 +136,7 @@
 - [x] **Huecos de las 7 tiradas**, con imán, intercambio y aclaratorias.
 - [x] **Gestos de la tabla de la especificación (§3):** tocar, mantener 430 ms, arrastrar, esquina, doble toque, pellizcar. Zona de toque de 48 dp. *(01-oct: el toque de cada pieza se agranda 24 unidades de mesa por lado.)*
 - [x] **`RadialMenu`:** círculos sueltos de 52 dp, elección por ángulo deslizando y soltando, orden fijo.
-- [ ] **Paneles compactos:** Leer, pregunta, interpretación y lecturas. **Falta (repasado el 01-oct):** existen, pero como hojas desde abajo (`showModalBottomSheet`, 3 en `tarot_screen.dart`) y la pregunta como diálogo. La especificación (§«paneles») pide paneles compactos anclados a lo que se tocó, nunca hojas desde abajo.
+- [ ] **Paneles compactos:** Leer, pregunta y lecturas guardadas, anclados a lo que se tocó (D7). La interpretación no va en panel: va como «Lectura revelada» (fase 5). Hoy salen como hojas desde abajo (`showModalBottomSheet`, 3 en `tarot_screen.dart`) y la pregunta como diálogo.
 - [x] **Widget tests:** tocar, mantener abre el radial, arrastrar encaja en el hueco, esquina voltea pasados 70°. *(01-oct: los dos últimos, con dedo real, en `table_view_test.dart` «gestos con el dedo»; comprobado que fallan si el umbral baja de 70.)*
 
 - [x] **Movimiento (30-sep, `table/table_motion.dart`):** las piezas viajan en vez de aparecer.
@@ -152,6 +152,8 @@
 - [x] **Sellar la pregunta** y romper el sello al interpretar (30-sep): sello de cera en (88, 712) que entra con un golpe; sellado no enseña el texto al tocarlo; al interpretar da un respingo y lo cruza una grieta. Pregunta de hasta 300 caracteres, como el prototipo. **Falta** el vuelo del texto del panel al sello (fase 6).
 - [x] **Interpretar bordado** en el paño. Mantener 1,3 s cierra el círculo. *(Repasado el 01-oct: `TableDirector.embroideryAt`, solo con la tirada completa y desvelada; tests en `table_logic_test` y `table_director_test`.)*
 - [x] **Interpretación de Tradición:** textos de `tarot_cards` por posición y sentido. El Oráculo queda fuera de esta versión (D4). *(01-oct: `tarot_table_service` lee `meaning_upright`/`meaning_reversed` con el giro aplicado, más el significado de la posición y las aclaratorias; la app lo enseña en la hoja de interpretación.)*
+- [ ] **«Lectura revelada» (D7):** interpretación a pantalla completa, una carta por página, con atmósfera por elemento (las de `ArcanumColors`), lámina desenfocada calculada una vez por carta (no en cada fotograma), volteo al entrar, tirada arriba y síntesis con «Cerrar el círculo». Respetar «reducir movimiento». Movimiento por elemento en la fase 6.
+  - Construirla como dos piezas reutilizables: **Atmósfera** (color del elemento o planeta + lámina desenfocada + movimiento) y **Revelado** (una pantalla por pieza, con volteo y franja de contexto).
 - [x] **Lecturas guardadas:** continuar (30-sep). «Contemplar» sin tocar queda descartado por ahora: continuar ya enseña la mesa tal cual.
 - [x] **Deshacer:** botón abajo a la izquierda con su anillo de 5 s, y el centro del radial (30-sep). Deshace lo local y, desde la decisión del 30-sep, también lo del servidor (ver fase 4).
 - [x] **Contexto astral desde el backend**, con el lugar del usuario (`user_place.dart`). *(02-oct, opción A con detalles de B, decidido con Samuel.)* El servidor calcula fase y hora planetaria con el lugar de residencia confirmado (sin lugar, sin hora: no se inventa) y lo guarda en la lectura. Añadido: `moon_illumination` (0..1) y `read_at` en la respuesta de interpretar, sin migración; la hoja lo enseña en una línea («Luna creciente · 63 % iluminada · hora de Venus · 2 de octubre de 2026, 21:14»). **Diferencias con la especificación que se aceptan:** el cielo se anota al interpretar (o al cerrar sin interpretar), no con la primera carta; y la iluminación no se guarda en `tarot_readings`, solo viaja en la interpretación. Las dos pedirían columnas nuevas.
@@ -183,6 +185,17 @@
 
 ---
 
+## Después de la mesa: llevar «Atmósfera» y «Revelado» a otras pantallas
+
+Decidido el 02-oct-2026: solo en **momentos de revelación** (cuando la app entrega una lectura, una carta o un horóscopo), no en listas, formularios ni ajustes. Cada una en su rama, fuera de `feat/mesa-tarot`. Orden propuesto:
+
+1. **Estudiar una carta (Saber):** ficha de cada arcano con su atmósfera y su lámina.
+2. **Lecturas guardadas:** reabrirlas como «Lectura revelada», con el cielo de aquel día.
+3. **Oráculo (tiradas con IA):** pide que el texto venga separado por carta; tocar el prompt solo midiendo con `arcanum-voz`.
+4. **Materia Arcana:** ficha con la atmósfera de su planeta y su grabado desenfocado (ya existe `materia_plate_reveal`).
+5. **Horóscopo diario:** atmósfera del elemento del signo y su lámina del zodiaco.
+6. **Hoy:** solo un tinte de fondo según la hora planetaria.
+
 ## Decisiones
 
 | # | Decisión | Estado |
@@ -193,6 +206,7 @@
 | D4 | ¿Oráculo con IA en la mesa? | **Decidido: solo Tradición en la primera versión.** El Oráculo, más adelante, con `arcanum-voz` y el cupo de Groq resuelto. |
 | D6 | ¿Sobre qué base va la migración de sesiones? | **Cerrada el 29-sep-2026.** `release/1.0.6` se mezcló en `main` (PR #9, `3ebf688`) y Railway lo desplegó: producción está en la **014** con `sendero_progress`, comprobado leyendo `alembic_version`. Esta rama se rebasó sobre ese `main`; la migración de la mesa es la **015**, colgando de la 014. **Reabierta y cerrada el 01-oct-2026:** mientras tanto `main` sacó a producción su propia 015 (`015_add_fragments.py`, `fragment_movements`). Al traer `main` a esta rama, la de la mesa pasó a **016** (`016_add_tarot_sessions.py`), colgando de la 015 de fragmentos. Las dos no tocan las mismas tablas. |
 | D5 | ¿La pregunta de la lectura se cifra? | **Cerrada el 29-sep: se hace lo mismo que la app de hoy.** Comprobado: `/tarot/spread` y `/tarot/draw-one` reciben la pregunta **en claro** y el servidor la guarda así. El comentario del modelo que decía «en el cliente se cifra» era falso y está corregido. La mesa manda la pregunta en claro al interpretar (el Oráculo, cuando llegue, la necesita legible). En el móvil, en cambio, el autoguardado de la mesa va **cifrado**. Si algún día se quiere la pregunta cifrada también en el servidor, es un cambio para todas las tiradas, no solo para la mesa. |
+| D7 | ¿Cómo se abren leer, pregunta, lecturas e interpretación? | **Decidido por Samuel (02-oct-2026).** Leer carta, pregunta y lecturas guardadas: **paneles compactos anclados** a lo que se tocó, como pide la especificación. Interpretación: **«Lectura revelada»**, una carta por pantalla (paginado vertical) con la atmósfera de su elemento, su lámina desenfocada detrás, volteo al entrar (invertida entra invertida), la tirada asomando arriba con la carta actual iluminada, y una síntesis final con «Cerrar el círculo» manteniendo 1,3 s. Se aparta de la especificación solo en la interpretación, que pedía un panel anclado: con 10 cartas no se lee bien en una caja pequeña. Maquetas: `prototipos/paneles-mesa.html` y `prototipos/lectura-revelada.html`. El movimiento por elemento (ascuas, ondas, polvo de luz, motas, rayos) es la «huella del palo» de la fase 6: primero colores y volteo, el movimiento después. **El diseño se reutilizará** en otras pantallas de revelación (ver «Después de la mesa»). |
 
 ## Entorno de pruebas de esta rama
 

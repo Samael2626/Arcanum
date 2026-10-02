@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Paneles de la mesa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap">
+<style>
+/* Layout: cuatro móviles en fila (se apilan en pantalla estrecha), cada uno con su nota debajo.
+   Un solo aspecto oscuro, el de la app (Grimorio Vivo). */
+:root{
+  --bg:#0A0A0F; --surface:#12121A; --surface-high:#1C1C28;
+  --gold:#C9A84C; --gold-light:#ECD79A; --gold-muted:#8A6E32;
+  --ivory:#F5F0E8; --ivory-muted:#B8B0A0;
+  --cloth-a:#3A1020; --cloth-b:#1F0610; --wood:#2E1C11;
+  --line:rgba(201,168,76,.35);
+  --display:"Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --body:"Crimson Pro", Georgia, "Times New Roman", serif;
+  color-scheme:dark;
+}
+html,body{background:var(--bg);color:var(--ivory)}
+body{font-family:var(--body);font-size:17px;line-height:1.45;padding-inline:16px;padding-block:28px 48px}
+.wrap{max-width:1240px;margin:0 auto;display:grid;gap:28px}
+header{display:grid;gap:8px;max-width:68ch}
+h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,5vw,42px);line-height:1.05;margin:0;color:var(--gold-light);text-wrap:balance}
+header p{margin:0;color:var(--ivory-muted)}
+.eyebrow{font-family:var(--display);letter-spacing:.2em;text-transform:uppercase;font-size:13px;color:var(--gold)}
+
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;align-items:start}
+figure{margin:0;display:grid;gap:12px;min-width:0}
+figcaption{display:grid;gap:4px;min-width:0}
+figcaption b{font-family:var(--display);font-size:20px;font-weight:600;color:var(--gold-light)}
+figcaption span{color:var(--ivory-muted);font-size:15.5px}
+.tag{justify-self:start;font-family:var(--display);font-size:12px;letter-spacing:.16em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--gold)}
+.tag.now{color:var(--ivory-muted);border-color:rgba(184,176,160,.35)}
+.tag.rec{background:var(--gold);color:var(--bg);border-color:var(--gold)}
+
+/* móvil */
+.phone{position:relative;width:100%;max-width:280px;aspect-ratio:390/780;border-radius:30px;border:6px solid #1a1a22;
+  background:radial-gradient(120% 80% at 50% 45%,var(--cloth-a),var(--cloth-b));overflow:hidden;
+  box-shadow:0 18px 50px rgba(0,0,0,.55), inset 0 0 0 10px var(--wood)}
+.bar{position:absolute;top:10px;left:16px;right:16px;display:flex;justify-content:space-between;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);z-index:1}
+.ring{position:absolute;left:50%;top:44%;width:70%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;border:1px dashed rgba(201,168,76,.28)}
+.embro{position:absolute;left:50%;top:76%;transform:translateX(-50%);font-family:var(--display);font-style:italic;font-size:15px;color:var(--gold);letter-spacing:.06em;white-space:nowrap}
+.seal{position:absolute;left:12%;top:86%;width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#8c2a33,#4A0E1A);box-shadow:0 2px 6px rgba(0,0,0,.6)}
+.card{position:absolute;width:15%;aspect-ratio:1/1.6;border-radius:4px;transform:translate(-50%,-50%);
+  background:linear-gradient(160deg,#F5F0E8,#d9ccae);box-shadow:0 3px 8px rgba(0,0,0,.55);border:1px solid #8C7A55}
+.card.back{background:repeating-linear-gradient(45deg,#2a1a40 0 4px,#1b1030 4px 8px);border-color:var(--gold-muted)}
+.card.sel{outline:2px solid var(--gold-light);outline-offset:2px}
+.card i{position:absolute;inset:12% 10%;border:1px solid rgba(138,110,50,.6);border-radius:2px}
+.card.rev i{transform:rotate(180deg)}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+
+/* hoja desde abajo (hoy) */
+.sheet{position:absolute;left:0;right:0;bottom:0;height:56%;background:var(--surface);border-radius:18px 18px 0 0;padding:10px 16px 16px;display:grid;align-content:start;gap:6px;box-shadow:0 -10px 30px rgba(0,0,0,.6)}
+.grab{justify-self:center;width:36px;height:4px;border-radius:2px;background:#3a3a48;margin-bottom:6px}
+
+/* panel anclado */
+.panel{position:absolute;background:rgba(18,18,26,.97);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;gap:5px;box-shadow:0 14px 40px rgba(0,0,0,.6)}
+.panel::after{content:"";position:absolute;left:var(--tip,50%);bottom:-7px;width:12px;height:12px;background:inherit;border-right:1px solid var(--line);border-bottom:1px solid var(--line);transform:translateX(-50%) rotate(45deg)}
+.panel.notip::after{display:none}
+.mh{font-family:var(--display);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+.rd{font-family:var(--display);font-size:20px;font-weight:600;line-height:1.05;color:var(--ivory)}
+.rd small{display:block;font-family:var(--body);font-size:12.5px;font-weight:400;color:var(--ivory-muted)}
+.mt{font-size:12.5px;line-height:1.35;color:var(--ivory-muted)}
+.sky{font-size:11.5px;color:var(--ivory-muted);font-style:italic}
+.it{display:grid;gap:1px;padding-top:6px;border-top:1px solid rgba(201,168,76,.15)}
+.it .pos{font-family:var(--display);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.it .nm{font-size:13.5px;color:var(--gold-light)}
+.it .tx{font-size:12px;line-height:1.3;color:var(--ivory)}
+.scroll{overflow:hidden;position:relative}
+.scroll::before{content:"";position:absolute;right:-6px;top:4px;width:3px;height:30%;border-radius:2px;background:var(--gold-muted)}
+.fade{position:absolute;left:0;right:0;bottom:0;height:40px;background:linear-gradient(transparent,rgba(18,18,26,.97))}
+.btn{justify-self:stretch;text-align:center;font-family:var(--display);font-size:14px;font-weight:600;padding:6px;border-radius:10px;background:var(--gold);color:var(--bg)}
+.pulse{position:absolute;width:44px;height:44px;border-radius:50%;border:1px solid var(--gold-light);transform:translate(-50%,-50%);opacity:.7}
+
+.verdict{display:grid;gap:10px;max-width:72ch;padding:18px 20px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.verdict h2{font-family:var(--display);font-size:24px;margin:0;color:var(--gold-light);font-weight:600}
+.verdict ul{margin:0;padding-left:20px;display:grid;gap:6px}
+.verdict li{color:var(--ivory)}
+.verdict li em{color:var(--ivory-muted);font-style:normal}
+.note{font-size:14px;color:var(--ivory-muted)}
+@media (prefers-reduced-motion:no-preference){.pulse{animation:p 2.4s ease-out infinite}@keyframes p{from{transform:translate(-50%,-50%) scale(.6);opacity:.9}to{transform:translate(-50%,-50%) scale(1.3);opacity:0}}}
+</style>
+</head><body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Mesa de tarot · fase 4</div>
+    <h1>Hoja desde abajo o panel anclado</h1>
+    <p>Cómo se vería la mesa al leer una carta y al interpretar una Cruz Celta. A la izquierda, lo que hace hoy la rama; después, lo que pide la especificación y las dos salidas para la interpretación larga.</p>
+  </header>
+
+  <div class="row">
+    <!-- 1. hoy -->
+    <figure>
+      <div class="phone" role="img" aria-label="Hoy: una hoja sube desde abajo y tapa media mesa">
+        <div class="bar"><span>Tres cartas</span><span>☾</span></div>
+        <div class="ring"></div>
+        <div class="card back" style="left:28%;top:36%"></div>
+        <div class="card rev sel" style="left:50%;top:36%"><i></i></div>
+        <div class="card back" style="left:72%;top:36%"></div>
+        <div class="dim"></div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <div class="mh">2 · Presente</div>
+          <div class="rd">La Torre<small>Invertida · Arcano Mayor</small></div>
+          <div class="mt">Lo que pesa ahora.</div>
+          <div class="mt" style="color:var(--ivory)">El derrumbe se aplaza o se vive por dentro: algo cede sin que se vea todavía.</div>
+        </div>
+      </div>
+      <figcaption>
+        <span class="tag now">Hoy en la rama</span>
+        <b>Leer carta · hoja desde abajo</b>
+        <span>Tapa media pantalla y oscurece el resto. Para ver la carta que estás leyendo hay que cerrar la hoja.</span>
+      </figcaption>
+    </figure>
+
+    <!-- 2. panel anclado: leer -->
+    <figure>
+      <div class="phone" role="img" aria-label="Panel anclado encima de la carta tocada; la mesa sigue visible">
+        <div class="bar"><span>Tres cartas</span><span>☾</span></div>
+        <div class="ring"></div>
+        <div class="card back" style="left:28%;top:56%"></div>
+        <div class="card rev sel" style="left:50%;top:56%"><i></i></div>
+        <div class="card back" style="left:72%;top:56%"></div>
+        <div class="embro">Interpretar</div>
+        <div class="seal"></div>
+        <div class="panel" style="left:9%;right:9%;top:13%">
+          <div class="mh">2 · Presente</div>
+          <div class="rd">La Torre<small>Invertida · Arcano Mayor</small></div>
+          <div class="mt">Lo que pesa ahora.</div>
+          <div class="mt" style="color:var(--ivory)">El derrumbe se aplaza o se vive por dentro: algo cede sin que se vea todavía.</div>
+        </div>
+      </div>
+      <figcaption>
+        <span class="tag">Especificación</span>
+        <b>Leer carta · panel anclado</b>
+        <span>Sale encima de la carta que tocaste, con una punta que la señala. Las otras cartas y el paño siguen a la vista. Tocar fuera lo cierra. Igual para la pregunta (sobre el sello) y las lecturas guardadas.</span>
+      </figcaption>
+    </figure>
+
+    <!-- 3. interpretación A -->
+    <figure>
+      <div class="phone" role="img" aria-label="Opción A: interpretación en un panel pequeño con desplazamiento interno">
+        <div class="bar"><span>Cruz Celta</span><span>☾</span></div>
+        <div class="card back" style="left:30%;top:24%;width:9%"></div>
+        <div class="card back" style="left:30%;top:40%;width:9%"></div>
+        <div class="card back" style="left:16%;top:40%;width:9%"></div>
+        <div class="card back" style="left:44%;top:40%;width:9%"></div>
+        <div class="card back" style="left:82%;top:22%;width:9%"></div>
+        <div class="card back" style="left:82%;top:36%;width:9%"></div>
+        <div class="pulse" style="left:50%;top:78%"></div>
+        <div class="embro">Interpretar</div>
+        <div class="panel" style="left:7%;right:7%;top:30%;height:42%;--tip:50%">
+          <div class="mh">Cruz Celta</div>
+          <div class="sky">Luna creciente · 63 % iluminada · 2 oct, 21:14</div>
+          <div class="scroll" style="display:grid;gap:5px">
+            <div class="it"><span class="pos">1 · Situación actual</span><span class="nm">La Torre · invertida</span><span class="tx">El derrumbe se aplaza o se vive por dentro.</span></div>
+            <div class="it"><span class="pos">2 · El desafío</span><span class="nm">Cinco de Copas</span><span class="tx">Lamentar lo perdido y no ver lo que queda en pie.</span></div>
+            <div class="it"><span class="pos">3 · Fundamento</span><span class="nm">La Emperatriz</span><span class="tx">Abundancia que pide…</span></div>
+            <div class="fade"></div>
+          </div>
+        </div>
+      </div>
+      <figcaption>
+        <span class="tag">Opción A</span>
+        <b>Interpretación · todo anclado</b>
+        <span>Cumple la especificación al pie de la letra. Pero caben 2 o 3 cartas de 10: el resto se lee desplazando dentro de una caja pequeña, y «Cerrar el círculo» queda al fondo.</span>
+      </figcaption>
+    </figure>
+
+    <!-- 4. interpretación B -->
+    <figure>
+      <div class="phone" role="img" aria-label="Opción B: interpretación en un panel grande; asoma una franja de la mesa arriba">
+        <div class="bar"><span>Cruz Celta</span><span>☾</span></div>
+        <div class="card back" style="left:30%;top:9%;width:9%"></div>
+        <div class="card back" style="left:16%;top:11%;width:9%"></div>
+        <div class="card back" style="left:44%;top:11%;width:9%"></div>
+        <div class="card back" style="left:82%;top:9%;width:9%"></div>
+        <div class="panel notip" style="left:5%;right:5%;top:17%;bottom:4%">
+          <div class="mh">Cruz Celta</div>
+          <div class="mt" style="color:var(--ivory)">«¿Sigo en este trabajo?»</div>
+          <div class="sky">Luna creciente · 63 % iluminada · hora de Venus · 2 oct, 21:14</div>
+          <div class="it"><span class="pos">1 · Situación actual</span><span class="nm">La Torre · invertida</span><span class="tx">El derrumbe se aplaza o se vive por dentro.</span></div>
+          <div class="it"><span class="pos">2 · El desafío</span><span class="nm">Cinco de Copas</span><span class="tx">Lamentar lo perdido y no ver lo que queda en pie.</span></div>
+          <div class="it"><span class="pos">3 · Fundamento</span><span class="nm">La Emperatriz</span><span class="tx">Abundancia que pide cuidado y tiempo.</span></div>
+          <div class="it"><span class="pos">4 · Pasado reciente</span><span class="nm">Ocho de Bastos</span><span class="tx">Todo fue rápido; ahora se asienta.</span></div>
+          <div class="it"><span class="pos">5 · Lo que corona</span><span class="nm">El Sol</span><span class="tx">Claridad si se suelta lo que ya cayó.</span></div>
+          <div class="fade" style="bottom:46px"></div>
+          <div class="btn" style="position:absolute;left:12px;right:12px;bottom:10px">Cerrar el círculo</div>
+        </div>
+      </div>
+      <figcaption>
+        <span class="tag rec">Opción B · recomendada</span>
+        <b>Interpretación · panel grande</b>
+        <span>Ocupa casi toda la pantalla pero deja ver la tirada arriba, y el botón queda siempre a mano. Rompe la especificación solo aquí: lo demás va anclado.</span>
+      </figcaption>
+    </figure>
+  </div>
+
+  <section class="verdict">
+    <h2>Qué decidir</h2>
+    <ul>
+      <li><b>¿Cambiar a paneles anclados?</b> <em>Afecta a leer carta, pregunta y lecturas guardadas. Es el único hueco de la fase 4 antes de entregar las fases 1–5.</em></li>
+      <li><b>Para la interpretación: ¿A o B?</b> <em>A es la especificación tal cual; B se lee mejor con 10 cartas.</em></li>
+      <li><b>O dejarlo como está hoy.</b> <em>Funciona; solo se aparta de la especificación. Se anotaría como diferencia aceptada.</em></li>
+    </ul>
+    <p class="note">Maqueta dibujada a mano para decidir, no capturas de la app. Los textos de las cartas son de ejemplo, no los de Tradición. Los colores y las letras sí son los de la app.</p>
+  </section>
+</div>
+
+</body></html>
