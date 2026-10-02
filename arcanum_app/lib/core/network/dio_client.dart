@@ -9,25 +9,27 @@ import '../auth/token_storage.dart';
 const String kProductionBaseUrl =
     'https://arcanum-code-production.up.railway.app';
 
-/// Override para pruebas fisicas contra un backend local:
+/// Override para pruebas fisicas contra un backend local, en debug o en
+/// profile (profile es el que sirve para medir animaciones en el movil):
 ///
-///     flutter build apk --debug --dart-define=API_BASE_URL=http://127.0.0.1:8000
+///     flutter run --profile --dart-define=API_BASE_URL=http://127.0.0.1:8000
 ///
 /// Cadena vacia cuando no se pasa el define, que es el caso normal.
 const String kApiBaseUrlOverride = String.fromEnvironment('API_BASE_URL');
 
 /// Decide contra que backend habla la app.
 ///
-/// El override SOLO se respeta en debug. En release se ignora aunque alguien
-/// pase el define: una compilacion de tienda que apunte a otro sitio por una
-/// bandera de linea de comandos es una forma silenciosa de publicar la app
-/// contra un servidor equivocado. Los parametros son inyectables para poder
-/// probar las dos ramas sin recompilar.
+/// El override se respeta en debug y en profile, NUNCA en release: una
+/// compilacion de tienda que apunte a otro sitio por una bandera de linea de
+/// comandos es una forma silenciosa de publicar la app contra un servidor
+/// equivocado. Profile no se publica nunca, y sin el override medir el
+/// rendimiento en el movil obligaba a hablar con produccion. Los parametros
+/// son inyectables para poder probar las dos ramas sin recompilar.
 String resolveBaseUrl({
   String override = kApiBaseUrlOverride,
-  bool debug = kDebugMode,
+  bool allowOverride = !kReleaseMode,
 }) {
-  if (!debug || override.trim().isEmpty) return kProductionBaseUrl;
+  if (!allowOverride || override.trim().isEmpty) return kProductionBaseUrl;
   return override.trim();
 }
 

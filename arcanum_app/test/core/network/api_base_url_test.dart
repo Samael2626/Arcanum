@@ -8,15 +8,24 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('sin override', () {
     test('el destino por defecto es Railway por HTTPS', () {
-      expect(resolveBaseUrl(override: '', debug: true), kProductionBaseUrl);
-      expect(resolveBaseUrl(override: '', debug: false), kProductionBaseUrl);
+      expect(
+        resolveBaseUrl(override: '', allowOverride: true),
+        kProductionBaseUrl,
+      );
+      expect(
+        resolveBaseUrl(override: '', allowOverride: false),
+        kProductionBaseUrl,
+      );
       expect(kProductionBaseUrl, startsWith('https://'));
     });
 
     test('un override en blanco no cuenta como override', () {
       // Un define mal pasado llega como cadena vacia o con espacios: eso es
       // "no hay override", no "apunta a ninguna parte".
-      expect(resolveBaseUrl(override: '   ', debug: true), kProductionBaseUrl);
+      expect(
+        resolveBaseUrl(override: '   ', allowOverride: true),
+        kProductionBaseUrl,
+      );
     });
 
     test('la app compilada sin define apunta a produccion', () {
@@ -30,25 +39,31 @@ void main() {
   group('con override explicito', () {
     const local = 'http://127.0.0.1:8000';
 
-    test('en debug se respeta el backend local', () {
-      expect(resolveBaseUrl(override: local, debug: true), local);
+    test('en debug y en profile se respeta el backend local', () {
+      expect(resolveBaseUrl(override: local, allowOverride: true), local);
     });
 
     test('en release se IGNORA y se mantiene produccion', () {
       // Aunque alguien pase el define a una build de release.
-      expect(resolveBaseUrl(override: local, debug: false), kProductionBaseUrl);
+      expect(
+        resolveBaseUrl(override: local, allowOverride: false),
+        kProductionBaseUrl,
+      );
     });
 
     test('en release tampoco se acepta otro HTTPS', () {
       // No es solo cuestion de cleartext: en release no se cambia de servidor.
       expect(
-        resolveBaseUrl(override: 'https://otro-servidor.example', debug: false),
+        resolveBaseUrl(
+          override: 'https://otro-servidor.example',
+          allowOverride: false,
+        ),
         kProductionBaseUrl,
       );
     });
 
     test('se recortan los espacios del define', () {
-      expect(resolveBaseUrl(override: ' $local ', debug: true), local);
+      expect(resolveBaseUrl(override: ' $local ', allowOverride: true), local);
     });
   });
 }
