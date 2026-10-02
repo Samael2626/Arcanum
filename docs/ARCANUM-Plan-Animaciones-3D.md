@@ -1,7 +1,7 @@
 # Plan: animaciones y 3D en ARCANUM
 
 **Origen:** conversación con Samuel del 02-oct-2026, tras la «Lectura revelada» (D7 de `ARCANUM-Plan-Mesa-Tarot.md`).
-**Estado:** propuesta. Las preguntas abiertas están al final; nada de esto se implementa sin cerrarlas.
+**Estado:** preguntas cerradas por Samuel el 02-oct-2026 (abajo). Se empieza por la tanda 1 de la mesa.
 
 ## Reglas que no se saltan
 
@@ -73,9 +73,9 @@ Segunda tanda:
 
 ## Preguntas abiertas
 
-Respuestas de Samuel, cuando las dé, aquí debajo con fecha.
+Respuestas de Samuel del 02-oct-2026:
 
-1. ¿Motor 3D de verdad o 3D con shaders y perspectiva?
-2. ¿Se puede usar el giroscopio (inclinar el móvil) para parallax y brillos? Pide una dependencia nueva y algo de batería.
-3. ¿Por dónde se empieza: la primera tanda de la mesa, la Luna 3D en Hoy o los signos?
-4. La Luna: ¿realista (textura fotográfica de dominio público de la NASA) o de grabado antiguo, como el resto de la app?
+1. ¿Motor 3D de verdad o 3D con shaders y perspectiva? → **Probar los dos primero:** prototipo de la Luna con cada técnica, medido en el GN2200, y decidir con números.
+2. ¿Giroscopio para parallax y brillos? → **Sí, con apagado:** `sensors_plus`, apagado con «reducir movimiento» y en segundo plano.
+3. ¿Por dónde se empieza? → **Tanda 1 de la mesa.** Luego la Luna (prototipo doble) y los signos.
+4. ¿Cómo se ve la Luna? → **Grabado antiguo:** tinta, oro y marfil, con la fase real del día.
