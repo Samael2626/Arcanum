@@ -210,6 +210,12 @@ class TableDirector extends ChangeNotifier {
       camera.toScreen(sealAt + Offset(dx * sealRadius, dy * sealRadius)),
   ]);
 
+  /// Rectangulo de pantalla del bordado «Interpretar»: ancla de su panel.
+  Rect get embroideryScreenRect => _bounds([
+    for (final (dx, dy) in [(-1, -1), (1, -1), (1, 1), (-1, 1)])
+      camera.toScreen(embroideryAt + Offset(dx * 90.0, dy * 28.0)),
+  ]);
+
   static Rect _bounds(List<Offset> p) => Rect.fromLTRB(
     p.map((o) => o.dx).reduce(math.min),
     p.map((o) => o.dy).reduce(math.min),

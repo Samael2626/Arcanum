@@ -1,0 +1,615 @@
+/// «Lectura revelada» (D7): la interpretacion de la mesa, una carta por
+/// pantalla. Cada carta entra volteandose con su lamina, sobre la atmosfera de
+/// su elemento y su propia lamina desenfocada; arriba asoma la tirada con la
+/// carta actual encendida. Al final, la sintesis y «Cerrar el circulo».
+library;
+
+import 'package:flutter/material.dart';
+
+import '../../../core/theme/arcanum_colors.dart';
+import '../../../shared/revelado/atmosphere.dart';
+import '../../../shared/revelado/reveal_pager.dart';
+import '../../oraculo/widgets/tarot_card.dart';
+import '../domain/table_models.dart';
+
+/// Cara dibujable de una carta de la mesa.
+TarotFace tarotFaceOf(CardFace f) => TarotFace.resolve({
+  'slug': f.slug,
+  'name': f.nameEs ?? f.name ?? '',
+  'arcana': f.arcana,
+  'suit': f.suit,
+  'number': f.number,
+});
+
+class LecturaRevelada extends StatelessWidget {
+  const LecturaRevelada({
+    super.key,
+    required this.reading,
+    required this.spread,
+    required this.onCloseCircle,
+    required this.onBack,
+  });
+
+  final Interpretation reading;
+
+  /// Tirada de la lectura, para dibujarla arriba. Lectura libre: null.
+  final SpreadDef? spread;
+  final VoidCallback onCloseCircle;
+
+  /// Volver a la mesa sin cerrar el circulo.
+  final VoidCallback onBack;
+
+  static const double headerHeight = 132;
+
+  @override
+  Widget build(BuildContext context) {
+    final cards = reading.cards;
+    final faces = [for (final c in cards) tarotFaceOf(c.face)];
+    final last = cards.length; // la sintesis va despues de las cartas
+    return Material(
+      color: ArcanumColors.background,
+      child: Semantics(
+        scopesRoute: true,
+        namesRoute: true,
+        explicitChildNodes: true,
+        label: 'Interpretación: ${reading.spreadName}',
+        child: RevealPager(
+          count: cards.length + 1,
+          headerHeight: headerHeight,
+          header: (context, current, go) => _SpreadStrip(
+            spread: spread,
+            title: reading.spreadName,
+            cards: cards,
+            current: current,
+            go: go,
+            onBack: onBack,
+          ),
+          background: (context, i) {
+            if (i == last) {
+              return const Atmosphere(
+                edge: ArcanumColors.background,
+                core: ArcanumColors.surfaceHigh,
+                glow: ArcanumColors.goldMuted,
+              );
+            }
+            final a = tarotAtmosphere(faces[i]);
+            return Atmosphere(
+              edge: a.edge,
+              core: a.core,
+              glow: a.glow,
+              art: faces[i].rwsAsset,
+              reversed: cards[i].face.reversed,
+            );
+          },
+          page: (context, i, active) => i == last
+              ? _Synthesis(
+                  reading: reading,
+                  faces: faces,
+                  active: active,
+                  onCloseCircle: onCloseCircle,
+                )
+              : _CardPage(
+                  card: cards[i],
+                  face: faces[i],
+                  number: i + 1,
+                  active: active,
+                  first: i == 0,
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Una carta: numero, posicion, lamina volteandose, nombre, sentido, lo que
+/// significa la posicion y lo que dice la carta en ella.
+class _CardPage extends StatelessWidget {
+  const _CardPage({
+    required this.card,
+    required this.face,
+    required this.number,
+    required this.active,
+    required this.first,
+  });
+
+  final InterpretedCard card;
+  final TarotFace face;
+  final int number;
+  final bool active;
+  final bool first;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = tarotAtmosphere(face).accent;
+    final rev = card.face.reversed;
+    final name = card.face.nameEs ?? card.face.name ?? face.name;
+    return Semantics(
+      container: true,
+      label:
+          '$number. ${card.position}. $name, ${rev ? 'invertida' : 'al derecho'}.',
+      child: Stack(
+        children: [
+          Positioned(
+            right: 16,
+            top: 0,
+            child: ExcludeSemantics(
+              child: Text(
+                '$number',
+                style: TextStyle(
+                  fontSize: 96,
+                  height: 1,
+                  fontWeight: FontWeight.w600,
+                  color: accent.withValues(alpha: .16),
+                ),
+              ),
+            ),
+          ),
+          // no es la vista principal: si el texto cabe, el gesto vertical
+          // pasa a la carta siguiente; solo se desplaza si no cabe
+          SingleChildScrollView(
+            primary: false,
+            padding: const EdgeInsets.fromLTRB(22, 18, 22, 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                RevealIn(
+                  active: active,
+                  child: Text(
+                    '$number · ${card.position}'.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      letterSpacing: 2.2,
+                      color: accent,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    RevealFlip(
+                      active: active,
+                      reversed: rev,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(6),
+                          boxShadow: [
+                            const BoxShadow(
+                              color: Colors.black87,
+                              blurRadius: 24,
+                              offset: Offset(0, 10),
+                            ),
+                            BoxShadow(
+                              color: accent.withValues(alpha: .45),
+                              blurRadius: 26,
+                              spreadRadius: -4,
+                            ),
+                          ],
+                        ),
+                        child: ExcludeSemantics(
+                          child: TarotCardFaceArt(
+                            face: face,
+                            size: const Size(104, 166),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: RevealIn(
+                        active: active,
+                        step: 2,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              style: const TextStyle(
+                                fontSize: 28,
+                                height: 1.05,
+                                fontWeight: FontWeight.w600,
+                                color: ArcanumColors.ivory,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              [
+                                rev ? 'Invertida' : 'Al derecho',
+                                if (card.isClarifier) 'aclaratoria',
+                              ].join(' · '),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: ArcanumColors.ivoryMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                if (card.positionMeaning case final pm?)
+                  RevealIn(
+                    active: active,
+                    step: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        pm,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontStyle: FontStyle.italic,
+                          color: accent,
+                        ),
+                      ),
+                    ),
+                  ),
+                RevealIn(
+                  active: active,
+                  step: 4,
+                  child: Text(
+                    card.meaning,
+                    style: const TextStyle(
+                      fontSize: 16.5,
+                      height: 1.45,
+                      color: ArcanumColors.ivory,
+                      shadows: [Shadow(color: Colors.black54, blurRadius: 8)],
+                    ),
+                  ),
+                ),
+                if (first) ...[
+                  const SizedBox(height: 28),
+                  Text(
+                    'Desliza hacia arriba',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: ArcanumColors.ivoryMuted.withValues(alpha: .8),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// El final: la pregunta, las cartas juntas, el cielo y «Cerrar el circulo».
+class _Synthesis extends StatelessWidget {
+  const _Synthesis({
+    required this.reading,
+    required this.faces,
+    required this.active,
+    required this.onCloseCircle,
+  });
+
+  final Interpretation reading;
+  final List<TarotFace> faces;
+  final bool active;
+  final VoidCallback onCloseCircle;
+
+  @override
+  Widget build(BuildContext context) {
+    final cards = reading.cards;
+    return Center(
+      child: SingleChildScrollView(
+        primary: false,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'EL CÍRCULO',
+              style: TextStyle(
+                fontSize: 12,
+                letterSpacing: 2.4,
+                color: ArcanumColors.gold,
+              ),
+            ),
+            if (reading.question case final q?) ...[
+              const SizedBox(height: 14),
+              RevealIn(
+                active: active,
+                child: Text(
+                  '«$q»',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontStyle: FontStyle.italic,
+                    color: ArcanumColors.goldLight,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 18),
+            RevealIn(
+              active: active,
+              step: 1,
+              child: ExcludeSemantics(
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (var i = 0; i < cards.length; i++)
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: tarotAtmosphere(
+                                faces[i],
+                              ).glow.withValues(alpha: .5),
+                              blurRadius: 14,
+                              spreadRadius: -2,
+                            ),
+                          ],
+                        ),
+                        child: Transform.rotate(
+                          angle: cards[i].face.reversed ? 3.14159265 : 0,
+                          child: TarotCardFaceArt(
+                            face: faces[i],
+                            size: const Size(34, 54),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            if (reading.skyLine case final sky?) ...[
+              const SizedBox(height: 16),
+              RevealIn(
+                active: active,
+                step: 2,
+                child: Text(
+                  sky,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontStyle: FontStyle.italic,
+                    color: ArcanumColors.ivoryMuted,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 26),
+            HoldToConfirm(
+              label: 'Mantén para cerrar el círculo',
+              onConfirm: onCloseCircle,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// La tirada en pequeño, arriba: cada carta en su hueco y la actual encendida.
+/// Tocar una salta a ella. Sin tirada (lectura libre), una fila de puntos.
+class _SpreadStrip extends StatelessWidget {
+  const _SpreadStrip({
+    required this.spread,
+    required this.title,
+    required this.cards,
+    required this.current,
+    required this.go,
+    required this.onBack,
+  });
+
+  final SpreadDef? spread;
+  final String title;
+  final List<InterpretedCard> cards;
+  final int current;
+  final ValueChanged<int> go;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final count = current < cards.length
+        ? '${current + 1} / ${cards.length}'
+        : 'Síntesis';
+    // la carta que se lee: la suya o, si aclara, la de su hueco
+    final lit = current < cards.length
+        ? (cards[current].slot ?? cards[current].clarifies)
+        : null;
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: RadialGradient(
+          center: Alignment(0, -1),
+          radius: 1.3,
+          colors: [Color(0xFF3A1020), Color(0xFF1F0610)],
+        ),
+        border: Border(bottom: BorderSide(color: Color(0x52C9A84C))),
+        boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 16)],
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Stack(
+          children: [
+            Positioned(
+              left: 4,
+              top: 0,
+              child: IconButton(
+                tooltip: 'Volver a la mesa',
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: ArcanumColors.goldLight,
+                ),
+                onPressed: onBack,
+              ),
+            ),
+            Positioned(
+              left: 52,
+              right: 16,
+              top: 14,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title.toUpperCase(),
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        letterSpacing: 2,
+                        color: ArcanumColors.gold,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    count,
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      letterSpacing: 1.5,
+                      color: ArcanumColors.gold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              left: 24,
+              right: 24,
+              top: 44,
+              bottom: 8,
+              child: spread == null || spread!.slots.isEmpty
+                  ? _Dots(count: cards.length, current: current, go: go)
+                  : LayoutBuilder(
+                      builder: (context, box) => Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          for (var s = 0; s < spread!.slots.length; s++)
+                            _MiniSlot(
+                              x: spread!.slots[s].x * box.maxWidth,
+                              y: spread!.slots[s].y * box.maxHeight,
+                              rotation: spread!.slots[s].rotation.toDouble(),
+                              filled: cards.any((c) => c.slot == s),
+                              lit: lit == s,
+                              label: '${s + 1}, ${spread!.slots[s].name}',
+                              onTap: () {
+                                final i = cards.indexWhere((c) => c.slot == s);
+                                if (i >= 0) go(i);
+                              },
+                            ),
+                        ],
+                      ),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniSlot extends StatelessWidget {
+  const _MiniSlot({
+    required this.x,
+    required this.y,
+    required this.rotation,
+    required this.filled,
+    required this.lit,
+    required this.label,
+    required this.onTap,
+  });
+
+  final double x;
+  final double y;
+  final double rotation;
+  final bool filled;
+  final bool lit;
+  final String label;
+  final VoidCallback onTap;
+
+  static const Size size = Size(14, 22);
+
+  @override
+  Widget build(BuildContext context) => Positioned(
+    left: x - 16,
+    top: y - 16,
+    width: 32,
+    height: 32,
+    child: Semantics(
+      button: filled,
+      selected: lit,
+      label: 'Ir a $label',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: filled ? onTap : null,
+        child: Center(
+          child: Transform.rotate(
+            angle: rotation * 3.14159265 / 180,
+            child: AnimatedScale(
+              scale: lit ? 1.18 : 1,
+              duration: const Duration(milliseconds: 300),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                width: size.width,
+                height: size.height,
+                decoration: BoxDecoration(
+                  color: filled ? const Color(0xFF2A1A40) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(2.5),
+                  border: Border.all(
+                    color: lit
+                        ? ArcanumColors.goldLight
+                        : ArcanumColors.goldMuted.withValues(
+                            alpha: filled ? 1 : .5,
+                          ),
+                    width: lit ? 1.6 : 1,
+                  ),
+                  boxShadow: lit
+                      ? const [
+                          BoxShadow(color: Color(0x99C9A84C), blurRadius: 12),
+                        ]
+                      : null,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class _Dots extends StatelessWidget {
+  const _Dots({required this.count, required this.current, required this.go});
+  final int count;
+  final int current;
+  final ValueChanged<int> go;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Wrap(
+      spacing: 4,
+      children: [
+        for (var i = 0; i < count; i++)
+          Semantics(
+            button: true,
+            selected: i == current,
+            label: 'Ir a la carta ${i + 1}',
+            child: GestureDetector(
+              onTap: () => go(i),
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  width: i == current ? 10 : 7,
+                  height: i == current ? 10 : 7,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: i == current
+                        ? ArcanumColors.goldLight
+                        : ArcanumColors.goldMuted,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    ),
+  );
+}

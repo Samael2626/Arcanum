@@ -12,6 +12,7 @@ import '../../core/theme/arcanum_colors.dart';
 import 'application/table_controller.dart';
 import 'domain/table_models.dart';
 import 'domain/table_state.dart';
+import 'reading/lectura_revelada.dart';
 import 'table/table_director.dart';
 import 'table/table_overlays.dart';
 import 'table/table_panel.dart';
@@ -50,6 +51,12 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
 
   void _openPanel(Rect anchor, String title, WidgetBuilder body) =>
       setState(() => _panel = (anchor: anchor, title: title, body: body));
+
+  /// Lectura ya interpretada de esta mesa: reabrirla no vuelve a cobrar.
+  Interpretation? _reading;
+
+  /// La «Lectura revelada» esta a la vista (D7).
+  bool _revealing = false;
 
   void _closePanel() {
     if (_panel != null) setState(() => _panel = null);
@@ -118,9 +125,14 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
     final panel = _panel;
     return PopScope(
       // atras cierra el panel antes que la mesa
-      canPop: panel == null,
+      canPop: panel == null && !_revealing,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _closePanel();
+        if (didPop) return;
+        if (panel != null) {
+          _closePanel();
+        } else {
+          setState(() => _revealing = false);
+        }
       },
       child: Scaffold(
         backgroundColor: ArcanumColors.background,
@@ -157,6 +169,15 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
                       context.canPop() ? context.pop() : context.go('/hoy'),
                 ),
               ),
+              if (_revealing && _reading != null)
+                Positioned.fill(
+                  child: LecturaRevelada(
+                    reading: _reading!,
+                    spread: _director?.spread,
+                    onBack: () => setState(() => _revealing = false),
+                    onCloseCircle: _closeCircle,
+                  ),
+                ),
               if (panel != null)
                 Positioned.fill(
                   child: TablePanel(
@@ -298,23 +319,24 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
   void openInterpretation() {
     final dir = _director;
     if (dir == null) return;
+    if (_reading != null) return setState(() => _revealing = true);
     // la clave vive lo que vive el panel: reintentar no cobra dos veces
     final key = IdempotencyKey.create();
     final seal = dir.table.seal;
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: ArcanumColors.surface,
-      builder: (context) => _InterpretationSheet(
+    _openPanel(
+      dir.embroideryScreenRect,
+      'Interpretación',
+      (context) => _InterpretPrompt(
         question: seal?.text,
         interpret: () => _ops.interpret(idempotencyKey: key),
-        close: () async {
-          await _ops.closeCircle();
-          toast('Círculo cerrado. La lectura quedó guardada en Lecturas.');
-        },
+        onReading: (r) => setState(() {
+          _panel = null;
+          _reading = r;
+          _revealing = true;
+        }),
         onError: (e) {
           if (isCreditsRequired(e)) {
-            Navigator.pop(context);
+            _closePanel();
             creditsRequired();
           } else {
             error(e);
@@ -322,6 +344,19 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
         },
       ),
     );
+  }
+
+  Future<void> _closeCircle() async {
+    try {
+      await _ops.closeCircle();
+      setState(() {
+        _revealing = false;
+        _reading = null;
+      });
+      toast('Círculo cerrado. La lectura quedó guardada en Lecturas.');
+    } on Object catch (e) {
+      error(e);
+    }
   }
 
   @override
@@ -514,62 +549,33 @@ class _Label extends StatelessWidget {
   );
 }
 
-class _SheetFrame extends StatelessWidget {
-  const _SheetFrame({required this.title, required this.children});
-  final String title;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) => SafeArea(
-    child: ConstrainedBox(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * .8,
-      ),
-      child: ListView(
-        shrinkWrap: true,
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 20,
-              letterSpacing: 1,
-              color: ArcanumColors.goldLight,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ...children,
-        ],
-      ),
-    ),
-  );
-}
-
-class _InterpretationSheet extends StatefulWidget {
-  const _InterpretationSheet({
+/// Antes de interpretar: la pregunta y lo que cuesta. Al interpretar se abre
+/// la «Lectura revelada».
+class _InterpretPrompt extends StatefulWidget {
+  const _InterpretPrompt({
     required this.question,
     required this.interpret,
-    required this.close,
+    required this.onReading,
     required this.onError,
   });
 
   final String? question;
   final Future<Interpretation> Function() interpret;
-  final Future<void> Function() close;
+  final ValueChanged<Interpretation> onReading;
   final void Function(Object error) onError;
 
   @override
-  State<_InterpretationSheet> createState() => _InterpretationSheetState();
+  State<_InterpretPrompt> createState() => _InterpretPromptState();
 }
 
-class _InterpretationSheetState extends State<_InterpretationSheet> {
-  Interpretation? _reading;
+class _InterpretPromptState extends State<_InterpretPrompt> {
   bool _working = false;
 
-  Future<void> _go(Future<void> Function() action) async {
+  Future<void> _go() async {
     setState(() => _working = true);
     try {
-      await action();
+      final reading = await widget.interpret();
+      widget.onReading(reading);
     } on Object catch (e) {
       widget.onError(e);
     } finally {
@@ -578,65 +584,26 @@ class _InterpretationSheetState extends State<_InterpretationSheet> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final r = _reading;
-    return _SheetFrame(
-      title: r?.spreadName ?? 'Interpretación',
-      children: [
-        if (widget.question != null) ...[
-          const _Label('Tu pregunta'),
-          Text('«${widget.question}»', style: _body),
-          const SizedBox(height: 14),
-        ],
-        if (r == null) ...[
-          Text(
-            'Interpretar gasta una lectura de tu cupo diario de tarot.',
-            style: _muted,
-          ),
-          const SizedBox(height: 14),
-          FilledButton(
-            onPressed: _working
-                ? null
-                : () => _go(() async {
-                    final reading = await widget.interpret();
-                    if (mounted) setState(() => _reading = reading);
-                  }),
-            child: Text(_working ? 'Interpretando…' : 'Interpretar'),
-          ),
-        ] else ...[
-          if (r.skyLine case final sky?)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text(sky, style: _muted),
-            ),
-          for (final c in r.cards) ...[
-            _Label(c.position),
-            Text(
-              '${c.face.nameEs ?? c.face.name ?? c.face.slug}${c.face.reversed ? ' · invertida' : ''}',
-              style: const TextStyle(
-                fontSize: 16,
-                color: ArcanumColors.goldLight,
-              ),
-            ),
-            if (c.positionMeaning != null)
-              Text(c.positionMeaning!, style: _muted),
-            const SizedBox(height: 4),
-            Text(c.meaning, style: _body),
-            const SizedBox(height: 14),
-          ],
-          FilledButton(
-            onPressed: _working
-                ? null
-                : () => _go(() async {
-                    await widget.close();
-                    if (context.mounted) Navigator.pop(context);
-                  }),
-            child: const Text('Cerrar el círculo'),
-          ),
-        ],
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      if (widget.question != null) ...[
+        const _Label('Tu pregunta'),
+        Text('«${widget.question}»', style: _body),
+        const SizedBox(height: 10),
       ],
-    );
-  }
+      Text(
+        'Interpretar gasta una lectura de tu cupo diario de tarot.',
+        style: _muted,
+      ),
+      const SizedBox(height: 10),
+      FilledButton(
+        onPressed: _working ? null : _go,
+        child: Text(_working ? 'Interpretando…' : 'Interpretar'),
+      ),
+    ],
+  );
 }
 
 class _Failure extends StatelessWidget {

@@ -522,6 +522,15 @@ String? _elementFromAstro(String? s) {
   return null;
 }
 
+/// La luz de la cara de una carta (borde, centro, bruma y acento), para teñir
+/// lo que la rodea: la «Lectura revelada» usa la misma atmosfera que su naipe.
+typedef TarotAtmosphere = ({Color edge, Color core, Color glow, Color accent});
+
+TarotAtmosphere tarotAtmosphere(TarotFace face) {
+  final s = _skinForFace(face);
+  return (edge: s.edge, core: s.core, glow: s.glow, accent: s.accent);
+}
+
 _CardSkin _skinForFace(TarotFace f) {
   switch (f.kind) {
     case TarotFaceKind.major:
