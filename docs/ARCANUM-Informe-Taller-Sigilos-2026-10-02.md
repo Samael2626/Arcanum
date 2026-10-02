@@ -14,7 +14,7 @@ sobre el remoto; lo que no, está marcado como no verificado.
 | Fuzz n=40 | Corrido con n=150, 0 fallos. |
 | 337 tests de taller + Grimorio | Corridos con Flutter: 334. No se explica la diferencia de 3. |
 | Suite de 976 tests (30-sep) | Reverificada: 976 → 992 → 1068 según el día (ver §3). |
-| Términos prometían un generador de sigilos «que no existe» | La tarjeta «Generador de sigilos» (P2) sigue en `legal-site/index.html`. |
+| Términos prometían un generador de sigilos «que no existe» | Los Términos y la política vivos (`gh-pages`) no mencionan sigilos: esa promesa se retiró el 25-ago-2026 (commit `9b38862`). Lo único que queda es la tarjeta «Generador de sigilos» (P2) de la página de presentación `legal-site/index.html`. La línea 511 del cierre del 20-sep, de donde salía la afirmación, no está en este repo y no la pude verificar. |
 
 ## 1. Qué es
 
@@ -88,8 +88,10 @@ No verificado (necesita teléfono):
 Pendiente de producto:
 4. Familias v2 en Flutter: Rosa-Cruz, Kamea, Sello personal y Comparar.
 5. Enlace del taller con Hoy, Grimorio y Bitácora (crear → cargar → olvidar → anotar).
-6. Revisión con `arcanum-legal` de los sellos (obra ajena) antes de publicar, y
-   cerrar la tarjeta «Generador de sigilos» de `legal-site/index.html`.
+6. Revisión con `arcanum-legal` de los sellos (obra ajena) antes de publicar. La
+   tarjeta «Generador de sigilos» (P2) de `legal-site/index.html` se actualiza el
+   día de la release, no antes. Los Términos (`gh-pages`) no necesitan cambio
+   obligatorio; opcionalmente se añade el taller a su lista de módulos.
 7. Menores: codificación corrupta de `Sigilos-Taller-v2.md`; cita de Cooper mal
    asignada por el conector NotebookLM.
 
