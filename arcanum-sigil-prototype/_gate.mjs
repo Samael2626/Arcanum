@@ -971,6 +971,19 @@ check('caligrafia pluma: resplandor y relieve siguen funcionando', cal.halo && c
 check('caligrafia: se guarda y se restaura con el documento', cal.guarda && cal.restaura);
 check('caligrafia: cambiar de estilo conserva la caligrafia', cal.preset);
 
+const galCal = await page.evaluate(() => {
+  const res = []; const antes = readGallery().length;
+  for (const m of ['curva', 'pluma']) {
+    setStyle({ calli: m }); const svg = buildSVG(); saveSigil();
+    setStyle({ calli: 'none' });
+    const it = readGallery()[0]; setFamily(it.family); docRestore(it.doc);
+    res.push(state.style.calli === m && buildSVG() === svg);
+  }
+  setStyle({ calli: 'none' });
+  return { res, n: readGallery().length - antes };
+});
+check('caligrafia: la galeria guarda y reabre curva y pluma idénticas', galCal.res.every(Boolean) && galCal.n === 2, JSON.stringify(galCal));
+
 check('sin errores de pagina', errors.length === 0, errors.slice(0, 2).join(' | '));
 await browser.close();
 const fails = results.filter(x => !x.ok).length;
