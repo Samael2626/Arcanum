@@ -1,6 +1,6 @@
 import 'dart:ui' show ImageFilter;
 
-import 'package:flutter/foundation.dart' show kReleaseMode;
+import 'package:flutter/foundation.dart' show kDebugMode, kProfileMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -145,7 +145,7 @@ class ArcanumDrawer extends ConsumerWidget {
                     ),
                     // Solo en builds de desarrollo y perfil: la mesa esta a
                     // medias y la version de la tienda no debe enseñarla.
-                    if (!kReleaseMode)
+                    if (kDebugMode || kProfileMode)
                       _FilaRuta(
                         icono: Icons.style_outlined,
                         iconoActivo: Icons.style,

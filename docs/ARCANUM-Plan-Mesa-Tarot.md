@@ -173,6 +173,13 @@
 
 ## Fase 7: calidad
 
+### Prueba en GN2200 (03-oct-2026, APK profile)
+
+- Puertas previas: `flutter analyze` verde; `flutter test` 811 pasan y 7 capturas manuales saltadas. Backend con las dos bases propias de esta rama: `pytest` 1399 pasan, 2 saltados; `scripts/verify_migrations.py` completo en verde. La APK profile apuntó a la API local mediante `adb reverse tcp:8000 tcp:8001`; el puerto 8000 del PC ya estaba ocupado y la API de la rama escuchó en 8001 con `DATABASE_URL` de desarrollo de la rama, sin cargar `.env`.
+- Fallo hallado y corregido: el cajón ocultaba «Mesa de tarot · en pruebas» en profile por `!kReleaseMode`. Se muestra con `kDebugMode || kProfileMode`; sigue oculta en release. Verificado en el GN2200 y con `flutter analyze` y los 7 tests de `arcanum_drawer_test.dart` en verde.
+- Recorrido observado: entrar en la mesa, abrir Rider–Waite–Smith, extender y sacar una carta, barajar en cascada, cortar en dos montones, elegir tirada de tres cartas, colocar una carta en Pasado y sellar la pregunta. La mesa recuperó su estado al salir y volver. [Captura de la tirada y el abanico](../.qa-mesa/gn2200-tres-cartas.png).
+- Quedaron sin verificar en esta pasada: desvelado y sus efectos, lectura larga y paginación, cierre de 1,3 s, historial, «reducir movimiento» y Cruz Celta completa. Samuel dio por suficiente el recorrido visual y pidió cerrarlo aquí. `adb logcat -d -s Choreographer:I | findstr /i "Skipped Choreographer"` no devolvió líneas en esta consulta; no hubo ventana de medida controlada ni `FrameTiming`, así que **no se afirma 60 fps** y el criterio de rendimiento sigue pendiente.
+
 - [ ] Medir en el móvil real con Impeller: 60 fps quieta y con la Cruz Celta; el abanico sin tirones.
 - [ ] Accesibilidad: `Semantics` en cartas y radial, 48 dp, lectores de pantalla.
 - [ ] Probar en el móvil más pequeño de la prueba cerrada (360 dp). *(02-oct, en tests: `pantalla_pequena_test.dart` abre la mesa, el panel de lecturas y una Cruz Celta con textos largos en 360×640 y 360×740, sin desbordes y con «Cerrar el círculo» al alcance. Cazó un fallo: con texto largo la carta se quedaba con el deslizamiento y no se podía pasar a la siguiente; ahora, al llegar al final del texto, seguir tirando pasa de carta. Falta verlo en un móvil real de 360 dp.)*
