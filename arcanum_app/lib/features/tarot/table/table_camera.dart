@@ -49,12 +49,18 @@ class TableCamera {
     panY: tPanY,
   );
 
+  /// Salta a un estado guardado. Lo que venga de fuera (una foto vieja, un
+  /// JSON a mano) se mete en los limites: una camara fuera de ellos dejaba la
+  /// mesa perdida al volver a entrar.
   void jumpTo(TableCameraState s) {
-    theta = tTheta = s.theta;
-    yaw = tYaw = s.yaw;
-    zoom = tZoom = s.zoom;
-    panX = tPanX = s.panX;
-    panY = tPanY = s.panY;
+    double ok(double v, double lo, double hi, double fallback) =>
+        v.isFinite ? _clamp(v, lo, hi) : fallback;
+    theta = tTheta = ok(s.theta, minTheta, maxTheta, baseTheta);
+    yaw = tYaw = ok(s.yaw, -maxYaw, maxYaw, 0);
+    zoom = tZoom = ok(s.zoom, minZoom, maxZoom, 1);
+    panX = tPanX = s.panX.isFinite ? s.panX : 0;
+    panY = tPanY = s.panY.isFinite ? s.panY : 0;
+    if (_viewport != Size.zero) clampToView();
   }
 
   /// Ajusta el encuadre a la pantalla: la mesa entra entera a lo alto y el
@@ -81,12 +87,21 @@ class TableCamera {
     top = a * c * p / (p + a * s);
     _k = k;
     _oy = (top - bottom) / 2;
+    clampToView();
   }
 
   /// Matriz de mesa a pantalla. La perspectiva se aplica desde el centro de
   /// la mesa en pantalla, como el `perspective-origin` del prototipo.
+  ///
+  /// El zoom AMPLIA la imagen ya proyectada (como una lupa), no acerca la mesa
+  /// a la camara. El prototipo lo metia en `scale3d(K, K, K)`: al acercar, el
+  /// borde cercano se echaba encima del plano de la camara y la perspectiva se
+  /// disparaba. Medido en 360 x 760 (GN2200): con 56 grados y zoom 2,6 una
+  /// carta levantada en la esquina de abajo ocupaba el 88 % del alto de la
+  /// pantalla, frente al 10 % sin zoom. Ahora todo crece igual, como mucho 2,6
+  /// veces lo que se ve sin zoom.
   Matrix4 matrix() {
-    final k = _k * zoom;
+    final k = _k;
     final ox = _viewport.width / 2 + panX,
         oy = _viewport.height / 2 + panY + _oy;
     // La perspectiva se MULTIPLICA como matriz propia. Poner la entrada (3, 2)
@@ -96,6 +111,7 @@ class TableCamera {
       ..setEntry(3, 2, -1 / TableGeometry.perspective);
     return Matrix4.identity()
       ..translateByDouble(ox, oy, 0, 1)
+      ..scaleByDouble(zoom, zoom, 1, 1)
       ..multiply(perspective)
       ..scaleByDouble(k, k, k, 1)
       ..rotateX(theta * math.pi / 180)
@@ -124,12 +140,17 @@ class TableCamera {
   /// El plano de la mesa (z = 0) se proyecta con una homografia 3x3: las
   /// columnas x, y y traslacion de la matriz 4x4, en las filas x, y y w. Su
   /// inversa lleva cualquier toque a la mesa, con inclinacion, giro y zoom.
-  Offset toTable(Offset screen) {
+  ///
+  /// Con `z`, el plano es el de una pieza levantada esa altura (una carta que
+  /// se arrastra va a 64): se dibuja mas cerca de la camara y el toque tiene
+  /// que buscarla ahi, no en el paño de debajo.
+  Offset toTable(Offset screen, {double z = 0}) {
     final m = matrix().storage;
-    // h = [[a, b, c], [d, e, f], [g, h, i]] (fila por fila)
-    final a = m[0], b = m[4], c = m[12];
-    final d = m[1], e = m[5], f = m[13];
-    final g = m[3], h = m[7], i = m[15];
+    // h = [[a, b, c], [d, e, f], [g, h, i]] (fila por fila); la altura entra
+    // en la columna de traslacion
+    final a = m[0], b = m[4], c = m[8] * z + m[12];
+    final d = m[1], e = m[5], f = m[9] * z + m[13];
+    final g = m[3], h = m[7], i = m[11] * z + m[15];
     final det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
     final sx = screen.dx, sy = screen.dy;
     final x = (e * i - f * h) * sx + (c * h - b * i) * sy + (b * f - c * e);
@@ -157,17 +178,20 @@ class TableCamera {
   }
 
   double _pinchD0 = 1, _pinchZ0 = 1;
-  Offset _pinchM0 = Offset.zero, _pinchP0 = Offset.zero;
+  Offset _pinchAt = Offset.zero;
 
   void startPinch(Offset a, Offset b) {
     _pinchD0 = math.max(1, (a - b).distance);
     _pinchZ0 = zoom;
-    _pinchM0 = (a + b) / 2;
-    _pinchP0 = Offset(panX, panY);
+    // el punto del paño que hay entre los dedos: se queda entre los dedos
+    _pinchAt = toTable((a + b) / 2);
   }
 
   /// Pellizcar acerca y separa; mover los dos dedos desplaza. Va directo, sin
   /// suavizado: la mesa tiene que estar pegada a los dedos.
+  ///
+  /// Se acerca HACIA los dedos: antes se acercaba hacia el centro de la mesa y
+  /// lo que habia bajo los dedos se escapaba de la pantalla.
   void updatePinch(Offset a, Offset b) {
     final m = (a + b) / 2;
     zoom = tZoom = _clamp(
@@ -175,8 +199,10 @@ class TableCamera {
       minZoom,
       maxZoom,
     );
-    panX = _pinchP0.dx + (m.dx - _pinchM0.dx);
-    panY = _pinchP0.dy + (m.dy - _pinchM0.dy);
+    // el desplazamiento es una traslacion de pantalla: basta con corregirlo
+    final drift = m - toScreen(_pinchAt);
+    panX += drift.dx;
+    panY += drift.dy;
     _clampPan();
     tPanX = panX;
     tPanY = panY;
@@ -196,6 +222,49 @@ class TableCamera {
     final my = (zoom - 1) * _viewport.height / 2 + 10;
     panX = _clamp(panX, -mx, mx);
     panY = _clamp(panY, -my, my);
+    _keepClothCentered();
+  }
+
+  /// Mete el desplazamiento (el actual y el destino) en lo que deja la mesa a
+  /// la vista. Llamarlo tras cambiar la camara desde fuera.
+  void clampToView() {
+    _clampPan();
+    final cx = panX, cy = panY;
+    panX = tPanX;
+    panY = tPanY;
+    _clampPan();
+    tPanX = panX;
+    tPanY = panY;
+    panX = cx;
+    panY = cy;
+  }
+
+  /// El centro de la pantalla tiene que caer en el paño: asi la mesa nunca se
+  /// va de la pantalla y siempre queda paño donde hacer doble toque.
+  ///
+  /// El limite de antes era un rectangulo de pantalla que no sabia del giro ni
+  /// de la inclinacion: con la mesa girada dejaba el paño medio fuera. Aqui se
+  /// mide en la mesa y, si se sale, se recorta el desplazamiento hacia el
+  /// centro (con desplazamiento cero el centro siempre cae en el paño).
+  void _keepClothCentered() {
+    if (_viewport == Size.zero) return;
+    final center = _viewport.center(Offset.zero);
+    bool inside() => TableGeometry.cloth.contains(toTable(center));
+    if (inside()) return;
+    final px = panX, py = panY;
+    var lo = 0.0, hi = 1.0;
+    for (var i = 0; i < 24; i++) {
+      final t = (lo + hi) / 2;
+      panX = px * t;
+      panY = py * t;
+      if (inside()) {
+        lo = t;
+      } else {
+        hi = t;
+      }
+    }
+    panX = px * lo;
+    panY = py * lo;
   }
 
   /// Acerca el estado actual al destino. Devuelve true si se movio (hay que
@@ -217,10 +286,21 @@ class TableCamera {
       zoom += (tZoom - zoom) * ease(.18);
       moved = true;
     }
-    if ((tPanX - panX).abs() > .3 || (tPanY - panY).abs() > .3) {
+    final panning = (tPanX - panX).abs() > .3 || (tPanY - panY).abs() > .3;
+    if (panning) {
       panX += (tPanX - panX) * ease(.18);
       panY += (tPanY - panY) * ease(.18);
+    }
+    if (panning || moved) {
+      // girar, inclinar o acercar cambia lo que se ve: el desplazamiento se
+      // revisa. Si choca con el tope, el destino se queda en el tope; si no,
+      // la camara pediria frames para siempre empujando contra el.
+      final bx = panX, by = panY;
       _clampPan();
+      if (panX != bx || panY != by) {
+        tPanX = panX;
+        tPanY = panY;
+      }
       moved = true;
     }
     return moved;

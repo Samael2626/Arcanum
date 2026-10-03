@@ -24,6 +24,9 @@ abstract final class TableGeometry {
   /// Por encima de esta linea estan los mazos sin abrir (el estante).
   static const double shelfY = 168;
 
+  /// El paño, dentro del marco: donde se juega (especificacion, §1).
+  static const Rect cloth = Rect.fromLTRB(18, 172, 582, 882);
+
   /// Zona de la tirada: los huecos se dan en fraccion de este rectangulo.
   static const Rect spreadArea = Rect.fromLTWH(36, 200, 528, 470);
 
@@ -155,4 +158,72 @@ List<TablePose> fanPoses(Offset start, Offset end, int count) {
         return TablePose(p.dx, p.dy, rot: ang, scale: TableGeometry.fanScale);
       }(),
   ];
+}
+
+/// Rectangulo de mesa (alineado con los ejes) que ocupa una carta en `p`,
+/// girada incluida, con `w` x `h` de tamaño base.
+Rect poseRect(
+  TablePose p, {
+  double w = TableGeometry.cardW,
+  double h = TableGeometry.cardH,
+}) {
+  final hw = w * p.scale / 2, hh = h * p.scale / 2;
+  final a = p.rot * math.pi / 180;
+  final c = math.cos(a).abs(), s = math.sin(a).abs();
+  return Rect.fromCenter(
+    center: p.offset,
+    width: 2 * (hw * c + hh * s),
+    height: 2 * (hw * s + hh * c),
+  );
+}
+
+double _overlap(Rect a, Rect b) {
+  final i = a.intersect(b);
+  return i.width <= 0 || i.height <= 0 ? 0 : i.width * i.height;
+}
+
+/// Centro de un sitio para una pieza de `size` dentro de `area` que pise lo
+/// menos posible lo ocupado (`taken`), y entre los igual de libres, el mas
+/// cercano a `near`.
+///
+/// Es lo que evita que las cartas sueltas caigan todas en el mismo punto,
+/// encima de la tirada, como se vio en el GN2200 el 03-oct. Si no queda sitio
+/// libre, elige el que menos tapa: nunca devuelve algo fuera de `area`.
+Offset freeSpot({
+  required Size size,
+  required Iterable<Rect> taken,
+  required Rect area,
+  required Offset near,
+  double gap = 6,
+  double step = 10,
+}) {
+  final boxes = [for (final r in taken) r.inflate(gap)];
+  final hw = size.width / 2, hh = size.height / 2;
+  final x0 = area.left + hw, x1 = area.right - hw;
+  final y0 = area.top + hh, y1 = area.bottom - hh;
+  if (x1 < x0 || y1 < y0) return area.center;
+  Offset? best;
+  var bestCost = double.infinity, bestD = double.infinity;
+  for (var y = y0; y <= y1 + 1e-9; y += step) {
+    for (var x = x0; x <= x1 + 1e-9; x += step) {
+      final r = Rect.fromCenter(
+        center: Offset(x, y),
+        width: size.width,
+        height: size.height,
+      );
+      var cost = 0.0;
+      for (final b in boxes) {
+        cost += _overlap(r, b);
+        if (cost > bestCost) break;
+      }
+      final d = (Offset(x, y) - near).distanceSquared;
+      if (cost < bestCost - 1e-6 ||
+          (cost - bestCost).abs() <= 1e-6 && d < bestD) {
+        best = Offset(x, y);
+        bestCost = cost;
+        bestD = d;
+      }
+    }
+  }
+  return best ?? area.center;
 }

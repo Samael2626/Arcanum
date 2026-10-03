@@ -199,7 +199,8 @@ class GestureGrammar {
 
   /// Cuando vence el temporizador de mantener, o null. Quien use la gramatica
   /// llama a `tick` en ese momento (o en cada frame, que tambien vale).
-  Duration? get deadline => _mode == _Mode.pending && _hit is! HitSeal
+  Duration? get deadline =>
+      _mode == _Mode.pending && _hit is! HitSeal && _hit is! HitNothing
       ? _downAt + (_hit is HitEmbroidery ? sealHold : hold)
       : null;
 
@@ -220,7 +221,9 @@ class GestureGrammar {
     _hit = hit;
     _start = _last = position;
     _downAt = time;
-    _mode = hit is HitNothing ? _Mode.idle : _Mode.pending;
+    // fuera de la mesa no hay nada que agarrar, pero el doble toque recentra:
+    // si la camara dejo el paño lejos, ahi es donde cae el dedo
+    _mode = _Mode.pending;
     _drag = null;
     return const [];
   }
@@ -321,7 +324,7 @@ class GestureGrammar {
         return [DragEndIntent(drag!, position, cancelled: cancelled)];
       case _Mode.pending:
         if (cancelled) return const [];
-        if (hit is HitSurface) {
+        if (hit is HitSurface || hit is HitNothing) {
           final last = _lastSurfaceTap;
           if (last != null &&
               time - last < doubleTapWindow &&
@@ -332,7 +335,7 @@ class GestureGrammar {
           _lastSurfaceTap = time;
           _lastSurfaceTapAt = position;
         }
-        return [TapIntent(hit, position)];
+        return hit is HitNothing ? const [] : [TapIntent(hit, position)];
       case _Mode.sealed:
       case _Mode.idle:
         return const [];
