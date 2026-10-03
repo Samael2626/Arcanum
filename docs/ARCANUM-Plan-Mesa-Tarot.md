@@ -181,6 +181,47 @@
 - Quedaron sin verificar en esta pasada: desvelado y sus efectos, lectura larga y paginación, cierre de 1,3 s, historial, «reducir movimiento» y Cruz Celta completa. Samuel pidió detener ese recorrido; la inspección posterior de abajo reabre la revisión. `adb logcat -d -s Choreographer:I | findstr /i "Skipped Choreographer"` no devolvió líneas en esta consulta; no hubo ventana de medida controlada ni `FrameTiming`, así que **no se afirma 60 fps** y el criterio de rendimiento sigue pendiente.
 - **Hallazgo posterior, bloqueante (03-oct):** [captura GN2200 del estado real](../.qa-mesa/gn2200-caos-cartas.png). Tras seguir sacando y moviendo cartas, la cámara quedó inclinada y el paño parcialmente fuera de pantalla; cartas y montones se amontonan sobre los huecos y el abanico invade sello y bordado. Samuel reporta que al tocar una carta tarda en salir, a veces aparece enorme, hay que moverla para sacar otra y la interacción se bloquea. La captura confirma la geometría y las superposiciones; latencia y bloqueo requieren reproducción cronometrada. **No dar la mesa por aprobada en móvil.** Diagnosticar cámara, tamaños proyectados, orden de capas, hit-test y espera de `ops.take` antes de seguir con publicación.
 
+### Reparación de la mesa en móvil (03-oct-2026, sesión en la nube, sin el GN2200)
+
+**Reproducido antes de tocar nada**, sobre `483a8d1`, con una mesa de 78 cartas en 360 × 760 (la pantalla útil del GN2200) y un servidor de pruebas que no contesta hasta que el test lo suelta:
+
+- **Tocar una carta del abanico no se ve hasta que contesta el servidor**, y un segundo toque durante la espera **se tira en silencio** (`_busy`): de dos toques salió una sola petición. Es el «tarda» y el «se bloquea».
+- **Arrastre corto soltado antes de la respuesta** (12 px de temblor, por encima del umbral de 6): la carta se queda **para siempre** levantada (`lift` 64), marcada como arrastrándose, a **escala 1,0** (la carta más grande de la mesa; el abanico va a 0,55) y **encima del abanico** (13 806 u² de solape), robando el toque de las cartas de debajo hasta que se arrastra otra vez. Es «sale enorme y hay que moverla para sacar otra».
+- **Sin tirada, o con la tirada llena, todas las cartas sacadas caen en (470, 472)**: una sobre otra y sobre el hueco «Futuro» de la tirada de tres. Es el montón de la captura.
+- **Con el abanico abierto, el sello no se puede tocar**: el toque se lo lleva el abanico.
+- **Cámara.** El zoom acercaba la mesa a la cámara (`scale3d(K, K, K)` del prototipo), así que la perspectiva se disparaba: con 56° y zoom 2,6, una carta suelta levantada en la esquina cercana ocupaba el **88 % del alto** (8,6 veces lo que mide sin zoom). Pellizcar acercaba hacia el centro de la mesa y no hacia los dedos, y lo que había bajo los dedos se escapaba. El límite del desplazamiento era un rectángulo de pantalla que no sabía del giro ni de la inclinación. La cámara **no se guardaba nunca** (`TableState.camera` siempre por defecto). El doble toque para recentrar solo valía sobre el paño, justo lo que falta cuando la mesa se ha ido.
+
+**Corregido** (`ce28646`, `e0b80b8`; tests en `0dd8cc7`):
+
+- **Sacar del abanico sin esperar.** La carta sale del abanico y vuela a su hueco en el mismo fotograma del toque, como un dorso (`PieceKind.pendingCard`); el hueco queda reservado y el siguiente toque va al siguiente. Cuando el servidor dice qué carta era, la de verdad ocupa ese sitio. Si falla, el dorso vuelve al abanico y se avisa. Las peticiones siguen en fila en el controlador: el servidor no recibe dos a la vez.
+- **Arrastre que termina antes de la respuesta:** la carta se suelta donde quedó, sin altura y a la escala de la tirada. **Soltada sobre el abanico se coloca como un toque** (primer hueco libre o sitio libre): así un temblor no la deja tapando las demás.
+- **Sitio libre para las cartas sueltas** (`freeSpot` en `table_geometry.dart`): por encima de la zona cercana (y < 690, el límite de la especificación), sin pisar huecos de la tirada (aunque estén vacíos), sello, bordado, montones con su nombre ni otras cartas, y lo más cerca posible de donde salió. Si no queda sitio, el que menos tapa. Los cortes buscan sitio igual, primero en la zona cercana.
+- **Sello y bordado encendido por encima del abanico y los montones**, al dibujar y al tocar. La especificación los pone en la misma zona (abanico en y 782, sello en 712, «Interpretar» en 716); las cartas en juego sí pueden taparlos, como antes.
+- **Toque igual a lo dibujado:** cada pieza se busca en su plano (`toTable(screen, z:)`), así que una carta levantada se toca donde se ve; primero lo que hay justo bajo el dedo y solo después el margen de 24 unidades, para que el margen de una carta no le robe el toque al sello o a la de al lado.
+- **Cámara:** el zoom amplía la imagen ya proyectada (el rango 1–2,6 de la especificación no cambia; ahora todo crece igual). Pellizcar acerca hacia los dedos. El centro de la pantalla cae **siempre en el paño**, con cualquier giro, inclinación y zoom. La cámara se guarda con la mesa y, al restaurarla, se mete en los límites. **Doble toque fuera de la mesa también recentra.**
+- **Medida de la espera:** `TableDirector.takeTimings` guarda lo que tardó el servidor en cada carta y, fuera de release, sale en el log como `[mesa] sacar carta: N ms`. En el GN2200: `adb logcat -s flutter | findstr "sacar carta"`.
+
+**Medido en tests** (motor de Flutter, 360 × 760; **no es el móvil**):
+
+| | Antes | Después |
+|---|---|---|
+| Toque en el abanico con el servidor sin contestar | nada visible; el segundo toque, perdido | dorso en su hueco en el mismo fotograma; 3 toques = 3 cartas; Cruz Celta 10 de 10 |
+| Carta más grande en pantalla (suelta, levantada, cualquier cámara permitida) | 672 px (88 % del alto) | 216 px (28 %); nunca crece más que el zoom |
+| Paño a la vista con zoom 1 | — | 100 % sin giro; 90–91 % con giro de 40° |
+| Paño a la vista con zoom 2,6 | — | 34–44 % (es el zoom); el centro siempre en el paño |
+| 4 cartas sacadas sin tirada | las 4 en (470, 472), sobre «Futuro» | 4 sitios distintos, sin tocarse ni tocar el abanico |
+
+Capturas del motor con el mismo guion (cuatro cartas sin tirada, tirada de tres, sello): [antes](../.qa-mesa/motor-antes-reposo.png) y [después](../.qa-mesa/motor-despues-reposo.png); y con la cámara inclinada y acercada: [antes](../.qa-mesa/motor-antes-zoom.png) y [después](../.qa-mesa/motor-despues-zoom.png). Las letras salen como cajas: el motor de tests no carga las fuentes.
+
+- **Puertas:** `flutter analyze` sin avisos; `flutter test` 825 pasan y 7 capturas manuales saltadas (14 tests nuevos en `mesa_movil_test.dart` y `mesa_movil_view_test.dart`). No se tocó el backend, así que no se corrieron `pytest` ni `verify_migrations`.
+- **Pendiente de comprobar en el GN2200 (APK profile):** que la carta se vea al instante con la red real y cuánto tarda el servidor (`[mesa] sacar carta`); que no se pierdan toques rápidos seguidos; tres cartas y Cruz Celta completas a toques; que un toque con temblor no deje cartas sobre el abanico; pellizco, giro y doble toque fuera de la mesa; que la cámara vuelva como se dejó; y fps quieta, con abanico y con la Cruz Celta. **No se afirma 60 fps.**
+
+**Decisiones abiertas para Samuel** (no se han tocado; las cifras son de 360 × 760):
+
+1. **Giro de ±40° con zoom 1:** deja fuera hasta un 10 % del paño (esquinas). A) Dejarlo así: se recupera con doble toque en cualquier sitio. B) Encuadre que se aleja con el giro para que entre entero (la especificación solo fija que *inclinar* no cambia el zoom). C) Bajar el giro máximo; habría que medir con qué valor entra entero.
+2. **Umbral de toque:** 6 px, el del prototipo (pensado para ratón). Flutter usa 18 (`kTouchSlop`). Con 6, un temblor convierte un toque en arrastre; lo corregido cubre las cartas del abanico, no los montones ni las cartas sueltas. A) 6. B) 18. C) Un valor medido en el GN2200.
+3. **Abanico frente a sello y bordado:** hoy se resuelve con el orden de capas. A) Dejarlo. B) Bajar la línea del abanico dentro de la zona cercana (y 690–880) para que no se pisen; cambia una coordenada de la especificación (y = 782).
+
 - [ ] Medir en el móvil real con Impeller: 60 fps quieta y con la Cruz Celta; el abanico sin tirones.
 - [ ] Accesibilidad: `Semantics` en cartas y radial, 48 dp, lectores de pantalla.
 - [ ] Probar en el móvil más pequeño de la prueba cerrada (360 dp). *(02-oct, en tests: `pantalla_pequena_test.dart` abre la mesa, el panel de lecturas y una Cruz Celta con textos largos en 360×640 y 360×740, sin desbordes y con «Cerrar el círculo» al alcance. Cazó un fallo: con texto largo la carta se quedaba con el deslizamiento y no se podía pasar a la siguiente; ahora, al llegar al final del texto, seguir tirando pasa de carta. Falta verlo en un móvil real de 360 dp.)*
