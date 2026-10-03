@@ -387,20 +387,6 @@ class _TarotTableViewState extends State<TarotTableView>
             painter: FeltPainter(spread: sp, hotSlot: _dir.hotSlot),
           ),
         ),
-        IgnorePointer(
-          child: RepaintBoundary(
-            child: AnimatedBuilder(
-              animation: _embroideryCtl,
-              builder: (context, _) => CustomPaint(
-                size: const Size(TableGeometry.width, TableGeometry.height),
-                painter: EmbroideryPainter(_embroideryCtl.value),
-              ),
-            ),
-          ),
-        ),
-        // el sello va sobre el paño y bajo las piezas: las cartas pueden taparlo
-        if (table.seal case final seal?)
-          SealPiece(at: TableDirector.sealAt, open: seal.open),
         for (final p in pieces)
           if (p.kind == PieceKind.shelfDeck || p.kind == PieceKind.pile)
             PilePiece(
@@ -417,6 +403,23 @@ class _TarotTableViewState extends State<TarotTableView>
             ),
         _fanLayer(back, pieces),
         _shuffleLayer(back),
+        // el bordado encendido y el sello van SOBRE el abanico y los montones:
+        // en la zona cercana se pisan (abanico en y 782, sello en 712, bordado
+        // en 716) y en el GN2200 el abanico los dejaba tapados y sin toque.
+        // Las cartas en juego si pueden taparlos.
+        IgnorePointer(
+          child: RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _embroideryCtl,
+              builder: (context, _) => CustomPaint(
+                size: const Size(TableGeometry.width, TableGeometry.height),
+                painter: EmbroideryPainter(_embroideryCtl.value),
+              ),
+            ),
+          ),
+        ),
+        if (table.seal case final seal?)
+          SealPiece(at: TableDirector.sealAt, open: seal.open),
         for (final e in _ghosts.entries)
           if (e.value.view.kind == PieceKind.pile)
             _ghost(e.key, e.value.view, e.value.to, back),
@@ -429,6 +432,14 @@ class _TarotTableViewState extends State<TarotTableView>
               if (mounted) setState(() => _imprints.remove(e.key));
             },
           ),
+        for (final p in pieces)
+          if (p.kind == PieceKind.pendingCard)
+            PendingCardPiece(
+              key: ValueKey(p.id),
+              view: p,
+              back: back,
+              birth: _births[p.id],
+            ),
         for (final p in pieces)
           if (p.kind == PieceKind.card)
             TableCardPiece(

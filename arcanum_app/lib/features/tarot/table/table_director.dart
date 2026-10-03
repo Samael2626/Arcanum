@@ -9,6 +9,7 @@
 /// `pieces()` y escucha los avisos. Las reglas son las del prototipo v2.
 library;
 
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -41,7 +42,16 @@ abstract class TableEffects {
   void error(Object error) {}
 }
 
-enum PieceKind { shelfDeck, pile, fanCard, card }
+enum PieceKind {
+  shelfDeck,
+  pile,
+  fanCard,
+
+  /// Carta ya pedida al servidor que todavia no ha contestado: se ve volar a
+  /// su sitio en el acto (boca abajo, como sale siempre) y no se puede tocar.
+  pendingCard,
+  card,
+}
 
 /// Una pieza lista para dibujar, en unidades de mesa.
 class PieceView {
@@ -106,6 +116,36 @@ class _Drag {
   bool gesture = false;
 }
 
+/// Una carta del abanico pedida al servidor y todavia sin respuesta.
+class _PendingTake {
+  _PendingTake({
+    required this.fanId,
+    required this.pid,
+    required this.position,
+    required this.from,
+    required this.to,
+    required this.slot,
+  });
+
+  final String fanId;
+  final String pid;
+  final int position;
+
+  /// Donde estaba en el abanico y adonde va (hueco o sitio libre).
+  final TablePose from;
+  TablePose to;
+
+  /// Hueco reservado: dos toques seguidos no van al mismo.
+  final int? slot;
+  final Stopwatch watch = Stopwatch()..start();
+
+  /// Se saco arrastrando y el dedo ya se levanto: al llegar la carta se suelta.
+  bool released = false;
+  bool cancelled = false;
+
+  String get id => 'pending:$fanId';
+}
+
 class _Radial {
   _Radial(this.layout, this.title, this.onPick);
   final RadialLayout layout;
@@ -142,7 +182,15 @@ class TableDirector extends ChangeNotifier {
   _Radial? _radial;
   List<String>? _union;
   bool _busy = false;
+  final Map<String, _PendingTake> _pending = {};
   int? hotSlot;
+
+  /// Cartas del abanico pedidas al servidor que aun no han llegado.
+  Iterable<String> get pendingTakes => _pending.keys;
+
+  /// Lo que tardo cada carta del abanico desde el toque hasta que el servidor
+  /// la dio (las ultimas 50). La carta se ve en el acto; esto mide la red.
+  final List<Duration> takeTimings = [];
   (String, Duration)? _pendingCardTap;
   Duration _now = Duration.zero;
 
@@ -216,6 +264,14 @@ class TableDirector extends ChangeNotifier {
       camera.toScreen(embroideryAt + Offset(dx * 90.0, dy * 28.0)),
   ]);
 
+  /// Lo que ocupa el sello en la mesa.
+  static Rect get sealRect =>
+      Rect.fromCircle(center: sealAt, radius: sealRadius);
+
+  /// Lo que ocupa el bordado «Interpretar» en la mesa (y donde se toca).
+  static Rect get embroideryRect =>
+      Rect.fromCenter(center: embroideryAt, width: 180, height: 56);
+
   static Rect _bounds(List<Offset> p) => Rect.fromLTRB(
     p.map((o) => o.dx).reduce(math.min),
     p.map((o) => o.dy).reduce(math.min),
@@ -284,7 +340,11 @@ class TableDirector extends ChangeNotifier {
       );
     }
     if (f != null) {
-      final positions = server?.piles[f.pid]?.positions ?? const <int>[];
+      // las ya pedidas salen del abanico en el acto, sin esperar al servidor
+      final positions = [
+        for (final pos in server?.piles[f.pid]?.positions ?? const <int>[])
+          if (!_pending.containsKey('fan:${f.pid}:$pos')) pos,
+      ];
       final poses = fanPoses(f.start, f.end, positions.length);
       for (var i = 0; i < positions.length; i++) {
         out.add(
@@ -296,6 +356,17 @@ class TableDirector extends ChangeNotifier {
           ),
         );
       }
+    }
+    for (final p in _pending.values) {
+      out.add(
+        PieceView(
+          id: p.id,
+          kind: PieceKind.pendingCard,
+          pose: _overrides[p.id] ?? p.to,
+          lift: _lift[p.id] ?? 0,
+          dragging: _overrides.containsKey(p.id),
+        ),
+      );
     }
     final dragged = _drag?.id;
     final cards = [...table.cards]
@@ -365,56 +436,101 @@ class TableDirector extends ChangeNotifier {
   static const double sealRadius = 42;
 
   // ---------- que hay bajo el dedo ----------
-  Hit hitAt(Offset tablePoint) {
+
+  /// Lo que hay bajo un punto de la mesa (a ras del paño).
+  Hit hitAt(Offset tablePoint) => hitAtScreen(camera.toScreen(tablePoint));
+
+  /// Lo que hay bajo el dedo, en el mismo orden en que se dibuja.
+  ///
+  /// Cada pieza se busca en SU plano: una carta levantada (arrastrandose,
+  /// volteandose) se dibuja mas cerca de la camara y se toca donde se ve, no
+  /// en el paño de debajo. Primero se mira lo que hay justo bajo el dedo y,
+  /// solo si no hay nada, la zona de toque ampliada: asi el margen de una
+  /// carta no le roba el toque al sello o a la carta de al lado.
+  Hit hitAtScreen(Offset screen) {
     final list = pieces();
-    for (final v in list.reversed) {
-      final pad = 24.0;
-      final w = TableGeometry.cardW, h = TableGeometry.cardH;
-      final local = localNormalized(
-        v.pose,
-        tablePoint,
-        w: w + pad * 2 / v.pose.scale,
-        h: h + pad * 2 / v.pose.scale,
-      );
-      if (local.dx.abs() > 1 || local.dy.abs() > 1) continue;
-      final exact = localNormalized(v.pose, tablePoint);
-      switch (v.kind) {
-        case PieceKind.shelfDeck:
-          return HitDeck(
-            pid: v.id.substring(6),
-            local: exact,
-            count: v.count,
-            inPlay: false,
-          );
-        case PieceKind.pile:
-          return HitDeck(pid: v.id.substring(5), local: exact, count: v.count);
-        case PieceKind.fanCard:
-          return HitCard(slug: v.id, local: exact, faceUp: false, inFan: true);
-        case PieceKind.card:
-          return HitCard(
-            slug: v.card!.slug,
-            local: exact,
-            faceUp: v.card!.faceUp,
-          );
-      }
-    }
-    // el sello esta encima del paño pero debajo de las cartas: se mira despues
-    if (table.seal != null &&
-        (tablePoint - sealAt).distance <= sealRadius + 8) {
-      return const HitSeal();
-    }
-    if (readyToInterpret &&
-        (tablePoint - embroideryAt).dx.abs() < 90 &&
-        (tablePoint - embroideryAt).dy.abs() < 28) {
-      return const HitEmbroidery();
+    final ground = camera.toTable(screen);
+    for (final padded in const [false, true]) {
+      final hit = _hitPass(list, screen, ground, padded: padded);
+      if (hit != null) return hit;
     }
     final inside =
-        tablePoint.dx >= 0 &&
-        tablePoint.dx <= TableGeometry.width &&
-        tablePoint.dy >= 0 &&
-        tablePoint.dy <= TableGeometry.height;
+        ground.dx >= 0 &&
+        ground.dx <= TableGeometry.width &&
+        ground.dy >= 0 &&
+        ground.dy <= TableGeometry.height;
     return inside ? const HitSurface() : const HitNothing();
   }
+
+  Hit? _hitPass(
+    List<PieceView> list,
+    Offset screen,
+    Offset ground, {
+    required bool padded,
+  }) {
+    Hit? piece(PieceView v) {
+      final at = v.lift == 0 ? ground : camera.toTable(screen, z: v.lift);
+      final pad = padded ? 24.0 / v.pose.scale : 0.0;
+      final w = TableGeometry.cardW, h = TableGeometry.cardH;
+      final exact = localNormalized(v.pose, at);
+      final local = padded
+          ? localNormalized(v.pose, at, w: w + pad * 2, h: h + pad * 2)
+          : exact;
+      if (local.dx.abs() > 1 || local.dy.abs() > 1) return null;
+      return switch (v.kind) {
+        PieceKind.shelfDeck => HitDeck(
+          pid: v.id.substring(6),
+          local: exact,
+          count: v.count,
+          inPlay: false,
+        ),
+        PieceKind.pile => HitDeck(
+          pid: v.id.substring(5),
+          local: exact,
+          count: v.count,
+        ),
+        PieceKind.fanCard => HitCard(
+          slug: v.id,
+          local: exact,
+          faceUp: false,
+          inFan: true,
+        ),
+        PieceKind.card => HitCard(
+          slug: v.card!.slug,
+          local: exact,
+          faceUp: v.card!.faceUp,
+        ),
+        PieceKind.pendingCard => null,
+      };
+    }
+
+    // de arriba abajo, como se pinta: cartas en juego, bordado y sello (sobre
+    // el abanico y los montones), abanico, montones y estante
+    for (final v in list.reversed) {
+      if (v.kind != PieceKind.card) continue;
+      final h = piece(v);
+      if (h != null) return h;
+    }
+    if (readyToInterpret && embroideryRect.contains(ground)) {
+      return const HitEmbroidery();
+    }
+    if (table.seal != null &&
+        (ground - sealAt).distance <= sealRadius + (padded ? 8 : 0)) {
+      return const HitSeal();
+    }
+    for (final v in list.reversed) {
+      if (v.kind == PieceKind.card || v.kind == PieceKind.pendingCard) continue;
+      final h = piece(v);
+      if (h != null) return h;
+    }
+    return null;
+  }
+
+  @visibleForTesting
+  void debugLift(String id, double z) => _lift[id] = z;
+
+  @visibleForTesting
+  Future<void> debugCut(String pid) => _autoCut(pid);
 
   // ---------- entrada de toques (coordenadas de pantalla) ----------
   void pointerDown(int pointer, Offset screen, Duration time) {
@@ -436,7 +552,7 @@ class TableDirector extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    _apply(grammar.down(pointer, screen, time, hitAt(camera.toTable(screen))));
+    _apply(grammar.down(pointer, screen, time, hitAtScreen(screen)));
   }
 
   void pointerMove(int pointer, Offset screen, Duration time) {
@@ -483,6 +599,7 @@ class TableDirector extends ChangeNotifier {
           _tap(hit, position);
         case ResetCameraIntent():
           camera.reset();
+          _saveCamera();
         case OpenRadialIntent(:final hit, :final position):
           _openRadialFor(hit, position);
         case RadialMoveIntent(:final position):
@@ -514,10 +631,33 @@ class TableDirector extends ChangeNotifier {
         case PinchUpdateIntent(:final a, :final b):
           camera.updatePinch(a, b);
         case PinchEndIntent():
-          break;
+          _saveCamera();
       }
     }
     if (intents.isNotEmpty) notifyListeners();
+  }
+
+  /// La camara viaja en la foto de la mesa: al volver se ve como se dejo.
+  /// Antes no se guardaba nunca y la mesa volvia siempre a la vista inicial.
+  void _saveCamera() {
+    final s = camera.state;
+    final was = table.camera;
+    if (was.theta == s.theta &&
+        was.yaw == s.yaw &&
+        was.zoom == s.zoom &&
+        was.panX == s.panX &&
+        was.panY == s.panY) {
+      return;
+    }
+    ops.arrange((t) => t.copyWith(camera: s));
+  }
+
+  void _report(Object e) {
+    if (isCreditsRequired(e)) {
+      effects.creditsRequired();
+    } else {
+      effects.error(e);
+    }
   }
 
   /// Ejecuta una accion que habla con el servidor: una a la vez, y los errores
@@ -552,6 +692,11 @@ class TableDirector extends ChangeNotifier {
 
   // ---------- tocar ----------
   void _tap(Hit hit, Offset screen) {
+    // sacar del abanico no espera a nada: cada toque es una carta
+    if (hit case HitCard(inFan: true, :final slug)) {
+      unawaited(_takeFromFan(slug));
+      return;
+    }
     if (_busy) return;
     switch (hit) {
       case HitSurface():
@@ -569,8 +714,6 @@ class TableDirector extends ChangeNotifier {
           return effects.toast('Este montón está vacío');
         }
         _autoFan(pid);
-      case HitCard(inFan: true, :final slug):
-        _run(() => _takeFromFan(slug));
       case HitCard(:final slug):
         final c = table.card(slug);
         if (c == null) return;
@@ -650,37 +793,226 @@ class TableDirector extends ChangeNotifier {
     );
   }
 
-  Future<void> _takeFromFan(String fanId) async {
-    final parts = fanId.split(':');
-    final pid = parts[1], pos = int.parse(parts[2]);
+  /// Saca una carta del abanico.
+  ///
+  /// En el acto, sin esperar al servidor: la carta sale del abanico y vuela a
+  /// su hueco (o a un sitio libre), y el hueco queda reservado. Asi un toque
+  /// se ve siempre y el siguiente toque no se pierde. Cuando el servidor dice
+  /// que carta era, la de verdad ocupa ese sitio; si falla, vuelve al abanico
+  /// y se dice por que.
+  ///
+  /// Antes el toque esperaba la respuesta con la mesa bloqueada (`_busy`) y
+  /// los toques de mientras se tiraban en silencio.
+  Future<void> _takeFromFan(String fanId, {_Drag? drag}) async {
+    if (_pending.containsKey(fanId)) return;
     final from = _poseOf(fanId);
-    final card = await ops.take(pid, pos);
-    if (from != null) _born('card:${card.slug}', from);
-    if (_count(pid) == 0) ops.arrange((s) => s.copyWith(fan: () => null));
+    if (from == null) return;
+    final parts = fanId.split(':');
     final sp = spread;
-    final empty = sp == null ? null : _firstEmptySlot(sp);
-    if (sp != null && empty != null) {
-      _place(card.slug, sp, empty);
+    final slot = drag != null || sp == null ? null : _firstEmptySlot(sp);
+    final scale = sp?.cardScale ?? TableGeometry.freeScale;
+    final to = drag != null
+        ? TablePose(from.x, from.y, scale: scale)
+        : slot != null
+        ? slotPose(sp!, slot)
+        : _looseSpot(from.offset, scale);
+    final p = _PendingTake(
+      fanId: fanId,
+      pid: parts[1],
+      position: int.parse(parts[2]),
+      from: from,
+      to: to,
+      slot: slot,
+    );
+    _pending[fanId] = p;
+    if (drag == null) _born(p.id, from);
+    notifyListeners();
+    final TableCard card;
+    try {
+      card = await ops.take(p.pid, p.position);
+    } on Object catch (e) {
+      _pending.remove(fanId);
+      _overrides.remove(p.id);
+      _lift.remove(p.id);
+      if (drag != null) {
+        if (identical(_drag, drag)) _drag = null;
+        if (drag.gesture) ops.commitUndoable();
+      }
+      notifyListeners();
+      _report(e);
+      return;
+    }
+    _pending.remove(fanId);
+    _timeTake(p);
+    if (_count(p.pid) == 0) ops.arrange((s) => s.copyWith(fan: () => null));
+    if (drag != null && !p.released && identical(_drag, drag)) {
+      // el dedo sigue abajo: la carta de verdad sigue al dedo desde ahi
+      _continueDrag(p, card, drag);
+    } else if (drag != null) {
+      _landReleased(p, card, drag);
     } else {
-      ops.arrange(
-        (s) => s.updateCard(
-          card.slug,
-          (k) => k.copyWith(
-            y: k.y - 150,
-            scale: sp?.cardScale ?? TableGeometry.freeScale,
-            rot: k.rot + _random.nextDouble() * 10 - 5,
-          ),
-        ),
+      _born('card:${card.slug}', _shownPending(p));
+      _land(card.slug, p.slot, p.to);
+    }
+    notifyListeners();
+  }
+
+  /// Donde se esta viendo la carta pendiente: va de camino 420 ms.
+  TablePose _shownPending(_PendingTake p) {
+    const travel = 420;
+    final t = (p.watch.elapsedMilliseconds / travel).clamp(0.0, 1.0);
+    if (t >= 1) return p.to;
+    final e = 1 - math.pow(1 - t, 3).toDouble();
+    return TablePose(
+      p.from.x + (p.to.x - p.from.x) * e,
+      p.from.y + (p.to.y - p.from.y) * e,
+      rot: p.from.rot + (p.to.rot - p.from.rot) * e,
+      scale: p.from.scale + (p.to.scale - p.from.scale) * e,
+    );
+  }
+
+  void _timeTake(_PendingTake p) {
+    p.watch.stop();
+    takeTimings.add(p.watch.elapsed);
+    if (takeTimings.length > 50) takeTimings.removeAt(0);
+    if (!kReleaseMode) {
+      debugPrint(
+        '[mesa] sacar carta: ${p.watch.elapsedMilliseconds} ms hasta la '
+        'respuesta del servidor (la carta se ve al instante)',
       );
     }
   }
 
+  /// Deja una carta recien sacada en su hueco (si sigue libre) o en `spot`.
+  void _land(String slug, int? slot, TablePose spot) {
+    final sp = spread;
+    final free =
+        sp != null &&
+            slot != null &&
+            slot < sp.cardCount &&
+            table.cardInSlot(slot) == null
+        ? slot
+        : null;
+    if (sp != null && free != null) return _place(slug, sp, free);
+    ops.arrange(
+      (s) => s.updateCard(
+        slug,
+        (k) => k.copyWith(
+          x: spot.x,
+          y: spot.y,
+          scale: sp?.cardScale ?? TableGeometry.freeScale,
+          rot: _random.nextDouble() * 10 - 5,
+        ),
+      ),
+    );
+  }
+
+  /// La carta llego con el dedo todavia en ella: pasa a arrastrarse.
+  void _continueDrag(_PendingTake p, TableCard card, _Drag d) {
+    final id = 'card:${card.slug}';
+    final pose = _overrides.remove(p.id) ?? p.to;
+    _lift.remove(p.id);
+    _wobble.remove(p.id);
+    ops.arrange(
+      (s) => s.updateCard(
+        card.slug,
+        (k) => k.copyWith(x: pose.x, y: pose.y, scale: pose.scale),
+      ),
+    );
+    // venia del abanico: no hay sitio al que devolver una carta desplazada
+    d
+      ..id = id
+      ..origin = null
+      ..ready = true;
+    _overrides[id] = pose;
+    _lift[id] = 64;
+  }
+
+  /// El dedo se levanto antes de que llegara la carta: se suelta donde quedo.
+  void _landReleased(_PendingTake p, TableCard card, _Drag d) {
+    final pose = p.to;
+    d
+      ..id = 'card:${card.slug}'
+      ..origin = null;
+    try {
+      ops.arrange(
+        (s) => s.updateCard(
+          card.slug,
+          (k) => k.copyWith(x: pose.x, y: pose.y, scale: pose.scale),
+        ),
+      );
+      _born(d.id, pose);
+      if (p.cancelled) {
+        _autoPlace(card.slug, pose.offset);
+      } else {
+        _dropCard(card.slug, pose, d);
+      }
+    } finally {
+      if (d.gesture) ops.commitUndoable();
+    }
+  }
+
+  /// Coloca una carta como si se hubiera tocado en el abanico: primer hueco
+  /// libre o, sin hueco, un sitio libre.
+  void _autoPlace(String slug, Offset near) {
+    final sp = spread;
+    final slot = sp == null ? null : _firstEmptySlot(sp);
+    if (sp != null && slot != null) return _place(slug, sp, slot);
+    final scale = sp?.cardScale ?? TableGeometry.freeScale;
+    _land(slug, null, _looseSpot(near, scale, skip: slug));
+  }
+
+  /// Lo que no puede taparse al dejar algo en la mesa: huecos de la tirada,
+  /// cartas, montones (con su nombre), el sello, el bordado y lo pendiente.
+  List<Rect> _occupied({String? skip}) {
+    final sp = spread;
+    return [
+      if (sp != null)
+        for (var i = 0; i < sp.cardCount; i++) poseRect(slotPose(sp, i)),
+      for (final c in table.cards)
+        if (c.slug != skip && !c.aside)
+          poseRect(TablePose(c.x, c.y, rot: c.rot, scale: c.scale)),
+      for (final p in table.piles) _pileRect(TablePose(p.x, p.y, rot: p.rot)),
+      for (final p in _pending.values) poseRect(p.to),
+      sealRect,
+      embroideryRect,
+    ];
+  }
+
+  /// Un monton ocupa su caja y su nombre, que va debajo.
+  static Rect _pileRect(TablePose p) {
+    final r = poseRect(
+      TablePose(p.x, p.y, rot: p.rot, scale: TableGeometry.deckScale),
+    );
+    return Rect.fromLTRB(r.left - 12, r.top, r.right + 12, r.bottom + 34);
+  }
+
+  /// Hasta donde se dejan las cartas sueltas: el paño por encima de la zona
+  /// cercana (y 690 en la especificacion), que es la del mazo y el abanico.
+  static const Rect _looseArea = Rect.fromLTRB(18, 172, 582, 690);
+
+  /// Sitio libre para una carta suelta: ni encima de la tirada, ni del sello,
+  /// ni del bordado, ni de otra carta, y lo mas cerca posible de `near`.
+  TablePose _looseSpot(Offset near, double scale, {String? skip}) {
+    final at = freeSpot(
+      size: Size(TableGeometry.cardW * scale, TableGeometry.cardH * scale),
+      taken: _occupied(skip: skip),
+      area: _looseArea,
+      near: near,
+    );
+    return TablePose(at.dx, at.dy, scale: scale);
+  }
+
+  /// Primer hueco sin carta y sin una carta de camino.
   int? _firstEmptySlot(SpreadDef sp) {
     for (var i = 0; i < sp.cardCount; i++) {
-      if (table.cardInSlot(i) == null) return i;
+      if (_slotFree(i)) return i;
     }
     return null;
   }
+
+  bool _slotFree(int i) =>
+      table.cardInSlot(i) == null && !_pending.values.any((p) => p.slot == i);
 
   void _place(String slug, SpreadDef sp, int slot) {
     final pose = slotPose(sp, slot);
@@ -705,7 +1037,7 @@ class TableDirector extends ChangeNotifier {
     if (sp == null) return _openSpreadRadial(pid, then: () => _deal(pid));
     final empty = [
       for (var i = 0; i < sp.cardCount; i++)
-        if (table.cardInSlot(i) == null) i,
+        if (_slotFree(i)) i,
     ];
     if (empty.isEmpty) return effects.toast('La tirada ya está completa');
     var dealt = 0;
@@ -727,25 +1059,43 @@ class TableDirector extends ChangeNotifier {
     }
   }
 
+  /// Sitio para un monton nuevo (un corte): en la zona cercana si cabe sin
+  /// tapar nada, y si no, en el paño donde menos tape. Antes se buscaba solo
+  /// lejos de otros montones y podia caer sobre el bordado o el sello.
   Offset _freeSpot(PileLayout near) {
-    final w = TableGeometry.cardW * TableGeometry.deckScale * 1.9;
-    for (final dx in [-w, w, -2 * w, 2 * w]) {
-      final x = (near.x + dx).clamp(70.0, TableGeometry.width - 70);
-      if (table.piles.every(
-        (q) =>
-            (Offset(q.x, q.y) - Offset(x, near.y)).distance >
-            TableGeometry.cardW * TableGeometry.deckScale * 1.2,
-      )) {
-        return Offset(x, near.y);
-      }
+    final taken = _occupied();
+    final f = fan;
+    if (f != null) {
+      final poses = fanPoses(f.start, f.end, 2);
+      taken.add(
+        poseRect(poses.first).expandToInclude(poseRect(poses.last)).inflate(30),
+      );
     }
-    return Offset(
-      near.x.clamp(70.0, TableGeometry.width - 70),
-      (near.y - TableGeometry.cardH * TableGeometry.deckScale * 1.3).clamp(
-        TableGeometry.shelfY + 70,
-        TableGeometry.height - 70,
-      ),
+    final size = _pileRect(const TablePose(0, 0)).size;
+    Offset pick(Rect area) => freeSpot(
+      size: size,
+      taken: taken,
+      area: area,
+      near: Offset(near.x, near.y),
     );
+    bool clear(Offset at) {
+      final r = Rect.fromCenter(
+        center: at,
+        width: size.width,
+        height: size.height,
+      );
+      return taken.every((t) {
+        final i = r.intersect(t);
+        return i.width <= 0 || i.height <= 0;
+      });
+    }
+
+    // el rectangulo del monton va con el nombre debajo: el centro de la caja
+    // queda por encima del centro del rectangulo
+    Offset box(Offset c) => c.translate(0, -17);
+    final close = pick(const Rect.fromLTRB(18, 690, 582, 882));
+    if (clear(close)) return box(close);
+    return box(pick(TableGeometry.cloth));
   }
 
   int _cutSize(int n) =>
@@ -1166,39 +1516,21 @@ class TableDirector extends ChangeNotifier {
         final d = _Drag(kind, id, Offset.zero);
         _drag = d;
         if (hit is HitCard && hit.inFan) {
-          // sale del abanico al empezar a arrastrarla
-          d.ready = false;
-          final parts = hit.slug.split(':');
+          // sale del abanico al empezar a arrastrarla: se ve en el dedo en el
+          // acto y la carta de verdad la sustituye al llegar del servidor
           ops.beginUndoable();
-          d.gesture = true;
-          ops
-              .take(parts[1], int.parse(parts[2]))
-              .then(
-                (card) {
-                  if (_count(parts[1]) == 0) {
-                    ops.arrange((s) => s.copyWith(fan: () => null));
-                  }
-                  d
-                    ..id = 'card:${card.slug}'
-                    ..origin = TablePose(
-                      card.x,
-                      card.y,
-                      rot: card.rot,
-                      scale: card.scale,
-                    )
-                    ..offset = Offset.zero
-                    ..ready = true;
-                  _lift[d.id] = 64;
-                  _moveDragged(d, d.last ?? at);
-                  notifyListeners();
-                },
-                onError: (Object e) {
-                  _drag = null;
-                  // cerrar dos veces no pasa nada: el segundo no encuentra gesto
-                  ops.commitUndoable();
-                  effects.error(e);
-                },
-              );
+          d
+            ..gesture = true
+            ..id = 'pending:${hit.slug}';
+          unawaited(_takeFromFan(hit.slug, drag: d));
+          final p = _pending[hit.slug];
+          if (p == null) {
+            _drag = null;
+            ops.commitUndoable();
+            return;
+          }
+          _lift[d.id] = 64;
+          _moveDragged(d, at);
           return;
         }
         final pose = _poseOf(id);
@@ -1225,6 +1557,8 @@ class TableDirector extends ChangeNotifier {
   void _dragUpdate(DragKind kind, Offset screen, Offset delta) {
     final d = _drag;
     if (d == null) return;
+    // el arrastre se mide a ras del paño, como el prototipo: lo que se suelta
+    // cae donde esta el dedo (la carta levantada se ve un poco desplazada)
     final at = camera.toTable(screen);
     final prev = d.last ?? at;
     d.last = at;
@@ -1244,14 +1578,18 @@ class TableDirector extends ChangeNotifier {
         _moveDragged(d, at);
         (_wobble[d.id] ??= Wobble()).push(at - prev);
         final sp = spread;
-        hotSlot = d.id.startsWith('card:') && sp != null
+        hotSlot =
+            (d.id.startsWith('card:') || d.id.startsWith('pending:')) &&
+                sp != null
             ? nearestSlot(sp, _overrides[d.id]!.offset)
             : null;
     }
   }
 
   void _dragEnd(DragKind kind, Offset screen, bool cancelled) {
-    final gesture = _drag?.gesture ?? false;
+    final pending = _drag?.id.startsWith('pending:') ?? false;
+    // una carta del abanico que aun no llego cierra su gesto al llegar
+    final gesture = !pending && (_drag?.gesture ?? false);
     try {
       _dropDragged(kind, cancelled);
     } finally {
@@ -1271,6 +1609,7 @@ class TableDirector extends ChangeNotifier {
         if (!cancelled) {
           camera.releaseOrbit(vyaw: d.offset.dx, vtheta: d.offset.dy);
         }
+        _saveCamera();
       case DragKind.peel:
         final (slug, peel) = _peel!;
         _peel = null;
@@ -1310,6 +1649,17 @@ class TableDirector extends ChangeNotifier {
         }
       case DragKind.move:
         final pose = _overrides.remove(d.id);
+        if (d.id.startsWith('pending:')) {
+          // el servidor no ha contestado: se anota donde se solto
+          final p = _pending[d.id.substring(8)];
+          if (p != null) {
+            p
+              ..released = true
+              ..cancelled = cancelled
+              ..to = pose ?? p.to;
+          }
+          return;
+        }
         if (!d.ready || pose == null) return;
         if (cancelled) return;
         if (d.id.startsWith('card:')) {
@@ -1322,12 +1672,37 @@ class TableDirector extends ChangeNotifier {
     }
   }
 
+  /// Caja del abanico abierto, o null.
+  Rect? get _fanBox {
+    final f = fan;
+    if (f == null) return null;
+    final poses = fanPoses(f.start, f.end, 2);
+    return poseRect(poses.first).expandToInclude(poseRect(poses.last));
+  }
+
   void _dropCard(String slug, TablePose pose, _Drag d) {
     final sp = spread;
     final slot = sp == null ? null : nearestSlot(sp, pose.offset);
+    // soltada encima del abanico (o casi sin moverla al sacarla): taparia las
+    // demas, asi que se coloca como si se hubiera tocado
+    final box = _fanBox;
+    if (slot == null && box != null && box.contains(pose.offset)) {
+      return _autoPlace(slug, pose.offset);
+    }
     if (sp != null && slot != null) {
       final other = table.cardInSlot(slot);
-      final origin = d.origin;
+      // la desplazada ocupa el hueco que se libera o el sitio de donde vino la
+      // otra; si la otra no venia de ningun sitio (el abanico), uno libre
+      final back = other == null || other.slug == slug
+          ? null
+          : d.originSlot != null
+          ? slotPose(sp, d.originSlot!)
+          : d.origin ??
+                _looseSpot(
+                  Offset(other.x, other.y),
+                  sp.cardScale,
+                  skip: other.slug,
+                );
       ops.arrange((s) {
         var t = s.putInSlot(slug, slot);
         final target = slotPose(sp, slot);
@@ -1342,10 +1717,6 @@ class TableDirector extends ChangeNotifier {
           ),
         );
         if (other != null && other.slug != slug) {
-          // la desplazada ocupa el hueco que se libera o el sitio de donde vino la otra
-          final back = d.originSlot != null
-              ? slotPose(sp, d.originSlot!)
-              : origin;
           if (back != null) {
             t = t.updateCard(
               other.slug,

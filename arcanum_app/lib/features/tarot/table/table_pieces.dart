@@ -228,6 +228,85 @@ class _TableCardPieceState extends State<TableCardPiece>
   }
 }
 
+/// Carta pedida al servidor que aun no ha llegado: un dorso que sale del
+/// abanico y vuela a su sitio en el acto. Cuando llega la de verdad, esta
+/// desaparece y la otra nace donde estaba. No se toca.
+class PendingCardPiece extends StatefulWidget {
+  const PendingCardPiece({
+    super.key,
+    required this.view,
+    required this.back,
+    this.birth,
+  });
+
+  final PieceView view;
+  final ui.Image back;
+  final Birth? birth;
+
+  @override
+  State<PendingCardPiece> createState() => _PendingCardPieceState();
+}
+
+class _PendingCardPieceState extends State<PendingCardPiece>
+    with SingleTickerProviderStateMixin, PoseMotion {
+  @override
+  void initState() {
+    super.initState();
+    motionStart(widget.view.pose, widget.birth);
+  }
+
+  @override
+  void didUpdateWidget(PendingCardPiece old) {
+    super.didUpdateWidget(old);
+    motionUpdate(widget.view.pose, dragging: widget.view.dragging);
+  }
+
+  @override
+  void dispose() {
+    motionDispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Positioned(
+    left: 0,
+    top: 0,
+    child: IgnorePointer(
+      child: Semantics(
+        label: 'Sacando una carta',
+        child: AnimatedBuilder(
+          animation: motion,
+          builder: (context, child) => Transform(
+            transform: pieceMatrix(
+              shownPose,
+              lift: widget.view.lift + motionLift,
+            ),
+            child: child,
+          ),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(9),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: .45),
+                  blurRadius: 6 + widget.view.lift * .15,
+                  offset: Offset(0, 3 + widget.view.lift * .08),
+                ),
+              ],
+            ),
+            child: RawImage(
+              image: widget.back,
+              width: _cardSize.width,
+              height: _cardSize.height,
+              fit: BoxFit.fill,
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 /// Un monton (o un mazo del estante), con su nombre debajo. Viaja como las
 /// cartas: el corte sale del monton original y el mazo abierto, del estante.
 class PilePiece extends StatefulWidget {
