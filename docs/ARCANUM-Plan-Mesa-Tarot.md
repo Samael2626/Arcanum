@@ -164,12 +164,18 @@
 ## Fase 6: efectos, sonido y háptica
 
 - [ ] Símbolos del palo junto a la carta.
-- [ ] Huella del palo en el paño: brasas, ondas, destello, polvo.
+- [x] Huella del palo en el paño: brasas, ondas, destello, polvo. *(Hecha en la tanda 1 de animaciones, 02-oct: `table/table_fx.dart`.)*
 - [ ] Luz de la fase lunar y la fase dibujada en la cabecera.
 - [ ] Humo al sellar y al cerrar el círculo.
-- [ ] Muestras de sonido grabadas, con variación de tono (±5 %) y volumen (±3 dB). Vibración con `HapticFeedback`.
-- [ ] Calidad adaptativa con `FrameTiming`.
-- [ ] Respetar «reducir movimiento».
+- [ ] Muestras de sonido grabadas, con variación de tono (±5 %) y volumen (±3 dB). **Faltan las grabaciones.**
+- [x] Vibración con `HapticFeedback` *(04-oct, `table/table_haptics.dart`)*. Vibran los momentos de la especificación (§7): barajar, cortar, encajar en un hueco, desvelar (con su patrón propio si sale un Mayor), sellar, romper el sello, cerrar el círculo y la opción del radial bajo el dedo. `HapticFeedback` no admite milisegundos, así que los del prototipo pasan a sus golpes fijos: hasta 5 ms, `selectionClick`; de 6 a 10, `lightImpact`; de 11 a 20, `mediumImpact`. Los patrones (12, 40, 12…) dan dos golpes con su pausa en medio. Si el móvil tiene apagada la respuesta táctil, Android no vibra.
+- [x] Calidad adaptativa con `FrameTiming` *(04-oct, `table/table_quality.dart`)*. Ventanas de 2 s; por debajo de 40 fps baja un nivel. **Nivel 1:** sin brillos con desenfoque (halo del bordado, del mazo recién abierto y del glifo de la huella). **Nivel 2:** además, efectos a medio ritmo (bordado y barajado se repintan a 30 por segundo) y sin huellas. Los fps se cuentan sobre el tiempo **en movimiento**: la mesa quieta no dibuja nada, así que no baja la calidad, y una ventana con menos de 30 fotogramas no decide.
+- [x] Respetar «reducir movimiento» *(04-oct)*. Antes solo lo respetaban la lectura revelada, el bordado y las huellas. Ahora en toda la mesa: las cartas aparecen en su sitio sin viajar; volteo y giro de golpe; el abanico, abierto o cerrado sin animarse; sin barajado en escena ni fantasmas que vuelan al montón; radial y sello sin animación de entrada; la cámara sin suavizado ni inercia. Siguen igual, a propósito, lo que mueve el dedo (la esquina, el arrastre) y los avisos con tiempo (el anillo de deshacer y el cierre de la ayuda): marcan cuánto queda, no adornan.
+- Tests: `test/features/tarot/mesa_calidad_test.dart` (15). Comprobado que los de «reducir movimiento» fallan si se quita el cambio. `flutter test` 840 pasan, 7 saltados; `flutter analyze` sin avisos.
+- **Decisiones abiertas para Samuel:**
+  1. **Cuándo vuelve a subir la calidad:** la especificación dice «tras un rato holgado» sin cifra. Provisional: 3 ventanas seguidas (6 s) a 55 fps o más. Otras opciones: subir antes (1 ventana) o no subir hasta salir de la mesa.
+  2. **Sombras de las cartas:** llevan desenfoque y la especificación (§9) dice que eso costaba mucho en el prototipo, pero no son «brillos», así que el nivel 1 no las toca. A) Dejarlas. B) Que el nivel 1 también las cambie por una sombra sin desenfoque.
+  3. **Vibración y silencio:** «Silenciar» del radial del paño es para el sonido. A) La vibración sigue solo el ajuste del sistema. B) Silenciar también la apaga.
 
 ## Fase 7: calidad
 
@@ -223,6 +229,7 @@ Capturas del motor con el mismo guion (cuatro cartas sin tirada, tirada de tres,
 3. **Abanico frente a sello y bordado:** hoy se resuelve con el orden de capas. A) Dejarlo. B) Bajar la línea del abanico dentro de la zona cercana (y 690–880) para que no se pisen; cambia una coordenada de la especificación (y = 782).
 
 - [ ] Medir en el móvil real con Impeller: 60 fps quieta y con la Cruz Celta; el abanico sin tirones.
+  - *(04-oct)* **Ya hay medidor** en la propia mesa (`table/table_quality.dart`). En profile, cada 2 s con movimiento deja una línea en el log: `[mesa fps] escena=… fotogramas=… fps=… montaje_p90=…ms dibujo_p90=…ms lentos=… calidad=…`. Las mismas columnas que la tabla de la fase 4. La escena dice qué se movía: `barajar`, `abanico`, `camara`, `arrastre` o `mesa:<tirada>:<n>cartas`. En el GN2200: `adb logcat -s flutter | findstr "mesa fps"`. La mesa quieta no da líneas porque no dibuja, y eso es lo esperado: «60 fps quieta» se cumple sin dibujar. Lo que hay que medir son las escenas con movimiento. **Sin medir todavía en el móvil.**
 - [ ] Accesibilidad: `Semantics` en cartas y radial, 48 dp, lectores de pantalla.
 - [ ] Probar en el móvil más pequeño de la prueba cerrada (360 dp). *(02-oct, en tests: `pantalla_pequena_test.dart` abre la mesa, el panel de lecturas y una Cruz Celta con textos largos en 360×640 y 360×740, sin desbordes y con «Cerrar el círculo» al alcance. Cazó un fallo: con texto largo la carta se quedaba con el deslizamiento y no se podía pasar a la siguiente; ahora, al llegar al final del texto, seguir tirando pasa de carta. Falta verlo en un móvil real de 360 dp.)*
 - [ ] Revisión de código (`/code-review`) antes de mezclar.
