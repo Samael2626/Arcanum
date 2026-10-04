@@ -30,10 +30,31 @@ SigilDoc? decodeSigilEntry(String content) {
   return null;
 }
 
+/// Marca de la kamea (familia historica de Agrippa): otro documento, mismo tipo de entrada.
+const kKameaMark = 'sigilo-kamea';
+
+String encodeKameaEntry(KameaDoc doc) => jsonEncode({'taller': kKameaMark, 'doc': doc.toJson()});
+
+/// Kamea guardada si el contenido lo es; null si no.
+KameaDoc? decodeKameaEntry(String content) {
+  final t = content.trimLeft();
+  if (!t.startsWith('{')) return null;
+  try {
+    final j = jsonDecode(t);
+    if (j is Map<String, dynamic> && j['taller'] == kKameaMark) return KameaDoc.fromJson(j['doc'] as Map<String, dynamic>);
+  } on FormatException {
+    return null;
+  }
+  return null;
+}
+
 const _meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
 /// Titulo neutro: la intencion queda dentro del contenido cifrado.
 String sigilTitle(DateTime d) => 'Sigilo del ${d.day} de ${_meses[d.month - 1]}';
+
+/// Titulo de una kamea: la tabla es una eleccion historica; el nombre trazado no sale del cifrado.
+String kameaTitle(KameaDoc doc, DateTime d) => 'Kamea de ${doc.def.name}, ${d.day} de ${_meses[d.month - 1]}';
 
 class SigilStore {
   final ArcanumApi api;
@@ -42,8 +63,14 @@ class SigilStore {
   const SigilStore(this.api, this.crypto, this.place);
 
   /// Crea la entrada (o reescribe [entryId]) y devuelve su id.
-  Future<String> save(SigilDoc doc, {String? entryId}) async {
-    final enc = await crypto.encryptText(encodeSigilEntry(doc));
+  Future<String> save(SigilDoc doc, {String? entryId}) => _persist(encodeSigilEntry(doc), sigilTitle, entryId);
+
+  /// Igual para una kamea: su titulo nombra la tabla, que es una eleccion
+  /// historica y no la intencion (el nombre trazado queda dentro, cifrado).
+  Future<String> saveKamea(KameaDoc doc, {String? entryId}) => _persist(encodeKameaEntry(doc), (d) => kameaTitle(doc, d), entryId);
+
+  Future<String> _persist(String plain, String Function(DateTime) title, String? entryId) async {
+    final enc = await crypto.encryptText(plain);
     if (entryId != null) {
       // al seguir editando, el momento de creacion (luna, hora) no cambia
       await api.grimoireUpdate(entryId, {'encrypted_content': enc.ciphertext, 'content_iv': enc.iv});
@@ -67,7 +94,7 @@ class SigilStore {
     final now = DateTime.now();
     final res = await api.grimoireCreate({
       'entry_type': 'sigil',
-      'title': sigilTitle(now),
+      'title': title(now),
       'encrypted_content': enc.ciphertext,
       'content_iv': enc.iv,
       'moon_phase': moonPhase,

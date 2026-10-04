@@ -8,6 +8,7 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
+import '../sigilos/kamea_screen.dart';
 import '../sigilos/sigil_store.dart';
 import '../sigilos/taller_screen.dart';
 import 'grimorio_atmosphere.dart';
@@ -65,6 +66,14 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
     final saved = await Navigator.push<bool>(
       context,
       MaterialPageRoute(builder: (_) => TallerScreen(entryId: widget.id, initial: doc)),
+    );
+    if (mounted && saved == true) _retry();
+  }
+
+  Future<void> _continueKamea(KameaDoc doc) async {
+    final saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => KameaScreen(entryId: widget.id, initial: doc)),
     );
     if (mounted && saved == true) _retry();
   }
@@ -292,8 +301,9 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
           delayMs: 120,
           // un sigilo del taller se dibuja (y se puede seguir editando); una
           // entrada «Sigilo» escrita a mano antes del taller sigue siendo texto
-          child: switch (type == 'sigil' ? decodeSigilEntry(content) : null) {
+          child: switch (type == 'sigil' ? (decodeSigilEntry(content) ?? decodeKameaEntry(content)) : null) {
             final SigilDoc doc => _SigilBody(doc: doc, onEdit: () => _continueSigil(doc), accent: accent),
+            final KameaDoc doc => _KameaBody(doc: doc, onEdit: () => _continueKamea(doc), accent: accent),
             _ => _ManuscriptBody(content: content, accent: accent),
           },
         ),
@@ -452,6 +462,37 @@ class _SigilBodyState extends State<_SigilBody> {
           padding: const EdgeInsets.only(top: 14),
           child: Text('«${widget.doc.sigil.intention}»', textAlign: TextAlign.center, style: ArcanumText.body(17, italic: true)),
         ),
+    ]);
+  }
+}
+
+
+/// Una kamea guardada: la figura y el camino para seguir editándola.
+class _KameaBody extends StatelessWidget {
+  final KameaDoc doc;
+  final VoidCallback onEdit;
+  final Color accent;
+  const _KameaBody({required this.doc, required this.onEdit, required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = doc.scene();
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      LayoutBuilder(
+        builder: (context, box) => Center(
+          child: Semantics(
+            image: true,
+            label: 'Kamea de ${doc.def.name}',
+            child: CustomPaint(size: Size.square(box.maxWidth), painter: SigilScenePainter(bg: s.bg, fg: s.fg)),
+          ),
+        ),
+      ),
+      const SizedBox(height: 16),
+      OutlinedButton(
+        onPressed: onEdit,
+        style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: accent),
+        child: const Text('Seguir en la kamea'),
+      ),
     ]);
   }
 }

@@ -11,6 +11,7 @@ import '../../shared/widgets/arcanum_field.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_resin.dart';
 import '../../shared/widgets/gold_button.dart';
+import '../sigilos/kamea_screen.dart';
 import '../sigilos/taller_screen.dart';
 import 'grimorio_atmosphere.dart';
 
@@ -107,6 +108,11 @@ class _GrimorioEditorState extends ConsumerState<GrimorioEditor> {
     if (mounted && saved == true) Navigator.pop(context, true);
   }
 
+  Future<void> _openKamea() async {
+    final saved = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => const KameaScreen()));
+    if (mounted && saved == true) Navigator.pop(context, true);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -140,7 +146,7 @@ class _GrimorioEditorState extends ConsumerState<GrimorioEditor> {
                     // un sigilo no se escribe: se forja en el taller, que lo
                     // guarda el mismo como entrada «Sigilo» cifrada
                     if (_type == 'sigil')
-                      Expanded(child: _SigilInvite(onOpen: _openTaller))
+                      Expanded(child: _SigilInvite(onOpen: _openTaller, onKamea: _openKamea))
                     else ...[
                       ArcanumField(controller: _title, label: 'Título'),
                       const SizedBox(height: 16),
@@ -311,8 +317,8 @@ class _WritingPage extends StatelessWidget {
 }
 
 class _SigilInvite extends StatelessWidget {
-  final VoidCallback onOpen;
-  const _SigilInvite({required this.onOpen});
+  final VoidCallback onOpen, onKamea;
+  const _SigilInvite({required this.onOpen, required this.onKamea});
 
   @override
   Widget build(BuildContext context) => Column(
@@ -329,6 +335,18 @@ class _SigilInvite extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           GoldButton(label: 'Abrir el taller', onPressed: onOpen),
+          const SizedBox(height: 18),
+          Text(
+            'O traza un nombre sobre la tabla planetaria de Agrippa: una figura histórica, sin ritual de carga.',
+            textAlign: TextAlign.center,
+            style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton(
+            onPressed: onKamea,
+            style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: ArcanumColors.gold),
+            child: const Text('Abrir una kamea'),
+          ),
         ],
       );
 }
