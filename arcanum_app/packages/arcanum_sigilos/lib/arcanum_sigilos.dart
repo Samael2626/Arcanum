@@ -8,6 +8,7 @@ export 'engine/geometry.dart';
 export 'engine/glyphs.dart';
 export 'engine/hebrew.dart';
 export 'engine/interaction.dart';
+export 'engine/kamea.dart';
 export 'engine/js_num.dart';
 export 'engine/layers.dart';
 export 'engine/letter_sigil.dart';

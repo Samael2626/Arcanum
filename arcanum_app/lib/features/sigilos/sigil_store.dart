@@ -109,6 +109,25 @@ const kMonthsEs = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio
 
 String dayMonthEs(DateTime d) => '${d.day} de ${kMonthsEs[d.month - 1]}';
 
+/// Marca de la kamea (familia historica de Agrippa): otro documento, mismo tipo de entrada.
+const kKameaMark = 'sigilo-kamea';
+
+String encodeKameaEntry(KameaDoc doc) => jsonEncode({'taller': kKameaMark, 'doc': doc.toJson()});
+
+/// Kamea guardada si el contenido lo es; null si no.
+KameaDoc? decodeKameaEntry(String content) {
+  final t = content.trimLeft();
+  if (!t.startsWith('{')) return null;
+  try {
+    final j = jsonDecode(t);
+    if (j is Map<String, dynamic> && j['taller'] == kKameaMark) return KameaDoc.fromJson(j['doc'] as Map<String, dynamic>);
+  } on FormatException {
+    return null;
+  }
+  return null;
+}
+
+
 /// Titulo neutro: la intencion queda dentro del contenido cifrado.
 String sigilTitle(DateTime d) => 'Sigilo del ${dayMonthEs(d)}';
 
@@ -140,6 +159,9 @@ Future<Uint8List?> renderSigilPreview(SigilDoc doc) async {
 /// Quien dibuja la miniatura (en los tests, uno de mentira: rasterizar no
 /// termina dentro del reloj falso de los tests de widgets).
 final sigilPreviewProvider = Provider<Future<Uint8List?> Function(SigilDoc)>((ref) => renderSigilPreview);
+
+/// Titulo de una kamea: la tabla es una eleccion historica; el nombre trazado no sale del cifrado.
+String kameaTitle(KameaDoc doc, DateTime d) => 'Kamea de ${doc.def.name}, ${dayMonthEs(d)}';
 
 class SigilStore {
   final ArcanumApi api;
@@ -187,8 +209,17 @@ class SigilStore {
 
   /// Crea la entrada (o reescribe [entryId]) y devuelve su id.
   Future<String> save(SigilEntry e, {String? entryId}) async {
-    final enc = await crypto.encryptText(encodeSigilEntry(e));
-    final thumb = await _previewFields(e.doc);
+    return _persist(encodeSigilEntry(e), sigilTitle, entryId, await _previewFields(e.doc));
+  }
+
+  /// Igual para una kamea: su titulo nombra la tabla, que es una eleccion
+  /// historica y no la intencion (el nombre trazado queda dentro, cifrado).
+  /// Sin miniatura: la lista cae a la capitular.
+  Future<String> saveKamea(KameaDoc doc, {String? entryId}) =>
+      _persist(encodeKameaEntry(doc), (d) => kameaTitle(doc, d), entryId, const {});
+
+  Future<String> _persist(String plain, String Function(DateTime) title, String? entryId, Map<String, String> thumb) async {
+    final enc = await crypto.encryptText(plain);
     if (entryId != null) {
       // al seguir editando, el momento de creacion (luna, hora) no cambia
       await api.grimoireUpdate(entryId, {'encrypted_content': enc.ciphertext, 'content_iv': enc.iv, ...thumb});
@@ -198,7 +229,7 @@ class SigilStore {
     final now = DateTime.now();
     final res = await api.grimoireCreate({
       'entry_type': 'sigil',
-      'title': sigilTitle(now),
+      'title': title(now),
       'encrypted_content': enc.ciphertext,
       'content_iv': enc.iv,
       ...thumb,

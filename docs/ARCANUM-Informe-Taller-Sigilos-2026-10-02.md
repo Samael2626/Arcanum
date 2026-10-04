@@ -86,7 +86,7 @@ No verificado (necesita teléfono):
 3. Lector de pantalla del selector de caligrafía y de las celdas de Sellos.
 
 Pendiente de producto:
-4. Familias v2 en Flutter: Rosa-Cruz, Kamea, Sello personal y Comparar.
+4. Familias v2 en Flutter: Rosa-Cruz, Sello personal y Comparar. **Kamea hecha el 4-oct** (ver §7).
 5. Enlace del taller con Hoy, Grimorio y Bitácora (crear → cargar → olvidar → anotar).
 6. Revisión con `arcanum-legal` de los sellos (obra ajena) antes de publicar. La
    tarjeta «Generador de sigilos» (P2) de `legal-site/index.html` se actualiza el
@@ -101,3 +101,31 @@ El taller y el catálogo están completos y probados en el entorno de pruebas de
 repo, con paridad exacta contra el prototipo y mutación detectada en cada capa.
 Lo único que separa esto de una release es lo que no se puede probar sin un
 teléfono: QA en la app instalada, 90 Hz y accesibilidad en dispositivo.
+
+
+## 7. Kamea en Flutter (4-oct)
+
+Primera familia v2 portada: el nombre en hebreo trazado sobre las siete tablas
+de Agrippa (lib. II, cap. 22), con los 17 nombres de inteligencias y espíritus,
+las tres reducciones de números grandes, los dos remates y la vista de lámina o
+de tabla numerada. Familia histórica aparte: sin carga ni olvido.
+
+- Motor: `packages/arcanum_sigilos/lib/engine/kamea.dart` (`KameaDoc`), puerto de
+  `js/kamea.js`. Valores hebreos en `hebrew.dart`.
+- Pantalla: `lib/features/sigilos/kamea_screen.dart`. Entrada desde el editor del
+  Grimorio («Abrir una kamea») y desde el detalle («Seguir en la kamea»).
+- Guardado: entrada `sigil` con marca `sigilo-kamea`; el título nombra la tabla
+  («Kamea de Saturno, 4 de octubre»), el nombre trazado queda cifrado dentro.
+- Referencias: `arcanum-sigil-prototype/_fixtures_kamea.mjs` genera
+  `fixtures/kamea.json` (117 casos) y 30 imágenes de Chromium en `png_kamea/`.
+
+Pruebas (corridas el 4-oct con Flutter 3.47.6): SVG idéntico al del prototipo en
+los 117 casos; lienzo frente a Chromium por debajo del 0,06 % de píxeles; pantalla
+y Grimorio, 8 tests. Suite completa: 1249 pasan, 8 saltados (1087 + 162 nuevos);
+`flutter analyze` sin avisos. Mutación: 4 de 5 errores inyectados detectados; el
+quinto (`c % 10` en la reducción por ceros) es equivalente, no cambia el resultado.
+
+No verificado (necesita teléfono): QA en la app instalada, lector de pantalla del
+selector de tablas y de la lectura de casillas. En el detalle del Grimorio la
+lámina muestra el nombre trazado como rótulo (a diferencia del sigilo de letras,
+que oculta la intención); si se quiere privacidad en pantalla, ocultarlo allí.
