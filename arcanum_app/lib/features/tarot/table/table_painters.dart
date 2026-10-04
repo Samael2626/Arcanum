@@ -216,9 +216,12 @@ class FeltPainter extends CustomPainter {
 /// desvelada: los dos hilos del circulo se encienden recorriendolo y la
 /// palabra se enciende de izquierda a derecha. `t` va de 0 (apagado) a 1.
 class EmbroideryPainter extends CustomPainter {
-  EmbroideryPainter(this.t);
+  EmbroideryPainter(this.t, {this.glow = true});
 
   final double t;
+
+  /// El halo de los hilos y de la palabra (se quita con la calidad baja).
+  final bool glow;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -229,8 +232,8 @@ class EmbroideryPainter extends CustomPainter {
       final k = ((t - delay) / (1 - delay) / .75).clamp(0.0, 1.0);
       if (k == 0) continue;
       final rect = Rect.fromCircle(center: c, radius: r);
-      canvas
-        ..drawArc(
+      if (glow) {
+        canvas.drawArc(
           rect,
           -math.pi / 2,
           2 * math.pi * k,
@@ -240,17 +243,18 @@ class EmbroideryPainter extends CustomPainter {
             ..strokeWidth = 4
             ..color = ArcanumColors.gold.withValues(alpha: .18 * k)
             ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
-        )
-        ..drawArc(
-          rect,
-          -math.pi / 2,
-          2 * math.pi * k,
-          false,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = .9
-            ..color = ArcanumColors.gold.withValues(alpha: .55),
         );
+      }
+      canvas.drawArc(
+        rect,
+        -math.pi / 2,
+        2 * math.pi * k,
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = .9
+          ..color = ArcanumColors.gold.withValues(alpha: .55),
+      );
     }
     // la palabra, de izquierda a derecha, en el ultimo tramo
     final w = ((t - .45) / .55).clamp(0.0, 1.0);
@@ -268,10 +272,11 @@ class EmbroideryPainter extends CustomPainter {
         letterSpacing: 3,
         color: ArcanumColors.gold.withValues(alpha: .95),
         shadows: [
-          Shadow(
-            color: ArcanumColors.gold.withValues(alpha: .6),
-            blurRadius: 10,
-          ),
+          if (glow)
+            Shadow(
+              color: ArcanumColors.gold.withValues(alpha: .6),
+              blurRadius: 10,
+            ),
         ],
       ),
     );
@@ -279,7 +284,7 @@ class EmbroideryPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(EmbroideryPainter old) => old.t != t;
+  bool shouldRepaint(EmbroideryPainter old) => old.t != t || old.glow != glow;
 }
 
 /// Las cartas del abanico: todas dorsos, estampados de la imagen grabada.

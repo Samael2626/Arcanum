@@ -13,6 +13,7 @@ import '../../../core/theme/arcanum_theme.dart';
 import '../../../shared/revelado/element_motion.dart';
 import '../../oraculo/widgets/tarot_card.dart';
 import 'table_geometry.dart';
+import 'table_quality.dart';
 
 /// Lo que hay que dibujar de una huella: donde, de que elemento y si es Mayor.
 class Imprint {
@@ -117,7 +118,12 @@ class _ImprintPieceState extends State<ImprintPiece>
           animation: _c,
           builder: (context, _) => CustomPaint(
             size: area,
-            painter: ImprintPainter(widget.imprint, t: _t, scale: p.scale),
+            painter: ImprintPainter(
+              widget.imprint,
+              t: _t,
+              scale: p.scale,
+              glow: TableQualityScope.levelOf(context) < 1,
+            ),
           ),
         ),
       ),
@@ -127,11 +133,19 @@ class _ImprintPieceState extends State<ImprintPiece>
 
 /// Dibuja la huella en el instante `t` (0..1). El centro es el de la carta.
 class ImprintPainter extends CustomPainter {
-  ImprintPainter(this.imprint, {required this.t, this.scale = 1});
+  ImprintPainter(
+    this.imprint, {
+    required this.t,
+    this.scale = 1,
+    this.glow = true,
+  });
 
   final Imprint imprint;
   final double t;
   final double scale;
+
+  /// El resplandor del glifo (se quita con la calidad baja).
+  final bool glow;
 
   static final List<List<double>> _seeds = () {
     final r = math.Random(11);
@@ -180,10 +194,11 @@ class ImprintPainter extends CustomPainter {
           fontFamilyFallback: kGlyphFallback,
           color: ArcanumColors.goldLight.withValues(alpha: show),
           shadows: [
-            Shadow(
-              color: ArcanumColors.gold.withValues(alpha: .8 * show),
-              blurRadius: 12,
-            ),
+            if (glow)
+              Shadow(
+                color: ArcanumColors.gold.withValues(alpha: .8 * show),
+                blurRadius: 12,
+              ),
           ],
         ),
       ),
@@ -248,5 +263,8 @@ class ImprintPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(ImprintPainter old) =>
-      old.t != t || old.imprint != imprint || old.scale != scale;
+      old.t != t ||
+      old.imprint != imprint ||
+      old.scale != scale ||
+      old.glow != glow;
 }
