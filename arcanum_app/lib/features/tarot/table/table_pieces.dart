@@ -149,25 +149,34 @@ class _TableCardPieceState extends State<TableCardPiece>
         child: AnimatedBuilder(
           animation: Listenable.merge([motion, _flip, _turn]),
           builder: (context, _) {
+            // «reducir movimiento»: volteo y giro de golpe, sin saltos; la
+            // esquina sigue al dedo porque la mueve el usuario
+            final still = MediaQuery.disableAnimationsOf(context);
+            final up = widget.view.card!.faceUp;
             // grados de volteo: la esquina manda mientras el dedo tira de ella
             final peel = v.peelAngle;
             final flip = peel > 0
                 ? peel
+                : still
+                ? (up ? 180.0 : 0.0)
                 : 180 *
                       (_flipFrom + (1 - _flipFrom) * _flip.value) *
-                      (widget.view.card!.faceUp ? 1 : 0);
-            final turnBump = math.sin(math.pi * _turn.value);
+                      (up ? 1 : 0);
+            final turn = still ? (_reversed ? 1.0 : 0.0) : _turn.value;
+            final turnBump = still ? 0.0 : math.sin(math.pi * turn);
             return Transform(
               transform: pieceMatrix(
                 shownPose,
                 lift:
                     v.lift +
                     turnBump * 20 +
-                    math.sin(math.pi * flip / 180) * 14,
+                    (still && peel == 0
+                        ? 0
+                        : math.sin(math.pi * flip / 180) * 14),
                 tiltX: v.tiltX,
                 tiltY: v.tiltY,
               ),
-              child: _card(flip, peel > 0 ? v.peelHingeX : 0),
+              child: _card(flip, peel > 0 ? v.peelHingeX : 0, turn),
             );
           },
         ),
@@ -176,7 +185,7 @@ class _TableCardPieceState extends State<TableCardPiece>
   }
 
   /// Carta volteada `deg` grados sobre una bisagra en `hingeX` (0 = el centro).
-  Widget _card(double deg, double hingeX) {
+  Widget _card(double deg, double hingeX, double turn) {
     final showFace = deg > 90;
     final dir = widget.view.card!.dir == 0 ? -1 : widget.view.card!.dir;
     final a = deg * math.pi / 180 * dir;
@@ -192,7 +201,7 @@ class _TableCardPieceState extends State<TableCardPiece>
         // la cara esta del otro lado: se deshace el espejo del giro
         transform: Matrix4.rotationY(math.pi),
         child: Transform.rotate(
-          angle: math.pi * _turn.value,
+          angle: math.pi * turn,
           child: RepaintBoundary(
             child: TarotCardFaceArt(face: _face, size: _cardSize),
           ),
@@ -200,7 +209,7 @@ class _TableCardPieceState extends State<TableCardPiece>
       );
     } else {
       side = Transform.rotate(
-        angle: math.pi * _turn.value,
+        angle: math.pi * turn,
         child: RawImage(
           image: widget.back,
           width: _cardSize.width,
@@ -467,10 +476,15 @@ class _SealPieceState extends State<SealPiece> with TickerProviderStateMixin {
         child: AnimatedBuilder(
           animation: Listenable.merge([_press, _crack]),
           builder: (context, _) {
+            // «reducir movimiento»: el sello esta, sin golpe ni respingo
+            final still = MediaQuery.disableAnimationsOf(context);
             // golpe al sellar: entra grande y se asienta
-            final press = Curves.elasticOut.transform(_press.value);
+            final press = still
+                ? 1.0
+                : Curves.elasticOut.transform(_press.value);
             // respingo al romperse: 1,2 y -6 grados que vuelven a su sitio
-            final jolt = math.sin(math.pi * _crack.value);
+            final jolt = still ? 0.0 : math.sin(math.pi * _crack.value);
+            final crack = still ? 1.0 : _crack.value;
             return Transform(
               alignment: Alignment.center,
               transform: Matrix4.identity()
@@ -483,7 +497,7 @@ class _SealPieceState extends State<SealPiece> with TickerProviderStateMixin {
                 ..rotateZ(-6 * math.pi / 180 * jolt),
               child: CustomPaint(
                 size: const Size.square(_d),
-                painter: _SealPainter(crack: widget.open ? _crack.value : 0),
+                painter: _SealPainter(crack: widget.open ? crack : 0),
               ),
             );
           },

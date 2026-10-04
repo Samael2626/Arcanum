@@ -267,6 +267,24 @@ class TableCamera {
     panY = py * lo;
   }
 
+  /// Salta al destino sin suavizado («reducir movimiento»). Devuelve true si
+  /// habia algo que mover.
+  bool settleNow() {
+    final moved =
+        theta != tTheta ||
+        yaw != tYaw ||
+        zoom != tZoom ||
+        panX != tPanX ||
+        panY != tPanY;
+    theta = tTheta;
+    yaw = tYaw;
+    zoom = tZoom;
+    panX = tPanX;
+    panY = tPanY;
+    if (moved) clampToView();
+    return moved;
+  }
+
   /// Acerca el estado actual al destino. Devuelve true si se movio (hay que
   /// repintar). Independiente de los fps: el prototipo acercaba un 14 % por
   /// frame a 60 Hz; aqui se escala por el tiempo real transcurrido.

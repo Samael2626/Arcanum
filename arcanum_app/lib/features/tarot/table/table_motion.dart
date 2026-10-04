@@ -73,8 +73,11 @@ mixin PoseMotion<W extends StatefulWidget> on State<W>, TickerProvider {
     motion.forward(from: 0);
   }
 
+  /// «Reducir movimiento»: las piezas aparecen en su sitio, sin viajar.
+  bool get _still => MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+
   /// Altura extra a mitad de viaje: lo que se mueve se levanta un poco.
-  double get motionLift => motion.isAnimating
+  double get motionLift => !_still && motion.isAnimating
       ? _bump(motion.value) *
             18 *
             (_from.offset - _to.offset).distance.clamp(0, 160) /
@@ -82,6 +85,7 @@ mixin PoseMotion<W extends StatefulWidget> on State<W>, TickerProvider {
       : 0;
 
   TablePose get shownPose {
+    if (_still) return _to;
     if (_waiting) return _from;
     if (!motion.isAnimating) return _to;
     return lerpPose(_from, _to, Curves.easeOutCubic.transform(motion.value));

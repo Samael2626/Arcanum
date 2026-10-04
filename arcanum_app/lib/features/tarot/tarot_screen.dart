@@ -15,6 +15,7 @@ import 'domain/table_models.dart';
 import 'domain/table_state.dart';
 import 'reading/lectura_revelada.dart';
 import 'table/table_director.dart';
+import 'table/table_haptics.dart';
 import 'table/table_overlays.dart';
 import 'table/table_panel.dart';
 import 'table/table_view.dart';
@@ -306,6 +307,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
         onCancel: _closePanel,
         onSeal: (q) {
           _ops.arrange((s) => s.copyWith(seal: () => Seal(text: q)));
+          dir.haptics.play(Buzz.seal);
           _closePanel();
         },
       ),
@@ -340,11 +342,15 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
       (context) => _InterpretPrompt(
         question: seal?.text,
         interpret: () => _ops.interpret(idempotencyKey: key),
-        onReading: (r) => setState(() {
-          _panel = null;
-          _reading = r;
-          _revealing = true;
-        }),
+        onReading: (r) {
+          // el sello se rompe al interpretar
+          if (seal != null && !seal.open) dir.haptics.play(Buzz.breakSeal);
+          setState(() {
+            _panel = null;
+            _reading = r;
+            _revealing = true;
+          });
+        },
         onError: (e) {
           if (isCreditsRequired(e)) {
             _closePanel();
@@ -373,6 +379,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
   Future<void> _closeCircle() async {
     try {
       await _ops.closeCircle();
+      _director?.haptics.play(Buzz.closeCircle);
       setState(() {
         _revealing = false;
         _reading = null;

@@ -25,15 +25,25 @@ import 'table_geometry.dart';
 import 'table_icons.dart';
 import 'table_motion.dart';
 import 'table_painters.dart';
+import 'gesture_grammar.dart';
 import 'table_pieces.dart';
+import 'table_quality.dart';
 
 class TarotTableView extends StatefulWidget {
-  const TarotTableView({super.key, required this.director, this.clock});
+  const TarotTableView({
+    super.key,
+    required this.director,
+    this.clock,
+    this.quality,
+  });
 
   final TableDirector director;
 
   /// Reloj de los gestos (mantener, doble toque). Inyectable para los tests.
   final Duration Function()? clock;
+
+  /// Calidad adaptativa. Inyectable para los tests; si no, la mesa usa la suya.
+  final TableQuality? quality;
 
   @override
   State<TarotTableView> createState() => _TarotTableViewState();
@@ -73,7 +83,23 @@ class _TarotTableViewState extends State<TarotTableView>
   ({String pid, String style, int epoch})? _shuffle;
   int _seenShuffle = 0;
 
+  /// Calidad adaptativa y medidor de fotogramas (especificacion §6).
+  late final TableQuality _quality = widget.quality ?? TableQuality();
+  late final FrameMeter _meter = FrameMeter(quality: _quality, scene: _scene);
+
   TableDirector get _dir => widget.director;
+
+  /// Lo que se esta viendo, para la linea del medidor en el log.
+  String _scene() {
+    if (_shuffle != null) return 'barajar';
+    if (_fanCtl.isAnimating || _dir.fanDragging) return 'abanico';
+    final drag = _dir.dragKind;
+    if (drag == DragKind.orbit) return 'camara';
+    if (drag != null) return 'arrastre';
+    final sp = _dir.spread?.slug ?? 'libre';
+    return 'mesa:$sp:${_dir.table.cards.length}cartas';
+  }
+
   Duration get _now => widget.clock?.call() ?? _clock.elapsed;
 
   @override
@@ -86,6 +112,12 @@ class _TarotTableViewState extends State<TarotTableView>
       duration: const Duration(milliseconds: 1400),
     );
     _dir.addListener(_changed);
+    _quality.addListener(_qualityChanged);
+    _meter.start();
+  }
+
+  void _qualityChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -109,6 +141,9 @@ class _TarotTableViewState extends State<TarotTableView>
   @override
   void dispose() {
     _dir.removeListener(_changed);
+    _meter.stop();
+    _quality.removeListener(_qualityChanged);
+    if (widget.quality == null) _quality.dispose();
     _fanCtl.dispose();
     _shuffleCtl.dispose();
     _embroideryCtl.dispose();
@@ -133,6 +168,7 @@ class _TarotTableViewState extends State<TarotTableView>
     final now = _now;
     final moving = _dir.tick(now, now - _lastTick);
     _lastTick = now;
+    _meter.note();
     if (moving || _dir.needsTicks) {
       setState(() {});
     } else {
@@ -143,6 +179,7 @@ class _TarotTableViewState extends State<TarotTableView>
   @override
   Widget build(BuildContext context) {
     final back = _back;
+    _dir.reduceMotion = MediaQuery.disableAnimationsOf(context);
     return LayoutBuilder(
       builder: (context, box) {
         _dir.setViewport(box.biggest);
@@ -156,33 +193,36 @@ class _TarotTableViewState extends State<TarotTableView>
               _dir.pointerMove(e.pointer, e.localPosition, _now),
           onPointerUp: (e) => _dir.pointerUp(e.pointer, e.localPosition, _now),
           onPointerCancel: (e) => _dir.pointerCancel(e.pointer),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (back != null)
-                Transform(
-                  transform: _dir.camera.matrix(),
-                  child: SizedBox(
-                    width: TableGeometry.width,
-                    height: TableGeometry.height,
-                    child: _table(back),
-                  ),
-                ),
-              if (_dir.radial != null) _RadialOverlay(director: _dir),
-              if (_dir.busy)
-                const Positioned(
-                  top: 12,
-                  right: 12,
-                  child: SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 1.6,
-                      color: ArcanumColors.gold,
+          child: TableQualityScope(
+            quality: _quality,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (back != null)
+                  Transform(
+                    transform: _dir.camera.matrix(),
+                    child: SizedBox(
+                      width: TableGeometry.width,
+                      height: TableGeometry.height,
+                      child: _table(back),
                     ),
                   ),
-                ),
-            ],
+                if (_dir.radial != null) _RadialOverlay(director: _dir),
+                if (_dir.busy)
+                  const Positioned(
+                    top: 12,
+                    right: 12,
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.6,
+                        color: ArcanumColors.gold,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         );
       },
@@ -210,6 +250,7 @@ class _TarotTableViewState extends State<TarotTableView>
       // se acaba de desvelar: deja su huella cuando termine de voltearse
       final card = e.value.card;
       if (!still &&
+          _quality.imprints &&
           card != null &&
           card.faceUp &&
           was.card != null &&
@@ -226,13 +267,15 @@ class _TarotTableViewState extends State<TarotTableView>
       if (now.containsKey(e.key)) continue;
       _births.remove(e.key);
       final to = _dir.takeExit(e.key);
-      if (to != null) _ghosts[e.key] = (view: e.value, to: to);
+      // con «reducir movimiento» lo que se va desaparece, sin vuelo
+      if (to != null && !still) _ghosts[e.key] = (view: e.value, to: to);
     }
     _last = now;
   }
 
   void _trackFan(int count) {
     final f = _dir.fan;
+    final still = MediaQuery.disableAnimationsOf(context);
     if (f != null) {
       _lastFan = (fan: f, count: count);
       if (_dir.fanDragging) {
@@ -242,9 +285,14 @@ class _TarotTableViewState extends State<TarotTableView>
       } else if (f.pid != _fanPid) {
         _fanPid = f.pid;
         _closingFan = null;
-        _fanJustOpened = true;
+        _fanJustOpened = !still;
         _afterFrame(() {
           _fanJustOpened = false;
+          // «reducir movimiento»: el abanico esta abierto, sin desplegarse
+          if (still) {
+            _fanCtl.value = 1;
+            return;
+          }
           _fanCtl
             ..duration = const Duration(milliseconds: 780)
             ..forward(from: 0);
@@ -252,6 +300,11 @@ class _TarotTableViewState extends State<TarotTableView>
       }
     } else if (_fanPid != null) {
       _fanPid = null;
+      if (still) {
+        _closingFan = null;
+        _afterFrame(() => _fanCtl.value = 0);
+        return;
+      }
       _closingFan = _lastFan;
       _afterFrame(() {
         _fanCtl.duration = const Duration(milliseconds: 460);
@@ -283,6 +336,8 @@ class _TarotTableViewState extends State<TarotTableView>
     final sh = _dir.shuffling;
     if (sh == null || sh.epoch == _seenShuffle) return;
     _seenShuffle = sh.epoch;
+    // «reducir movimiento»: el barajado no se representa; lo dice el aviso
+    if (MediaQuery.disableAnimationsOf(context)) return;
     _shuffle = sh;
     _afterFrame(() {
       _shuffleCtl
@@ -333,7 +388,12 @@ class _TarotTableViewState extends State<TarotTableView>
           painter: ShuffleTheaterPainter(
             pile: pile.pose,
             style: shuffleStyleOf(sh.style),
-            t: _shuffleCtl.value,
+            t: _quality.halfRate
+                ? halfRate(
+                    _shuffleCtl.value,
+                    shuffleDuration(shuffleStyleOf(sh.style)),
+                  )
+                : _shuffleCtl.value,
             back: back,
             count: pile.count,
             seed: sh.epoch,
@@ -393,7 +453,7 @@ class _TarotTableViewState extends State<TarotTableView>
               key: ValueKey(p.id),
               view: p,
               back: back,
-              glow: fresh && p.kind == PieceKind.pile,
+              glow: fresh && p.kind == PieceKind.pile && _quality.glow,
               birth: _births[p.id],
               // mientras se baraja, la caja muestra pocas: el resto esta en el aire
               shownCount:
@@ -413,7 +473,15 @@ class _TarotTableViewState extends State<TarotTableView>
               animation: _embroideryCtl,
               builder: (context, _) => CustomPaint(
                 size: const Size(TableGeometry.width, TableGeometry.height),
-                painter: EmbroideryPainter(_embroideryCtl.value),
+                painter: EmbroideryPainter(
+                  _quality.halfRate
+                      ? halfRate(
+                          _embroideryCtl.value,
+                          const Duration(milliseconds: 1400),
+                        )
+                      : _embroideryCtl.value,
+                  glow: _quality.glow,
+                ),
               ),
             ),
           ),
@@ -479,6 +547,8 @@ class _RadialOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = director.radial!;
     final hot = director.radialHot;
+    // «reducir movimiento»: los circulos estan en su sitio, sin salir del centro
+    final still = MediaQuery.disableAnimationsOf(context);
     const s = RadialLayout.buttonSize;
     return Stack(
       children: [
@@ -528,8 +598,10 @@ class _RadialOverlay extends StatelessWidget {
           // cada circulo sale del centro, uno detras de otro, como en el prototipo
           TweenAnimationBuilder<double>(
             key: ValueKey((identityHashCode(l), i)),
-            tween: Tween(begin: 0, end: 1),
-            duration: Duration(milliseconds: 170 + 28 * i),
+            tween: Tween(begin: still ? 1 : 0, end: 1),
+            duration: still
+                ? Duration.zero
+                : Duration(milliseconds: 170 + 28 * i),
             curve: Interval(
               i * .08 / (1 + i * .08),
               1,
@@ -572,7 +644,9 @@ class _RadialButton extends StatelessWidget {
           children: [
             AnimatedScale(
               scale: hot ? 1.18 : 1,
-              duration: const Duration(milliseconds: 120),
+              duration: MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 120),
               child: Container(
                 width: s,
                 height: s,

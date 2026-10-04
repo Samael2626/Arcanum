@@ -24,6 +24,7 @@ import 'gesture_grammar.dart';
 import 'radial_logic.dart';
 import 'table_camera.dart';
 import 'table_geometry.dart';
+import 'table_haptics.dart';
 
 /// Lo que la mesa necesita de la pantalla: paneles, avisos y errores.
 abstract class TableEffects {
@@ -162,13 +163,21 @@ class TableDirector extends ChangeNotifier {
     this.spreads = const [],
     math.Random? random,
     TableCamera? camera,
+    this.haptics = const TableHaptics(),
   }) : camera = camera ?? TableCamera(from: ops.table.camera),
        _random = random ?? math.Random();
 
   final TableOps ops;
   final TableEffects effects;
   final TableCamera camera;
+  final TableHaptics haptics;
   final GestureGrammar grammar = GestureGrammar();
+
+  /// «Reducir movimiento» del sistema: la camara salta sin suavizado ni
+  /// inercia. Lo pone la vista en cada construccion.
+  bool reduceMotion = false;
+
+  void _buzz(Buzz b) => unawaited(haptics.play(b));
   List<DeckInfo> decks;
   List<SpreadDef> spreads;
   final math.Random _random;
@@ -291,6 +300,9 @@ class TableDirector extends ChangeNotifier {
 
   /// El abanico sigue al dedo: se dibuja sin animar el despliegue.
   bool get fanDragging => _fanDraft != null;
+
+  /// Que se esta arrastrando ahora, o null.
+  DragKind? get dragKind => _drag?.kind;
 
   void setViewport(Size size) => camera.fit(size);
 
@@ -585,7 +597,7 @@ class TableDirector extends ChangeNotifier {
       _pendingCardTap = null;
       _returnToPile(pending.$1);
     }
-    var moving = camera.step(dt);
+    var moving = reduceMotion ? camera.settleNow() : camera.step(dt);
     _wobble.removeWhere((_, w) => !w.step());
     moving |= _wobble.isNotEmpty;
     return moving;
@@ -604,7 +616,11 @@ class TableDirector extends ChangeNotifier {
           _openRadialFor(hit, position);
         case RadialMoveIntent(:final position):
           final r = _radial;
-          if (r != null) r.hot = r.layout.hotAt(position);
+          if (r != null) {
+            final hot = r.layout.hotAt(position);
+            if (hot != null && hot != r.hot) _buzz(Buzz.radialHover);
+            r.hot = hot;
+          }
         case RadialReleaseIntent(:final position):
           final r = _radial;
           final hot = r?.layout.hotAt(position);
@@ -733,7 +749,18 @@ class TableDirector extends ChangeNotifier {
   void _revealOrRead(TableCard c) {
     if (c.faceUp) return effects.openReading(c);
     ops.arrange((s) => s.updateCard(c.slug, (k) => k.copyWith(faceUp: true)));
+    _buzzReveal([c]);
     effects.flipped(table.card(c.slug)!);
+  }
+
+  /// Desvelar vibra una vez; si sale un Mayor, con su patron.
+  void _buzzReveal(Iterable<TableCard> cards) {
+    if (cards.isEmpty) return;
+    _buzz(
+      cards.any((c) => c.face.arcana == 'major')
+          ? Buzz.revealMajor
+          : Buzz.reveal,
+    );
   }
 
   // ---------- mazos ----------
@@ -1016,6 +1043,7 @@ class TableDirector extends ChangeNotifier {
 
   void _place(String slug, SpreadDef sp, int slot) {
     final pose = slotPose(sp, slot);
+    _buzz(Buzz.snap);
     ops.arrange(
       (s) => s
           .putInSlot(slug, slot)
@@ -1107,6 +1135,7 @@ class TableDirector extends ChangeNotifier {
     final spot = _freeSpot(src);
     await _undoable(() async {
       final np = await ops.cut(pid, _cutSize(_count(pid)));
+      _buzz(Buzz.cut);
       _born('pile:$np', _pilePose(src));
       ops.arrange(
         (s) => s.copyWith(
@@ -1190,6 +1219,7 @@ class TableDirector extends ChangeNotifier {
       return effects.toast('No hay cartas sobre el paño que guardar');
     }
     await ops.closeCircle();
+    _buzz(Buzz.closeCircle);
     effects.toast('Círculo cerrado. La lectura quedó guardada en Lecturas.');
   }
 
@@ -1252,6 +1282,7 @@ class TableDirector extends ChangeNotifier {
   void _revealAll() {
     final hidden = table.cards.where((c) => !c.aside && !c.faceUp).toList()
       ..sort((a, b) => (a.slot ?? 99).compareTo(b.slot ?? 99));
+    _buzzReveal(hidden);
     ops.arrange((s) {
       var t = s;
       for (final c in hidden) {
@@ -1394,6 +1425,7 @@ class TableDirector extends ChangeNotifier {
   void _openShuffleRadial(String pid, Offset screen) {
     _openRadial(screen, 'Barajar', RadialMenus.shuffle, (style) async {
       shuffling = (pid: pid, style: style, epoch: ++_shuffleEpoch);
+      _buzz(Buzz.shuffle);
       notifyListeners();
       await ops.shuffle(pid, style: style);
       effects.shuffled(pid, style);
@@ -1494,6 +1526,7 @@ class TableDirector extends ChangeNotifier {
             .cut(pid, _cutSize(hit.count))
             .then(
               (np) {
+                _buzz(Buzz.cut);
                 d
                   ..id = 'pile:$np'
                   ..ready = true;
@@ -1606,7 +1639,8 @@ class TableDirector extends ChangeNotifier {
     _lift.remove(d.id);
     switch (kind) {
       case DragKind.orbit:
-        if (!cancelled) {
+        // con «reducir movimiento» la mesa se para donde la deja el dedo
+        if (!cancelled && !reduceMotion) {
           camera.releaseOrbit(vyaw: d.offset.dx, vtheta: d.offset.dy);
         }
         _saveCamera();
@@ -1620,6 +1654,7 @@ class TableDirector extends ChangeNotifier {
               (k) => k.copyWith(faceUp: true, dir: -peel.corner.toInt()),
             ),
           );
+          _buzzReveal([table.card(slug)!]);
           effects.flipped(table.card(slug)!);
         }
       case DragKind.fan:
@@ -1703,6 +1738,7 @@ class TableDirector extends ChangeNotifier {
                   sp.cardScale,
                   skip: other.slug,
                 );
+      _buzz(Buzz.snap);
       ops.arrange((s) {
         var t = s.putInSlot(slug, slot);
         final target = slotPose(sp, slot);
