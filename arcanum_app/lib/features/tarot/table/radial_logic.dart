@@ -26,7 +26,13 @@ class RadialItem {
 }
 
 class RadialLayout {
-  RadialLayout._(this.center, this.radius, this.items, this.positions);
+  RadialLayout._(
+    this.center,
+    this.anchor,
+    this.radius,
+    this.items,
+    this.positions,
+  );
 
   /// Coloca el radial alrededor de `anchor` sin salirse de la pantalla.
   factory RadialLayout.at(Offset anchor, Size screen, List<RadialItem> items) {
@@ -40,7 +46,7 @@ class RadialLayout {
     final top = pad + titleHeight, bottom = screen.height - pad - 16;
     final cy = anchor.dy.clamp(top, math.max(top, bottom)).toDouble();
     final center = Offset(cx, cy);
-    return RadialLayout._(center, r, items, [
+    return RadialLayout._(center, anchor, r, items, [
       for (var i = 0; i < n; i++)
         center + Offset(math.cos(angleOf(i, n)), math.sin(angleOf(i, n))) * r,
     ]);
@@ -49,7 +55,8 @@ class RadialLayout {
   static const double radius0 = 86;
   static const double largeRadius = 100;
 
-  /// Zona muerta del centro: ahi no se marca nada y soltar deja el radial abierto.
+  /// Zona muerta del centro y del punto pulsado: ahi no se marca nada y
+  /// soltar deja el radial abierto.
   static const double deadZone = 46;
 
   /// Alto que se reserva al titulo encima del circulo.
@@ -59,6 +66,10 @@ class RadialLayout {
   static const double buttonSize = 52;
 
   final Offset center;
+
+  /// Donde se pulso. Pegado al borde el circulo se mete hacia dentro y una
+  /// opcion puede quedar bajo el dedo: soltar sin deslizar no debe elegirla.
+  final Offset anchor;
   final double radius;
   final List<RadialItem> items;
   final List<Offset> positions;
@@ -72,7 +83,9 @@ class RadialLayout {
   /// Opcion marcada con el dedo en `p`, o null (centro u opcion apagada).
   int? hotAt(Offset p) {
     final d = p - center;
-    if (d.distance <= deadZone) return null;
+    if (d.distance <= deadZone || (p - anchor).distance <= deadZone) {
+      return null;
+    }
     final n = items.length;
     final a =
         (math.atan2(d.dy, d.dx) + math.pi / 2 + math.pi * 4) % (math.pi * 2);

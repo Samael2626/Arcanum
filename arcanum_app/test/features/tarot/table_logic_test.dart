@@ -412,6 +412,24 @@ void main() {
       }
     });
 
+    test(
+      'pegado al borde, soltar sin deslizar no elige la opcion de debajo',
+      () {
+        // GN2200: mazo en la esquina; el circulo se mete hacia dentro y
+        // «Extender» quedaba bajo el dedo, asi que soltar lo ejecutaba
+        const gn2200 = Size(411, 914);
+        const press = Offset(325, 640);
+        final deck = RadialMenus.deck(count: 75, cardsOut: true, piles: 1);
+        final l = RadialLayout.at(press, gn2200, deck);
+        expect((l.center - press).distance, greaterThan(RadialLayout.deadZone));
+        expect(l.hotAt(press), isNull);
+        expect(l.hotAt(press.translate(-8, 6)), isNull);
+        // deslizar de verdad hasta una opcion sigue eligiendola
+        final spread = deck.indexWhere((i) => i.id == 'spread');
+        expect(l.hotAt(l.positions[spread]), spread);
+      },
+    );
+
     test('con mas de 6 opciones el circulo es mas grande', () {
       final deck = RadialMenus.deck(count: 78, cardsOut: false, piles: 1);
       expect(RadialLayout.at(const Offset(195, 422), phone, deck).radius, 100);
