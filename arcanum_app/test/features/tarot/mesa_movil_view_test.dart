@@ -251,6 +251,7 @@ void main() {
       await tapAt(tester, fanPoint(10));
       // un fotograma despues del toque, sin respuesta del servidor
       expect(pending(), findsOneWidget);
+      expect(find.bySemanticsLabel('Sacando una carta'), findsOneWidget);
       await tapAt(tester, fanPoint(30));
       await tapAt(tester, fanPoint(50));
       expect(pending(), findsNWidgets(3), reason: 'ningun toque perdido');

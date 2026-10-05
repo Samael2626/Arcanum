@@ -155,6 +155,10 @@ void main() {
     );
     addTearDown(c.dispose);
     await tester.runAsync(() => c.read(tableControllerProvider.future));
+    tester.view
+      ..physicalSize = const Size(360, 760)
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: c,
@@ -172,6 +176,14 @@ void main() {
     }
     final disc = tester.widget<MoonDisc>(find.byType(MoonDisc));
     expect((disc.illumination, disc.waxing), (.63, true));
+    expect(
+      find.bySemanticsLabel(RegExp('Gibosa creciente.*63.*iluminada')),
+      findsOneWidget,
+    );
+    expect(
+      tester.getSize(find.byType(MoonBadge)).height,
+      greaterThanOrEqualTo(48),
+    );
     expect(
       tester.widget<MoonlightLayer>(find.byType(MoonlightLayer)).illumination,
       .63,

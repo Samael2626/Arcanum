@@ -72,6 +72,7 @@ void main() {
         ),
       );
       expect(find.bySemanticsLabel('Deshacer'), findsOneWidget);
+      expect(tester.getSize(find.bySemanticsLabel('Deshacer')).height, 48);
       await tester.tap(find.bySemanticsLabel('Deshacer'));
       expect(undone, 1);
     });

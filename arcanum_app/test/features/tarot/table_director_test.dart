@@ -116,6 +116,7 @@ void main() {
 
   TableState table() => dir.table;
   Offset screenOf(Offset tablePoint) => dir.camera.toScreen(tablePoint);
+
   Offset pileAt(String pid) {
     final p = table().piles.firstWhere((p) => p.pid == pid);
     return Offset(p.x, p.y);
@@ -175,6 +176,41 @@ void main() {
     await tap(shelfPose(0, 2).offset);
     expect(table().hasTable, isTrue);
   }
+
+  test('objetivos de mazo y sello cubren 48 dp en 360 por 760', () async {
+    dir.setViewport(const Size(360, 760));
+    final shelf = screenOf(shelfPose(0, 2).offset);
+    for (final delta in const [
+      Offset(-23, 0),
+      Offset(23, 0),
+      Offset(0, -23),
+      Offset(0, 23),
+    ]) {
+      expect(dir.hitAtScreen(shelf + delta), isA<HitDeck>());
+    }
+    await openRws();
+    final pile = screenOf(pileAt('p0'));
+    for (final delta in const [
+      Offset(-23, 0),
+      Offset(23, 0),
+      Offset(0, -23),
+      Offset(0, 23),
+    ]) {
+      expect(dir.hitAtScreen(pile + delta), isA<HitDeck>());
+    }
+    c
+        .read(tableControllerProvider.notifier)
+        .arrange((s) => s.copyWith(seal: () => const Seal(text: 'pregunta')));
+    final seal = screenOf(TableDirector.sealAt);
+    for (final delta in const [
+      Offset(-23, 0),
+      Offset(23, 0),
+      Offset(0, -23),
+      Offset(0, 23),
+    ]) {
+      expect(dir.hitAtScreen(seal + delta), isA<HitSeal>());
+    }
+  });
 
   group('mazos', () {
     test('tocar un mazo del estante lo pone en juego en su sitio', () async {

@@ -346,10 +346,10 @@ class TableDirector extends ChangeNotifier {
   ]);
 
   static Rect _touchRect(Rect rect) => Rect.fromCenter(
-        center: rect.center,
-        width: math.max(48, rect.width),
-        height: math.max(48, rect.height),
-      );
+    center: rect.center,
+    width: math.max(48, rect.width),
+    height: math.max(48, rect.height),
+  );
 
   /// Lo que ocupa el sello en la mesa.
   static Rect get sealRect =>
@@ -629,17 +629,15 @@ class TableDirector extends ChangeNotifier {
     if (r != null && !grammar.active) {
       // radial abierto para tocar: tocar una opcion la elige, tocar fuera lo cierra
       final i = r.layout.tappedAt(screen);
-      _radial = null;
       // el centro deshace el ultimo gesto si todavia se puede; si no, cierra
-      if (i == null &&
-          (screen - r.layout.center).distance < 24 &&
-          ops.canUndo) {
-        _run(() async {
-          if (await ops.undo()) effects.toast('Deshecho');
-        });
+      if (i != null) {
+        activateRadialItem(i);
+      } else if ((screen - r.layout.center).distance < 24) {
+        activateRadialCenter();
+      } else {
+        _radial = null;
+        notifyListeners();
       }
-      if (i != null) _run(() => r.onPick(r.layout.items[i].id));
-      notifyListeners();
       return;
     }
     _apply(grammar.down(pointer, screen, time, hitAtScreen(screen)));
@@ -796,7 +794,7 @@ class TableDirector extends ChangeNotifier {
       case HitSurface():
         if (_union != null) _union = null;
       case HitEmbroidery():
-        if (readyToInterpret) effects.openInterpretation();
+        activateEmbroidery();
       case HitSeal():
         final seal = table.seal;
         if (seal != null) effects.openSealInfo(seal);
@@ -822,6 +820,31 @@ class TableDirector extends ChangeNotifier {
       case HitNothing():
         break;
     }
+  }
+
+  void activateRadialItem(int index) {
+    final r = _radial;
+    if (r == null || index < 0 || index >= r.layout.items.length) return;
+    final item = r.layout.items[index];
+    if (!item.enabled) return;
+    _radial = null;
+    _run(() => r.onPick(item.id));
+    notifyListeners();
+  }
+
+  void activateRadialCenter() {
+    if (_radial == null) return;
+    _radial = null;
+    if (ops.canUndo) {
+      _run(() async {
+        if (await ops.undo()) effects.toast('Deshecho');
+      });
+    }
+    notifyListeners();
+  }
+
+  void activateEmbroidery() {
+    if (!_busy && readyToInterpret) effects.openInterpretation();
   }
 
   void _revealOrRead(TableCard c) {

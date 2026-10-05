@@ -10,6 +10,7 @@ import 'package:arcanum_app/features/tarot/table/table_motion.dart';
 import 'package:arcanum_app/features/tarot/table/table_painters.dart';
 import 'package:arcanum_app/features/tarot/table/table_view.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -155,6 +156,8 @@ void main() {
     tester,
   ) async {
     await pumpTable(tester);
+    tester.view.physicalSize = const Size(360, 760);
+    await tester.pump();
     await tap(tester, shelfPose(0, 2).offset);
     final g = await tester.startGesture(screen(TableGeometry.homeSpot));
     now += const Duration(milliseconds: 460);
@@ -172,6 +175,23 @@ void main() {
     ]) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
+    final option = find.bySemanticsLabel('Barajar');
+    expect(
+      tester
+          .getSemantics(option)
+          .getSemanticsData()
+          .hasAction(SemanticsAction.tap),
+      isTrue,
+    );
+    final center = find.bySemanticsLabel(RegExp(r'^(Deshacer|Cerrar)$'));
+    expect(tester.getSize(center).height, 48);
+    expect(
+      tester
+          .getSemantics(center)
+          .getSemanticsData()
+          .hasAction(SemanticsAction.tap),
+      isTrue,
+    );
     // soltar sobre Cortar
     final layout = dir.radial!;
     await g.moveTo(layout.positions[1]);
@@ -201,6 +221,7 @@ void main() {
       find.bySemanticsLabel(RegExp(r'invertida\. Posición 1, Mensaje')),
       findsOneWidget,
     );
+    expect(find.bySemanticsLabel('Interpretar tirada'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

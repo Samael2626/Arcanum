@@ -522,6 +522,17 @@ class _TarotTableViewState extends State<TarotTableView>
             ),
           ),
         ),
+        if (_dir.readyToInterpret)
+          Positioned(
+            left: TableDirector.embroideryAt.dx - 90,
+            top: TableDirector.embroideryAt.dy - 43,
+            child: Semantics(
+              label: 'Interpretar tirada',
+              button: true,
+              onTap: _dir.activateEmbroidery,
+              child: const SizedBox(width: 180, height: 86),
+            ),
+          ),
         if (table.seal case final seal?)
           SealPiece(at: TableDirector.sealAt, open: seal.open),
         for (final e in _ghosts.entries)
@@ -613,6 +624,7 @@ class _RadialOverlay extends StatelessWidget {
           child: Semantics(
             label: director.ops.canUndo ? 'Deshacer' : 'Cerrar',
             button: true,
+            onTap: director.activateRadialCenter,
             child: SizedBox(
               width: 48,
               height: 48,
@@ -658,7 +670,11 @@ class _RadialOverlay extends StatelessWidget {
                 child: Opacity(opacity: t.clamp(0.0, 1.0), child: child),
               );
             },
-            child: _RadialButton(item: l.items[i], hot: i == hot),
+            child: _RadialButton(
+              item: l.items[i],
+              hot: i == hot,
+              onTap: () => director.activateRadialItem(i),
+            ),
           ),
       ],
     );
@@ -666,10 +682,15 @@ class _RadialOverlay extends StatelessWidget {
 }
 
 class _RadialButton extends StatelessWidget {
-  const _RadialButton({required this.item, required this.hot});
+  const _RadialButton({
+    required this.item,
+    required this.hot,
+    required this.onTap,
+  });
 
   final RadialItem item;
   final bool hot;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -681,6 +702,8 @@ class _RadialButton extends StatelessWidget {
         button: true,
         enabled: item.enabled,
         selected: item.current,
+        onTap: item.enabled ? onTap : null,
+        excludeSemantics: true,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
