@@ -583,23 +583,29 @@ class _RadialOverlay extends StatelessWidget {
           ),
         ),
         Positioned(
-          left: l.center.dx - 18,
-          top: l.center.dy - 18,
+          left: l.center.dx - 24,
+          top: l.center.dy - 24,
           child: Semantics(
             label: director.ops.canUndo ? 'Deshacer' : 'Cerrar',
             button: true,
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: ArcanumColors.goldMuted),
-              ),
+            child: SizedBox(
+              width: 48,
+              height: 48,
               child: Center(
-                child: TableIcon(
-                  director.ops.canUndo ? 'undo' : 'x',
-                  color: ArcanumColors.goldMuted,
-                  size: 16,
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: ArcanumColors.goldMuted),
+                  ),
+                  child: Center(
+                    child: TableIcon(
+                      director.ops.canUndo ? 'undo' : 'x',
+                      color: ArcanumColors.goldMuted,
+                      size: 16,
+                    ),
+                  ),
                 ),
               ),
             ),

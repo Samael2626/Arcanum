@@ -121,7 +121,7 @@ class SmokeLayer extends StatefulWidget {
 
 class _SmokeLayerState extends State<SmokeLayer>
     with SingleTickerProviderStateMixin {
-  late final Ticker _ticker = createTicker(_tick);
+  late final Ticker _ticker;
   late final math.Random _rnd = widget.random ?? math.Random();
   List<SmokeWisp> _wisps = const [];
   Duration _now = Duration.zero;
@@ -129,6 +129,7 @@ class _SmokeLayerState extends State<SmokeLayer>
   @override
   void initState() {
     super.initState();
+    _ticker = createTicker(_tick);
     widget.emitter.addListener(_drain);
   }
 

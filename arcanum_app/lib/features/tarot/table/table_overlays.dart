@@ -10,6 +10,74 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/arcanum_colors.dart';
 import 'table_icons.dart';
 
+/// Lista de posiciones del abanico con zonas de toque de 48 dp.
+class FanPickerButton extends StatelessWidget {
+  const FanPickerButton({
+    super.key,
+    required this.positions,
+    required this.onChoose,
+  });
+
+  final List<int> positions;
+  final ValueChanged<int> onChoose;
+
+  @override
+  Widget build(BuildContext context) {
+    if (positions.isEmpty) return const SizedBox.shrink();
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: SizedBox(
+          height: 48,
+          child: FilledButton(
+            onPressed: () => showModalBottomSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              builder: (sheet) => SafeArea(
+                child: FractionallySizedBox(
+                  heightFactor: .75,
+                  child: ListView.builder(
+                    itemCount: positions.length,
+                    itemExtent: 48,
+                    itemBuilder: (row, index) {
+                      final position = positions[index];
+                      void choose() {
+                        Navigator.pop(sheet);
+                        onChoose(position);
+                      }
+
+                      return Semantics(
+                        label:
+                            'Carta ${index + 1} de ${positions.length}, '
+                            'posicion ${position + 1} del mazo',
+                        button: true,
+                        onTap: choose,
+                        excludeSemantics: true,
+                        child: InkWell(
+                          onTap: choose,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text('Carta ${position + 1}'),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+            child: Text('Elegir carta (${positions.length})'),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Tarjeta con los cuatro gestos. Sale sola la primera vez, se cierra a los
 /// 40 s (o con «Entendido») y deja un «?» arriba a la derecha para volver.
 class TableHelp extends StatefulWidget {

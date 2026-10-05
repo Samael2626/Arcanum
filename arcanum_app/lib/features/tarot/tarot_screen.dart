@@ -114,6 +114,11 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
   Widget build(BuildContext context) {
     final table = ref.watch(tableControllerProvider);
     final catalog = ref.watch(tarotCatalogProvider);
+    final current = table.asData?.value;
+    final fan = current?.fan;
+    final fanPositions = fan == null
+        ? null
+        : current?.server?.piles[fan.pid]?.positions;
     // la Luna de la lectura si ya se interpreto; si no, la de ahora
     final moon = tableMoonFor(_reading, ref.watch(tableMoonNowProvider).value);
     final body = switch ((table, catalog)) {
@@ -167,6 +172,15 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
                   ),
                 ),
               ],
+              if (_director != null &&
+                  fanPositions != null &&
+                  fanPositions.isNotEmpty)
+                Positioned.fill(
+                  child: FanPickerButton(
+                    positions: fanPositions,
+                    onChoose: _director!.takeFanPosition,
+                  ),
+                ),
               // la fase, junto a la ayuda, como en el prototipo
               if (moon != null && _director != null)
                 Positioned(

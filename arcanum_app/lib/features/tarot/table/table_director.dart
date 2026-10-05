@@ -931,6 +931,17 @@ class TableDirector extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Seleccion precisa desde la lista accesible; conserva el mismo flujo del toque.
+  Future<void> takeFanPosition(int position) async {
+    final fan = table.fan;
+    if (fan == null ||
+        !(table.server?.piles[fan.pid]?.positions.contains(position) ??
+            false)) {
+      return;
+    }
+    await _takeFromFan('fan:${fan.pid}:$position');
+  }
+
   /// Donde se esta viendo la carta pendiente: va de camino 420 ms.
   TablePose _shownPending(_PendingTake p) {
     const travel = 420;
