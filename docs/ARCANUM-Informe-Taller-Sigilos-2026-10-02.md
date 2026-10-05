@@ -167,3 +167,19 @@ También desbordaba la fila de colores con «naranja escarlata brillante».
 No verificado (necesita teléfono): QA en la app instalada, lector de pantalla de
 los interruptores y de la lectura, y el aspecto con Crimson Pro y Noto Serif
 Hebrew en el Lamen (los tests usan una fuente de prueba de cuadrados).
+
+## 9. Sello personal en Flutter (4-oct)
+
+Commit `b809b24`, sobre `72dc379`. `PersonalDoc` monta la figura de letras,
+Rosa-Cruz o Kamea en un formato visual Goetia/Pentáculo/Agrippa. El resultado
+es una reconstrucción [RC], no una pieza histórica; el SVG lo dice. Kamea
+conserva su planeta. Pantalla propia, entrada cifrada `sigilo-personal` y
+restauración desde el Grimorio. El título no revela el nombre.
+
+Referencias: `_fixtures_personal.mjs` produjo 33 casos y 11 PNG de Chromium.
+Paridad SVG completa, lienzo bajo 0,06 % y prueba de caminos, anchos y opacidades.
+Pantalla a 390×844, guardado y reapertura probados. Suite completa: 1562 pasan,
+8 saltados; `flutter analyze` sin avisos. Tres mutaciones detectadas y revertidas.
+Después de la suite se corrigió el caso de fuente Kamea con cuadrícula visible;
+su prueba específica y el análisis pasaron. La procedencia, defectos y límites
+están en [[ARCANUM-Avance-Sello-Personal-2026-10-04]].
