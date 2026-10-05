@@ -429,10 +429,16 @@ void main() {
           'sello ni «Interpretar»', () async {
         await openWithFan(spread: sp.slug);
         ops().arrange((s) => s.copyWith(seal: () => const Seal(text: '¿?')));
-        for (var i = 0; i < sp.cardCount + 1; i++) {
+        for (var i = 0; i < sp.cardCount; i++) {
           tapScreen(fanTapPoint(2 + i * 5));
           await settle();
         }
+        // la tirada llena recoge el abanico: la de mas se saca reabriendolo
+        expect(table().fan, isNull);
+        final p = table().piles.single;
+        await tap(Offset(p.x, p.y));
+        tapScreen(fanTapPoint(2));
+        await settle();
         final extra = table().cards.singleWhere((k) => k.slot == null);
         final r = rectOf(
           TablePose(extra.x, extra.y, rot: extra.rot, scale: extra.scale),
@@ -451,7 +457,6 @@ void main() {
         await openWithFan(spread: 'three_card');
         ops().arrange((s) => s.copyWith(seal: () => const Seal(text: '¿?')));
         expect(dir.hitAt(TableDirector.sealAt), isA<HitSeal>());
-        // tirada completa y desvelada: el bordado manda sobre el abanico
         for (final i in [3, 20, 40]) {
           tapScreen(fanTapPoint(i));
           await settle();
@@ -463,6 +468,12 @@ void main() {
           }
           return t;
         });
+        // tirada completa: el abanico se recogio solo y no tapa el bordado
+        expect(table().fan, isNull);
+        expect(dir.hitAt(TableDirector.embroideryAt), isA<HitEmbroidery>());
+        // y si se reabre para una aclaratoria, el bordado sigue mandando
+        final p = table().piles.single;
+        await tap(Offset(p.x, p.y));
         expect(table().fan, isNotNull);
         expect(dir.hitAt(TableDirector.embroideryAt), isA<HitEmbroidery>());
       },

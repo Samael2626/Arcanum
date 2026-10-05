@@ -993,7 +993,20 @@ class TableDirector extends ChangeNotifier {
       _born('card:${card.slug}', _shownPending(p));
       _land(card.slug, p.slot, p.to);
     }
+    _gatherFanIfComplete();
     notifyListeners();
+  }
+
+  /// Tirada llena y abanico abierto: ya no hace falta sacar, y el abanico
+  /// tapaba «Interpretar». Se recoge solo; un toque al mazo lo vuelve a abrir
+  /// si hace falta una aclaratoria.
+  void _gatherFanIfComplete() {
+    final sp = spread;
+    if (sp == null || table.fan == null) return;
+    for (var i = 0; i < sp.cardCount; i++) {
+      if (table.cardInSlot(i) == null) return;
+    }
+    ops.arrange((s) => s.copyWith(fan: () => null));
   }
 
   /// Seleccion precisa desde la lista accesible; conserva el mismo flujo del toque.
@@ -1762,6 +1775,7 @@ class TableDirector extends ChangeNotifier {
     final gesture = !pending && (_drag?.gesture ?? false);
     try {
       _dropDragged(kind, cancelled);
+      _gatherFanIfComplete();
     } finally {
       if (gesture) ops.commitUndoable();
     }

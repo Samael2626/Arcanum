@@ -350,6 +350,23 @@ void main() {
       },
     );
 
+    test('al llenar el ultimo hueco el abanico se recoge solo', () async {
+      // GN2200: con el abanico abierto, «Interpretar» se pintaba encima
+      await openRws();
+      c
+          .read(tableControllerProvider.notifier)
+          .arrange((s) => s.copyWith(spread: () => 'three_card'));
+      await tap(pileAt('p0'));
+      PieceView fanCard() =>
+          dir.pieces().firstWhere((p) => p.kind == PieceKind.fanCard);
+      await tap(fanCard().pose.offset);
+      await tap(fanCard().pose.offset);
+      expect(table().fan, isNotNull, reason: 'aun falta un hueco');
+      await tap(fanCard().pose.offset);
+      expect(table().cardInSlot(2), isNotNull);
+      expect(table().fan, isNull);
+    });
+
     test('desvelar todas da la vuelta solo a las de la tirada', () async {
       // GN2200: desvelaba tambien la carta suelta, que no cuenta
       await openRws();
