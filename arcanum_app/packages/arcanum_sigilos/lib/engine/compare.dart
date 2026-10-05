@@ -262,6 +262,7 @@ class CompareDoc {
                 note,
                 i >= 4 ? 'italic Georgia, serif' : 'Georgia, serif',
                 1,
+                alignStart: true,
               ),
           ],
         ),

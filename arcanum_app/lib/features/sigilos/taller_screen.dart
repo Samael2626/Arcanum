@@ -178,11 +178,12 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
 
   // ── Guardar, cargar, compartir ────────────────────────────────
   Future<void> _save() async {
+    final snapshot = _snap;
     setState(() => _saving = true);
     try {
       final store = SigilStore(ref.read(arcanumApiProvider), ref.read(grimoireCryptoProvider), ref.read(userPlaceProvider));
       _savedId = await store.save(doc, entryId: _savedId);
-      _savedSnapshot = _snap;
+      _savedSnapshot = snapshot;
       _toast('Sigilo guardado en tu Grimorio.');
     } catch (e) {
       debugPrint('ARCANUM taller: fallo al guardar el sigilo ($e).');

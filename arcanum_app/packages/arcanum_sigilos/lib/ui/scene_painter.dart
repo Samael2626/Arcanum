@@ -97,7 +97,7 @@ void _paintPrims(Canvas canvas, List<LayerPrim> prims, String color, double gop)
         canvas.translate(t.x, t.y);
         canvas.rotate(t.rot * math.pi / 180);
         // misma regla que el SVG: centro horizontal y base a TEXT_MID del cuerpo
-        tp.paint(canvas, Offset(-tp.width / 2, t.size * kTextMid - base));
+        tp.paint(canvas, Offset(t.alignStart ? 0 : -tp.width / 2, t.size * kTextMid - base));
         canvas.restore();
     }
   }

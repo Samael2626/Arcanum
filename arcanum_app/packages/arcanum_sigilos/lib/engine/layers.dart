@@ -143,7 +143,8 @@ final class PolyPrim extends LayerPrim {
 final class TextPrim extends LayerPrim {
   final double x, y, rot, size;
   final String ch, font;
-  const TextPrim(this.x, this.y, this.rot, this.size, this.ch, this.font, super.op);
+  final bool alignStart;
+  const TextPrim(this.x, this.y, this.rot, this.size, this.ch, this.font, super.op, {this.alignStart = false});
 }
 
 final class GlyphLayerPrim extends LayerPrim {

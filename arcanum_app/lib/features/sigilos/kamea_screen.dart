@@ -88,11 +88,12 @@ class KameaScreenState extends ConsumerState<KameaScreen> {
 
   // ── Guardar y compartir ───────────────────────────────────────
   Future<void> _save() async {
+    final snapshot = _snap;
     setState(() => _saving = true);
     try {
       final store = SigilStore(ref.read(arcanumApiProvider), ref.read(grimoireCryptoProvider), ref.read(userPlaceProvider));
       _savedId = await store.saveKamea(doc, entryId: _savedId);
-      _savedSnapshot = _snap;
+      _savedSnapshot = snapshot;
       _toast('Kamea guardada en tu Grimorio.');
     } catch (e) {
       debugPrint('ARCANUM kamea: fallo al guardar ($e).');

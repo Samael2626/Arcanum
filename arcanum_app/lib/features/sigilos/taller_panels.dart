@@ -468,7 +468,7 @@ class GuardarPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       sectionTitle('Cargar'),
-      Text('Contempla el sigilo con la respiración. Al terminar decides si lo guardas o lo olvidas.', style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted)),
+      Text('Contempla el sigilo y respira a tu ritmo, sin retener el aire. Al terminar decides si lo guardas o lo olvidas.', style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted)),
       const SizedBox(height: 8),
       OutlinedButton(onPressed: canSave ? onCharge : null, style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: ArcanumColors.gold), child: const Text('Cargar')),
       sectionTitle('Guardar'),

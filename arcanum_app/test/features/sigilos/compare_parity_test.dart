@@ -107,4 +107,9 @@ void main() {
       }
     }
   });
+  test('las notas usan el anclaje izquierdo del SVG', () {
+    final notes = compareFor(cases.first).scene().fg.singleWhere((g) => g.layer == 'compare-notes');
+    expect(notes.prims!.whereType<TextPrim>().every((t) => t.alignStart && t.x == 430), isTrue);
+    expect(sceneSVG([notes]), contains('text-anchor="start"'));
+  });
 }

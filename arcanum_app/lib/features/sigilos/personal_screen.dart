@@ -35,7 +35,8 @@ class PersonalScreenState extends ConsumerState<PersonalScreen> {
   @visibleForTesting
   PersonalDoc get debugDoc => doc;
   String get _snap => jsonEncode(doc.toJson());
-  bool get _dirty => doc.ready && _snap != _savedSnapshot;
+  bool get _nameChanged => _name.text.trim() != doc.displayedName;
+  bool get _dirty => _nameChanged || (doc.ready && _snap != _savedSnapshot);
 
   @override
   void initState() { super.initState(); if (_savedId != null) _savedSnapshot = _snap; }
@@ -60,11 +61,13 @@ class PersonalScreenState extends ConsumerState<PersonalScreen> {
   }
 
   Future<void> _save() async {
+    if (!doc.ready || _nameChanged) return;
+    final snapshot = _snap;
     setState(() => _saving = true);
     try {
       final store = SigilStore(ref.read(arcanumApiProvider), ref.read(grimoireCryptoProvider), ref.read(userPlaceProvider));
       _savedId = await store.savePersonal(doc, entryId: _savedId);
-      _savedSnapshot = _snap;
+      _savedSnapshot = snapshot;
       _toast('Sello guardado en tu Grimorio.');
     } catch (error) {
       debugPrint('ARCANUM sello personal: fallo al guardar ($error).');
@@ -108,7 +111,7 @@ class PersonalScreenState extends ConsumerState<PersonalScreen> {
   Widget _panel() => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
     sectionTitle('Figura central'),
     TextField(controller: _name, maxLength: 40, enableSuggestions: false, autocorrect: false, enableIMEPersonalizedLearning: false,
-      style: ArcanumText.body(16), decoration: const InputDecoration(hintText: 'Tu nombre o una palabra'), onSubmitted: (_) => _generate()),
+      style: ArcanumText.body(16), decoration: const InputDecoration(hintText: 'Tu nombre o una palabra'), onChanged: (_) => setState(() {}), onSubmitted: (_) => _generate()),
     Wrap(spacing: 6, runSpacing: 6, children: [
       familiaChip('Letras', doc.source == 'letters', () { setState(() => doc.source = 'letters'); _generate(); }),
       familiaChip('Rosa-Cruz', doc.source == 'rosa', () { setState(() => doc.source = 'rosa'); _generate(); }),
@@ -116,6 +119,8 @@ class PersonalScreenState extends ConsumerState<PersonalScreen> {
     ]),
     const SizedBox(height: 8),
     GoldButton(label: 'Trazar figura', onPressed: _generate),
+    if (_nameChanged && doc.ready)
+      Text('Vuelve a trazar el nombre editado antes de guardar o compartir.', style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted)),
     sectionTitle('Formato del sello'),
     Wrap(spacing: 6, runSpacing: 6, children: [
       familiaChip('Goetia', doc.template == 'goetia', () => setState(() => doc.setTemplate('goetia'))),
@@ -145,12 +150,12 @@ class PersonalScreenState extends ConsumerState<PersonalScreen> {
     sectionTitle('Guardar'),
     Text('El nombre y las decisiones se guardan cifrados. El título del Grimorio no revela el nombre.', style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted)),
     const SizedBox(height: 8),
-    GoldButton(label: _savedId == null ? 'Guardar en el Grimorio' : 'Guardar cambios', loading: _saving, onPressed: doc.ready ? _save : null),
+    GoldButton(label: _savedId == null ? 'Guardar en el Grimorio' : 'Guardar cambios', loading: _saving, onPressed: doc.ready && !_nameChanged ? _save : null),
     sectionTitle('Compartir'),
     Row(children: [
-      Expanded(child: familiaOutlined('Imagen (PNG)', doc.ready ? () => _share(png: true) : null)),
+      Expanded(child: familiaOutlined('Imagen (PNG)', doc.ready && !_nameChanged ? () => _share(png: true) : null)),
       const SizedBox(width: 8),
-      Expanded(child: familiaOutlined('Vector (SVG)', doc.ready ? () => _share(png: false) : null)),
+      Expanded(child: familiaOutlined('Vector (SVG)', doc.ready && !_nameChanged ? () => _share(png: false) : null)),
     ]),
     SwitchListTile(contentPadding: EdgeInsets.zero, title: Text('Fondo transparente al compartir', style: ArcanumText.body(15)),
       value: _transparent, activeThumbColor: ArcanumColors.gold, onChanged: (v) => setState(() => _transparent = v)),

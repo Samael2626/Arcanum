@@ -226,6 +226,7 @@ void main() {
     final st = await _forjar(tester, api);
     await tester.tap(find.text('Guardar'));
     await tester.pump();
+    await _bajarA(tester, 'Guardar en el Grimorio');
     await tester.tap(find.text('Guardar en el Grimorio'));
     await tester.pumpAndSettle();
     final body = api.created.single;

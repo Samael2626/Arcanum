@@ -1,5 +1,5 @@
-// Carga del sigilo (gnosis de bajo riesgo): contemplarlo con la respiracion
-// (4 s inhala, 4 sosten, 4 exhala, 4 sosten) durante 30, 60 o 120 s. Al
+// Carga del sigilo (gnosis de bajo riesgo): contemplarlo con respiracion natural
+// durante 30, 60 o 120 s, sin ritmos impuestos ni retenciones. Al
 // terminar se decide: guardarlo o olvidarlo (intencion -> ... -> carga -> olvido).
 import 'dart:async';
 
@@ -18,19 +18,15 @@ class TallerCarga extends StatefulWidget {
   State<TallerCarga> createState() => _TallerCargaState();
 }
 
-class _TallerCargaState extends State<TallerCarga> with SingleTickerProviderStateMixin {
+class _TallerCargaState extends State<TallerCarga> {
   int seconds = 30;
   Timer? _timer;
   int left = 30;
   bool running = false, done = false;
-  late final AnimationController _breath = AnimationController(vsync: this, duration: const Duration(seconds: 16));
-
-  static const _fases = ['Inhala', 'Sostén', 'Exhala', 'Sostén'];
 
   @override
   void dispose() {
     _timer?.cancel();
-    _breath.dispose();
     super.dispose();
   }
 
@@ -39,12 +35,10 @@ class _TallerCargaState extends State<TallerCarga> with SingleTickerProviderStat
       running = true;
       left = seconds;
     });
-    _breath.repeat();
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
       setState(() => left--);
       if (left <= 0) {
         t.cancel();
-        _breath.stop();
         setState(() {
           running = false;
           done = true;
@@ -67,33 +61,13 @@ class _TallerCargaState extends State<TallerCarga> with SingleTickerProviderStat
           Text('CARGA DEL SIGILO', style: ArcanumText.label().copyWith(color: ArcanumColors.gold, letterSpacing: 4)),
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Text('Fija la mirada en el sigilo y respira sin forzar. Cuando el tiempo termine, cierra los ojos y decide si lo guardas o lo olvidas.',
+            child: Text('Contempla el sigilo y respira a tu ritmo, sin retener el aire. Puedes cerrar en cualquier momento. Al terminar, decide si lo guardas o lo olvidas.',
                 textAlign: TextAlign.center, style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted)),
           ),
           Expanded(
             child: LayoutBuilder(builder: (context, box) {
               final side = box.biggest.shortestSide;
-              return Center(
-                child: Stack(alignment: Alignment.center, children: [
-                  CustomPaint(size: Size.square(side), painter: SigilScenePainter(bg: s.bg, fg: s.fg)),
-                  AnimatedBuilder(
-                    animation: _breath,
-                    builder: (context, _) {
-                      final t = _breath.value * 4, fase = t.floor() % 4, f = t - t.floor();
-                      final k = fase == 0 ? .65 + .35 * f : fase == 1 ? 1.0 : fase == 2 ? 1 - .35 * f : .65;
-                      return Opacity(
-                        opacity: running ? .35 + .65 * (k - .65) / .35 : 0,
-                        child: Container(
-                          width: side * .3 * k,
-                          height: side * .3 * k,
-                          decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: ArcanumColors.gold.withValues(alpha: .6))),
-                          child: Center(child: Text(_fases[fase].toUpperCase(), style: ArcanumText.label().copyWith(color: ArcanumColors.gold))),
-                        ),
-                      );
-                    },
-                  ),
-                ]),
-              );
+              return Center(child: CustomPaint(size: Size.square(side), painter: SigilScenePainter(bg: s.bg, fg: s.fg)));
             }),
           ),
           Text('${(left ~/ 60).toString().padLeft(2, '0')}:${(left % 60).toString().padLeft(2, '0')}', style: ArcanumText.heading(30).copyWith(fontFeatures: const [FontFeature.tabularFigures()])),

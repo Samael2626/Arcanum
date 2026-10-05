@@ -55,6 +55,8 @@ void main() {
     await tester.pump();
     await tester.tap(find.widgetWithText(OutlinedButton, 'Cargar'));
     await tester.pumpAndSettle();
+    expect(find.textContaining('respira a tu ritmo'), findsOneWidget);
+    expect(find.text('SOSTÉN'), findsNothing);
     await tester.tap(find.text('Empezar'));
     await tester.pump(const Duration(seconds: 31));
     await tester.pump();
