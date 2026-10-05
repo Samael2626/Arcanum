@@ -2,7 +2,7 @@
 tags: [arcanum, estado, indice]
 tipo: estado
 area: arcanum
-actualizado: 2026-10-04
+actualizado: 2026-10-05
 nota: "Reconstruido desde memoria tras perder el vault F:. Fuente de verdad ahora en este repo git."
 ---
 
@@ -15,11 +15,11 @@ backend en GitHub `github.com/Samael2626/Arcanum`.
 Docs del proyecto (este repo): [[ARCANUM-Semana3-Flutter]] · [[ARCANUM-Mejoras-y-Retos]] ·
 [[ARCANUM-Auditoria-Senior-2026-06-17]] · `docs/checkpoints/`.
 
-## Estado actual (2026-10-04)
+## Estado actual (2026-10-05)
 
 - **Grimorio:** CRUD real con contenido cifrado AES-256; el Taller guarda documentos de letras, Kamea, Rosa-Cruz, Sello personal y Comparar como entradas `sigil` diferenciadas. El nombre/intención no aparece en el título. [[ARCANUM-Avance-Sello-Personal-2026-10-04]] (`b809b24`); [[ARCANUM-Avance-Comparar-2026-10-04]] (`5120d0b`). El detalle de Kamea oculta el rótulo del nombre por decisión de Samuel. La Bitácora de práctica usa entradas `ritual` cifradas: [[ARCANUM-Avance-Ritual-Bitacora-2026-10-04]] (`acc1d5b`).
 - **Oráculo:** lecturas de tarot con IA Groq `openai/gpt-oss-120b` en producción; no usa Claude API. La disponibilidad depende de la cuota de la organización de Groq. Véase `AGENTS.md`, «Groq: modelo, límites y coste».
-- **Taller:** Letras se abre desde Hoy, tiene carga/olvido y permite anotar la práctica en la Bitácora del Grimorio. Kamea y Rosa-Cruz son familias separadas sin ritual de caos; Sello personal es una reconstrucción declarada; Comparar muestra las tres figuras sin fusionarlas.
+- **Taller:** Letras se abre desde Hoy, tiene carga/olvido con respiración natural opcional y permite anotar la práctica en la Bitácora del Grimorio. Kamea y Rosa-Cruz son familias separadas sin ritual de caos; Sello personal es una reconstrucción declarada; Comparar muestra las tres figuras sin fusionarlas. Alineación del lienzo y guardado ante ediciones simultáneas corregidos en [[ARCANUM-Mejora-Taller-2026-10-05]] (`aef5cd6`). QA en teléfono físico pendiente.
 
 Las secciones «Semana 1–3» de abajo registran el estado histórico de junio; no describen el estado actual.
 
