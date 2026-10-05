@@ -133,10 +133,12 @@ abstract final class RadialMenus {
     RadialItem('union', 'Unir', enabled: piles >= 2),
   ];
 
+  /// «Tirada» va al final: las tres primeras no se mueven de sitio.
   static const List<RadialItem> fan = [
     RadialItem('take', 'Sacar'),
     RadialItem('gather', 'Juntar'),
     RadialItem('shuffle', 'Barajar'),
+    RadialItem('spread', 'Tirada'),
   ];
 
   /// Los ids son los estilos que acepta el backend.

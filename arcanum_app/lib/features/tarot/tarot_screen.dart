@@ -337,7 +337,9 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
             Text(sp.slots[slot].meaning, style: _body)
           else if (card.host == null)
             Text(
-              'No cuenta para la lectura: arrástrala a un hueco.',
+              sp == null
+                  ? TableDirector.spreadHint
+                  : 'No cuenta para la lectura: arrástrala a un hueco.',
               style: _muted,
             ),
           const SizedBox(height: 8),

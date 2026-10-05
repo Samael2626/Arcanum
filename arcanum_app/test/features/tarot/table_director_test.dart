@@ -335,6 +335,32 @@ void main() {
     );
 
     test(
+      'sin tirada, la primera carta sacada avisa una vez de donde se elige',
+      () async {
+        // GN2200: las cartas quedaban «fuera de la tirada» sin pista de que
+        // «Tirada» vive en el menu del mazo
+        await openRws();
+        await tap(pileAt('p0'));
+        PieceView fanCard() =>
+            dir.pieces().firstWhere((p) => p.kind == PieceKind.fanCard);
+        await tap(fanCard().pose.offset);
+        expect(fx.toasts.where((t) => t.contains('«Tirada»')), hasLength(1));
+        await tap(fanCard().pose.offset);
+        expect(fx.toasts.where((t) => t.contains('«Tirada»')), hasLength(1));
+      },
+    );
+
+    test('el abanico abierto tambien ofrece elegir la tirada', () async {
+      await openRws();
+      await tap(pileAt('p0'));
+      final fanCard = dir.pieces().firstWhere(
+        (p) => p.kind == PieceKind.fanCard,
+      );
+      await holdAndPick(fanCard.pose.offset, 'spread');
+      expect(dir.radial!.items.map((i) => i.id), contains('three_card'));
+    });
+
+    test(
       'arrastrar una carta a un hueco la coloca; cerca de otra, la aclara',
       () async {
         await openRws();

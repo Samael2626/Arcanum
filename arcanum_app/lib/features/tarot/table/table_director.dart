@@ -931,6 +931,13 @@ class TableDirector extends ChangeNotifier {
   ///
   /// Antes el toque esperaba la respuesta con la mesa bloqueada (`_busy`) y
   /// los toques de mientras se tiraban en silencio.
+  /// Sin tirada las cartas no cuentan para la lectura y nada decia donde se
+  /// elige: se avisa una vez, con la primera carta sacada.
+  static const spreadHint =
+      'Aún no hay tirada: mantén pulsado el mazo y elige «Tirada» para que '
+      'las cartas cuenten.';
+  bool _spreadHinted = false;
+
   Future<void> _takeFromFan(String fanId, {_Drag? drag}) async {
     if (_pending.containsKey(fanId)) return;
     final from = _poseOf(fanId);
@@ -972,6 +979,10 @@ class TableDirector extends ChangeNotifier {
     }
     _pending.remove(fanId);
     _timeTake(p);
+    if (sp == null && !_spreadHinted) {
+      _spreadHinted = true;
+      effects.toast(spreadHint);
+    }
     if (_count(p.pid) == 0) ops.arrange((s) => s.copyWith(fan: () => null));
     if (drag != null && !p.released && identical(_drag, drag)) {
       // el dedo sigue abajo: la carta de verdad sigue al dedo desde ahi
@@ -1503,6 +1514,8 @@ class TableDirector extends ChangeNotifier {
             case 'shuffle':
               ops.arrange((s) => s.copyWith(fan: () => null));
               _openShuffleRadial(pid, screen);
+            case 'spread':
+              _openSpreadRadial(pid);
           }
         });
       case HitCard(:final slug):
