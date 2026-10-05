@@ -222,6 +222,8 @@ String personalTitle(DateTime d) => 'Sello personal, ${dayMonthEs(d)}';
 
 String compareTitle(DateTime d) => 'Comparación de sigilos, ${dayMonthEs(d)}';
 
+String practiceTitle(DateTime d) => 'Práctica de sigilo, ${dayMonthEs(d)}';
+
 class SigilStore {
   final ArcanumApi api;
   final GrimoireCrypto crypto;
@@ -284,7 +286,14 @@ class SigilStore {
 
   Future<String> saveCompare(CompareDoc doc, {String? entryId}) => _persist(encodeCompareEntry(doc), compareTitle, entryId, const {});
 
-  Future<String> _persist(String plain, String Function(DateTime) title, String? entryId, Map<String, String> thumb) async {
+  /// Bitacora: solo la observacion escrita por la persona, nunca el documento olvidado.
+  Future<String> savePracticeNote(String note) {
+    final text = note.trim();
+    if (text.isEmpty) throw ArgumentError.value(note, 'note', 'La anotacion esta vacia');
+    return _persist(text, practiceTitle, null, const {}, entryType: 'ritual');
+  }
+
+  Future<String> _persist(String plain, String Function(DateTime) title, String? entryId, Map<String, String> thumb, {String entryType = 'sigil'}) async {
     final enc = await crypto.encryptText(plain);
     if (entryId != null) {
       // al seguir editando, el momento de creacion (luna, hora) no cambia
@@ -294,7 +303,7 @@ class SigilStore {
     final s = await sky();
     final now = DateTime.now();
     final res = await api.grimoireCreate({
-      'entry_type': 'sigil',
+      'entry_type': entryType,
       'title': title(now),
       'encrypted_content': enc.ciphertext,
       'content_iv': enc.iv,

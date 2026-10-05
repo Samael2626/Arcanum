@@ -189,7 +189,7 @@ void main() {
 
   test('una kamea y un sigilo de letras no se confunden al leerse', () {
     final k = encodeKameaEntry(KameaDoc(hebrew: 'אגיאל'));
-    final s = encodeSigilEntry(SigilDoc()..generate('Quiero paz'));
+    final s = encodeSigilEntry(SigilEntry(SigilDoc()..generate('Quiero paz')));
     expect(decodeSigilEntry(k), isNull);
     expect(decodeKameaEntry(s), isNull);
     expect(decodeKameaEntry('Dibujé una tabla a mano.'), isNull);

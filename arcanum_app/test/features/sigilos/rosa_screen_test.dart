@@ -206,7 +206,7 @@ void main() {
   test('una Rosa-Cruz, una kamea y un sigilo de letras no se confunden al leerse', () {
     final r = encodeRosaEntry(RosaDoc()..setName('Samuel'));
     final k = encodeKameaEntry(KameaDoc(hebrew: 'אגיאל'));
-    final s = encodeSigilEntry(SigilDoc()..generate('Quiero paz'));
+    final s = encodeSigilEntry(SigilEntry(SigilDoc()..generate('Quiero paz')));
     for (final other in [k, s]) {
       expect(decodeRosaEntry(other), isNull);
     }

@@ -19,6 +19,7 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import 'sigil_radial.dart';
 import 'sigil_store.dart';
+import 'bitacora_sheet.dart';
 import 'taller_carga.dart';
 import 'taller_fuentes.dart';
 import 'taller_panels.dart';
@@ -253,8 +254,16 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
     }
     if (!mounted) return;
     _savedSnapshot = _saveSnap;
+    // anotacion voluntaria en la Bitacora: solo lo que la persona observo, nunca la intencion
+    final noted = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: ArcanumColors.surface,
+      builder: (_) => BitacoraSheet(savedCopy: saved),
+    );
+    if (!mounted) return;
     final messenger = ScaffoldMessenger.maybeOf(context);
-    Navigator.pop(context, saved);
+    Navigator.pop(context, saved || noted == true);
     messenger?.showSnackBar(const SnackBar(content: Text('Soltado. No lo busques.')));
   }
 

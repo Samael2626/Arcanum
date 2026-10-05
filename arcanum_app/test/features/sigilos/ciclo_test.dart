@@ -6,6 +6,7 @@ import 'dart:convert';
 
 import 'package:arcanum_app/features/grimorio/grimorio_detail.dart';
 import 'package:arcanum_app/features/grimorio/grimorio_editor.dart';
+import 'package:arcanum_app/features/sigilos/bitacora_sheet.dart';
 import 'package:arcanum_app/features/sigilos/sigil_radial.dart';
 import 'package:arcanum_app/features/sigilos/sigil_store.dart';
 import 'package:arcanum_app/features/sigilos/taller_carga.dart';
@@ -187,6 +188,8 @@ void main() {
       await _cargar(t, 'Olvidar');
       await t.tap(find.text('Soltar'));
       await t.pumpAndSettle();
+      await t.tap(find.text('Cerrar sin anotar'));
+      await t.pumpAndSettle();
       expect(api.updated, hasLength(2));
       final (id, body) = api.updated.last;
       expect(id, 'sigilo-1');
@@ -207,6 +210,10 @@ void main() {
       await _cargar(t, 'Olvidar');
       expect(find.textContaining('no se ha guardado'), findsOneWidget);
       await t.tap(find.text('Soltar'));
+      await t.pumpAndSettle();
+      // la Bitacora se ofrece despues de soltar; cerrarla sin anotar no guarda nada
+      expect(find.byType(BitacoraSheet), findsOneWidget);
+      await t.tap(find.text('Cerrar sin anotar'));
       await t.pumpAndSettle();
       expect(api.created, isEmpty);
       expect(api.updated, isEmpty);
