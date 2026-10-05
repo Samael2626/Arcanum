@@ -42,7 +42,7 @@ void main() {
 
     // 2) ninguna tarjeta anuncia "Continuar gratis" donde se abren packs de pago
     final practicante = find.ancestor(
-      of: find.text('Prácticante'),
+      of: find.text('Practicante'),
       matching: find.byType(Column),
     );
     expect(

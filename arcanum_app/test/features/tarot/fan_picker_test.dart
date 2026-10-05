@@ -31,7 +31,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 350));
     expect(
-      find.bySemanticsLabel('Carta 1 de 78, posicion 1 del mazo'),
+      find.bySemanticsLabel('Carta 1 de 78, posición 1 del mazo'),
       findsOneWidget,
     );
     expect(tester.getSize(find.byType(InkWell).first).height, 48);

@@ -50,7 +50,7 @@ class FanPickerButton extends StatelessWidget {
                       return Semantics(
                         label:
                             'Carta ${index + 1} de ${positions.length}, '
-                            'posicion ${position + 1} del mazo',
+                            'posición ${position + 1} del mazo',
                         button: true,
                         onTap: choose,
                         excludeSemantics: true,

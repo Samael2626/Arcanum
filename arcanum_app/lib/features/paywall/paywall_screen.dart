@@ -106,7 +106,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
                 // ── Tier 2: Consumibles ──
                 _TierCard(
-                  title: 'Prácticante',
+                  title: 'Practicante',
                   subtitle: 'Compra lo que necesites',
                   price: '',
                   features: [
