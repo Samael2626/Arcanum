@@ -20,6 +20,7 @@ import '../../core/theme/arcanum_theme.dart';
 import 'sigil_radial.dart';
 import 'sigil_store.dart';
 import 'taller_carga.dart';
+import 'bitacora_sheet.dart';
 import 'taller_fuentes.dart';
 import 'taller_panels.dart';
 
@@ -197,16 +198,24 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
     if (fin == CargaFin.guardar) {
       await _save();
     } else {
-      // olvido: el sigilo no se guarda y el taller se cierra
+      // El olvido borra el documento de la vista y del historial de deshacer.
+      // Una copia guardada antes permanece en el Grimorio: se informa en la hoja.
+      final hadCopy = _savedId != null;
+      setState(() {
+        doc = SigilDoc();
+        ctl = CanvasController(doc);
+        _intention.clear();
+        _past.clear();
+        _future.clear();
+        _commit();
+        _repaint.value++;
+      });
       _savedSnapshot = _snap;
-      if (mounted) Navigator.pop(context, _savedId != null);
-      _toastRoot('Soltado. No lo busques.');
+      final noted = await showModalBottomSheet<bool>(context: context,
+        isScrollControlled: true, backgroundColor: ArcanumColors.surface,
+        builder: (_) => BitacoraSheet(savedCopy: hadCopy));
+      if (mounted) Navigator.pop(context, noted == true || hadCopy);
     }
-  }
-
-  void _toastRoot(String m) {
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    messenger?.showSnackBar(SnackBar(content: Text(m)));
   }
 
   Future<ui.Image> _render(int px) async {

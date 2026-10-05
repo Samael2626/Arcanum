@@ -145,6 +145,8 @@ String personalTitle(DateTime d) =>
     'Sello personal, ${d.day} de ${_meses[d.month - 1]}';
 String compareTitle(DateTime d) =>
     'Comparación de sigilos, ${d.day} de ${_meses[d.month - 1]}';
+String practiceTitle(DateTime d) =>
+    'Práctica de sigilo, ${d.day} de ${_meses[d.month - 1]}';
 
 class SigilStore {
   final ArcanumApi api;
@@ -170,10 +172,18 @@ class SigilStore {
   Future<String> saveCompare(CompareDoc doc, {String? entryId}) =>
       _persist(encodeCompareEntry(doc), compareTitle, entryId);
 
+  /// Bitacora: solo la observacion escrita por la persona, nunca el documento olvidado.
+  Future<String> savePracticeNote(String note) {
+    final text = note.trim();
+    if (text.isEmpty) throw ArgumentError.value(note, 'note', 'La anotacion esta vacia');
+    return _persist(text, practiceTitle, null, entryType: 'ritual');
+  }
+
   Future<String> _persist(
     String plain,
     String Function(DateTime) title,
     String? entryId,
+    {String entryType = 'sigil'}
   ) async {
     final enc = await crypto.encryptText(plain);
     if (entryId != null) {
@@ -203,7 +213,7 @@ class SigilStore {
     }
     final now = DateTime.now();
     final res = await api.grimoireCreate({
-      'entry_type': 'sigil',
+      'entry_type': entryType,
       'title': title(now),
       'encrypted_content': enc.ciphertext,
       'content_iv': enc.iv,

@@ -105,7 +105,7 @@ class _TallerCargaState extends State<TallerCarga> with SingleTickerProviderStat
                     const SizedBox(width: 10),
                     Expanded(child: FilledButton(onPressed: () => Navigator.pop(context, CargaFin.guardar), style: FilledButton.styleFrom(minimumSize: const Size(48, 48), backgroundColor: ArcanumColors.gold, foregroundColor: ArcanumColors.background), child: const Text('Guardar'))),
                   ])
-                : Row(children: [
+                : Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.center, children: [
                     for (final n in const [30, 60, 120])
                       Padding(
                         padding: const EdgeInsets.only(right: 6),
@@ -119,7 +119,6 @@ class _TallerCargaState extends State<TallerCarga> with SingleTickerProviderStat
                           onSelected: running ? null : (_) => setState(() => left = seconds = n),
                         ),
                       ),
-                    const Spacer(),
                     FilledButton(onPressed: running ? null : _start, style: FilledButton.styleFrom(minimumSize: const Size(96, 48), backgroundColor: ArcanumColors.gold, foregroundColor: ArcanumColors.background), child: const Text('Empezar')),
                   ]),
           ),

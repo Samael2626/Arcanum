@@ -1,6 +1,7 @@
 import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/features/hoy/hoy_screen.dart';
+import 'package:arcanum_app/features/sigilos/taller_screen.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_frame.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_motion.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_resin.dart';
@@ -175,6 +176,22 @@ Future<void> pulsar(WidgetTester tester, Key key) async {
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  testWidgets('Hoy abre el taller de letras', (tester) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(ProviderScope(overrides: [
+      arcanumApiProvider.overrideWithValue(_TodayApi()),
+      authProvider.overrideWith(_AuthWithPlace.new),
+    ], child: const MaterialApp(home: Scaffold(body: HoyScreen()))));
+    await tester.pump();
+    await tester.pump();
+    await tester.ensureVisible(find.text('Crear sigilo de letras'));
+    await tester.tap(find.text('Crear sigilo de letras'));
+    await tester.pumpAndSettle();
+    expect(find.byType(TallerScreen), findsOneWidget);
+  });
 
   testWidgets('Hoy evita animaciones y marcos costosos permanentes', (
     tester,

@@ -14,6 +14,7 @@ import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_resin.dart';
+import '../sigilos/taller_screen.dart';
 import 'hoy_guidance.dart';
 import 'hoy_lore.dart';
 import 'presentation/widgets/nested_sky_instrument.dart';
@@ -159,6 +160,18 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
     // Entrada en cascada suave: cada panel emerge del velo con su propio retardo.
     return Column(
       children: [
+        OutlinedButton.icon(
+          onPressed: () async {
+            final saved = await Navigator.push<bool>(context,
+              MaterialPageRoute(builder: (_) => const TallerScreen()));
+            if (mounted && saved == true) context.go('/grimorio');
+          },
+          icon: const Icon(Icons.auto_fix_high, size: 18),
+          label: const Text('Crear sigilo de letras'),
+          style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48),
+            foregroundColor: ArcanumColors.gold),
+        ),
+        const SizedBox(height: 12),
         if (step != null) ...[
           _NextStepCard(step: step, onTap: () => _runStep(step)),
           const SizedBox(height: 18),
