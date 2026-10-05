@@ -579,6 +579,25 @@ class _SpreadStrip extends StatelessWidget {
   /// Saltar al hueco `s`. Dos huecos con el mismo centro (el cruce 1/2 de la
   /// Cruz Celta) comparten zona y el toque iria siempre al de encima: tocar
   /// alterna entre ellos, empezando por el primero.
+  /// Radio alrededor de cada hueco del minimapa que cuenta como tocarlo.
+  static const double reach = 40;
+
+  void _tapNear(Offset p, Size box) {
+    final slots = spread!.slots;
+    int? best;
+    var bestD = reach;
+    for (var s = 0; s < slots.length; s++) {
+      if (!cards.any((c) => c.slot == s)) continue;
+      final d = (Offset(slots[s].x * box.width, slots[s].y * box.height) - p)
+          .distance;
+      if (d <= bestD) {
+        bestD = d;
+        best = s;
+      }
+    }
+    if (best != null) _goToSlot(best);
+  }
+
   void _goToSlot(int s) {
     final slots = spread!.slots;
     final twins = [
@@ -697,13 +716,23 @@ class _SpreadStrip extends StatelessWidget {
                               filled: cards.any((c) => c.slot == s),
                               lit: lit == s,
                               label: '${s + 1}, ${spread!.slots[s].name}',
-                              onTap: () => _goToSlot(s),
                               // el lector nombra cada hueco: va directo a el
                               onSemanticsTap: () {
                                 final i = cards.indexWhere((c) => c.slot == s);
                                 if (i >= 0) go(i);
                               },
                             ),
+                          // el dedo va al hueco mas cercano: cada uno gana su
+                          // zona sin pisar al vecino (en la columna de la Cruz
+                          // Celta no caben cajas de 48 dp)
+                          Positioned.fill(
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.translucent,
+                              excludeFromSemantics: true,
+                              onTapUp: (d) =>
+                                  _tapNear(d.localPosition, box.biggest),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -723,7 +752,6 @@ class _MiniSlot extends StatelessWidget {
     required this.filled,
     required this.lit,
     required this.label,
-    required this.onTap,
     required this.onSemanticsTap,
   });
 
@@ -733,7 +761,6 @@ class _MiniSlot extends StatelessWidget {
   final bool filled;
   final bool lit;
   final String label;
-  final VoidCallback onTap;
   final VoidCallback onSemanticsTap;
 
   static const Size size = Size(14, 22);
@@ -749,10 +776,7 @@ class _MiniSlot extends StatelessWidget {
       selected: lit,
       label: 'Ir a $label',
       onTap: filled ? onSemanticsTap : null,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        excludeFromSemantics: true,
-        onTap: filled ? onTap : null,
+      child: SizedBox.expand(
         child: Center(
           child: Transform.rotate(
             angle: rotation * 3.14159265 / 180,

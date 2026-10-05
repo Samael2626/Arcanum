@@ -245,6 +245,17 @@ void main() {
       expect(find.text('El Sol'), findsOneWidget);
     });
 
+    testWidgets('el minimapa acepta el toque cerca del hueco, no solo encima', (
+      tester,
+    ) async {
+      // la caja era de 32 dp: por debajo de los 48 que pide un dedo
+      await pump(tester);
+      final c = tester.getCenter(find.bySemanticsLabel('Ir a 3, Futuro'));
+      await tester.tapAt(c + const Offset(0, 22));
+      await settleFrames(tester);
+      expect(find.text('3 / 3'), findsOneWidget);
+    });
+
     testWidgets('en el cruce, tocar alterna entre la 1 y la 2', (tester) async {
       // GN2200: «Ir a 1» e «Ir a 2» compartian zona; el toque iba siempre a una
       final cross = SpreadDef.fromJson({
