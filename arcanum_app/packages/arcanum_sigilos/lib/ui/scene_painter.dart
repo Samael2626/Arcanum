@@ -152,6 +152,7 @@ void paintScene(Canvas canvas, List<SceneGroup> groups, {double? minW, double Fu
         paint.shader = _gradient(it.grad!);
         if (a < 1) paint.color = Color.fromRGBO(0, 0, 0, a);
       } else if (!it.fill) {
+        if (it.strokeGrad != null) paint.shader = _gradient(it.strokeGrad!);
         paint
           ..style = PaintingStyle.stroke
           ..strokeWidth = w

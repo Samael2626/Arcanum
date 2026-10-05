@@ -9,6 +9,7 @@ import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../sigilos/kamea_screen.dart';
+import '../sigilos/rosa_screen.dart';
 import '../sigilos/sigil_store.dart';
 import '../sigilos/taller_screen.dart';
 import 'grimorio_atmosphere.dart';
@@ -74,6 +75,14 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
     final saved = await Navigator.push<bool>(
       context,
       MaterialPageRoute(builder: (_) => KameaScreen(entryId: widget.id, initial: doc)),
+    );
+    if (mounted && saved == true) _retry();
+  }
+
+  Future<void> _continueRosa(RosaDoc doc) async {
+    final saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => RosaScreen(entryId: widget.id, initial: doc)),
     );
     if (mounted && saved == true) _retry();
   }
@@ -301,9 +310,10 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
           delayMs: 120,
           // un sigilo del taller se dibuja (y se puede seguir editando); una
           // entrada «Sigilo» escrita a mano antes del taller sigue siendo texto
-          child: switch (type == 'sigil' ? (decodeSigilEntry(content) ?? decodeKameaEntry(content)) : null) {
+          child: switch (type == 'sigil' ? (decodeSigilEntry(content) ?? decodeKameaEntry(content) ?? decodeRosaEntry(content)) : null) {
             final SigilDoc doc => _SigilBody(doc: doc, onEdit: () => _continueSigil(doc), accent: accent),
-            final KameaDoc doc => _KameaBody(doc: doc, onEdit: () => _continueKamea(doc), accent: accent),
+            final KameaDoc doc => _FamiliaBody(scene: doc.scene(), label: 'Kamea de ${doc.def.name}', editLabel: 'Seguir en la kamea', onEdit: () => _continueKamea(doc), accent: accent),
+            final RosaDoc doc => _FamiliaBody(scene: doc.scene(), label: 'Rosa-Cruz', editLabel: 'Seguir en la Rosa-Cruz', onEdit: () => _continueRosa(doc), accent: accent),
             _ => _ManuscriptBody(content: content, accent: accent),
           },
         ),
@@ -467,23 +477,24 @@ class _SigilBodyState extends State<_SigilBody> {
 }
 
 
-/// Una kamea guardada: la figura y el camino para seguir editándola.
-class _KameaBody extends StatelessWidget {
-  final KameaDoc doc;
+/// Una familia historica guardada (Kamea, Rosa-Cruz): la figura y el camino
+/// para seguir editandola.
+class _FamiliaBody extends StatelessWidget {
+  final ({List<SceneGroup> bg, List<SceneGroup> fg}) scene;
+  final String label, editLabel;
   final VoidCallback onEdit;
   final Color accent;
-  const _KameaBody({required this.doc, required this.onEdit, required this.accent});
+  const _FamiliaBody({required this.scene, required this.label, required this.editLabel, required this.onEdit, required this.accent});
 
   @override
   Widget build(BuildContext context) {
-    final s = doc.scene();
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       LayoutBuilder(
         builder: (context, box) => Center(
           child: Semantics(
             image: true,
-            label: 'Kamea de ${doc.def.name}',
-            child: CustomPaint(size: Size.square(box.maxWidth), painter: SigilScenePainter(bg: s.bg, fg: s.fg)),
+            label: label,
+            child: CustomPaint(size: Size.square(box.maxWidth), painter: SigilScenePainter(bg: scene.bg, fg: scene.fg)),
           ),
         ),
       ),
@@ -491,7 +502,7 @@ class _KameaBody extends StatelessWidget {
       OutlinedButton(
         onPressed: onEdit,
         style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: accent),
-        child: const Text('Seguir en la kamea'),
+        child: Text(editLabel),
       ),
     ]);
   }

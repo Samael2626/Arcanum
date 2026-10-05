@@ -24,7 +24,11 @@ class PathItem {
   final double? op;
   final List<String>? units;
   final Grad? grad;
-  const PathItem(this.d, {this.fill = false, this.op, this.units, this.grad});
+
+  /// Degradado a lo largo del trazo (Rosa-Cruz con colores). Solo lo pinta el
+  /// lienzo: el SVG de esa familia lo escribe su propio emisor.
+  final Grad? strokeGrad;
+  const PathItem(this.d, {this.fill = false, this.op, this.units, this.grad, this.strokeGrad});
 }
 
 /// Grupo de la escena. Lleva caminos (items) o primitivas de capa (prims).
