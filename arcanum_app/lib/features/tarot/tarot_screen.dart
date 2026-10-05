@@ -377,7 +377,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
         interpret: () => _ops.interpret(idempotencyKey: key),
         onReading: (r) {
           // el sello se rompe al interpretar
-          if (seal != null && !seal.open) dir.buzz(Buzz.breakSeal);
+          if (seal != null && !seal.open) dir.sealBroken();
           setState(() {
             _panel = null;
             _reading = r;
@@ -412,7 +412,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
   Future<void> _closeCircle() async {
     try {
       await _ops.closeCircle();
-      _director?.buzz(Buzz.closeCircle);
+      _director?.circleClosed();
       setState(() {
         _revealing = false;
         _reading = null;

@@ -25,6 +25,7 @@ import 'radial_logic.dart';
 import 'table_camera.dart';
 import 'table_geometry.dart';
 import 'table_haptics.dart';
+import 'table_smoke.dart';
 
 /// Lo que la mesa necesita de la pantalla: paneles, avisos y errores.
 abstract class TableEffects {
@@ -190,6 +191,31 @@ class TableDirector extends ChangeNotifier {
   }
 
   void _buzz(Buzz b) => buzz(b);
+
+  /// Humo de la mesa (la vista lo pinta encima, en pantalla).
+  final SmokeEmitter smoke = SmokeEmitter();
+
+  /// Centro del circulo bordado (especificacion §1): de ahi sale el humo al
+  /// cerrar el circulo.
+  static const Offset circleCenter = Offset(300, 484);
+
+  /// Se rompio el sello al interpretar: chasquido y humo, como el prototipo.
+  void sealBroken() {
+    buzz(Buzz.breakSeal);
+    smoke.puff(camera.toScreen(sealAt), 16);
+  }
+
+  /// Se cerro el circulo: vibracion y humo desde el centro del bordado.
+  void circleClosed() {
+    buzz(Buzz.closeCircle);
+    smoke.puff(camera.toScreen(circleCenter), 26);
+  }
+
+  @override
+  void dispose() {
+    smoke.dispose();
+    super.dispose();
+  }
 
   void _toggleMute() {
     muted = !muted;
@@ -1240,7 +1266,7 @@ class TableDirector extends ChangeNotifier {
       return effects.toast('No hay cartas sobre el paño que guardar');
     }
     await ops.closeCircle();
-    _buzz(Buzz.closeCircle);
+    circleClosed();
     effects.toast('Círculo cerrado. La lectura quedó guardada en Lecturas.');
   }
 

@@ -28,6 +28,7 @@ import 'table_painters.dart';
 import 'gesture_grammar.dart';
 import 'table_pieces.dart';
 import 'table_quality.dart';
+import 'table_smoke.dart';
 
 class TarotTableView extends StatefulWidget {
   const TarotTableView({
@@ -207,6 +208,8 @@ class _TarotTableViewState extends State<TarotTableView>
                       child: _table(back),
                     ),
                   ),
+                // el humo sube por la pantalla, encima de la mesa y bajo el radial
+                Positioned.fill(child: SmokeLayer(emitter: _dir.smoke)),
                 if (_dir.radial != null) _RadialOverlay(director: _dir),
                 if (_dir.busy)
                   const Positioned(
