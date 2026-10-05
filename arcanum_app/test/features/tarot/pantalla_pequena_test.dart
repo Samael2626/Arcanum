@@ -7,6 +7,7 @@ import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/features/tarot/application/table_controller.dart';
 import 'package:arcanum_app/features/tarot/domain/table_models.dart';
 import 'package:arcanum_app/features/tarot/reading/lectura_revelada.dart';
+import 'package:arcanum_app/features/tarot/table/table_director.dart';
 import 'package:arcanum_app/features/tarot/tarot_screen.dart';
 import 'package:arcanum_app/shared/revelado/reveal_pager.dart';
 import 'package:flutter/material.dart';
@@ -227,5 +228,44 @@ void main() {
     expect(panel.left, greaterThanOrEqualTo(0));
     expect(panel.right, lessThanOrEqualTo(_small.width));
     expect(panel.bottom, lessThanOrEqualTo(_small.height));
+  });
+
+  testWidgets('los avisos no tapan deshacer ni «Elegir carta»', (tester) async {
+    // GN2200: el aviso de 2,6 s tapaba el deshacer, que solo dura 5 s
+    SharedPreferences.setMockInitialValues({});
+    FlutterSecureStorage.setMockInitialValues({});
+    _phone(tester, _small);
+    final c = ProviderContainer(
+      overrides: [
+        arcanumApiProvider.overrideWithValue(_Server()),
+        authProvider.overrideWith(_Auth.new),
+      ],
+    );
+    addTearDown(c.dispose);
+    await tester.runAsync(() => c.read(tableControllerProvider.future));
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: c,
+        child: const MaterialApp(home: TarotTableScreen()),
+      ),
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await _frames(tester, 20);
+    final effects = tester.state(find.byType(TarotTableScreen)) as TableEffects;
+    effects.toast('3 · Futuro');
+    await _frames(tester, 20);
+    // la superficie que se ve; el rect del SnackBar incluye su margen
+    final bar = tester.getRect(
+      find
+          .descendant(
+            of: find.byType(SnackBar),
+            matching: find.byType(Material),
+          )
+          .first,
+    );
+    // deshacer y «Elegir carta»: 48 dp con 14 de margen, pegados abajo
+    expect(bar.bottom, lessThanOrEqualTo(_small.height - (14 + 48 + 14)));
   });
 }

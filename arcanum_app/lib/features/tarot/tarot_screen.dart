@@ -239,6 +239,10 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
         SnackBar(
           content: Text(message),
           duration: const Duration(milliseconds: 2600),
+          // flota sobre deshacer y «Elegir carta» (48 dp + 14 de margen):
+          // pegado abajo tapaba la mitad de los 5 s del deshacer
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 14 + 48 + 14 + 8),
         ),
       );
   }
