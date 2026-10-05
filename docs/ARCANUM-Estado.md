@@ -17,9 +17,9 @@ Docs del proyecto (este repo): [[ARCANUM-Semana3-Flutter]] · [[ARCANUM-Mejoras-
 
 ## Estado actual (2026-10-04)
 
-- **Grimorio:** CRUD real con contenido cifrado AES-256; el Taller guarda documentos de letras, Kamea, Rosa-Cruz y Sello personal como entradas `sigil` diferenciadas. El nombre/intención no aparece en el título. Sello personal: [[ARCANUM-Avance-Sello-Personal-2026-10-04]], commit `b809b24`.
+- **Grimorio:** CRUD real con contenido cifrado AES-256; el Taller guarda documentos de letras, Kamea, Rosa-Cruz, Sello personal y Comparar como entradas `sigil` diferenciadas. El nombre/intención no aparece en el título. [[ARCANUM-Avance-Sello-Personal-2026-10-04]] (`b809b24`); [[ARCANUM-Avance-Comparar-2026-10-04]] (`5120d0b`). El detalle de Kamea oculta el rótulo del nombre por decisión de Samuel.
 - **Oráculo:** lecturas de tarot con IA Groq `openai/gpt-oss-120b` en producción; no usa Claude API. La disponibilidad depende de la cuota de la organización de Groq. Véase `AGENTS.md`, «Groq: modelo, límites y coste».
-- **Taller:** letras con carga/olvido; Kamea y Rosa-Cruz como familias separadas sin ritual de caos; Sello personal como reconstrucción declarada. «Comparar» y el enlace con Hoy/Bitácora siguen pendientes.
+- **Taller:** letras con carga/olvido; Kamea y Rosa-Cruz como familias separadas sin ritual de caos; Sello personal como reconstrucción declarada; Comparar muestra las tres figuras sin fusionarlas. Falta el enlace de Letras con Hoy/Bitácora.
 
 Las secciones «Semana 1–3» de abajo registran el estado histórico de junio; no describen el estado actual.
 
@@ -83,6 +83,6 @@ cd D:\Proyectos\Arcanum\arcanum_app && flutter run -d web-server --web-port 3000
 ```
 
 ## Siguiente
-Este «Siguiente» correspondía a junio. El pendiente actual del Taller es «Comparar», el enlace
+Este «Siguiente» correspondía a junio. El pendiente actual del Taller es el enlace
 Hoy–Grimorio–Bitácora, QA en teléfono y revisión legal antes de publicar. Ver
 [[ARCANUM-Avance-Sello-Personal-2026-10-04]].
