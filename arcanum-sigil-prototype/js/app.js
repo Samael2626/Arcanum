@@ -246,6 +246,7 @@ function restoreState(s) {
   rebuild();
 }
 const svgURL = svg => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+const CALLI_NAMES = { curva: 'Curva', pluma: 'Pluma' };
 const FAMILY_NAMES = { letters: 'Letras', rosa: 'Rosa-Cruz', kamea: 'Kamea', personal: 'Sello', compare: 'Comparar' };
 function galleryLabel() {
   const f = state.family;
@@ -262,7 +263,7 @@ function saveSigil() {
   const items = readGallery();
   items.unshift({
     id: 'sigil-' + now.getTime(), family: f,
-    name: now.toLocaleDateString('es-CO') + ' · ' + FAMILY_NAMES[f] + ' · ' + galleryLabel(),
+    name: now.toLocaleDateString('es-CO') + ' · ' + FAMILY_NAMES[f] + ' · ' + galleryLabel() + (f === 'letters' && CALLI_NAMES[state.style.calli] ? ' · ' + CALLI_NAMES[state.style.calli] : ''),
     thumb: f === 'letters' ? snapshot(120).toDataURL('image/png') : svgURL(buildSVG()),
     state: captureState(), doc: docSnapshot()
   });

@@ -15,7 +15,7 @@ function check(name, ok, detail = '') {
 }
 
 // Sin chromium de playwright descargado, cae a Edge del sistema
-const browser = await chromium.launch().catch(() => chromium.launch({ channel: 'msedge' }));
+const browser = await chromium.launch({executablePath:process.env.CHROMIUM||undefined}).catch(() => chromium.launch({ channel: 'msedge' }));
 const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } });
 const errors = [];
 page.on('pageerror', e => errors.push(String(e)));
@@ -471,6 +471,15 @@ await fill('#rosaName', 'VOLUNTAS');
 await click('#btnRosaGenerate');
 const vol = await page.evaluate(() => ({ n: [...state.rosa.hebrew].length, g: gematria(state.rosa.hebrew).std }));
 check('letra a letra: VOLUNTAS 8 letras, 232', vol.n === 8 && vol.g === 232, `${vol.n} ${vol.g}`);
+// la c: suave ante e/i (ס), dura en el resto y al final de palabra (כ, final ך)
+const CASOS_C = [['Marc', 'מרך'], ['Frederic', 'פרדריך'], ['Cecilia', 'ססיליה'], ['Lucas', 'לוכס'], ['Rocco', 'רוכו'], ['Chesed', 'חסד'], ['Isaac', 'יצחק'], ['Marc Cid', 'מרך סיד']];
+const cRes = await page.evaluate(casos => casos.map(([n]) => transliterate(n, 'consonantal').hebrew), CASOS_C);
+CASOS_C.forEach(([n, he], i) => check(`transliteracion de la c: ${n} = ${he}`, cRes[i] === he, cRes[i]));
+check('letra a letra: Marc = מארך (la c final sigue siendo dura)', await page.evaluate(() => transliterate('Marc', 'full').hebrew === 'מארך'));
+check('ninguna c final se lee como s (26 nombres acabados en c)', await page.evaluate(() => ['Marc', 'Frederic', 'Eric', 'Isac', 'Ludovic', 'Lorenc', 'Franc', 'Domenec', 'Joaquic', 'Benedic', 'Tomic', 'Pic', 'Sec', 'Roc', 'Vic', 'Luc', 'Nic', 'Duc', 'Bec', 'Mac', 'Tec', 'Zac', 'Arc', 'Oc', 'Ac', 'Ec'].every(n => { const h = transliterate(n, 'consonantal').hebrew; return h.endsWith('ך') && !h.endsWith('ס'); })));
+await click('#famRosa'); await selectOpt('#selTranslit', 'consonantal'); await fill('#rosaName', 'Marc'); await click('#btnRosaGenerate');
+// la Rosa solo tiene las 22 letras base: la Kaf final se traza en el petalo de la Kaf
+check('Rosa-Cruz: Marc = מרך y termina en el pétalo de la Kaf', await page.evaluate(() => state.rosa.hebrew === 'מרך' && state.rosa.trace.map(v => v.he).join('') === 'מרכ'));
 await selectOpt('#selTranslit', 'consonantal');
 await click('#famLetters');
 await page.waitForTimeout(80);
@@ -916,6 +925,64 @@ await mob.mouse.move(hb2.x + hb2.width / 2, hb2.y + 10); await mob.mouse.down();
 check('movil: arrastrarla abajo la cierra', await mob.evaluate(() => ui.sheet === 'closed'));
 check('movil: pestañas, + y herramientas de 48 px o mas', await mob.evaluate(() => [...document.querySelectorAll('.tab, #btnFab, .canvas-tools .tool:not([hidden]), #btnMenu')].every(b => { const r = b.getBoundingClientRect(); return r.width >= 48 && r.height >= 48; })));
 await mob.close();
+
+// 17) Estilizacion caligrafica: capa opcional que no toca la geometria
+await click('#famLetters');
+await forge('SABIDURIA', 'fusion');
+const cal = await page.evaluate(() => {
+  const nums = svg => (svg.match(/-?\d+(?:\.\d+)?|NaN|undefined|Infinity/g) || []);
+  const corePaths = svg => (svg.match(/data-layer="core"[^>]*>(.*?)<\/g>/) || [, ''])[1].match(/<path d="[^"]+"/g) || [];
+  const out = {}; const rec = m => { setStyle({ calli: m }); return buildSVG(); };
+  const base = buildSVG();
+  const curva = rec('curva'), curva2 = buildSVG(), pluma = rec('pluma'), pluma2 = buildSVG();
+  out.vuelta = rec('none') === base;
+  out.curvaDet = curva === curva2; out.plumaDet = pluma === pluma2;
+  out.curvaNum = !nums(curva).some(n => isNaN(Number(n)) || !isFinite(Number(n)));
+  out.plumaNum = !nums(pluma).some(n => isNaN(Number(n)) || !isFinite(Number(n)));
+  const n0 = corePaths(base).length;
+  out.curvaN = [corePaths(curva).length, n0];
+  // los extremos de cada recta no se mueven: solo se comba el medio
+  const ends = d => { const m = d.match(/-?\d+\.\d+/g).map(Number); return [m[0], m[1], m[m.length - 2], m[m.length - 1]]; };
+  const pb = corePaths(base).map(x => ends(x)), pc = corePaths(curva).map(x => ends(x));
+  const key = e => [e.slice(0, 2).join(','), e.slice(2).join(',')].sort().join('|');
+  out.extremos = pb.length === pc.length && pb.every((e, i) => key(e) === key(pc[i]));
+  out.plumaCapas = ['data-layer="pluma"', 'data-layer="core-eje"'].every(t => pluma.includes(t));
+  out.plumaN = [(pluma.match(/data-layer="pluma"[^>]*>(.*?)<\/g>/) || [, ''])[1].match(/<path /g).length, n0];
+  const all = [...(pluma.match(/data-layer="pluma"[^>]*>(.*?)<\/g>/) || [, ''])[1].matchAll(/ d="([^"]+)"/g)].flatMap(m => nums(m[1])).map(Number);
+  out.plumaDentro = all.every(v => v > -5 && v < SIZE + 5);
+  out.sinStroke = !/data-layer="pluma"[^>]*stroke=/.test(pluma);
+  setStyle({ calli: 'pluma', glow: true }); const g = buildSVG(); out.halo = /core-eje-halo/.test(g) && !/stroke-width="NaN"/.test(g);
+  setStyle({ glow: false, relief: true }); out.relieve = /pluma-sombra/.test(buildSVG());
+  setStyle({ relief: false, calli: 'curva' });
+  const doc = JSON.parse(docSnapshot()); out.guarda = doc.letters.style.calli === 'curva';
+  setStyle({ calli: 'none' }); docRestore(JSON.stringify(doc)); out.restaura = state.style.calli === 'curva' && buildSVG() === curva;
+  setStyle({ calli: 'none' });
+  // un preset de estilo no borra la caligrafia elegida
+  setStyle({ calli: 'pluma' }); document.querySelector('[data-preset-style="oro"]').click(); out.preset = state.style.calli === 'pluma';
+  setStyle({ calli: 'none', preset: 'pergamino' });
+  return out;
+});
+check('caligrafia: volver a Recta devuelve el SVG exacto', cal.vuelta);
+check('caligrafia: curva y pluma deterministas', cal.curvaDet && cal.plumaDet);
+check('caligrafia: sin NaN ni infinitos', cal.curvaNum && cal.plumaNum);
+check('caligrafia curva: mismos trazos y mismos extremos', cal.curvaN[0] === cal.curvaN[1] && cal.extremos, JSON.stringify(cal.curvaN));
+check('caligrafia pluma: un contorno por trazo, relleno y dentro del lienzo', cal.plumaCapas && cal.plumaN[0] === cal.plumaN[1] && cal.plumaDentro && cal.sinStroke, JSON.stringify(cal.plumaN));
+check('caligrafia pluma: resplandor y relieve siguen funcionando', cal.halo && cal.relieve);
+check('caligrafia: se guarda y se restaura con el documento', cal.guarda && cal.restaura);
+check('caligrafia: cambiar de estilo conserva la caligrafia', cal.preset);
+
+const galCal = await page.evaluate(() => {
+  const res = []; const antes = readGallery().length;
+  for (const m of ['curva', 'pluma']) {
+    setStyle({ calli: m }); const svg = buildSVG(); saveSigil();
+    setStyle({ calli: 'none' });
+    const it = readGallery()[0]; setFamily(it.family); docRestore(it.doc);
+    res.push(state.style.calli === m && buildSVG() === svg && it.name.endsWith(m === 'curva' ? ' · Curva' : ' · Pluma'));
+  }
+  setStyle({ calli: 'none' }); saveSigil(); res.push(!/ · (Curva|Pluma)$/.test(readGallery()[0].name));
+  return { res, n: readGallery().length - antes };
+});
+check('caligrafia: la galeria guarda y reabre curva y pluma idénticas', galCal.res.every(Boolean) && galCal.n === 3, JSON.stringify(galCal));
 
 check('sin errores de pagina', errors.length === 0, errors.slice(0, 2).join(' | '));
 await browser.close();

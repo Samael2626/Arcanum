@@ -10,7 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const INDEX = 'file:///' + (process.argv[4] ? path.resolve(process.argv[4]) : path.join(__dirname, 'index.html')).split('\\').join('/');
 const SEED = Number(process.argv[2] || 1), N = Number(process.argv[3] || 150);
 
-const browser = await chromium.launch().catch(() => chromium.launch({ channel: 'msedge' }));
+const browser = await chromium.launch({executablePath:process.env.CHROMIUM||undefined}).catch(() => chromium.launch({ channel: 'msedge' }));
 const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } });
 const errors = [];
 page.on('pageerror', e => errors.push(String(e)));

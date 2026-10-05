@@ -28,7 +28,7 @@ const INKS = [
 const GROUNDS = [
   ['Pergamino', '#efe6d2'], ['Papel', '#f7f3ea'], ['Negro', '#0a080d'], ['Burdeos', '#2a0b12'], ['Azul noche', '#0f1626']
 ];
-const STYLE_BASE = { preset: 'pergamino', ink: '#1b1612', bg: '#efe6d2', metal: null, texture: 'pergamino', width: 100, line: 'single', cap: 'round', relief: false, glow: false };
+const STYLE_BASE = { preset: 'pergamino', ink: '#1b1612', bg: '#efe6d2', metal: null, texture: 'pergamino', width: 100, line: 'single', cap: 'round', calli: 'none', relief: false, glow: false };
 const STYLE_PRESETS = {
   pergamino: { label: 'Pergamino', ink: '#1b1612', bg: '#efe6d2', texture: 'pergamino' },
   papel: { label: 'Papel limpio', ink: '#1b1612', bg: '#f7f3ea', texture: 'none' },
@@ -101,7 +101,7 @@ function applyFx(groups, th) {
   for (const g of groups) {
     let seq = [g];
     if (st.line === 'double' && g.layer === 'core') seq = [{ ...g, w: g.w * 1.9 }, { ...g, layer: 'core-hueco', color: th.bg, w: g.w * .7 }];
-    if (st.glow && g.sigil) seq = [{ ...g, layer: g.layer + '-halo', w: g.w * 3.4, op: .12 }, { ...g, layer: g.layer + '-halo2', w: g.w * 2, op: .2 }, ...seq];
+    if (st.glow && g.sigil) seq = [{ ...g, layer: g.layer + '-halo', w: (g.hw || g.w) * 3.4, op: .12 }, { ...g, layer: g.layer + '-halo2', w: (g.hw || g.w) * 2, op: .2 }, ...seq];
     if (st.relief) seq = [
       ...seq.map(q => ({ ...q, layer: q.layer + '-sombra', color: '#000000', op: (q.op == null ? 1 : q.op) * .35, dx: 1.6, dy: 1.6 })),
       ...seq.map(q => ({ ...q, layer: q.layer + '-luz', color: '#ffffff', op: (q.op == null ? 1 : q.op) * .45, dx: -1.1, dy: -1.1 })),
@@ -148,13 +148,14 @@ function buildStylePanel() {
   $('inkSwatches').innerHTML = inks.map(([n, c]) => `<button class="sw" data-ink="${c}" title="${n}" aria-label="${n}" style="background:${c}"></button>`).join('');
   const grounds = [...GROUNDS.map(([n, c]) => [n, c, '']), ...PLANET_ORDER.map(id => [`${PLANET_METAL[id][0].toUpperCase() + PLANET_METAL[id].slice(1)} (${KAMEA_BY_ID[id].name})`, `linear-gradient(135deg, ${METAL_TONE[PLANET_METAL[id]][0]}, ${METAL_TONE[PLANET_METAL[id]][1]})`, id])];
   $('bgSwatches').innerHTML = grounds.map(([n, c, metal]) => `<button class="sw" ${metal ? `data-metal="${metal}"` : `data-bg="${c}"`} title="${n}" aria-label="${n}" style="background:${c}"></button>`).join('');
-  document.querySelectorAll('[data-preset-style]').forEach(b => b.addEventListener('click', () => applyStyle(presetStyle(b.dataset.presetStyle))));
+  document.querySelectorAll('[data-preset-style]').forEach(b => b.addEventListener('click', () => applyStyle({ ...presetStyle(b.dataset.presetStyle), calli: state.style.calli })));
   document.querySelectorAll('[data-ink]').forEach(b => b.addEventListener('click', () => setStyle({ ink: b.dataset.ink })));
   document.querySelectorAll('[data-bg]').forEach(b => b.addEventListener('click', () => setStyle({ bg: b.dataset.bg, metal: null, metalPlanet: null })));
   document.querySelectorAll('[data-metal]').forEach(b => b.addEventListener('click', () => { const m = metalStyle(b.dataset.metal); setStyle({ bg: m.bg, metal: m.metal, metalPlanet: m.metalPlanet, texture: 'none' }); }));
   document.querySelectorAll('[data-texture]').forEach(b => b.addEventListener('click', () => setStyle({ texture: b.dataset.texture })));
   document.querySelectorAll('[data-line]').forEach(b => b.addEventListener('click', () => setStyle({ line: b.dataset.line })));
   document.querySelectorAll('[data-cap]').forEach(b => b.addEventListener('click', () => setStyle({ cap: b.dataset.cap })));
+  document.querySelectorAll('[data-calli]').forEach(b => b.addEventListener('click', () => setStyle({ calli: b.dataset.calli })));
   $('chkRelief').addEventListener('change', e => setStyle({ relief: e.target.checked }));
   $('chkGlow').addEventListener('change', e => setStyle({ glow: e.target.checked }));
   $('rngStrokeW').addEventListener('input', e => setStyle({ width: Number(e.target.value) }));
@@ -169,6 +170,7 @@ function syncStyleUI() {
   document.querySelectorAll('[data-texture]').forEach(b => { b.classList.toggle('active', b.dataset.texture === st.texture); b.disabled = !!st.metal; });
   document.querySelectorAll('[data-line]').forEach(b => b.classList.toggle('active', b.dataset.line === st.line));
   document.querySelectorAll('[data-cap]').forEach(b => b.classList.toggle('active', b.dataset.cap === st.cap));
+  document.querySelectorAll('[data-calli]').forEach(b => b.classList.toggle('active', b.dataset.calli === st.calli));
   $('chkRelief').checked = st.relief; $('chkGlow').checked = st.glow;
   $('rngStrokeW').value = st.width; $('strokeWVal').textContent = st.width + '%';
   $('styleInfo').innerHTML = styleInfoHTML();

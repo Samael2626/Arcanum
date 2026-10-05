@@ -5,7 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const INDEX = 'file:///' + path.join(__dirname, 'index.html').split('\\').join('/');
-const browser = await chromium.launch().catch(() => chromium.launch({ channel: 'msedge' }));
+const browser = await chromium.launch({executablePath:process.env.CHROMIUM||undefined}).catch(() => chromium.launch({ channel: 'msedge' }));
 const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } });
 const errors = [];
 page.on('pageerror', e => errors.push(String(e)));

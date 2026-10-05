@@ -79,7 +79,7 @@ void main() {
     // Se quedó en 40 dp desde que se escribió; el de Cielo nació con 48.
     await _montar(tester, const SaberScreen());
     await tester.pump();
-    for (final rotulo in ['Plantas', 'Biblioteca']) {
+    for (final rotulo in ['Plantas', 'Biblioteca', 'Sellos']) {
       final caja = tester.getRect(
         find
             .ancestor(of: find.text(rotulo), matching: find.byType(InkWell))

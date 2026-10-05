@@ -1,0 +1,174 @@
+// Documento del sigilo de letras: letras + capas + remates + estilo. Produce
+// la escena (lienzo) y el SVG exportado desde la misma lista de grupos
+// (lettersScene y buildSVG del prototipo, familia «letras»).
+import 'dart:convert';
+
+import 'geometry.dart';
+import 'layers.dart';
+import 'reduction.dart';
+import 'letter_sigil.dart';
+import 'scene.dart';
+import 'style.dart';
+import 'terminals.dart';
+
+class LettersScene {
+  final List<SceneGroup> bg, fg;
+  const LettersScene(this.bg, this.fg);
+}
+
+class SigilDoc {
+  final LetterSigil sigil;
+  List<Layer> layers;
+  SigilStyle style;
+  String terminals;
+  Map<String, String> endStyles;
+  double termScale;
+  bool transparent;
+
+  SigilDoc({LetterSigil? sigil, List<Layer>? layers, this.style = const SigilStyle(), this.terminals = 'none', Map<String, String>? endStyles,
+      this.termScale = 100, this.transparent = false})
+      : sigil = sigil ?? LetterSigil(),
+        layers = layers ?? [],
+        endStyles = endStyles ?? {};
+
+  LayerCtx get ctx => LayerCtx.letters(sigil.intention);
+
+  // la disposicion de capas es pura (capas + texto): se calcula una vez por
+  // estado y la reusan pintado, toque, guias y radial
+  String? _layKey;
+  LayerLayout? _lay;
+  LayerLayout get layout {
+    final key = '${sigil.intention}|${jsonEncode([for (final l in layers) l.toJson()])}';
+    if (key != _layKey) {
+      _lay = layoutLayers(layers, ctx);
+      _layKey = key;
+    }
+    return _lay!;
+  }
+  SigilTheme get theme => themeFor(style);
+
+  /// Claves de lo que no cambia mientras se arrastra una letra: permiten
+  /// guardar grabados el soporte y las capas.
+  String get layoutKey {
+    layout;
+    return _layKey!;
+  }
+
+  String get styleKey => jsonEncode(style.toJson());
+
+  /// Reduce y compone la intencion dentro del hueco que dejan los marcos.
+  bool generate(String text) {
+    // el hueco no depende del texto, solo de la geometria de los marcos
+    final contentR = layoutLayers(layers, LayerCtx.letters(text)).contentR;
+    final changed = sigil.intention != text;
+    final ok = sigil.generate(text, contentR: contentR);
+    if (changed) endStyles = {};
+    return ok;
+  }
+
+  /// Tras tocar capas: el sigilo se vuelve a encuadrar en el hueco.
+  void refit() {
+    if (sigil.prims.isNotEmpty) sigil.view = sigil.fitView(layout.contentR);
+  }
+
+  void rebuild() => sigil.rebuild(contentR: layout.contentR);
+
+  List<TerminalMark> terminalMarks(List<Prim> visible) =>
+      terminalList(sigil, visible, general: terminals, perEnd: endStyles, scale: termScale);
+
+  LettersScene scene({bool transparent = false}) {
+    final th = theme, lw = kLineW * style.width / 100;
+    final lay = layout;
+    final visible = sigil.visible;
+    final fg = <SceneGroup>[
+      for (final p in lay.parts)
+        if (p.layer.type != LayerType.symbol) SceneGroup(layer: p.layer.type.name, color: th.ink, prims: p.g.prims),
+      if (style.calli == 'pluma') ...[
+        // eje fino (lo usan resplandor y relieve) bajo el contorno relleno de la pluma
+        SceneGroup(layer: 'core-eje', color: th.ink, w: lw * .4, hw: lw, cap: 'round', sigil: true, items: [
+          for (final p in visible) PathItem(sigil.calliPath(p), units: p.units),
+        ]),
+        SceneGroup(layer: 'pluma', color: th.ink, items: [
+          for (final p in visible) PathItem(sigil.calliOutline(p, lw), fill: true, units: p.units),
+        ]),
+      ] else
+        SceneGroup(layer: 'core', color: th.ink, w: lw, cap: style.cap, sigil: true, items: [
+          for (final p in visible) PathItem(style.calli == 'curva' ? sigil.calliPath(p) : sigil.primPath(p), units: p.units),
+        ]),
+    ];
+    final marks = terminalMarks(visible);
+    if (marks.isNotEmpty) {
+      fg.add(SceneGroup(layer: 'terminals', color: th.ink, w: lw * .8, cap: style.cap, sigil: true, items: [
+        for (final t in marks)
+          for (final sh in t.shapes) PathItem(sh.d, fill: sh.fill),
+      ]));
+    }
+    for (final p in lay.parts) {
+      if (p.layer.type == LayerType.symbol) fg.add(SceneGroup(layer: 'symbol', color: th.ink, prims: p.g.prims));
+    }
+    return LettersScene(transparent ? const [] : bgScene(style, th), applyFx(fg.where((g) => !g.isEmpty).toList(), style, th));
+  }
+
+  // ── Guardado ────────────────────────────────────────────────────
+  // Se guarda el documento (lo que decide el usuario), no el dibujo: el motor
+  // es determinista y lo regenera identico al abrirlo, y se puede seguir
+  // editando. Pesa unos KB; el SVG, decenas.
+  static const kVersion = 1;
+
+  Map<String, Object?> toJson() => {
+        'v': kVersion,
+        'intention': sigil.intention,
+        'method': sigil.method.name,
+        'mode': sigil.mode.name,
+        'overlap': sigil.overlap,
+        'absorb': sigil.absorb,
+        'compact': sigil.compact,
+        'edits': {for (final l in sigil.letters) l.ch: l.user.toJson()},
+        'hidden': [...sigil.hidden],
+        'layers': [for (final l in layers) l.toJson()],
+        'style': style.toJson(),
+        'terminals': terminals,
+        'endStyles': {...endStyles},
+        'termScale': termScale,
+        'transparent': transparent,
+      };
+
+  factory SigilDoc.fromJson(Map<String, dynamic> j) {
+    final v = j['v'] as int? ?? 0;
+    if (v > kVersion) throw FormatException('Sigilo guardado con una version mas nueva ($v) que esta app ($kVersion).');
+    final doc = SigilDoc(
+      layers: [for (final l in (j['layers'] as List? ?? const [])) Layer.fromJson(l as Map<String, dynamic>)],
+      style: SigilStyle.fromJson(j['style'] as Map<String, dynamic>),
+      terminals: j['terminals'] as String? ?? 'none',
+      termScale: (j['termScale'] as num? ?? 100).toDouble(),
+      transparent: j['transparent'] as bool? ?? false,
+    );
+    doc.sigil
+      ..method = ReductionMethod.values.byName(j['method'] as String)
+      ..mode = ComposeMode.values.byName(j['mode'] as String)
+      ..overlap = (j['overlap'] as num? ?? 0).toDouble()
+      ..absorb = j['absorb'] as bool? ?? true
+      ..compact = j['compact'] as bool? ?? true;
+    final intention = j['intention'] as String? ?? '';
+    if (intention.isNotEmpty) doc.generate(intention);
+    // las ediciones y los ocultos se aplican despues de componer
+    final edits = (j['edits'] as Map<String, dynamic>? ?? const {});
+    for (final l in doc.sigil.letters) {
+      final e = edits[l.ch];
+      if (e != null) l.user = LetterEdit.fromJson(e as Map<String, dynamic>);
+    }
+    doc.sigil.hidden = [for (final h in (j['hidden'] as List? ?? const [])) h as String];
+    doc.endStyles = {for (final e in (j['endStyles'] as Map<String, dynamic>? ?? const {}).entries) e.key: e.value as String};
+    if (doc.sigil.letters.isNotEmpty) doc.rebuild();
+    return doc;
+  }
+
+  /// SVG exportado: el mismo que dibuja el lienzo, sin marcas de edicion.
+  String buildSVG() {
+    final out = StringBuffer('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">');
+    if (!transparent) out.write(sceneSVG(bgScene(style, theme)));
+    if (sigil.prims.isNotEmpty && sigil.view != null) out.write(sceneSVG(scene(transparent: true).fg));
+    out.write('</svg>');
+    return out.toString();
+  }
+}

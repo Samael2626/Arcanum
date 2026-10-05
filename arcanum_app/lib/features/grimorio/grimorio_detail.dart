@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:arcanum_sigilos/arcanum_sigilos.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/arcanum_api.dart';
@@ -7,6 +8,8 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
+import '../sigilos/sigil_store.dart';
+import '../sigilos/taller_screen.dart';
 import 'grimorio_atmosphere.dart';
 
 class GrimorioDetail extends ConsumerStatefulWidget {
@@ -57,6 +60,14 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
   }
 
   void _retry() => setState(() => _future = _load());
+
+  Future<void> _continueSigil(SigilDoc doc) async {
+    final saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => TallerScreen(entryId: widget.id, initial: doc)),
+    );
+    if (mounted && saved == true) _retry();
+  }
 
   Future<void> _confirmDelete() async {
     final ok = await showDialog<bool>(
@@ -279,7 +290,12 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
         const SizedBox(height: 22),
         Cascade(
           delayMs: 120,
-          child: _ManuscriptBody(content: content, accent: accent),
+          // un sigilo del taller se dibuja (y se puede seguir editando); una
+          // entrada «Sigilo» escrita a mano antes del taller sigue siendo texto
+          child: switch (type == 'sigil' ? decodeSigilEntry(content) : null) {
+            final SigilDoc doc => _SigilBody(doc: doc, onEdit: () => _continueSigil(doc), accent: accent),
+            _ => _ManuscriptBody(content: content, accent: accent),
+          },
         ),
         const SizedBox(height: 34),
         Cascade(
@@ -385,5 +401,57 @@ class _OrnamentRule extends StatelessWidget {
         rule(),
       ],
     );
+  }
+}
+
+// ── Cuerpo de un sigilo del taller ───────────────────────────────────────────
+
+/// El sigilo dibujado por el mismo motor que lo creo. La intencion no se
+/// muestra sola: en la practica del sigilo se suelta; queda a un toque.
+class _SigilBody extends StatefulWidget {
+  final SigilDoc doc;
+  final VoidCallback onEdit;
+  final Color accent;
+  const _SigilBody({required this.doc, required this.onEdit, required this.accent});
+  @override
+  State<_SigilBody> createState() => _SigilBodyState();
+}
+
+class _SigilBodyState extends State<_SigilBody> {
+  bool _showIntention = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = widget.doc.scene();
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      LayoutBuilder(
+        builder: (context, box) => Center(
+          child: CustomPaint(size: Size.square(box.maxWidth), painter: SigilScenePainter(bg: s.bg, fg: s.fg)),
+        ),
+      ),
+      const SizedBox(height: 16),
+      Row(children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () => setState(() => _showIntention = !_showIntention),
+            style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: widget.accent),
+            child: Text(_showIntention ? 'Ocultar la intención' : 'Ver la intención'),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: OutlinedButton(
+            onPressed: widget.onEdit,
+            style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: widget.accent),
+            child: const Text('Seguir en el taller'),
+          ),
+        ),
+      ]),
+      if (_showIntention)
+        Padding(
+          padding: const EdgeInsets.only(top: 14),
+          child: Text('«${widget.doc.sigil.intention}»', textAlign: TextAlign.center, style: ArcanumText.body(17, italic: true)),
+        ),
+    ]);
   }
 }

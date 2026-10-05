@@ -47,6 +47,10 @@ dependencies:
   crypto: ^3.0.3
   shared_preferences: ^2.5.5
   flutter_svg: ^2.3.0
+  # taller de sigilos: motor y lienzo en un paquete propio (lo usa tambien la
+  # prueba en movil, que no puede ser una ruta de la app por Firebase)
+  arcanum_sigilos:
+    path: packages/arcanum_sigilos
   path_provider: ^2.1.6
   # rive: ^0.14.8
   # model_viewer_plus: ^1.10.0
@@ -100,6 +104,9 @@ flutter:
     - assets/materia/manifest.json
     - assets/materia/entonado/
     - assets/materia/grabado/
+    # Catalogo historico de sellos (Agrippa 1651, Goetia 1916): obra de dominio
+    # publico con su procedencia. Lo genera arcanum-sigil-prototype/_export_catalogo.mjs.
+    - assets/sellos/catalogo-sellos.json
     # Licencias de las fuentes: la OFL 1.1 obliga a distribuir su texto con el
     # software. Se empaquetan como asset y se registran en LicenseRegistry para
     # que aparezcan en showLicensePage().
@@ -140,5 +147,12 @@ flutter:
     - family: ArcanumGlifos
       fonts:
         - asset: assets/fonts/ArcanumGlifos-Regular.ttf
+    # Hebreo del taller de sigilos (anillo hebreo, Rosa-Cruz, Kamea). Noto Serif
+    # Hebrew, peso 400, recortada a las 27 letras y el espacio (7,6 KB). SIL OFL
+    # 1.1, Noto Project Authors: ver OFL-Noto.txt. Sin ella, cada movil pone la
+    # suya (o cajas).
+    - family: Noto Serif Hebrew
+      fonts:
+        - asset: assets/fonts/NotoSerifHebrew-Regular.ttf
   # shaders:
   #   - shaders/nebula.frag

@@ -8,6 +8,7 @@ import 'package:arcanum_app/features/lecturas/presentation/lector_screen.dart';
 import 'package:arcanum_app/features/lecturas/presentation/lecturas_screen.dart';
 import 'package:arcanum_app/features/lecturas/presentation/obra_screen.dart';
 import 'package:arcanum_app/features/saber/saber_screen.dart';
+import 'package:arcanum_app/features/saber/sellos/sellos_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -314,6 +315,42 @@ void main() {
   }
 
   group('Saber', () {
+    testWidgets(
+      'Sellos es la tercera cara: no se construye hasta pedirla y luego carga el catálogo',
+      (tester) async {
+        await tester.pumpWidget(_app(api, crypto, '/saber'));
+        await tester.pump();
+
+        expect(find.text('Sellos'), findsOneWidget);
+        // el catálogo pesa ~2,9 MB: abrir Saber no debe pagarlo
+        // skipOffstage: false, porque el IndexedStack deja las otras caras fuera
+        // de pantalla y el buscador por defecto no las vería aunque existieran
+        expect(find.byType(SellosScreen, skipOffstage: false), findsNothing);
+
+        await tester.tap(find.text('Sellos'));
+        await tester.pump();
+        expect(find.byType(SellosScreen), findsOneWidget);
+
+        // el asset y el parseo en isolate son E/S real: fuera del reloj
+        // simulado, sondeando hasta que aparezca (máx. 15 s)
+        for (var n = 0; n < 75; n++) {
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 200)),
+          );
+          await tester.pump(const Duration(milliseconds: 50));
+          if (find.text('Agrippa · planetas').evaluate().isNotEmpty) break;
+        }
+        expect(find.text('Agrippa · planetas'), findsOneWidget);
+
+        // ir a Plantas y volver conserva la cara sin recargar
+        await tester.tap(find.text('Plantas'));
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.tap(find.text('Sellos'));
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(find.text('Agrippa · planetas'), findsOneWidget);
+      },
+    );
+
     testWidgets('alterna entre Plantas y Biblioteca', (tester) async {
       await tester.pumpWidget(_app(api, crypto, '/saber'));
       await tester.pump();
