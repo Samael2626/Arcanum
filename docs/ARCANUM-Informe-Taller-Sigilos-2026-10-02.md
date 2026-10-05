@@ -77,7 +77,7 @@ una aserción vacía en mi propio test (`find.byType` ignora lo `Offstage`); cor
 ## 5. Estado y pendiente
 
 Hecho en Flutter: motor de letras, capas, escena, estilo, pintor propio,
-interacción, taller dentro del Grimorio (guardado cifrado, carga 4-4-4-4, olvido),
+interacción, taller dentro del Grimorio (guardado cifrado, carga con respiración natural, olvido),
 caligrafía, y el catálogo histórico en Saber.
 
 No verificado (necesita teléfono):
@@ -209,3 +209,16 @@ la borre explícitamente.
 La prueba 390×844 descubrió y corrigió un desborde de 92 px en la pantalla de
 carga. Suite completa: 1601 pasan, 8 saltados; `flutter analyze` sin avisos.
 Fuente y límites: [[ARCANUM-Avance-Ritual-Bitacora-2026-10-04]].
+
+## 12. Mejora de carga, lienzo y guardado (5-oct)
+
+Commit `aef5cd6`. La carga de Letras deja respirar al ritmo propio y no pide
+retener el aire; el patrón 4-4-4-4 anterior quedó retirado. Las notas de
+Comparar se alinean a la izquierda también en el lienzo, como en el SVG.
+Editar un nombre ya trazado bloquea guardar/exportar hasta reconstruir;
+las ediciones durante un guardado asíncrono permanecen pendientes. Suite
+completa: 1606 pasan, 8 saltadas; `flutter analyze` sin problemas.
+`flutter build apk --debug --no-pub` generó el APK tras repetir con acceso
+de red. Gradle advirtió sobre Kotlin Gradle Plugin en la app y `purchases_flutter`.
+`adb devices`, `flutter devices` y `flutter emulators` no detectaron móvil ni
+emulador; QA físico pendiente. Detalle en [[ARCANUM-Mejora-Taller-2026-10-05]].

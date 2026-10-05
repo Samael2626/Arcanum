@@ -20,7 +20,7 @@ Relacionado: [[Guia-Maestra-de-Sigilos]], [[Sigilos-Guia-de-Producto]], [[ARCANU
 
 - [OM] Austin Osman Spare, *The Book of Pleasure (Self-Love)* (1913), apartado «Sigils»: combina letras simplificadas y vincula la operación a la atención y al deseo. La secuencia exacta de botones, el temporizador y la nota cifrada son decisiones de ARCANUM, no instrucciones textuales de Spare. Véase el examen de fuente y variantes en [[Guia-Maestra-de-Sigilos]], secciones «Letras», «Carga» y «Olvido».
 - [RC] El diario posterior a «Olvidar» documenta la experiencia sin exigir conservar la figura. Es una adaptación de producto, no un paso histórico universal.
-- [AR] La respiración sigue siendo una guía opcional en la pantalla de carga. Se puede cerrar; no se obliga a completar ni se aplica el ritual a Kamea, Rosa-Cruz, Sello personal o Comparar.
+- [AR] La respiración era una guía opcional en esta versión. El 5-oct se retiró el patrón 4-4-4-4 para dejar respirar al ritmo propio, sin retenciones: [[ARCANUM-Mejora-Taller-2026-10-05]]. El ritual no se aplica a Kamea, Rosa-Cruz, Sello personal o Comparar.
 - [AR] No se borra una copia ya guardada mediante «Olvidar». Borrar una entrada persistida requiere la acción explícita del Grimorio.
 
 ## Verificación ejecutada (2026-10-04)
