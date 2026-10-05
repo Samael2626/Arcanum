@@ -139,28 +139,34 @@ class TableController extends AsyncNotifier<TableState> implements TableOps {
   }
 
   Future<ServerView> _op(String op, Map<String, dynamic> body) async {
-    final raw = await _api.tarotTableOp(_sessionId(), op, _checkpoint(body));
+    final raw = await _requestOp(op, body);
     return ServerView.fromJson(raw);
   }
 
-  /// Decide si esta operacion marca punto de deshacer en el servidor.
+  Future<Map<String, dynamic>> _requestOp(
+    String op,
+    Map<String, dynamic> body,
+  ) async {
+    final inGesture = _gesture != null;
+    final checkpoint = !inGesture || _checkpointPending;
+    final raw = await _api.tarotTableOp(_sessionId(), op, {
+      ...body,
+      'checkpoint': checkpoint,
+    });
+    if (inGesture) {
+      _checkpointPending = false;
+      _gestureServer = true;
+    } else if (_undoServer) {
+      _forgetUndo();
+    }
+    return raw;
+  }
+
+  /// Marca el punto de deshacer solo tras confirmar la operacion del servidor.
   ///
   /// Dentro de un gesto, solo la primera: asi el servidor vuelve a antes del
   /// gesto entero. Fuera de un gesto el servidor avanza por su cuenta, y un
   /// deshacer ofrecido que dependia de el ya no seria el nuestro: se retira.
-  Map<String, dynamic> _checkpoint(Map<String, dynamic> body) {
-    final bool cp;
-    if (_gesture != null) {
-      cp = _checkpointPending;
-      _checkpointPending = false;
-      _gestureServer = true;
-    } else {
-      cp = true;
-      if (_undoServer) _forgetUndo();
-    }
-    return {...body, 'checkpoint': cp};
-  }
-
   // ---------- mazo (servidor) ----------
   @override
   Future<void> openDeck(String deck) => _serial(() async {
@@ -184,11 +190,7 @@ class TableController extends AsyncNotifier<TableState> implements TableOps {
   /// Corta las `n` de arriba a un monton nuevo y devuelve su id.
   @override
   Future<String> cut(String pile, int n) => _serial(() async {
-    final raw = await _api.tarotTableOp(
-      _sessionId(),
-      'cut',
-      _checkpoint({'pile': pile, 'n': n}),
-    );
+    final raw = await _requestOp('cut', {'pile': pile, 'n': n});
     _set(
       _current.withServer(
         ServerView.fromJson(raw['table'] as Map<String, dynamic>),
@@ -206,11 +208,7 @@ class TableController extends AsyncNotifier<TableState> implements TableOps {
   /// Saca la carta de `position` y la deja boca abajo junto al monton.
   @override
   Future<TableCard> take(String pile, int position) => _serial(() async {
-    final raw = await _api.tarotTableOp(
-      _sessionId(),
-      'take',
-      _checkpoint({'pile': pile, 'position': position}),
-    );
+    final raw = await _requestOp('take', {'pile': pile, 'position': position});
     final face = CardFace.fromJson(raw['card'] as Map<String, dynamic>);
     final from = _current.piles.where((p) => p.pid == pile).firstOrNull;
     final card = TableCard(

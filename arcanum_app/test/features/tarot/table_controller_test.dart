@@ -119,6 +119,20 @@ void main() {
   });
 
   group('deshacer en el servidor', () {
+    test('un fallo no consume el checkpoint del gesto', () async {
+      await c.read(tableControllerProvider.future);
+      await ctl().openDeck('rws');
+      ctl().beginUndoable();
+      server.failNext = StateError('red');
+      await expectLater(ctl().cut('p0', 2), throwsStateError);
+      await ctl().take('p0', 0);
+      ctl().commitUndoable();
+      await ctl().flush();
+      expect(server.checkpoints, [true]);
+      expect(await ctl().undo(), isTrue);
+      expect(st().server!.piles['p0']!.count, 6);
+    });
+
     test(
       'un gesto con varias operaciones vuelve entero al mazo de antes',
       () async {
@@ -154,6 +168,20 @@ void main() {
         expect(server.undos, 0);
       },
     );
+
+    test('un fallo fuera del gesto conserva el deshacer ofrecido', () async {
+      await c.read(tableControllerProvider.future);
+      await ctl().openDeck('rws');
+      ctl().beginUndoable();
+      await ctl().take('p0', 0);
+      ctl().commitUndoable();
+      await ctl().flush();
+      server.failNext = StateError('red');
+      await expectLater(ctl().shuffle('p0'), throwsStateError);
+      expect(ctl().canUndo, isTrue);
+      expect(await ctl().undo(), isTrue);
+      expect(st().server!.piles['p0']!.count, 6);
+    });
 
     test('un gesto solo local no molesta al servidor al deshacerse', () async {
       await c.read(tableControllerProvider.future);
