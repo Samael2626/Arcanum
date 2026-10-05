@@ -196,3 +196,16 @@ etiqueta por etiqueta, lienzo bajo 0,06 % y prueba de caminos, grosor y opacidad
 Pantalla a 390×844, guardado y reapertura probados. Suite completa: 1599 pasan,
 8 saltados; `flutter analyze` sin avisos. Tres mutaciones detectadas y revertidas.
 Procedencia y límites: [[ARCANUM-Avance-Comparar-2026-10-04]].
+
+## 11. Letras: Hoy, carga, olvido y Bitácora (4-oct)
+
+Commit `acc1d5b`. Hoy abre el Taller de Letras. Después de «Olvidar», el
+Taller limpia la figura, la intención y el historial de deshacer, y ofrece
+anotar la experiencia. Esa anotación es una entrada `ritual` cifrada en el
+Grimorio, con título neutro. No existe módulo independiente de Bitácora en
+esta rama. Una copia del sigilo guardada antes permanece hasta que el usuario
+la borre explícitamente.
+
+La prueba 390×844 descubrió y corrigió un desborde de 92 px en la pantalla de
+carga. Suite completa: 1601 pasan, 8 saltados; `flutter analyze` sin avisos.
+Fuente y límites: [[ARCANUM-Avance-Ritual-Bitacora-2026-10-04]].
