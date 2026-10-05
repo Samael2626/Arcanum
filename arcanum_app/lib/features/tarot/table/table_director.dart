@@ -1408,8 +1408,14 @@ class TableDirector extends ChangeNotifier {
     );
   }
 
+  /// Boca abajo y dentro de la lectura: en un hueco o aclarando uno. La
+  /// suelta no cuenta, asi que «Desvelar todas» no la toca.
+  Iterable<TableCard> get _hiddenInReading => table.cards.where(
+    (c) => !c.aside && !c.faceUp && (c.slot != null || c.host != null),
+  );
+
   void _revealAll() {
-    final hidden = table.cards.where((c) => !c.aside && !c.faceUp).toList()
+    final hidden = _hiddenInReading.toList()
       ..sort((a, b) => (a.slot ?? 99).compareTo(b.slot ?? 99));
     _buzzReveal(hidden);
     ops.arrange((s) {
@@ -1521,7 +1527,7 @@ class TableDirector extends ChangeNotifier {
       case HitCard(:final slug):
         final c = table.card(slug);
         if (c == null) return;
-        final hidden = table.cards.where((k) => !k.aside && !k.faceUp).length;
+        final hidden = _hiddenInReading.length;
         final sp = spread;
         final title = c.faceUp
             ? c.face.commonName

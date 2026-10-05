@@ -350,6 +350,21 @@ void main() {
       },
     );
 
+    test('desvelar todas da la vuelta solo a las de la tirada', () async {
+      // GN2200: desvelaba tambien la carta suelta, que no cuenta
+      await openRws();
+      final ops = c.read(tableControllerProvider.notifier);
+      ops.arrange((s) => s.copyWith(spread: () => 'three_card'));
+      await holdAndPick(pileAt('p0'), 'deal');
+      final loose = await ops.take('p0', 3);
+      await settle();
+      await holdAndPick(slotPose(three, 0).offset, 'reveal-all');
+      for (var i = 0; i < 3; i++) {
+        expect(table().cardInSlot(i)!.faceUp, isTrue, reason: 'hueco $i');
+      }
+      expect(table().card(loose.slug)!.faceUp, isFalse);
+    });
+
     test('el abanico abierto tambien ofrece elegir la tirada', () async {
       await openRws();
       await tap(pileAt('p0'));
