@@ -214,7 +214,7 @@ List<List<KameaStep>> kameaFit(List<List<KameaStep>> words) {
 }
 
 /// Dos segmentos casi colineales que se solapan: uno esconderia al otro.
-bool kameaOverlap(({double x, double y}) c, ({double x, double y}) d, ({double x, double y}) a, ({double x, double y}) b) {
+bool segmentsOverlap(({double x, double y}) c, ({double x, double y}) d, ({double x, double y}) a, ({double x, double y}) b) {
   final dx = d.x - c.x, dy = d.y - c.y, l = hypot(dx, dy);
   if (l < 1) return false;
   final ux = dx / l, uy = dy / l;
@@ -268,7 +268,7 @@ List<KameaShape> kameaShapes(List<KameaStep> steps, KameaEnds ends, KameaLook lo
   final segs = <_Seg>[];
   for (var i = 0; i < verts.length - 1; i++) {
     final a = verts[i], b = verts[i + 1];
-    final lane = segs.where((s) => kameaOverlap((x: s.a.x, y: s.a.y), (x: s.b.x, y: s.b.y), (x: a.x, y: a.y), (x: b.x, y: b.y))).length;
+    final lane = segs.where((s) => segmentsOverlap((x: s.a.x, y: s.a.y), (x: s.b.x, y: s.b.y), (x: a.x, y: a.y), (x: b.x, y: b.y))).length;
     final dx = b.x - a.x, dy = b.y - a.y, l = hypot(dx, dy) == 0 ? 1.0 : hypot(dx, dy), ux = dx / l, uy = dy / l;
     // carril a la izquierda del sentido de avance
     final ox = -uy * lane * look.lane, oy = ux * lane * look.lane;

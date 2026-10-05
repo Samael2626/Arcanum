@@ -127,6 +127,24 @@ KameaDoc? decodeKameaEntry(String content) {
   return null;
 }
 
+/// Marca de la Rosa-Cruz (familia historica de Mathers): otro documento, mismo tipo de entrada.
+const kRosaMark = 'sigilo-rosa';
+
+String encodeRosaEntry(RosaDoc doc) => jsonEncode({'taller': kRosaMark, 'doc': doc.toJson()});
+
+/// Rosa-Cruz guardada si el contenido lo es; null si no.
+RosaDoc? decodeRosaEntry(String content) {
+  final t = content.trimLeft();
+  if (!t.startsWith('{')) return null;
+  try {
+    final j = jsonDecode(t);
+    if (j is Map<String, dynamic> && j['taller'] == kRosaMark) return RosaDoc.fromJson(j['doc'] as Map<String, dynamic>);
+  } on FormatException {
+    return null;
+  }
+  return null;
+}
+
 
 /// Titulo neutro: la intencion queda dentro del contenido cifrado.
 String sigilTitle(DateTime d) => 'Sigilo del ${dayMonthEs(d)}';
@@ -162,6 +180,9 @@ final sigilPreviewProvider = Provider<Future<Uint8List?> Function(SigilDoc)>((re
 
 /// Titulo de una kamea: la tabla es una eleccion historica; el nombre trazado no sale del cifrado.
 String kameaTitle(KameaDoc doc, DateTime d) => 'Kamea de ${doc.def.name}, ${dayMonthEs(d)}';
+
+/// Titulo de una Rosa-Cruz: no lleva el nombre trazado, que va dentro del cifrado.
+String rosaTitle(DateTime d) => 'Rosa-Cruz, ${dayMonthEs(d)}';
 
 class SigilStore {
   final ArcanumApi api;
@@ -217,6 +238,9 @@ class SigilStore {
   /// Sin miniatura: la lista cae a la capitular.
   Future<String> saveKamea(KameaDoc doc, {String? entryId}) =>
       _persist(encodeKameaEntry(doc), (d) => kameaTitle(doc, d), entryId, const {});
+
+  /// Y una Rosa-Cruz: el titulo no lleva el nombre.
+  Future<String> saveRosa(RosaDoc doc, {String? entryId}) => _persist(encodeRosaEntry(doc), rosaTitle, entryId, const {});
 
   Future<String> _persist(String plain, String Function(DateTime) title, String? entryId, Map<String, String> thumb) async {
     final enc = await crypto.encryptText(plain);

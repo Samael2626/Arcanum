@@ -86,7 +86,7 @@ No verificado (necesita teléfono):
 3. Lector de pantalla del selector de caligrafía y de las celdas de Sellos.
 
 Pendiente de producto:
-4. Familias v2 en Flutter: Rosa-Cruz, Sello personal y Comparar. **Kamea hecha el 4-oct** (ver §7).
+4. Familias v2 en Flutter: Sello personal y Comparar. **Kamea (4-oct) y Rosa-Cruz (5-oct) hechas** (ver §7 y §8).
 5. Enlace del taller con Hoy, Grimorio y Bitácora (crear → cargar → olvidar → anotar).
 6. Revisión con `arcanum-legal` de los sellos (obra ajena) antes de publicar. La
    tarjeta «Generador de sigilos» (P2) de `legal-site/index.html` se actualiza el
@@ -129,3 +129,41 @@ No verificado (necesita teléfono): QA en la app instalada, lector de pantalla d
 selector de tablas y de la lectura de casillas. En el detalle del Grimorio la
 lámina muestra el nombre trazado como rótulo (a diferencia del sigilo de letras,
 que oculta la intención); si se quiere privacidad en pantalla, ocultarlo allí.
+
+## 8. Rosa-Cruz en Flutter (5-oct)
+
+Segunda familia v2: el nombre en hebreo trazado sobre el Lamen (22 pétalos: 3
+madres, 7 dobles, 12 simples) como en el manuscrito F de Mathers. Círculo en la
+inicial, quiebro en letras repetidas, lazo por giro casi recto y por paso junto
+a una letra no visitada, trazo apartado cuando repasa otra línea, barra final,
+una palabra por sigilo, y colores de la escala del Rey con tramos degradados.
+
+- Motor: `packages/arcanum_sigilos/lib/engine/rosa.dart` (`RosaDoc`), puerto de
+  `js/rosa.js`. El lienzo pinta degradados a lo largo del trazo con el nuevo
+  `PathItem.strokeGrad`; el SVG lo escribe `RosaDoc.buildSVG`.
+- Pantalla: `lib/features/sigilos/rosa_screen.dart`. Las piezas comunes con la
+  Kamea (chips, compartir, aviso al salir) pasan a `familia_ui.dart`.
+- Guardado: entrada `sigil` con marca `sigilo-rosa`; el título es «Rosa-Cruz, 5
+  de octubre» y el nombre queda cifrado dentro. El detalle del Grimorio dibuja
+  solo el trazo sobre el Lamen: no muestra el nombre.
+- Referencias: `arcanum-sigil-prototype/_fixtures_rosa.mjs` genera
+  `fixtures/rosa.json` (192 casos, 70 de ellos al azar con semilla fija) y 48
+  imágenes de Chromium en `png_rosa/`. El JSON guarda el SVG desde la obra: el
+  soporte ya tiene su paridad en los fixtures de letras.
+
+Pruebas (corridas el 5-oct): petalos, recorrido, marcas, gematría y SVG idénticos
+al prototipo en los 192 casos; lienzo frente a Chromium por debajo del 0,06 %;
+el lienzo dibuja los mismos trazos, anchos y opacidades que el SVG (también en la
+Kamea, donde se añadió); pantalla y Grimorio, 8 tests. Suite completa: 1510
+pasan, 8 saltados; `flutter analyze` sin avisos. Mutación: 9 de 10 errores
+inyectados detectados en el SVG; el que sobrevive (`t >= 0` en el paso junto a
+una letra) es inalcanzable con esta geometría, porque dos pétalos distintos
+nunca quedan a menos de 48 px.
+
+Defecto propio encontrado y corregido: con tres puertas, la invitación del editor
+del Grimorio desbordaba 72 px en un móvil de 844 px de alto; ahora se desplaza.
+También desbordaba la fila de colores con «naranja escarlata brillante».
+
+No verificado (necesita teléfono): QA en la app instalada, lector de pantalla de
+los interruptores y de la lectura, y el aspecto con Crimson Pro y Noto Serif
+Hebrew en el Lamen (los tests usan una fuente de prueba de cuadrados).

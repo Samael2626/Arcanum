@@ -88,6 +88,20 @@ void main() {
     }
   });
 
+  test('el lienzo dibuja los mismos trazos y anchos que escribe el SVG', () {
+    final mark = RegExp(r'<path data-mark="(\w+)" d="([^"]+)" stroke-width="([\d.]+)"');
+    for (final c in cases) {
+      final doc = docFor(c), svg = doc.buildSVG(), scene = doc.scene();
+      final fromSvg = [for (final m in mark.allMatches(svg)) '${m[1]}|${m[2]}|${double.parse(m[3]!)}']..sort();
+      final fromScene = [
+        for (final g in scene.fg)
+          if (g.layer.startsWith('kamea-') && g.w != null && g.layer != 'kamea-grid')
+            for (final it in g.items) '${g.layer.substring(6)}|${it.d}|${g.w}',
+      ]..sort();
+      expect(fromScene, fromSvg, reason: '${c['planet']} ${c['hebrew']}');
+    }
+  });
+
   test('la transliteracion de un nombre latino da el hebreo del prototipo', () {
     for (final c in cases) {
       final name = c['name'] as String?;
