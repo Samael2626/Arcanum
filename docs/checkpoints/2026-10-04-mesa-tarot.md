@@ -21,7 +21,7 @@ La rama `feat/mesa-tarot` avanzo desde el fallo visto en el GN2200 el 03-oct. Se
 - `b71fe87`: lista de 78 posiciones con filas de 48 dp (`table_overlays.dart`, `tarot_screen.dart`, `fan_picker_test.dart`); centro del radial con cuadro semantico de 48 dp (`table_view.dart`). Se corrigio la creacion tardia del ticker de humo en `table_smoke.dart`, que hacia fallar 34 pruebas de widgets al desmontar la mesa.
 - `63cace8`: pregunta que vuela al sello en 760 ms; anillo de cierre de 3400 ms con opacidad 0 → 0,9 → 0 y escala 0,7 → 1,08 (`table_fx.dart`). Cartas de regreso al mazo en 900 ms (`table_director.dart`, `table_view.dart`, `table_motion.dart`). «Interpretar» tiene objetivo de toque minimo de 48 dp en pantalla (`table_director.dart`). Tests en `table_circle_test.dart` y `table_director_test.dart`.
 - `03d2f2a`: etiqueta y accion semantica para «Interpretar» y opciones/centro del radial; medicion de 48 dp en mazo, monton, sello, radial, deshacer y lista a 360 × 760 (`table_view.dart`, `table_director.dart` y tests de la mesa). Se verificaron nombre lunar y carta pendiente.
-- Revision del 05-oct: `table_controller.dart` consumia el checkpoint antes de confirmar la primera operacion del gesto. Una peticion fallida dejaba la siguiente con `checkpoint: false` y anulaba el deshacer del servidor. El test en `table_controller_test.dart` fallo antes con `[false]` en lugar de `[true]`; el controlador ahora confirma el checkpoint despues de recibir respuesta. Tambien conserva el deshacer previo si falla una operacion fuera del gesto.
+- `e9fa128` (revision del 05-oct): `table_controller.dart` consumia el checkpoint antes de confirmar la primera operacion del gesto. Una peticion fallida dejaba la siguiente con `checkpoint: false` y anulaba el deshacer del servidor. El test en `table_controller_test.dart` fallo antes con `[false]` en lugar de `[true]`; el controlador ahora confirma el checkpoint despues de recibir respuesta. Tambien conserva el deshacer previo si falla una operacion fuera del gesto.
 
 ## Medido
 
@@ -32,7 +32,7 @@ La rama `feat/mesa-tarot` avanzo desde el fallo visto en el GN2200 el 03-oct. Se
 
 ## Estado actual
 
-- Rama: `feat/mesa-tarot`, worktree `D:\Proyectos\Arcanum-mesa`. Ultimo commit de codigo anterior al cierre de este checkpoint: `03d2f2a`; la correccion del checkpoint se registra en el siguiente commit.
+- Rama: `feat/mesa-tarot`, worktree `D:\Proyectos\Arcanum-mesa`. Ultimo commit de codigo: `e9fa128`.
 - Puertas Flutter: analisis sin avisos; 879 tests aprobados, 7 saltados. Backend sin cambios desde la fase 5; no se ejecutaron `pytest` ni migraciones en esta tanda.
 - Sin push ni merge a `main`. La fase 8 sigue sin empezar.
 
