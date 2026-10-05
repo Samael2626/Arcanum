@@ -80,6 +80,58 @@ TablePose slotPose(SpreadDef spread, int i) {
   );
 }
 
+/// Caja que ocupa el hueco `i`, con su giro (el de 90 grados va a lo ancho).
+Rect slotRect(SpreadDef spread, int i) {
+  final p = slotPose(spread, i);
+  final w = TableGeometry.cardW * p.scale, h = TableGeometry.cardH * p.scale;
+  final a = p.rot * math.pi / 180;
+  final c = math.cos(a).abs(), s = math.sin(a).abs();
+  return Rect.fromCenter(
+    center: p.offset,
+    width: w * c + h * s,
+    height: w * s + h * c,
+  );
+}
+
+/// Centro de la etiqueta de cada hueco.
+///
+/// Debajo, si cabe. Si pisa otro hueco (la carta que caiga ahi la taparia)
+/// u otra etiqueta, prueba a la derecha, a la izquierda y arriba. Antes iba
+/// siempre debajo: en la Cruz Celta la 1 y la 2 coincidian en el cruce y las
+/// cartas de la columna tapaban el 8 y el 10. O(n^2) con n <= 12 huecos.
+List<Offset> slotLabelCenters(SpreadDef spread, Size Function(int) sizeOf) {
+  const gap = 8.0;
+  final slots = [
+    for (var i = 0; i < spread.cardCount; i++) slotRect(spread, i),
+  ];
+  final placed = <Rect>[];
+  final out = <Offset>[];
+  for (var i = 0; i < slots.length; i++) {
+    final r = slots[i];
+    final size = sizeOf(i);
+    final candidates = [
+      Offset(r.center.dx, r.bottom + gap + size.height / 2),
+      Offset(r.right + gap + size.width / 2, r.center.dy),
+      Offset(r.left - gap - size.width / 2, r.center.dy),
+      Offset(r.center.dx, r.top - gap - size.height / 2),
+    ];
+    Rect box(Offset c) =>
+        Rect.fromCenter(center: c, width: size.width, height: size.height);
+    bool free(Rect b) =>
+        TableGeometry.cloth.contains(b.topLeft) &&
+        TableGeometry.cloth.contains(b.bottomRight) &&
+        !slots.any(b.overlaps) &&
+        !placed.any(b.overlaps);
+    final pick = candidates.firstWhere(
+      (c) => free(box(c)),
+      orElse: () => candidates.first,
+    );
+    placed.add(box(pick));
+    out.add(pick);
+  }
+  return out;
+}
+
 /// Hueco mas cercano a `p` si esta dentro del iman, o null.
 ///
 /// El iman crece con el tamaño de carta de la tirada: en la Rueda del año

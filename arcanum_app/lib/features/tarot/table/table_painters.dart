@@ -121,8 +121,13 @@ class FeltPainter extends CustomPainter {
     _embroidery(canvas);
     final sp = spread;
     if (sp != null) {
+      final labels = [
+        for (var i = 0; i < sp.cardCount; i++) _labelPainter(sp, i),
+      ];
+      final at = slotLabelCenters(sp, (i) => labels[i].size);
       for (var i = 0; i < sp.cardCount; i++) {
         _slot(canvas, sp, i);
+        labels[i].paint(canvas, at[i] - labels[i].size.center(Offset.zero));
       }
     }
   }
@@ -174,18 +179,21 @@ class FeltPainter extends CustomPainter {
         ..color = ArcanumColors.gold.withValues(alpha: hot ? .9 : .38),
     );
     canvas.restore();
-    final label = sp.labelByName ? sp.slots[i].name : '${i + 1}';
-    _text(
-      canvas,
-      label,
-      Offset(p.x, p.y + TableGeometry.cardH * p.scale / 2 + 16),
-      TextStyle(
+  }
+
+  static TextPainter _labelPainter(SpreadDef sp, int i) => TextPainter(
+    text: TextSpan(
+      text: sp.labelByName ? sp.slots[i].name : '${i + 1}',
+      style: TextStyle(
+        fontFamily: 'Cormorant Garamond',
         fontSize: sp.labelByName ? 19 : 21,
         letterSpacing: 1,
         color: ArcanumColors.goldLight.withValues(alpha: .7),
       ),
-    );
-  }
+    ),
+    textDirection: TextDirection.ltr,
+    textAlign: TextAlign.center,
+  )..layout(maxWidth: 220);
 
   static void _text(
     Canvas canvas,

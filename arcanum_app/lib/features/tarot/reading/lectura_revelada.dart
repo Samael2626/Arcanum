@@ -576,6 +576,22 @@ class _SpreadStrip extends StatelessWidget {
   /// Donde queda la tirada en pequeño dentro de la franja.
   static const double sideInset = 24, topInset = 44, bottomInset = 8;
 
+  /// Saltar al hueco `s`. Dos huecos con el mismo centro (el cruce 1/2 de la
+  /// Cruz Celta) comparten zona y el toque iria siempre al de encima: tocar
+  /// alterna entre ellos, empezando por el primero.
+  void _goToSlot(int s) {
+    final slots = spread!.slots;
+    final twins = [
+      for (var t = 0; t < slots.length; t++)
+        if (slots[t].x == slots[s].x && slots[t].y == slots[s].y) t,
+    ];
+    final now = current < cards.length ? cards[current].slot : null;
+    final at = twins.indexOf(now ?? -1);
+    final target = at < 0 ? twins.first : twins[(at + 1) % twins.length];
+    final i = cards.indexWhere((c) => c.slot == target);
+    if (i >= 0) go(i);
+  }
+
   /// Centro y giro del hueco de una carta en la franja, en coordenadas de la
   /// lectura. Una aclaratoria va al hueco que aclara; sin tirada, al centro.
   static ({Offset at, double rotation}) target(
@@ -681,7 +697,9 @@ class _SpreadStrip extends StatelessWidget {
                               filled: cards.any((c) => c.slot == s),
                               lit: lit == s,
                               label: '${s + 1}, ${spread!.slots[s].name}',
-                              onTap: () {
+                              onTap: () => _goToSlot(s),
+                              // el lector nombra cada hueco: va directo a el
+                              onSemanticsTap: () {
                                 final i = cards.indexWhere((c) => c.slot == s);
                                 if (i >= 0) go(i);
                               },
@@ -706,6 +724,7 @@ class _MiniSlot extends StatelessWidget {
     required this.lit,
     required this.label,
     required this.onTap,
+    required this.onSemanticsTap,
   });
 
   final double x;
@@ -715,6 +734,7 @@ class _MiniSlot extends StatelessWidget {
   final bool lit;
   final String label;
   final VoidCallback onTap;
+  final VoidCallback onSemanticsTap;
 
   static const Size size = Size(14, 22);
 
@@ -728,8 +748,10 @@ class _MiniSlot extends StatelessWidget {
       button: filled,
       selected: lit,
       label: 'Ir a $label',
+      onTap: filled ? onSemanticsTap : null,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
+        excludeFromSemantics: true,
         onTap: filled ? onTap : null,
         child: Center(
           child: Transform.rotate(
