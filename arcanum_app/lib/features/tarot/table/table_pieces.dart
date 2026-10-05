@@ -16,6 +16,7 @@ import 'table_director.dart';
 import 'table_geometry.dart';
 import 'table_motion.dart';
 import 'table_painters.dart';
+import 'suit_pips.dart';
 import 'table_quality.dart';
 
 const _cardSize = Size(TableGeometry.cardW, TableGeometry.cardH);
@@ -70,6 +71,10 @@ class _TableCardPieceState extends State<TableCardPiece>
   double _flipFrom = 0;
   late bool _reversed = widget.view.card!.reversed;
 
+  /// Los simbolos del palo entran con su salto solo al desvelarla aqui; si ya
+  /// llego desvelada (mesa restaurada), estan sin mas, como en el prototipo.
+  late bool _pipsInstant = widget.view.card!.faceUp;
+
   TarotFace _resolve() {
     final f = widget.view.card!.face;
     return TarotFace.resolve({
@@ -104,6 +109,7 @@ class _TableCardPieceState extends State<TableCardPiece>
     motionUpdate(v.pose, dragging: v.dragging);
     final wasUp = old.view.card!.faceUp;
     if (c.faceUp && !wasUp) {
+      _pipsInstant = false;
       // si venia de la esquina, el volteo sigue desde donde la solto el dedo
       final timing = TarotFlipTiming.of(_face);
       _flipFrom = (old.view.peelAngle / 180).clamp(0.0, 1.0);
@@ -177,7 +183,25 @@ class _TableCardPieceState extends State<TableCardPiece>
                 tiltX: v.tiltX,
                 tiltY: v.tiltY,
               ),
-              child: _card(flip, peel > 0 ? v.peelHingeX : 0, turn),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  _card(flip, peel > 0 ? v.peelHingeX : 0, turn),
+                  // los simbolos del palo, cuando termina de voltearse
+                  if (up && peel == 0 && flip >= 180)
+                    Positioned(
+                      left: _cardSize.width + 5,
+                      top: 6,
+                      child: SuitPips(
+                        key: ValueKey('pips:${widget.view.card!.slug}'),
+                        face: _face,
+                        reversed: widget.view.card!.reversed,
+                        instant: _pipsInstant,
+                        glow: TableQualityScope.levelOf(context) < 1,
+                      ),
+                    ),
+                ],
+              ),
             );
           },
         ),
