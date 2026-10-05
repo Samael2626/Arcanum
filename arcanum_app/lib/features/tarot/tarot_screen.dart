@@ -2,16 +2,16 @@
 /// lo que la mesa pide (avisos, paneles, tienda, errores).
 library;
 
-import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/api/arcanum_api.dart';
+import '../../core/auth/auth_controller.dart';
 import '../../core/theme/arcanum_colors.dart';
 import 'application/table_controller.dart';
+import 'domain/table_error.dart';
 import 'domain/table_models.dart';
 import 'domain/table_state.dart';
 import 'reading/lectura_revelada.dart';
@@ -129,7 +129,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
       ),
       (AsyncError(:final error), _) ||
       (_, AsyncError(:final error)) => _Failure(
-        message: _describe(error),
+        message: _failedToLoad(error),
         onRetry: () {
           ref.invalidate(tarotCatalogProvider);
           ref.invalidate(tableControllerProvider);
@@ -244,28 +244,22 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
   }
 
   @override
-  void error(Object error) => toast(_describe(error));
+  void error(Object error) {
+    toast(tableErrorMessage(error));
+    // sesion caida: se cierra de verdad y la guarda del router lleva al login
+    if (isTableSessionLost(error)) ref.read(authProvider.notifier).logout();
+  }
 
-  static String _describe(Object error) {
-    if (error is DioException) {
-      final detail = error.response?.data;
-      if (detail is Map && detail['detail'] is String) {
-        return detail['detail'] as String;
-      }
-      if (error.response == null) {
-        return 'No hay conexión con el servidor. Inténtalo de nuevo.';
-      }
+  /// La mesa no cargo. Con la sesion caida, «Reintentar» fallaria igual:
+  /// se cierra despues del fotograma (no en pleno build) y el router lleva
+  /// al login.
+  String _failedToLoad(Object error) {
+    if (isTableSessionLost(error)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ref.read(authProvider.notifier).logout();
+      });
     }
-    // fuera de la version de la tienda se dice que fallo: el mensaje generico
-    // no deja saber si fue la sesion, el servidor o la app
-    if (!kReleaseMode) {
-      final what = error is DioException
-          ? 'HTTP ${error.response?.statusCode ?? '-'} '
-                '${error.requestOptions.path}'
-          : '${error.runtimeType}: $error';
-      return 'No se pudo completar. Inténtalo de nuevo.\n\n[$what]';
-    }
-    return 'No se pudo completar. Inténtalo de nuevo.';
+    return tableErrorMessage(error);
   }
 
   @override
@@ -477,7 +471,8 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (snap.hasError) Text(_describe(snap.error!), style: _muted),
+              if (snap.hasError)
+                Text(tableErrorMessage(snap.error!), style: _muted),
               if (rows == null && !snap.hasError)
                 const Padding(
                   padding: EdgeInsets.all(12),
