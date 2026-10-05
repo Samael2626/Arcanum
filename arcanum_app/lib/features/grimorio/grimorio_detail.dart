@@ -9,11 +9,31 @@ import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../sigilos/kamea_screen.dart';
+import '../sigilos/compare_screen.dart';
 import '../sigilos/personal_screen.dart';
 import '../sigilos/rosa_screen.dart';
 import '../sigilos/sigil_store.dart';
 import '../sigilos/taller_screen.dart';
 import 'grimorio_atmosphere.dart';
+
+@visibleForTesting
+({List<SceneGroup> bg, List<SceneGroup> fg}) kameaDetailScene(KameaDoc doc) {
+  final scene = doc.scene();
+  return (
+    bg: scene.bg,
+    fg: [
+      for (final g in scene.fg)
+        if (g.layer == 'caption' && g.prims != null)
+          SceneGroup(
+            layer: g.layer,
+            color: g.color,
+            prims: g.prims!.skip(1).toList(),
+          )
+        else
+          g,
+    ],
+  );
+}
 
 class GrimorioDetail extends ConsumerStatefulWidget {
   final String id;
@@ -67,7 +87,9 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
   Future<void> _continueSigil(SigilDoc doc) async {
     final saved = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(builder: (_) => TallerScreen(entryId: widget.id, initial: doc)),
+      MaterialPageRoute(
+        builder: (_) => TallerScreen(entryId: widget.id, initial: doc),
+      ),
     );
     if (mounted && saved == true) _retry();
   }
@@ -75,7 +97,9 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
   Future<void> _continueKamea(KameaDoc doc) async {
     final saved = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(builder: (_) => KameaScreen(entryId: widget.id, initial: doc)),
+      MaterialPageRoute(
+        builder: (_) => KameaScreen(entryId: widget.id, initial: doc),
+      ),
     );
     if (mounted && saved == true) _retry();
   }
@@ -83,13 +107,30 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
   Future<void> _continueRosa(RosaDoc doc) async {
     final saved = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(builder: (_) => RosaScreen(entryId: widget.id, initial: doc)),
+      MaterialPageRoute(
+        builder: (_) => RosaScreen(entryId: widget.id, initial: doc),
+      ),
     );
     if (mounted && saved == true) _retry();
   }
 
   Future<void> _continuePersonal(PersonalDoc doc) async {
-    final saved = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => PersonalScreen(entryId: widget.id, initial: doc)));
+    final saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PersonalScreen(entryId: widget.id, initial: doc),
+      ),
+    );
+    if (mounted && saved == true) _retry();
+  }
+
+  Future<void> _continueCompare(CompareDoc doc) async {
+    final saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CompareScreen(entryId: widget.id, initial: doc),
+      ),
+    );
     if (mounted && saved == true) _retry();
   }
 
@@ -316,11 +357,46 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
           delayMs: 120,
           // un sigilo del taller se dibuja (y se puede seguir editando); una
           // entrada «Sigilo» escrita a mano antes del taller sigue siendo texto
-          child: switch (type == 'sigil' ? (decodeSigilEntry(content) ?? decodeKameaEntry(content) ?? decodeRosaEntry(content) ?? decodePersonalEntry(content)) : null) {
-            final SigilDoc doc => _SigilBody(doc: doc, onEdit: () => _continueSigil(doc), accent: accent),
-            final KameaDoc doc => _FamiliaBody(scene: doc.scene(), label: 'Kamea de ${doc.def.name}', editLabel: 'Seguir en la kamea', onEdit: () => _continueKamea(doc), accent: accent),
-            final RosaDoc doc => _FamiliaBody(scene: doc.scene(), label: 'Rosa-Cruz', editLabel: 'Seguir en la Rosa-Cruz', onEdit: () => _continueRosa(doc), accent: accent),
-            final PersonalDoc doc => _FamiliaBody(scene: doc.scene(), label: 'Sello personal', editLabel: 'Seguir el sello personal', onEdit: () => _continuePersonal(doc), accent: accent),
+          child: switch (type == 'sigil'
+              ? (decodeSigilEntry(content) ??
+                    decodeKameaEntry(content) ??
+                    decodeRosaEntry(content) ??
+                    decodePersonalEntry(content) ??
+                    decodeCompareEntry(content))
+              : null) {
+            final SigilDoc doc => _SigilBody(
+              doc: doc,
+              onEdit: () => _continueSigil(doc),
+              accent: accent,
+            ),
+            final KameaDoc doc => _FamiliaBody(
+              scene: kameaDetailScene(doc),
+              label: 'Kamea de ${doc.def.name}',
+              editLabel: 'Seguir en la kamea',
+              onEdit: () => _continueKamea(doc),
+              accent: accent,
+            ),
+            final RosaDoc doc => _FamiliaBody(
+              scene: doc.scene(),
+              label: 'Rosa-Cruz',
+              editLabel: 'Seguir en la Rosa-Cruz',
+              onEdit: () => _continueRosa(doc),
+              accent: accent,
+            ),
+            final PersonalDoc doc => _FamiliaBody(
+              scene: doc.scene(),
+              label: 'Sello personal',
+              editLabel: 'Seguir el sello personal',
+              onEdit: () => _continuePersonal(doc),
+              accent: accent,
+            ),
+            final CompareDoc doc => _FamiliaBody(
+              scene: doc.scene(),
+              label: 'Comparación de sigilos',
+              editLabel: 'Seguir la comparación',
+              onEdit: () => _continueCompare(doc),
+              accent: accent,
+            ),
             _ => _ManuscriptBody(content: content, accent: accent),
           },
         ),
@@ -439,7 +515,11 @@ class _SigilBody extends StatefulWidget {
   final SigilDoc doc;
   final VoidCallback onEdit;
   final Color accent;
-  const _SigilBody({required this.doc, required this.onEdit, required this.accent});
+  const _SigilBody({
+    required this.doc,
+    required this.onEdit,
+    required this.accent,
+  });
   @override
   State<_SigilBody> createState() => _SigilBodyState();
 }
@@ -450,39 +530,59 @@ class _SigilBodyState extends State<_SigilBody> {
   @override
   Widget build(BuildContext context) {
     final s = widget.doc.scene();
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      LayoutBuilder(
-        builder: (context, box) => Center(
-          child: CustomPaint(size: Size.square(box.maxWidth), painter: SigilScenePainter(bg: s.bg, fg: s.fg)),
-        ),
-      ),
-      const SizedBox(height: 16),
-      Row(children: [
-        Expanded(
-          child: OutlinedButton(
-            onPressed: () => setState(() => _showIntention = !_showIntention),
-            style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: widget.accent),
-            child: Text(_showIntention ? 'Ocultar la intención' : 'Ver la intención'),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LayoutBuilder(
+          builder: (context, box) => Center(
+            child: CustomPaint(
+              size: Size.square(box.maxWidth),
+              painter: SigilScenePainter(bg: s.bg, fg: s.fg),
+            ),
           ),
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: OutlinedButton(
-            onPressed: widget.onEdit,
-            style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: widget.accent),
-            child: const Text('Seguir en el taller'),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () =>
+                    setState(() => _showIntention = !_showIntention),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(48, 48),
+                  foregroundColor: widget.accent,
+                ),
+                child: Text(
+                  _showIntention ? 'Ocultar la intención' : 'Ver la intención',
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: OutlinedButton(
+                onPressed: widget.onEdit,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(48, 48),
+                  foregroundColor: widget.accent,
+                ),
+                child: const Text('Seguir en el taller'),
+              ),
+            ),
+          ],
+        ),
+        if (_showIntention)
+          Padding(
+            padding: const EdgeInsets.only(top: 14),
+            child: Text(
+              '«${widget.doc.sigil.intention}»',
+              textAlign: TextAlign.center,
+              style: ArcanumText.body(17, italic: true),
+            ),
           ),
-        ),
-      ]),
-      if (_showIntention)
-        Padding(
-          padding: const EdgeInsets.only(top: 14),
-          child: Text('«${widget.doc.sigil.intention}»', textAlign: TextAlign.center, style: ArcanumText.body(17, italic: true)),
-        ),
-    ]);
+      ],
+    );
   }
 }
-
 
 /// Una familia historica guardada (Kamea, Rosa-Cruz): la figura y el camino
 /// para seguir editandola.
@@ -491,26 +591,41 @@ class _FamiliaBody extends StatelessWidget {
   final String label, editLabel;
   final VoidCallback onEdit;
   final Color accent;
-  const _FamiliaBody({required this.scene, required this.label, required this.editLabel, required this.onEdit, required this.accent});
+  const _FamiliaBody({
+    required this.scene,
+    required this.label,
+    required this.editLabel,
+    required this.onEdit,
+    required this.accent,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      LayoutBuilder(
-        builder: (context, box) => Center(
-          child: Semantics(
-            image: true,
-            label: label,
-            child: CustomPaint(size: Size.square(box.maxWidth), painter: SigilScenePainter(bg: scene.bg, fg: scene.fg)),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LayoutBuilder(
+          builder: (context, box) => Center(
+            child: Semantics(
+              image: true,
+              label: label,
+              child: CustomPaint(
+                size: Size.square(box.maxWidth),
+                painter: SigilScenePainter(bg: scene.bg, fg: scene.fg),
+              ),
+            ),
           ),
         ),
-      ),
-      const SizedBox(height: 16),
-      OutlinedButton(
-        onPressed: onEdit,
-        style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: accent),
-        child: Text(editLabel),
-      ),
-    ]);
+        const SizedBox(height: 16),
+        OutlinedButton(
+          onPressed: onEdit,
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(48, 48),
+            foregroundColor: accent,
+          ),
+          child: Text(editLabel),
+        ),
+      ],
+    );
   }
 }
