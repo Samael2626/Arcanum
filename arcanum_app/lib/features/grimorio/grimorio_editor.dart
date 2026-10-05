@@ -12,6 +12,7 @@ import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_resin.dart';
 import '../../shared/widgets/gold_button.dart';
 import '../sigilos/kamea_screen.dart';
+import '../sigilos/personal_screen.dart';
 import '../sigilos/rosa_screen.dart';
 import '../sigilos/taller_screen.dart';
 import 'grimorio_atmosphere.dart';
@@ -121,6 +122,11 @@ class _GrimorioEditorState extends ConsumerState<GrimorioEditor> {
     if (mounted && saved == true) Navigator.pop(context, true);
   }
 
+  Future<void> _openPersonal() async {
+    final saved = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => const PersonalScreen()));
+    if (mounted && saved == true) Navigator.pop(context, true);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -154,7 +160,7 @@ class _GrimorioEditorState extends ConsumerState<GrimorioEditor> {
                     // un sigilo no se escribe: se forja en el taller, que lo
                     // guarda el mismo como entrada «Sigilo» cifrada
                     if (_type == 'sigil')
-                      Expanded(child: _SigilInvite(onOpen: _openTaller, onKamea: _openKamea, onRosa: _openRosa))
+                      Expanded(child: _SigilInvite(onOpen: _openTaller, onKamea: _openKamea, onRosa: _openRosa, onPersonal: _openPersonal))
                     else ...[
                       ArcanumField(controller: _title, label: 'Título'),
                       const SizedBox(height: 16),
@@ -325,8 +331,8 @@ class _WritingPage extends StatelessWidget {
 }
 
 class _SigilInvite extends StatelessWidget {
-  final VoidCallback onOpen, onKamea, onRosa;
-  const _SigilInvite({required this.onOpen, required this.onKamea, required this.onRosa});
+  final VoidCallback onOpen, onKamea, onRosa, onPersonal;
+  const _SigilInvite({required this.onOpen, required this.onKamea, required this.onRosa, required this.onPersonal});
 
   @override
   Widget build(BuildContext context) => Center(
@@ -363,6 +369,12 @@ class _SigilInvite extends StatelessWidget {
                 onPressed: onRosa,
                 style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: ArcanumColors.gold),
                 child: const Text('Abrir una Rosa-Cruz'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: onPersonal,
+                style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: ArcanumColors.gold),
+                child: const Text('Crear sello personal'),
               ),
             ],
           ),

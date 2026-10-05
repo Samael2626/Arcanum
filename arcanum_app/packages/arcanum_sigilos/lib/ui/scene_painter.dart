@@ -137,6 +137,7 @@ void paintScene(Canvas canvas, List<SceneGroup> groups, {double? minW, double Fu
   for (final g in groups) {
     canvas.save();
     if ((g.dx ?? 0) != 0 || (g.dy ?? 0) != 0) canvas.translate(g.dx ?? 0, g.dy ?? 0);
+    if (g.scale != null) canvas.scale(g.scale!);
     final gop = g.op ?? 1;
     if (g.prims != null) {
       _paintPrims(canvas, g.prims!, g.color, gop);

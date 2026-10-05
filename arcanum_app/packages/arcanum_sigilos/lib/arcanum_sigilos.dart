@@ -9,6 +9,7 @@ export 'engine/glyphs.dart';
 export 'engine/hebrew.dart';
 export 'engine/interaction.dart';
 export 'engine/kamea.dart';
+export 'engine/personal.dart';
 export 'engine/rosa.dart';
 export 'engine/js_num.dart';
 export 'engine/layers.dart';

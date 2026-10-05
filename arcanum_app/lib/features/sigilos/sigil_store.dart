@@ -145,6 +145,23 @@ RosaDoc? decodeRosaEntry(String content) {
   return null;
 }
 
+/// Reconstruccion personal con figura de una de las tres familias.
+const kPersonalMark = 'sigilo-personal';
+
+String encodePersonalEntry(PersonalDoc doc) => jsonEncode({'taller': kPersonalMark, 'doc': doc.toJson()});
+
+PersonalDoc? decodePersonalEntry(String content) {
+  final t = content.trimLeft();
+  if (!t.startsWith('{')) return null;
+  try {
+    final j = jsonDecode(t);
+    if (j is Map<String, dynamic> && j['taller'] == kPersonalMark) return PersonalDoc.fromJson(j['doc'] as Map<String, dynamic>);
+  } on FormatException {
+    return null;
+  }
+  return null;
+}
+
 
 /// Titulo neutro: la intencion queda dentro del contenido cifrado.
 String sigilTitle(DateTime d) => 'Sigilo del ${dayMonthEs(d)}';
@@ -183,6 +200,8 @@ String kameaTitle(KameaDoc doc, DateTime d) => 'Kamea de ${doc.def.name}, ${dayM
 
 /// Titulo de una Rosa-Cruz: no lleva el nombre trazado, que va dentro del cifrado.
 String rosaTitle(DateTime d) => 'Rosa-Cruz, ${dayMonthEs(d)}';
+
+String personalTitle(DateTime d) => 'Sello personal, ${dayMonthEs(d)}';
 
 class SigilStore {
   final ArcanumApi api;
@@ -241,6 +260,8 @@ class SigilStore {
 
   /// Y una Rosa-Cruz: el titulo no lleva el nombre.
   Future<String> saveRosa(RosaDoc doc, {String? entryId}) => _persist(encodeRosaEntry(doc), rosaTitle, entryId, const {});
+
+  Future<String> savePersonal(PersonalDoc doc, {String? entryId}) => _persist(encodePersonalEntry(doc), personalTitle, entryId, const {});
 
   Future<String> _persist(String plain, String Function(DateTime) title, String? entryId, Map<String, String> thumb) async {
     final enc = await crypto.encryptText(plain);
