@@ -2,7 +2,7 @@
 tags: [arcanum, estado, indice]
 tipo: estado
 area: arcanum
-actualizado: 2026-06-18
+actualizado: 2026-10-04
 nota: "Reconstruido desde memoria tras perder el vault F:. Fuente de verdad ahora en este repo git."
 ---
 
@@ -14,6 +14,14 @@ backend en GitHub `github.com/Samael2626/Arcanum`.
 
 Docs del proyecto (este repo): [[ARCANUM-Semana3-Flutter]] · [[ARCANUM-Mejoras-y-Retos]] ·
 [[ARCANUM-Auditoria-Senior-2026-06-17]] · `docs/checkpoints/`.
+
+## Estado actual (2026-10-04)
+
+- **Grimorio:** CRUD real con contenido cifrado AES-256; el Taller guarda documentos de letras, Kamea, Rosa-Cruz y Sello personal como entradas `sigil` diferenciadas. El nombre/intención no aparece en el título. Sello personal: [[ARCANUM-Avance-Sello-Personal-2026-10-04]], commit `b809b24`.
+- **Oráculo:** lecturas de tarot con IA Groq `openai/gpt-oss-120b` en producción; no usa Claude API. La disponibilidad depende de la cuota de la organización de Groq. Véase `AGENTS.md`, «Groq: modelo, límites y coste».
+- **Taller:** letras con carga/olvido; Kamea y Rosa-Cruz como familias separadas sin ritual de caos; Sello personal como reconstrucción declarada. «Comparar» y el enlace con Hoy/Bitácora siguen pendientes.
+
+Las secciones «Semana 1–3» de abajo registran el estado histórico de junio; no describen el estado actual.
 
 ## Stack
 - **Backend:** FastAPI (Python 3.12) + PostgreSQL 17 + Redis (Memurai en Windows) + Alembic.
@@ -49,8 +57,7 @@ dibujada, con micro-animación de pulso dorado). Arquitectura `core/`+`shared/`+
 - **Arte (Materia Arcana)** ya NO es skeleton: backend `/materia` (15 correspondencias sembradas:
   hierbas/piedras/metales/inciensos con planeta+elemento+intenciones; list con filtros + detalle +
   CRUD con auth) y pestaña con lista filtrable por tipo + ficha en bottom sheet. Commit `5fb8b30`.
-- Pestañas **Grimorio / Oráculo** siguen skeleton: faltan sus endpoints (Grimorio = CRUD + cifrado
-  AES-256 client-side reto #2; Oráculo = tarot + IA Groq).
+- En junio, las pestañas **Grimorio / Oráculo** seguían como esqueleto. Ambas están implementadas; ver «Estado actual» arriba.
 - **Propósito de cada módulo (uso mágico real):** ver [[ARCANUM-Modulos-Proposito]].
 
 ### Entorno (2026-06-18): movimientos de disco rompieron y se repararon
@@ -76,6 +83,6 @@ cd D:\Proyectos\Arcanum\arcanum_app && flutter run -d web-server --web-port 3000
 ```
 
 ## Siguiente
-Auth UI + Dio/JWT + Riverpod ✅ hechos. Falta: onboarding (5 pasos) pulido; endpoints backend para
-Grimorio (CRUD + cifrado AES-256 client-side, reto #2), Materia Arcana (Arte) y Oráculo (tarot/IA);
-luego conectar esas pestañas. Ver [[ARCANUM-Mejoras-y-Retos]].
+Este «Siguiente» correspondía a junio. El pendiente actual del Taller es «Comparar», el enlace
+Hoy–Grimorio–Bitácora, QA en teléfono y revisión legal antes de publicar. Ver
+[[ARCANUM-Avance-Sello-Personal-2026-10-04]].
