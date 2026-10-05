@@ -295,7 +295,6 @@ class TableController extends AsyncNotifier<TableState> implements TableOps {
     if (!canUndo) return false;
     final snap = _undo!;
     final server = _undoServer;
-    _forgetUndo();
     if (server) {
       final view = ServerView.fromJson(await _api.tarotUndo(_sessionId()));
       _set(snap.withServer(view));
@@ -303,6 +302,7 @@ class TableController extends AsyncNotifier<TableState> implements TableOps {
       final view = _current.server;
       _set(view == null ? snap : snap.withServer(view));
     }
+    _forgetUndo();
     return true;
   });
 

@@ -183,6 +183,20 @@ void main() {
       expect(st().server!.piles['p0']!.count, 6);
     });
 
+    test('un fallo al deshacer permite reintentar', () async {
+      await c.read(tableControllerProvider.future);
+      await ctl().openDeck('rws');
+      ctl().beginUndoable();
+      await ctl().take('p0', 0);
+      ctl().commitUndoable();
+      await ctl().flush();
+      server.failUndo = StateError('red');
+      await expectLater(ctl().undo(), throwsStateError);
+      expect(ctl().canUndo, isTrue);
+      expect(await ctl().undo(), isTrue);
+      expect(st().server!.piles['p0']!.count, 6);
+    });
+
     test('un gesto solo local no molesta al servidor al deshacerse', () async {
       await c.read(tableControllerProvider.future);
       await ctl().openDeck('rws');

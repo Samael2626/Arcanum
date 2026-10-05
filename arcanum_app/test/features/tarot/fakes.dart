@@ -28,6 +28,7 @@ class FakeServer extends ArcanumApi {
 
   /// Si no es null, la proxima operacion de mesa falla con este error.
   Object? failNext;
+  Object? failUndo;
 
   /// Sentido impuesto al continuar una lectura (si no, c2 sale invertida).
   Map<String, bool> forcedReversed = {};
@@ -196,6 +197,11 @@ class FakeServer extends ArcanumApi {
   @override
   @override
   Future<Map<String, dynamic>> tarotUndo(String sessionId) async {
+    final fail = failUndo;
+    if (fail != null) {
+      failUndo = null;
+      throw fail;
+    }
     final prev = previous;
     if (prev == null) throw StateError('Ya no se puede deshacer.');
     piles = prev.piles;

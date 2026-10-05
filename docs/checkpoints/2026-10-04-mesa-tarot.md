@@ -22,6 +22,7 @@ La rama `feat/mesa-tarot` avanzo desde el fallo visto en el GN2200 el 03-oct. Se
 - `63cace8`: pregunta que vuela al sello en 760 ms; anillo de cierre de 3400 ms con opacidad 0 → 0,9 → 0 y escala 0,7 → 1,08 (`table_fx.dart`). Cartas de regreso al mazo en 900 ms (`table_director.dart`, `table_view.dart`, `table_motion.dart`). «Interpretar» tiene objetivo de toque minimo de 48 dp en pantalla (`table_director.dart`). Tests en `table_circle_test.dart` y `table_director_test.dart`.
 - `03d2f2a`: etiqueta y accion semantica para «Interpretar» y opciones/centro del radial; medicion de 48 dp en mazo, monton, sello, radial, deshacer y lista a 360 × 760 (`table_view.dart`, `table_director.dart` y tests de la mesa). Se verificaron nombre lunar y carta pendiente.
 - `e9fa128` (revision del 05-oct): `table_controller.dart` consumia el checkpoint antes de confirmar la primera operacion del gesto. Una peticion fallida dejaba la siguiente con `checkpoint: false` y anulaba el deshacer del servidor. El test en `table_controller_test.dart` fallo antes con `[false]` en lugar de `[true]`; el controlador ahora confirma el checkpoint despues de recibir respuesta. Tambien conserva el deshacer previo si falla una operacion fuera del gesto.
+- Segunda correccion del 05-oct: `undo()` retiraba la oferta antes de confirmar el deshacer del servidor. Un fallo de red impedia reintentarlo; el test fallo antes con `canUndo == false` y pasa despues de mover el retiro al final de la operacion.
 
 ## Medido
 
@@ -29,11 +30,12 @@ La rama `feat/mesa-tarot` avanzo desde el fallo visto en el GN2200 el 03-oct. Se
 - A 360 × 760, el abanico automatico de 78 deja 3,27 dp entre posiciones en zoom 1 y 8,49 dp en zoom 2,6, calculados con `TableCamera`. El bordado tenia unos 31 dp de alto proyectado; una prueba fallo al tocar a 23 dp de su centro y paso tras ampliar el objetivo a 48 dp.
 - Antes del arreglo del ticker, `flutter test` dio 839 aprobadas, 7 saltadas y 34 fallidas con `Looking up a deactivated widget's ancestor is unsafe`. Despues, `flutter analyze` sin avisos y `flutter test` 877 aprobadas, 7 capturas manuales saltadas. Las pruebas del anillo verifican 3400 ms y «reducir movimiento»; las del vuelo, 760 ms y ausencia con «reducir movimiento».
 - Tras la correccion del checkpoint: `flutter analyze` sin avisos; `flutter test` 879 aprobadas y 7 capturas manuales saltadas. El test de regresion fallo antes del arreglo y las 20 pruebas del controlador pasaron despues.
+- Tras la correccion del reintento de deshacer: 21 pruebas del controlador aprobadas; `flutter analyze` sin avisos y `flutter test` 880 aprobadas, 7 capturas manuales saltadas.
 
 ## Estado actual
 
 - Rama: `feat/mesa-tarot`, worktree `D:\Proyectos\Arcanum-mesa`. Ultimo commit de codigo: `e9fa128`.
-- Puertas Flutter: analisis sin avisos; 879 tests aprobados, 7 saltados. Backend sin cambios desde la fase 5; no se ejecutaron `pytest` ni migraciones en esta tanda.
+- Puertas Flutter: analisis sin avisos; 880 tests aprobados, 7 saltados. Backend sin cambios desde la fase 5; no se ejecutaron `pytest` ni migraciones en esta tanda.
 - Sin push ni merge a `main`. La fase 8 sigue sin empezar.
 
 ## Pendiente en el GN2200
