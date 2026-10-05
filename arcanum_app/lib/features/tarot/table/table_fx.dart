@@ -15,6 +15,233 @@ import '../../oraculo/widgets/tarot_card.dart';
 import 'table_geometry.dart';
 import 'table_quality.dart';
 
+class SealFlightEmitter extends ChangeNotifier {
+  ({String text, Rect from, Rect to})? flight;
+
+  void fly(String text, Rect from, Rect to) {
+    flight = (text: text, from: from, to: to);
+    notifyListeners();
+  }
+}
+
+class SealFlightLayer extends StatefulWidget {
+  const SealFlightLayer({super.key, required this.emitter});
+
+  final SealFlightEmitter emitter;
+
+  @override
+  State<SealFlightLayer> createState() => _SealFlightLayerState();
+}
+
+class _SealFlightLayerState extends State<SealFlightLayer>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _progress;
+  ({String text, Rect from, Rect to})? _flight;
+
+  @override
+  void initState() {
+    super.initState();
+    _progress =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 760),
+        )..addStatusListener((status) {
+          if (status == AnimationStatus.completed && mounted) {
+            setState(() => _flight = null);
+          }
+        });
+    widget.emitter.addListener(_fly);
+  }
+
+  @override
+  void didUpdateWidget(SealFlightLayer old) {
+    super.didUpdateWidget(old);
+    if (old.emitter != widget.emitter) {
+      old.emitter.removeListener(_fly);
+      widget.emitter.addListener(_fly);
+    }
+  }
+
+  void _fly() {
+    if (MediaQuery.disableAnimationsOf(context)) return;
+    setState(() => _flight = widget.emitter.flight);
+    _progress.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    widget.emitter.removeListener(_fly);
+    _progress.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: IgnorePointer(
+      child: RepaintBoundary(
+        child: AnimatedBuilder(
+          animation: _progress,
+          builder: (context, _) {
+            final flight = _flight;
+            if (flight == null || _progress.value >= 1) {
+              return const SizedBox.shrink();
+            }
+            final raw = TableQualityScope.levelOf(context) >= 2
+                ? halfRate(_progress.value, _progress.duration!)
+                : _progress.value;
+            final t = const Cubic(.5, 0, .2, 1).transform(raw);
+            final rect = Rect.lerp(flight.from, flight.to, t)!;
+            return Stack(
+              children: [
+                Positioned.fromRect(
+                  rect: rect,
+                  child: Opacity(
+                    opacity: 1 - t,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4A0E1A),
+                        border: Border.all(
+                          color: const Color(0xFFB8960C),
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(14 + t * 28),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Text(
+                          flight.text,
+                          maxLines: 3,
+                          overflow: TextOverflow.clip,
+                          style: const TextStyle(color: Color(0xFFF5F0E8)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    ),
+  );
+}
+
+/// Dispara el anillo al cerrar una lectura.
+class CircleMarkEmitter extends ChangeNotifier {
+  int epoch = 0;
+
+  void mark() {
+    epoch++;
+    notifyListeners();
+  }
+}
+
+class CircleMarkLayer extends StatefulWidget {
+  const CircleMarkLayer({super.key, required this.emitter});
+
+  final CircleMarkEmitter emitter;
+
+  @override
+  State<CircleMarkLayer> createState() => _CircleMarkLayerState();
+}
+
+class _CircleMarkLayerState extends State<CircleMarkLayer>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _progress;
+
+  @override
+  void initState() {
+    super.initState();
+    _progress = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3400),
+    );
+    widget.emitter.addListener(_mark);
+  }
+
+  @override
+  void didUpdateWidget(CircleMarkLayer old) {
+    super.didUpdateWidget(old);
+    if (old.emitter != widget.emitter) {
+      old.emitter.removeListener(_mark);
+      widget.emitter.addListener(_mark);
+    }
+  }
+
+  void _mark() {
+    if (MediaQuery.disableAnimationsOf(context)) return;
+    _progress.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    widget.emitter.removeListener(_mark);
+    _progress.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: IgnorePointer(
+      child: RepaintBoundary(
+        child: AnimatedBuilder(
+          animation: _progress,
+          builder: (context, _) => CustomPaint(
+            size: const Size(TableGeometry.width, TableGeometry.height),
+            painter: CircleMarkPainter(
+              TableQualityScope.levelOf(context) >= 2
+                  ? halfRate(_progress.value, _progress.duration!)
+                  : _progress.value,
+              glow: TableQualityScope.levelOf(context) == 0,
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class CircleMarkPainter extends CustomPainter {
+  const CircleMarkPainter(this.progress, {required this.glow});
+
+  final double progress;
+  final bool glow;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0 || progress >= 1) return;
+    final opacity = progress < .3
+        ? .9 * progress / .3
+        : .9 * (1 - progress) / .7;
+    final radius = 220 * (.7 + .38 * Curves.easeOut.transform(progress));
+    final center = const Offset(300, 484);
+    if (glow) {
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3
+          ..color = Color.fromRGBO(237, 174, 48, .7 * opacity)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20),
+      );
+    }
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..color = Color.fromRGBO(236, 215, 154, opacity),
+    );
+  }
+
+  @override
+  bool shouldRepaint(CircleMarkPainter old) =>
+      old.progress != progress || old.glow != glow;
+}
+
 /// Lo que hay que dibujar de una huella: donde, de que elemento y si es Mayor.
 class Imprint {
   const Imprint({

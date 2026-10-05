@@ -67,7 +67,8 @@ class _TarotTableViewState extends State<TarotTableView>
   /// sobra, acaba de nacer.
   Map<String, PieceView> _last = {};
   final Map<String, Birth?> _births = {};
-  final Map<String, ({PieceView view, TablePose to})> _ghosts = {};
+  final Map<String, ({PieceView view, TablePose to, Duration duration})>
+  _ghosts = {};
 
   /// El abanico se despliega al abrirse y se pliega al recogerse.
   late final AnimationController _fanCtl;
@@ -215,6 +216,18 @@ class _TarotTableViewState extends State<TarotTableView>
                   ),
                 if (widget.moonIllumination case final f?)
                   Positioned.fill(child: MoonlightLayer(illumination: f)),
+                if (back != null)
+                  Transform(
+                    transform: _dir.camera.matrix(),
+                    child: SizedBox(
+                      width: TableGeometry.width,
+                      height: TableGeometry.height,
+                      child: CircleMarkLayer(emitter: _dir.circleMark),
+                    ),
+                  ),
+                Positioned.fill(
+                  child: SealFlightLayer(emitter: _dir.sealFlight),
+                ),
                 // el humo sube por la pantalla, encima de la mesa y bajo el radial
                 Positioned.fill(child: SmokeLayer(emitter: _dir.smoke)),
                 if (_dir.radial != null) _RadialOverlay(director: _dir),
@@ -278,7 +291,13 @@ class _TarotTableViewState extends State<TarotTableView>
       _births.remove(e.key);
       final to = _dir.takeExit(e.key);
       // con «reducir movimiento» lo que se va desaparece, sin vuelo
-      if (to != null && !still) _ghosts[e.key] = (view: e.value, to: to);
+      if (to != null && !still) {
+        _ghosts[e.key] = (
+          view: e.value,
+          to: to,
+          duration: _dir.takeExitDuration(e.key),
+        );
+      }
     }
     _last = now;
   }
@@ -414,26 +433,32 @@ class _TarotTableViewState extends State<TarotTableView>
     );
   }
 
-  Widget _ghost(String id, PieceView view, TablePose to, ui.Image back) =>
-      DepartingPiece(
-        key: ValueKey('ghost:$id'),
-        from: view.pose,
-        to: to,
-        onDone: () {
-          if (mounted) setState(() => _ghosts.remove(id));
-        },
-        child: view.kind == PieceKind.pile
-            ? CustomPaint(
-                size: const Size(TableGeometry.cardW, TableGeometry.cardH),
-                painter: PilePainter(count: view.count, back: back),
-              )
-            : RawImage(
-                image: back,
-                width: TableGeometry.cardW,
-                height: TableGeometry.cardH,
-                fit: BoxFit.fill,
-              ),
-      );
+  Widget _ghost(
+    String id,
+    PieceView view,
+    TablePose to,
+    Duration duration,
+    ui.Image back,
+  ) => DepartingPiece(
+    key: ValueKey('ghost:$id'),
+    from: view.pose,
+    to: to,
+    duration: duration,
+    onDone: () {
+      if (mounted) setState(() => _ghosts.remove(id));
+    },
+    child: view.kind == PieceKind.pile
+        ? CustomPaint(
+            size: const Size(TableGeometry.cardW, TableGeometry.cardH),
+            painter: PilePainter(count: view.count, back: back),
+          )
+        : RawImage(
+            image: back,
+            width: TableGeometry.cardW,
+            height: TableGeometry.cardH,
+            fit: BoxFit.fill,
+          ),
+  );
 
   Widget _table(ui.Image back) {
     final pieces = _dir.pieces();
@@ -501,7 +526,7 @@ class _TarotTableViewState extends State<TarotTableView>
           SealPiece(at: TableDirector.sealAt, open: seal.open),
         for (final e in _ghosts.entries)
           if (e.value.view.kind == PieceKind.pile)
-            _ghost(e.key, e.value.view, e.value.to, back),
+            _ghost(e.key, e.value.view, e.value.to, e.value.duration, back),
         // la huella va bajo la carta: sale de sus bordes
         for (final e in _imprints.entries)
           ImprintPiece(
@@ -530,7 +555,7 @@ class _TarotTableViewState extends State<TarotTableView>
             ),
         for (final e in _ghosts.entries)
           if (e.value.view.kind == PieceKind.card)
-            _ghost(e.key, e.value.view, e.value.to, back),
+            _ghost(e.key, e.value.view, e.value.to, e.value.duration, back),
       ],
     );
   }

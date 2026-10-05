@@ -52,6 +52,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
     with WidgetsBindingObserver
     implements TableEffects {
   TableDirector? _director;
+  final GlobalKey _tableRootKey = GlobalKey();
 
   /// Panel anclado abierto (D7): como mucho uno.
   ({Rect anchor, String title, WidgetBuilder body})? _panel;
@@ -154,6 +155,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
         backgroundColor: ArcanumColors.background,
         body: SafeArea(
           child: Stack(
+            key: _tableRootKey,
             children: [
               Positioned.fill(child: body),
               // encima de la mesa y fuera de su Listener: sus toques no tocan el paño
@@ -363,7 +365,18 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
       'Sellar la pregunta',
       (context) => _SealForm(
         onCancel: _closePanel,
-        onSeal: (q) {
+        onSeal: (q, fieldRect) {
+          final root = _tableRootKey.currentContext?.findRenderObject();
+          if (root is RenderBox) {
+            dir.sealFlight.fly(
+              q,
+              Rect.fromPoints(
+                root.globalToLocal(fieldRect.topLeft),
+                root.globalToLocal(fieldRect.bottomRight),
+              ),
+              dir.sealScreenRect,
+            );
+          }
           _ops.arrange((s) => s.copyWith(seal: () => Seal(text: q)));
           dir.buzz(Buzz.seal);
           _closePanel();
@@ -435,6 +448,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
   }
 
   Future<void> _closeCircle() async {
+    _director?.prepareCircleClose();
     try {
       await _ops.closeCircle();
       _director?.circleClosed();
@@ -444,6 +458,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
       });
       toast('Círculo cerrado. La lectura quedó guardada en Lecturas.');
     } on Object catch (e) {
+      _director?.cancelCircleClose();
       error(e);
     }
   }
@@ -565,7 +580,7 @@ const _muted = TextStyle(
 class _SealForm extends StatefulWidget {
   const _SealForm({required this.onCancel, required this.onSeal});
   final VoidCallback onCancel;
-  final ValueChanged<String> onSeal;
+  final void Function(String, Rect) onSeal;
 
   @override
   State<_SealForm> createState() => _SealFormState();
@@ -573,6 +588,7 @@ class _SealForm extends StatefulWidget {
 
 class _SealFormState extends State<_SealForm> {
   final _text = TextEditingController();
+  final _fieldKey = GlobalKey();
 
   @override
   void dispose() {
@@ -583,7 +599,9 @@ class _SealFormState extends State<_SealForm> {
   void _seal() {
     final q = _text.text.trim();
     if (q.isEmpty) return widget.onCancel();
-    widget.onSeal(q);
+    final field = _fieldKey.currentContext?.findRenderObject();
+    if (field is! RenderBox) return;
+    widget.onSeal(q, field.localToGlobal(Offset.zero) & field.size);
   }
 
   @override
@@ -592,6 +610,7 @@ class _SealFormState extends State<_SealForm> {
     mainAxisSize: MainAxisSize.min,
     children: [
       TextField(
+        key: _fieldKey,
         controller: _text,
         autofocus: true,
         maxLength: 300,

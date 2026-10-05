@@ -423,6 +423,12 @@ void main() {
                 (k) => k.copyWith(faceUp: true),
               ),
             );
+        final embroidery = dir.embroideryScreenRect;
+        expect(embroidery.height, lessThan(48));
+        expect(
+          dir.hitAtScreen(embroidery.center.translate(0, 23)),
+          isA<HitEmbroidery>(),
+        );
         await tap(TableDirector.embroideryAt);
         expect(fx.interpretation, 1);
       },
@@ -543,6 +549,12 @@ void main() {
       expect(server.closedArgs!['placements'], [
         {'slug': slug, 'slot': 0},
       ]);
+      expect(dir.circleMark.epoch, 1);
+      expect(dir.takeExit('card:$slug'), isNotNull);
+      expect(
+        dir.takeExitDuration('card:$slug'),
+        const Duration(milliseconds: 900),
+      );
       expect(fx.toasts.last, startsWith('Círculo cerrado'));
     });
   });

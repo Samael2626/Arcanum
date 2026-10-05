@@ -23,6 +23,7 @@ import 'card_physics.dart';
 import 'gesture_grammar.dart';
 import 'radial_logic.dart';
 import 'table_camera.dart';
+import 'table_fx.dart';
 import 'table_geometry.dart';
 import 'table_haptics.dart';
 import 'table_smoke.dart';
@@ -194,6 +195,8 @@ class TableDirector extends ChangeNotifier {
 
   /// Humo de la mesa (la vista lo pinta encima, en pantalla).
   final SmokeEmitter smoke = SmokeEmitter();
+  final CircleMarkEmitter circleMark = CircleMarkEmitter();
+  final SealFlightEmitter sealFlight = SealFlightEmitter();
 
   /// Centro del circulo bordado (especificacion §1): de ahi sale el humo al
   /// cerrar el circulo.
@@ -208,12 +211,15 @@ class TableDirector extends ChangeNotifier {
   /// Se cerro el circulo: vibracion y humo desde el centro del bordado.
   void circleClosed() {
     buzz(Buzz.closeCircle);
+    circleMark.mark();
     smoke.puff(camera.toScreen(circleCenter), 26);
   }
 
   @override
   void dispose() {
     smoke.dispose();
+    circleMark.dispose();
+    sealFlight.dispose();
     super.dispose();
   }
 
@@ -259,6 +265,7 @@ class TableDirector extends ChangeNotifier {
   // que se marcha, y la vista lo anima. Se consume al leerlo.
   final Map<String, ({TablePose from, Duration delay})> _births = {};
   final Map<String, TablePose> _exits = {};
+  final Set<String> _circleExits = {};
 
   /// Barajado en curso, para que la vista lo represente. `epoch` cambia en
   /// cada barajado, aunque sea del mismo monton y con el mismo estilo.
@@ -268,6 +275,10 @@ class TableDirector extends ChangeNotifier {
   ({TablePose from, Duration delay})? takeBirth(String id) =>
       _births.remove(id);
   TablePose? takeExit(String id) => _exits.remove(id);
+
+  Duration takeExitDuration(String id) => _circleExits.remove(id)
+      ? const Duration(milliseconds: 900)
+      : const Duration(milliseconds: 480);
 
   void _born(String id, TablePose from, [Duration delay = Duration.zero]) =>
       _births[id] = (from: from, delay: delay);
@@ -282,6 +293,20 @@ class TableDirector extends ChangeNotifier {
     for (final c in table.cards) {
       _exits['card:${c.slug}'] = _pilePose(target);
     }
+  }
+
+  void prepareCircleClose() {
+    final pid = table.activePid;
+    if (pid == null) return;
+    _allExitTo(pid);
+    _circleExits.addAll(table.cards.map((c) => 'card:${c.slug}'));
+  }
+
+  void cancelCircleClose() {
+    for (final id in _circleExits) {
+      _exits.remove(id);
+    }
+    _circleExits.clear();
   }
 
   TableState get table => ops.table;
@@ -319,6 +344,12 @@ class TableDirector extends ChangeNotifier {
     for (final (dx, dy) in [(-1, -1), (1, -1), (1, 1), (-1, 1)])
       camera.toScreen(embroideryAt + Offset(dx * 90.0, dy * 28.0)),
   ]);
+
+  static Rect _touchRect(Rect rect) => Rect.fromCenter(
+        center: rect.center,
+        width: math.max(48, rect.width),
+        height: math.max(48, rect.height),
+      );
 
   /// Lo que ocupa el sello en la mesa.
   static Rect get sealRect =>
@@ -570,7 +601,7 @@ class TableDirector extends ChangeNotifier {
       final h = piece(v);
       if (h != null) return h;
     }
-    if (readyToInterpret && embroideryRect.contains(ground)) {
+    if (readyToInterpret && _touchRect(embroideryScreenRect).contains(screen)) {
       return const HitEmbroidery();
     }
     if (table.seal != null &&
@@ -1276,7 +1307,13 @@ class TableDirector extends ChangeNotifier {
     if (!table.cards.any((c) => !c.aside)) {
       return effects.toast('No hay cartas sobre el paño que guardar');
     }
-    await ops.closeCircle();
+    prepareCircleClose();
+    try {
+      await ops.closeCircle();
+    } on Object {
+      cancelCircleClose();
+      rethrow;
+    }
     circleClosed();
     effects.toast('Círculo cerrado. La lectura quedó guardada en Lecturas.');
   }
