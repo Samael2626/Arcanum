@@ -1,4 +1,5 @@
 // Acceso, guardado y restauracion de Comparar en un telefono 390x844.
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:arcanum_app/core/api/arcanum_api.dart';
@@ -9,6 +10,7 @@ import 'package:arcanum_app/features/grimorio/grimorio_detail.dart';
 import 'package:arcanum_app/features/grimorio/grimorio_editor.dart';
 import 'package:arcanum_app/features/sigilos/compare_screen.dart';
 import 'package:arcanum_app/features/sigilos/sigil_store.dart';
+import 'package:arcanum_app/shared/widgets/gold_button.dart';
 import 'package:arcanum_sigilos/arcanum_sigilos.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -23,10 +25,12 @@ class _Auth extends AuthNotifier {
 class _Api extends ArcanumApi {
   _Api() : super(Dio());
   final created = <Map<String, dynamic>>[];
+  Completer<void>? createGate;
   Map<String, dynamic> detail = const {};
   @override
   Future<Map<String, dynamic>> grimoireCreate(Map<String, dynamic> body) async {
     created.add(body);
+    if (createGate != null) await createGate!.future;
     return {'id': 'compare-1'};
   }
   @override
@@ -93,6 +97,43 @@ void main() {
     final plain = utf8.decode(base64Decode(body['encrypted_content'] as String));
     expect(decodeCompareEntry(plain)!.name, 'Samuel');
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('editar el nombre exige volver a comparar antes de guardar', (tester) async {
+    _phone(tester);
+    await tester.pumpWidget(_app(const CompareScreen(), _Api()));
+    await tester.enterText(find.byType(TextField).first, 'Samuel');
+    await tester.tap(find.text('Comparar').first);
+    await tester.pump();
+    final save = find.widgetWithText(GoldButton, 'Guardar en el Grimorio');
+    expect(tester.widget<GoldButton>(save).onPressed, isNotNull);
+    await tester.enterText(find.byType(TextField).first, 'Gabriel');
+    await tester.pump();
+    expect(tester.widget<GoldButton>(save).onPressed, isNull);
+    expect(find.textContaining('Vuelve a comparar'), findsOneWidget);
+    await tester.tap(find.text('Comparar').first);
+    await tester.pump();
+    expect(tester.widget<GoldButton>(save).onPressed, isNotNull);
+  });
+
+  testWidgets('editar durante el guardado conserva el aviso de cambios pendientes', (tester) async {
+    _phone(tester);
+    final api = _Api()..createGate = Completer<void>();
+    await tester.pumpWidget(_app(const CompareScreen(), api));
+    await tester.enterText(find.byType(TextField).first, 'Samuel');
+    await tester.tap(find.text('Comparar').first);
+    await tester.pump();
+    await _show(tester, find.text('Guardar en el Grimorio'));
+    await tester.tap(find.text('Guardar en el Grimorio'));
+    await tester.pump();
+    expect(api.created, hasLength(1));
+    final state = tester.state<CompareScreenState>(find.byType(CompareScreen));
+    state.debugDoc.planetChoice = 'mars';
+    api.createGate!.complete();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Cerrar'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Los cambios de esta comparación se perderán'), findsOneWidget);
   });
 
   testWidgets('el detalle restaura la lamina', (tester) async {

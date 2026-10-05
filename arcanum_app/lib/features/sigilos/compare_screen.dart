@@ -35,7 +35,8 @@ class CompareScreenState extends ConsumerState<CompareScreen> {
   @visibleForTesting
   CompareDoc get debugDoc => doc;
   String get _snap => jsonEncode(doc.toJson());
-  bool get _dirty => doc.ready && _snap != _savedSnapshot;
+  bool get _nameChanged => _name.text.trim() != doc.name;
+  bool get _dirty => _nameChanged || (doc.ready && _snap != _savedSnapshot);
 
   @override
   void initState() {
@@ -64,6 +65,8 @@ class CompareScreenState extends ConsumerState<CompareScreen> {
   }
 
   Future<void> _save() async {
+    if (!doc.ready || _nameChanged) return;
+    final snapshot = _snap;
     setState(() => _saving = true);
     try {
       final store = SigilStore(
@@ -72,7 +75,7 @@ class CompareScreenState extends ConsumerState<CompareScreen> {
         ref.read(userPlaceProvider),
       );
       _savedId = await store.saveCompare(doc, entryId: _savedId);
-      _savedSnapshot = _snap;
+      _savedSnapshot = snapshot;
       _toast('Comparación guardada en tu Grimorio.');
     } catch (error) {
       debugPrint('ARCANUM comparar: fallo al guardar ($error).');
@@ -174,9 +177,13 @@ class CompareScreenState extends ConsumerState<CompareScreen> {
         enableIMEPersonalizedLearning: false,
         style: ArcanumText.body(16),
         decoration: const InputDecoration(hintText: 'Nombre o palabra'),
+        onChanged: (_) => setState(() {}),
         onSubmitted: (_) => _generate(),
       ),
       GoldButton(label: 'Comparar', onPressed: _generate),
+      if (_nameChanged && doc.ready)
+        Text('Vuelve a comparar el nombre editado antes de guardar o compartir.',
+          style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted)),
       sectionTitle('Kamea'),
       Text(
         'La tabla cambia la figura de Kamea; las tres construcciones usan el mismo nombre.',
@@ -218,7 +225,7 @@ class CompareScreenState extends ConsumerState<CompareScreen> {
       GoldButton(
         label: _savedId == null ? 'Guardar en el Grimorio' : 'Guardar cambios',
         loading: _saving,
-        onPressed: doc.ready ? _save : null,
+        onPressed: doc.ready && !_nameChanged ? _save : null,
       ),
       sectionTitle('Compartir'),
       Row(
@@ -226,14 +233,14 @@ class CompareScreenState extends ConsumerState<CompareScreen> {
           Expanded(
             child: familiaOutlined(
               'Imagen (PNG)',
-              doc.ready ? () => _share(png: true) : null,
+              doc.ready && !_nameChanged ? () => _share(png: true) : null,
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: familiaOutlined(
               'Vector (SVG)',
-              doc.ready ? () => _share(png: false) : null,
+              doc.ready && !_nameChanged ? () => _share(png: false) : null,
             ),
           ),
         ],

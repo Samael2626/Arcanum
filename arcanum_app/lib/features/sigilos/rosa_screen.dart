@@ -80,11 +80,12 @@ class RosaScreenState extends ConsumerState<RosaScreen> {
 
   // ── Guardar y compartir ───────────────────────────────────────
   Future<void> _save() async {
+    final snapshot = _snap;
     setState(() => _saving = true);
     try {
       final store = SigilStore(ref.read(arcanumApiProvider), ref.read(grimoireCryptoProvider), ref.read(userPlaceProvider));
       _savedId = await store.saveRosa(doc, entryId: _savedId);
-      _savedSnapshot = _snap;
+      _savedSnapshot = snapshot;
       _toast('Rosa-Cruz guardada en tu Grimorio.');
     } catch (e) {
       debugPrint('ARCANUM rosa: fallo al guardar ($e).');

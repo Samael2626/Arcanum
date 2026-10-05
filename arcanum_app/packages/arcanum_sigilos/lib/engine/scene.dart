@@ -83,7 +83,7 @@ String primsSVG(List<LayerPrim> prims, String color, {bool outline = false}) => 
             final drawn = outline ? textOutlineSVG(t, color, o) : null;
             if (drawn != null) return drawn;
             final italic = t.font.startsWith('italic');
-            return '<text transform="translate(${f2(t.x)} ${f2(t.y)}) rotate(${f2(t.rot)})" y="${f2(t.size * kTextMid)}" text-anchor="middle" font-family="${italic ? 'Georgia, serif' : t.font}"${italic ? ' font-style="italic"' : ''} font-size="${f2(t.size)}" fill="$color"$o>${esc(t.ch)}</text>';
+            return '<text transform="translate(${f2(t.x)} ${f2(t.y)}) rotate(${f2(t.rot)})" y="${f2(t.size * kTextMid)}" text-anchor="${t.alignStart ? 'start' : 'middle'}" font-family="${italic ? 'Georgia, serif' : t.font}"${italic ? ' font-style="italic"' : ''} font-size="${f2(t.size)}" fill="$color"$o>${esc(t.ch)}</text>';
           }(),
       };
     }).join();
@@ -91,7 +91,7 @@ String primsSVG(List<LayerPrim> prims, String color, {bool outline = false}) => 
 LayerPrim _withOp(LayerPrim p, double k) => switch (p) {
       CirclePrim c => CirclePrim(c.cx, c.cy, c.r, c.w, c.op * k),
       PolyPrim q => PolyPrim(q.pts, q.closed, q.w, q.op * k),
-      TextPrim t => TextPrim(t.x, t.y, t.rot, t.size, t.ch, t.font, t.op * k),
+      TextPrim t => TextPrim(t.x, t.y, t.rot, t.size, t.ch, t.font, t.op * k, alignStart: t.alignStart),
       GlyphLayerPrim g => GlyphLayerPrim(g.x, g.y, g.rot, g.size, g.ch, g.op * k),
     };
 

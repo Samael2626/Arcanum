@@ -9,6 +9,7 @@ import 'package:arcanum_app/features/grimorio/grimorio_editor.dart';
 import 'package:arcanum_app/features/grimorio/grimorio_detail.dart';
 import 'package:arcanum_app/features/sigilos/personal_screen.dart';
 import 'package:arcanum_app/features/sigilos/sigil_store.dart';
+import 'package:arcanum_app/shared/widgets/gold_button.dart';
 import 'package:arcanum_sigilos/arcanum_sigilos.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -56,6 +57,22 @@ Future<void> _show(WidgetTester t, Finder f) async {
 }
 
 void main() {
+  testWidgets('editar el nombre exige volver a trazar antes de guardar', (tester) async {
+    _phone(tester);
+    await tester.pumpWidget(_app(const PersonalScreen(), _Api()));
+    await tester.enterText(find.byType(TextField).first, 'Samuel');
+    await tester.tap(find.text('Trazar figura'));
+    await tester.pump();
+    final save = find.widgetWithText(GoldButton, 'Guardar en el Grimorio');
+    expect(tester.widget<GoldButton>(save).onPressed, isNotNull);
+    await tester.enterText(find.byType(TextField).first, 'Gabriel');
+    await tester.pump();
+    expect(tester.widget<GoldButton>(save).onPressed, isNull);
+    expect(find.textContaining('Vuelve a trazar'), findsOneWidget);
+    await tester.tap(find.text('Trazar figura'));
+    await tester.pump();
+    expect(tester.widget<GoldButton>(save).onPressed, isNotNull);
+  });
   testWidgets('el editor ofrece el sello y la pantalla cabe en 390x844', (tester) async {
     _phone(tester);
     await tester.pumpWidget(_app(const GrimorioEditor(), _Api()));
