@@ -16,7 +16,7 @@ import '../domain/table_models.dart';
 /// Cara dibujable de una carta de la mesa.
 TarotFace tarotFaceOf(CardFace f) => TarotFace.resolve({
   'slug': f.slug,
-  'name': f.nameEs ?? f.name ?? '',
+  'name': f.commonName,
   'arcana': f.arcana,
   'suit': f.suit,
   'number': f.number,
@@ -272,7 +272,8 @@ class _CardPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final accent = tarotAtmosphere(face).accent;
     final rev = card.face.reversed;
-    final name = card.face.nameEs ?? card.face.name ?? face.name;
+    final name = card.face.commonName;
+    final gd = card.face.goldenDawnTitle;
     return Semantics(
       container: true,
       label:
@@ -363,6 +364,17 @@ class _CardPage extends StatelessWidget {
                                 color: ArcanumColors.ivory,
                               ),
                             ),
+                            if (gd != null) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                gd,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontStyle: FontStyle.italic,
+                                  color: ArcanumColors.goldMuted,
+                                ),
+                              ),
+                            ],
                             const SizedBox(height: 4),
                             Text(
                               [

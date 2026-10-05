@@ -1524,7 +1524,7 @@ class TableDirector extends ChangeNotifier {
         final hidden = table.cards.where((k) => !k.aside && !k.faceUp).length;
         final sp = spread;
         final title = c.faceUp
-            ? (c.face.nameEs ?? c.face.name ?? '')
+            ? c.face.commonName
             : c.slot != null && sp != null
             ? '${c.slot! + 1} · ${sp.slots[c.slot!].name}'
             : c.aside

@@ -417,6 +417,7 @@ class TableController extends AsyncNotifier<TableState> implements TableOps {
                         reversed: sense[c.slug] ?? c.face.reversed,
                         name: c.face.name,
                         nameEs: c.face.nameEs,
+                        titleEs: c.face.titleEs,
                         arcana: c.face.arcana,
                         suit: c.face.suit,
                         number: c.face.number,

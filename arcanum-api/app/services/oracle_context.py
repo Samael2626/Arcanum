@@ -229,6 +229,16 @@ def _correspondencias(c: dict) -> str:
     return " · ".join(partes)
 
 
+def card_display_name(c: dict) -> str:
+    """Nombre con el que el modelo ve la carta, y con el que el guarda la exige.
+
+    `name_es` es el nombre comun («Dos de Espadas»); `name` y `slug` quedan
+    para sesiones guardadas antes de que existiera. Contexto y guarda usan
+    esta misma funcion: si divergen, cada lectura se reintenta (y se paga).
+    """
+    return c.get("name_es") or c.get("name") or c.get("slug") or ""
+
+
 def build_tarot_context(session: DivinationSession) -> str:
     """Render compacto de una tirada de tarot guardada, organizada POR POSICIÓN.
 
@@ -256,9 +266,7 @@ def build_tarot_context(session: DivinationSession) -> str:
     lineas: list[str] = [f"TIRADA DE TAROT DEL CONSULTANTE (spread: {spread})"]
     for c in cards:
         pos = c.get("position") or "Carta"
-        # Nombre ES limpio (name_es ya viene derivado sin el descriptor
-        # bilingüe); fallback a name/slug para compat con sesiones viejas.
-        name = c.get("name_es") or c.get("name") or c.get("slug") or "?"
+        name = card_display_name(c) or "?"
         orient = "derecha" if c.get("drawn_upright", True) else "invertida"
         meaning = (c.get("meaning") or "").strip()
         # EL CORCHETE DE CORRESPONDENCIAS YA NO VIAJA. Derogado el 27-sep-2026.

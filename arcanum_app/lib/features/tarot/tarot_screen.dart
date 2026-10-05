@@ -339,13 +339,15 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            f.nameEs ?? f.name ?? 'Carta',
+            f.commonName,
             style: const TextStyle(
               fontSize: 22,
               height: 1.1,
               color: ArcanumColors.ivory,
             ),
           ),
+          if (f.goldenDawnTitle case final gd?)
+            Text(gd, style: _muted.copyWith(fontStyle: FontStyle.italic)),
           Text(card.reversed ? 'Invertida' : 'Al derecho', style: _muted),
           const SizedBox(height: 8),
           if (inSpread)

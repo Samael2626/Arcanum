@@ -100,6 +100,7 @@ class CardFace {
     required this.reversed,
     this.name,
     this.nameEs,
+    this.titleEs,
     this.arcana,
     this.suit,
     this.number,
@@ -109,6 +110,9 @@ class CardFace {
   final bool reversed;
   final String? name;
   final String? nameEs;
+
+  /// Titulo Golden Dawn en español («Señor de la Paz Restaurada»).
+  final String? titleEs;
   final String? arcana;
   final String? suit;
   final int? number;
@@ -118,6 +122,7 @@ class CardFace {
     reversed: j['reversed'] as bool? ?? false,
     name: j['name'] as String?,
     nameEs: j['name_es'] as String?,
+    titleEs: j['title_es'] as String?,
     arcana: j['arcana'] as String?,
     suit: j['suit'] as String?,
     number: j['number'] as int?,
@@ -128,10 +133,26 @@ class CardFace {
     'reversed': reversed,
     'name': name,
     'name_es': nameEs,
+    'title_es': titleEs,
     'arcana': arcana,
     'suit': suit,
     'number': number,
   };
+
+  /// Nombre que reconoce cualquiera. Un menor es su numero y su palo, que es
+  /// lo que dice su slug: lo guardado antes traia el titulo GD en `nameEs`.
+  String get commonName => arcana == 'minor'
+      ? [
+          for (final w in slug.split('-'))
+            w == 'de' ? w : '${w[0].toUpperCase()}${w.substring(1)}',
+        ].join(' ')
+      : (nameEs ?? name ?? slug);
+
+  /// Titulo Golden Dawn, para ir debajo del nombre; null si no aporta nada.
+  String? get goldenDawnTitle {
+    final t = titleEs ?? (arcana == 'minor' ? nameEs : null);
+    return t == null || t == commonName ? null : t;
+  }
 }
 
 class PileView {

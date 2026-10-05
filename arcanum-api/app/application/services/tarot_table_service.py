@@ -17,7 +17,7 @@ from app.application.ports.repositories import (
     TarotTableRepository,
 )
 from app.application.services.tarot_service import TarotService
-from app.data.deck_data import derive_name_es
+from app.data.deck_data import derive_name_es, derive_title_es
 from app.domain.decks import Deck, get_deck, list_decks
 from app.domain.entities import TarotCardEntity, TarotReadingEntity, TarotTableEntity
 from app.domain.spreads import get_spread
@@ -65,7 +65,7 @@ def card_view(card: TarotCardEntity, reversed_: bool) -> dict:
     """Lo que el cliente necesita para pintar la cara de una carta ya sacada."""
     return {
         "slug": card.slug, "name": TarotService._display_name(card), "name_es": derive_name_es(card),
-        "arcana": card.arcana, "suit": card.suit, "number": card.number, "reversed": reversed_,
+        "title_es": derive_title_es(card), "arcana": card.arcana, "suit": card.suit, "number": card.number, "reversed": reversed_,
     }
 
 

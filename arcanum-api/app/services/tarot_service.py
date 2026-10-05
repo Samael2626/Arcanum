@@ -11,7 +11,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.data.deck_data import LEGACY_STATIC_DECK, attr, derive_name_es
+from app.data.deck_data import LEGACY_STATIC_DECK, attr, derive_name_es, derive_title_es
 from app.domain.spreads import get_spread
 from app.models.tarot import TarotCard, TarotReading
 from app.schemas.tarot import TarotCardInDeck, TarotReadingResponse
@@ -83,6 +83,7 @@ def draw_cards(deck: list, *, count: int = 3,
             "decan": attr(card, "decan"),
             "zodiac": attr(card, "zodiac"),
             "name_es": derive_name_es(card),
+            "title_es": derive_title_es(card),
         })
     return result
 
@@ -162,6 +163,7 @@ def _hydrate(card: TarotCard, *, position: Optional[str],
         zodiac=card.zodiac,
         title_book_t=card.title_book_t,
         name_es=derive_name_es(card),
+        title_es=derive_title_es(card),
         position=position,
         reversed=reversed_,
         meaning=card.meaning_reversed if reversed_ else card.meaning_upright,

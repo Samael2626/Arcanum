@@ -46,6 +46,7 @@ class TarotCardInDeck(BaseModel):
     zodiac: Optional[str] = None
     title_book_t: Optional[str] = None
     name_es: Optional[str] = None             # ADITIVO: nombre ES limpio, sin bilingüe
+    title_es: Optional[str] = None            # ADITIVO: titulo Golden Dawn en ES, si difiere
     position: Optional[str] = None            # Pasado/Presente/Futuro, etc.
     reversed: Optional[bool] = False
     meaning: str

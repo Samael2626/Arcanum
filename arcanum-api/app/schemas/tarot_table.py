@@ -74,6 +74,7 @@ class CardFace(BaseModel):
     slug: str
     name: Optional[str] = None
     name_es: Optional[str] = None
+    title_es: Optional[str] = None
     arcana: Optional[str] = None
     suit: Optional[str] = None
     number: Optional[int] = None

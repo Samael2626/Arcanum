@@ -79,7 +79,7 @@ class _TableCardPieceState extends State<TableCardPiece>
     final f = widget.view.card!.face;
     return TarotFace.resolve({
       'slug': f.slug,
-      'name': f.nameEs ?? f.name ?? '',
+      'name': f.commonName,
       'arcana': f.arcana,
       'suit': f.suit,
       'number': f.number,
