@@ -369,7 +369,7 @@ class _TarotTableViewState extends State<TarotTableView>
               : fanPoses(f.start, Offset.lerp(f.start, f.end, t)!, count);
           return CustomPaint(
             size: const Size(TableGeometry.width, TableGeometry.height),
-            painter: FanPainter(poses, back),
+            painter: FanPainter(poses, back, soft: _quality.glow),
           );
         },
       ),
@@ -397,6 +397,7 @@ class _TarotTableViewState extends State<TarotTableView>
             back: back,
             count: pile.count,
             seed: sh.epoch,
+            soft: _quality.glow,
           ),
         ),
       ),

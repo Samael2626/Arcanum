@@ -110,8 +110,11 @@ void main() {
   });
 
   group('en la pantalla de la mesa', () {
-    Future<void> pumpScreen(WidgetTester tester) async {
-      SharedPreferences.setMockInitialValues({});
+    Future<void> pumpScreen(
+      WidgetTester tester, {
+      Map<String, Object> prefs = const {},
+    }) async {
+      SharedPreferences.setMockInitialValues(prefs);
       FlutterSecureStorage.setMockInitialValues({});
       tester.view
         ..physicalSize = const Size(390, 844)
@@ -209,6 +212,33 @@ void main() {
       expect(find.text('LECTURAS GUARDADAS'), findsNothing);
       expect(find.byType(TarotTableScreen), findsOneWidget);
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('Silenciar apaga la vibracion y se recuerda al volver', (
+      tester,
+    ) async {
+      await pumpScreen(tester);
+      await clothMenu(tester, 'Silenciar');
+      expect(find.text('Mesa en silencio: ya no vibra.'), findsOneWidget);
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool(TarotTableScreen.mutedKey), isTrue);
+
+      // al volver a entrar, el radial del paño ofrece volver a oir
+      await tester.pumpWidget(const SizedBox());
+      await pumpScreen(tester, prefs: {TarotTableScreen.mutedKey: true});
+      final g = await tester.startGesture(const Offset(195, 300));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 480)),
+      );
+      await tester.pump(const Duration(milliseconds: 16));
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(find.text('Sonido'), findsOneWidget);
+      expect(find.text('Silenciar'), findsNothing);
+      await g.up();
+      await tester.pump(const Duration(seconds: 2));
     });
   });
 }

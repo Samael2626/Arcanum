@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/api/arcanum_api.dart';
 import '../../core/theme/arcanum_colors.dart';
@@ -38,6 +39,9 @@ final tarotCatalogProvider =
 
 class TarotTableScreen extends ConsumerStatefulWidget {
   const TarotTableScreen({super.key});
+
+  /// Donde se recuerda el silencio de la mesa entre sesiones.
+  static const mutedKey = 'tarot_mesa_silencio';
 
   @override
   ConsumerState<TarotTableScreen> createState() => _TarotTableScreenState();
@@ -77,6 +81,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _loadMuted();
   }
 
   @override
@@ -102,7 +107,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
     effects: this,
     decks: c.decks,
     spreads: c.spreads,
-  );
+  )..muted = _silent;
 
   @override
   Widget build(BuildContext context) {
@@ -248,7 +253,35 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
   void shuffled(String pile, String style) {}
 
   @override
-  void toggleSound() => toast('El sonido de la mesa llega más adelante.');
+  void muteChanged(bool muted) => _saveMuted(muted);
+
+  bool _silent = false;
+
+  Future<void> _loadMuted() async {
+    try {
+      final muted =
+          (await SharedPreferences.getInstance()).getBool(
+            TarotTableScreen.mutedKey,
+          ) ??
+          false;
+      _silent = muted;
+      _director?.muted = muted;
+    } on Object {
+      // sin preferencias se queda como esta: vibrando
+    }
+  }
+
+  Future<void> _saveMuted(bool muted) async {
+    _silent = muted;
+    try {
+      await (await SharedPreferences.getInstance()).setBool(
+        TarotTableScreen.mutedKey,
+        muted,
+      );
+    } on Object {
+      // si no se puede guardar, vale para esta sesion
+    }
+  }
 
   @override
   void openReading(TableCard card) {
@@ -307,7 +340,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
         onCancel: _closePanel,
         onSeal: (q) {
           _ops.arrange((s) => s.copyWith(seal: () => Seal(text: q)));
-          dir.haptics.play(Buzz.seal);
+          dir.buzz(Buzz.seal);
           _closePanel();
         },
       ),
@@ -344,7 +377,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
         interpret: () => _ops.interpret(idempotencyKey: key),
         onReading: (r) {
           // el sello se rompe al interpretar
-          if (seal != null && !seal.open) dir.haptics.play(Buzz.breakSeal);
+          if (seal != null && !seal.open) dir.buzz(Buzz.breakSeal);
           setState(() {
             _panel = null;
             _reading = r;
@@ -379,7 +412,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
   Future<void> _closeCircle() async {
     try {
       await _ops.closeCircle();
-      _director?.haptics.play(Buzz.closeCircle);
+      _director?.buzz(Buzz.closeCircle);
       setState(() {
         _revealing = false;
         _reading = null;

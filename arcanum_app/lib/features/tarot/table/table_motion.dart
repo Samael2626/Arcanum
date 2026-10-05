@@ -193,6 +193,7 @@ class ShuffleTheaterPainter extends CustomPainter {
     required this.back,
     required this.count,
     required this.seed,
+    this.soft = true,
   });
 
   final TablePose pile;
@@ -206,6 +207,11 @@ class ShuffleTheaterPainter extends CustomPainter {
   static final _shadow = Paint()
     ..color = Colors.black.withValues(alpha: .35)
     ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+  static final _sharpShadow = Paint()
+    ..color = Colors.black.withValues(alpha: .28);
+
+  /// Sombra desenfocada; con la calidad baja, nitida.
+  final bool soft;
 
   void _card(Canvas canvas, Offset at, double rotDeg, double lift) {
     final s = pile.scale;
@@ -224,7 +230,7 @@ class ShuffleTheaterPainter extends CustomPainter {
           rect.shift(Offset(0, 3 + lift * .1)),
           const Radius.circular(9),
         ),
-        _shadow,
+        soft ? _shadow : _sharpShadow,
       )
       ..drawImageRect(
         back,
@@ -291,5 +297,5 @@ class ShuffleTheaterPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(ShuffleTheaterPainter old) =>
-      old.t != t || old.style != style || old.pile != pile;
+      old.t != t || old.style != style || old.pile != pile || old.soft != soft;
 }

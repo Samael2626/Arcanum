@@ -16,6 +16,7 @@ import 'table_director.dart';
 import 'table_geometry.dart';
 import 'table_motion.dart';
 import 'table_painters.dart';
+import 'table_quality.dart';
 
 const _cardSize = Size(TableGeometry.cardW, TableGeometry.cardH);
 
@@ -226,7 +227,9 @@ class _TableCardPieceState extends State<TableCardPiece>
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: .45),
-              blurRadius: 6 + widget.view.lift * .15,
+              blurRadius: TableQualityScope.levelOf(context) < 1
+                  ? 6 + widget.view.lift * .15
+                  : 0,
               offset: Offset(0, 3 + widget.view.lift * .08),
             ),
           ],
@@ -298,7 +301,9 @@ class _PendingCardPieceState extends State<PendingCardPiece>
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: .45),
-                  blurRadius: 6 + widget.view.lift * .15,
+                  blurRadius: TableQualityScope.levelOf(context) < 1
+                      ? 6 + widget.view.lift * .15
+                      : 0,
                   offset: Offset(0, 3 + widget.view.lift * .08),
                 ),
               ],
@@ -497,7 +502,10 @@ class _SealPieceState extends State<SealPiece> with TickerProviderStateMixin {
                 ..rotateZ(-6 * math.pi / 180 * jolt),
               child: CustomPaint(
                 size: const Size.square(_d),
-                painter: _SealPainter(crack: widget.open ? crack : 0),
+                painter: _SealPainter(
+                  crack: widget.open ? crack : 0,
+                  soft: TableQualityScope.levelOf(context) < 1,
+                ),
               ),
             );
           },
@@ -508,7 +516,10 @@ class _SealPieceState extends State<SealPiece> with TickerProviderStateMixin {
 }
 
 class _SealPainter extends CustomPainter {
-  _SealPainter({required this.crack});
+  _SealPainter({required this.crack, this.soft = true});
+
+  /// Sombra desenfocada; con la calidad baja, nitida.
+  final bool soft;
 
   /// 0 sellado; hasta 1, la grieta avanzando.
   final double crack;
@@ -521,9 +532,11 @@ class _SealPainter extends CustomPainter {
     canvas.drawCircle(
       c.translate(0, 5),
       r,
-      Paint()
-        ..color = Colors.black.withValues(alpha: .55)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+      soft
+          ? (Paint()
+              ..color = Colors.black.withValues(alpha: .55)
+              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6))
+          : (Paint()..color = Colors.black.withValues(alpha: .4)),
     );
     canvas.drawCircle(
       c,
@@ -586,5 +599,6 @@ class _SealPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_SealPainter old) => old.crack != crack;
+  bool shouldRepaint(_SealPainter old) =>
+      old.crack != crack || old.soft != soft;
 }

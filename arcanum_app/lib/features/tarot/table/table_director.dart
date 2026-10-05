@@ -38,7 +38,9 @@ abstract class TableEffects {
   /// Se toco el sello: sellado no enseña la pregunta; roto, si.
   void openSealInfo(Seal seal) {}
   void openHistory() {}
-  void toggleSound() {}
+
+  /// Se silencio o se volvio a oir la mesa desde el radial del paño.
+  void muteChanged(bool muted) {}
   void creditsRequired() {}
   void error(Object error) {}
 }
@@ -177,7 +179,26 @@ class TableDirector extends ChangeNotifier {
   /// inercia. Lo pone la vista en cada construccion.
   bool reduceMotion = false;
 
-  void _buzz(Buzz b) => unawaited(haptics.play(b));
+  /// Mesa en silencio (radial del paño): sin vibracion, y sin sonido cuando
+  /// llegue. Decidido por Samuel el 05-oct. Lo guarda la pantalla.
+  bool muted = false;
+
+  /// Vibra, salvo con la mesa en silencio. La pantalla lo usa para sellar,
+  /// romper el sello y cerrar el circulo.
+  void buzz(Buzz b) {
+    if (!muted) unawaited(haptics.play(b));
+  }
+
+  void _buzz(Buzz b) => buzz(b);
+
+  void _toggleMute() {
+    muted = !muted;
+    effects.muteChanged(muted);
+    effects.toast(
+      muted ? 'Mesa en silencio: ya no vibra.' : 'La mesa vuelve a vibrar.',
+    );
+  }
+
   List<DeckInfo> decks;
   List<SpreadDef> spreads;
   final math.Random _random;
@@ -1332,12 +1353,12 @@ class TableDirector extends ChangeNotifier {
                     table.fan != null ||
                     table.piles.length > 1),
             hasReadings: true,
-            soundOn: true,
+            soundOn: !muted,
           ),
           (id) async => switch (id) {
             'seal' => effects.openSeal(),
             'hist' => effects.openHistory(),
-            'sound' => effects.toggleSound(),
+            'sound' => _toggleMute(),
             'all' when reading => _openRadial(
               screen,
               'Recoger todo',

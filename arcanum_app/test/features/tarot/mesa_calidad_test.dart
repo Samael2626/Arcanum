@@ -516,5 +516,56 @@ void main() {
       expect(find.byType(ImprintPiece), findsNothing);
       await leaveSaved(tester);
     });
+
+    testWidgets('calidad 1 tambien quita el desenfoque de las sombras', (
+      tester,
+    ) async {
+      final q = TableQuality();
+      await pumpTable(tester, quality: q);
+      await openWithFan(tester);
+      await tapAt(tester, fanPoint(5));
+      await tester.pump(const Duration(milliseconds: 500));
+      bool fanSoft() => tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((w) => w.painter)
+          .whereType<FanPainter>()
+          .single
+          .soft;
+      double cardBlur() {
+        final box = tester.widget<DecoratedBox>(
+          find
+              .descendant(
+                of: find.byType(TableCardPiece),
+                matching: find.byType(DecoratedBox),
+              )
+              .first,
+        );
+        return (box.decoration as BoxDecoration).boxShadow!.first.blurRadius;
+      }
+
+      expect(fanSoft(), isTrue);
+      expect(cardBlur(), greaterThan(0));
+      q.value = 1;
+      await tester.pump();
+      expect(fanSoft(), isFalse);
+      expect(cardBlur(), 0);
+      await leaveSaved(tester);
+    });
+
+    testWidgets('en silencio la mesa no vibra; al quitarlo, vuelve', (
+      tester,
+    ) async {
+      await pumpTable(tester);
+      await openWithFan(tester);
+      dir.muted = true;
+      await tapAt(tester, fanPoint(5));
+      dir.buzz(Buzz.seal);
+      expect(buzz.played, isEmpty);
+      dir.muted = false;
+      await tapAt(tester, fanPoint(20));
+      dir.buzz(Buzz.seal);
+      expect(buzz.played, [Buzz.snap, Buzz.seal]);
+      await leaveSaved(tester);
+    });
   });
 }

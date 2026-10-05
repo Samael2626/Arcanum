@@ -172,10 +172,10 @@
 - [x] Calidad adaptativa con `FrameTiming` *(04-oct, `table/table_quality.dart`)*. Ventanas de 2 s; por debajo de 40 fps baja un nivel. **Nivel 1:** sin brillos con desenfoque (halo del bordado, del mazo recién abierto y del glifo de la huella). **Nivel 2:** además, efectos a medio ritmo (bordado y barajado se repintan a 30 por segundo) y sin huellas. Los fps se cuentan sobre el tiempo **en movimiento**: la mesa quieta no dibuja nada, así que no baja la calidad, y una ventana con menos de 30 fotogramas no decide.
 - [x] Respetar «reducir movimiento» *(04-oct)*. Antes solo lo respetaban la lectura revelada, el bordado y las huellas. Ahora en toda la mesa: las cartas aparecen en su sitio sin viajar; volteo y giro de golpe; el abanico, abierto o cerrado sin animarse; sin barajado en escena ni fantasmas que vuelan al montón; radial y sello sin animación de entrada; la cámara sin suavizado ni inercia. Siguen igual, a propósito, lo que mueve el dedo (la esquina, el arrastre) y los avisos con tiempo (el anillo de deshacer y el cierre de la ayuda): marcan cuánto queda, no adornan.
 - Tests: `test/features/tarot/mesa_calidad_test.dart` (15). Comprobado que los de «reducir movimiento» fallan si se quita el cambio. `flutter test` 840 pasan, 7 saltados; `flutter analyze` sin avisos.
-- **Decisiones abiertas para Samuel:**
-  1. **Cuándo vuelve a subir la calidad:** la especificación dice «tras un rato holgado» sin cifra. Provisional: 3 ventanas seguidas (6 s) a 55 fps o más. Otras opciones: subir antes (1 ventana) o no subir hasta salir de la mesa.
-  2. **Sombras de las cartas:** llevan desenfoque y la especificación (§9) dice que eso costaba mucho en el prototipo, pero no son «brillos», así que el nivel 1 no las toca. A) Dejarlas. B) Que el nivel 1 también las cambie por una sombra sin desenfoque.
-  3. **Vibración y silencio:** «Silenciar» del radial del paño es para el sonido. A) La vibración sigue solo el ajuste del sistema. B) Silenciar también la apaga.
+- **Decidido por Samuel (05-oct):**
+  - **Las sombras cuentan como brillos caros.** Desde el nivel 1, las sombras de las cartas en juego, de la que se está sacando, del abanico, del barajado y del sello pierden el desenfoque y quedan nítidas.
+  - **«Silenciar» del radial del paño apaga también la vibración** (y el sonido, cuando llegue). Se recuerda entre sesiones (`tarot_mesa_silencio` en las preferencias). El radial dice «Silenciar» o «Sonido» según toque.
+- **Sigue abierta:** cuándo vuelve a subir la calidad. La especificación dice «tras un rato holgado» sin cifra; provisional: 3 ventanas seguidas (6 s) a 55 fps o más.
 
 ## Fase 7: calidad
 

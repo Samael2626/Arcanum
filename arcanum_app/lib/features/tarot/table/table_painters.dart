@@ -289,15 +289,21 @@ class EmbroideryPainter extends CustomPainter {
 
 /// Las cartas del abanico: todas dorsos, estampados de la imagen grabada.
 class FanPainter extends CustomPainter {
-  FanPainter(this.poses, this.back);
+  FanPainter(this.poses, this.back, {this.soft = true});
 
   final List<TablePose> poses;
   final ui.Image back;
+
+  /// Sombra desenfocada; con la calidad baja, sombra nitida (Samuel, 05-oct:
+  /// las sombras cuentan como brillos caros).
+  final bool soft;
 
   static final _paint = Paint()..filterQuality = FilterQuality.medium;
   static final _shadow = Paint()
     ..color = Colors.black.withValues(alpha: .35)
     ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+  static final _sharpShadow = Paint()
+    ..color = Colors.black.withValues(alpha: .28);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -309,7 +315,7 @@ class FanPainter extends CustomPainter {
         ..scale(p.scale)
         ..drawRRect(
           RRect.fromRectAndRadius(_cardRect, const Radius.circular(9)),
-          _shadow,
+          soft ? _shadow : _sharpShadow,
         )
         ..restore();
       _stamp(canvas, back, p, _paint);
@@ -318,7 +324,7 @@ class FanPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(FanPainter old) =>
-      !identical(old.poses, poses) || old.back != back;
+      !identical(old.poses, poses) || old.back != back || old.soft != soft;
 }
 
 /// Un monton: cantos apilados segun las cartas que quedan y el dorso encima.
