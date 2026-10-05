@@ -34,7 +34,7 @@ class PathItem {
 /// Grupo de la escena. Lleva caminos (items) o primitivas de capa (prims).
 class SceneGroup {
   final String layer, color;
-  final double? w, op, dx, dy;
+  final double? w, op, dx, dy, scale;
 
   /// Ancho base de los halos cuando el trazo real no es un `stroke` (la pluma).
   final double? hw;
@@ -42,12 +42,12 @@ class SceneGroup {
   final bool sigil;
   final List<PathItem> items;
   final List<LayerPrim>? prims;
-  const SceneGroup({required this.layer, required this.color, this.w, this.op, this.dx, this.dy, this.hw, this.cap, this.sigil = false, this.items = const [], this.prims});
+  const SceneGroup({required this.layer, required this.color, this.w, this.op, this.dx, this.dy, this.scale, this.hw, this.cap, this.sigil = false, this.items = const [], this.prims});
 
   bool get isEmpty => prims != null ? prims!.isEmpty : items.isEmpty;
 
-  SceneGroup copyWith({String? layer, String? color, double? w, double? op, double? dx, double? dy}) => SceneGroup(
-      layer: layer ?? this.layer, color: color ?? this.color, w: w ?? this.w, op: op ?? this.op, dx: dx ?? this.dx, dy: dy ?? this.dy, hw: hw,
+  SceneGroup copyWith({String? layer, String? color, double? w, double? op, double? dx, double? dy, double? scale}) => SceneGroup(
+      layer: layer ?? this.layer, color: color ?? this.color, w: w ?? this.w, op: op ?? this.op, dx: dx ?? this.dx, dy: dy ?? this.dy, scale: scale ?? this.scale, hw: hw,
       cap: cap, sigil: sigil, items: items, prims: prims);
 }
 
@@ -98,7 +98,7 @@ String _opAttr(double? op) => op != null && op < 1 ? ' opacity="${jsFixedNum(op,
 
 String groupSVG(SceneGroup g) {
   final dx = g.dx ?? 0, dy = g.dy ?? 0;
-  final tf = dx != 0 || dy != 0 ? ' transform="translate(${jsNum(dx)} ${jsNum(dy)})"' : '';
+  final tf = dx != 0 || dy != 0 || g.scale != null ? ' transform="translate(${jsNum(dx)} ${jsNum(dy)})${g.scale == null ? '' : ' scale(${g.scale!.toStringAsFixed(4)})'}"' : '';
   final gop = g.op ?? 1;
   if (g.prims != null) {
     return '<g data-layer="${g.layer}"$tf>${primsSVG(gop < 1 ? g.prims!.map((p) => _withOp(p, gop)).toList() : g.prims!, g.color)}</g>';

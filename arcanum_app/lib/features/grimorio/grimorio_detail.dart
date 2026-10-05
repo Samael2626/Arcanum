@@ -9,6 +9,7 @@ import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../sigilos/kamea_screen.dart';
+import '../sigilos/personal_screen.dart';
 import '../sigilos/rosa_screen.dart';
 import '../sigilos/sigil_store.dart';
 import '../sigilos/taller_screen.dart';
@@ -84,6 +85,11 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
       context,
       MaterialPageRoute(builder: (_) => RosaScreen(entryId: widget.id, initial: doc)),
     );
+    if (mounted && saved == true) _retry();
+  }
+
+  Future<void> _continuePersonal(PersonalDoc doc) async {
+    final saved = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => PersonalScreen(entryId: widget.id, initial: doc)));
     if (mounted && saved == true) _retry();
   }
 
@@ -310,10 +316,11 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
           delayMs: 120,
           // un sigilo del taller se dibuja (y se puede seguir editando); una
           // entrada «Sigilo» escrita a mano antes del taller sigue siendo texto
-          child: switch (type == 'sigil' ? (decodeSigilEntry(content) ?? decodeKameaEntry(content) ?? decodeRosaEntry(content)) : null) {
+          child: switch (type == 'sigil' ? (decodeSigilEntry(content) ?? decodeKameaEntry(content) ?? decodeRosaEntry(content) ?? decodePersonalEntry(content)) : null) {
             final SigilDoc doc => _SigilBody(doc: doc, onEdit: () => _continueSigil(doc), accent: accent),
             final KameaDoc doc => _FamiliaBody(scene: doc.scene(), label: 'Kamea de ${doc.def.name}', editLabel: 'Seguir en la kamea', onEdit: () => _continueKamea(doc), accent: accent),
             final RosaDoc doc => _FamiliaBody(scene: doc.scene(), label: 'Rosa-Cruz', editLabel: 'Seguir en la Rosa-Cruz', onEdit: () => _continueRosa(doc), accent: accent),
+            final PersonalDoc doc => _FamiliaBody(scene: doc.scene(), label: 'Sello personal', editLabel: 'Seguir el sello personal', onEdit: () => _continuePersonal(doc), accent: accent),
             _ => _ManuscriptBody(content: content, accent: accent),
           },
         ),
