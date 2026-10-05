@@ -86,7 +86,7 @@ No verificado (necesita teléfono):
 3. Lector de pantalla del selector de caligrafía y de las celdas de Sellos.
 
 Pendiente de producto:
-4. Familias v2 en Flutter: Sello personal y Comparar. **Kamea (4-oct) y Rosa-Cruz (5-oct) hechas** (ver §7 y §8).
+4. Familias v2 en Flutter: **Kamea, Rosa-Cruz, Sello personal y Comparar hechas** (ver §7–§10).
 5. Enlace del taller con Hoy, Grimorio y Bitácora (crear → cargar → olvidar → anotar).
 6. Revisión con `arcanum-legal` de los sellos (obra ajena) antes de publicar. La
    tarjeta «Generador de sigilos» (P2) de `legal-site/index.html` se actualiza el
@@ -183,3 +183,16 @@ Pantalla a 390×844, guardado y reapertura probados. Suite completa: 1562 pasan,
 Después de la suite se corrigió el caso de fuente Kamea con cuadrícula visible;
 su prueba específica y el análisis pasaron. La procedencia, defectos y límites
 están en [[ARCANUM-Avance-Sello-Personal-2026-10-04]].
+
+## 10. Comparar en Flutter (4-oct)
+
+Commit `5120d0b`. `CompareDoc` monta tres figuras independientes del mismo
+nombre: Letras (únicas y fusión), Rosa-Cruz y Kamea del planeta elegido. Pantalla
+propia, SVG, PNG y entrada cifrada `sigilo-comparar` con título neutro. Samuel
+decidió ocultar el rótulo del nombre de Kamea solo en el detalle del Grimorio.
+
+`_fixtures_compare.mjs` produjo 19 casos y 10 PNG de Chromium. Paridad SVG
+etiqueta por etiqueta, lienzo bajo 0,06 % y prueba de caminos, grosor y opacidad.
+Pantalla a 390×844, guardado y reapertura probados. Suite completa: 1599 pasan,
+8 saltados; `flutter analyze` sin avisos. Tres mutaciones detectadas y revertidas.
+Procedencia y límites: [[ARCANUM-Avance-Comparar-2026-10-04]].
