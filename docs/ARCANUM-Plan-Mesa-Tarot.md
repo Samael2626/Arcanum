@@ -26,7 +26,7 @@
 ## Fase 0: preparación
 
 - [x] Medir el prototipo en un móvil real con `#fps`. **Referencia (móvil de Samuel, 29-sep): 36–42 fps en reposo, ~18 con movimiento o animaciones fuertes.** Es el techo del 3D del navegador; Flutter tiene que llegar a 60.
-- [x] Decisiones D1–D4 cerradas con Samuel el 29-sep; D5 se comprueba en la fase 3.
+- [x] Decisiones D1–D4 cerradas con Samuel el 29-sep; D5 se cerró el 29-sep (ver tabla de decisiones).
 - [x] `git worktree add ../Arcanum-mesa -b feat/mesa-tarot origin/main` y traer la especificación, el plan y el prototipo.
 
 ## Fase 1: dominio del backend (sin HTTP)
@@ -66,10 +66,10 @@
 - **Estados de la mesa:** `open` → `interpreted` → `closed`, o `abandoned` si se abre otra o pasan **12 h** sin tocarla. Abandonada o caducada responde **404**; cerrada, **409**. El índice único parcial `uq_tarot_sessions_one_active` impide dos activas aunque falle el código.
 - **Bloqueo:** cada operación bloquea la fila de la mesa (`FOR UPDATE`). Probado: ocho peticiones a la vez por la misma carta, una sale 200 y siete 400.
 - **Estilos de barajar:** `cascada`, `por_encima`, `sobre_el_pano` (los tres del radial del prototipo).
-- **Interpretar** recibe `{spread, question, placements: [{slug, slot}] + aclaratorias [{slug, clarifies}]}`. Valida **antes** de cobrar (una tirada mal formada no gasta cupo), pone las invertidas que decidió el servidor y devuelve la lectura de Tradición: nombre y significado de cada hueco y el significado de la carta según su sentido. Máximo 3 aclaratorias por hueco. Se puede interpretar otra vez tras sacar aclaratorias, y cada vez gasta cupo.
-- **Cerrar** exige una lectura interpretada, guarda en `tarot_readings` (con `slot` y `clarifies` en `cards_drawn`, y la foto de la mesa en `table_snapshot`, hasta 64 KB) y es idempotente: repetirlo devuelve la misma lectura.
+- **Interpretar** recibe `{spread, question, placements: [{slug, slot}] + aclaratorias [{slug, clarifies}]}`. Valida **antes** de cobrar (una tirada mal formada no gasta cupo), pone las invertidas que decidió el servidor y devuelve la lectura de Tradición: nombre y significado de cada hueco y el significado de la carta según su sentido. Máximo 3 aclaratorias por hueco. Repetir la misma lectura devuelve la interpretación guardada sin otro cobro; para leer nuevas aclaratorias se continúa la lectura en otra mesa.
+- **Cerrar** guarda en `tarot_readings` la lectura interpretada o una mesa sin interpretar, completa, parcial o libre, sin cobrar en este último caso (decisión del 30-sep). Conserva `slot` y `clarifies` en `cards_drawn` y la foto en `table_snapshot`, hasta 64 KB. Es idempotente: repetirlo devuelve la misma lectura.
 - **Historial:** `GET /tarot/readings` y `GET /tarot/readings/{id}`. Solo las del usuario; las de otro dan 404.
-- **La pregunta** se guarda como hoy en `/tarot/spread`, en claro. D5 sigue abierta.
+- **La pregunta** se envía al servidor en claro, como en `/tarot/spread`; D5 quedó cerrada el 29-sep. La foto local de la mesa se cifra con AES-256-GCM.
 - **Puerta:** `verify_migrations` hasta 015 y vuelta; 1251 pasan y 2 saltados; `tests_pg` 119 (21 nuevos).
 
 ## Fase 3: base de la app
@@ -87,7 +87,7 @@
 - **Guarda la vista pública, no el mazo:** `ServerView` (cuántas quedan y en qué posiciones) más la disposición local. `withServer()` reconcilia: montones nuevos tras un corte, montones que desaparecen al unir y cartas que vuelven al mazo.
 - **Operaciones en fila:** dos toques seguidos se aplican en orden. Los errores de red no se tragan; llegan a la pantalla.
 - **Autoguardado cifrado** con el mismo AES-256-GCM y la misma clave del dispositivo que el Grimorio, uno por usuario. `flush()` guarda en el acto (para cuando la app pasa a segundo plano). Si el servidor ya no tiene esa mesa, la foto se olvida. Borrar la cuenta borra las mesas guardadas.
-- **Deshacer es local:** vuelve a la disposición de antes del gesto, 5 s, una vez. **El mazo del servidor no retrocede**, así que deshacer un corte o una unión no los deshace en el servidor. Para la fase 5 hay que decidir si el servidor guarda un paso de deshacer o si esos gestos no se ofrecen para deshacer.
+- **Deshacer, estado de la fase 3:** entonces solo volvía la disposición local durante 5 s. Desde la fase 4 también retrocede el mazo del servidor en los gestos que lo tocaron (ver decisión del 30-sep y línea de fase 4).
 - **Puerta:** `flutter analyze` limpio; `flutter test` 675 pasan (22 nuevos, tres pasadas seguidas sin fallos intermitentes).
 
 ## Fase 4: la mesa
@@ -149,7 +149,7 @@
 
 ## Fase 5: el ritual
 
-- [x] **Sellar la pregunta** y romper el sello al interpretar (30-sep): sello de cera en (88, 712) que entra con un golpe; sellado no enseña el texto al tocarlo; al interpretar da un respingo y lo cruza una grieta. Pregunta de hasta 300 caracteres, como el prototipo. **Falta** el vuelo del texto del panel al sello (fase 6).
+- [x] **Sellar la pregunta** y romper el sello al interpretar (30-sep): sello de cera en (88, 712) que entra con un golpe; sellado no enseña el texto al tocarlo; al interpretar da un respingo y lo cruza una grieta. Pregunta de hasta 300 caracteres, como el prototipo. El vuelo del texto se añadió en la fase 6.
 - [x] **Interpretar bordado** en el paño. Mantener 1,3 s cierra el círculo. *(Repasado el 01-oct: `TableDirector.embroideryAt`, solo con la tirada completa y desvelada; tests en `table_logic_test` y `table_director_test`.)*
 - [x] **Interpretación de Tradición:** textos de `tarot_cards` por posición y sentido. El Oráculo queda fuera de esta versión (D4). *(01-oct: `tarot_table_service` lee `meaning_upright`/`meaning_reversed` con el giro aplicado, más el significado de la posición y las aclaratorias; la app lo enseña en la hoja de interpretación.)*
 - [x] **«Lectura revelada» (D7):** interpretación a pantalla completa, una carta por página, con atmósfera por elemento (las de `ArcanumColors`), lámina desenfocada calculada una vez por carta (no en cada fotograma), volteo al entrar, tirada arriba y síntesis con «Cerrar el círculo». Respetar «reducir movimiento». Movimiento por elemento en la fase 6.
@@ -232,7 +232,7 @@ Capturas del motor con el mismo guion (cuatro cartas sin tirada, tirada de tres,
 - [ ] Medir en el móvil real con Impeller: 60 fps quieta y con la Cruz Celta; el abanico sin tirones.
   - *(04-oct)* **Ya hay medidor** en la propia mesa (`table/table_quality.dart`). En profile, cada 2 s con movimiento deja una línea en el log: `[mesa fps] escena=… fotogramas=… fps=… montaje_p90=…ms dibujo_p90=…ms lentos=… calidad=…`. Las mismas columnas que la tabla de la fase 4. La escena dice qué se movía: `barajar`, `abanico`, `camara`, `arrastre` o `mesa:<tirada>:<n>cartas`. En el GN2200: `adb logcat -s flutter | findstr "mesa fps"`. La mesa quieta no da líneas porque no dibuja, y eso es lo esperado: «60 fps quieta» se cumple sin dibujar. Lo que hay que medir son las escenas con movimiento. **Sin medir todavía en el móvil.**
 - [ ] Accesibilidad: `Semantics` en cartas y radial, 48 dp, lectores de pantalla.
-  - *(04-oct)* Las cartas en juego ya anuncian nombre, sentido y hueco; el sello, deshacer y las opciones del radial tienen etiqueta. El centro del radial conserva el dibujo de 36 dp, con cuadro semantico de 48 dp que coincide con la zona de toque en `table_director.dart`. Falta el test integral de semantica y zonas de toque en reposo y zoom 1 para marcar la tarea como hecha.
+  - *(04-oct)* Las cartas en juego ya anuncian nombre, sentido y hueco; el sello, deshacer y las opciones del radial tienen etiqueta. El centro del radial conserva el dibujo de 36 dp, con cuadro semántico de 48 dp que coincide con la zona de toque en `table_director.dart`. Los tests a 360 × 760 cubren semántica y objetivos en reposo con zoom 1; falta comprobarlos con lector de pantalla y dedos reales en el GN2200.
   - **Decidido por Samuel (04-oct):** conservar el abanico visual y abrir una lista seleccionable de 78 filas de 48 dp (`table/table_overlays.dart`, `table/table_director.dart`, `tarot_screen.dart`). La disposicion automatica actual conserva 77 intervalos de **3,27 dp** a 360 × 760 en zoom 1; el maximo zoom los deja en **8,49 dp**. La lista permite elegir una posicion exacta sin acertar esa franja. `fan_picker_test.dart` verifica las 78 posiciones, la etiqueta semantica y los 48 dp. Falta comprobar la interaccion y el lector real en el GN2200.
   - **Fallo confirmado y corregido:** `table_smoke.dart` creaba el ticker por primera vez en `dispose()` si nunca habia humo. Fallaba `mesa_calidad_test.dart` antes del cambio con `Looking up a deactivated widget's ancestor is unsafe`; ahora se crea en `initState`. Las 34 pruebas de widgets afectadas pasan. Puertas: `flutter analyze` sin avisos; `flutter test` **874 pasan, 7 saltadas**. No se comprobo rendimiento ni tacto en el GN2200.
   - *(04-oct)* «Interpretar» tenia una zona de toque de unos 31 dp de alto proyectado en reposo. `table_director.dart` la amplia a un minimo de 48 dp en pantalla sin cambiar el bordado. `table_director_test.dart` fallo antes con `HitSurface` al tocar a 23 dp del centro; pasa con el cambio. Falta comprobar en el GN2200 los objetivos superpuestos con cartas y abanico.
@@ -248,7 +248,7 @@ Capturas del motor con el mismo guion (cuatro cartas sin tirada, tirada de tres,
 - [ ] Mezclar a `main` solo con las puertas en verde. Ojo: **eso despliega el backend en el acto**.
 - [ ] Comprobar el commit vivo en Railway (`railway status --json`).
 - [ ] Build para la prueba cerrada de Play.
-- [ ] Nota en el vault y actualizar la especificación con lo que haya cambiado.
+- [x] Nota completa en el vault y especificación actualizada con lo implementado (05-oct). La nota vive en `D:\Brain\10-Proyectos\ARCANUM\Checkpoint-ARCANUM-Mesa-2026-10-04.md`; los puntos de integración y publicación de esta fase siguen pendientes y requieren autorización aparte.
 
 ---
 

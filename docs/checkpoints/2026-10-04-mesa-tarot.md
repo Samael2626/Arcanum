@@ -23,6 +23,7 @@ La rama `feat/mesa-tarot` avanzo desde el fallo visto en el GN2200 el 03-oct. Se
 - `03d2f2a`: etiqueta y accion semantica para «Interpretar» y opciones/centro del radial; medicion de 48 dp en mazo, monton, sello, radial, deshacer y lista a 360 × 760 (`table_view.dart`, `table_director.dart` y tests de la mesa). Se verificaron nombre lunar y carta pendiente.
 - `e9fa128` (revision del 05-oct): `table_controller.dart` consumia el checkpoint antes de confirmar la primera operacion del gesto. Una peticion fallida dejaba la siguiente con `checkpoint: false` y anulaba el deshacer del servidor. El test en `table_controller_test.dart` fallo antes con `[false]` en lugar de `[true]`; el controlador ahora confirma el checkpoint despues de recibir respuesta. Tambien conserva el deshacer previo si falla una operacion fuera del gesto.
 - `aa4bf4a` (segunda correccion del 05-oct): `undo()` retiraba la oferta antes de confirmar el deshacer del servidor. Un fallo de red impedia reintentarlo; el test fallo antes con `canUndo == false` y pasa despues de mover el retiro al final de la operacion.
+- Documentacion del 05-oct (fase 8, punto 5): `docs/ARCANUM-Spec-Mesa-Tarot.md` refleja el backend, la app, los efectos, la accesibilidad y las decisiones pendientes tal como quedaron implementados. `docs/ARCANUM-Plan-Mesa-Tarot.md` corrige textos antiguos sobre D5, deshacer, interpretacion, cierre sin interpretar y vuelo de la pregunta. La nota completa se copio a `D:\Brain\10-Proyectos\ARCANUM\Checkpoint-ARCANUM-Mesa-2026-10-04.md`.
 
 ## Medido
 
@@ -36,7 +37,8 @@ La rama `feat/mesa-tarot` avanzo desde el fallo visto en el GN2200 el 03-oct. Se
 
 - Rama: `feat/mesa-tarot`, worktree `D:\Proyectos\Arcanum-mesa`. Ultimo commit de codigo: `aa4bf4a`.
 - Puertas Flutter: analisis sin avisos; 880 tests aprobados, 7 saltados. Backend sin cambios desde la fase 5; no se ejecutaron `pytest` ni migraciones en esta tanda.
-- Sin push ni merge a `main`. La fase 8 sigue sin empezar.
+- Sin push ni merge a `main`. La publicacion de la mesa sigue pendiente.
+- Solo se completo la documentacion de la fase 8 (punto 5); pestaña, integracion, despliegue y build siguen pendientes.
 
 ## Pendiente en el GN2200
 

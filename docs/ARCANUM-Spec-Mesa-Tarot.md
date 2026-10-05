@@ -1,13 +1,12 @@
 # Mesa de tarot: especificación para Flutter
 
-Fuente de verdad del comportamiento: `prototipos/tarot-mesa-3d-v2.html` (rama `release/1.0.6`, commit `463f00b` o posterior).
-Este documento traduce ese prototipo a decisiones de la app. Donde el prototipo y este texto no coincidan, manda el prototipo y hay que corregir este texto.
+Referencia visual y de tiempos: `prototipos/tarot-mesa-3d-v2.html`. Las decisiones posteriores de Samuel y el comportamiento implementado se registran aquí y en `ARCANUM-Plan-Mesa-Tarot.md`; cuando difieren del prototipo, rige la decisión registrada.
 
 Decisiones de Samuel que no se discuten al portar:
 
 - Módulo nuevo **Tarot**, separado del Oráculo.
 - **Regla única de gestos:** tocar hace la acción directa; mantener pulsado abre el radial.
-- **Sin barra de botones:** todo vive en la mesa.
+- **Sin barra de botones:** las acciones viven en la mesa; para elegir una posición exacta del abanico de 78 se abre una lista accesible.
 - **Sin velas.**
 - **Nada de menús que se reordenen:** cada acción tiene siempre su sitio.
 
@@ -27,7 +26,7 @@ Todo se posiciona en un plano de **600 × 900 unidades** que luego proyecta la c
 | Zona cercana | y 690–880 | Mazo en juego (470, 782) y abanico (y = 782) |
 | Bordado «Interpretar» | centro (300, 484), anillo r = 202, palabra en y ≈ 700 | Bajo la tirada: ninguna de las 7 tiradas lo pisa |
 
-- Carta base: 110 × 190 unidades.
+- Carta base en Flutter: 110 × 176 unidades (proporción 1:1,6 de la lámina RWS de la app); el prototipo usaba 110 × 190.
 - Escalas: mazo 0,62; abanico 0,55; carta suelta 0,70. Cada tirada tiene su propia escala `s`.
 
 ### Mazos
@@ -37,7 +36,7 @@ Un mazo es **arte + contenido**:
 - **Rider–Waite–Smith:** 78 cartas.
 - **Arcanos Mayores:** 22 cartas, mismo arte.
 
-En el backend, cada mazo es una fila: nombre, cartas incluidas, si admite invertidas y referencia a su arte. Así, añadir un mazo nuevo no toca el motor.
+En el backend, los mazos se definen como datos en `app/domain/decks.py`: nombre, cartas incluidas, si admiten invertidas y referencia a su arte. Añadir uno no cambia el motor de sesiones.
 
 ### Tiradas
 
@@ -53,7 +52,7 @@ Son datos, no código: una lista de posiciones `[fx, fy, giro, nombre, significa
 | Cruz Celta | 10 | 0,56 | número (la 2 va a 90°) |
 | Rueda del año | 12 | 0,46 | número |
 
-Las coordenadas exactas están en `SPREADS` del prototipo. El backend debería servir este catálogo para que la app y el Oráculo lean la misma definición.
+Las coordenadas se portaron a `app/domain/spreads.py` y el backend sirve el catálogo por `GET /tarot/spreads`. Las siete tiradas están disponibles para la mesa; llevarlas al Oráculo queda fuera de esta fase.
 
 ### Sorteo en el servidor
 
@@ -78,7 +77,7 @@ sesion = {
 | `devolver(id, pid)` | Al fondo del montón |
 | `recoger(pid)` | Todas las sacadas vuelven al fondo |
 
-**Todo esto está por construir en FastAPI.** Hoy solo existen `/tarot/spread` y `/tarot/draw-one`, que devuelven cartas ya elegidas.
+**Implementado:** `TarotSession`, persistencia y rutas `/tarot/sessions` para abrir, operar, interpretar, deshacer y cerrar. El orden permanece en el servidor; la app recibe posiciones ocupadas y cartas ya sacadas. `/tarot/spread` y `/tarot/draw-one` siguen disponibles para la app publicada.
 
 ---
 
@@ -87,10 +86,11 @@ sesion = {
 - **Perspectiva:** 1000. La mesa se transforma con `scale · rotateX(θ) · rotateZ(giro)`.
   - En Flutter: `Matrix4` con `setEntry(3, 2, 1/1000)`, `rotateX`, `rotateZ`.
 - **Encuadre:** se calcula una vez, con la inclinación de reposo **θ = 30°**, ajustando el ancho al paño (el marco puede recortarse un poco) y centrando en alto. Inclinar la mesa **no** cambia el zoom.
-- **Toque → mesa:** es la inversa de la proyección (`toTable` en el prototipo): primero se deshace la inclinación y después el giro.
+- **Toque → mesa:** se usa la homografía inversa de la proyección; el hit-test sigue el plano de cada pieza.
 - **Límites:** giro ±40°, inclinación 16–56°, zoom 1–2,6.
 - **Movimiento:** el arrastre mueve el destino y la cámara lo alcanza a razón de 0,14 por fotograma. Al soltar hay inercia (×6 en giro, ×5 en inclinación).
 - **Sentido:** invertido a petición de Samuel. Arrastrar a la derecha gira la mesa hacia la izquierda.
+- **Corrección del 03-oct:** zoom como lupa, pellizco hacia los dedos, centro retenido en el paño, cámara guardada y doble toque para recuperar el encuadre incluso fuera de la mesa. El giro ±40° puede recortar hasta el 10 % del paño a 360 × 760 con zoom 1; la decisión sobre ese recorte sigue abierta.
 
 ---
 
@@ -108,7 +108,7 @@ Umbrales:
 | Doble toque en tapete o marco | Restablece la cámara | | |
 | Mazo del estante | Lo pone en juego | — | Al paño: lo pone en juego |
 | Mazo o montón en juego | Lo extiende (o lo junta si otro tenía el abanico) | Radial del mazo | Centro: moverlo. Laterales: abanico. Borde de arriba: cortar. Soltarlo sobre otro: unirlos. |
-| Carta del abanico | La saca al primer hueco libre | Radial del abanico | La saca y la lleva |
+| Carta del abanico | La saca al primer hueco libre; la posición exacta se puede elegir en una lista de 78 filas de 48 dp | Radial del abanico | La saca y la lleva |
 | Carta suelta | Vuelve al montón más cercano | Radial de la carta | Moverla. Imán a los huecos; junto a otra carta de la tirada queda como aclaratoria. |
 | Carta en la tirada | Desvela o lee | Radial de la carta | Moverla (intercambio si el hueco está ocupado) |
 | Esquina de la carta boca abajo | — | — | La levanta y voltea (ver 5) |
@@ -117,7 +117,8 @@ Umbrales:
 | Sello de la pregunta | Cuándo se selló | | |
 
 - **Pellizcar con dos dedos:** zoom y desplazamiento.
-- **Zona de toque de cada carta:** su tamaño visible más ~8 px por lado, para que en la Cruz Celta supere los 48 dp.
+- **Zona de toque de cada carta:** se amplía respecto al dibujo; los tests a 360 × 760 comprueban objetivos de al menos 48 dp para las acciones principales en reposo y zoom 1. La superposición y el lector de pantalla reales siguen pendientes en el GN2200.
+- **Extracción inmediata:** al tocar el abanico se ve un dorso pendiente en el mismo fotograma y su posición queda reservada. La carta definitiva llega con la respuesta del servidor; un error la devuelve al abanico y se avisa. El umbral de 6 px frente a los 18 px de `kTouchSlop` sigue como decisión abierta.
 
 ---
 
@@ -125,7 +126,7 @@ Umbrales:
 
 - Cada acción es un **círculo suelto de 52 dp**, con el nombre debajo en versalitas de 10,5 pt. No hay disco común.
   - Radio 86 (hasta 6 opciones) o 100 (7 o más).
-  - Centro de 44 dp: cierra, o hace de **Deshacer** mientras esté vigente.
+  - Centro dibujado de 36 dp, con objetivo táctil y semántico de al menos 48 dp: cierra, o hace de **Deshacer** mientras esté vigente.
 - **Gestual:** se abre al mantener pulsado y, sin levantar el dedo, se elige por el **ángulo** a más de 46 px del centro. Soltar sobre la opción la ejecuta; soltar en el centro deja el radial abierto para tocar.
 - **Gramática fija:** lo imposible se apaga, nunca desaparece ni cambia de sitio.
 
@@ -140,7 +141,7 @@ Umbrales:
 | Unir | Elegir orden · Automático |
 | Recoger todo (con lectura empezada) | Cerrar el círculo · Sin guardar |
 
-Leer, la pregunta, la interpretación y las lecturas guardadas son **paneles compactos** anclados a lo que se tocó. Nunca hojas que suben desde abajo.
+Leer, la pregunta y las lecturas guardadas usan paneles compactos anclados a lo que se tocó. La interpretación de Tradición usa «Lectura revelada» a pantalla completa, una carta por página.
 
 ---
 
@@ -156,7 +157,7 @@ Leer, la pregunta, la interpretación y las lecturas guardadas son **paneles com
   - En cada fotograma: velocidad = velocidad × 0,74 + (objetivo − actual) × 0,16.
   - Al soltar, el objetivo se reduce ×0,8 por fotograma y la carta oscila hasta calmarse.
   - En Flutter: `SpringSimulation` o un `Ticker` con esta misma integración.
-- **Reparto:** una carta cada 110 ms, 420 ms de vuelo; al encajar suena un golpe suave y vibra 8 ms.
+- **Reparto:** una carta cada 110 ms, 420 ms de vuelo; al encajar vibra. El sonido espera las grabaciones de Samuel.
 - **Barajados:** son animación, porque el azar lo pone el servidor.
   - **Cascada:** dos mitades que se entrelazan.
   - **Por encima:** 4 rondas de bloques de 3.
@@ -177,9 +178,11 @@ Leer, la pregunta, la interpretación y las lecturas guardadas son **paneles com
 **Calidad adaptativa:** la mesa mide sus fps cada 2 s.
 
 - Por debajo de 40 baja un nivel: primero quita brillos caros; después hace los efectos a medio ritmo y quita las huellas.
-- Vuelve a subir tras un rato holgado.
+- La recuperación está pendiente de decisión de producto; por ahora usa tres ventanas consecutivas de 2 s a 55 fps o más.
 
 En Flutter se decide con `FrameTiming`.
+
+**Estado implementado (05-oct):** símbolos del palo, huellas, luz lunar con fundido de 2,5 s, humo al romper el sello y al cerrar, pregunta que vuela al sello en 760 ms y anillo de cierre de 3400 ms con las cartas de regreso en 900 ms. «Reducir movimiento» suprime los efectos decorativos; los niveles de calidad reducen desenfoques y cadencia. Los efectos van en capas separadas para no repintar el paño cada fotograma. El ritmo visual y los fps faltan por medir en el GN2200.
 
 ---
 
@@ -198,20 +201,20 @@ Todo el sonido está en re dórico pentatónico, con reverberación de 2,8 s. Na
 | Cerrar el círculo | Acorde lento | 10, 60, 10 |
 | Opción del radial bajo el dedo | — | 4 ms |
 
-- **En Flutter no se sintetiza:** se graban muestras de estos mismos sonidos y se varía el tono ±5 % y el volumen ±3 dB en cada disparo, para que no suene enlatado.
-- **Háptica** con `HapticFeedback`.
-- **Silenciar** desde el radial del paño.
+- **Sonido pendiente:** Samuel aportará las grabaciones; no se sintetizaron ni se añadieron muestras de prueba. Al integrarlas se variará el tono ±5 % y el volumen ±3 dB.
+- **Háptica implementada** con `HapticFeedback`: los tiempos del prototipo se traducen a los golpes fijos disponibles en Flutter.
+- **Silenciar** desde el radial del paño apaga la vibración y apagará el sonido cuando exista; se recuerda entre sesiones.
 
 ---
 
 ## 8. Persistencia, deshacer y memoria
 
-- **Autoguardado continuo:** una foto JSON de toda la mesa (`serialize` del prototipo): mazo, montones del servidor, abanico, cartas con posición, hueco, sentido, aclaratorias, tirada, sello, lectura y cámara. En Flutter va en almacenamiento local **cifrado, como el Grimorio**.
-- **Deshacer el último gesto:** foto antes de cortar, mover, extender, unir o devolver; se ofrece 5 s.
+- **Autoguardado continuo:** una foto JSON de la vista pública del servidor y la disposición local: montones sin revelar su orden, abanico, cartas con posición, hueco, sentido, aclaratorias, tirada, sello y cámara. En Flutter va en almacenamiento local **cifrado, como el Grimorio**.
+- **Deshacer el último gesto:** foto antes de cortar, mover, extender, unir o devolver; se ofrece 5 s. Si tocó el mazo, el servidor guarda el estado anterior hasta 30 s y retrocede con el cliente. Un error de red conserva la opción de reintentar mientras siga vigente.
   - En el prototipo es un botón discreto en la esquina inferior izquierda con un anillo que se consume, y el centro del radial hace lo mismo.
   - **Trampa que ya costó un fallo:** la foto debe **copiar** los arrays de los montones, no compartirlos.
-- **Lecturas guardadas:** cada cierre de círculo guarda la foto, la pregunta y el contexto astral. Se pueden **contemplar** (reconstrucción sin tocar) o **continuar** desde ahí.
-- **Contexto astral:** fase, iluminación, hora planetaria y fecha. Se registra con la primera carta que entra en la tirada. En la app sale del backend (`lunar_calendar.py`, `planetary_hours.py`) con el lugar del usuario (`user_place.dart`).
+- **Lecturas guardadas:** cada cierre de círculo guarda la foto, la pregunta y el contexto astral. Se pueden **continuar** desde ahí; «Contemplar» sin tocar se descartó por ahora.
+- **Contexto astral:** fase, hora planetaria y fecha se calculan al interpretar o cerrar sin interpretar, con el lugar confirmado del usuario (`user_place.dart`); sin lugar no se inventa hora. La iluminación viaja en la respuesta de interpretar, pero no se guarda en `tarot_readings`. La pregunta viaja en claro al servidor (D5); el autoguardado local de la mesa va cifrado con AES-256-GCM.
 
 ---
 
@@ -231,28 +234,30 @@ Estado final del prototipo, sin GPU: quieta 60 fps, Cruz Celta ~57–59, abanico
 
 ---
 
-## 10. Estructura propuesta en Flutter
+## 10. Estructura implementada en Flutter
 
 ```
 lib/features/tarot/
-  data/        catalogo de tiradas y mazos, cliente de sesion de sorteo, persistencia cifrada
-  domain/      TableState (lo que hoy es serialize), reglas de montones, deshacer
-  table/       TableCamera (Matrix4 + inversa), TableView (Stack de piezas), hit-test en unidades de mesa
-  pieces/      DeckPiece (caja con grosor), CardPiece (envuelve TarotCardView + bisagra + muelle)
-  radial/      RadialMenu (Overlay, seleccion por angulo, gramatica fija)
-  fx/          FxPainter (huellas, humo, luz lunar), PipsRow
-  audio/       muestras y variacion de tono, HapticFeedback
+  application/ TableController: operaciones en fila, deshacer local y del servidor
+  data/        TableStore: foto local cifrada por usuario
+  domain/      TableState y modelos de la mesa
+  table/       camara, geometria, gestos, piezas, radial, efectos, calidad y haptica
+  reading/     Lectura revelada
   tarot_screen.dart
 ```
 
-Estado con Riverpod (`@riverpod` + generación de código), como pide el repo.
+El cliente de API está en `lib/core/api/arcanum_api.dart`; las tiradas y mazos vienen del backend. Riverpod usa `AsyncNotifier` manual, siguiendo el patrón existente en el repo; este módulo no añadió generación de código.
+
+**Accesibilidad implementada:** cartas con nombre, sentido y hueco; opciones y centro del radial, sello, bordado, deshacer, disco lunar y carta pendiente con etiquetas y acciones semánticas. El abanico visual mantiene sus 78 posiciones y añade una lista seleccionable de 78 filas de 48 dp; en 360 × 760 cada posición visual solo separa 3,27 dp. Los efectos decorativos quedan fuera del lector de pantalla. Las pruebas automatizadas no sustituyen la comprobación con lector real en GN2200.
 
 ---
 
-## 11. Abierto
+## 11. Estado y asuntos abiertos
 
-- **Backend:** mazos, catálogo de tiradas y sesión de sorteo por posiciones (sección 1). Con migración y tests.
+- **Backend de la mesa:** mazos, siete tiradas y sesión de sorteo por posiciones ya implementados, con migración 016 y tests. Falta la revisión integral de la rama antes de integrarla.
 - **Oráculo con las tiradas nuevas:** requiere tocar el prompt y `oracle_guard` con el skill `arcanum-voz`, y cuidar el cupo de Groq, que ya se agota a diario. La Rueda del año (12 cartas) es la más cara.
 - **Arte vectorial de ARCANUM:** `TarotFacePainter` no se pudo portar al prototipo HTML. En Flutter sí existe: decidir qué mazo lo usa.
-- **Motor de interpretación:** en el prototipo es un hueco («aquí respondería Tradición u Oráculo»).
+- **Motor de interpretación:** Tradición funciona en la mesa con significados por posición y sentido. El Oráculo con las tiradas nuevas queda pendiente.
 - **Cartas pequeñas en la Cruz Celta y la Rueda:** mitigadas con la zona de toque y el zoom, pero siguen siendo pequeñas en un móvil de 360 dp.
+- **Validación en GN2200:** medir fps con Impeller, completar Cruz Celta, comprobar lector de pantalla, tacto, efectos y textos largos. Sin esas medidas no se afirma 60 fps ni aprobación móvil.
+- **Decisiones abiertas:** recuperación de calidad (provisional: tres ventanas de 2 s a ≥55 fps), recorte de hasta 10 % del paño con giro ±40°, umbral de arrastre de 6 frente a 18 px, y posición del abanico frente al sello y bordado. Opciones en `ARCANUM-Plan-Mesa-Tarot.md`.
