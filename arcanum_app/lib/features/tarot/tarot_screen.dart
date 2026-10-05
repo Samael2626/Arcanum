@@ -157,50 +157,61 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
           child: Stack(
             key: _tableRootKey,
             children: [
-              Positioned.fill(child: body),
-              // encima de la mesa y fuera de su Listener: sus toques no tocan el paño
-              if (_director != null) ...[
-                const Positioned.fill(child: TableHelp()),
-                Positioned.fill(
-                  child: UndoDot(
-                    until: _ops.undoUntil,
-                    onUndo: () async {
-                      try {
-                        if (await _ops.undo()) toast('Deshecho');
-                      } on Object catch (e) {
-                        error(e);
-                      }
-                    },
+              // con la lectura encima, la mesa sale del lector de pantalla
+              Positioned.fill(
+                child: ExcludeSemantics(
+                  excluding: _revealing && _reading != null,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(child: body),
+                      // encima de la mesa y fuera de su Listener: sus toques no tocan el paño
+                      if (_director != null) ...[
+                        const Positioned.fill(child: TableHelp()),
+                        Positioned.fill(
+                          child: UndoDot(
+                            until: _ops.undoUntil,
+                            onUndo: () async {
+                              try {
+                                if (await _ops.undo()) toast('Deshecho');
+                              } on Object catch (e) {
+                                error(e);
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                      if (_director != null &&
+                          fanPositions != null &&
+                          fanPositions.isNotEmpty)
+                        Positioned.fill(
+                          child: FanPickerButton(
+                            positions: fanPositions,
+                            onChoose: _director!.takeFanPosition,
+                          ),
+                        ),
+                      // la fase, junto a la ayuda, como en el prototipo
+                      if (moon != null && _director != null)
+                        Positioned(
+                          top: 4,
+                          right: 52,
+                          child: MoonBadge(moon: moon, onTap: toast),
+                        ),
+                      Positioned(
+                        top: 4,
+                        left: 4,
+                        child: IconButton(
+                          tooltip: 'Volver',
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: ArcanumColors.goldLight,
+                          ),
+                          onPressed: () => context.canPop()
+                              ? context.pop()
+                              : context.go('/hoy'),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-              if (_director != null &&
-                  fanPositions != null &&
-                  fanPositions.isNotEmpty)
-                Positioned.fill(
-                  child: FanPickerButton(
-                    positions: fanPositions,
-                    onChoose: _director!.takeFanPosition,
-                  ),
-                ),
-              // la fase, junto a la ayuda, como en el prototipo
-              if (moon != null && _director != null)
-                Positioned(
-                  top: 4,
-                  right: 52,
-                  child: MoonBadge(moon: moon, onTap: toast),
-                ),
-              Positioned(
-                top: 4,
-                left: 4,
-                child: IconButton(
-                  tooltip: 'Volver',
-                  icon: const Icon(
-                    Icons.arrow_back,
-                    color: ArcanumColors.goldLight,
-                  ),
-                  onPressed: () =>
-                      context.canPop() ? context.pop() : context.go('/hoy'),
                 ),
               ),
               if (_revealing && _reading != null)

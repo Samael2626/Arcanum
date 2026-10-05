@@ -373,11 +373,15 @@ void main() {
       expect(server.interprets, 1);
       expect(find.byType(LecturaRevelada), findsOneWidget);
       expect(find.text('1 / 1'), findsOneWidget);
+      // GN2200: con la lectura encima, el lector seguia llegando a la mesa
+      final deckLabel = RegExp(r'Rider–Waite–Smith, \d+ cartas');
+      expect(find.semantics.byLabel(deckLabel), findsNothing);
 
       // atras vuelve a la mesa; el bordado la reabre sin cobrar otra vez
       await tester.binding.handlePopRoute();
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.byType(LecturaRevelada), findsNothing);
+      expect(find.semantics.byLabel(deckLabel), findsOne);
       await tapEmbroidery();
       expect(find.byType(LecturaRevelada), findsOneWidget);
       expect(server.interprets, 1);
