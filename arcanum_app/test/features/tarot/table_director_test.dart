@@ -350,6 +350,35 @@ void main() {
       },
     );
 
+    test('elegir tirada aparta las sueltas que pisan un hueco nuevo', () async {
+      // GN2200: la carta sacada antes de elegir tirada tapaba el hueco 3
+      await openRws();
+      final ops = c.read(tableControllerProvider.notifier);
+      final loose = await ops.take('p0', 0);
+      final under = slotPose(three, 1);
+      ops.arrange(
+        (s) => s.updateCard(
+          loose.slug,
+          (k) => k.copyWith(x: under.x, y: under.y, scale: .7),
+        ),
+      );
+      await holdAndPick(pileAt('p0'), 'spread');
+      final layout = dir.radial!;
+      final i = layout.items.indexWhere((it) => it.id == 'three_card');
+      dir.pointerDown(++pointer, layout.positions[i], clock);
+      await settle();
+      expect(table().spread, 'three_card');
+      final k = table().card(loose.slug)!;
+      final r = poseRect(TablePose(k.x, k.y, rot: k.rot, scale: k.scale));
+      for (var s = 0; s < three.cardCount; s++) {
+        expect(
+          r.overlaps(poseRect(slotPose(three, s))),
+          isFalse,
+          reason: 'hueco ${s + 1}',
+        );
+      }
+    });
+
     test('al llenar el ultimo hueco el abanico se recoge solo', () async {
       // GN2200: con el abanico abierto, «Interpretar» se pintaba encima
       await openRws();

@@ -1630,6 +1630,18 @@ class TableDirector extends ChangeNotifier {
       ),
       undoable: true,
     );
+    // las sueltas que ahora caen sobre un hueco se apartan: si no, la carta
+    // del hueco las taparia o ellas al hueco
+    final slots = [for (var i = 0; i < sp.cardCount; i++) slotRect(sp, i)];
+    for (final c in table.cards) {
+      if (c.slot != null || c.host != null || c.aside) continue;
+      final r = poseRect(TablePose(c.x, c.y, rot: c.rot, scale: c.scale));
+      if (!slots.any(r.overlaps)) continue;
+      final to = _looseSpot(Offset(c.x, c.y), c.scale, skip: c.slug);
+      ops.arrange(
+        (s) => s.updateCard(c.slug, (k) => k.copyWith(x: to.x, y: to.y)),
+      );
+    }
   }
 
   // ---------- arrastrar ----------
