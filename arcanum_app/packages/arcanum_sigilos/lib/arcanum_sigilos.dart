@@ -3,6 +3,7 @@
 library;
 
 export 'engine/arcane_glyphs.dart';
+export 'engine/compare.dart';
 export 'engine/fusion.dart';
 export 'engine/geometry.dart';
 export 'engine/glyphs.dart';

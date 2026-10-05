@@ -163,6 +163,23 @@ PersonalDoc? decodePersonalEntry(String content) {
 }
 
 
+/// Lamina didactica de las tres familias; el nombre permanece cifrado.
+const kCompareMark = 'sigilo-comparar';
+
+String encodeCompareEntry(CompareDoc doc) => jsonEncode({'taller': kCompareMark, 'doc': doc.toJson()});
+
+CompareDoc? decodeCompareEntry(String content) {
+  final t = content.trimLeft();
+  if (!t.startsWith('{')) return null;
+  try {
+    final j = jsonDecode(t);
+    if (j is Map<String, dynamic> && j['taller'] == kCompareMark) return CompareDoc.fromJson(j['doc'] as Map<String, dynamic>);
+  } on FormatException {
+    return null;
+  }
+  return null;
+}
+
 /// Titulo neutro: la intencion queda dentro del contenido cifrado.
 String sigilTitle(DateTime d) => 'Sigilo del ${dayMonthEs(d)}';
 
@@ -202,6 +219,8 @@ String kameaTitle(KameaDoc doc, DateTime d) => 'Kamea de ${doc.def.name}, ${dayM
 String rosaTitle(DateTime d) => 'Rosa-Cruz, ${dayMonthEs(d)}';
 
 String personalTitle(DateTime d) => 'Sello personal, ${dayMonthEs(d)}';
+
+String compareTitle(DateTime d) => 'Comparación de sigilos, ${dayMonthEs(d)}';
 
 class SigilStore {
   final ArcanumApi api;
@@ -262,6 +281,8 @@ class SigilStore {
   Future<String> saveRosa(RosaDoc doc, {String? entryId}) => _persist(encodeRosaEntry(doc), rosaTitle, entryId, const {});
 
   Future<String> savePersonal(PersonalDoc doc, {String? entryId}) => _persist(encodePersonalEntry(doc), personalTitle, entryId, const {});
+
+  Future<String> saveCompare(CompareDoc doc, {String? entryId}) => _persist(encodeCompareEntry(doc), compareTitle, entryId, const {});
 
   Future<String> _persist(String plain, String Function(DateTime) title, String? entryId, Map<String, String> thumb) async {
     final enc = await crypto.encryptText(plain);
