@@ -28,6 +28,7 @@ import 'table_painters.dart';
 import 'gesture_grammar.dart';
 import 'table_pieces.dart';
 import 'table_quality.dart';
+import 'table_moon.dart';
 import 'table_smoke.dart';
 
 class TarotTableView extends StatefulWidget {
@@ -36,6 +37,7 @@ class TarotTableView extends StatefulWidget {
     required this.director,
     this.clock,
     this.quality,
+    this.moonIllumination,
   });
 
   final TableDirector director;
@@ -45,6 +47,9 @@ class TarotTableView extends StatefulWidget {
 
   /// Calidad adaptativa. Inyectable para los tests; si no, la mesa usa la suya.
   final TableQuality? quality;
+
+  /// Luz de la Luna sobre la mesa (0 nueva, 1 llena), o null sin dato.
+  final double? moonIllumination;
 
   @override
   State<TarotTableView> createState() => _TarotTableViewState();
@@ -208,6 +213,8 @@ class _TarotTableViewState extends State<TarotTableView>
                       child: _table(back),
                     ),
                   ),
+                if (widget.moonIllumination case final f?)
+                  Positioned.fill(child: MoonlightLayer(illumination: f)),
                 // el humo sube por la pantalla, encima de la mesa y bajo el radial
                 Positioned.fill(child: SmokeLayer(emitter: _dir.smoke)),
                 if (_dir.radial != null) _RadialOverlay(director: _dir),

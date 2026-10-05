@@ -81,6 +81,16 @@ class FakeServer extends ArcanumApi {
     return _view();
   }
 
+  /// Luna de `/astral/moon` (la de ahora, para la luz de la mesa).
+  Map<String, dynamic> moonNow = const {
+    'illumination': .63,
+    'is_waxing': true,
+    'phase_name': 'Gibosa creciente',
+  };
+
+  @override
+  Future<Map<String, dynamic>> moon() async => moonNow;
+
   @override
   Future<Map<String, dynamic>?> tarotCurrentTable() async =>
       id == null || status == 'closed' ? null : _view();

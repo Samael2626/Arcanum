@@ -17,6 +17,7 @@ import 'domain/table_state.dart';
 import 'reading/lectura_revelada.dart';
 import 'table/table_director.dart';
 import 'table/table_haptics.dart';
+import 'table/table_moon.dart';
 import 'table/table_overlays.dart';
 import 'table/table_panel.dart';
 import 'table/table_view.dart';
@@ -113,9 +114,12 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
   Widget build(BuildContext context) {
     final table = ref.watch(tableControllerProvider);
     final catalog = ref.watch(tarotCatalogProvider);
+    // la Luna de la lectura si ya se interpreto; si no, la de ahora
+    final moon = tableMoonFor(_reading, ref.watch(tableMoonNowProvider).value);
     final body = switch ((table, catalog)) {
       (AsyncData(), AsyncData(:final value)) => TarotTableView(
         director: _directorFor(value),
+        moonIllumination: moon?.illumination,
       ),
       (AsyncError(:final error), _) ||
       (_, AsyncError(:final error)) => _Failure(
@@ -163,6 +167,13 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
                   ),
                 ),
               ],
+              // la fase, junto a la ayuda, como en el prototipo
+              if (moon != null && _director != null)
+                Positioned(
+                  top: 4,
+                  right: 52,
+                  child: MoonBadge(moon: moon, onTap: toast),
+                ),
               Positioned(
                 top: 4,
                 left: 4,
