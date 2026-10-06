@@ -118,6 +118,7 @@ def _tirada_real(tirada=None, spread: str = "three_card") -> str:
     no sirve, que es justo lo que invalida la medida.
     """
     from app.core.config import settings
+    from app.data.deck_data import derive_name_es
     from app.services import oracle_context as oc
 
     base = str(settings.ARCANUM_DATA_DIR or "").rstrip("/")
@@ -137,7 +138,12 @@ def _tirada_real(tirada=None, spread: str = "three_card") -> str:
             raise SystemExit(f"{slug} no esta en el catalogo; revisa el slug.")
         cartas.append({
             "position": pos,
-            "name_es": c["title_book_t"].split("/")[-1].strip(),
+            # el MISMO nombre que da la app (b51f90a, 06-oct-2026): el comun,
+            # «Ocho de Oros», no el titulo Book T. Medir con el titulo era medir
+            # un contexto que produccion ya no manda.
+            "name_es": derive_name_es({
+                **c, "arcana": c.get("arcana") or ("minor" if c.get("suit") else "major"),
+            }),
             "drawn_upright": derecha,
             "slug": slug,
             "meaning": (c.get("meaning_upright") if derecha
