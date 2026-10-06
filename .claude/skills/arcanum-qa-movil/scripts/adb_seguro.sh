@@ -60,10 +60,16 @@ PY
     xy=$(TXT="$2" python - <<'PY'
 import os,re
 x=open(os.environ['UI_WIN'],encoding='utf-8').read(); want=os.environ['TXT']
-for m in re.finditer(r'<node [^>]*?text="([^"]*)"[^>]*?content-desc="([^"]*)"[^>]*?bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"',x):
-    t,d,a,b,c,e=m.groups()
-    if want in t or want in d:
-        print((int(a)+int(c))//2,(int(b)+int(e))//2); break
+# exacto antes que parcial, y tocable antes que no: «Forjar» no debe caer en
+# el texto de ayuda «…pulsa «Forjar».» del lienzo
+nodes=[]
+for m in re.finditer(r'<node [^>]*?text="([^"]*)"[^>]*?content-desc="([^"]*)"[^>]*?clickable="(\w+)"[^>]*?bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"',x):
+    t,d,c,a,b,cc,e=m.groups()
+    labels=[t.strip(),d.strip()]+[l.strip() for l in d.split('&#10;')]
+    exact=want in labels; part=any(want in l for l in labels)
+    if exact or part: nodes.append((not exact, c!='true', (int(a)+int(cc))//2,(int(b)+int(e))//2))
+if nodes:
+    n=min(nodes); print(n[2],n[3])
 PY
 )
     [ -z "$xy" ] && { echo "NO ENCONTRADO: '$2'" >&2; exit 4; }

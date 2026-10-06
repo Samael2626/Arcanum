@@ -41,6 +41,10 @@ bash .claude/skills/arcanum-qa-movil/scripts/instalar_qa.sh <modulo> [ruta_app] 
 
 - Cambia `applicationId` y el `package_name` de `google-services.json` a
   `com.arcanum.magick.<modulo>` SOLO durante la compilacion y lo restaura.
+- Tarda ~15 min: lanzarlo con `run_in_background` de la herramienta, NUNCA
+  con `&` en la shell (muere al cerrarse la shell y el trap no restaura
+  `build.gradle`; si pasa: `git checkout -- android/app/build.gradle` y
+  borrar `android/app/google-services.json`).
 - Compila `--profile` (rendimiento real, sin depurador) con
   `GRADLE_USER_HOME=D:\Softwares\gradle-taller` (el de `D:\tmp\.gradle` esta
   corrupto).
@@ -62,6 +66,11 @@ Leer la lista del modulo en `references/` y recorrerla en orden. Por cada paso:
 
 Lo que la lista marca como **[dedo]** se le pide a Samuel con una pregunta
 concreta («arrastra la letra M: ¿va pegada al dedo o con retraso?»).
+
+**Escribir texto:** tocar el campo y luego `escribir`, que espera al teclado.
+Para cerrarlo, `ocultar_teclado`, nunca `atras`: sin teclado, atras cierra la
+pantalla. Si el teclado sube y baja solo, es un fallo de la app (paso con el
+taller el 6-oct), no del metodo: confirmarlo con el dedo de Samuel.
 
 ## 3. Informar
 

@@ -12,6 +12,8 @@ ID="com.arcanum.magick.$MOD"
 GS_SRC="/d/Proyectos/Arcanum/arcanum_app/android/app/google-services.json"
 
 cd "$APP" || exit 1
+# QA_SOLO_COMPILAR=1: compila sin movil (se instala despues con adb install -r)
+[ "${QA_SOLO_COMPILAR:-}" = 1 ] || adb get-state >/dev/null 2>&1 || { echo "SIN MOVIL: adb no ve ningun dispositivo (cable, depuracion USB, autorizar el PC)"; exit 1; }
 [ -f "$GS_SRC" ] || { echo "FALTA $GS_SRC (no se versiona)"; exit 1; }
 had_gs=0; [ -f android/app/google-services.json ] && had_gs=1 && cp android/app/google-services.json /tmp/gs.bak
 restore() {
@@ -32,9 +34,19 @@ if [ "$LOCAL" = "--local" ]; then
 fi
 
 export GRADLE_USER_HOME='D:\Softwares\gradle-taller'
-flutter build apk --profile "${DEFINES[@]}" 2>&1 | tail -3
 APK=build/app/outputs/flutter-apk/app-profile.apk
-[ -f "$APK" ] || { echo "SIN APK"; exit 1; }
+# fuera el APK viejo: si la compilacion falla no se instala el de antes
+rm -f "$APK"
+flutter build apk --profile "${DEFINES[@]}" > /tmp/qa_build.log 2>&1
+rc=$?
+if [ $rc -ne 0 ] || [ ! -f "$APK" ]; then
+  echo "COMPILACION FALLIDA (rc=$rc). Lo relevante:"
+  grep -E "What went wrong|error|Error|FAILURE|Could not|> " /tmp/qa_build.log | head -25
+  exit 1
+fi
+tail -2 /tmp/qa_build.log
+
+[ "${QA_SOLO_COMPILAR:-}" = 1 ] && { cp "$APK" "/d/tmp/arcanum-$MOD-qa.apk"; echo "COMPILADO: /d/tmp/arcanum-$MOD-qa.apk"; exit 0; }
 
 # nunca sobre la de Play
 [ "$ID" = "com.arcanum.magick" ] && { echo "PROHIBIDO instalar sobre com.arcanum.magick"; exit 1; }
