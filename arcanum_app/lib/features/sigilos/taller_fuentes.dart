@@ -77,7 +77,7 @@ List<Widget> _fuentes(SigilDoc doc) {
     if (r == null) Padding(padding: const EdgeInsets.only(top: 12), child: Text('Forja primero un sigilo.', style: muted)),
     if (r != null) ...[
       sectionTitle('Reducción'),
-      line(r.label, [r.method == ReductionMethod.cooper ? Procedencia.om : Procedencia.om]),
+      line(r.label, const [Procedencia.om]),
       Text(r.rule.replaceAll(' [AR]', ' (completar con letras únicas es decisión de ARCANUM)'), style: muted),
       Text('${r.cleaned}  →  ${r.units.join(' ')}', style: muted),
       sectionTitle('Letras'),

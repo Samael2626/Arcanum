@@ -191,7 +191,7 @@ class ScenePictureCache {
 /// Parte la escena en lo de debajo del sigilo, el sigilo (con sus efectos) y
 /// lo de encima. Solo el sigilo cambia al arrastrar una letra.
 (List<SceneGroup>, List<SceneGroup>, List<SceneGroup>) splitAroundSigil(List<SceneGroup> fg) {
-  final i0 = fg.indexWhere((g) => g.sigil), i1 = fg.lastIndexWhere((g) => g.sigil);
+  final i0 = fg.indexWhere((g) => g.live), i1 = fg.lastIndexWhere((g) => g.live);
   if (i0 < 0) return (fg, const [], const []);
   return (fg.sublist(0, i0), fg.sublist(i0, i1 + 1), fg.sublist(i1 + 1));
 }

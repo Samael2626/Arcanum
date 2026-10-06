@@ -36,15 +36,21 @@ class SceneGroup {
   final double? hw;
   final String? cap;
   final bool sigil;
+
+  /// Se mueve con las letras (arrastre, giro, ocultar): el lienzo no lo graba.
+  /// Por defecto, lo mismo que [sigil]; la pluma se mueve pero no lleva halo.
+  final bool live;
   final List<PathItem> items;
   final List<LayerPrim>? prims;
-  const SceneGroup({required this.layer, required this.color, this.w, this.op, this.dx, this.dy, this.hw, this.cap, this.sigil = false, this.items = const [], this.prims});
+  const SceneGroup(
+      {required this.layer, required this.color, this.w, this.op, this.dx, this.dy, this.hw, this.cap, this.sigil = false, bool? live, this.items = const [], this.prims})
+      : live = live ?? sigil;
 
   bool get isEmpty => prims != null ? prims!.isEmpty : items.isEmpty;
 
   SceneGroup copyWith({String? layer, String? color, double? w, double? op, double? dx, double? dy}) => SceneGroup(
       layer: layer ?? this.layer, color: color ?? this.color, w: w ?? this.w, op: op ?? this.op, dx: dx ?? this.dx, dy: dy ?? this.dy, hw: hw,
-      cap: cap, sigil: sigil, items: items, prims: prims);
+      cap: cap, sigil: sigil, live: live, items: items, prims: prims);
 }
 
 String esc(String s) => s.replaceAllMapped(RegExp('[&<>"\']'), (m) => const {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'}[m[0]]!);

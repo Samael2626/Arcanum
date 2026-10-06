@@ -115,6 +115,17 @@ class LetterSigil {
     return true;
   }
 
+  /// Compone letras ya reducidas, sin intencion: un sigilo soltado conserva el
+  /// dibujo aunque la intencion se haya borrado. Mismo orden, mismo dibujo.
+  bool generateUnits(List<String> units, {double contentR = kDefaultContentR}) {
+    intention = '';
+    reduction = null;
+    letters = [for (final ch in units.where(kGlyphs.containsKey)) SigilLetter(ch, null)];
+    if (letters.isEmpty) { prims = []; extra = []; view = null; return false; }
+    applyLayout(contentR: contentR);
+    return true;
+  }
+
   void applyLayout({double contentR = kDefaultContentR}) {
     final kept = <String>[];
     for (final l in letters) {

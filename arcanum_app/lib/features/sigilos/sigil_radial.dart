@@ -82,10 +82,12 @@ class SelectionRadial extends StatelessWidget {
     final a = ctl.anchor();
     if (a == null) return const SizedBox.shrink();
     final acts = _actions(), n = acts.length;
-    final r = n >= 6 ? 68.0 : 58.0, d = 2 * r + _kBtn + 8, k = side / kSize;
+    // en lienzos chicos (pantalla partida) el anillo se encoge para caber
+    final r = math.min(n >= 6 ? 68.0 : 58.0, math.max(0.0, (side - _kBtn - 12) / 2)), d = 2 * r + _kBtn + 8, k = side / kSize;
     // centro: donde se toco, si fue este elemento; si no, el del elemento
     final c = ctl.tap != null && ctl.tapFor == a.key ? ctl.tap! : Pt(a.x, a.cy);
-    final cx = (c.x * k).clamp(d / 2 + 2, side - d / 2 - 2), cy = (c.y * k).clamp(d / 2 + 2, side - d / 2 - 2);
+    double fit(double v) => d + 4 >= side ? side / 2 : v.clamp(d / 2 + 2, side - d / 2 - 2);
+    final cx = fit(c.x * k), cy = fit(c.y * k);
     final name = a.isLetter ? a.letter! : (a.layer!.type == LayerType.symbol ? (stampName(a.layer!.sym) ?? a.layer!.sym) : a.layer!.name);
     return Positioned(
       left: cx - d / 2,
@@ -124,7 +126,10 @@ class AddRadial extends StatelessWidget {
   final ValueChanged<bool> onToggle;
   final void Function(LayerType type) onAdd;
   final VoidCallback onSymbol;
-  const AddRadial({super.key, required this.open, required this.onToggle, required this.onAdd, required this.onSymbol});
+
+  /// Lado del lienzo: el arco no puede salirse de el (se recorta y no se toca).
+  final double side;
+  const AddRadial({super.key, required this.open, required this.onToggle, required this.onAdd, required this.onSymbol, this.side = 400});
 
   @override
   Widget build(BuildContext context) {
@@ -136,7 +141,8 @@ class AddRadial extends StatelessWidget {
       RadialAction(icon: Icons.title, label: 'Inscripción', onTap: () => onAdd(LayerType.inscription)),
       RadialAction(child: const GlyphIcon('♃', size: 22, color: ArcanumColors.goldLight), label: 'Símbolo', onTap: onSymbol),
     ];
-    const r = 190.0;
+    // 190 en el lienzo normal; menos si el lienzo no da (boton + etiqueta caben)
+    final r = math.min(190.0, math.max(_kBtn * 1.5, side - 8 - _kBtn / 2 - 44 - 50));
     return Stack(clipBehavior: Clip.none, children: [
       if (open)
         for (var i = 0; i < items.length; i++) ...() {
