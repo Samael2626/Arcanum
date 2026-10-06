@@ -221,7 +221,21 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
       return;
     }
     final saved = _savedId != null;
-    if (!await confirmRelease(context, saved: saved) || !mounted) return;
+    final release = await confirmRelease(context, saved: saved);
+    if (!mounted) return;
+    if (!release) {
+      // «Volver»: no se suelta, pero la carga se hizo y se anota igual; si el
+      // sigilo aun no esta guardado, queda pendiente y va con el guardado
+      _charges.add(await _store.chargeNow(r.seconds));
+      if (!mounted) return;
+      if (saved) {
+        await _save();
+      } else {
+        setState(() {});
+        _toast('Carga anotada: se guardará con el sigilo.');
+      }
+      return;
+    }
     if (saved) {
       // la intencion se borra de la entrada; el dibujo queda con la fecha
       final charge = await _store.chargeNow(r.seconds);

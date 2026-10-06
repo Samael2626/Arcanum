@@ -115,7 +115,16 @@ class _TallerCargaState extends State<TallerCarga> with SingleTickerProviderStat
                           width: side * .3 * k,
                           height: side * .3 * k,
                           decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: ArcanumColors.gold.withValues(alpha: .6))),
-                          child: Center(child: Text(_fases[fase].toUpperCase(), style: ArcanumText.label().copyWith(color: ArcanumColors.gold))),
+                          // placa oscura: el dorado fino no se leia sobre las lineas del sigilo
+                          child: Center(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(color: Colors.black.withValues(alpha: .78), borderRadius: BorderRadius.circular(10)),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                child: Text(_fases[fase].toUpperCase(), style: ArcanumText.label().copyWith(color: ArcanumColors.goldLight, letterSpacing: 3)),
+                              ),
+                            ),
+                          ),
                         ),
                       );
                     },

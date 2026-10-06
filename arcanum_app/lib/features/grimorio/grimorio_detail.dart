@@ -96,8 +96,9 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
       MaterialPageRoute(fullscreenDialog: true, builder: (_) => TallerCarga(doc: entry.doc, keepLabel: 'Anotar')),
     );
     if (!mounted || r == null) return;
-    final release = r.end == ChargeEnd.release;
-    if (release && (!await confirmRelease(context, saved: true) || !mounted)) return;
+    // «Volver» en el aviso no suelta, pero la carga se hizo: se anota igual
+    final release = r.end == ChargeEnd.release && await confirmRelease(context, saved: true);
+    if (!mounted) return;
     final store = SigilStore(_api, ref.read(grimoireCryptoProvider), ref.read(userPlaceProvider), preview: ref.read(sigilPreviewProvider));
     try {
       final charged = SigilEntry(entry.doc, charges: [...entry.charges, await store.chargeNow(r.seconds)]);
