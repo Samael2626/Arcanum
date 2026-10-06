@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:arcanum_app/features/grimorio/grimorio_detail.dart';
+import 'package:arcanum_app/features/grimorio/grimorio_editor.dart';
 import 'package:arcanum_app/features/sigilos/sigil_radial.dart';
 import 'package:arcanum_app/features/sigilos/sigil_store.dart';
 import 'package:arcanum_app/features/sigilos/taller_carga.dart';
@@ -247,6 +248,9 @@ void main() {
     });
   });
 
+  group('teclado', teclado);
+  group('pantalla entera', pantallaEntera);
+
   group('radial en lienzo chico', () {
     testWidgets('el radial de seleccion cabe y no lanza aunque el lienzo mida 150', (t) async {
       final doc = SigilDoc()..generate(_intencion);
@@ -320,5 +324,50 @@ void main() {
       expect(e.charges.single.seconds, 30);
       expect(e.doc.sigil.intention, _intencion);
     });
+  });
+}
+
+// Encontrado en el movil (6-oct): al subir el teclado el alto libre baja del
+// ancho, el taller se creia en horizontal, rehacia el panel y el campo perdia
+// el foco: el teclado subia y se bajaba solo y no se podia escribir.
+void teclado() {
+  testWidgets('subir el teclado no cambia la disposicion ni quita el foco al campo', (t) async {
+    phoneView(t);
+    await t.pumpWidget(tallerApp(const TallerScreen(), FakeApi()));
+    await t.tap(find.byType(TextField).first);
+    await t.pump();
+    final campo = find.byType(EditableText).first;
+    expect(t.state<EditableTextState>(campo).widget.focusNode.hasFocus, isTrue);
+    // teclado de 420 dp: el alto libre queda por debajo del ancho, como en el
+    // GN2200 con la cabecera del Grimorio encima
+    t.view.viewInsets = const FakeViewPadding(bottom: 420 * 3);
+    await t.pumpAndSettle();
+    expect(t.state<EditableTextState>(find.byType(EditableText).first).widget.focusNode.hasFocus, isTrue, reason: 'el campo perdio el foco');
+    await t.enterText(find.byType(TextField).first, 'Escribo con el teclado abierto');
+    expect(find.text('Escribo con el teclado abierto'), findsOneWidget);
+    t.view.resetViewInsets();
+  });
+}
+
+// Encontrado en el movil (6-oct): el taller se abria dentro del marco del
+// Grimorio (navegador anidado) y su cabecera quedaba encima del lienzo.
+void pantallaEntera() {
+  testWidgets('el taller se abre en el navegador raiz, fuera del marco del Grimorio', (t) async {
+    phoneView(t);
+    final anidado = GlobalKey<NavigatorState>();
+    await t.pumpWidget(tallerApp(
+        Scaffold(
+          appBar: AppBar(title: const Text('Cabecera del Grimorio')),
+          body: Navigator(key: anidado, onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => const GrimorioEditor())),
+        ),
+        FakeApi()));
+    await t.tap(find.text('Sigilo'));
+    await t.pump();
+    await t.tap(find.text('Abrir el taller'));
+    await t.pumpAndSettle();
+    expect(find.byType(TallerScreen), findsOneWidget);
+    // la cabecera del marco ya no se ve: el taller cubre la pantalla
+    expect(find.text('Cabecera del Grimorio'), findsNothing);
+    expect(anidado.currentState!.canPop(), isFalse, reason: 'el taller entro en el navegador anidado');
   });
 }

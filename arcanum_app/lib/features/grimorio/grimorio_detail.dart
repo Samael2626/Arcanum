@@ -83,8 +83,7 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
   }
 
   Future<void> _continueSigil(SigilEntry entry) async {
-    final saved = await Navigator.push<bool>(
-      context,
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(
       MaterialPageRoute(builder: (_) => TallerScreen(entryId: widget.id, initial: entry)),
     );
     if (mounted && saved == true) _retry();
@@ -93,8 +92,7 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
   /// Cargar desde el Grimorio: la carga se anota en la entrada; soltar borra
   /// la intencion y deja el dibujo con la fecha.
   Future<void> _chargeSigil(SigilEntry entry) async {
-    final r = await Navigator.push<ChargeResult>(
-      context,
+    final r = await Navigator.of(context, rootNavigator: true).push<ChargeResult>(
       MaterialPageRoute(fullscreenDialog: true, builder: (_) => TallerCarga(doc: entry.doc, keepLabel: 'Anotar')),
     );
     if (!mounted || r == null) return;

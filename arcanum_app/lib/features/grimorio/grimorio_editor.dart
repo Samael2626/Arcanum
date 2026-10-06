@@ -103,7 +103,9 @@ class _GrimorioEditorState extends ConsumerState<GrimorioEditor> {
   }
 
   Future<void> _openTaller() async {
-    final saved = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => const TallerScreen()));
+    // navegador raiz: el taller ocupa la pantalla entera, sin la cabecera
+    // del Grimorio encima (le quitaba ~85 dp al lienzo)
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(MaterialPageRoute(builder: (_) => const TallerScreen()));
     if (mounted && saved == true) Navigator.pop(context, true);
   }
 

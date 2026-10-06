@@ -28,6 +28,10 @@ vibracion). Todo lo demas lo hace la skill.
    back local con `--dart-define=API_BASE_URL=http://127.0.0.1:8000` y
    `adb reverse tcp:8000 tcp:8000` (como hizo la mesa).
 6. En Git Bash: `MSYS_NO_PATHCONV=1` para rutas `/sdcard/...`.
+7. **Es el telefono personal de Samuel.** Si una captura sale con una
+   notificacion (mensajes, nombres, numeros), se BORRA en el acto, no se
+   describe ni se cita, y se repite la captura. La captura solo se hace con
+   la app propia delante.
 
 ## 1. Instalar
 
