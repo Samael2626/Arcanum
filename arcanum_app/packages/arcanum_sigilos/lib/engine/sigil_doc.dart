@@ -188,10 +188,11 @@ class SigilDoc {
   }
 
   /// SVG exportado: el mismo que dibuja el lienzo, sin marcas de edicion.
-  String buildSVG() {
+  /// [outlineText]: el texto de las capas en trazos (lo que se comparte).
+  String buildSVG({bool outlineText = false}) {
     final out = StringBuffer('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">');
     if (!transparent) out.write(sceneSVG(bgScene(style, theme)));
-    if (sigil.prims.isNotEmpty && sigil.view != null) out.write(sceneSVG(scene(transparent: true).fg));
+    if (sigil.prims.isNotEmpty && sigil.view != null) out.write(sceneSVG(scene(transparent: true).fg, outline: outlineText));
     out.write('</svg>');
     return out.toString();
   }

@@ -263,7 +263,8 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
       } else {
         final keep = doc.transparent;
         doc.transparent = _transparent;
-        final svg = doc.buildSVG();
+        // texto en trazos: se ve igual en cualquier programa, sin fuentes
+        final svg = doc.buildSVG(outlineText: true);
         doc.transparent = keep;
         path = '${dir.path}/arcanum-sigilo.svg';
         await File(path).writeAsString(svg, flush: true);
