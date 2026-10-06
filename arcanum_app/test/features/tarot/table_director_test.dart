@@ -478,6 +478,69 @@ void main() {
       }
     });
 
+    test(
+      'al llenar la tirada se avisa una vez; la aclaratoria no repite',
+      () async {
+        // GN2200, 06-oct: el abanico se recogia sin decir nada y quien seguia
+        // deslizando giraba la mesa
+        await openRws();
+        c
+            .read(tableControllerProvider.notifier)
+            .arrange((s) => s.copyWith(spread: () => 'three_card'));
+        await tap(pileAt('p0'));
+        PieceView fanCard() =>
+            dir.pieces().firstWhere((p) => p.kind == PieceKind.fanCard);
+        for (var i = 0; i < 3; i++) {
+          await tap(fanCard().pose.offset);
+        }
+        expect(
+          fx.toasts.where((t) => t.startsWith('Tirada completa')),
+          hasLength(1),
+        );
+        // reabrirlo para una aclaratoria no vuelve a anunciarlo
+        await tap(pileAt('p0'));
+        await tap(fanCard().pose.offset);
+        expect(
+          fx.toasts.where((t) => t.startsWith('Tirada completa')),
+          hasLength(1),
+        );
+      },
+    );
+
+    test('una suelta no cae sobre la etiqueta de un hueco', () async {
+      // GN2200, 06-oct: la carta de mas tapo «Presente»
+      await openRws();
+      c
+          .read(tableControllerProvider.notifier)
+          .arrange((s) => s.copyWith(spread: () => 'three_card'));
+      final labels = slotLabelRects(three);
+      for (var i = 0; i < three.cardCount; i++) {
+        final at = dir.debugLooseSpot(labels[i].center, three.cardScale);
+        final r = poseRect(at);
+        for (final l in labels) {
+          expect(
+            r.overlaps(l),
+            isFalse,
+            reason: 'cerca de la etiqueta ${i + 1}',
+          );
+        }
+      }
+    });
+
+    test('una carta arrastrada no se suelta colgando fuera del paño', () async {
+      await openRws();
+      final ops = c.read(tableControllerProvider.notifier);
+      final card = await ops.take('p0', 0);
+      ops.arrange(
+        (s) => s.updateCard(card.slug, (k) => k.copyWith(x: 300, y: 450)),
+      );
+      await drag(const Offset(300, 450), const Offset(-40, 520));
+      final k = table().card(card.slug)!;
+      final r = poseRect(TablePose(k.x, k.y, rot: k.rot, scale: k.scale));
+      expect(r.left, greaterThanOrEqualTo(TableGeometry.cloth.left));
+      expect(r.right, lessThanOrEqualTo(TableGeometry.cloth.right));
+    });
+
     test('al llenar el ultimo hueco el abanico se recoge solo', () async {
       // GN2200: con el abanico abierto, «Interpretar» se pintaba encima
       await openRws();

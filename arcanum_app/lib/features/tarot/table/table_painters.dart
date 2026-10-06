@@ -124,7 +124,8 @@ class FeltPainter extends CustomPainter {
       final labels = [
         for (var i = 0; i < sp.cardCount; i++) _labelPainter(sp, i),
       ];
-      final at = slotLabelCenters(sp, (i) => labels[i].size);
+      // misma medida que usa el director para no dejar cartas encima
+      final at = slotLabelCenters(sp, (i) => slotLabelSize(sp, i));
       for (var i = 0; i < sp.cardCount; i++) {
         _slot(canvas, sp, i);
         labels[i].paint(canvas, at[i] - labels[i].size.center(Offset.zero));

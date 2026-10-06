@@ -14,11 +14,8 @@ List<SpreadDef> _spreads() => [
     SpreadDef.fromJson(j as Map<String, dynamic>),
 ];
 
-/// Tamaño aproximado de la etiqueta: el del pintor real ronda esto.
-Size _size(SpreadDef sp, int i) {
-  final text = sp.labelByName ? sp.slots[i].name : '${i + 1}';
-  return Size(text.length * 11.0 + 6, 26);
-}
+/// La misma medida que usan el pintor y el director.
+Size _size(SpreadDef sp, int i) => slotLabelSize(sp, i);
 
 void main() {
   for (final sp in _spreads()) {

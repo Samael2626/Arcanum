@@ -132,6 +132,28 @@ List<Offset> slotLabelCenters(SpreadDef spread, Size Function(int) sizeOf) {
   return out;
 }
 
+/// Tamaño de la etiqueta del hueco `i`, por exceso: lo usan el pintor para
+/// colocarla y el director para que una carta suelta no caiga encima. Cormorant
+/// a 19-21 px ronda medio cuerpo por letra; se suma el espaciado y un margen.
+Size slotLabelSize(SpreadDef spread, int i) {
+  final text = spread.labelByName ? spread.slots[i].name : '${i + 1}';
+  final fs = spread.labelByName ? 19.0 : 21.0;
+  return Size(text.length * (fs * .55 + 1) + 6, fs * 1.35);
+}
+
+/// Donde quedan las etiquetas de la tirada, en unidades de mesa.
+List<Rect> slotLabelRects(SpreadDef spread) {
+  final centers = slotLabelCenters(spread, (i) => slotLabelSize(spread, i));
+  return [
+    for (var i = 0; i < spread.cardCount; i++)
+      Rect.fromCenter(
+        center: centers[i],
+        width: slotLabelSize(spread, i).width,
+        height: slotLabelSize(spread, i).height,
+      ),
+  ];
+}
+
 /// Hueco mas cercano a `p` si esta dentro del iman, o null.
 ///
 /// El iman crece con el tamaño de carta de la tirada: en la Rueda del año

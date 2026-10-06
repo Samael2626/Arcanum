@@ -1034,6 +1034,7 @@ class TableDirector extends ChangeNotifier {
 
   Future<void> _takeFromFan(String fanId, {_Drag? drag}) async {
     if (_pending.containsKey(fanId)) return;
+    final wasFull = _spreadFull;
     final from = _poseOf(fanId);
     if (from == null) return;
     final parts = fanId.split(':');
@@ -1087,20 +1088,40 @@ class TableDirector extends ChangeNotifier {
       _born('card:${card.slug}', _shownPending(p));
       _land(card.slug, p.slot, p.to);
     }
-    _gatherFanIfComplete();
+    _gatherFanIfComplete(wasFull: wasFull);
     notifyListeners();
   }
 
   /// Tirada llena y abanico abierto: ya no hace falta sacar, y el abanico
   /// tapaba «Interpretar». Se recoge solo; un toque al mazo lo vuelve a abrir
   /// si hace falta una aclaratoria.
-  void _gatherFanIfComplete() {
-    final sp = spread;
-    if (sp == null || table.fan == null) return;
-    for (var i = 0; i < sp.cardCount; i++) {
-      if (table.cardInSlot(i) == null) return;
-    }
+  ///
+  /// `wasFull` es si la tirada ya estaba llena antes del gesto: el aviso sale
+  /// solo al completarla, no con cada aclaratoria de un abanico reabierto.
+  void _gatherFanIfComplete({bool wasFull = true}) {
+    if (!_spreadFull || table.fan == null) return;
     ops.arrange((s) => s.copyWith(fan: () => null));
+    if (wasFull) return;
+    final sp = spread!;
+    final allUp = [
+      for (var i = 0; i < sp.cardCount; i++) table.cardInSlot(i)!,
+    ].every((c) => c.faceUp);
+    // quien siguiera deslizando por donde estaba el abanico giraria la mesa
+    // sin saber por que: se dice que se recogio y que toca ahora
+    effects.toast(
+      allUp
+          ? 'Tirada completa: toca «Interpretar».'
+          : 'Tirada completa: el mazo se recoge. Desvela las cartas.',
+    );
+  }
+
+  bool get _spreadFull {
+    final sp = spread;
+    if (sp == null) return false;
+    for (var i = 0; i < sp.cardCount; i++) {
+      if (table.cardInSlot(i) == null) return false;
+    }
+    return true;
   }
 
   /// Seleccion precisa desde la lista accesible; conserva el mismo flujo del toque.
@@ -1226,6 +1247,8 @@ class TableDirector extends ChangeNotifier {
     return [
       if (sp != null)
         for (var i = 0; i < sp.cardCount; i++) poseRect(slotPose(sp, i)),
+      // sus etiquetas tambien: una suelta encima tapaba «Presente»
+      if (sp != null) ...slotLabelRects(sp),
       for (final c in table.cards)
         if (c.slug != skip && !c.aside)
           poseRect(TablePose(c.x, c.y, rot: c.rot, scale: c.scale)),
@@ -1259,6 +1282,10 @@ class TableDirector extends ChangeNotifier {
     );
     return TablePose(at.dx, at.dy, scale: scale);
   }
+
+  @visibleForTesting
+  TablePose debugLooseSpot(Offset near, double scale) =>
+      _looseSpot(near, scale);
 
   /// Primer hueco sin carta y sin una carta de camino.
   int? _firstEmptySlot(SpreadDef sp) {
@@ -1922,9 +1949,10 @@ class TableDirector extends ChangeNotifier {
     final pending = _drag?.id.startsWith('pending:') ?? false;
     // una carta del abanico que aun no llego cierra su gesto al llegar
     final gesture = !pending && (_drag?.gesture ?? false);
+    final wasFull = _spreadFull;
     try {
       _dropDragged(kind, cancelled);
-      _gatherFanIfComplete();
+      _gatherFanIfComplete(wasFull: wasFull);
     } finally {
       if (gesture) ops.commitUndoable();
     }
@@ -2110,6 +2138,18 @@ class TableDirector extends ChangeNotifier {
       }
     }
     final aside = pose.y < TableGeometry.shelfY;
+    final scale = aside
+        ? TableGeometry.deckScale
+        : (sp?.cardScale ?? TableGeometry.freeScale);
+    // entera dentro del paño (o del estante): antes se sujetaba el centro y
+    // la carta podia quedar colgando sobre el marco y el borde de la pantalla
+    final hw = TableGeometry.cardW * scale / 2;
+    final hh = TableGeometry.cardH * scale / 2;
+    const c = TableGeometry.cloth;
+    final x = pose.x.clamp(c.left + hw, c.right - hw).toDouble();
+    final y = aside
+        ? pose.y.clamp(hh, TableGeometry.shelfY - 1).toDouble()
+        : pose.y.clamp(c.top + hh, c.bottom - hh).toDouble();
     ops.arrange(
       (s) => s.updateCard(
         slug,
@@ -2117,11 +2157,9 @@ class TableDirector extends ChangeNotifier {
           slot: () => null,
           host: () => null,
           aside: aside,
-          x: pose.x.clamp(40, TableGeometry.width - 40),
-          y: pose.y.clamp(40, TableGeometry.height - 40),
-          scale: aside
-              ? TableGeometry.deckScale
-              : (sp?.cardScale ?? TableGeometry.freeScale),
+          x: x,
+          y: y,
+          scale: scale,
         ),
       ),
       undoable: true,
