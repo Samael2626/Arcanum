@@ -1,6 +1,7 @@
 // Carga del sigilo (gnosis de bajo riesgo): contemplarlo con la respiracion
 // (4 s inhala, 4 sosten, 4 exhala, 4 sosten) durante 30, 60 o 120 s. Al
 // terminar se decide: guardarlo o olvidarlo (intencion -> ... -> carga -> olvido).
+// La pantalla devuelve la decision y los segundos; quien la abre anota la carga.
 import 'dart:async';
 
 import 'package:arcanum_sigilos/arcanum_sigilos.dart';
@@ -9,11 +10,38 @@ import 'package:flutter/material.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 
-enum CargaFin { guardar, olvidar }
+enum ChargeEnd { keep, release }
+
+typedef ChargeResult = ({ChargeEnd end, int seconds});
+
+/// Aviso antes de soltar: lo que se pierde no vuelve.
+Future<bool> confirmRelease(BuildContext context, {required bool saved}) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      backgroundColor: ArcanumColors.surface,
+      title: Text('¿Soltar el sigilo?', style: ArcanumText.heading(22)),
+      content: Text(
+        saved
+            ? 'La intención se borrará de tu Grimorio para siempre: ni tú podrás volver a leerla. El dibujo se queda, con la fecha en que lo soltaste.'
+            : 'Este sigilo no se ha guardado: al soltarlo, ni el dibujo ni la intención quedarán en ARCANUM.',
+        style: ArcanumText.body(15),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Volver')),
+        TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Soltar')),
+      ],
+    ),
+  );
+  return ok == true;
+}
 
 class TallerCarga extends StatefulWidget {
   final SigilDoc doc;
-  const TallerCarga({super.key, required this.doc});
+
+  /// Boton de quedarselo: «Guardar» en el taller, «Anotar» desde el Grimorio.
+  final String keepLabel;
+  const TallerCarga({super.key, required this.doc, this.keepLabel = 'Guardar'});
   @override
   State<TallerCarga> createState() => _TallerCargaState();
 }
@@ -87,7 +115,16 @@ class _TallerCargaState extends State<TallerCarga> with SingleTickerProviderStat
                           width: side * .3 * k,
                           height: side * .3 * k,
                           decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: ArcanumColors.gold.withValues(alpha: .6))),
-                          child: Center(child: Text(_fases[fase].toUpperCase(), style: ArcanumText.label().copyWith(color: ArcanumColors.gold))),
+                          // placa oscura: el dorado fino no se leia sobre las lineas del sigilo
+                          child: Center(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(color: Colors.black.withValues(alpha: .78), borderRadius: BorderRadius.circular(10)),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                child: Text(_fases[fase].toUpperCase(), style: ArcanumText.label().copyWith(color: ArcanumColors.goldLight, letterSpacing: 3)),
+                              ),
+                            ),
+                          ),
                         ),
                       );
                     },
@@ -101,25 +138,27 @@ class _TallerCargaState extends State<TallerCarga> with SingleTickerProviderStat
             padding: const EdgeInsets.all(16),
             child: done
                 ? Row(children: [
-                    Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(context, CargaFin.olvidar), style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: ArcanumColors.ivory), child: const Text('Olvidar'))),
+                    Expanded(child: OutlinedButton(onPressed: () => Navigator.pop<ChargeResult>(context, (end: ChargeEnd.release, seconds: seconds)), style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: ArcanumColors.ivory), child: const Text('Olvidar'))),
                     const SizedBox(width: 10),
-                    Expanded(child: FilledButton(onPressed: () => Navigator.pop(context, CargaFin.guardar), style: FilledButton.styleFrom(minimumSize: const Size(48, 48), backgroundColor: ArcanumColors.gold, foregroundColor: ArcanumColors.background), child: const Text('Guardar'))),
+                    Expanded(child: FilledButton(onPressed: () => Navigator.pop<ChargeResult>(context, (end: ChargeEnd.keep, seconds: seconds)), style: FilledButton.styleFrom(minimumSize: const Size(48, 48), backgroundColor: ArcanumColors.gold, foregroundColor: ArcanumColors.background), child: Text(widget.keepLabel))),
                   ])
                 : Row(children: [
-                    for (final n in const [30, 60, 120])
-                      Padding(
-                        padding: const EdgeInsets.only(right: 6),
-                        child: ChoiceChip(
-                          label: Text('$n s'),
-                          selected: seconds == n,
-                          showCheckmark: false,
-                          selectedColor: ArcanumColors.gold,
-                          labelStyle: TextStyle(color: seconds == n ? ArcanumColors.background : ArcanumColors.ivory),
-                          backgroundColor: ArcanumColors.surfaceHigh,
-                          onSelected: running ? null : (_) => setState(() => left = seconds = n),
-                        ),
-                      ),
-                    const Spacer(),
+                    // los chips se parten en dos lineas antes que empujar el boton fuera
+                    Expanded(
+                      child: Wrap(spacing: 6, runSpacing: 6, children: [
+                        for (final n in const [30, 60, 120])
+                          ChoiceChip(
+                            label: Text('$n s'),
+                            selected: seconds == n,
+                            showCheckmark: false,
+                            selectedColor: ArcanumColors.gold,
+                            labelStyle: TextStyle(color: seconds == n ? ArcanumColors.background : ArcanumColors.ivory),
+                            backgroundColor: ArcanumColors.surfaceHigh,
+                            onSelected: running ? null : (_) => setState(() => left = seconds = n),
+                          ),
+                      ]),
+                    ),
+                    const SizedBox(width: 10),
                     FilledButton(onPressed: running ? null : _start, style: FilledButton.styleFrom(minimumSize: const Size(96, 48), backgroundColor: ArcanumColors.gold, foregroundColor: ArcanumColors.background), child: const Text('Empezar')),
                   ]),
           ),

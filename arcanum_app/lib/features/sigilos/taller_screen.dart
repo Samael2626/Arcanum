@@ -26,7 +26,7 @@ import 'taller_panels.dart';
 class TallerScreen extends ConsumerStatefulWidget {
   /// Entrada del Grimorio que se sigue editando (null: sigilo nuevo).
   final String? entryId;
-  final SigilDoc? initial;
+  final SigilEntry? initial;
   const TallerScreen({super.key, this.entryId, this.initial});
 
   @override
@@ -34,7 +34,10 @@ class TallerScreen extends ConsumerStatefulWidget {
 }
 
 class TallerScreenState extends ConsumerState<TallerScreen> {
-  late SigilDoc doc = widget.initial ?? SigilDoc();
+  late SigilDoc doc = widget.initial?.doc ?? SigilDoc();
+
+  /// Cargas ya anotadas (y las nuevas, hasta que se guarden).
+  late final List<SigilCharge> _charges = [...?widget.initial?.charges];
   late CanvasController ctl = CanvasController(doc);
   late final TextEditingController _intention = TextEditingController(text: doc.sigil.intention);
   final _repaint = ValueNotifier<int>(0);
@@ -47,6 +50,9 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
   @visibleForTesting
   SigilDoc get debugDoc => doc;
 
+  // el panel conserva su estado (y el foco del campo) si cambia de sitio
+  final _panelKey = GlobalKey();
+
   // historial: fotos del documento (lo que decide el usuario)
   final List<String> _past = [], _future = [];
 
@@ -54,7 +60,7 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
   void initState() {
     super.initState();
     _commit();
-    if (_savedId != null) _savedSnapshot = _past.last;
+    if (_savedId != null) _savedSnapshot = _saveSnap;
   }
 
   @override
@@ -65,7 +71,10 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
   }
 
   String get _snap => jsonEncode(doc.toJson());
-  bool get _dirty => doc.sigil.prims.isNotEmpty && _snap != _savedSnapshot;
+
+  /// Lo que se compara con lo guardado: documento y numero de cargas.
+  String get _saveSnap => '${_charges.length}|$_snap';
+  bool get _dirty => doc.sigil.prims.isNotEmpty && _saveSnap != _savedSnapshot;
 
   void _commit() {
     final s = _snap;
@@ -124,9 +133,12 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
     _changed();
   }
 
-  void _toast(String m) => ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(m)));
+  void _toast(String m) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(m)));
+  }
 
   // ── Simbolos ──────────────────────────────────────────────────
   Future<void> _pickSymbol() async {
@@ -176,37 +188,74 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
   }
 
   // ── Guardar, cargar, compartir ────────────────────────────────
-  Future<void> _save() async {
+  SigilStore get _store =>
+      SigilStore(ref.read(arcanumApiProvider), ref.read(grimoireCryptoProvider), ref.read(userPlaceProvider), preview: ref.read(sigilPreviewProvider));
+
+  Future<bool> _save() async {
+    if (_saving) return false;
     setState(() => _saving = true);
+    // la foto se toma ANTES de enviar: lo que se mueva durante el envio sigue
+    // contando como cambio sin guardar
+    final snap = _saveSnap;
+    final entry = SigilEntry(SigilDoc.fromJson(doc.toJson()), charges: [..._charges]);
     try {
-      final store = SigilStore(ref.read(arcanumApiProvider), ref.read(grimoireCryptoProvider), ref.read(userPlaceProvider));
-      _savedId = await store.save(doc, entryId: _savedId);
-      _savedSnapshot = _snap;
+      _savedId = await _store.save(entry, entryId: _savedId);
+      _savedSnapshot = snap;
       _toast('Sigilo guardado en tu Grimorio.');
+      return true;
     } catch (e) {
       debugPrint('ARCANUM taller: fallo al guardar el sigilo ($e).');
       _toast('No se pudo guardar. Revisa la conexión e inténtalo de nuevo.');
+      return false;
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 
   Future<void> _charge() async {
-    final fin = await Navigator.push<CargaFin>(context, MaterialPageRoute(fullscreenDialog: true, builder: (_) => TallerCarga(doc: doc)));
-    if (!mounted || fin == null) return;
-    if (fin == CargaFin.guardar) {
-      await _save();
-    } else {
-      // olvido: el sigilo no se guarda y el taller se cierra
-      _savedSnapshot = _snap;
-      if (mounted) Navigator.pop(context, _savedId != null);
-      _toastRoot('Soltado. No lo busques.');
+    final r = await Navigator.of(context, rootNavigator: true).push<ChargeResult>(MaterialPageRoute(fullscreenDialog: true, builder: (_) => TallerCarga(doc: doc)));
+    if (!mounted || r == null) return;
+    if (r.end == ChargeEnd.keep) {
+      _charges.add(await _store.chargeNow(r.seconds));
+      if (mounted) await _save();
+      return;
     }
-  }
-
-  void _toastRoot(String m) {
+    final saved = _savedId != null;
+    final release = await confirmRelease(context, saved: saved);
+    if (!mounted) return;
+    if (!release) {
+      // «Volver»: no se suelta, pero la carga se hizo y se anota igual; si el
+      // sigilo aun no esta guardado, queda pendiente y va con el guardado
+      _charges.add(await _store.chargeNow(r.seconds));
+      if (!mounted) return;
+      if (saved) {
+        await _save();
+      } else {
+        setState(() {});
+        _toast('Carga anotada: se guardará con el sigilo.');
+      }
+      return;
+    }
+    if (saved) {
+      // la intencion se borra de la entrada; el dibujo queda con la fecha
+      final charge = await _store.chargeNow(r.seconds);
+      final out = releasedCopy(SigilEntry(doc, charges: [..._charges, charge]), DateTime.now());
+      setState(() => _saving = true);
+      try {
+        await _store.save(out, entryId: _savedId);
+      } catch (e) {
+        debugPrint('ARCANUM taller: fallo al soltar el sigilo ($e).');
+        _toast('No se pudo soltar: la intención sigue guardada. Revisa la conexión e inténtalo de nuevo.');
+        return;
+      } finally {
+        if (mounted) setState(() => _saving = false);
+      }
+    }
+    if (!mounted) return;
+    _savedSnapshot = _saveSnap;
     final messenger = ScaffoldMessenger.maybeOf(context);
-    messenger?.showSnackBar(SnackBar(content: Text(m)));
+    Navigator.pop(context, saved);
+    messenger?.showSnackBar(const SnackBar(content: Text('Soltado. No lo busques.')));
   }
 
   Future<ui.Image> _render(int px) async {
@@ -231,7 +280,8 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
       } else {
         final keep = doc.transparent;
         doc.transparent = _transparent;
-        final svg = doc.buildSVG();
+        // texto en trazos: se ve igual en cualquier programa, sin fuentes
+        final svg = doc.buildSVG(outlineText: true);
         doc.transparent = keep;
         path = '${dir.path}/arcanum-sigilo.svg';
         await File(path).writeAsString(svg, flush: true);
@@ -287,6 +337,7 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
                 _changed();
               },
               onSymbol: _pickSymbol,
+              side: side,
             ),
           ),
       ]),
@@ -369,8 +420,11 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
         body: SafeArea(
           top: false,
           child: LayoutBuilder(builder: (context, box) {
-            final landscape = box.maxWidth > box.maxHeight;
-            final panel = ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 32), children: [_panel()]);
+            // la orientacion es la de la pantalla, no la del hueco libre: con el
+            // teclado abierto el alto baja del ancho, y decidir por el hueco
+            // rehacia el panel y el campo perdia el foco (el teclado se cerraba)
+            final landscape = MediaQuery.orientationOf(context) == Orientation.landscape;
+            final panel = ListView(key: _panelKey, padding: const EdgeInsets.fromLTRB(16, 4, 16, 32), children: [_panel()]);
             if (landscape) {
               final side = box.maxHeight;
               return Row(children: [

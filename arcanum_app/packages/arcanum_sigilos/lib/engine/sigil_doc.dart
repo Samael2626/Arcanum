@@ -31,14 +31,17 @@ class SigilDoc {
         layers = layers ?? [],
         endStyles = endStyles ?? {};
 
-  LayerCtx get ctx => LayerCtx.letters(sigil.intention);
+  /// Letras reducidas, en orden: el material del dibujo.
+  List<String> get units => [for (final l in sigil.letters) l.ch];
+
+  LayerCtx get ctx => LayerCtx.letters(units.join(' '));
 
   // la disposicion de capas es pura (capas + texto): se calcula una vez por
   // estado y la reusan pintado, toque, guias y radial
   String? _layKey;
   LayerLayout? _lay;
   LayerLayout get layout {
-    final key = '${sigil.intention}|${jsonEncode([for (final l in layers) l.toJson()])}';
+    final key = '${units.join()}|${jsonEncode([for (final l in layers) l.toJson()])}';
     if (key != _layKey) {
       _lay = layoutLayers(layers, ctx);
       _layKey = key;
@@ -66,6 +69,22 @@ class SigilDoc {
     return ok;
   }
 
+  /// Compone letras ya reducidas (sigilo soltado, sin intencion).
+  bool generateUnits(List<String> units) {
+    final contentR = layoutLayers(layers, LayerCtx.letters('')).contentR;
+    return sigil.generateUnits(units, contentR: contentR);
+  }
+
+  /// Soltar: la intencion se borra para siempre; letras, ediciones y dibujo
+  /// se quedan (el guardado lleva las letras en lugar de la intencion).
+  void forget() {
+    sigil
+      ..intention = ''
+      ..reduction = null;
+  }
+
+  bool get released => sigil.intention.isEmpty && sigil.letters.isNotEmpty;
+
   /// Tras tocar capas: el sigilo se vuelve a encuadrar en el hueco.
   void refit() {
     if (sigil.prims.isNotEmpty) sigil.view = sigil.fitView(layout.contentR);
@@ -88,7 +107,7 @@ class SigilDoc {
         SceneGroup(layer: 'core-eje', color: th.ink, w: lw * .4, hw: lw, cap: 'round', sigil: true, items: [
           for (final p in visible) PathItem(sigil.calliPath(p), units: p.units),
         ]),
-        SceneGroup(layer: 'pluma', color: th.ink, items: [
+        SceneGroup(layer: 'pluma', color: th.ink, live: true, items: [
           for (final p in visible) PathItem(sigil.calliOutline(p, lw), fill: true, units: p.units),
         ]),
       ] else
@@ -131,6 +150,7 @@ class SigilDoc {
         'endStyles': {...endStyles},
         'termScale': termScale,
         'transparent': transparent,
+        if (released) 'units': units,
       };
 
   factory SigilDoc.fromJson(Map<String, dynamic> j) {
@@ -150,7 +170,11 @@ class SigilDoc {
       ..absorb = j['absorb'] as bool? ?? true
       ..compact = j['compact'] as bool? ?? true;
     final intention = j['intention'] as String? ?? '';
-    if (intention.isNotEmpty) doc.generate(intention);
+    if (intention.isNotEmpty) {
+      doc.generate(intention);
+    } else if (j['units'] is List) {
+      doc.generateUnits([for (final u in j['units'] as List) u as String]);
+    }
     // las ediciones y los ocultos se aplican despues de componer
     final edits = (j['edits'] as Map<String, dynamic>? ?? const {});
     for (final l in doc.sigil.letters) {
@@ -164,10 +188,11 @@ class SigilDoc {
   }
 
   /// SVG exportado: el mismo que dibuja el lienzo, sin marcas de edicion.
-  String buildSVG() {
+  /// [outlineText]: el texto de las capas en trazos (lo que se comparte).
+  String buildSVG({bool outlineText = false}) {
     final out = StringBuffer('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">');
     if (!transparent) out.write(sceneSVG(bgScene(style, theme)));
-    if (sigil.prims.isNotEmpty && sigil.view != null) out.write(sceneSVG(scene(transparent: true).fg));
+    if (sigil.prims.isNotEmpty && sigil.view != null) out.write(sceneSVG(scene(transparent: true).fg, outline: outlineText));
     out.write('</svg>');
     return out.toString();
   }

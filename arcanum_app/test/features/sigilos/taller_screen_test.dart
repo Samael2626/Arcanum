@@ -3,56 +3,15 @@
 // Grimorio (editor y detalle).
 import 'dart:convert';
 
-import 'package:arcanum_app/core/api/arcanum_api.dart';
-import 'package:arcanum_app/core/astro/user_place.dart';
-import 'package:arcanum_app/core/auth/auth_controller.dart';
-import 'package:arcanum_app/core/crypto/grimoire_crypto.dart';
 import 'package:arcanum_app/features/grimorio/grimorio_detail.dart';
 import 'package:arcanum_app/features/grimorio/grimorio_editor.dart';
 import 'package:arcanum_app/features/sigilos/sigil_store.dart';
 import 'package:arcanum_app/features/sigilos/taller_screen.dart';
 import 'package:arcanum_sigilos/arcanum_sigilos.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class _Auth extends AuthNotifier {
-  @override
-  AuthState build() => const AuthState(AuthStatus.authenticated, {'id': 'user-a'});
-}
-
-class _FakeApi extends ArcanumApi {
-  _FakeApi() : super(Dio());
-  final created = <Map<String, dynamic>>[], updated = <(String, Map<String, dynamic>)>[];
-  Map<String, dynamic> detail = const {};
-
-  @override
-  Future<Map<String, dynamic>> grimoireCreate(Map<String, dynamic> body) async {
-    created.add(body);
-    return {'id': 'sigilo-1'};
-  }
-
-  @override
-  Future<Map<String, dynamic>> grimoireUpdate(String id, Map<String, dynamic> body) async {
-    updated.add((id, body));
-    return {'id': id};
-  }
-
-  @override
-  Future<Map<String, dynamic>> grimoireGet(String id) async => detail;
-
-  @override
-  Future<Map<String, dynamic>> moon() async => {'phase_name': 'Creciente'};
-}
-
-/// Cifrado de mentira: base64 (el de verdad tiene sus propios tests).
-class _FakeCrypto extends GrimoireCrypto {
-  @override
-  Future<({String ciphertext, String iv})> encryptText(String plaintext) async => (ciphertext: base64Encode(utf8.encode(plaintext)), iv: 'iv');
-  @override
-  Future<String> decryptText(String ciphertextB64, String ivB64) async => utf8.decode(base64Decode(ciphertextB64));
-}
+import 'taller_fakes.dart';
 
 /// El panel del taller es una lista vertical: se arrastra con el dedo hasta que
 /// el rotulo entra en la zona visible (entre la barra de pestañas y el pie).
@@ -70,27 +29,11 @@ Future<void> _llevarA(WidgetTester t, String r) async {
 Future<void> _bajarA(WidgetTester t, String r) => _llevarA(t, r);
 Future<void> _subirA(WidgetTester t, String r) => _llevarA(t, r);
 
-Widget _app(Widget child, _FakeApi api) => ProviderScope(
-      overrides: [
-        arcanumApiProvider.overrideWithValue(api),
-        authProvider.overrideWith(_Auth.new),
-        grimoireCryptoProvider.overrideWithValue(_FakeCrypto()),
-        userPlaceProvider.overrideWithValue(null),
-      ],
-      child: MaterialApp(home: child),
-    );
-
-void _phone(WidgetTester tester) {
-  tester.view.physicalSize = const Size(390 * 3, 844 * 3);
-  tester.view.devicePixelRatio = 3;
-  addTearDown(tester.view.reset);
-}
-
 const _intencion = 'Mi práctica mantiene enfoque sereno';
 
-Future<TallerScreenState> _forjar(WidgetTester tester, _FakeApi api) async {
-  _phone(tester);
-  await tester.pumpWidget(_app(const TallerScreen(), api));
+Future<TallerScreenState> _forjar(WidgetTester tester, FakeApi api) async {
+  phoneView(tester);
+  await tester.pumpWidget(tallerApp(const TallerScreen(), api));
   expect(find.text('Escribe tu intención y pulsa «Forjar».'), findsOneWidget);
   await tester.enterText(find.byType(TextField).first, _intencion);
   await tester.tap(find.text('Forjar'));
@@ -108,14 +51,14 @@ Offset _sobreLetra(WidgetTester tester, SigilDoc doc) {
 
 void main() {
   testWidgets('forjar dibuja el sigilo con el mismo motor que el prototipo', (tester) async {
-    final st = await _forjar(tester, _FakeApi());
+    final st = await _forjar(tester, FakeApi());
     expect(find.text('Escribe tu intención y pulsa «Forjar».'), findsNothing);
     final ref = SigilDoc()..generate(_intencion);
     expect(st.debugDoc.buildSVG(), ref.buildSVG());
   });
 
   testWidgets('tocar una letra abre su radial; girar cambia el sigilo y deshacer lo devuelve', (tester) async {
-    final st = await _forjar(tester, _FakeApi());
+    final st = await _forjar(tester, FakeApi());
     final antes = st.debugDoc.buildSVG();
     await tester.tapAt(_sobreLetra(tester, st.debugDoc));
     await tester.pump();
@@ -133,7 +76,7 @@ void main() {
   });
 
   testWidgets('los botones del radial y del lienzo miden 48 px', (tester) async {
-    final st = await _forjar(tester, _FakeApi());
+    final st = await _forjar(tester, FakeApi());
     await tester.tapAt(_sobreLetra(tester, st.debugDoc));
     await tester.pump();
     for (final t in ['Girar −15°', 'Girar +15°', 'Reflejo horizontal', 'Reflejo vertical', 'Reducir', 'Ampliar', 'Restaurar la letra', 'Añadir']) {
@@ -143,7 +86,7 @@ void main() {
   });
 
   testWidgets('el boton + añade una estrella y el radial pasa a la capa', (tester) async {
-    final st = await _forjar(tester, _FakeApi());
+    final st = await _forjar(tester, FakeApi());
     await tester.tap(find.byTooltip('Añadir'));
     await tester.pump();
     await tester.tap(find.byTooltip('Estrella'));
@@ -156,7 +99,7 @@ void main() {
   });
 
   testWidgets('un estilo de la pestaña Estilo cambia el sigilo', (tester) async {
-    final st = await _forjar(tester, _FakeApi());
+    final st = await _forjar(tester, FakeApi());
     await tester.tap(find.text('Estilo'));
     await tester.pump();
     await tester.tap(find.text('Oro y negro'));
@@ -166,7 +109,7 @@ void main() {
   });
 
   testWidgets('Caligrafía: Pluma y Curva cambian cómo se pinta, un estilo no la borra y se guarda', (tester) async {
-    final api = _FakeApi();
+    final api = FakeApi();
     final st = await _forjar(tester, api);
     final recta = st.debugDoc.buildSVG();
     await tester.tap(find.text('Estilo'));
@@ -216,13 +159,13 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('Guardar en el Grimorio'));
     await tester.pumpAndSettle();
-    final doc = decodeSigilEntry(utf8.decode(base64Decode(api.created.single['encrypted_content'] as String)))!;
+    final doc = (decodeSigilEntry(utf8.decode(base64Decode(api.created.single['encrypted_content'] as String))) as SigilReadable).entry.doc;
     expect(doc.style.calli, 'pluma');
     expect(doc.buildSVG(), antes);
   });
 
   testWidgets('guardar cifra el documento entero y el titulo no lleva la intencion', (tester) async {
-    final api = _FakeApi();
+    final api = FakeApi();
     final st = await _forjar(tester, api);
     await tester.tap(find.text('Guardar'));
     await tester.pump();
@@ -233,7 +176,7 @@ void main() {
     expect(body['title'] as String, startsWith('Sigilo del '));
     expect((body['title'] as String).toLowerCase(), isNot(contains('práctica')));
     expect(body['moon_phase'], 'Creciente');
-    final doc = decodeSigilEntry(utf8.decode(base64Decode(body['encrypted_content'] as String)))!;
+    final doc = (decodeSigilEntry(utf8.decode(base64Decode(body['encrypted_content'] as String))) as SigilReadable).entry.doc;
     expect(doc.sigil.intention, _intencion);
     expect(doc.buildSVG(), st.debugDoc.buildSVG());
     // guardar otra vez reescribe la misma entrada (antes se va el aviso, que tapa el boton)
@@ -246,8 +189,8 @@ void main() {
   });
 
   testWidgets('en el editor del Grimorio, «Sigilo» lleva al taller en vez de al texto', (tester) async {
-    _phone(tester);
-    await tester.pumpWidget(_app(const GrimorioEditor(), _FakeApi()));
+    phoneView(tester);
+    await tester.pumpWidget(tallerApp(const GrimorioEditor(), FakeApi()));
     expect(find.text('Sellar entrada'), findsOneWidget);
     await tester.tap(find.text('Sigilo'));
     await tester.pump();
@@ -259,12 +202,12 @@ void main() {
   });
 
   testWidgets('el detalle dibuja el sigilo; la intencion queda oculta hasta pedirla', (tester) async {
-    _phone(tester);
+    phoneView(tester);
     final doc = SigilDoc()..generate(_intencion);
-    final enc = await _FakeCrypto().encryptText(encodeSigilEntry(doc));
-    final api = _FakeApi()
+    final enc = await FakeCrypto().encryptText(encodeSigilEntry(SigilEntry(doc)));
+    final api = FakeApi()
       ..detail = {'id': 'sigilo-1', 'entry_type': 'sigil', 'title': 'Sigilo del 30 de septiembre', 'encrypted_content': enc.ciphertext, 'content_iv': enc.iv, 'moon_phase': 'Creciente', 'entry_date': '2026-09-30T10:00:00Z'};
-    await tester.pumpWidget(_app(const GrimorioDetail(id: 'sigilo-1'), api));
+    await tester.pumpWidget(tallerApp(const GrimorioDetail(id: 'sigilo-1'), api));
     for (var i = 0; i < 4; i++) {
       await tester.pump(const Duration(milliseconds: 300));
     }
@@ -277,11 +220,11 @@ void main() {
   });
 
   testWidgets('una entrada «Sigilo» escrita a mano antes del taller sigue siendo texto', (tester) async {
-    _phone(tester);
-    final enc = await _FakeCrypto().encryptText('Dibujé un sigilo con las letras de mi nombre.');
-    final api = _FakeApi()
+    phoneView(tester);
+    final enc = await FakeCrypto().encryptText('Dibujé un sigilo con las letras de mi nombre.');
+    final api = FakeApi()
       ..detail = {'id': 'viejo', 'entry_type': 'sigil', 'title': 'Mi sigilo', 'encrypted_content': enc.ciphertext, 'content_iv': enc.iv, 'entry_date': '2026-09-01T10:00:00Z'};
-    await tester.pumpWidget(_app(const GrimorioDetail(id: 'viejo'), api));
+    await tester.pumpWidget(tallerApp(const GrimorioDetail(id: 'viejo'), api));
     for (var i = 0; i < 4; i++) {
       await tester.pump(const Duration(milliseconds: 300));
     }

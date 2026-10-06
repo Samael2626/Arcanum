@@ -1,8 +1,13 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional, List
 from uuid import UUID
 from enum import Enum
+
+
+# Miniatura cifrada de la lista (PNG pequeño en base64, cifrado en el cliente).
+# Tope holgado: una de 160 px ronda los 10-20 KB; esto corta abusos.
+PREVIEW_MAX = 120_000
 
 
 class EntryType(str, Enum):
@@ -32,12 +37,16 @@ class GrimoireEntryCreate(GrimoireEntryBase):
     """
     encrypted_content: str  # AES-256 ciphertext (base64)
     content_iv: str          # IV base64
+    encrypted_preview: Optional[str] = Field(default=None, max_length=PREVIEW_MAX)
+    preview_iv: Optional[str] = Field(default=None, max_length=64)
 
 
 class GrimoireEntryUpdate(BaseModel):
     title: Optional[str] = None
     encrypted_content: Optional[str] = None
     content_iv: Optional[str] = None
+    encrypted_preview: Optional[str] = Field(default=None, max_length=PREVIEW_MAX)
+    preview_iv: Optional[str] = Field(default=None, max_length=64)
     moon_phase: Optional[str] = None
     moon_sign: Optional[str] = None
     planetary_hour: Optional[str] = None
@@ -52,6 +61,8 @@ class GrimoireEntryResponse(GrimoireEntryBase):
     user_id: UUID
     encrypted_content: str
     content_iv: str
+    encrypted_preview: Optional[str] = None
+    preview_iv: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 
@@ -70,6 +81,8 @@ class GrimoireEntrySummary(BaseModel):
     tags: Optional[List[str]] = []
     entry_date: datetime
     created_at: datetime
+    encrypted_preview: Optional[str] = None
+    preview_iv: Optional[str] = None
 
     class Config:
         from_attributes = True

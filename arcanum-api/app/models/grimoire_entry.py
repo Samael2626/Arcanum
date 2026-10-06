@@ -14,6 +14,9 @@ class GrimoireEntry(Base):
     title = Column(String(255), nullable=False)
     encrypted_content = Column(String, nullable=False)  # AES-256 ciphertext (base64)
     content_iv = Column(String(64), nullable=False)     # IV base64 (no secreto)
+    # miniatura cifrada (PNG de un sigilo) para la lista, sin bajar el contenido
+    encrypted_preview = Column(String, nullable=True)
+    preview_iv = Column(String(64), nullable=True)
     moon_phase = Column(String(30), nullable=True)
     moon_sign = Column(String(20), nullable=True)
     planetary_hour = Column(String(20), nullable=True)

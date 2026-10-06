@@ -4,6 +4,7 @@
 import 'arcane_glyphs.dart';
 import 'js_num.dart';
 import 'layers.dart';
+import 'text_outline.dart';
 
 /// Centro optico de una linea de texto respecto de su base (fraccion del cuerpo).
 const kTextMid = .35;
@@ -36,15 +37,21 @@ class SceneGroup {
   final double? hw;
   final String? cap;
   final bool sigil;
+
+  /// Se mueve con las letras (arrastre, giro, ocultar): el lienzo no lo graba.
+  /// Por defecto, lo mismo que [sigil]; la pluma se mueve pero no lleva halo.
+  final bool live;
   final List<PathItem> items;
   final List<LayerPrim>? prims;
-  const SceneGroup({required this.layer, required this.color, this.w, this.op, this.dx, this.dy, this.hw, this.cap, this.sigil = false, this.items = const [], this.prims});
+  const SceneGroup(
+      {required this.layer, required this.color, this.w, this.op, this.dx, this.dy, this.hw, this.cap, this.sigil = false, bool? live, this.items = const [], this.prims})
+      : live = live ?? sigil;
 
   bool get isEmpty => prims != null ? prims!.isEmpty : items.isEmpty;
 
   SceneGroup copyWith({String? layer, String? color, double? w, double? op, double? dx, double? dy}) => SceneGroup(
       layer: layer ?? this.layer, color: color ?? this.color, w: w ?? this.w, op: op ?? this.op, dx: dx ?? this.dx, dy: dy ?? this.dy, hw: hw,
-      cap: cap, sigil: sigil, items: items, prims: prims);
+      cap: cap, sigil: sigil, live: live, items: items, prims: prims);
 }
 
 String esc(String s) => s.replaceAllMapped(RegExp('[&<>"\']'), (m) => const {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'}[m[0]]!);
@@ -61,13 +68,16 @@ String glyphSVG(String sym, double x, double y, double size, double rot, String 
       '${g.f != null ? '<path d="${g.f}" fill="$color" stroke="none"/>' : ''}</g>';
 }
 
-String primsSVG(List<LayerPrim> prims, String color) => prims.map((p) {
+/// [outline]: texto en trazos (exportar); sin el, `<text>` como el prototipo.
+String primsSVG(List<LayerPrim> prims, String color, {bool outline = false}) => prims.map((p) {
       final o = p.op < 1 ? ' opacity="${f2(p.op)}"' : '';
       return switch (p) {
         CirclePrim c => '<circle cx="${f2(c.cx)}" cy="${f2(c.cy)}" r="${f2(c.r)}" fill="none" stroke="$color" stroke-width="${f2(c.w)}"$o/>',
         PolyPrim q => '<path d="M ${q.pts.map((v) => '${f2(v.$1)} ${f2(v.$2)}').join(' L ')}${q.closed ? ' Z' : ''}" fill="none" stroke="$color" stroke-width="${f2(q.w)}" stroke-linejoin="round" stroke-linecap="round"$o/>',
         GlyphLayerPrim g => glyphSVG(g.ch, g.x, g.y, g.size, g.rot, color, g.op),
         TextPrim t => () {
+            final drawn = outline ? textOutlineSVG(t, color, o) : null;
+            if (drawn != null) return drawn;
             final italic = t.font.startsWith('italic');
             return '<text transform="translate(${f2(t.x)} ${f2(t.y)}) rotate(${f2(t.rot)})" y="${f2(t.size * kTextMid)}" text-anchor="middle" font-family="${italic ? 'Georgia, serif' : t.font}"${italic ? ' font-style="italic"' : ''} font-size="${f2(t.size)}" fill="$color"$o>${esc(t.ch)}</text>';
           }(),
@@ -92,12 +102,12 @@ String _gradSVG(Grad gr) {
 
 String _opAttr(double? op) => op != null && op < 1 ? ' opacity="${jsFixedNum(op, 3)}"' : '';
 
-String groupSVG(SceneGroup g) {
+String groupSVG(SceneGroup g, {bool outline = false}) {
   final dx = g.dx ?? 0, dy = g.dy ?? 0;
   final tf = dx != 0 || dy != 0 ? ' transform="translate(${jsNum(dx)} ${jsNum(dy)})"' : '';
   final gop = g.op ?? 1;
   if (g.prims != null) {
-    return '<g data-layer="${g.layer}"$tf>${primsSVG(gop < 1 ? g.prims!.map((p) => _withOp(p, gop)).toList() : g.prims!, g.color)}</g>';
+    return '<g data-layer="${g.layer}"$tf>${primsSVG(gop < 1 ? g.prims!.map((p) => _withOp(p, gop)).toList() : g.prims!, g.color, outline: outline)}</g>';
   }
   final sq = g.cap == 'square', defs = <String>[];
   final body = g.items.map((it) {
@@ -115,4 +125,4 @@ String groupSVG(SceneGroup g) {
   return '<g data-layer="${g.layer}"$stroke$tf>${defs.isNotEmpty ? '<defs>${defs.join()}</defs>' : ''}$body</g>';
 }
 
-String sceneSVG(List<SceneGroup> groups) => groups.map(groupSVG).join();
+String sceneSVG(List<SceneGroup> groups, {bool outline = false}) => groups.map((g) => groupSVG(g, outline: outline)).join();

@@ -170,7 +170,9 @@ class _SigilCanvasState extends State<SigilCanvas> {
                 );
                 // un toque leve cuando el iman engancha una guia: se nota sin mirar
                 final has = _c.guides.isNotEmpty;
-                if (has && !_hadGuides) HapticFeedback.selectionClick();
+                // lightImpact y no selectionClick: este (CLOCK_TICK en Android) no vibra
+                // en varios fabricantes; comprobado en el GN2200 (OnePlus), 6-oct
+                if (has && !_hadGuides) HapticFeedback.lightImpact();
                 _hadGuides = has;
                 _repaint();
               },

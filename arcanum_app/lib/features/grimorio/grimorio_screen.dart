@@ -1,9 +1,13 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api/arcanum_api.dart';
 import '../../core/auth/auth_controller.dart';
+import '../../core/crypto/grimoire_crypto.dart';
 import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
@@ -293,7 +297,15 @@ class _CodexLeaf extends StatelessWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        IlluminatedDropCap(letter: titleText[0], mood: mood),
+                        // un sigilo con miniatura se ve a si mismo; si no, capitular
+                        if (type == 'sigil' && entry['encrypted_preview'] is String && entry['preview_iv'] is String)
+                          SigilThumb(
+                            ciphertext: entry['encrypted_preview'] as String,
+                            iv: entry['preview_iv'] as String,
+                            fallback: IlluminatedDropCap(letter: titleText[0], mood: mood),
+                          )
+                        else
+                          IlluminatedDropCap(letter: titleText[0], mood: mood),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
@@ -701,4 +713,57 @@ class _SavedPassagesLink extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// Miniatura cifrada de un sigilo en la lista. Se descifra una vez por version
+/// (el IV cambia en cada guardado) y se recuerda mientras la app vive.
+class SigilThumb extends ConsumerStatefulWidget {
+  final String ciphertext, iv;
+  final Widget fallback;
+  final double size;
+  const SigilThumb({super.key, required this.ciphertext, required this.iv, required this.fallback, this.size = 52});
+
+  static final _cache = <String, Uint8List>{};
+
+  @override
+  ConsumerState<SigilThumb> createState() => _SigilThumbState();
+}
+
+class _SigilThumbState extends ConsumerState<SigilThumb> {
+  late Future<Uint8List?> _png = _load();
+
+  @override
+  void didUpdateWidget(SigilThumb old) {
+    super.didUpdateWidget(old);
+    if (old.iv != widget.iv || old.ciphertext != widget.ciphertext) _png = _load();
+  }
+
+  Future<Uint8List?> _load() async {
+    final hit = SigilThumb._cache[widget.iv];
+    if (hit != null) return hit;
+    try {
+      final b64 = await ref.read(grimoireCryptoProvider).decryptText(widget.ciphertext, widget.iv);
+      final png = base64Decode(b64);
+      if (SigilThumb._cache.length > 200) SigilThumb._cache.clear();
+      return SigilThumb._cache[widget.iv] = png;
+    } catch (error) {
+      // sin miniatura la fila sigue sirviendo: se cae a la capitular
+      debugPrint('ARCANUM grimorio: miniatura ilegible ($error).');
+      return null;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cached = SigilThumb._cache[widget.iv];
+    Widget img(Uint8List png) => ClipRRect(
+          borderRadius: BorderRadius.circular(widget.size * .22),
+          child: Image.memory(png, width: widget.size, height: widget.size, gaplessPlayback: true, filterQuality: FilterQuality.medium),
+        );
+    if (cached != null) return img(cached);
+    return FutureBuilder<Uint8List?>(
+      future: _png,
+      builder: (context, snap) => snap.data != null ? img(snap.data!) : widget.fallback,
+    );
+  }
 }
