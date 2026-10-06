@@ -1,13 +1,17 @@
 """Invalidar access tokens al cerrar todas las sesiones.
 
-Revision ID: 017
+Revision ID: 018
+Revises: 017
+
+Iba como 017 en su rama; se renumero al entrar despues de
+017_add_grimoire_preview (dos 017 colgando de 016 son dos cabezas en Alembic).
 """
 
 from alembic import op
 import sqlalchemy as sa
 
-revision = "017"
-down_revision = "016"
+revision = "018"
+down_revision = "017"
 branch_labels = None
 depends_on = None
 
