@@ -138,7 +138,7 @@ void main() {
     final toques = calls.where((c) => c.startsWith('HapticFeedback')).toList();
     expect(engancha, greaterThan(1), reason: 'el recorrido cruza varias guias');
     expect(toques, hasLength(engancha));
-    expect(toques.every((c) => c.contains('HapticFeedbackType.selectionClick')), isTrue);
+    expect(toques.every((c) => c.contains('HapticFeedbackType.lightImpact')), isTrue);
     expect(sym.x, closeTo(400, 1e-6), reason: 'acaba pegado a la vertical del centro');
   });
 
