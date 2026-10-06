@@ -33,6 +33,12 @@ htmlcov
 *.db
 *.sqlite
 .env.example
+**/.env
+**/.env.*
+**/key.properties
+**/*.jks
+**/*.p12
+**/*.pem
 
 # Node/Flutter (front-end)
 node_modules
@@ -62,3 +68,23 @@ docker-compose.yml
 # Logs
 *.log
 logs/
+
+# Solo los archivos que usa la imagen de la API.
+**
+!requirements.txt
+!start.sh
+!arcanum-api/
+!arcanum-api/**
+arcanum-api/.env
+arcanum-api/.env.*
+arcanum-api/.venv/
+arcanum-api/venv/
+arcanum-api/.pytest_cache/
+arcanum-api/.claude/
+arcanum-api/tests/
+arcanum-api/tests_unit/
+arcanum-api/tests_pg/
+**/key.properties
+**/*.jks
+**/*.p12
+**/*.pem

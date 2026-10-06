@@ -104,7 +104,9 @@ class UserRepository:
         row = self._db.query(User).filter(User.id == user.id).first()
         if not row:
             raise ValueError(f"User {user.id} not found")
-        _apply_to_orm(user, row)
+        for field in fields(UserEntity):
+            if field.name != "auth_epoch" and hasattr(row, field.name):
+                setattr(row, field.name, getattr(user, field.name))
         self._db.commit()
         self._db.refresh(row)
         return _to_entity(UserEntity, row)
@@ -141,6 +143,9 @@ class RefreshTokenRepository:
             self._db.commit()
 
     def delete_all_for_user(self, user_id: UUID) -> int:
+        self._db.query(User).filter(User.id == user_id).update(
+            {User.auth_epoch: User.auth_epoch + 1}
+        )
         count = self._db.query(RefreshToken).filter(RefreshToken.user_id == user_id).delete()
         self._db.commit()
         return count

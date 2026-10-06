@@ -100,7 +100,7 @@ def logout(
     current_user: UserEntity = Depends(get_current_user),
     auth: AuthService = Depends(get_auth_service),
 ):
-    auth.revoke_refresh_token(refresh_token)
+    auth.revoke_refresh_token(refresh_token, current_user.id)
     payload = verify_token(token, token_type="access")
     if payload and payload.get("exp"):
         remaining = int(payload["exp"] - datetime.now(timezone.utc).timestamp())

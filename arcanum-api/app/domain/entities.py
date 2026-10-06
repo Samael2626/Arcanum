@@ -29,6 +29,7 @@ class UserEntity:
     preferred_tradition: str | None = None
     preferred_house_system: str = "placidus"
     onboarding_completed: bool = False
+    auth_epoch: int = 0
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
