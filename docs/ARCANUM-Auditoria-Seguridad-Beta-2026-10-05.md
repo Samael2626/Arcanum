@@ -24,11 +24,23 @@
 - Una prueba adicional confirmó que guardar un perfil cargado antes de `/auth/logout-all` no restaura la época de autenticación revocada. Tokens sin firma o firmados con otra clave devolvieron 401. Se ejecutaron siete pruebas dirigidas en una base aislada: siete pasaron.
 - El Android Manifest de `main` desactiva backup; los tokens móviles están en `FlutterSecureStorage`; la URL de API en release usa HTTPS.
 
+## Segunda pasada: concurrencia y caída de Redis
+
+- Se reprodujo un canje doble del mismo refresh token contra PostgreSQL real: dos peticiones simultáneas recibían dos pares nuevos. La consulta y el borrado estaban separados; el segundo borrado no encontraba fila, pero aun así emitía credenciales. El consumo ahora usa `DELETE ... RETURNING` en una operación atómica. La prueba de carrera exige exactamente un canje exitoso y pasó tras la corrección.
+- Se modeló un `refresh` ya iniciado que inserta su token después de `logout-all`. Antes ese token recuperaba la sesión. Los refresh tokens nuevos incluyen `auth_epoch` y la rotación lo compara con el usuario actual; los tokens antiguos sin esa reclamación solo son válidos mientras la época siga en cero. La prueba pasó tras el cambio.
+- Se reprodujo que una caída de Redis en producción desactivaba el límite de intentos y la comprobación de blacklist. Ahora esos controles responden 503 en producción cuando Redis no está disponible; desarrollo conserva el comportamiento permisivo. La indisponibilidad temporal es preferible a dar por válido un token cuya revocación no puede consultarse.
+- La primera corrida de los tests PostgreSQL dio falsos fallos porque `arcanum_migration_test` marcaba revisión 017 pero carecía de `users.auth_epoch`. Se cambió a la base de pruebas aislada `arcanum_migration_test_security`, cuya revisión 017 y columna se comprobaron. En esa base, los 59 tests dirigidos de mesa de tarot y webhook RevenueCat pasaron.
+- Se inspeccionó el APK debug local: firma Android Debug, `debuggable=true`, tráfico claro permitido y backup desactivado. Esas propiedades son esperables para debug y no prueban cómo quedará el AAB release.
+- Suite completa tras las correcciones, con ambas bases PostgreSQL aisladas y `ARCANUM_DATA_DIR` montado: **1.417 pasaron, 4 saltaron**. Los saltos son tres JSON de ingesta no presentes y `wordfreq` opcional. Se ejecutó sin otra prueba concurrente sobre esas bases. La corrida anterior tuvo una roja causada por dos procesos de pruebas sobre la misma base; el caso pasó aislado y la corrida final pasó completa.
+- Se construyó un AAB release local desde esta rama: `arcanum_app/build/app/outputs/bundle/release/app-release.aab`, 90.159.525 bytes, SHA-256 `F89D81DA0693CBCE4E7BAA2B9D2C7273298679AC26D1A77A31A5CB55C9A4D57D`. `bundletool validate` pasó y `jarsigner -verify` confirmó firma de upload; el certificado autofirmado y sin timestamp generó avisos esperables. El manifiesto declara paquete `com.arcanum.magick`, versión 15 / 1.0.7, `allowBackup=false`, sin `debuggable` ni `usesCleartextTraffic`. El APK universal generado desde el AAB mostró lo mismo; bundletool lo firmó con clave debug solo para inspección, no para Play.
+- Se revisaron las 891 entradas del AAB: sin nombres de `.env`, `key.properties`, keystore o `google-services.json`; ninguna entrada contiene los marcadores `gsk_`, clave privada PEM, `"private_key"` o `SERVICE_ROLE_KEY`. Esto es una búsqueda de marcadores, no una garantía de ausencia de cualquier secreto imaginable. Los tres archivos locales necesarios para compilar se retiraron del worktree al terminar.
+- Del AAB se generó un APK universal con bundletool para inspección: mantiene `allowBackup=false` y no declara `debuggable` ni `usesCleartextTraffic`. Las 7 pruebas Flutter de configuración de red y cifrado del grimorio pasaron. No había dispositivo conectado para instalar y probar el flujo real.
+
 ## Pendiente antes de ampliar testers
 
-- Revisar el AAB **release** exacto que se subirá a Play. Solo hay APK de debug local; no se puede inferir el contenido del release a partir de ella.
+- Comparar el SHA-256 del AAB que se subirá a Play con el artefacto local auditado. Si se recompila o cambia la rama, repetir la inspección. No había dispositivo conectado para una prueba dinámica móvil.
 - Aplicar estos cambios en producción después de revisar la rama y verificar el despliegue vivo. Los códigos HTTP comprobados en producción corresponden a la versión anterior.
-- Verificar en Railway que Redis esté disponible: el límite de intentos y la blacklist por token hacen `fail-open` cuando Redis falla. La revocación global nueva vive en PostgreSQL y no depende de Redis.
+- Verificar en Railway que Redis esté disponible antes de desplegar: la nueva política devuelve 503 para las rutas protegidas si Redis falla. La revocación global vive en PostgreSQL y no depende de Redis.
 - La copia de `key.properties` guardada junto al keystore en Drive sigue pendiente de separación según `docs/ARCANUM-Pendiente-Seguridad-Keystore.md`.
 
 ## Fuentes

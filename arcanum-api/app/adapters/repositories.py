@@ -11,7 +11,7 @@ from dataclasses import fields
 from datetime import datetime, timezone
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session, contains_eager, noload, selectinload
 
@@ -136,6 +136,15 @@ class RefreshTokenRepository:
     def get_by_hash(self, token_hash: str) -> RefreshTokenEntity | None:
         row = self._db.query(RefreshToken).filter(RefreshToken.token_hash == token_hash).first()
         return _to_entity(RefreshTokenEntity, row)
+
+    def consume_by_hash(self, token_hash: str) -> UUID | None:
+        user_id = self._db.execute(
+            delete(RefreshToken)
+            .where(RefreshToken.token_hash == token_hash)
+            .returning(RefreshToken.user_id)
+        ).scalar_one_or_none()
+        self._db.commit()
+        return user_id
 
     def delete(self, token: RefreshTokenEntity) -> None:
         row = self._db.query(RefreshToken).filter(RefreshToken.id == token.id).first()
