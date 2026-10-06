@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import uuid4
-from jose import JWTError, jwt
+import jwt
+from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 from redis import Redis
 from fastapi import Depends, HTTPException, status
@@ -75,7 +76,7 @@ def verify_token(token: str, token_type: str = "access") -> Optional[dict]:
         if payload.get("type") != token_type:
             return None
         return payload
-    except JWTError:
+    except InvalidTokenError:
         return None
 
 
@@ -128,6 +129,8 @@ def get_current_user(
     row = db.query(User).filter(User.email == email).first()
     if row is None:
         raise credentials_exception
+    if payload.get("auth_epoch", 0) != row.auth_epoch:
+        raise credentials_exception
 
     return UserEntity(
         id=row.id,
@@ -150,6 +153,7 @@ def get_current_user(
         preferred_tradition=row.preferred_tradition,
         preferred_house_system=row.preferred_house_system,
         onboarding_completed=row.onboarding_completed,
+        auth_epoch=row.auth_epoch,
         created_at=row.created_at,
         updated_at=row.updated_at,
     )
