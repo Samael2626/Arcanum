@@ -351,10 +351,8 @@ void main() {
     );
 
     group('lupa del abanico', () {
-      List<PieceView> fan() => dir
-          .pieces()
-          .where((p) => p.kind == PieceKind.fanCard)
-          .toList();
+      List<PieceView> fan() =>
+          dir.pieces().where((p) => p.kind == PieceKind.fanCard).toList();
       PieceView focused() => fan().singleWhere((p) => p.focused);
 
       Future<void> openFan() async {
@@ -391,6 +389,51 @@ void main() {
         expect(table().cards, hasLength(1));
         expect(fan().map((p) => p.id), isNot(contains(chosen)));
         expect(fan().where((p) => p.focused), isEmpty);
+      });
+
+      test(
+        'el dedo quieto no abre el menu: la lupa sigue y soltar saca',
+        () async {
+          // GN2200, 06-oct: a los 430 ms salia el menu y la lupa se apagaba
+          await openFan();
+          final id = ++pointer;
+          dir.pointerDown(id, screenOf(fan()[3].pose.offset), clock);
+          final chosen = focused().id;
+          clock += const Duration(milliseconds: 900);
+          dir.tick(clock, const Duration(milliseconds: 16));
+          expect(dir.radial, isNull);
+          expect(focused().id, chosen);
+          dir.pointerUp(id, screenOf(fan()[3].pose.offset), clock);
+          await settle();
+          expect(table().cards, hasLength(1));
+        },
+      );
+
+      test('el abanico no llega a los bordes del gesto atras', () async {
+        // GN2200, 06-oct: la primera carta quedaba a menos de 24 dp del borde
+        // y deslizar desde ella sacaba de la mesa
+        await openFan();
+        const margin = TableDirector.screenEdgeMargin;
+        for (final p in fan()) {
+          final r = poseRect(p.pose);
+          for (final corner in [
+            r.topLeft,
+            r.topRight,
+            r.bottomLeft,
+            r.bottomRight,
+          ]) {
+            final s = dir.camera.toScreen(corner);
+            expect(s.dx, greaterThanOrEqualTo(margin - .5), reason: p.id);
+            expect(
+              s.dx,
+              lessThanOrEqualTo(phone.width - margin + .5),
+              reason: p.id,
+            );
+          }
+        }
+        // y sigue siendo un abanico largo
+        final f = table().fan!;
+        expect((f.end - f.start).distance, greaterThan(250));
       });
 
       test('subir el dedo lleva la carta a un hueco concreto', () async {
@@ -467,15 +510,23 @@ void main() {
       expect(table().card(loose.slug)!.faceUp, isFalse);
     });
 
-    test('el abanico abierto tambien ofrece elegir la tirada', () async {
-      await openRws();
-      await tap(pileAt('p0'));
-      final fanCard = dir.pieces().firstWhere(
-        (p) => p.kind == PieceKind.fanCard,
-      );
-      await holdAndPick(fanCard.pose.offset, 'spread');
-      expect(dir.radial!.items.map((i) => i.id), contains('three_card'));
-    });
+    test(
+      'con el abanico abierto, mantener el mazo da el menu del abanico',
+      () async {
+        // mantener sobre el abanico ya no abre nada: alli manda la lupa
+        await openRws();
+        await tap(pileAt('p0'));
+        final id = ++pointer;
+        dir.pointerDown(id, screenOf(pileAt('p0')), clock);
+        clock += const Duration(milliseconds: 450);
+        dir.tick(clock, const Duration(milliseconds: 16));
+        expect(dir.radial!.items.map((i) => i.id), contains('gather'));
+        dir.pointerCancel(id);
+        dir.closeRadial();
+        await holdAndPick(pileAt('p0'), 'spread');
+        expect(dir.radial!.items.map((i) => i.id), contains('three_card'));
+      },
+    );
 
     test(
       'arrastrar una carta a un hueco la coloca; cerca de otra, la aclara',

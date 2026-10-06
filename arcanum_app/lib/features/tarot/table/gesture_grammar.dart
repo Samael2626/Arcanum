@@ -199,8 +199,15 @@ class GestureGrammar {
 
   /// Cuando vence el temporizador de mantener, o null. Quien use la gramatica
   /// llama a `tick` en ese momento (o en cada frame, que tambien vale).
+  ///
+  /// Sobre el abanico no corre: alli manda la lupa, y quien se para a mirar
+  /// la carta levantada no debe encontrarse un menu (GN2200, 06-oct). El menu
+  /// del abanico se abre manteniendo el mazo.
   Duration? get deadline =>
-      _mode == _Mode.pending && _hit is! HitSeal && _hit is! HitNothing
+      _mode == _Mode.pending &&
+          _hit is! HitSeal &&
+          _hit is! HitNothing &&
+          !(_hit is HitCard && (_hit as HitCard).inFan)
       ? _downAt + (_hit is HitEmbroidery ? sealHold : hold)
       : null;
 

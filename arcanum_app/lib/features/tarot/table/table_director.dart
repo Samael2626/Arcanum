@@ -960,13 +960,59 @@ class TableDirector extends ChangeNotifier {
     final endX = p.x > TableGeometry.width / 2
         ? 58.0
         : TableGeometry.width - 58;
+    final start = _fanStart(Offset(p.x, y), Offset(endX, y));
+    final end = _fanEndOffEdges(start, Offset(endX, y));
     ops.arrange(
       (s) => s.copyWith(
-        fan: () =>
-            FanLayout(pid: pid, start: Offset(p.x, y), end: Offset(endX, y)),
+        fan: () => FanLayout(pid: pid, start: start, end: end),
       ),
       undoable: true,
     );
+  }
+
+  /// El abanico empieza al lado de su caja, no encima: media caja, un hueco y
+  /// media carta. Encima la tapaba, y mantener el mazo (que es como se abre el
+  /// menu del abanico) caia en su primera carta.
+  static const double fanClearance =
+      TableGeometry.cardW * TableGeometry.deckScale / 2 +
+      6 +
+      TableGeometry.cardW * TableGeometry.fanScale / 2;
+
+  static Offset _fanStart(Offset pile, Offset toward) {
+    final d = toward - pile;
+    final len = d.distance;
+    return len == 0 ? pile : pile + d / len * fanClearance;
+  }
+
+  /// Distancia minima (dp) entre el abanico y los bordes de la pantalla. En
+  /// Android, deslizar desde menos de ~24 dp del borde es el gesto «atras»:
+  /// en el GN2200 la primera carta quedaba ahi y la lupa sacaba de la mesa.
+  static const double screenEdgeMargin = 32;
+
+  /// Acerca `end` al mazo hasta que la carta del extremo quede lejos de los
+  /// bordes con la camara de ahora. Pasos de 4 u; a lo sumo ~120 iteraciones.
+  Offset _fanEndOffEdges(Offset start, Offset end) {
+    final w = camera.viewport.width;
+    bool clear(Offset at) {
+      final r = poseRect(
+        TablePose(at.dx, at.dy, scale: TableGeometry.fanScale),
+      );
+      for (final c in [r.topLeft, r.topRight, r.bottomLeft, r.bottomRight]) {
+        final x = camera.toScreen(c).dx;
+        if (x < screenEdgeMargin || x > w - screenEdgeMargin) return false;
+      }
+      return true;
+    }
+
+    final d = start - end;
+    final len = d.distance;
+    if (len == 0 || w <= 0) return end;
+    final step = d / len * 4;
+    var at = end;
+    for (var walked = 0.0; walked < len && !clear(at); walked += 4) {
+      at += step;
+    }
+    return at;
   }
 
   /// Saca una carta del abanico.
@@ -1544,6 +1590,10 @@ class TableDirector extends ChangeNotifier {
             _ => null,
           },
         );
+      case HitDeck(inPlay: true, :final pid) when fan?.pid == pid:
+        // con el abanico abierto, el mazo es la caja vacia: su menu es el del
+        // abanico (mantener sobre el abanico es de la lupa)
+        _openFanRadial(pid, screen);
       case HitDeck(inPlay: true, :final pid):
         final count = _count(pid);
         _openRadial(
@@ -1571,20 +1621,7 @@ class TableDirector extends ChangeNotifier {
           },
         );
       case HitCard(inFan: true, :final slug):
-        _openRadial(screen, 'Abanico', RadialMenus.fan, (id) async {
-          final pid = slug.split(':')[1];
-          switch (id) {
-            case 'take':
-              await _takeFromFan(slug);
-            case 'gather':
-              ops.arrange((s) => s.copyWith(fan: () => null));
-            case 'shuffle':
-              ops.arrange((s) => s.copyWith(fan: () => null));
-              _openShuffleRadial(pid, screen);
-            case 'spread':
-              _openSpreadRadial(pid);
-          }
-        });
+        _openFanRadial(slug.split(':')[1], screen, take: slug);
       case HitCard(:final slug):
         final c = table.card(slug);
         if (c == null) return;
@@ -1618,6 +1655,29 @@ class TableDirector extends ChangeNotifier {
       case HitDeck() || HitEmbroidery() || HitSeal() || HitNothing():
         break;
     }
+  }
+
+  /// Menu del abanico. «Sacar» saca `take` o, sin ella, la primera carta.
+  void _openFanRadial(String pid, Offset screen, {String? take}) {
+    _openRadial(screen, 'Abanico', RadialMenus.fan, (id) async {
+      switch (id) {
+        case 'take':
+          final slug =
+              take ??
+              pieces()
+                  .where((p) => p.kind == PieceKind.fanCard)
+                  .map((p) => p.id)
+                  .firstOrNull;
+          if (slug != null) await _takeFromFan(slug);
+        case 'gather':
+          ops.arrange((s) => s.copyWith(fan: () => null));
+        case 'shuffle':
+          ops.arrange((s) => s.copyWith(fan: () => null));
+          _openShuffleRadial(pid, screen);
+        case 'spread':
+          _openSpreadRadial(pid);
+      }
+    });
   }
 
   void _openShuffleRadial(String pid, Offset screen) {
@@ -1720,7 +1780,8 @@ class TableDirector extends ChangeNotifier {
       case DragKind.fan:
         final pid = (hit as HitDeck).pid;
         final p = _pile(pid)!;
-        _fanDraft = FanLayout(pid: pid, start: Offset(p.x, p.y), end: at);
+        final start = _fanStart(Offset(p.x, p.y), at);
+        _fanDraft = FanLayout(pid: pid, start: start, end: at);
         _drag = _Drag(kind, 'pile:$pid', Offset.zero);
       case DragKind.cut:
         final pid = (hit as HitDeck).pid;
@@ -1836,7 +1897,14 @@ class TableDirector extends ChangeNotifier {
           localNormalized(TablePose(c.x, c.y, rot: c.rot, scale: c.scale), at),
         );
       case DragKind.fan:
-        _fanDraft = _fanDraft!.to(at);
+        final draft = _fanDraft!;
+        final pile = _pile(draft.pid)!;
+        final start = _fanStart(Offset(pile.x, pile.y), at);
+        _fanDraft = FanLayout(
+          pid: draft.pid,
+          start: start,
+          end: _fanEndOffEdges(start, at),
+        );
       case DragKind.cut || DragKind.move:
         if (!d.ready) return;
         _moveDragged(d, at);
