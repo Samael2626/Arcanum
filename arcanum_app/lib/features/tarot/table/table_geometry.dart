@@ -212,6 +212,90 @@ List<TablePose> fanPoses(Offset start, Offset end, int count) {
   ];
 }
 
+/// Lupa sobre el abanico: la carta bajo el dedo sube y crece, y las vecinas
+/// se apartan a lo largo de la linea (ojo de pez de Sarkar-Brown). Sin ella,
+/// en 360 dp cada carta del abanico ocupa 3,27 dp y no se puede acertar.
+///
+/// `focus` es el dedo en unidades de mesa; cuenta su proyeccion sobre la
+/// linea del abanico. O(n) con n <= 78.
+({List<TablePose> poses, int selected}) fanLens(
+  List<TablePose> base,
+  Offset focus,
+) {
+  if (base.isEmpty) return (poses: base, selected: -1);
+  final o = base.first.offset;
+  final dir = base.length > 1 ? base.last.offset - o : const Offset(1, 0);
+  final u = dir / (dir.distance == 0 ? 1.0 : dir.distance);
+  // la normal que apunta hacia el centro de la mesa (y menor)
+  final n = Offset(-u.dy, u.dx);
+  final up = n.dy <= 0 ? n : -n;
+  double along(Offset p) => (p - o).dx * u.dx + (p - o).dy * u.dy;
+  final f = along(focus);
+  var selected = 0;
+  for (var i = 1; i < base.length; i++) {
+    if ((along(base[i].offset) - f).abs() <
+        (along(base[selected].offset) - f).abs()) {
+      selected = i;
+    }
+  }
+  return (
+    poses: [
+      for (var i = 0; i < base.length; i++)
+        () {
+          final p = base[i];
+          final d = along(p.offset) - f;
+          final r = d.abs() / FanLensShape.reach;
+          if (r >= 1) return p;
+          const k = FanLensShape.spread;
+          final shift =
+              d.sign * (k + 1) * r / (k * r + 1) * FanLensShape.reach - d;
+          final g = math.exp(
+            -d * d / (2 * FanLensShape.sigma * FanLensShape.sigma),
+          );
+          final sel = i == selected;
+          final lift =
+              FanLensShape.lift * g + (sel ? FanLensShape.selectedLift : 0);
+          final at = p.offset + u * shift + up * lift;
+          return TablePose(
+            at.dx,
+            at.dy,
+            rot: p.rot,
+            scale: p.scale * (1 + .55 * g + (sel ? .2 : 0)),
+          );
+        }(),
+    ],
+    selected: selected,
+  );
+}
+
+/// Distancia de `p` a la linea `start`-`end`, positiva hacia el centro de la
+/// mesa (y menor): sirve para saber si el dedo ya dejo el abanico.
+double heightAboveLine(Offset start, Offset end, Offset p) {
+  final d = end - start;
+  final u = d / (d.distance == 0 ? 1.0 : d.distance);
+  final n = Offset(-u.dy, u.dx);
+  final up = n.dy <= 0 ? n : -n;
+  final v = p - start;
+  return v.dx * up.dx + v.dy * up.dy;
+}
+
+/// Medidas de la lupa, en unidades de mesa (las del prototipo pasadas a la
+/// escala del abanico real).
+abstract final class FanLensShape {
+  /// Hasta donde llega: mas alla, las cartas no se mueven.
+  static const double reach = 150;
+
+  /// Cuanto separa a las vecinas del dedo.
+  static const double spread = 3.2;
+
+  /// Anchura de la campana que levanta y agranda.
+  static const double sigma = 26;
+  static const double lift = 44;
+
+  /// Lo que sube de mas la elegida.
+  static const double selectedLift = 36;
+}
+
 /// Rectangulo de mesa (alineado con los ejes) que ocupa una carta en `p`,
 /// girada incluida, con `w` x `h` de tamaño base.
 Rect poseRect(

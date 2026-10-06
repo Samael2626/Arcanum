@@ -31,7 +31,10 @@ enum Buzz {
   closeCircle([10, 60, 10]),
 
   /// Cambia la opcion del radial bajo el dedo.
-  radialHover([4]);
+  radialHover([4]),
+
+  /// La lupa del abanico pasa a otra carta: un clic, como una muesca.
+  fanTick([3]);
 
   const Buzz(this.pattern);
 

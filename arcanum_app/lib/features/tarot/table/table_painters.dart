@@ -297,10 +297,21 @@ class EmbroideryPainter extends CustomPainter {
 
 /// Las cartas del abanico: todas dorsos, estampados de la imagen grabada.
 class FanPainter extends CustomPainter {
-  FanPainter(this.poses, this.back, {this.soft = true});
+  FanPainter(this.poses, this.back, {this.soft = true, this.focusLast = false});
 
   final List<TablePose> poses;
   final ui.Image back;
+
+  /// La ultima es la que la lupa tiene levantada: lleva aura dorada.
+  final bool focusLast;
+
+  static final _halo = Paint()
+    ..color = ArcanumColors.goldLight.withValues(alpha: .55)
+    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+  static final _rim = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 2.4
+    ..color = ArcanumColors.goldLight;
 
   /// Sombra desenfocada; con la calidad baja, sombra nitida (Samuel, 05-oct:
   /// las sombras cuentan como brillos caros).
@@ -315,7 +326,22 @@ class FanPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (final p in poses) {
+    for (var i = 0; i < poses.length; i++) {
+      final p = poses[i];
+      final lit = focusLast && i == poses.length - 1;
+      if (lit) {
+        canvas
+          ..save()
+          ..translate(p.x, p.y)
+          ..rotate(p.rot * math.pi / 180)
+          ..scale(p.scale);
+        final r = RRect.fromRectAndRadius(_cardRect, const Radius.circular(9));
+        // con la calidad baja, solo el filo: el halo desenfocado es caro
+        if (soft) canvas.drawRRect(r.inflate(6), _halo);
+        canvas
+          ..drawRRect(r.inflate(1.5), _rim)
+          ..restore();
+      }
       canvas
         ..save()
         ..translate(p.x + 1.5, p.y + 2)
@@ -332,7 +358,10 @@ class FanPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(FanPainter old) =>
-      !identical(old.poses, poses) || old.back != back || old.soft != soft;
+      !identical(old.poses, poses) ||
+      old.back != back ||
+      old.soft != soft ||
+      old.focusLast != focusLast;
 }
 
 /// Un monton: cantos apilados segun las cartas que quedan y el dorso encima.

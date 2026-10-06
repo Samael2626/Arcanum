@@ -350,6 +350,62 @@ void main() {
       },
     );
 
+    group('lupa del abanico', () {
+      List<PieceView> fan() => dir
+          .pieces()
+          .where((p) => p.kind == PieceKind.fanCard)
+          .toList();
+      PieceView focused() => fan().singleWhere((p) => p.focused);
+
+      Future<void> openFan() async {
+        await openRws();
+        await tap(pileAt('p0'));
+        expect(table().fan, isNotNull);
+      }
+
+      test('pulsar el abanico levanta la carta bajo el dedo', () async {
+        await openFan();
+        final under = fan()[3];
+        dir.pointerDown(++pointer, screenOf(under.pose.offset), clock);
+        final f = focused();
+        expect(f.pose.scale, greaterThan(under.pose.scale * 1.4));
+        expect(f.pose.y, lessThan(under.pose.y));
+        dir.pointerCancel(pointer);
+        expect(fan().where((p) => p.focused), isEmpty);
+      });
+
+      test('deslizar y soltar saca la carta de la lupa', () async {
+        await openFan();
+        final from = fan()[0].pose.offset, to = fan()[4].pose.offset;
+        final id = ++pointer;
+        dir.pointerDown(id, screenOf(from), clock);
+        for (var i = 1; i <= 12; i++) {
+          clock += const Duration(milliseconds: 16);
+          dir.pointerMove(id, screenOf(Offset.lerp(from, to, i / 12)!), clock);
+          await settle();
+        }
+        final chosen = focused().id;
+        dir.pointerUp(id, screenOf(to), clock);
+        clock += const Duration(milliseconds: 100);
+        await settle();
+        expect(table().cards, hasLength(1));
+        expect(fan().map((p) => p.id), isNot(contains(chosen)));
+        expect(fan().where((p) => p.focused), isEmpty);
+      });
+
+      test('subir el dedo lleva la carta a un hueco concreto', () async {
+        await openFan();
+        c
+            .read(tableControllerProvider.notifier)
+            .arrange((s) => s.copyWith(spread: () => 'three_card'));
+        final from = fan()[2].pose.offset, to = slotPose(three, 2).offset;
+        await drag(from, to, steps: 16);
+        await settle();
+        expect(table().cardInSlot(2), isNotNull);
+        expect(table().cards, hasLength(1));
+      });
+    });
+
     test('elegir tirada aparta las sueltas que pisan un hueco nuevo', () async {
       // GN2200: la carta sacada antes de elegir tirada tapaba el hueco 3
       await openRws();

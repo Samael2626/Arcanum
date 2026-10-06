@@ -74,6 +74,7 @@ class PieceView {
     this.peelHingeX = 0,
     this.label,
     this.dragging = false,
+    this.focused = false,
   });
 
   final String id;
@@ -99,6 +100,9 @@ class PieceView {
 
   /// Va pegada al dedo: se dibuja sin animar el cambio de sitio.
   final bool dragging;
+
+  /// La carta del abanico que la lupa tiene levantada: la que sale al soltar.
+  final bool focused;
 
   double get width =>
       (kind == PieceKind.card || kind == PieceKind.fanCard ? 1 : 1) *
@@ -376,6 +380,27 @@ class TableDirector extends ChangeNotifier {
 
   FanLayout? get fan => _fanDraft ?? table.fan;
 
+  /// Dedo sobre el abanico (unidades de mesa) mientras la lupa esta puesta.
+  Offset? _lensAt;
+
+  /// Carta del abanico que la lupa tiene levantada, o null.
+  String? _lensId;
+
+  /// Pone o quita la lupa y vibra al cruzar de una carta a otra.
+  void _setLens(Offset? at) {
+    _lensAt = at;
+    final before = _lensId;
+    pieces();
+    if (at != null && before != null && _lensId != before) {
+      _buzz(Buzz.fanTick);
+    }
+    notifyListeners();
+  }
+
+  /// Cuanto hay que subir el dedo sobre la linea del abanico para dejar la
+  /// lupa y llevarse la carta: por encima de la carta levantada.
+  static const double lensPullHeight = 130;
+
   /// El abanico sigue al dedo: se dibuja sin animar el despliegue.
   bool get fanDragging => _fanDraft != null;
 
@@ -435,17 +460,29 @@ class TableDirector extends ChangeNotifier {
         for (final pos in server?.piles[f.pid]?.positions ?? const <int>[])
           if (!_pending.containsKey('fan:${f.pid}:$pos')) pos,
       ];
-      final poses = fanPoses(f.start, f.end, positions.length);
-      for (var i = 0; i < positions.length; i++) {
-        out.add(
-          PieceView(
-            id: 'fan:${f.pid}:${positions[i]}',
-            kind: PieceKind.fanCard,
-            pose: poses[i],
-            fanPosition: positions[i],
-          ),
-        );
+      var poses = fanPoses(f.start, f.end, positions.length);
+      var sel = -1;
+      final lensAt = _lensAt;
+      if (lensAt != null && positions.isNotEmpty) {
+        final l = fanLens(poses, lensAt);
+        poses = l.poses;
+        sel = l.selected;
       }
+      _lensId = sel >= 0 ? 'fan:${f.pid}:${positions[sel]}' : null;
+      PieceView view(int i) => PieceView(
+        id: 'fan:${f.pid}:${positions[i]}',
+        kind: PieceKind.fanCard,
+        pose: poses[i],
+        fanPosition: positions[i],
+        focused: i == sel,
+      );
+      // la levantada se pinta (y se toca) por encima de sus vecinas
+      for (var i = 0; i < positions.length; i++) {
+        if (i != sel) out.add(view(i));
+      }
+      if (sel >= 0) out.add(view(sel));
+    } else {
+      _lensId = null;
     }
     for (final p in _pending.values) {
       out.add(
@@ -640,7 +677,11 @@ class TableDirector extends ChangeNotifier {
       }
       return;
     }
-    _apply(grammar.down(pointer, screen, time, hitAtScreen(screen)));
+    final hit = hitAtScreen(screen);
+    if (hit is HitCard && hit.inFan && !grammar.active) {
+      _setLens(camera.toTable(screen));
+    }
+    _apply(grammar.down(pointer, screen, time, hit));
   }
 
   void pointerMove(int pointer, Offset screen, Duration time) {
@@ -651,9 +692,13 @@ class TableDirector extends ChangeNotifier {
   void pointerUp(int pointer, Offset screen, Duration time) {
     _now = time;
     _apply(grammar.up(pointer, screen, time));
+    if (_lensAt != null && _drag == null) _setLens(null);
   }
 
-  void pointerCancel(int pointer) => _apply(grammar.cancel(pointer));
+  void pointerCancel(int pointer) {
+    _apply(grammar.cancel(pointer));
+    if (_lensAt != null) _setLens(null);
+  }
 
   /// Hay algo esperando al reloj (mantener, doble toque) o en movimiento.
   /// Con la mesa quieta no se piden frames: la bateria lo agradece.
@@ -689,6 +734,7 @@ class TableDirector extends ChangeNotifier {
           camera.reset();
           _saveCamera();
         case OpenRadialIntent(:final hit, :final position):
+          if (_lensAt != null) _setLens(null);
           _openRadialFor(hit, position);
         case RadialMoveIntent(:final position):
           final r = _radial;
@@ -786,7 +832,9 @@ class TableDirector extends ChangeNotifier {
   void _tap(Hit hit, Offset screen) {
     // sacar del abanico no espera a nada: cada toque es una carta
     if (hit case HitCard(inFan: true, :final slug)) {
-      unawaited(_takeFromFan(slug));
+      final chosen = _lensId ?? slug;
+      _setLens(null);
+      unawaited(_takeFromFan(chosen));
       return;
     }
     if (_busy) return;
@@ -1711,21 +1759,10 @@ class TableDirector extends ChangeNotifier {
         final d = _Drag(kind, id, Offset.zero);
         _drag = d;
         if (hit is HitCard && hit.inFan) {
-          // sale del abanico al empezar a arrastrarla: se ve en el dedo en el
-          // acto y la carta de verdad la sustituye al llegar del servidor
-          ops.beginUndoable();
-          d
-            ..gesture = true
-            ..id = 'pending:${hit.slug}';
-          unawaited(_takeFromFan(hit.slug, drag: d));
-          final p = _pending[hit.slug];
-          if (p == null) {
-            _drag = null;
-            ops.commitUndoable();
-            return;
-          }
-          _lift[d.id] = 64;
-          _moveDragged(d, at);
+          // deslizar sobre el abanico pasea la lupa; subir el dedo se lleva
+          // la carta (ver _dragUpdate)
+          d.id = 'lens';
+          _setLens(at);
           return;
         }
         final pose = _poseOf(id);
@@ -1740,6 +1777,23 @@ class TableDirector extends ChangeNotifier {
         _lift[id] = 64;
         _moveDragged(d, at);
     }
+  }
+
+  /// Saca `slug` del abanico pegada al dedo: se ve en el acto y la carta de
+  /// verdad la sustituye al llegar del servidor.
+  void _pullFromFan(_Drag d, String slug, Offset at) {
+    ops.beginUndoable();
+    d
+      ..gesture = true
+      ..id = 'pending:$slug';
+    unawaited(_takeFromFan(slug, drag: d));
+    if (_pending[slug] == null) {
+      _drag = null;
+      ops.commitUndoable();
+      return;
+    }
+    _lift[d.id] = 64;
+    _moveDragged(d, at);
   }
 
   void _moveDragged(_Drag d, Offset at) {
@@ -1757,6 +1811,21 @@ class TableDirector extends ChangeNotifier {
     final at = camera.toTable(screen);
     final prev = d.last ?? at;
     d.last = at;
+    if (d.id == 'lens') {
+      final f = fan;
+      final chosen = _lensId;
+      if (f != null &&
+          chosen != null &&
+          heightAboveLine(f.start, f.end, at) > lensPullHeight) {
+        _setLens(null);
+        final pull = _Drag(DragKind.move, chosen, Offset.zero);
+        _drag = pull;
+        _pullFromFan(pull, chosen, at);
+      } else {
+        _setLens(at);
+      }
+      return;
+    }
     switch (kind) {
       case DragKind.orbit:
         final v = camera.orbitBy(delta);
@@ -1798,6 +1867,12 @@ class TableDirector extends ChangeNotifier {
     _drag = null;
     hotSlot = null;
     if (d == null) return;
+    if (d.id == 'lens') {
+      final chosen = _lensId;
+      _setLens(null);
+      if (!cancelled && chosen != null) unawaited(_takeFromFan(chosen));
+      return;
+    }
     _wobble[d.id]?.release();
     _lift.remove(d.id);
     switch (kind) {

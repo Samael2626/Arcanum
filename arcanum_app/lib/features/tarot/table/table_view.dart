@@ -384,6 +384,8 @@ class _TarotTableViewState extends State<TarotTableView>
     ];
     final f = _dir.fan ?? _closingFan?.fan;
     if (f == null) return const SizedBox.shrink();
+    // la lupa deja la carta levantada al final de la lista
+    final lens = pieces.any((p) => p.kind == PieceKind.fanCard && p.focused);
     final count = open.isNotEmpty ? open.length : (_closingFan?.count ?? 0);
     if (count == 0) return const SizedBox.shrink();
     return RepaintBoundary(
@@ -398,7 +400,12 @@ class _TarotTableViewState extends State<TarotTableView>
               : fanPoses(f.start, Offset.lerp(f.start, f.end, t)!, count);
           return CustomPaint(
             size: const Size(TableGeometry.width, TableGeometry.height),
-            painter: FanPainter(poses, back, soft: _quality.glow),
+            painter: FanPainter(
+              poses,
+              back,
+              soft: _quality.glow,
+              focusLast: lens && identical(poses, open),
+            ),
           );
         },
       ),
