@@ -5,9 +5,11 @@
 // Ciclo: intencion -> composicion -> carga (se anota cada una) -> olvido
 // (la intencion se borra; el dibujo queda con la fecha en que se solto).
 import 'dart:convert';
+import 'dart:ui' as ui;
 
 import 'package:arcanum_sigilos/arcanum_sigilos.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/arcanum_api.dart';
 import '../../core/astro/user_place.dart';
@@ -115,11 +117,50 @@ String sigilTitle(DateTime d) => 'Sigilo del ${dayMonthEs(d)}';
 SigilEntry releasedCopy(SigilEntry e, DateTime at) =>
     SigilEntry(SigilDoc.fromJson(e.doc.toJson())..forget(), charges: [...e.charges], released: at);
 
+/// Lado de la miniatura de la lista: el doble de lo que ocupa (52 dp) en 3x.
+const kPreviewPx = 160;
+
+/// PNG pequeño del sigilo, con su fondo, para la lista del Grimorio.
+Future<Uint8List?> renderSigilPreview(SigilDoc doc) async {
+  if (doc.sigil.prims.isEmpty) return null;
+  final rec = ui.PictureRecorder();
+  final c = ui.Canvas(rec)..scale(kPreviewPx / kSize);
+  final s = doc.scene();
+  paintScene(c, s.bg);
+  // trazo minimo: a 160 px los trazos finos se perderian
+  paintScene(c, s.fg, minW: 2 * kSize / kPreviewPx);
+  final img = await rec.endRecording().toImage(kPreviewPx, kPreviewPx);
+  try {
+    return (await img.toByteData(format: ui.ImageByteFormat.png))?.buffer.asUint8List();
+  } finally {
+    img.dispose();
+  }
+}
+
+/// Quien dibuja la miniatura (en los tests, uno de mentira: rasterizar no
+/// termina dentro del reloj falso de los tests de widgets).
+final sigilPreviewProvider = Provider<Future<Uint8List?> Function(SigilDoc)>((ref) => renderSigilPreview);
+
 class SigilStore {
   final ArcanumApi api;
   final GrimoireCrypto crypto;
   final UserPlace? place;
-  const SigilStore(this.api, this.crypto, this.place);
+  final Future<Uint8List?> Function(SigilDoc) preview;
+  const SigilStore(this.api, this.crypto, this.place, {this.preview = renderSigilPreview});
+
+  /// Miniatura cifrada como el contenido. Si falla, la entrada se guarda sin
+  /// ella (la lista cae a la capitular): nunca bloquea el guardado.
+  Future<Map<String, String>> _previewFields(SigilDoc doc) async {
+    try {
+      final png = await preview(doc);
+      if (png == null) return const {};
+      final enc = await crypto.encryptText(base64Encode(png));
+      return {'encrypted_preview': enc.ciphertext, 'preview_iv': enc.iv};
+    } catch (error) {
+      debugPrint('ARCANUM taller: sin miniatura del sigilo ($error).');
+      return const {};
+    }
+  }
 
   /// Cielo de ahora: luna siempre que se pueda; hora y regente solo con lugar
   /// confirmado (sin el, serian de otro sitio). Nunca falla: sin red, nada.
@@ -147,9 +188,10 @@ class SigilStore {
   /// Crea la entrada (o reescribe [entryId]) y devuelve su id.
   Future<String> save(SigilEntry e, {String? entryId}) async {
     final enc = await crypto.encryptText(encodeSigilEntry(e));
+    final thumb = await _previewFields(e.doc);
     if (entryId != null) {
       // al seguir editando, el momento de creacion (luna, hora) no cambia
-      await api.grimoireUpdate(entryId, {'encrypted_content': enc.ciphertext, 'content_iv': enc.iv});
+      await api.grimoireUpdate(entryId, {'encrypted_content': enc.ciphertext, 'content_iv': enc.iv, ...thumb});
       return entryId;
     }
     final s = await sky();
@@ -159,6 +201,7 @@ class SigilStore {
       'title': sigilTitle(now),
       'encrypted_content': enc.ciphertext,
       'content_iv': enc.iv,
+      ...thumb,
       'moon_phase': s.moon,
       'planetary_hour': s.hour,
       'day_planet': s.dayRuler,

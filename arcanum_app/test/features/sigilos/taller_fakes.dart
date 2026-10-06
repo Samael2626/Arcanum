@@ -2,11 +2,13 @@
 // (base64) y la app envuelta con sus proveedores.
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/astro/user_place.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/core/crypto/grimoire_crypto.dart';
+import 'package:arcanum_app/features/sigilos/sigil_store.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -59,6 +61,8 @@ Widget tallerApp(Widget child, FakeApi api) => ProviderScope(
         authProvider.overrideWith(FakeAuth.new),
         grimoireCryptoProvider.overrideWithValue(FakeCrypto()),
         userPlaceProvider.overrideWithValue(null),
+        // miniatura fija: rasterizar no termina con el reloj falso
+        sigilPreviewProvider.overrideWithValue((_) async => Uint8List.fromList(const [137, 80, 78, 71])),
       ],
       child: MaterialApp(home: child),
     );

@@ -100,7 +100,7 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
     if (!mounted || r == null) return;
     final release = r.end == ChargeEnd.release;
     if (release && (!await confirmRelease(context, saved: true) || !mounted)) return;
-    final store = SigilStore(_api, ref.read(grimoireCryptoProvider), ref.read(userPlaceProvider));
+    final store = SigilStore(_api, ref.read(grimoireCryptoProvider), ref.read(userPlaceProvider), preview: ref.read(sigilPreviewProvider));
     try {
       final charged = SigilEntry(entry.doc, charges: [...entry.charges, await store.chargeNow(r.seconds)]);
       await store.save(release ? releasedCopy(charged, DateTime.now()) : charged, entryId: widget.id);

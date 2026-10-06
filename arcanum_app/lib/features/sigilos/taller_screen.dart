@@ -185,7 +185,8 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
   }
 
   // ── Guardar, cargar, compartir ────────────────────────────────
-  SigilStore get _store => SigilStore(ref.read(arcanumApiProvider), ref.read(grimoireCryptoProvider), ref.read(userPlaceProvider));
+  SigilStore get _store =>
+      SigilStore(ref.read(arcanumApiProvider), ref.read(grimoireCryptoProvider), ref.read(userPlaceProvider), preview: ref.read(sigilPreviewProvider));
 
   Future<bool> _save() async {
     if (_saving) return false;
