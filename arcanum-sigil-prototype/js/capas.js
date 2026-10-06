@@ -55,14 +55,16 @@ const layersOf = scope => scope === 'personal' ? state.personal.layers : state.l
 const layerById = (scope, id) => layersOf(scope).find(L => L.id === id) || null;
 const layerName = L => LAYER_TYPES[L.type].label + (L.type === 'star' ? ` ${L.points}` : L.type === 'symbol' ? ` ${L.sym}` : '');
 
-// Contexto de texto por defecto: la intencion (letras) o el nombre (sello)
+// Contexto de texto por defecto: las letras reducidas (nunca la intencion,
+// que no debe quedar escrita en el dibujo) o el nombre (sello)
 function layerCtx(scope) {
   if (scope === 'personal') {
     const planet = personalPlanet(), k = KAMEA_BY_ID[planet];
     const name = personalName() || 'SIN NOMBRE';
     return { text: name, planet, title: `Sello de ${name}`, sub: `${k.sym}︎ ${k.name} · ${PLANET_METAL[planet]}` };
   }
-  return { text: state.intention, planet: null, title: state.intention, sub: '' };
+  const letters = state.letters.map(l => l.ch).join(' ');
+  return { text: letters, planet: null, title: letters, sub: '' };
 }
 const rotPt = (x, y, cx, cy, deg) => {
   const a = rad(deg), c = Math.cos(a), s = Math.sin(a), u = x - cx, v = y - cy;

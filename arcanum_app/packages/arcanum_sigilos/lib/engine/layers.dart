@@ -119,7 +119,9 @@ class LayerCtx {
   final String text, title, sub;
   final String? planet;
   const LayerCtx({this.text = '', this.planet, this.title = '', this.sub = ''});
-  factory LayerCtx.letters(String intention) => LayerCtx(text: intention, title: intention);
+  /// Sigilo de letras: el texto por defecto son las letras reducidas, nunca la
+  /// intencion (el dibujo se comparte y la intencion es privada).
+  factory LayerCtx.letters(String letters) => LayerCtx(text: letters, title: letters);
 }
 
 // ── Primitivas de capa ──────────────────────────────────────────

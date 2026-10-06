@@ -163,6 +163,8 @@ class GrimoireEntryEntity:
     tradition: str | None = None
     tags: list[str] | None = None
     entry_date: datetime | None = None
+    encrypted_preview: str | None = None
+    preview_iv: str | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
 

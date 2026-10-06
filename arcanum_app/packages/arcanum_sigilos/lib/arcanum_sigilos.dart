@@ -16,6 +16,7 @@ export 'engine/scene.dart';
 export 'engine/sigil_doc.dart';
 export 'engine/style.dart';
 export 'engine/terminals.dart';
+export 'engine/text_outline.dart';
 export 'ui/scene_painter.dart';
 export 'ui/sigil_canvas.dart';
 export 'ui/icons.dart';
