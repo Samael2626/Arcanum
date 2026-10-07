@@ -306,6 +306,30 @@ class TableState {
   /// aparecen junto al principal. Cartas que ya no estan fuera del mazo se
   /// quitan de la mesa, y las aclaratorias que colgaban de ellas se sueltan.
   /// Una carta sacada que la mesa no conocia no se inventa: la pone quien la saco.
+  /// Las sacadas que el servidor tiene fuera y aqui no hay: pasa al volver sin
+  /// la foto local (la app murio antes de guardar, otro movil). Se dejan sueltas
+  /// boca abajo, en fila; sin ellas quedaban invisibles e inservibles.
+  TableState withMissingDrawn(ServerView view) {
+    final have = {for (final c in cards) c.slug};
+    final missing = [
+      for (final d in view.drawn)
+        if (!have.contains(d.slug) && view.drawnFaces[d.slug] != null) d.slug,
+    ];
+    if (missing.isEmpty) return this;
+    return copyWith(
+      cards: [
+        ...cards,
+        for (var i = 0; i < missing.length; i++)
+          TableCard(
+            face: view.drawnFaces[missing[i]]!,
+            x: 110 + (i % 5) * 95.0,
+            y: 420 + (i ~/ 5) * 130.0,
+            scale: .7,
+          ),
+      ],
+    );
+  }
+
   TableState withServer(ServerView view) {
     final byPid = {for (final p in piles) p.pid: p};
     final anchor = byPid[activePid] ?? const PileLayout(pid: '');
@@ -449,5 +473,21 @@ class TableState {
     } on Object {
       return null;
     }
+  }
+}
+
+/// Si una interpretacion sigue siendo la de esta mesa: las mismas cartas en los
+/// mismos huecos (o aclarando a los mismos). Tras recoger y hacer otra tirada,
+/// el bordado reabria la vieja como si fuera de las cartas nuevas (06-oct).
+extension InterpretationOnTable on Interpretation {
+  bool describes(TableState table) {
+    String key(String slug, int? slot, int? clarifies) =>
+        '$slug|$slot|$clarifies';
+    final now = {
+      for (final p in table.placements())
+        key(p['slug'] as String, p['slot'] as int?, p['clarifies'] as int?),
+    };
+    final read = {for (final c in cards) key(c.face.slug, c.slot, c.clarifies)};
+    return now.length == read.length && now.containsAll(read);
   }
 }

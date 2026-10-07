@@ -114,6 +114,16 @@ class TarotTableService:
         except DuplicateActiveTable as exc:
             raise TableConflict("Ya se estaba abriendo otra mesa: vuelve a intentarlo.") from exc
 
+    def drawn_faces(self, table: TarotTableEntity) -> list[dict]:
+        """Las sacadas con su cara y su sentido, en el orden en que salieron."""
+        session = TarotSession.from_dict(table.state)
+        catalog = self._cards.by_slugs(session.drawn)
+        return [
+            card_view(catalog[s], session.reversed_.get(s, False)) if s in catalog
+            else {"slug": s, "reversed": session.reversed_.get(s, False)}
+            for s in session.drawn
+        ]
+
     def current(self, user_id: UUID) -> Optional[TarotTableEntity]:
         table = self._tables.active(user_id)
         if table is not None and self._expired(table):

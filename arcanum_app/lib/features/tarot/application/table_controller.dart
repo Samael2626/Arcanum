@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/arcanum_api.dart';
@@ -94,7 +95,7 @@ class TableController extends AsyncNotifier<TableState> implements TableOps {
     final base = local != null && local.sessionId == view.id
         ? local
         : TableState(camera: camera, activePid: view.piles.keys.firstOrNull);
-    return base.withServer(view);
+    return base.withServer(view).withMissingDrawn(view);
   }
 
   TableState get _current => state.value ?? TableState.empty;
@@ -156,7 +157,10 @@ class TableController extends AsyncNotifier<TableState> implements TableOps {
     if (inGesture) {
       _checkpointPending = false;
       _gestureServer = true;
-    } else if (_undoServer) {
+    } else {
+      // el mazo avanzo por su cuenta: ningun deshacer ofrecido antes vale ya.
+      // Tampoco uno local: deshacer tras sacar quitaba una carta que el
+      // servidor sigue contando fuera (revision 06-oct)
       _forgetUndo();
     }
     return raw;
@@ -296,8 +300,16 @@ class TableController extends AsyncNotifier<TableState> implements TableOps {
     final snap = _undo!;
     final server = _undoServer;
     if (server) {
-      final view = ServerView.fromJson(await _api.tarotUndo(_sessionId()));
-      _set(snap.withServer(view));
+      final Map<String, dynamic> raw;
+      try {
+        raw = await _api.tarotUndo(_sessionId());
+      } on DioException catch (e) {
+        // 409: el servidor ya no puede (se interpreto, caduco). Reintentar no
+        // sirve; un fallo de red si, y la oferta se queda.
+        if (e.response?.statusCode == 409) _forgetUndo();
+        rethrow;
+      }
+      _set(snap.withServer(ServerView.fromJson(raw)));
     } else {
       final view = _current.server;
       _set(view == null ? snap : snap.withServer(view));
@@ -329,19 +341,20 @@ class TableController extends AsyncNotifier<TableState> implements TableOps {
           question: s.seal?.text,
           idempotencyKey: idempotencyKey,
         );
-        final current = await _api.tarotCurrentTable();
-        if (current != null) {
-          _set(
-            _current
-                .withServer(ServerView.fromJson(current))
-                .copyWith(
-                  seal: () => s.seal == null
-                      ? null
-                      : Seal(text: s.seal!.text, open: true),
-                ),
-          );
-        }
-        return Interpretation.fromJson(raw);
+        final it = Interpretation.fromJson(raw);
+        // la respuesta ya trae lo necesario: otra llamada aqui podia fallar
+        // despues de cobrar y esconder una lectura pagada (revision 06-oct).
+        // Lo interpretado no se deshace: la oferta se retira.
+        _forgetUndo();
+        final server = _current.server;
+        _set(
+          _current.copyWith(
+            server: () => server?.interpretedAs(it),
+            seal: () =>
+                s.seal == null ? null : Seal(text: s.seal!.text, open: true),
+          ),
+        );
+        return it;
       });
 
   /// Cierra el circulo: el servidor guarda la lectura con la foto de la mesa
@@ -354,18 +367,20 @@ class TableController extends AsyncNotifier<TableState> implements TableOps {
   Future<Map<String, dynamic>> closeCircle() => _serial(() async {
     final s = _current;
     final seal = s.seal;
-    final snap = seal == null
-        ? s
-        : s.copyWith(seal: () => Seal(text: seal.text, open: true));
-    final unread = s.server?.status == 'open';
+    final snap = s.copyWith(
+      seal: () => seal == null ? null : Seal(text: seal.text, open: true),
+      // el texto de la interpretacion ya lo tiene el servidor: repetido aqui
+      // pasaba de 64 KB en tiradas grandes y el circulo no cerraba
+      server: () => s.server?.withoutInterpretation(),
+    );
+    // las posiciones van siempre: con ellas el servidor sabe si lo interpretado
+    // sigue siendo lo que hay en la mesa (revision 06-oct)
     final reading = await _api.tarotCloseTable(
       _sessionId(),
       table: snap.toJson(),
-      spread: unread ? s.spread : null,
-      question: unread ? seal?.text : null,
-      placements: !unread
-          ? const []
-          : s.spread != null
+      spread: s.spread,
+      question: seal?.text,
+      placements: s.spread != null
           ? s.placements()
           : [
               for (final c in s.cards)

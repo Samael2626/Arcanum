@@ -36,6 +36,7 @@ from app.schemas.tarot_table import (
     CutIn,
     CutOut,
     DeckOut,
+    DrawnCardView,
     GatherIn,
     InterpretationOut,
     InterpretIn,
@@ -103,7 +104,9 @@ def current_session(user: UserEntity = Depends(get_current_user),
     table = tables.current(user.id)
     if table is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "No hay ninguna mesa abierta.")
-    return _view(table)
+    view = _view(table)
+    view.drawn = [DrawnCardView(**face) for face in tables.drawn_faces(table)]
+    return view
 
 
 @router.post("/sessions/{session_id}/shuffle", response_model=TableView)

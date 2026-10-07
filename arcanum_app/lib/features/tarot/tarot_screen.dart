@@ -416,7 +416,12 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
   void openInterpretation() {
     final dir = _director;
     if (dir == null) return;
-    if (_reading != null) return setState(() => _revealing = true);
+    final shown = _reading;
+    if (shown != null && shown.describes(dir.table)) {
+      return setState(() => _revealing = true);
+    }
+    // la de antes era de otras cartas: se interpreta la mesa de ahora
+    _reading = null;
     // la clave vive lo que vive el panel: reintentar no cobra dos veces
     final key = IdempotencyKey.create();
     final seal = dir.table.seal;

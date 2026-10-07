@@ -56,6 +56,14 @@ class PileView(BaseModel):
 class DrawnCardView(BaseModel):
     slug: str
     reversed: bool
+    # solo en /sessions/current: la cara, para dibujar las sacadas al volver
+    # sin la foto local (revision 06-oct)
+    name: Optional[str] = None
+    name_es: Optional[str] = None
+    title_es: Optional[str] = None
+    arcana: Optional[str] = None
+    suit: Optional[str] = None
+    number: Optional[int] = None
 
 
 class TableView(BaseModel):

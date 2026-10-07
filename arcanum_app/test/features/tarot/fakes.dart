@@ -28,6 +28,14 @@ class FakeServer extends ArcanumApi {
 
   /// Si no es null, la proxima operacion de mesa falla con este error.
   Object? failNext;
+
+  /// Llamadas a `/sessions/current` y fallo forzado de la proxima.
+  int currentCalls = 0;
+  Object? failCurrent;
+
+  /// Como el back desde el 06-oct: `/sessions/current` manda la cara de las
+  /// cartas sacadas, para dibujarlas sin la foto local.
+  bool richDrawn = true;
   Object? failUndo;
 
   /// Sentido impuesto al continuar una lectura (si no, c2 sale invertida).
@@ -93,8 +101,31 @@ class FakeServer extends ArcanumApi {
   Future<Map<String, dynamic>> moon() async => moonNow;
 
   @override
-  Future<Map<String, dynamic>?> tarotCurrentTable() async =>
-      id == null || status == 'closed' ? null : _view();
+  Future<Map<String, dynamic>?> tarotCurrentTable() async {
+    currentCalls++;
+    final fail = failCurrent;
+    if (fail != null) {
+      failCurrent = null;
+      throw fail;
+    }
+    if (id == null || status == 'closed') return null;
+    final v = _view();
+    if (richDrawn) {
+      v['drawn'] = [
+        for (final s in drawn)
+          {
+            'slug': s,
+            'reversed': _rev(s),
+            'name': s,
+            'name_es': 'Carta $s',
+            'arcana': 'minor',
+            'suit': 'copas',
+            'number': 1,
+          },
+      ];
+    }
+    return v;
+  }
 
   @override
   Future<Map<String, dynamic>> tarotTableOp(
@@ -177,6 +208,8 @@ class FakeServer extends ArcanumApi {
       'question': question,
     };
     status = 'interpreted';
+    // como el back: lo interpretado ya no se deshace
+    previous = null;
     return {
       'session_id': sessionId,
       'spread': spread,
@@ -203,7 +236,17 @@ class FakeServer extends ArcanumApi {
       throw fail;
     }
     final prev = previous;
-    if (prev == null) throw StateError('Ya no se puede deshacer.');
+    if (prev == null) {
+      final req = RequestOptions(path: '/tarot/sessions/$sessionId/undo');
+      throw DioException(
+        requestOptions: req,
+        response: Response(
+          requestOptions: req,
+          statusCode: 409,
+          data: {'detail': 'Ya no se puede deshacer.'},
+        ),
+      );
+    }
     piles = prev.piles;
     drawn = prev.drawn;
     previous = null;

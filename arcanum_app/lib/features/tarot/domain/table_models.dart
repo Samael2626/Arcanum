@@ -183,6 +183,7 @@ class ServerView {
     required this.drawn,
     required this.expiresAt,
     this.interpretation,
+    this.drawnFaces = const {},
   });
 
   final String id;
@@ -201,7 +202,37 @@ class ServerView {
   final DateTime expiresAt;
   final Interpretation? interpretation;
 
+  /// Cara de cada sacada, si el servidor la manda (`/sessions/current`): con
+  /// ella se dibujan las cartas al volver sin la foto local.
+  final Map<String, CardFace> drawnFaces;
+
   bool get isActive => status == 'open' || status == 'interpreted';
+
+  ServerView _copy({
+    String? status,
+    Interpretation? Function()? interpretation,
+  }) => ServerView(
+    id: id,
+    status: status ?? this.status,
+    deck: deck,
+    label: label,
+    total: total,
+    piles: piles,
+    drawn: drawn,
+    expiresAt: expiresAt,
+    interpretation: interpretation == null
+        ? this.interpretation
+        : interpretation(),
+    drawnFaces: drawnFaces,
+  );
+
+  /// La vista tras interpretar, con la respuesta de la propia peticion.
+  ServerView interpretedAs(Interpretation it) =>
+      _copy(status: 'interpreted', interpretation: () => it);
+
+  /// Sin el texto de la interpretacion: el servidor ya lo tiene, y repetido en
+  /// la foto del cierre pasaba de 64 KB en las tiradas grandes.
+  ServerView withoutInterpretation() => _copy(interpretation: () => null);
   Set<String> get drawnSlugs => {for (final d in drawn) d.slug};
 
   factory ServerView.fromJson(Map<String, dynamic> j) {
@@ -221,6 +252,10 @@ class ServerView {
           (d) => (slug: d['slug'] as String, reversed: d['reversed'] as bool),
         ),
       ),
+      drawnFaces: {
+        for (final d in (j['drawn'] as List).cast<Map<String, dynamic>>())
+          if (d['arcana'] != null) d['slug'] as String: CardFace.fromJson(d),
+      },
       expiresAt: DateTime.parse(j['expires_at'] as String),
       interpretation: interp == null ? null : Interpretation.fromJson(interp),
     );

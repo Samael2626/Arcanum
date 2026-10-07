@@ -6,6 +6,7 @@ import 'package:arcanum_app/features/tarot/application/table_controller.dart';
 import 'package:arcanum_app/features/tarot/data/table_store.dart';
 import 'package:arcanum_app/features/tarot/domain/table_models.dart';
 import 'package:arcanum_app/features/tarot/domain/table_state.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -114,7 +115,9 @@ void main() {
     await ctl().take('p0', 0);
     ctl().arrange((s) => s.putInSlot('c0', 0), undoable: true);
     await ctl().giveBack('c0', 'p0');
-    expect(await ctl().undo(), isTrue);
+    // devolverla al mazo retira el deshacer local: ya no describe la mesa
+    // (revision 06-oct). Y la carta, desde luego, no vuelve
+    expect(await ctl().undo(), isFalse);
     expect(st().card('c0'), isNull);
   });
 
@@ -330,6 +333,98 @@ void main() {
       expect(st().hasTable, isFalse);
     },
   );
+
+  group('revision de codigo del 06-oct', () {
+    Future<void> oneCardRead() async {
+      await c.read(tableControllerProvider.future);
+      await ctl().openDeck('rws');
+      ctl().arrange((s) => s.copyWith(spread: () => 'one_card'));
+      final card = await ctl().take('p0', 0);
+      ctl().arrange((s) => s.putInSlot(card.slug, 0));
+    }
+
+    test(
+      'interpretar no hace una llamada extra que pueda fallar tras cobrar',
+      () async {
+        await oneCardRead();
+        final before = server.currentCalls;
+        server.failCurrent = StateError('red');
+        final r = await ctl().interpret();
+        expect(r.cards, isNotEmpty);
+        expect(server.currentCalls, before);
+        expect(st().server!.status, 'interpreted');
+        expect(st().server!.interpretation, isNotNull);
+      },
+    );
+
+    test(
+      'la foto del cierre no repite la interpretacion y lleva las posiciones',
+      () async {
+        await oneCardRead();
+        await ctl().interpret();
+        await ctl().closeCircle();
+        final server0 = server.closedWith!['server'] as Map<String, dynamic>;
+        expect(server0['interpretation'], isNull);
+        expect(server.closedArgs!['spread'], 'one_card');
+        expect(server.closedArgs!['placements'], isNotEmpty);
+      },
+    );
+
+    test('sacar fuera de un gesto retira el deshacer local ofrecido', () async {
+      await c.read(tableControllerProvider.future);
+      await ctl().openDeck('rws');
+      // extender el abanico ofrece deshacer (solo local)
+      ctl().arrange(
+        (s) => s.copyWith(
+          fan: () => const FanLayout(
+            pid: 'p0',
+            start: Offset(470, 782),
+            end: Offset(80, 782),
+          ),
+        ),
+        undoable: true,
+      );
+      expect(ctl().canUndo, isTrue);
+      await ctl().take('p0', 0);
+      // deshacer ahora quitaria una carta que el servidor sigue contando fuera
+      expect(ctl().canUndo, isFalse);
+    });
+
+    test('interpretar retira el deshacer del servidor', () async {
+      await oneCardRead();
+      ctl().beginUndoable();
+      await ctl().shuffle('p0');
+      ctl().commitUndoable();
+      await ctl().interpret();
+      expect(ctl().canUndo, isFalse);
+    });
+
+    test('un 409 al deshacer retira la oferta', () async {
+      await oneCardRead();
+      ctl().beginUndoable();
+      await ctl().shuffle('p0');
+      ctl().commitUndoable();
+      await Future<void>.delayed(Duration.zero);
+      server.previous = null; // el servidor ya no tiene a donde volver
+      await expectLater(ctl().undo(), throwsA(isA<DioException>()));
+      expect(ctl().canUndo, isFalse);
+    });
+
+    test('sin la foto local, las cartas sacadas se ven al volver', () async {
+      await c.read(tableControllerProvider.future);
+      await ctl().openDeck('rws');
+      await ctl().take('p0', 0);
+      await ctl().take('p0', 1);
+      // la app murio antes de guardar: otro arranque sin foto local
+      c.dispose();
+      SharedPreferences.setMockInitialValues({});
+      FlutterSecureStorage.setMockInitialValues({});
+      c = container();
+      final s = await c.read(tableControllerProvider.future);
+      expect({for (final k in s.cards) k.slug}, {'c0', 'c1'});
+      expect(s.cards.first.face.nameEs, startsWith('Carta'));
+    });
+  });
 
   test('la mesa se guarda cifrada y se recupera al volver', () async {
     await c.read(tableControllerProvider.future);

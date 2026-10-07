@@ -527,3 +527,18 @@ def test_cerrar_lo_interpretado_sin_cambios_guarda_la_interpretacion(client):
     r = _post(client, sid, "close", {"spread": "three_card", "placements": placements})
     assert r.status_code == 200, r.text
     assert [c["slug"] for c in r.json()["cards_drawn"]] == [c["slug"] for c in cards]
+
+
+def test_la_mesa_actual_trae_la_cara_de_las_sacadas(client):
+    # al volver sin la foto local, la app dibuja las sacadas con esto; sin ello
+    # quedaban invisibles (revision 06-oct)
+    sid = _open(client)["id"]
+    sacadas = _take(client, sid, [0, 1])
+    now = client.get("/tarot/sessions/current").json()
+    caras = {d["slug"]: d for d in now["drawn"]}
+    for c in sacadas:
+        assert caras[c["slug"]]["name_es"] == c["name_es"]
+        assert caras[c["slug"]]["arcana"] == c["arcana"]
+        assert caras[c["slug"]]["reversed"] == c["reversed"]
+    # y el orden del mazo sigue sin salir
+    assert "piles" in now and all(set(p) == {"count", "positions"} for p in now["piles"].values())
