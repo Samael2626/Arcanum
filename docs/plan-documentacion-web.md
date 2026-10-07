@@ -1,0 +1,51 @@
+# Plan de documentación y web de ARCANUM
+
+Fecha: 2026-10-07. Alcance: organizar conocimiento y mostrar el producto con precisión.
+
+## Diagnóstico
+
+- Ya existen estado, specs, auditorías y checkpoints, pero no había un índice ni una regla clara para mantener páginas estables.
+- Firebase está configurado para servir [`arcanum_app/sitio/`](../arcanum_app/sitio/), según `arcanum_app/firebase.json`. Esa página contiene una presentación breve, soporte y enlaces legales.
+- [`legal-site/index.html`](../legal-site/index.html) es una presentación antigua con etiquetas P0/P1/P2 y un formulario de vista previa. No usarlo como inventario de funciones vigentes.
+- La navegación actual del producto tiene cinco secciones: Cielo, Horóscopo, Grimorio, Saber y Oráculo. Dentro de ellas hay funciones como tarot, biblioteca, materia y Taller de sigilos; se deben describir desde la experiencia real, sin prometer pantallas separadas que no existen.
+
+## Qué mostrar en la web pública
+
+| Página o bloque | Pregunta que responde | Evidencia necesaria |
+|---|---|---|
+| Inicio | ¿Qué es ARCANUM y para quién sirve? | Captura actual y descripción contrastada con la app |
+| Recorrido | ¿Qué puedo hacer en Cielo, Horóscopo, Grimorio, Saber y Oráculo? | Capturas actuales de dispositivo o emulador, una acción real por sección |
+| Cómo funciona | ¿De dónde salen los cálculos y qué hace la IA? | Código astral, configuración del modelo y límites claros de uso |
+| Privacidad en lenguaje claro | ¿Qué se cifra y qué datos salen del dispositivo? | Flujo real, consentimiento y enlace a la política vigente en `gh-pages` |
+| Ayuda | ¿Cómo empiezo, recupero acceso, gestiono pagos y elimino la cuenta? | Flujos probados y enlace a eliminación de cuenta vigente |
+| Estado y cambios | ¿Qué versión se muestra y qué cambió? | Versión/release real, fecha y cambios visibles para usuarios |
+
+Primera versión: ampliar la página de Firebase existente con recorrido, tres a cinco capturas actuales, preguntas frecuentes y fecha de revisión. Mantener `app-ads.txt` en la raíz. Conservar los enlaces legales a `gh-pages`; no copiar allí sus textos. No publicar diagramas internos, arquitectura de seguridad detallada ni un roadmap que parezca promesa de entrega.
+
+## Qué documentar dentro del repositorio
+
+| Documento estable | Contenido mínimo | Fuente |
+|---|---|---|
+| Mapa de producto | Secciones, recorridos y límites de cada función | Router y pantallas |
+| Arquitectura | Contexto, contenedores y flujos sensibles | Código y configuración |
+| Contratos | API y errores importantes; enlazar OpenAPI generado | Routers y esquemas |
+| Datos y privacidad | Qué se almacena, cifra, envía a terceros y borra | Modelos, cliente y política vigente |
+| Operación | Entornos, despliegue, pruebas, observabilidad y recuperación | README, CI y configuración |
+| Decisiones | ADR breve para elecciones difíciles de revertir | PR y evidencia |
+
+## Control sin duplicar trabajo
+
+1. **Fuente:** Git para documentación técnica y producto; `gh-pages` para los legales; sitio Firebase para contenido público. El vault, si está disponible, enlaza a estas fuentes y guarda notas personales, sin crear otra versión normativa.
+2. **Cambio:** un PR que altera un flujo actualiza la página estable correspondiente y su diagrama. La descripción del PR explica qué cambió y cómo se verificó.
+3. **Estado:** issues/PR para trabajo pendiente; `ARCANUM-Estado.md` para el panorama consolidado. Marcar en documentos viejos que son históricos cuando puedan confundir.
+4. **Revisión:** antes de cada release, recorrer los enlaces, las capturas, la versión mostrada y las afirmaciones de privacidad/pagos. La fecha de revisión no reemplaza la comprobación.
+
+## Primer lote ejecutable
+
+1. Mantener este índice y el mapa de arquitectura como entrada técnica.
+2. Hacer inventario visual de las cinco secciones en la build actual; escoger capturas sin datos personales.
+3. Redactar la guía de uso por recorridos reales: primer inicio, consulta del cielo, guardar en Grimorio, leer en Saber y usar el Oráculo.
+4. Ampliar `arcanum_app/sitio/index.html` con ese material; revisar enlaces legales y `app-ads.txt` antes de desplegar.
+5. Dibujar las tres secuencias sensibles indicadas en [arquitectura.md](arquitectura.md) a medida que se verifiquen sus flujos.
+
+No hace falta elegir un generador nuevo de documentación para este lote: Markdown y Mermaid en Git cubren índice, revisión y diagramas; el sitio estático existente cubre la cara pública. Reconsiderarlo si aparecen múltiples autores, búsqueda de muchas páginas o traducciones.
