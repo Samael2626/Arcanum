@@ -14,8 +14,11 @@ import 'package:flutter_test/flutter_test.dart';
 final _num = RegExp(r'-?\d+(?:\.\d+)?');
 
 String? diffNumeric(String a, String b, {double tol = 0.011}) {
-  if (a.split(_num).join('#') != b.split(_num).join('#')) return 'texto distinto';
-  final sa = _num.allMatches(a).map((m) => m[0]!).toList(), sb = _num.allMatches(b).map((m) => m[0]!).toList();
+  if (a.split(_num).join('#') != b.split(_num).join('#')) {
+    return 'texto distinto';
+  }
+  final sa = _num.allMatches(a).map((m) => m[0]!).toList(),
+      sb = _num.allMatches(b).map((m) => m[0]!).toList();
   for (var i = 0; i < sa.length; i++) {
     if (sa[i] == sb[i]) continue;
     final x = double.parse(sa[i]), y = double.parse(sb[i]);
@@ -34,13 +37,18 @@ String? diffSvg(String dart, String js) {
     final d = diffNumeric(a[i], b[i]);
     if (d != null) return 'etiqueta $i: $d\n  dart: ${a[i]}\n  js:   ${b[i]}';
   }
-  if (a.length != b.length) return 'numero de etiquetas: dart ${a.length}, js ${b.length}';
+  if (a.length != b.length) {
+    return 'numero de etiquetas: dart ${a.length}, js ${b.length}';
+  }
   return null;
 }
 
 SigilDoc docFor(Map<String, dynamic> c) {
   final doc = SigilDoc(
-    layers: [for (final l in c['layers'] as List) Layer.fromJson(l as Map<String, dynamic>)],
+    layers: [
+      for (final l in c['layers'] as List)
+        Layer.fromJson(l as Map<String, dynamic>),
+    ],
     style: SigilStyle.fromJson(c['style'] as Map<String, dynamic>),
     terminals: c['terminals'] as String,
     transparent: c['transparent'] as bool,
@@ -59,19 +67,41 @@ SigilDoc docFor(Map<String, dynamic> c) {
 }
 
 void main() {
-  final cases = ((jsonDecode(File('test/features/sigilos/fixtures/capas.json').readAsStringSync()) as Map<String, dynamic>)['svgs'] as List)
-      .cast<Map<String, dynamic>>();
+  final cases =
+      ((jsonDecode(
+                    File(
+                      'test/features/sigilos/fixtures/capas.json',
+                    ).readAsStringSync(),
+                  )
+                  as Map<String, dynamic>)['svgs']
+              as List)
+          .cast<Map<String, dynamic>>();
 
   test('hay SVG de referencia de todos los estilos', () {
     final presets = cases.map((c) => (c['style'] as Map)['preset']).toSet();
-    expect(presets, containsAll(['pergamino', 'papel', 'lacre', 'oro', 'burdeos', 'plata', 'metal', 'flash-venus', 'flash-saturn', 'propio']));
+    expect(
+      presets,
+      containsAll([
+        'pergamino',
+        'papel',
+        'lacre',
+        'oro',
+        'burdeos',
+        'plata',
+        'metal',
+        'flash-venus',
+        'flash-saturn',
+        'propio',
+      ]),
+    );
     expect(cases.any((c) => c['transparent'] == true), isTrue);
     expect(cases.any((c) => (c['endStyles'] as Map).isNotEmpty), isTrue);
   });
 
   for (final c in cases) {
     final st = c['style'] as Map<String, dynamic>;
-    final name = '${c['text']} · ${c['mode']} · ${(c['layers'] as List).length} capas · ${st['preset']}'
+    final name =
+        '${c['text']} · ${c['mode']} · ${(c['layers'] as List).length} capas · ${st['preset']}'
         '${st['line'] == 'double' ? ' doble' : ''}${st['relief'] == true ? ' relieve' : ''}${st['glow'] == true ? ' resplandor' : ''}'
         ' · remate ${c['terminals']}${(c['endStyles'] as Map).isNotEmpty ? ' + uno' : ''}${c['transparent'] == true ? ' · transparente' : ''}';
     test(name, () {
@@ -80,16 +110,24 @@ void main() {
     });
   }
 
-  test('los relampagueantes siguen Flying Roll XIV (campo del planeta, signo complementario)', () {
-    const pairs = {
-      'mars': ('#de2a1f', '#1d9a58'), 'venus': ('#1d9a58', '#de2a1f'), 'sun': ('#f28a1c', '#2f63d6'), 'moon': ('#2f63d6', '#f28a1c'),
-      'mercury': ('#f2cf1d', '#7b31b3'), 'jupiter': ('#7b31b3', '#f2cf1d'), 'saturn': ('#3c2b8f', '#f0aa1a'),
-    };
-    pairs.forEach((p, v) {
-      final s = presetStyle('flash-$p');
-      expect((s.bg, s.ink), v, reason: p);
-    });
-  });
+  test(
+    'los relampagueantes siguen Flying Roll XIV (campo del planeta, signo complementario)',
+    () {
+      const pairs = {
+        'mars': ('#de2a1f', '#1d9a58'),
+        'venus': ('#1d9a58', '#de2a1f'),
+        'sun': ('#f28a1c', '#2f63d6'),
+        'moon': ('#2f63d6', '#f28a1c'),
+        'mercury': ('#f2cf1d', '#7b31b3'),
+        'jupiter': ('#7b31b3', '#f2cf1d'),
+        'saturn': ('#3c2b8f', '#f0aa1a'),
+      };
+      pairs.forEach((p, v) {
+        final s = presetStyle('flash-$p');
+        expect((s.bg, s.ink), v, reason: p);
+      });
+    },
+  );
 
   test('el metal de cada planeta es el de la Goetia (p. 48)', () {
     expect(metalStyle('mars').metal, 'hierro');

@@ -59,19 +59,20 @@ void main() {
     expect(find.textContaining(r'$ 4.900'), findsWidgets);
   });
 
-  testWidgets('sin plan base tambien funciona, por si algun producto es viejo', (
-    tester,
-  ) async {
-    // Los productos dados de alta antes de febrero de 2023 llegan sin sufijo.
-    // El arreglo no puede romperlos.
-    await _montar(
-      tester,
-      precios: expandirPreciosPorIdBase(const {
-        'arcanum_premium_annual': r'$ 39.900',
-      }),
-    );
-    expect(find.textContaining(r'$ 39.900'), findsWidgets);
-  });
+  testWidgets(
+    'sin plan base tambien funciona, por si algun producto es viejo',
+    (tester) async {
+      // Los productos dados de alta antes de febrero de 2023 llegan sin sufijo.
+      // El arreglo no puede romperlos.
+      await _montar(
+        tester,
+        precios: expandirPreciosPorIdBase(const {
+          'arcanum_premium_annual': r'$ 39.900',
+        }),
+      );
+      expect(find.textContaining(r'$ 39.900'), findsWidgets);
+    },
+  );
 
   testWidgets('sin respuesta de la tienda no se muestra ningun precio', (
     tester,

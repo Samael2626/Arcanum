@@ -234,7 +234,8 @@ class MonetizationService {
       // este metodo no tiene por que saberlo, y el dia que se venda una
       // suscripcion por aqui seguiria funcionando.
       final pkg = all.firstWhere(
-        (p) => idBaseDeProducto(p.storeProduct.identifier) ==
+        (p) =>
+            idBaseDeProducto(p.storeProduct.identifier) ==
             idBaseDeProducto(productId),
         orElse: () => throw StateError('Product not found: $productId'),
       );
