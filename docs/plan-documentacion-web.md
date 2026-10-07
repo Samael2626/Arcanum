@@ -49,3 +49,10 @@ Primera versión: ampliar la página de Firebase existente con recorrido, tres a
 5. Dibujar las tres secuencias sensibles indicadas en [arquitectura.md](arquitectura.md) a medida que se verifiquen sus flujos.
 
 No hace falta elegir un generador nuevo de documentación para este lote: Markdown y Mermaid en Git cubren índice, revisión y diagramas; el sitio estático existente cubre la cara pública. Reconsiderarlo si aparecen múltiples autores, búsqueda de muchas páginas o traducciones.
+
+## Implementación web — 7 de octubre de 2026
+
+- La página pública de Firebase en [`arcanum_app/sitio/index.html`](../arcanum_app/sitio/index.html) muestra el recorrido por Cielo, Horóscopo, Grimorio, Saber y Oráculo, con capturas generadas desde pruebas de widgets con datos ficticios.
+- Las fuentes de las capturas son `arcanum_app/test/capturas/hoy_capturas_test.dart` y `arcanum_app/test/capturas/navegacion_capturas_test.dart`. Al cambiar esas pantallas, regenerar y revisar las imágenes de `arcanum_app/sitio/assets/` antes del siguiente despliegue.
+- El texto de privacidad distingue el cuerpo cifrado de las entradas del Grimorio de sus títulos y datos de contexto. La afirmación se contrastó con `arcanum_app/lib/features/grimorio/grimorio_editor.dart`.
+- La página conserva los enlaces legales de `gh-pages` y `app-ads.txt` en la raíz de Hosting. La llamada a la acción envía un correo para solicitar acceso a la prueba cerrada.

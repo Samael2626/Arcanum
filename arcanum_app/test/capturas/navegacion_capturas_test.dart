@@ -131,7 +131,61 @@ class _Api extends ArcanumApi {
   /// El Grimorio pide su lista al construirse. Sin doblarla, la llamada se va
   /// al Dio real y el test muere con un temporizador pendiente.
   @override
-  Future<List<Map<String, dynamic>>> grimoireList() async => [];
+  Future<List<Map<String, dynamic>>> grimoireList() async => [
+    {
+      'id': 'sample-ritual',
+      'entry_type': 'ritual',
+      'title': 'Consagración del aceite de Venus',
+      'entry_date': '2026-10-07',
+      'day_planet': 'venus',
+      'planetary_hour': 'venus',
+      'moon_phase': 'Cuarto menguante',
+    },
+  ];
+
+  @override
+  Future<List<Map<String, dynamic>>> senderoProgress() async => [];
+
+  @override
+  Future<Map<String, dynamic>> usageToday() async => {
+    'balance': 3,
+    'acciones': {
+      'oracle_ia': {
+        'limite_diario': 1,
+        'usado': 0,
+        'restante': 1,
+        'siguiente_gasta_credito': false,
+      },
+    },
+  };
+
+  @override
+  Future<List<Map<String, dynamic>>> allProgress() async => [];
+
+  @override
+  Future<List<Map<String, dynamic>>> libraryWorks() async => [];
+
+  @override
+  Future<List<Map<String, dynamic>>> materiaList({
+    String? itemType,
+    String? planet,
+    String? q,
+  }) async => const [
+    {
+      'slug': 'romero',
+      'item_type': 'herb',
+      'name': 'Romero',
+      'planet': 'sun',
+      'element': 'fire',
+    },
+    {
+      'slug': 'amatista',
+      'item_type': 'stone',
+      'name': 'Amatista',
+      'planet': 'jupiter',
+      'element': 'air',
+    },
+  ];
 }
 
 Future<void> _montar(WidgetTester tester) async {
@@ -185,7 +239,11 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
     await _cargarFuentes();
   });
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(
+    () => SharedPreferences.setMockInitialValues({
+      'sendero_offer_hidden_user-a': true,
+    }),
+  );
 
   testWidgets('n1 el cajón abierto, desde Hoy', (tester) async {
     await _montar(tester);
@@ -209,6 +267,14 @@ void main() {
   testWidgets('n4 el Grimorio, con su frase nueva', (tester) async {
     await _montar(tester);
     await _irA(tester, 'Grimorio');
+    await tester.pump(const Duration(seconds: 2));
     await _retratar(tester, 'nav-4-grimorio');
+  });
+
+  testWidgets('n5 Saber con materias de muestra', (tester) async {
+    await _montar(tester);
+    await _irA(tester, 'Saber');
+    await tester.pump(const Duration(milliseconds: 400));
+    await _retratar(tester, 'nav-5-saber');
   });
 }

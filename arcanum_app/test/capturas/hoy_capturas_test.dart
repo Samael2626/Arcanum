@@ -92,6 +92,21 @@ class _AuthConLugar extends AuthNotifier {
 class _ApiDeMuestra extends ArcanumApi {
   _ApiDeMuestra() : super(Dio());
 
+  @override
+  Future<List<Map<String, dynamic>>> senderoProgress() async => [];
+
+  @override
+  Future<Map<String, dynamic>> usageToday() async => {
+    'balance': 3,
+    'acciones': <String, dynamic>{},
+  };
+
+  @override
+  Future<List<Map<String, dynamic>>> allProgress() async => [];
+
+  @override
+  Future<List<Map<String, dynamic>>> libraryWorks() async => [];
+
   /// El regente, la hora planetaria y la luna: el primer panel de la pantalla.
   /// Sin esto la tarjeta se va a la implementacion real, no hay servidor y Hoy
   /// se queda en "El cielo guarda silencio".
@@ -398,7 +413,11 @@ void main() {
   // Por captura, no una sola vez: el consentimiento se guarda en preferencias,
   // asi que tras la captura que lo acepta las siguientes ya no verian el
   // dialogo y el toque caeria en el vacio.
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(
+    () => SharedPreferences.setMockInitialValues({
+      'sendero_offer_hidden_user-a': true,
+    }),
+  );
 
   testWidgets('01 arriba, con el sello cerrado', (tester) async {
     await _montar(tester);
