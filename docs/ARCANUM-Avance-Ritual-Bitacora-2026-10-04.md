@@ -34,3 +34,11 @@ Relacionado: [[Guia-Maestra-de-Sigilos]], [[Sigilos-Guia-de-Producto]], [[ARCANU
 - El primer test del flujo descubrió un desborde de **92 px** en los controles de carga a 390×844; «Empezar» no recibía el toque. Se sustituyó la fila rígida por controles que envuelven. La prueba pasó después.
 - El primer test de entrada desde Hoy usó la ventana predeterminada de 800×600 y el Taller desbordó 2 px en un control lateral; el test se ajustó a la ventana móvil exigida de 390×844. No se afirma que esa composición lateral funcione en 800×600.
 - No verificado en teléfono real: 90 Hz, arrastre con dedo, lector de pantalla, aspecto de Crimson Pro/Noto Serif Hebrew, comportamiento de teclado y red reales. No hubo revisión legal de obra ajena ni publicación.
+
+## Nota de integracion con main (7-oct)
+
+Al llevar las familias v2 sobre main:
+
+- La puerta «Crear sigilo de letras» en Hoy NO se integro: choca con la portada nueva (rama de la portada). Pendiente de decidir donde vive la entrada al taller de letras.
+- La Bitacora si: tras «Soltar» (confirmado) se ofrece la hoja de anotacion, encima del ciclo de main (historial cifrado, miniatura, soltar con aviso). Cerrar sin anotar no guarda nada.
+- La respiracion 4-4-4-4 de la carga NO se retiro (ver [[ARCANUM-Mejora-Taller-2026-10-05]]): main mantiene las fases con su placa oscura. Retirarla es decision de producto pendiente.

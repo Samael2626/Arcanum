@@ -36,3 +36,7 @@ Relacionado: [[Guia-Maestra-de-Sigilos]], [[ARCANUM-Avance-Ritual-Bitacora-2026-
 - El test de guardado de Letras tocaba un botón 6 px fuera de la ventana de 390×844; se desplazó la lista y pasó.
 - La compilación advirtió que el uso de Kotlin Gradle Plugin por la app y `purchases_flutter` fallará en versiones futuras de Flutter; requiere migración antes de actualizar Flutter.
 - Falta QA en teléfono físico: 90 Hz, arrastre con dedo, lector de pantalla, teclado y red reales, y aspecto con Crimson Pro y Noto Serif Hebrew.
+
+## Nota de integracion con main (7-oct)
+
+En la rama de integracion NO se aplico el cambio de taller_carga.dart (retirar la respiracion 4-4-4-4 y el texto «respira a tu ritmo»): main conserva las fases con placa oscura. Queda como decision de producto. Si se decide retirarlas, cambiar tambien el test «placa de fase» de ciclo_test.dart.
