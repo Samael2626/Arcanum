@@ -4,10 +4,35 @@ Protege endpoints sensibles (login, register) contra fuerza bruta y
 enumeración. Redis es opcional en desarrollo. En producción, una caída
 devuelve 503 para no desactivar el límite.
 """
+import os
+from ipaddress import ip_address, ip_network
+
 from fastapi import Request, HTTPException, status
 from redis.exceptions import RedisError
 
 from app.core import security
+
+_RAILWAY_PROXY_NETWORK = ip_network("100.64.0.0/10")
+
+
+def client_ip_for_rate_limit(request: Request) -> str:
+    """Usa X-Real-IP solo cuando la conexion llega del proxy de Railway."""
+    peer = request.client.host if request.client else "unknown"
+    try:
+        parsed_peer = ip_address(peer)
+    except ValueError:
+        return peer
+
+    if os.getenv("RAILWAY_ENVIRONMENT_NAME") and parsed_peer in _RAILWAY_PROXY_NETWORK:
+        forwarded = request.headers.get("x-real-ip", "")
+        try:
+            return str(ip_address(forwarded))
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Servicio temporalmente no disponible",
+            ) from None
+    return str(parsed_peer)
 
 
 class RateLimiter:
@@ -26,7 +51,7 @@ class RateLimiter:
         if redis is None:
             return  # Redis opcional en desarrollo
 
-        ip = request.client.host if request.client else "unknown"
+        ip = client_ip_for_rate_limit(request)
         key = f"ratelimit:{self.scope}:{ip}"
 
         try:
