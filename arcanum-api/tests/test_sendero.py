@@ -142,3 +142,31 @@ def test_legacy_orientation_reward_is_not_granted_again(client, db_session):
     assert response.status_code == 200
     assert response.json()["reward_fragments"] == 0
     assert client.get("/fragments/balance", headers=headers).json()["balance"] == 3
+
+
+def test_orientation_v3_grants_its_fragment(client):
+    # 07-oct: la portada de mosaicos dejo Primer umbral en 2 pasos (version 3).
+    # Sin esto, quien lo completaba ya no cobraba nunca
+    headers = _auth_headers(client)
+    payload = {"version": 3, "step": 1, "status": "completed"}
+
+    first = client.put("/sendero/progress/orientation", headers=headers, json=payload)
+    balance = client.get("/fragments/balance", headers=headers)
+
+    assert first.status_code == 200
+    assert first.json()["reward_fragments"] == 1
+    assert balance.json()["balance"] == 1
+
+
+def test_orientation_v2_then_v3_pays_only_once(client, db_session):
+    # quien completo la version 2 la ve otra vez pendiente: repetirla no paga
+    headers = _auth_headers(client)
+    v2 = {"version": 2, "step": 2, "status": "completed"}
+    v3 = {"version": 3, "step": 1, "status": "completed"}
+
+    first = client.put("/sendero/progress/orientation", headers=headers, json=v2)
+    second = client.put("/sendero/progress/orientation", headers=headers, json=v3)
+
+    assert first.json()["reward_fragments"] == 1
+    assert second.json()["reward_fragments"] == 0
+    assert db_session.query(FragmentMovement).count() == 1

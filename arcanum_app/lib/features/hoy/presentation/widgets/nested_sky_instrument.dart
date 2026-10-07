@@ -159,15 +159,15 @@ class _NestedSkyInstrumentState extends State<NestedSkyInstrument> {
             const SizedBox(height: 16),
             _Panel(
               etiqueta: _etiqueta,
-              nombre: _nombre(phase),
-              dato: _dato(illumination, age),
+              nombre: _nombre(age, waxing),
+              dato: _dato(age, waxing),
             ),
           ] else ...[
             const SizedBox(height: 10),
             _Panel(
               etiqueta: 'La Luna',
-              nombre: phase,
-              dato: _datoLunar(illumination, age),
+              nombre: _lunarName(age, waxing),
+              dato: _lunarCourse(waxing),
             ),
             const SizedBox(height: 16),
             // DOS LUGARES DISTINTOS, y hay que decir cual falta. Este es
@@ -217,17 +217,27 @@ class _NestedSkyInstrumentState extends State<NestedSkyInstrument> {
     SkyBody.moon => 'La Luna',
   };
 
-  String _nombre(String phase) => switch (_actual) {
+  String _nombre(double? age, bool waxing) => switch (_actual) {
     SkyBody.ruler => 'Día de ${planetEs[widget.ruler] ?? widget.ruler}',
     SkyBody.hour => 'Hora de ${planetEs[_hourPlanet] ?? _hourPlanet}',
-    SkyBody.moon => phase,
+    SkyBody.moon => _lunarName(age, waxing),
   };
 
-  String _dato(double illumination, double? age) => switch (_actual) {
+  String _dato(double? age, bool waxing) => switch (_actual) {
     SkyBody.ruler => 'Rige la jornada entera, desde el amanecer',
     SkyBody.hour => _datoHora(),
-    SkyBody.moon => _datoLunar(illumination, age),
+    SkyBody.moon => _lunarCourse(waxing),
   };
+
+  // La fase y el porcentaje ya los dice la baldosa «Cielo» de la portada
+  // (Samuel, 07-oct): aqui el detalle que alli no esta, el dia del ciclo y
+  // hacia donde va.
+  static String _lunarName(double? age, bool waxing) => age == null
+      ? (waxing ? 'Luna que crece' : 'Luna que mengua')
+      : 'Día ${age.round()} del ciclo';
+
+  static String _lunarCourse(bool waxing) =>
+      waxing ? 'Crece hacia la Llena' : 'Mengua hacia la Nueva';
 
   String _datoHora() {
     final minutos = (widget.hour?['minutes_remaining'] as num?)?.toInt();
@@ -236,10 +246,6 @@ class _NestedSkyInstrumentState extends State<NestedSkyInstrument> {
         : 'Hora nocturna';
     return minutos == null ? franja : '$franja · termina en $minutos min';
   }
-
-  String _datoLunar(double illumination, double? age) =>
-      '${(illumination * 100).round()}% iluminada'
-      '${age == null ? '' : ' · ${age.round()} días'}';
 
   static double _hourProgress(Map<String, dynamic>? hour, int? minutes) {
     final starts = DateTime.tryParse((hour?['starts_at'] as String?) ?? '');

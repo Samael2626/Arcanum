@@ -9,18 +9,30 @@ import 'package:go_router/go_router.dart';
 
 import '../../apoyo/saldo_falso.dart';
 
-/// El cajon: TODA la navegacion desde el 21-sep-2026.
+/// El cajon: CUENTA Y AYUDA desde el 07-oct-2026.
 ///
-/// Lo que se fija aqui es lo que justifico cada pieza: que Privacidad no vuelva
-/// a estar a tres toques, que las secciones salgan de `arcanumSections` y no de
-/// una lista escrita a mano, y que la regla de seleccion de la casa se aplique
-/// igual a las dos mitades del cajon.
+/// Del 21-sep al 07-oct-2026 fue toda la navegacion. Con la portada de
+/// mosaicos las secciones salieron de aqui: se abren desde Cielo, y la barra
+/// superior lleva una casa para volver a ella. Lo que se fija ahora es lo que
+/// justifico cada pieza que queda: que Privacidad no vuelva a estar a tres
+/// toques, que las secciones NO se cuelen de nuevo en el cajon (dos sitios
+/// para lo mismo), y que la regla de seleccion de la casa siga aplicandose.
 ///
 /// Se monta un `StatefulShellRoute` de verdad y no un `Scaffold` suelto: el
-/// cajon pide el shell para saber en que rama estas, y fabricarlo a mano seria
-/// probar otra cosa.
+/// cajon pide el shell, y fabricarlo a mano seria probar otra cosa.
 void main() {
-  Future<GoRouter> abrir(WidgetTester t, {String en = '/hoy'}) async {
+  /// Rutas de la cuenta, FUERA del shell, como en `app_router.dart`.
+  const cuenta = ['/perfil', '/settings', '/privacy', '/sendero', '/tarot'];
+
+  /// [enRama] mete ademas una ruta de la cuenta COMO RAMA del shell. Solo para
+  /// probar la regla de seleccion: en la app ninguna fila del cajon apunta
+  /// dentro del shell, asi que la fila marcada no se ve nunca -- pero si un
+  /// dia alguna apunta, tiene que marcarse como manda la casa.
+  Future<GoRouter> abrir(
+    WidgetTester t, {
+    String en = '/hoy',
+    String? enRama,
+  }) async {
     final router = GoRouter(
       initialLocation: en,
       routes: [
@@ -38,18 +50,21 @@ void main() {
             body: shell,
           ),
           branches: [
-            for (final seccion in arcanumSections)
+            for (final route in [
+              for (final s in arcanumSections) s.route,
+              ?enRama,
+            ])
               StatefulShellBranch(
                 routes: [
                   GoRoute(
-                    path: seccion.route,
-                    builder: (c, s) => Text('pantalla ${seccion.route}'),
+                    path: route,
+                    builder: (c, s) => Text('pantalla $route'),
                   ),
                 ],
               ),
           ],
         ),
-        for (final r in ['/perfil', '/settings', '/privacy'])
+        for (final r in cuenta.where((r) => r != enRama))
           GoRoute(
             path: r,
             builder: (c, s) => Scaffold(body: Text('pantalla $r')),
@@ -73,29 +88,43 @@ void main() {
     await t.pumpAndSettle();
   }
 
-  testWidgets(
-    'las secciones salen de arcanumSections, no de una lista aparte',
-    (t) async {
-      await abrir(t);
-      await abrirCajon(t);
+  Finder enCajon(Finder f) =>
+      find.descendant(of: find.byType(ArcanumDrawer), matching: f);
 
-      for (final seccion in arcanumSections) {
-        expect(
-          find.text(seccion.title),
-          findsWidgets,
-          reason: '${seccion.title} no esta en el cajon',
-        );
-      }
-    },
-  );
+  // Filas que lleva el cajon. La mesa solo existe en debug y perfil, y los
+  // tests corren en debug: si sale en la tienda, lo vigila la condicion
+  // `kDebugMode || kProfileMode` del propio cajon, no este test.
+  const filas = [
+    'Mesa de tarot · en pruebas',
+    'Ayuda y recorrido',
+    'Perfil',
+    'Ajustes',
+    'Privacidad y datos',
+  ];
 
-  testWidgets('las tres de la cuenta viven al mismo nivel', (t) async {
+  testWidgets('las secciones viven en la portada, no en el cajon', (t) async {
     await abrir(t);
     await abrirCajon(t);
 
-    expect(find.text('Perfil'), findsOneWidget);
-    expect(find.text('Ajustes'), findsOneWidget);
-    expect(find.text('Privacidad y datos'), findsOneWidget);
+    expect(enCajon(find.text('CUENTA Y AYUDA')), findsOneWidget);
+    for (final seccion in arcanumSections) {
+      expect(
+        enCajon(find.text(seccion.title)),
+        findsNothing,
+        reason:
+            '${seccion.title} volvio al cajon: la abre su mosaico de la '
+            'portada, y dos entradas para lo mismo es lo que se quito',
+      );
+    }
+  });
+
+  testWidgets('las de la cuenta viven al mismo nivel', (t) async {
+    await abrir(t);
+    await abrirCajon(t);
+
+    for (final rotulo in filas) {
+      expect(enCajon(find.text(rotulo)), findsOneWidget, reason: rotulo);
+    }
   });
 
   testWidgets('Privacidad llega en DOS toques desde el arranque', (t) async {
@@ -125,65 +154,67 @@ void main() {
     );
   });
 
-  testWidgets('una seccion cuesta dos toques, y cambia de rama', (t) async {
+  // Antes: "una seccion cuesta dos toques, y cambia de rama". Las secciones ya
+  // no estan aqui (07-oct-2026); lo que queda es la ayuda, que tambien tiene
+  // que costar dos toques y cerrar el cajon detras.
+  testWidgets('la ayuda cuesta dos toques, y el cajon se cierra', (t) async {
     await abrir(t);
     await abrirCajon(t);
-    await t.tap(find.text('Horóscopo'));
+    await t.tap(find.text('Ayuda y recorrido'));
     await t.pumpAndSettle();
 
-    expect(find.text('pantalla /horoscopo'), findsOneWidget);
+    expect(find.text('pantalla /sendero'), findsOneWidget);
     expect(find.text('Perfil'), findsNothing, reason: 'el cajon se cerro');
   });
 
   testWidgets('la fila de la pantalla abierta lleva los tres avisos', (
     t,
   ) async {
-    await abrir(t, en: '/horoscopo');
+    await abrir(t, en: '/perfil', enRama: '/perfil');
     await abrirCajon(t);
 
-    final activa = t.widget<Text>(find.text('Horóscopo')).style!;
-    final otra = t.widget<Text>(find.text('Grimorio')).style!;
+    final activa = t.widget<Text>(find.text('Perfil')).style!;
+    final otra = t.widget<Text>(find.text('Ajustes')).style!;
 
     expect(activa.color, ArcanumColors.goldLight);
     expect(activa.fontWeight, FontWeight.w600);
     expect(otra.color, ArcanumColors.ivoryMuted);
     expect(otra.fontWeight, FontWeight.w400);
     // Y la forma: relleno la de aqui, contorno las otras.
-    expect(find.byIcon(arcanumSections[1].selectedIcon), findsOneWidget);
-    expect(find.byIcon(arcanumSections[1].icon), findsNothing);
-    expect(find.byIcon(arcanumSections[2].icon), findsOneWidget);
+    expect(find.byIcon(Icons.person), findsOneWidget);
+    expect(find.byIcon(Icons.person_outline), findsNothing);
+    expect(find.byIcon(Icons.tune_outlined), findsOneWidget);
   });
 
   testWidgets('ninguna fila baja de 48 de alto', (t) async {
     await abrir(t);
     await abrirCajon(t);
 
-    final rotulos = [
-      for (final s in arcanumSections) s.title,
-      'Perfil',
-      'Ajustes',
-      'Privacidad y datos',
-    ];
-    for (final rotulo in rotulos) {
+    for (final rotulo in filas) {
       final caja = find
           .ancestor(
             of: find.text(rotulo),
             matching: find.byType(ConstrainedBox),
           )
           .first;
-      expect(t.getSize(caja).height, greaterThanOrEqualTo(48));
+      expect(t.getSize(caja).height, greaterThanOrEqualTo(48), reason: rotulo);
     }
   });
 
-  testWidgets('tocar la seccion en la que ya estas vuelve a su raiz', (
+  // Antes: "tocar la seccion en la que ya estas vuelve a su raiz". Volver a
+  // la portada lo hace ahora la casa de la barra (ver cajon_navegacion_test).
+  // Aqui queda la otra mitad: tocar la fila de donde ya estas no apila la
+  // misma pantalla otra vez, solo cierra el cajon.
+  testWidgets('tocar la fila en la que ya estas solo cierra el cajon', (
     t,
   ) async {
-    await abrir(t);
+    final router = await abrir(t, en: '/perfil', enRama: '/perfil');
     await abrirCajon(t);
-    await t.tap(find.text('Cielo'));
+    await t.tap(find.text('Perfil'));
     await t.pumpAndSettle();
 
-    expect(find.text('pantalla /hoy'), findsOneWidget);
+    expect(find.text('pantalla /perfil'), findsOneWidget);
+    expect(router.canPop(), isFalse, reason: 'se apilo la misma pantalla');
     expect(find.text('Ajustes'), findsNothing, reason: 'el cajon se cerro');
   });
 }

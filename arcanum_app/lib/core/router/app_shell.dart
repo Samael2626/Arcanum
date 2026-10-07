@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../shared/widgets/arcanum_mood.dart';
-import '../../shared/widgets/arcanum_resin.dart';
 import 'arcanum_drawer.dart';
 
-import '../auth/auth_controller.dart';
 import '../content/sections.dart';
+import '../state/flow_providers.dart';
 import '../theme/arcanum_colors.dart';
 import '../theme/arcanum_theme.dart';
 import '../../shared/widgets/info_dot.dart';
@@ -15,21 +13,8 @@ import '../../features/sendero/presentation/sendero_invitation.dart';
 import '../../features/sendero/application/sendero_guide_controller.dart';
 import '../../features/sendero/presentation/sendero_spotlight.dart';
 
-/// Carcasa con barra superior contextual. YA NO HAY BARRA INFERIOR.
-///
-/// Arriba (por pantalla): hamburguesa que abre el cajon + nombre místico de la
-/// sección + subtítulo llano + "?" que explica + avatar. La barra superior se
-/// OCULTA en las sub-rutas (una obra, un capítulo), que traen su propio AppBar
-/// con botón de volver.
-///
-/// LA BARRA DE ABAJO SE QUITO EL 21-sep-2026. Toda la navegacion pasa por
-/// `ArcanumDrawer`, que dibuja en vertical la misma `arcanumSections` que
-/// alimentaba a la barra y sigue llamando a `goBranch`: las ramas del shell y
-/// su estado de pila no se tocan, solo cambia quien las ofrece.
-///
-/// Lo que se pierde, dicho en voz alta: la barra marcaba la seccion abierta
-/// sin que nadie hiciera nada, y ahora hay que abrir el cajon para saber donde
-/// estas. Y lo diario pasa de 4 toques a 8. Se decidio a sabiendas.
+/// Las secciones se abren desde los mosaicos de Cielo. La barra superior deja
+/// visible el retorno a esa portada; el cajon contiene solo cuenta y ayuda.
 class AppShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
   const AppShell({super.key, required this.navigationShell});
@@ -149,34 +134,25 @@ class _SectionBar extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(width: 12),
-          const _ProfileAvatar(),
+          const SizedBox(width: 4),
+          const _HomeButton(),
         ],
       ),
     );
   }
 }
 
-/// La hamburguesa: puerta principal a TODA la navegacion, arriba a la
-/// izquierda, que es donde la busca cualquiera.
-///
-/// Fue un sello -- el pentaculo U+26E4 de `ArcanumGlifos` -- mientras el cajon
-/// solo guardaba la cuenta. Con las cinco secciones dentro, el glifo bonito
-/// deja de decir lo que hay detras: tres lineas son la convencion y aqui la
-/// convencion pesa mas, porque esto ya no es un adorno sino el unico camino a
-/// las secciones.
-///
-/// Sin filete, como todo. Su zona tactil son 48 aunque el icono mida 22.
+/// La hamburguesa abre cuenta, ajustes y ayuda. Su zona tactil mide 48.
 class _MenuPrincipal extends ConsumerWidget {
   const _MenuPrincipal();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Tooltip(
-      message: 'Navegación',
+      message: 'Cuenta y ayuda',
       child: Semantics(
         button: true,
-        label: 'Abrir el menú',
+        label: 'Abrir cuenta y ayuda',
         child: InkWell(
           customBorder: const CircleBorder(),
           key: ref.read(senderoGuideTargetsProvider).keyFor('menu'),
@@ -197,44 +173,16 @@ class _MenuPrincipal extends ConsumerWidget {
   }
 }
 
-/// Avatar circular con la inicial del practicante. Segundo tirador del MISMO
-/// cajon que la hamburguesa: no hay un segundo cajon ni un segundo widget.
-///
-/// Se queda aunque la hamburguesa haga ya el trabajo, porque el avatar es lo
-/// que se toca buscando la cuenta, y la cuenta sigue estando ahi dentro.
-class _ProfileAvatar extends ConsumerWidget {
-  const _ProfileAvatar();
+class _HomeButton extends ConsumerWidget {
+  const _HomeButton();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authProvider).user;
-    final name = (user?['display_name'] as String?)?.trim();
-    final initial = (name != null && name.isNotEmpty)
-        ? name.substring(0, 1).toUpperCase()
-        : '☾';
-    return Semantics(
-      button: true,
-      label: 'Abrir tu cuenta',
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: Scaffold.of(context).openDrawer,
-        child: Container(
-          width: 40,
-          height: 40,
-          alignment: Alignment.center,
-          // Sin filete, como el resto de la app: lo que le da forma es el
-          // propio material.
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: ArcanumResin.gradient(mood: ArcanumMood.neutral),
-            boxShadow: ArcanumResin.shadow,
-          ),
-          child: Text(
-            initial,
-            style: ArcanumText.heading(20, color: ArcanumColors.gold),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context, WidgetRef ref) => IconButton(
+    tooltip: 'Volver a la portada',
+    icon: const Icon(Icons.home_outlined, color: ArcanumColors.goldLight),
+    onPressed: () {
+      ref.read(cieloCaraProvider.notifier).set(0);
+      context.go('/hoy');
+    },
+  );
 }

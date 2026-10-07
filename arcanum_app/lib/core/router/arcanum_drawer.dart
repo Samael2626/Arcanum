@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../content/sections.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/bloque_saldo.dart';
 import '../../shared/widgets/arcanum_mood.dart';
@@ -13,26 +12,7 @@ import '../../shared/widgets/arcanum_resin.dart';
 import '../../shared/widgets/arcanum_toggle.dart';
 import '../../features/sendero/application/sendero_guide_controller.dart';
 
-/// El cajon: TODA la navegacion, desde que la barra de abajo dejo de existir.
-///
-/// Hasta el 21-sep-2026 esto guardaba solo lo secundario -- Perfil, Ajustes,
-/// Privacidad -- y las cinco secciones vivian en una `NavigationBar`. Ahora
-/// cuelgan las dos cosas del mismo cajon, separadas por una linea.
-///
-/// LAS SECCIONES NO SE ESCRIBEN AQUI. Salen de `arcanumSections`, que sigue
-/// siendo la fuente unica: el indice de cada fila es el indice de su rama del
-/// shell, igual que lo era el del destino de la barra. Ese invariante no lo
-/// cambio el quitar la barra, solo cambio quien lo dibuja.
-///
-/// QUE CUESTA, CONTADO
-///
-///   Cielo       0 -> 0   es el arranque del router
-///   Las otras   1 -> 2   abrir el cajon, y luego la seccion
-///   Perfil      2 -> 2
-///   Ajustes     2 -> 2
-///   Privacidad  2 -> 2
-///
-/// O sea que lo diario pasa de 4 toques a 8. Se acepta a sabiendas.
+/// Cajon de cuenta y ayuda. Las secciones viven en los mosaicos de Cielo.
 ///
 /// LA EXCEPCION DE MATERIAL, DICHA EN VOZ ALTA
 ///
@@ -54,9 +34,8 @@ import '../../features/sendero/application/sendero_guide_controller.dart';
 class ArcanumDrawer extends ConsumerWidget {
   const ArcanumDrawer({super.key, required this.navigationShell});
 
-  /// El mismo shell que dibuja el cuerpo. Hace falta para dos cosas: saber que
-  /// rama esta abierta (que fila va marcada) y cambiar de rama sin perder su
-  /// pila, que es lo que daba `goBranch` a la barra.
+  /// Se conserva la firma mientras el shell comparte este cajon con rutas
+  /// apiladas. Los mosaicos cambian de rama mediante sus rutas existentes.
   final StatefulNavigationShell navigationShell;
 
   /// Cuanto deja ver. Por debajo de esto el texto de dentro empieza a pelearse
@@ -68,7 +47,6 @@ class ArcanumDrawer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final base = ArcanumResin.gradient(mood: ArcanumMood.neutral);
-    final indice = navigationShell.currentIndex;
     final targets = ref.read(senderoGuideTargetsProvider);
 
     return Drawer(
@@ -101,47 +79,11 @@ class ArcanumDrawer extends ConsumerWidget {
                       padding: EdgeInsets.fromLTRB(20, 22, 20, 14),
                       child: SectionLabel('ARCANUM'),
                     ),
-                    // El saldo, ARRIBA. Es lo unico de aqui que antes no se
-                    // podia ver sin chocar antes con un 402, asi que va donde
-                    // se mira primero.
-                    //
-                    // QUE DESPLAZA, MEDIDO EN EL TELEFONO (OnePlus GN2200, que
-                    // es 360x800 dp justos) el 25-sep-2026: NADA se cae del
-                    // pliegue. Con el bloque puesto, el cajon entero -- las
-                    // cinco secciones y las tres de la cuenta -- termina a los
-                    // 443 dp de los 800 que hay. Sobra la mitad.
-                    //
-                    // El bloque mide ~92 dp. La siguiente pieza que se anada
-                    // aqui arriba tiene ~357 dp antes de empujar "Privacidad y
-                    // datos" fuera, que es la ultima fila y por tanto la que
-                    // caeria primero.
                     const BloqueSaldoCajon(),
-                    for (var i = 0; i < arcanumSections.length; i++)
-                      _FilaSeccion(
-                        seccion: arcanumSections[i],
-                        activa: i == indice,
-                        tapKey: targets.keyFor(
-                          'section_${arcanumSections[i].route.substring(1)}',
-                        ),
-                        // `initialLocation` solo cuando ya estas en esa rama:
-                        // es lo que hacia la barra, y sirve para salir de una
-                        // sub-ruta sin buscar el boton de volver.
-                        onTap: () {
-                          navigationShell.goBranch(
-                            i,
-                            initialLocation: i == indice,
-                          );
-                          ref
-                              .read(senderoGuideProvider.notifier)
-                              .onAction(
-                                'section_${arcanumSections[i].route.substring(1)}',
-                              );
-                        },
-                      ),
                     const _Separador(),
                     const Padding(
                       padding: EdgeInsets.fromLTRB(20, 6, 20, 14),
-                      child: SectionLabel('GUÍA Y CUENTA'),
+                      child: SectionLabel('CUENTA Y AYUDA'),
                     ),
                     // Solo en builds de desarrollo y perfil: la mesa esta a
                     // medias y la version de la tienda no debe enseñarla.
@@ -155,7 +97,7 @@ class ArcanumDrawer extends ConsumerWidget {
                     _FilaRuta(
                       icono: Icons.explore_outlined,
                       iconoActivo: Icons.explore,
-                      rotulo: 'Sendero',
+                      rotulo: 'Ayuda y recorrido',
                       ruta: '/sendero',
                     ),
                     _FilaRuta(
@@ -195,8 +137,7 @@ class ArcanumDrawer extends ConsumerWidget {
   }
 }
 
-/// La linea que separa las secciones de la cuenta. Sin filete a los lados: se
-/// para donde para el texto de las filas.
+/// Separa el saldo de las opciones de cuenta.
 class _Separador extends StatelessWidget {
   const _Separador();
 
@@ -274,32 +215,6 @@ class _Fila extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Una seccion: cambia de RAMA, no apila. Aqui "activa" significa que su rama
-/// es la que esta abierta detras del cajon.
-class _FilaSeccion extends StatelessWidget {
-  const _FilaSeccion({
-    required this.seccion,
-    required this.activa,
-    required this.onTap,
-    this.tapKey,
-  });
-
-  final ArcanumSection seccion;
-  final bool activa;
-  final VoidCallback onTap;
-  final Key? tapKey;
-
-  @override
-  Widget build(BuildContext context) => _Fila(
-    icono: seccion.icon,
-    iconoActivo: seccion.selectedIcon,
-    rotulo: seccion.title,
-    activa: activa,
-    onTap: onTap,
-    tapKey: tapKey,
-  );
 }
 
 /// Lo de la cuenta: rutas de primer nivel FUERA del shell, asi que se apilan

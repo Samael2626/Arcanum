@@ -19,15 +19,18 @@ from app.schemas.sendero import (
 
 router = APIRouter(prefix="/sendero", tags=["sendero"])
 
+# Ultimo paso de cada leccion que paga, por version. Varias versiones de la
+# misma leccion pagan UNA vez: la clave del movimiento no lleva la version.
 REWARDED_LESSONS = {
-    "orientation": (2, 2),
-    "cielo": (2, 1),
-    "horoscopo": (2, 1),
-    "grimorio": (2, 0),
-    "saber": (2, 0),
-    "oraculo": (2, 1),
-    "fragmentos": (1, 0),
-    "account": (2, 1),
+    # 3: portada de mosaicos (07-oct-2026), dos pasos
+    "orientation": {(2, 2), (3, 1)},
+    "cielo": {(2, 1)},
+    "horoscopo": {(2, 1)},
+    "grimorio": {(2, 0)},
+    "saber": {(2, 0)},
+    "oraculo": {(2, 1)},
+    "fragmentos": {(1, 0)},
+    "account": {(2, 1)},
 }
 
 
@@ -102,7 +105,7 @@ def update_sendero_progress(
     lesson = REWARDED_LESSONS.get(normalized_id)
     if (
         lesson is not None
-        and (payload.version, payload.step) == lesson
+        and (payload.version, payload.step) in lesson
         and payload.status == SenderoStatus.completed
     ):
         reward = FragmentService().grant_lesson(db, current_user.id, normalized_id)

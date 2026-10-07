@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,8 +15,10 @@ import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_resin.dart';
+import '../sendero/application/sendero_guide_controller.dart';
 import 'hoy_guidance.dart';
 import 'hoy_lore.dart';
+import 'presentation/widgets/atlas_home_panel.dart';
 import 'presentation/widgets/nested_sky_instrument.dart';
 import 'presentation/widgets/today_card.dart';
 
@@ -39,10 +42,13 @@ final hoySkyProvider = FutureProvider.autoDispose<Map<String, dynamic>>((
 ) async {
   final place = ref.watch(userPlaceProvider);
   final api = ref.read(arcanumApiProvider);
-  if (place == null) {
-    return <String, dynamic>{'moon': await api.moon()};
-  }
-  return api.today(lat: place.lat, lon: place.lon);
+  final data = place == null
+      ? <String, dynamic>{'moon': await api.moon()}
+      : await api.today(lat: place.lat, lon: place.lon);
+  return <String, dynamic>{
+    ...data,
+    '_fetched_at': DateTime.now().toIso8601String(),
+  };
 });
 
 class HoyScreen extends ConsumerStatefulWidget {
@@ -147,6 +153,9 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
     final moon = data['moon'] as Map<String, dynamic>;
     final hour = data['planetary_hour'] as Map<String, dynamic>?;
     final ruler = data['day_ruler'] as String?;
+    final observedAt =
+        DateTime.tryParse(data['_fetched_at'] as String? ?? '') ??
+        DateTime.now();
     // "Tu siguiente paso": lo conduce la HORA planetaria (cambia cada ~60 min,
     // mantiene Hoy vivo), no el día. Si el planeta no es de los siete clásicos
     // no hay paso y la tarjeta no aparece.
@@ -159,6 +168,31 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
     // Entrada en cascada suave: cada panel emerge del velo con su propio retardo.
     return Column(
       children: [
+        AtlasHomePanel(
+          moon: moon,
+          observedAt: observedAt,
+          onMoonTap: () => _openMoonLore(moon),
+          onHoroscope: () {
+            ref
+                .read(senderoGuideProvider.notifier)
+                .onAction('section_horoscopo');
+            context.go('/horoscopo');
+          },
+          onGrimoire: () {
+            ref.read(grimoireComposeProvider.notifier).set(true);
+            context.go('/grimorio');
+          },
+          onSaber: () => context.go('/saber'),
+          // la placa Mesa abre la mesa (prototipo E), pero solo donde la mesa
+          // ya se ensena: en la tienda sigue siendo el Oraculo
+          showTable: kDebugMode || kProfileMode,
+          onTable: () => context.push('/tarot'),
+          onOracle: () => context.go('/oraculo'),
+          horoscopeKey: ref
+              .read(senderoGuideTargetsProvider)
+              .keyFor('section_horoscopo'),
+        ),
+        const SizedBox(height: 22),
         if (step != null) ...[
           _NextStepCard(step: step, onTap: () => _runStep(step)),
           const SizedBox(height: 18),
@@ -184,6 +218,15 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
   /// filtradas por planeta, un capítulo de Culpeper, el editor del grimorio o
   /// la pestaña del oráculo.
   void _runStep(NextStep step) => _navigate(step.kind, step.planet, step.slug);
+
+  void _openMoonLore(Map<String, dynamic> moon) => showMoonPhaseSheet(
+    context,
+    phaseName: moon['phase_name'] as String,
+    illumination: (moon['illumination'] as num).toDouble(),
+    waxing: moon['is_waxing'] as bool,
+    ageDays: (moon['age_days'] as num?)?.toDouble(),
+    phaseSlug: moon['phase_slug'] as String?,
+  );
 
   void _navigate(NextStepKind kind, String planet, String? slug) {
     switch (kind) {
@@ -228,14 +271,6 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
     final hourPlanet = hour?['planet'] as String?;
     // Ni `planet` ni `mood` se calculan ya aqui: los decide el selector del
     // instrumento, que es quien sabe que cuerpo se esta mirando.
-    final illumination = (moon['illumination'] as num).toDouble();
-    final waxing = moon['is_waxing'] as bool;
-    final phase = moon['phase_name'] as String;
-    // El slug viajaba en la respuesta desde siempre y nadie lo leia: es lo que
-    // deja a la hoja distinguir las ocho fases en vez de dos.
-    final phaseSlug = moon['phase_slug'] as String?;
-    final age = (moon['age_days'] as num?)?.toDouble();
-
     return NestedSkyInstrument(
       ruler: ruler,
       hour: hour,
@@ -251,14 +286,7 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
               isDay: hour!['is_daytime'] as bool,
               minutesRemaining: (hour['minutes_remaining'] as num).toInt(),
             ),
-      onMoonTap: () => showMoonPhaseSheet(
-        context,
-        phaseName: phase,
-        illumination: illumination,
-        waxing: waxing,
-        ageDays: age,
-        phaseSlug: phaseSlug,
-      ),
+      onMoonTap: () => _openMoonLore(moon),
       onConfirmPlace: () => context.push('/perfil'),
       // Los chips siguen al cuerpo elegido en el selector, no a la hora: los
       // del Sol no le sirven a la Luna.

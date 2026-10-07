@@ -79,6 +79,10 @@ void main() {
     expect(prefs.containsKey('sendero_progress_v1_sendero-test-user'), isTrue);
   });
 
+  // Actualizado el 07-oct-2026: el Primer umbral ya no pasa por el menu (las
+  // secciones viven en los mosaicos de la portada), asi que tocar el menu
+  // tampoco cuenta. Lo que se vigila es lo de siempre: solo el gesto esperado
+  // avanza, se puede pausar y retomar, y repetir tras completar empieza de 0.
   test('guia avanza solo por el gesto esperado y permite repetir', () async {
     final api = _SenderoApi();
     final container = ProviderContainer(
@@ -91,37 +95,72 @@ void main() {
     await container.read(senderoControllerProvider.future);
 
     final journey = senderoJourneyById('orientation')!;
+    final saved = 'orientation:${journey.version}';
     final guide = container.read(senderoGuideProvider.notifier);
     guide.start(journey);
     guide.onAction('help');
     expect(container.read(senderoGuideProvider)?.step, 0);
     guide.onAction('menu');
+    expect(container.read(senderoGuideProvider)?.step, 0);
+    guide.onAction('section_horoscopo');
     expect(container.read(senderoGuideProvider)?.step, 1);
     guide.pause();
     expect(container.read(senderoGuideProvider), isNull);
 
+    // Retoma donde se quedo: la ayuda existe en cualquier seccion.
     await guide.idle;
     guide.start(
       journey,
-      saved: container.read(senderoControllerProvider).value?['orientation:2'],
+      saved: container.read(senderoControllerProvider).value?[saved],
     );
-    expect(container.read(senderoGuideProvider)?.step, 0);
-    guide.onAction('menu');
+    expect(container.read(senderoGuideProvider)?.step, 1);
     guide.onAction('section_horoscopo');
+    expect(container.read(senderoGuideProvider)?.step, 1);
     guide.onAction('help');
     expect(container.read(senderoGuideProvider), isNull);
     await guide.idle;
     expect(
-      container
-          .read(senderoControllerProvider)
-          .value?['orientation:2']
-          ?.isCompleted,
+      container.read(senderoControllerProvider).value?[saved]?.isCompleted,
       isTrue,
     );
 
     guide.start(
       journey,
-      saved: container.read(senderoControllerProvider).value?['orientation:2'],
+      saved: container.read(senderoControllerProvider).value?[saved],
+    );
+    expect(container.read(senderoGuideProvider)?.step, 0);
+    guide.pause();
+  });
+
+  // Un paso que depende de algo abierto (el cajon, para Ajustes) no se retoma
+  // a medias: al volver el cajon esta cerrado, y se empieza por abrirlo. Antes
+  // lo vigilaba el Primer umbral, cuando su segundo paso era el del menu.
+  test('guia retoma desde el principio si el paso pide el cajon', () async {
+    final api = _SenderoApi();
+    final container = ProviderContainer(
+      overrides: [
+        arcanumApiProvider.overrideWithValue(api),
+        authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+      ],
+    );
+    addTearDown(container.dispose);
+    await container.read(senderoControllerProvider.future);
+
+    final journey = senderoJourneyById('account')!;
+    final guide = container.read(senderoGuideProvider.notifier);
+    guide.start(journey);
+    guide.onAction('settings');
+    expect(container.read(senderoGuideProvider)?.step, 0);
+    guide.onAction('menu');
+    expect(container.read(senderoGuideProvider)?.step, 1);
+    guide.pause();
+
+    await guide.idle;
+    guide.start(
+      journey,
+      saved: container
+          .read(senderoControllerProvider)
+          .value?['account:${journey.version}'],
     );
     expect(container.read(senderoGuideProvider)?.step, 0);
     guide.pause();
@@ -130,12 +169,15 @@ void main() {
   testWidgets('hub muestra todas las camaras y estado completado', (
     tester,
   ) async {
+    // La version sale del catalogo y no va escrita: el progreso cuenta por
+    // version, y el 07-oct-2026 el Primer umbral subio a la 3 con la portada
+    // nueva. Con un 2 fijo, el hub lo daba por no explorado.
     final api = _SenderoApi()
       ..remote = [
         {
           'journey_id': 'orientation',
-          'version': 2,
-          'step': 2,
+          'version': senderoJourneyById('orientation')!.version,
+          'step': 1,
           'status': 'completed',
         },
       ];
