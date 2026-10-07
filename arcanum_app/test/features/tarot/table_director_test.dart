@@ -7,6 +7,8 @@ import 'package:arcanum_app/features/tarot/domain/table_models.dart';
 import 'package:arcanum_app/features/tarot/domain/table_state.dart';
 import 'package:arcanum_app/features/tarot/table/gesture_grammar.dart';
 import 'package:arcanum_app/features/tarot/table/table_director.dart';
+import 'package:arcanum_app/features/tarot/table/table_motion.dart';
+import 'package:arcanum_app/features/tarot/table/table_sound.dart';
 import 'package:arcanum_app/features/tarot/table/table_geometry.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -63,6 +65,20 @@ SpreadDef spread(String slug, List<(double, double)> xy) => SpreadDef(
   ],
 );
 
+class _Ear implements SoundPlayer {
+  final hits = <SoundHit>[];
+  List<String> get files => [for (final h in hits) h.file];
+
+  @override
+  Future<void> prepare(Iterable<String> files) async {}
+
+  @override
+  void play(SoundHit hit) => hits.add(hit);
+
+  @override
+  Future<void> dispose() async {}
+}
+
 final one = spread('one_card', [(.5, .5)]);
 final three = spread('three_card', [(.2, .46), (.5, .46), (.8, .46)]);
 
@@ -72,6 +88,7 @@ void main() {
   late ProviderContainer c;
   late _Effects fx;
   late TableDirector dir;
+  late _Ear ear;
   var clock = Duration.zero;
   var pointer = 0;
 
@@ -87,7 +104,9 @@ void main() {
     );
     await c.read(tableControllerProvider.future);
     fx = _Effects();
+    ear = _Ear();
     dir = TableDirector(
+      sound: TableSound(player: ear, vary: false),
       ops: c.read(tableControllerProvider.notifier),
       effects: fx,
       decks: const [
@@ -741,6 +760,76 @@ void main() {
         expect(fx.interpretation, 1);
       },
     );
+  });
+
+  group('sonido', () {
+    test('el vuelo que espera el sonido es el de la animacion', () {
+      expect(TableDirector.cardTravel, PoseMotion.travel);
+    });
+
+    Future<void> dealThree() async {
+      await openRws();
+      c
+          .read(tableControllerProvider.notifier)
+          .arrange((s) => s.copyWith(spread: () => 'three_card'));
+      await holdAndPick(pileAt('p0'), 'deal');
+    }
+
+    test(
+      'repartir suena a papel y a madera con la nota de cada hueco',
+      () async {
+        await dealThree();
+        expect(ear.files.where((f) => f == 'sacar'), hasLength(3));
+        expect(ear.files.where((f) => f.startsWith('campana_')), [
+          'campana_0',
+          'campana_1',
+          'campana_2',
+        ]);
+        // el papel al salir (cada 110 ms) y la madera al aterrizar
+        int ms(String f, int i) => ear.hits
+            .where((h) => h.file == f)
+            .elementAt(i)
+            .delay
+            .inMilliseconds;
+        expect([for (var i = 0; i < 3; i++) ms('sacar', i)], [0, 110, 220]);
+        expect([for (var i = 0; i < 3; i++) ms('encajar', i)], [420, 530, 640]);
+      },
+    );
+
+    test('desvelar suena la carta; en silencio no suena nada', () async {
+      await dealThree();
+      ear.hits.clear();
+      await tap(Offset(table().cardInSlot(0)!.x, table().cardInSlot(0)!.y));
+      expect(ear.files, isNotEmpty);
+      expect(
+        ear.files.first,
+        matches(r'^(bastos|copas|espadas|oros)_\d|^mayor'),
+      );
+      dir.muted = true;
+      ear.hits.clear();
+      await tap(Offset(table().cardInSlot(1)!.x, table().cardInSlot(1)!.y));
+      dir.circleClosed();
+      dir.sealed();
+      expect(ear.hits, isEmpty);
+    });
+
+    test('cerrar el circulo da el acorde de lo desvelado', () async {
+      await dealThree();
+      await tap(Offset(table().cardInSlot(0)!.x, table().cardInSlot(0)!.y));
+      ear.hits.clear();
+      dir.circleClosed();
+      expect(ear.files.first, 'acorde_0');
+      expect(ear.files.every((f) => f.startsWith('acorde_')), isTrue);
+      expect(ear.files.length, inInclusiveRange(1, 2));
+    });
+
+    test('sellar y romper el sello suenan', () async {
+      await openRws();
+      dir
+        ..sealed()
+        ..sealBroken();
+      expect(ear.files, ['sellar', 'romper']);
+    });
   });
 
   group('sello', () {

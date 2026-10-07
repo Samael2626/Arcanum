@@ -157,7 +157,7 @@ Leer, la pregunta y las lecturas guardadas usan paneles compactos anclados a lo 
   - En cada fotograma: velocidad = velocidad × 0,74 + (objetivo − actual) × 0,16.
   - Al soltar, el objetivo se reduce ×0,8 por fotograma y la carta oscila hasta calmarse.
   - En Flutter: `SpringSimulation` o un `Ticker` con esta misma integración.
-- **Reparto:** una carta cada 110 ms, 420 ms de vuelo; al encajar vibra. El sonido espera las grabaciones de Samuel.
+- **Reparto:** una carta cada 110 ms, 420 ms de vuelo; al encajar vibra. Suena el papel al salir cada carta y la madera al aterrizar.
 - **Barajados:** son animación, porque el azar lo pone el servidor.
   - **Cascada:** dos mitades que se entrelazan.
   - **Por encima:** 4 rondas de bloques de 3.
@@ -188,22 +188,28 @@ En Flutter se decide con `FrameTiming`.
 
 ## 7. Sonido y háptica
 
-Todo el sonido está en re dórico pentatónico, con reverberación de 2,8 s. Nada suena áspero.
+Todo el sonido está en re dórico pentatónico. Nada suena áspero. Elegido por Samuel el 07-oct tras tres vueltas de prototipo (página «Sonidos de la mesa»): la versión **para altavoz de móvil** —lo grave una octava arriba, porque el altavoz no da menos de unos 250 Hz, y sala de 1,6 s en vez de 2,8 s, que en un altavoz pequeño emborronaba—, con todas las mejoras de la segunda y la tercera vuelta.
 
 | Evento | Sonido | Vibración |
 |---|---|---|
-| Barajar en cascada | 10 roces de papel y 3 campanitas ascendentes | 8 ms |
-| Cortar | Roce y campana grave | 12 ms |
-| Encajar en un hueco | Golpe de madera suave y una nota | 8 ms |
-| Desvelar | Campana de cristal (dos notas) | 10 ms |
-| Desvelar un Mayor | Cuenco con batido de 5 s | 12, 40, 12 |
+| Barajar | Cascada de 24 roces que acelera y 3 campanitas ascendentes | 8 ms |
+| Cortar | Roce y campana | 12 ms |
+| Sacar una carta | Solo papel, sin nota | — |
+| Encajar en un hueco | Madera y la nota de su hueco: el hueco 1 es el más grave y cada uno sube un grado | 8 ms |
+| Desvelar | Dos notas con el timbre del palo: Bastos bronce, Copas redondo, Espadas cristal, Oros madera afinada. Al derecho suben; invertida bajan y suenan veladas | 10 ms |
+| Desvelar un Mayor | Cuenco con batido | 12, 40, 12 |
 | Sellar / romper el sello | Tono cálido / chasquido y 4 notas descendentes | 14 / 8, 30, 8 |
-| Cerrar el círculo | Acorde lento | 10, 60, 10 |
+| Cerrar el círculo | El acorde de la lectura: la tónica y la nota final de cada carta desvelada | 10, 60, 10 |
 | Opción del radial bajo el dedo | — | 4 ms |
 
-- **Sonido pendiente:** Samuel aportará las grabaciones; no se sintetizaron ni se añadieron muestras de prueba. Al integrarlas se variará el tono ±5 % y el volumen ±3 dB.
+- **Cada carta suena siempre igual.** En el prototipo la nota se sorteaba; en la app sale de la carta (su número), así que se aprende de oído y dos lecturas con las mismas cartas cierran con el mismo acorde.
+- **Lo nuevo no pisa lo que suena:** durante los 2,2 s del cuenco de un Mayor, lo siguiente entra al 55 %. El mismo sonido repetido en menos de 250 ms baja un 30 % cada vez, hasta la mitad como mucho (con suelo, para que el reparto se siga oyendo).
+- **Variación por disparo:** tono ±5 % y volumen ±3 dB.
+- **Desvelar varias** las hace sonar una tras otra, cada 300 ms.
+- **Ficheros:** 76 OGG mono a 24 kHz (571 KB) en `assets/sounds/mesa/`, sintetizados por `tools/build_mesa_sonidos.py` con la misma receta del prototipo; nada de muestras de terceros. Si Samuel graba papel y madera de verdad, se cambian los ficheros sin tocar el código.
+- **Motor:** `flutter_soloud` (baja latencia, varias voces). Decodificados ocupan unos 9,6 MB en memoria (calculado, por medir en el aparato). Si el motor no arranca, la mesa sigue sin sonido y el fallo se reporta.
 - **Háptica implementada** con `HapticFeedback`: los tiempos del prototipo se traducen a los golpes fijos disponibles en Flutter.
-- **Silenciar** desde el radial del paño apaga la vibración y apagará el sonido cuando exista; se recuerda entre sesiones.
+- **Silenciar** desde el radial del paño apaga el sonido y la vibración; se recuerda entre sesiones.
 
 ---
 

@@ -27,6 +27,7 @@ import 'table_fx.dart';
 import 'table_geometry.dart';
 import 'table_haptics.dart';
 import 'table_smoke.dart';
+import 'table_sound.dart';
 
 /// Lo que la mesa necesita de la pantalla: paneles, avisos y errores.
 abstract class TableEffects {
@@ -172,30 +173,43 @@ class TableDirector extends ChangeNotifier {
     math.Random? random,
     TableCamera? camera,
     this.haptics = const TableHaptics(),
+    TableSound? sound,
   }) : camera = camera ?? TableCamera(from: ops.table.camera),
+       sound = sound ?? TableSound(),
        _random = random ?? math.Random();
 
   final TableOps ops;
   final TableEffects effects;
   final TableCamera camera;
   final TableHaptics haptics;
+  final TableSound sound;
   final GestureGrammar grammar = GestureGrammar();
 
   /// «Reducir movimiento» del sistema: la camara salta sin suavizado ni
   /// inercia. Lo pone la vista en cada construccion.
   bool reduceMotion = false;
 
-  /// Mesa en silencio (radial del paño): sin vibracion, y sin sonido cuando
-  /// llegue. Decidido por Samuel el 05-oct. Lo guarda la pantalla.
+  /// Mesa en silencio (radial del paño): ni vibra ni suena. Decidido por
+  /// Samuel el 05-oct. Lo guarda la pantalla.
   bool muted = false;
 
-  /// Vibra, salvo con la mesa en silencio. La pantalla lo usa para sellar,
-  /// romper el sello y cerrar el circulo.
+  /// Vibra, salvo con la mesa en silencio.
   void buzz(Buzz b) {
     if (!muted) unawaited(haptics.play(b));
   }
 
   void _buzz(Buzz b) => buzz(b);
+
+  /// Suena, salvo con la mesa en silencio.
+  void _chime(void Function(TableSound s) play) {
+    if (!muted) play(sound);
+  }
+
+  /// Se sello la pregunta: tono calido y vibracion.
+  void sealed() {
+    buzz(Buzz.seal);
+    _chime((s) => s.seal());
+  }
 
   /// Humo de la mesa (la vista lo pinta encima, en pantalla).
   final SmokeEmitter smoke = SmokeEmitter();
@@ -209,12 +223,16 @@ class TableDirector extends ChangeNotifier {
   /// Se rompio el sello al interpretar: chasquido y humo, como el prototipo.
   void sealBroken() {
     buzz(Buzz.breakSeal);
+    _chime((s) => s.breakSeal());
     smoke.puff(camera.toScreen(sealAt), 16);
   }
 
   /// Se cerro el circulo: vibracion y humo desde el centro del bordado.
   void circleClosed() {
     buzz(Buzz.closeCircle);
+    _chime(
+      (s) => s.closeCircle(table.cards.where((c) => c.faceUp && !c.aside)),
+    );
     circleMark.mark();
     smoke.puff(camera.toScreen(circleCenter), 26);
   }
@@ -224,6 +242,7 @@ class TableDirector extends ChangeNotifier {
     smoke.dispose();
     circleMark.dispose();
     sealFlight.dispose();
+    unawaited(sound.dispose());
     super.dispose();
   }
 
@@ -231,7 +250,9 @@ class TableDirector extends ChangeNotifier {
     muted = !muted;
     effects.muteChanged(muted);
     effects.toast(
-      muted ? 'Mesa en silencio: ya no vibra.' : 'La mesa vuelve a vibrar.',
+      muted
+          ? 'Mesa en silencio: ni suena ni vibra.'
+          : 'La mesa vuelve a sonar y a vibrar.',
     );
   }
 
@@ -283,6 +304,9 @@ class TableDirector extends ChangeNotifier {
   Duration takeExitDuration(String id) => _circleExits.remove(id)
       ? const Duration(milliseconds: 900)
       : const Duration(milliseconds: 480);
+
+  /// Lo que vuela una carta al nacer o al caer en su sitio (`PoseMotion`).
+  static const cardTravel = Duration(milliseconds: 420);
 
   void _born(String id, TablePose from, [Duration delay = Duration.zero]) =>
       _births[id] = (from: from, delay: delay);
@@ -907,9 +931,11 @@ class TableDirector extends ChangeNotifier {
     effects.flipped(table.card(c.slug)!);
   }
 
-  /// Desvelar vibra una vez; si sale un Mayor, con su patron.
+  /// Desvelar vibra una vez; si sale un Mayor, con su patron. Suena cada
+  /// carta, una tras otra.
   void _buzzReveal(Iterable<TableCard> cards) {
     if (cards.isEmpty) return;
+    _chime((s) => s.reveal(cards));
     _buzz(
       cards.any((c) => c.face.arcana == 'major')
           ? Buzz.revealMajor
@@ -1060,6 +1086,7 @@ class TableDirector extends ChangeNotifier {
       slot: slot,
     );
     _pending[fanId] = p;
+    _chime((s) => s.slide());
     if (drag == null) _born(p.id, from);
     notifyListeners();
     final TableCard card;
@@ -1091,7 +1118,7 @@ class TableDirector extends ChangeNotifier {
       _landReleased(p, card, drag);
     } else {
       _born('card:${card.slug}', _shownPending(p));
-      _land(card.slug, p.slot, p.to);
+      _land(card.slug, p.slot, p.to, landing: cardTravel);
     }
     _gatherFanIfComplete(wasFull: wasFull);
     notifyListeners();
@@ -1167,7 +1194,12 @@ class TableDirector extends ChangeNotifier {
   }
 
   /// Deja una carta recien sacada en su hueco (si sigue libre) o en `spot`.
-  void _land(String slug, int? slot, TablePose spot) {
+  void _land(
+    String slug,
+    int? slot,
+    TablePose spot, {
+    Duration landing = Duration.zero,
+  }) {
     final sp = spread;
     final free =
         sp != null &&
@@ -1176,7 +1208,9 @@ class TableDirector extends ChangeNotifier {
             table.cardInSlot(slot) == null
         ? slot
         : null;
-    if (sp != null && free != null) return _place(slug, sp, free);
+    if (sp != null && free != null) {
+      return _place(slug, sp, free, landing: landing);
+    }
     ops.arrange(
       (s) => s.updateCard(
         slug,
@@ -1303,9 +1337,17 @@ class TableDirector extends ChangeNotifier {
   bool _slotFree(int i) =>
       table.cardInSlot(i) == null && !_pending.values.any((p) => p.slot == i);
 
-  void _place(String slug, SpreadDef sp, int slot) {
+  /// `landing`: lo que tarda la carta en llegar; el sonido espera a que
+  /// aterrice.
+  void _place(
+    String slug,
+    SpreadDef sp,
+    int slot, {
+    Duration landing = Duration.zero,
+  }) {
     final pose = slotPose(sp, slot);
     _buzz(Buzz.snap);
+    _chime((s) => s.snap(slot, after: landing));
     ops.arrange(
       (s) => s
           .putInSlot(slug, slot)
@@ -1338,14 +1380,11 @@ class TableDirector extends ChangeNotifier {
       }
       final pile = _pile(pid);
       final card = await ops.take(pid, positions.first);
-      if (pile != null) {
-        _born(
-          'card:${card.slug}',
-          _pilePose(pile),
-          Duration(milliseconds: 110 * dealt++),
-        );
-      }
-      _place(card.slug, sp, slot);
+      // una carta cada 110 ms: suena el papel al salir y la madera al llegar
+      final wait = Duration(milliseconds: 110 * dealt++);
+      if (pile != null) _born('card:${card.slug}', _pilePose(pile), wait);
+      _chime((s) => s.slide(after: wait));
+      _place(card.slug, sp, slot, landing: wait + cardTravel);
     }
   }
 
@@ -1398,6 +1437,7 @@ class TableDirector extends ChangeNotifier {
     await _undoable(() async {
       final np = await ops.cut(pid, _cutSize(_count(pid)));
       _buzz(Buzz.cut);
+      _chime((s) => s.cut());
       _born('pile:$np', _pilePose(src));
       ops.arrange(
         (s) => s.copyWith(
@@ -1716,6 +1756,7 @@ class TableDirector extends ChangeNotifier {
     _openRadial(screen, 'Barajar', RadialMenus.shuffle, (style) async {
       shuffling = (pid: pid, style: style, epoch: ++_shuffleEpoch);
       _buzz(Buzz.shuffle);
+      _chime((s) => s.shuffle());
       notifyListeners();
       await ops.shuffle(pid, style: style);
       effects.shuffled(pid, style);
@@ -1830,6 +1871,7 @@ class TableDirector extends ChangeNotifier {
             .then(
               (np) {
                 _buzz(Buzz.cut);
+                _chime((s) => s.cut());
                 d
                   ..id = 'pile:$np'
                   ..ready = true;
@@ -2078,6 +2120,7 @@ class TableDirector extends ChangeNotifier {
                   skip: other.slug,
                 );
       _buzz(Buzz.snap);
+      _chime((s) => s.snap(slot));
       ops.arrange((s) {
         var t = s.putInSlot(slug, slot);
         final target = slotPose(sp, slot);

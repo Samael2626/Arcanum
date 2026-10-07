@@ -2,6 +2,8 @@
 /// lo que la mesa pide (avisos, paneles, tienda, errores).
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,10 +18,11 @@ import 'domain/table_models.dart';
 import 'domain/table_state.dart';
 import 'reading/lectura_revelada.dart';
 import 'table/table_director.dart';
-import 'table/table_haptics.dart';
 import 'table/table_moon.dart';
 import 'table/table_overlays.dart';
 import 'table/table_panel.dart';
+import 'table/table_sound.dart';
+import 'table/table_sound_player.dart';
 import 'table/table_view.dart';
 
 /// Mazos y tiradas del servidor: la app y el Oraculo leen la misma definicion.
@@ -104,12 +107,20 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
 
   TableDirector _directorFor(
     ({List<DeckInfo> decks, List<SpreadDef> spreads}) c,
-  ) => _director ??= TableDirector(
-    ops: _ops,
-    effects: this,
-    decks: c.decks,
-    spreads: c.spreads,
-  )..muted = _silent;
+  ) {
+    final existing = _director;
+    if (existing != null) return existing;
+    final dir = TableDirector(
+      ops: _ops,
+      effects: this,
+      decks: c.decks,
+      spreads: c.spreads,
+      sound: TableSound(player: ref.read(tableSoundPlayerProvider)),
+    )..muted = _silent;
+    // el motor arranca y carga en segundo plano: la mesa no lo espera
+    unawaited(dir.sound.prepare());
+    return _director = dir;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -391,7 +402,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
             );
           }
           _ops.arrange((s) => s.copyWith(seal: () => Seal(text: q)));
-          dir.buzz(Buzz.seal);
+          dir.sealed();
           _closePanel();
         },
       ),

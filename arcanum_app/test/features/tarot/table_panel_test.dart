@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'package:arcanum_app/features/tarot/table/table_sound.dart';
+import 'package:arcanum_app/features/tarot/table/table_sound_player.dart';
 import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/features/tarot/application/table_controller.dart';
@@ -122,6 +124,7 @@ void main() {
       addTearDown(tester.view.reset);
       final c = ProviderContainer(
         overrides: [
+          tableSoundPlayerProvider.overrideWithValue(const SilentPlayer()),
           arcanumApiProvider.overrideWithValue(_Server()),
           authProvider.overrideWith(_Auth.new),
         ],
@@ -219,7 +222,7 @@ void main() {
     ) async {
       await pumpScreen(tester);
       await clothMenu(tester, 'Silenciar');
-      expect(find.text('Mesa en silencio: ya no vibra.'), findsOneWidget);
+      expect(find.text('Mesa en silencio: ni suena ni vibra.'), findsOneWidget);
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 20)),
       );

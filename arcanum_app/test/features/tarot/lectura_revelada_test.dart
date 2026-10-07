@@ -1,5 +1,7 @@
 import 'dart:ui' show Tristate;
 
+import 'package:arcanum_app/features/tarot/table/table_sound.dart';
+import 'package:arcanum_app/features/tarot/table/table_sound_player.dart';
 import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/features/tarot/application/table_controller.dart';
@@ -383,6 +385,7 @@ void main() {
       final server = _Server();
       final c = ProviderContainer(
         overrides: [
+          tableSoundPlayerProvider.overrideWithValue(const SilentPlayer()),
           arcanumApiProvider.overrideWithValue(server),
           authProvider.overrideWith(_Auth.new),
         ],
