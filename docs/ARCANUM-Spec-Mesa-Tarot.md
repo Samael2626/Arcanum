@@ -107,15 +107,16 @@ Umbrales:
 | Tapete o marco | — | Radial del paño | Gira e inclina la mesa |
 | Doble toque en tapete o marco | Restablece la cámara | | |
 | Mazo del estante | Lo pone en juego | — | Al paño: lo pone en juego |
-| Mazo o montón en juego | Lo extiende (o lo junta si otro tenía el abanico) | Radial del mazo; con su abanico abierto, el radial del abanico | Centro: moverlo. Laterales: abanico. Borde de arriba: cortar. Soltarlo sobre otro: unirlos. |
+| Mazo o montón en juego | Lo extiende (o lo junta si otro tenía el abanico). Si no está junto a un borde, primero se aparta al más cercano | Radial del mazo; con su abanico abierto, el radial del abanico | Centro: moverlo. Laterales: abanico. Borde de arriba: cortar. Soltarlo sobre otro: unirlos. |
 | Carta del abanico | Pulsar pone la lupa; soltar saca la carta resaltada al primer hueco libre | Nada: mantener es parte de la lupa (el radial del abanico se abre manteniendo el mazo) | Deslizar pasea la lupa; subir el dedo por encima del abanico se lleva la carta a un hueco concreto |
-| Carta suelta | Vuelve al montón más cercano | Radial de la carta | Moverla. Imán a los huecos; junto a otra carta de la tirada queda como aclaratoria. |
-| Carta en la tirada | Desvela o lee | Radial de la carta | Moverla (intercambio si el hueco está ocupado) |
+| Carta suelta | Boca abajo la desvela; boca arriba, la lee | Radial de la carta | Moverla. Imán a los huecos; junto a otra carta de la tirada queda como aclaratoria. Soltarla en la bandeja la recoge. |
+| Carta en la tirada | Desvela o lee | Radial de la carta | Moverla (intercambio si el hueco está ocupado). Soltarla en la bandeja la recoge. |
 | Esquina de la carta boca abajo | — | — | La levanta y voltea (ver 5) |
-| Doble toque en carta suelta | Desvela o lee | | |
 | «Interpretar» bordado | Interpretación | 1,3 s: un hilo rodea la tirada y **cierra el círculo** | |
 | Sello de la pregunta | Cuándo se selló | | |
 
+- **Bandeja y mazo que se aparta (07-oct).** Elegidos por Samuel en el prototipo «Toques de la mesa», tras la prueba en el GN2200: un toque devolvía la carta suelta al montón y en la mesa libre las cartas «desaparecían» al ir a girarlas. Ahora tocar una carta, suelta o en su hueco, la desvela o la lee. Recoger es arrastrarla a la **bandeja**, que solo aparece mientras se arrastra una carta: abajo, a todo lo ancho, 64 dp de alto. «Recoger» sigue en el radial de la carta. Con el mazo lejos de los bordes, el abanico salía de media mesa (75 cartas en una banda); ahora el mazo **se aparta** al borde más cercano y se extiende desde ahí, todo en un solo deshacer.
+- **Avisos según lo que dicen (07-oct).** Fuera el SnackBar blanco. **Bordado** en el paño, bajo «Interpretar», para los hitos del ritual (barajar, cortar, tirada completa, círculo cerrado, la lectura vuelve). **Burbuja junto a la pieza** para lo que habla de una carta o un montón (el hueco donde cae, invertida, montón vacío, se aparta). **Píldora arriba** para el estado de la mesa y del sistema (silencio, deshecho, errores). La regla vive en `table_notice.dart`. Ninguno tapa deshacer ni «Elegir carta» a 360 × 640.
 - **Pellizcar con dos dedos:** zoom y desplazamiento.
 - **Zona de toque de cada carta:** se amplía respecto al dibujo; los tests a 360 × 760 comprueban objetivos de al menos 48 dp para las acciones principales en reposo y zoom 1. La superposición y el lector de pantalla reales siguen pendientes en el GN2200.
 - **Extracción inmediata:** al tocar el abanico se ve un dorso pendiente en el mismo fotograma y su posición queda reservada. La carta definitiva llega con la respuesta del servidor; un error la devuelve al abanico y se avisa. El umbral es de 18 px (`kTouchSlop`, 07-oct); la lupa del abanico no lo espera.

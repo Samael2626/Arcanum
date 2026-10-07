@@ -14,6 +14,7 @@ import 'package:arcanum_app/features/tarot/domain/table_state.dart';
 import 'package:arcanum_app/features/tarot/table/gesture_grammar.dart';
 import 'package:arcanum_app/features/tarot/table/table_camera.dart';
 import 'package:arcanum_app/features/tarot/table/table_director.dart';
+import 'package:arcanum_app/features/tarot/table/table_notice.dart';
 import 'package:arcanum_app/features/tarot/table/table_geometry.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -33,8 +34,13 @@ class _Effects extends TableEffects {
   var interpretation = 0;
   final seals = <Seal>[];
 
+  final notices = <({String text, NoticeKind kind, Offset? at})>[];
   @override
-  void toast(String message) => toasts.add(message);
+  void toast(String message, {NoticeKind kind = NoticeKind.pill, Offset? at}) {
+    toasts.add(message);
+    notices.add((text: message, kind: kind, at: at));
+  }
+
   @override
   void error(Object error) => errors.add(error);
   @override

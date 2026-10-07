@@ -7,6 +7,7 @@ import 'package:arcanum_app/features/tarot/domain/table_models.dart';
 import 'package:arcanum_app/features/tarot/domain/table_state.dart';
 import 'package:arcanum_app/features/tarot/table/gesture_grammar.dart';
 import 'package:arcanum_app/features/tarot/table/table_director.dart';
+import 'package:arcanum_app/features/tarot/table/table_notice.dart';
 import 'package:arcanum_app/features/tarot/table/table_motion.dart';
 import 'package:arcanum_app/features/tarot/table/table_sound.dart';
 import 'package:arcanum_app/features/tarot/table/table_geometry.dart';
@@ -31,8 +32,16 @@ class _Effects extends TableEffects {
   var interpretation = 0;
   final seals = <Seal>[];
 
+  final notices = <({String text, NoticeKind kind, Offset? at})>[];
   @override
-  void toast(String message) => toasts.add(message);
+  void toast(String message, {NoticeKind kind = NoticeKind.pill, Offset? at}) {
+    toasts.add(message);
+    notices.add((text: message, kind: kind, at: at));
+  }
+
+  final readings = <String>[];
+  @override
+  void openReading(TableCard card) => readings.add(card.slug);
   @override
   void flipped(TableCard card) => flips.add(card.slug);
   @override
@@ -650,42 +659,79 @@ void main() {
       },
     );
 
-    test(
-      'carta suelta: un toque la devuelve al monton, dos la desvelan',
-      () async {
-        await openRws();
-        final a = await c.read(tableControllerProvider.notifier).take('p0', 0);
-        final b = await c.read(tableControllerProvider.notifier).take('p0', 1);
-        c
-            .read(tableControllerProvider.notifier)
-            .arrange(
-              (s) => s.updateCard(b.slug, (k) => k.copyWith(x: 150, y: 400)),
-            );
-        await tap(Offset(a.x, a.y)); // uno y espera: vuelve al mazo
-        expect(table().card(a.slug), isNull);
+    test('carta suelta: un toque la desvela y otro la lee', () async {
+      // Samuel, 07-oct: un toque la devolvia al monton y en la mesa libre las
+      // cartas «desaparecian» al ir a girarlas
+      await openRws();
+      final ops = c.read(tableControllerProvider.notifier);
+      final a = await ops.take('p0', 0);
+      ops.arrange(
+        (s) => s.updateCard(a.slug, (k) => k.copyWith(x: 150, y: 400)),
+      );
+      await tap(const Offset(150, 400));
+      expect(table().card(a.slug)!.faceUp, isTrue);
+      expect(fx.flips, [a.slug]);
+      await tap(const Offset(150, 400));
+      expect(table().card(a.slug), isNotNull, reason: 'no vuelve al mazo');
+      expect(fx.readings, [a.slug]);
+    });
 
+    group('bandeja', () {
+      Future<String> loose() async {
+        await openRws();
+        final ops = c.read(tableControllerProvider.notifier);
+        final a = await ops.take('p0', 0);
+        ops.arrange(
+          (s) => s.updateCard(a.slug, (k) => k.copyWith(x: 150, y: 400)),
+        );
+        return a.slug;
+      }
+
+      Future<void> dragTo(
+        Offset fromTable,
+        Offset toScreen, {
+        bool check = false,
+      }) async {
         final id = ++pointer;
-        dir.pointerDown(id, screenOf(const Offset(150, 400)), clock);
-        dir.pointerUp(
-          id,
-          screenOf(const Offset(150, 400)),
-          clock += const Duration(milliseconds: 50),
-        );
-        dir.pointerDown(
-          id,
-          screenOf(const Offset(150, 400)),
-          clock += const Duration(milliseconds: 100),
-        );
-        dir.pointerUp(
-          id,
-          screenOf(const Offset(150, 400)),
-          clock += const Duration(milliseconds: 50),
-        );
+        final from = screenOf(fromTable);
+        dir.pointerDown(id, from, clock);
+        expect(dir.trayShown, isFalse, reason: 'sin arrastrar no hay bandeja');
+        for (var i = 1; i <= 10; i++) {
+          clock += const Duration(milliseconds: 16);
+          dir.pointerMove(id, Offset.lerp(from, toScreen, i / 10)!, clock);
+          await settle();
+        }
+        if (check) {
+          expect(dir.trayShown, isTrue);
+          expect(dir.trayHot, isTrue);
+        }
+        dir.pointerUp(id, toScreen, clock);
+        clock += const Duration(milliseconds: 100);
         await settle();
-        expect(table().card(b.slug)!.faceUp, isTrue);
-        expect(fx.flips, [b.slug]);
-      },
-    );
+        expect(dir.trayShown, isFalse);
+      }
+
+      test('arrastrar una carta la muestra; soltarla ahi la recoge', () async {
+        final slug = await loose();
+        await dragTo(const Offset(150, 400), dir.trayRect.center, check: true);
+        expect(table().card(slug), isNull, reason: 'vuelve al mazo');
+        expect(table().cards, isEmpty);
+      });
+
+      test('soltarla fuera de la bandeja no la recoge', () async {
+        final slug = await loose();
+        await dragTo(const Offset(150, 400), screenOf(const Offset(420, 300)));
+        expect(table().card(slug), isNotNull);
+      });
+
+      test('la bandeja cae abajo, a todo lo ancho y con 48 dp o mas', () {
+        final r = dir.trayRect, v = dir.camera.viewport;
+        expect(r.bottom, lessThanOrEqualTo(v.height));
+        expect(r.bottom, greaterThan(v.height - 48));
+        expect(r.height, greaterThanOrEqualTo(48));
+        expect(r.width, greaterThan(v.width * .8));
+      });
+    });
 
     test('tirar de la esquina de una carta boca abajo la voltea', () async {
       await openRws();
@@ -790,6 +836,60 @@ void main() {
         expect(r.overlaps(fanBox), isFalse, reason: '$r sobre $fanBox');
       },
     );
+
+    test('con el mazo en el centro, al extenderlo se aparta al borde', () async {
+      // Samuel, 07-oct: el abanico salia de media mesa, 75 cartas en una banda
+      await openRws();
+      pileTo(const Offset(300, 560));
+      await tap(pileAt('p0'));
+      final p = table().piles.single;
+      expect(
+        p.x <= 80 || p.x >= TableGeometry.width - 80,
+        isTrue,
+        reason: 'mazo en x=${p.x}',
+      );
+      final f = table().fan!;
+      expect(
+        (f.end - f.start).distance,
+        greaterThan(TableDirector.fanRoom * .9),
+      );
+      // un deshacer devuelve mazo y abanico a la vez
+      expect(await c.read(tableControllerProvider.notifier).undo(), isTrue);
+      expect(table().fan, isNull);
+      expect(table().piles.single.x, 300);
+    });
+
+    test('cada aviso sale donde toca: hito, pieza o estado', () async {
+      await openRws();
+      expect(fx.notices.last.kind, NoticeKind.piece, reason: 'mazo en juego');
+      final ops = c.read(tableControllerProvider.notifier);
+      final card = await ops.take('p0', 0);
+      ops.arrange(
+        (s) => s
+            .copyWith(spread: () => 'three_card')
+            .updateCard(card.slug, (k) => k.copyWith(x: 150, y: 300)),
+      );
+      await drag(const Offset(150, 300), slotPose(three, 1).offset);
+      expect(fx.notices.last.text, '2 · Hueco 2');
+      expect(fx.notices.last.kind, NoticeKind.piece);
+      expect(fx.notices.last.at, slotPose(three, 1).offset);
+      await tap(pileAt('p0'));
+      for (var i = 0; i < 2; i++) {
+        await tap(
+          dir
+              .pieces()
+              .firstWhere((p) => p.kind == PieceKind.fanCard)
+              .pose
+              .offset,
+        );
+      }
+      expect(
+        fx.notices.firstWhere((n) => n.text.startsWith('Tirada completa')).kind,
+        NoticeKind.embroidery,
+      );
+      await holdAndPick(const Offset(560, 860), 'sound');
+      expect(fx.notices.last.kind, NoticeKind.pill, reason: 'silencio');
+    });
 
     test('soltar el mazo sobre «Interpretar» lo aparta y avisa', () async {
       await openRws();

@@ -230,6 +230,11 @@ class _TarotTableViewState extends State<TarotTableView>
                 ),
                 // el humo sube por la pantalla, encima de la mesa y bajo el radial
                 Positioned.fill(child: SmokeLayer(emitter: _dir.smoke)),
+                _Tray(
+                  rect: _dir.trayRect,
+                  shown: _dir.trayShown,
+                  hot: _dir.trayHot,
+                ),
                 if (_dir.radial != null) _RadialOverlay(director: _dir),
                 if (_dir.busy)
                   const Positioned(
@@ -592,6 +597,64 @@ class _TarotTableViewState extends State<TarotTableView>
 
 /// El radial, en coordenadas de pantalla: circulos sueltos de 52 dp con su
 /// nombre debajo. Los toques los decide el director; esto solo se dibuja.
+/// Bandeja de recoger: solo mientras se arrastra una carta. Soltarla encima
+/// la devuelve al mazo (Samuel, 07-oct).
+class _Tray extends StatelessWidget {
+  const _Tray({required this.rect, required this.shown, required this.hot});
+
+  final Rect rect;
+  final bool shown;
+  final bool hot;
+
+  @override
+  Widget build(BuildContext context) => Positioned.fromRect(
+    rect: rect,
+    child: IgnorePointer(
+      child: AnimatedOpacity(
+        opacity: shown ? 1 : 0,
+        duration: const Duration(milliseconds: 160),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: hot ? const Color(0x52C9A84C) : const Color(0x8C0A0A0F),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: hot ? ArcanumColors.goldLight : ArcanumColors.gold,
+              width: hot ? 2 : 1.2,
+            ),
+          ),
+          // sin tamano todavia (primer fotograma) no debe desbordar: se encoge
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.south_rounded,
+                  size: 20,
+                  color: hot ? ArcanumColors.goldLight : ArcanumColors.gold,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  hot ? 'Suelta para recoger' : 'Arrastra aquí para recoger',
+                  style: TextStyle(
+                    fontFamily: 'Crimson Pro',
+                    fontSize: 16,
+                    color: hot
+                        ? ArcanumColors.goldLight
+                        : const Color(0xFFF5F0E8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 class _RadialOverlay extends StatelessWidget {
   const _RadialOverlay({required this.director});
 

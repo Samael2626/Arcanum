@@ -19,6 +19,7 @@ import 'domain/table_state.dart';
 import 'reading/lectura_revelada.dart';
 import 'table/table_director.dart';
 import 'table/table_moon.dart';
+import 'table/table_notice.dart';
 import 'table/table_overlays.dart';
 import 'table/table_panel.dart';
 import 'table/table_sound.dart';
@@ -93,6 +94,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _director?.dispose();
+    _notices.dispose();
     super.dispose();
   }
 
@@ -200,6 +202,14 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
                             onChoose: _director!.takeFanPosition,
                           ),
                         ),
+                      if (_director case final dir?)
+                        Positioned.fill(
+                          child: NoticeLayer(
+                            board: _notices,
+                            camera: dir.camera,
+                            embroideryAt: TableDirector.embroideryAt,
+                          ),
+                        ),
                       // la fase, junto a la ayuda, como en el prototipo
                       if (moon != null && _director != null)
                         Positioned(
@@ -252,21 +262,21 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
   }
 
   // ---------- lo que pide la mesa ----------
+  /// Los avisos ya no son un SnackBar blanco: salen en la mesa, segun lo que
+  /// dicen (ver `table_notice.dart`).
+  final NoticeBoard _notices = NoticeBoard();
+
   @override
-  void toast(String message) {
+  void toast(String message, {NoticeKind kind = NoticeKind.pill, Offset? at}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          duration: const Duration(milliseconds: 2600),
-          // flota sobre deshacer y «Elegir carta» (48 dp + 14 de margen):
-          // pegado abajo tapaba la mitad de los 5 s del deshacer
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 14 + 48 + 14 + 8),
-        ),
-      );
+    final piece = kind == NoticeKind.piece && at != null;
+    _notices.show(
+      TableNotice(
+        message,
+        kind: piece || kind == NoticeKind.embroidery ? kind : NoticeKind.pill,
+        at: piece ? at : null,
+      ),
+    );
   }
 
   @override
@@ -485,7 +495,10 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
         _revealing = false;
         _reading = null;
       });
-      toast('Círculo cerrado. La lectura quedó guardada en Lecturas.');
+      toast(
+        'Círculo cerrado. La lectura quedó guardada en Lecturas.',
+        kind: NoticeKind.embroidery,
+      );
     } on Object catch (e) {
       _director?.cancelCircleClose();
       error(e);
@@ -577,7 +590,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
     _closePanel();
     try {
       await _ops.continueReading(reading);
-      toast('La lectura vuelve a la mesa.');
+      toast('La lectura vuelve a la mesa.', kind: NoticeKind.embroidery);
     } on Object catch (e) {
       error(e);
     }
