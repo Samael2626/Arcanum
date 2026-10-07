@@ -3,7 +3,6 @@ import 'package:arcanum_app/features/arte/arte_screen.dart';
 import 'package:arcanum_app/features/arte/materia_engravings.dart';
 import 'package:arcanum_app/features/arte/materia_specimen.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_mood.dart';
-import 'package:arcanum_app/shared/widgets/arcanum_motion.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -118,7 +117,8 @@ void main() {
     expect(api.calls, 1);
     expect(find.text('Romero'), findsOneWidget);
     expect(find.text('Amatista'), findsNothing);
-    expect(find.byType(ArcanumTilt), findsNothing);
+    // ArcanumTilt se retiro (y su fichero, en la depuracion del 7-oct): que no vuelva
+    expect(find.byWidgetPredicate((w) => w.runtimeType.toString() == 'ArcanumTilt'), findsNothing);
   });
 
   testWidgets('filtros y tarjetas exponen semántica de controles', (

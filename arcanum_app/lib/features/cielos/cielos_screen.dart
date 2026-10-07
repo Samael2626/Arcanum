@@ -146,7 +146,10 @@ class _NatalViewState extends ConsumerState<_NatalView> {
     // anterior.
     ref.listen<String?>(birthSignatureProvider, (previa, actual) {
       if (actual != null && actual != _firma) {
-        setState(() => _future = _load());
+        // llaves: una flecha devolveria el Future a setState, y eso lanza
+        setState(() {
+          _future = _load();
+        });
       }
     });
 
@@ -156,7 +159,15 @@ class _NatalViewState extends ConsumerState<_NatalView> {
         child: RefreshIndicator(
           color: ArcanumColors.gold,
           backgroundColor: ArcanumColors.surface,
-          onRefresh: () async => setState(() => _future = _load()),
+          // se espera a la carga: antes el indicador se iba al instante. El
+          // error lo pinta el FutureBuilder; aqui solo se deja de esperar
+          onRefresh: () {
+            final next = _load();
+            setState(() {
+              _future = next;
+            });
+            return next.then((_) {}, onError: (_) {});
+          },
           child: FutureBuilder<(Map<String, dynamic>, Map<String, dynamic>)>(
             future: _future,
             builder: (context, snap) {

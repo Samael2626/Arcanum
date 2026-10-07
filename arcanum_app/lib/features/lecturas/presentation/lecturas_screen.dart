@@ -48,7 +48,9 @@ class _LecturasScreenState extends ConsumerState<LecturasScreen> {
           backgroundColor: ArcanumColors.surface,
           onRefresh: () async {
             ref.invalidate(allProgressProvider);
-            setState(() => _future = _load(refresh: true));
+            setState(() {
+              _future = _load(refresh: true);
+            });
           },
           child: FutureBuilder<List<LibraryWorkSummary>>(
             future: _future,

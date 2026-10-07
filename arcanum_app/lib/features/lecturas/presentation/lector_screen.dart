@@ -186,7 +186,9 @@ class _LectorScreenState extends ConsumerState<LectorScreen> {
               logLibraryFailure('capitulo', snapshot.error);
               return ChapterUnavailable(
                 workSlug: widget.workSlug,
-                onRetry: () => setState(() => _future = _load()),
+                onRetry: () => setState(() {
+                  _future = _load();
+                }),
               );
             }
             return _reader(snapshot.data!, settings);

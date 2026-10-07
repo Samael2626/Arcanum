@@ -27,7 +27,10 @@ class _AiConsentSettingsCardState extends ConsumerState<AiConsentSettingsCard> {
   }
 
   void _setStatus(AiConsentStatus status) {
-    setState(() => _statusFuture = Future.value(status));
+    // llaves: la flecha devolveria el Future a setState, y en depuracion lanza
+    setState(() {
+      _statusFuture = Future.value(status);
+    });
   }
 
   Future<void> _review(String userId) async {
