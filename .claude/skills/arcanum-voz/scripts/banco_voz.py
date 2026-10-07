@@ -5,16 +5,16 @@ Parchea `claude_service.HOROSCOPE_SYSTEM_PROMPT` y `get_oracle_system_prompt`,
 que se leen en cada llamada, asi que una variante se prueba sin commitear nada
 y sin arriesgar produccion. El fichero de variante es texto plano.
 
-    python loop.py horoscopo --prompt v2.txt --cartas AB
-    python loop.py oraculo   --prompt o1.txt --cruz
+    python banco_voz.py horoscopo --prompt v2.txt --cartas AB --pausa 75 --max-llamadas 4
+    python banco_voz.py oraculo --prompt o1.txt --cruz --pausa 75 --max-llamadas 4
 """
 from __future__ import annotations
-import argparse, io, os, sys, json, time
+import argparse, io, os, sys, json, re, time
+from contextlib import contextmanager
 from datetime import date, datetime, timezone
 from types import SimpleNamespace
 
 sys.path.insert(0, os.path.abspath("."))
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 SK = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 CARTAS = {
@@ -32,30 +32,60 @@ TIRADA10 = [("Situación actual", "ocho-de-oros", True), ("El desafío", "cinco-
             ("Futuro inmediato", "caballero-de-bastos", True), ("Tu actitud", "cuatro-de-copas", True),
             ("Entorno e influencias", "diez-de-oros", False), ("Esperanzas y miedos", "la-luna", True),
             ("Resultado", "el-mundo", True)]
-GASTO = {"llamadas": 0, "tokens_salida": 0}
-PAUSA = {"s": 35, "primera": True}
+class BudgetExceeded(RuntimeError):
+    pass
 
 
-def _pausa():
-    """Espaciar las llamadas: el plan gratuito da 8.000 TPM y una lectura ronda
-    los 3.800, asi que dos seguidas rebotan por MINUTO (no por dia)."""
-    if PAUSA["primera"]:
-        PAUSA["primera"] = False
-        return
-    time.sleep(PAUSA["s"])
+class CallBudget:
+    """Cuenta y separa cada peticion real, incluido el retry y la rotacion."""
+
+    def __init__(self, max_calls: int, pause: int):
+        self.max_calls = max_calls
+        self.pause = pause
+        self.calls = 0
+        self.last_call = None
+        self.prompt_tokens = 0
+        self.completion_tokens = 0
+
+    def invoke(self, create, *args, **kwargs):
+        if self.calls >= self.max_calls:
+            raise BudgetExceeded(f"Presupuesto agotado: {self.max_calls} llamadas")
+        if self.last_call is not None:
+            time.sleep(max(0, self.last_call + self.pause - time.monotonic()))
+        self.calls += 1
+        try:
+            response = create(*args, **kwargs)
+            usage = getattr(response, "usage", None)
+            if usage:
+                self.prompt_tokens += usage.prompt_tokens or 0
+                self.completion_tokens += usage.completion_tokens or 0
+            return response
+        finally:
+            self.last_call = time.monotonic()
+
+
+@contextmanager
+def paced_calls(budget: CallBudget):
+    from groq.resources.chat.completions import Completions
+
+    original = Completions.create
+
+    def paced(self, *args, **kwargs):
+        return budget.invoke(original, self, *args, **kwargs)
+
+    Completions.create = paced
+    try:
+        yield
+    finally:
+        Completions.create = original
 
 
 def _diag(d):
     p = [f"retry={d.get('retried')}", f"tok={d.get('completion_tokens')}"]
-    for k in ("missing_first", "missing_final", "flaws_first", "flaws_final"):
+    for k in ("missing_first", "missing_final", "flaws_first", "flaws_final", "flaws_returned"):
         if d.get(k):
             p.append(f"{k}={d[k]}")
     return "  ".join(p)
-
-
-def _contar(d):
-    GASTO["llamadas"] += 2 if d.get("retried") else 1
-    GASTO["tokens_salida"] += d.get("completion_tokens") or 0
 
 
 def guard_v2():
@@ -94,6 +124,48 @@ def cobertura_en_el_cuerpo():
     cs._missing_terms = solo_cuerpo
 
 
+_BODIES_IN_SYNTHESIS = re.compile(
+    r"\b(?:Sol|Mercurio|Venus|Marte|J[uú]piter|Saturno|Urano|Neptuno|"
+    r"Plut[oó]n|Nodo Norte)\b", re.IGNORECASE,
+)
+
+
+def synthesis_body_names(text: str, final_card: str) -> list[str]:
+    """Solo la respuesta posterior a la ultima etiqueta de la Cruz Celta.
+
+    La Luna se deja fuera del piloto: en esta tirada tambien es una carta y
+    marcar su nombre como cuerpo astral seria un falso positivo.
+    """
+    last_label = re.search(
+        rf"(?m)^\s*Resultado\s*[-—–:]\s*{re.escape(final_card)}\b[^\n]*",
+        text, re.IGNORECASE,
+    )
+    if not last_label:
+        return []
+    answer = text[last_label.end():]
+    return sorted({match.group() for match in _BODIES_IN_SYNTHESIS.finditer(answer)})
+
+
+def guard_synthesis(final_card: str) -> None:
+    """Variante de laboratorio: no cambia el guarda de produccion."""
+    from app.services import oracle_guard as og
+
+    original = og.defectos
+
+    def with_synthesis(text: str, data: str) -> list[str]:
+        flaws = original(text, data)
+        names = synthesis_body_names(text, final_card)
+        if names:
+            flaws.append(
+                "La respuesta tras las diez cartas nombro cuerpos astrales "
+                f"({', '.join(names)}). Reescribe ese parrafo sin sus nombres; "
+                "di en palabras comunes que tiene delante para decidir"
+            )
+        return flaws
+
+    og.defectos = with_synthesis
+
+
 def horoscopo(prompt, cartas, veces):
     from app.services import claude_service as cs
     from app.services import horoscope as hs, natal_chart_engine as nce, planetary_hours as ph
@@ -108,9 +180,7 @@ def horoscopo(prompt, cartas, veces):
         sky_txt = hs.describe(sky, ahora, day_ruler=ph.get_day_ruler(date.today()),
                               planetary_hour=hora)
         for i in range(veces):
-            _pausa()
             texto, d = cs.generate_horoscope(sky_txt, hs.expected_terms(sky))
-            _contar(d)
             print(f"\n{'='*70}\nHOROSCOPO {etiqueta}  ({i+1}/{veces})\n{'='*70}")
             print(f"-- {_diag(d)}\n")
             print(texto if d.get("available") else f"NO DISPONIBLE: {d}")
@@ -160,6 +230,7 @@ def limpia_tarot(txt: str) -> str:
 
 def _tarot(tirada, spread):
     from app.core.config import settings
+    from app.data.deck_data import derive_name_es
     from app.services import oracle_context as oc
     base = str(settings.ARCANUM_DATA_DIR or "").rstrip("/")
     cat = {}
@@ -169,7 +240,10 @@ def _tarot(tirada, spread):
     cartas = []
     for pos, slug, der in tirada:
         c = cat[slug]
-        cartas.append({"position": pos, "name_es": c["title_book_t"].split("/")[-1].strip(),
+        cartas.append({"position": pos,
+                       "name_es": derive_name_es({
+                           **c, "arcana": c.get("arcana") or ("minor" if c.get("suit") else "major"),
+                       }),
                        "drawn_upright": der, "slug": slug,
                        "meaning": (c.get("meaning_upright") if der else c.get("meaning_reversed")) or "",
                        "element": c.get("element"), "suit": c.get("suit"),
@@ -179,7 +253,7 @@ def _tarot(tirada, spread):
     return oc.build_tarot_context(s), [c["name_es"] for c in cartas]
 
 
-def oraculo(prompt, cruz, veces, limpio=False):
+def oraculo(prompt, cruz, veces, limpio=False, synthesis_guard=False):
     from app.core.config import settings
     from app.services import claude_service as cs, natal_chart_engine as nce, oracle_context as oc
     if prompt:
@@ -195,19 +269,21 @@ def oraculo(prompt, cruz, veces, limpio=False):
     tirada = TIRADA10 if cruz else TIRADA3
     spread = "celtic_cross" if cruz else "three_card"
     tarot_txt, esperadas = _tarot(tirada, spread)
+    if synthesis_guard:
+        guard_synthesis(esperadas[-1])
     if limpio:
         ctx = limpia_astral(ctx)
         tarot_txt = limpia_tarot(tarot_txt)
         print("--- CONTEXTO LIMPIO ---"); print(ctx); print(tarot_txt[:600]); print("---")
     for i in range(veces):
-        _pausa()
         texto, d = cs.generate_reading(ctx, settings.ORACLE_MODEL_PREMIUM, question=PREGUNTA,
                                        tarot=tarot_txt, card_count=len(esperadas),
                                        expected_cards=esperadas)
-        _contar(d)
         print(f"\n{'='*70}\nORACULO {spread} ({len(esperadas)} cartas)  ({i+1}/{veces})\n{'='*70}")
         print(f"-- {_diag(d)}\n")
         print(texto if d.get("available") else f"NO DISPONIBLE: {d}")
+        if cruz and d.get("available"):
+            print(f"\nCUERPOS EN RESPUESTA: {synthesis_body_names(texto, esperadas[-1])}")
 
 
 def main():
@@ -218,26 +294,37 @@ def main():
     p.add_argument("--cruz", action="store_true")
     p.add_argument("--veces", type=int, default=1)
     p.add_argument("--limpio", action="store_true", help="poda los dos bloques de datos")
-    p.add_argument("--pausa", type=int, default=35, help="segundos entre llamadas (TPM)")
+    p.add_argument("--guard-sintesis", action="store_true",
+                   help="variante de laboratorio: reintenta si la sintesis nombra cuerpos")
+    p.add_argument("--pausa", type=int, default=75, help="segundos entre llamadas reales a Groq")
+    p.add_argument("--max-llamadas", type=int, required=True,
+                   help="presupuesto maximo de llamadas reales, incluidos reintentos")
     p.add_argument("--cuerpo", action="store_true",
                    help="mide la cobertura contra el cuerpo, no contra el texto entero")
     p.add_argument("--v2guard", action="store_true",
                    help="permite el nombre con oficio; sigue vetando la figura")
     a = p.parse_args()
-    PAUSA["s"] = a.pausa
+    if a.pausa < 75 or a.max_llamadas < 1:
+        p.error("--pausa debe ser al menos 75 y --max-llamadas positivo")
+    if a.guard_sintesis and (a.que != "oraculo" or not a.cruz):
+        p.error("--guard-sintesis requiere oraculo --cruz")
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
     if a.v2guard:
         guard_v2()
     if a.cuerpo:
         cobertura_en_el_cuerpo()
     texto_prompt = io.open(a.prompt, encoding="utf-8").read() if a.prompt else None
+    budget = CallBudget(a.max_llamadas, a.pausa)
     try:
-        if a.que == "horoscopo":
-            horoscopo(texto_prompt, list(a.cartas.upper()), a.veces)
-        else:
-            oraculo(texto_prompt, a.cruz, a.veces, a.limpio)
+        with paced_calls(budget):
+            if a.que == "horoscopo":
+                horoscopo(texto_prompt, list(a.cartas.upper()), a.veces)
+            else:
+                oraculo(texto_prompt, a.cruz, a.veces, a.limpio, a.guard_sintesis)
     finally:
-        print(f"\n### GASTO: {GASTO['llamadas']} llamadas, "
-              f"{GASTO['tokens_salida']} tokens de salida")
+        print(f"\n### GASTO: {budget.calls} llamadas, "
+              f"{budget.prompt_tokens} tokens de entrada, "
+              f"{budget.completion_tokens} tokens de salida")
     return 0
 
 

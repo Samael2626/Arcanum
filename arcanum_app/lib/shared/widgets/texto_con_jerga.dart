@@ -77,7 +77,8 @@ class _TextoConJergaState extends State<TextoConJerga> {
       showConceptSheet(
         context,
         titulo: sefira.titulo,
-        subtitulo: '${sefira.numero} de 10 · ${sefira.planeta} · ${sefira.mundo}',
+        subtitulo:
+            '${sefira.numero} de 10 · ${sefira.planeta} · ${sefira.mundo}',
         que: sefira.que,
         comoLabel: 'QUÉ APORTA EN LA CARTA',
         como: sefira.enLaCarta,

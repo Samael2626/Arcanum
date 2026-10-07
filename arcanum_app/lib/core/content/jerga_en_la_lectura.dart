@@ -96,8 +96,12 @@ List<TerminoJerga> jergaEnLaLectura(String texto) {
   final hallazgos = <TerminoJerga>[];
   final plano = _plano(texto);
 
-  void buscar(String aguja,
-      {SephirahLore? sefira, GlossaryEntry? glosario, CourtLore? figura}) {
+  void buscar(
+    String aguja, {
+    SephirahLore? sefira,
+    GlossaryEntry? glosario,
+    CourtLore? figura,
+  }) {
     final needle = _plano(aguja);
     var desde = 0;
     while (true) {
@@ -105,14 +109,16 @@ List<TerminoJerga> jergaEnLaLectura(String texto) {
       if (i < 0) break;
       desde = i + needle.length;
       if (!_esPalabraEntera(plano, i, needle.length)) continue;
-      hallazgos.add(TerminoJerga(
-        inicio: i,
-        fin: i + needle.length,
-        textoVisible: texto.substring(i, i + needle.length),
-        sefira: sefira,
-        glosario: glosario,
-        figura: figura,
-      ));
+      hallazgos.add(
+        TerminoJerga(
+          inicio: i,
+          fin: i + needle.length,
+          textoVisible: texto.substring(i, i + needle.length),
+          sefira: sefira,
+          glosario: glosario,
+          figura: figura,
+        ),
+      );
     }
   }
 
@@ -124,10 +130,14 @@ List<TerminoJerga> jergaEnLaLectura(String texto) {
   // "Princesa de las Aguas" en la ficha de la carta tiene que poder tocar la
   // palabra igual que quien lee "Sota".
   const alias = <String, String>{
-    'sota': 'sota', 'princesa': 'sota', 'paje': 'sota',
+    'sota': 'sota',
+    'princesa': 'sota',
+    'paje': 'sota',
     'caballero': 'caballero',
     'reina': 'reina',
-    'rey': 'rey', 'príncipe': 'rey', 'principe': 'rey',
+    'rey': 'rey',
+    'príncipe': 'rey',
+    'principe': 'rey',
   };
   alias.forEach((palabra, clave) {
     final f = courtLore[clave];

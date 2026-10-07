@@ -52,9 +52,8 @@ class MateriaPlate {
 
   /// Alto partido por ancho. Una botanica ronda 1,7; un mapa celeste de Bayer,
   /// 0,77.
-  double get relacion => px.length == 2 && px.first > 0
-      ? px.last / px.first
-      : 1;
+  double get relacion =>
+      px.length == 2 && px.first > 0 ? px.last / px.first : 1;
 
   String get entonadoPath => 'assets/$entonado';
   String get grabadoPath => 'assets/$grabado';
@@ -62,10 +61,8 @@ class MateriaPlate {
   /// El credito al pie de la lamina. La licencia es de dominio publico, asi
   /// que esto no es una obligacion legal: es lo que separa una app de
   /// ocultismo serio de un tablero de recortes.
-  String get credito => [
-    if (autor != null && autor!.isNotEmpty) autor,
-    obra,
-  ].join(', ');
+  String get credito =>
+      [if (autor != null && autor!.isNotEmpty) autor, obra].join(', ');
 
   factory MateriaPlate.fromJson(String slug, Map<String, dynamic> j) =>
       MateriaPlate(

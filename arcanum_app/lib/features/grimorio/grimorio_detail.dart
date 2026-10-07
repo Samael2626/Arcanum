@@ -63,8 +63,8 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
 
   // llaves: una flecha devolveria el Future a setState, y eso lanza
   void _retry() => setState(() {
-        _future = _load();
-      });
+    _future = _load();
+  });
 
   // el sigilo se decodifica una vez por contenido, no en cada build
   String? _sigilContent;
@@ -84,7 +84,9 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
 
   Future<void> _continueSigil(SigilEntry entry) async {
     final saved = await Navigator.of(context, rootNavigator: true).push<bool>(
-      MaterialPageRoute(builder: (_) => TallerScreen(entryId: widget.id, initial: entry)),
+      MaterialPageRoute(
+        builder: (_) => TallerScreen(entryId: widget.id, initial: entry),
+      ),
     );
     if (mounted && saved == true) _retry();
   }
@@ -92,22 +94,41 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
   /// Cargar desde el Grimorio: la carga se anota en la entrada; soltar borra
   /// la intencion y deja el dibujo con la fecha.
   Future<void> _chargeSigil(SigilEntry entry) async {
-    final r = await Navigator.of(context, rootNavigator: true).push<ChargeResult>(
-      MaterialPageRoute(fullscreenDialog: true, builder: (_) => TallerCarga(doc: entry.doc, keepLabel: 'Anotar')),
-    );
+    final r = await Navigator.of(context, rootNavigator: true)
+        .push<ChargeResult>(
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (_) => TallerCarga(doc: entry.doc, keepLabel: 'Anotar'),
+          ),
+        );
     if (!mounted || r == null) return;
     // «Volver» en el aviso no suelta, pero la carga se hizo: se anota igual
-    final release = r.end == ChargeEnd.release && await confirmRelease(context, saved: true);
+    final release =
+        r.end == ChargeEnd.release &&
+        await confirmRelease(context, saved: true);
     if (!mounted) return;
-    final store = SigilStore(_api, ref.read(grimoireCryptoProvider), ref.read(userPlaceProvider), preview: ref.read(sigilPreviewProvider));
+    final store = SigilStore(
+      _api,
+      ref.read(grimoireCryptoProvider),
+      ref.read(userPlaceProvider),
+      preview: ref.read(sigilPreviewProvider),
+    );
     try {
-      final charged = SigilEntry(entry.doc, charges: [...entry.charges, await store.chargeNow(r.seconds)]);
-      await store.save(release ? releasedCopy(charged, DateTime.now()) : charged, entryId: widget.id);
+      final charged = SigilEntry(
+        entry.doc,
+        charges: [...entry.charges, await store.chargeNow(r.seconds)],
+      );
+      await store.save(
+        release ? releasedCopy(charged, DateTime.now()) : charged,
+        entryId: widget.id,
+      );
     } catch (error) {
       debugPrint('ARCANUM grimorio: fallo al anotar la carga ($error).');
-      _snack(release
-          ? 'No se pudo soltar: la intención sigue guardada. Inténtalo de nuevo.'
-          : 'No se pudo anotar la carga. Revisa la conexión e inténtalo de nuevo.');
+      _snack(
+        release
+            ? 'No se pudo soltar: la intención sigue guardada. Inténtalo de nuevo.'
+            : 'No se pudo anotar la carga. Revisa la conexión e inténtalo de nuevo.',
+      );
       return;
     }
     _snack(release ? 'Soltado. No lo busques.' : 'Carga anotada en el sigilo.');
@@ -339,17 +360,21 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
           // entrada «Sigilo» escrita a mano antes del taller sigue siendo texto
           child: switch (type == 'sigil' ? _decodeSigil(content) : null) {
             SigilReadable(:final entry) => _SigilBody(
-                entry: entry,
-                onEdit: () => _continueSigil(entry),
-                onCharge: () => _chargeSigil(entry),
-                accent: accent,
-              ),
+              entry: entry,
+              onEdit: () => _continueSigil(entry),
+              onCharge: () => _chargeSigil(entry),
+              accent: accent,
+            ),
             SigilUnreadable(:final newerVersion) => Text(
-                newerVersion
-                    ? 'Este sigilo se guardó con una versión más nueva de ARCANUM. Actualiza la app para verlo.'
-                    : 'Este sigilo no se puede dibujar: sus datos están dañados.',
-                style: ArcanumText.body(16, color: ArcanumColors.ivoryMuted, italic: true),
+              newerVersion
+                  ? 'Este sigilo se guardó con una versión más nueva de ARCANUM. Actualiza la app para verlo.'
+                  : 'Este sigilo no se puede dibujar: sus datos están dañados.',
+              style: ArcanumText.body(
+                16,
+                color: ArcanumColors.ivoryMuted,
+                italic: true,
               ),
+            ),
             null => _ManuscriptBody(content: content, accent: accent),
           },
         ),
@@ -469,7 +494,12 @@ class _SigilBody extends StatefulWidget {
   final SigilEntry entry;
   final VoidCallback onEdit, onCharge;
   final Color accent;
-  const _SigilBody({required this.entry, required this.onEdit, required this.onCharge, required this.accent});
+  const _SigilBody({
+    required this.entry,
+    required this.onEdit,
+    required this.onCharge,
+    required this.accent,
+  });
   @override
   State<_SigilBody> createState() => _SigilBodyState();
 }
@@ -487,47 +517,99 @@ class _SigilBodyState extends State<_SigilBody> {
   static String _two(int n) => n.toString().padLeft(2, '0');
 
   static String _chargeLine(SigilCharge c) => [
-        '${dayMonthEs(c.at)}, ${_two(c.at.hour)}:${_two(c.at.minute)}',
-        '${c.seconds} s',
-        if (c.moon != null && c.moon!.isNotEmpty) '☽ ${c.moon}',
-        if (c.hour != null) '${planetGlyph[c.hour] ?? ''} hora de ${planetEs[c.hour] ?? c.hour}',
-      ].join(' · ');
+    '${dayMonthEs(c.at)}, ${_two(c.at.hour)}:${_two(c.at.minute)}',
+    '${c.seconds} s',
+    if (c.moon != null && c.moon!.isNotEmpty) '☽ ${c.moon}',
+    if (c.hour != null)
+      '${planetGlyph[c.hour] ?? ''} hora de ${planetEs[c.hour] ?? c.hour}',
+  ].join(' · ');
 
   @override
   Widget build(BuildContext context) {
     final e = widget.entry, accent = widget.accent;
     final muted = ArcanumText.body(14, color: ArcanumColors.ivoryMuted);
-    final outlined = OutlinedButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: accent);
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      LayoutBuilder(
-        builder: (context, box) => Center(
-          child: CustomPaint(size: Size.square(box.maxWidth), painter: SigilScenePainter(bg: _scene.bg, fg: _scene.fg)),
+    final outlined = OutlinedButton.styleFrom(
+      minimumSize: const Size(48, 48),
+      foregroundColor: accent,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LayoutBuilder(
+          builder: (context, box) => Center(
+            child: CustomPaint(
+              size: Size.square(box.maxWidth),
+              painter: SigilScenePainter(bg: _scene.bg, fg: _scene.fg),
+            ),
+          ),
         ),
-      ),
-      const SizedBox(height: 16),
-      if (e.isReleased)
-        Text('Soltado el ${dayMonthEs(e.released!)}. La intención ya no está en ARCANUM.',
-            textAlign: TextAlign.center, style: ArcanumText.body(16, color: ArcanumColors.goldMuted, italic: true))
-      else ...[
-        Row(children: [
-          Expanded(child: OutlinedButton(onPressed: widget.onCharge, style: outlined, child: const Text('Cargar'))),
-          const SizedBox(width: 10),
-          Expanded(child: OutlinedButton(onPressed: widget.onEdit, style: outlined, child: const Text('Seguir en el taller'))),
-        ]),
-        TextButton(
-          onPressed: () => setState(() => _showIntention = !_showIntention),
-          style: TextButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: ArcanumColors.ivoryMuted),
-          child: Text(_showIntention ? 'Ocultar la intención' : 'Ver la intención'),
-        ),
-        if (_showIntention) Text('«${e.doc.sigil.intention}»', textAlign: TextAlign.center, style: ArcanumText.body(17, italic: true)),
+        const SizedBox(height: 16),
+        if (e.isReleased)
+          Text(
+            'Soltado el ${dayMonthEs(e.released!)}. La intención ya no está en ARCANUM.',
+            textAlign: TextAlign.center,
+            style: ArcanumText.body(
+              16,
+              color: ArcanumColors.goldMuted,
+              italic: true,
+            ),
+          )
+        else ...[
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: widget.onCharge,
+                  style: outlined,
+                  child: const Text('Cargar'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: widget.onEdit,
+                  style: outlined,
+                  child: const Text('Seguir en el taller'),
+                ),
+              ),
+            ],
+          ),
+          TextButton(
+            onPressed: () => setState(() => _showIntention = !_showIntention),
+            style: TextButton.styleFrom(
+              minimumSize: const Size(48, 48),
+              foregroundColor: ArcanumColors.ivoryMuted,
+            ),
+            child: Text(
+              _showIntention ? 'Ocultar la intención' : 'Ver la intención',
+            ),
+          ),
+          if (_showIntention)
+            Text(
+              '«${e.doc.sigil.intention}»',
+              textAlign: TextAlign.center,
+              style: ArcanumText.body(17, italic: true),
+            ),
+        ],
+        if (e.charges.isNotEmpty) ...[
+          const SizedBox(height: 18),
+          Text(
+            e.charges.length == 1
+                ? 'Cargado 1 vez'
+                : 'Cargado ${e.charges.length} veces',
+            style: ArcanumText.label().copyWith(
+              color: ArcanumColors.gold,
+              letterSpacing: 2,
+            ),
+          ),
+          const SizedBox(height: 6),
+          for (final c in e.charges)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(_chargeLine(c), style: muted),
+            ),
+        ],
       ],
-      if (e.charges.isNotEmpty) ...[
-        const SizedBox(height: 18),
-        Text(e.charges.length == 1 ? 'Cargado 1 vez' : 'Cargado ${e.charges.length} veces',
-            style: ArcanumText.label().copyWith(color: ArcanumColors.gold, letterSpacing: 2)),
-        const SizedBox(height: 6),
-        for (final c in e.charges) Padding(padding: const EdgeInsets.only(bottom: 4), child: Text(_chargeLine(c), style: muted)),
-      ],
-    ]);
+    );
   }
 }

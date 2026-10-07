@@ -31,8 +31,11 @@ void main() {
         for (final cara in ['entonado', 'grabado']) {
           final ruta = v[cara] as String;
           expect(ruta, endsWith('.webp'), reason: '${entrada.key}/$cara');
-          expect(File('assets/$ruta').existsSync(), isTrue,
-              reason: 'falta assets/$ruta');
+          expect(
+            File('assets/$ruta').existsSync(),
+            isTrue,
+            reason: 'falta assets/$ruta',
+          );
         }
       }
     });
@@ -42,8 +45,11 @@ void main() {
         final v = entrada.value as Map<String, dynamic>;
         expect(v['license'], 'public-domain', reason: entrada.key);
         expect(v['obra'], isNotEmpty, reason: entrada.key);
-        expect(v['source'], startsWith('https://commons.wikimedia.org/'),
-            reason: entrada.key);
+        expect(
+          v['source'],
+          startsWith('https://commons.wikimedia.org/'),
+          reason: entrada.key,
+        );
       }
     });
   });

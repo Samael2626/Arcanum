@@ -53,7 +53,10 @@ void main() {
 
     test('gradle no inyecta el placeholder ni exige la credencial', () {
       final gradle = File('android/app/build.gradle').readAsStringSync();
-      expect(gradle, isNot(contains('manifestPlaceholders["admobApplicationId"]')));
+      expect(
+        gradle,
+        isNot(contains('manifestPlaceholders["admobApplicationId"]')),
+      );
       expect(gradle, isNot(contains('ADMOB_APP_ID')));
       // Ni el de prueba de Google: si no hay SDK, no hay ID de ninguna clase.
       expect(gradle, isNot(contains('ca-app-pub-')));
