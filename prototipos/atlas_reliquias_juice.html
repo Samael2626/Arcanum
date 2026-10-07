@@ -22,11 +22,14 @@
     .controls{padding-top:17px}.controls h2{font:600 37px/.96 Cormorant;margin:10px 0 13px}.controls>p{font-size:15px;color:var(--muted);margin:0 0 21px}.control-block{border-top:1px solid #8a6e3255;padding:18px 0}.control-block h3{font:600 12px Crimson;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-label);margin:0 0 11px}.choice{display:flex;gap:6px;flex-wrap:wrap}.choice button{min-height:42px;padding:8px 11px;border:1px solid #8a6e3266;background:#1c1c28;color:var(--muted);font-size:14px}.choice button[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:var(--ink);font-weight:600}.choice button:hover{filter:brightness(1.14)}.checks{display:grid;gap:7px}.checks label{display:flex;align-items:center;gap:9px;color:var(--ivory);font-size:15px;cursor:pointer}.checks input{accent-color:var(--gold);width:17px;height:17px}.controls .play{display:grid;grid-template-columns:1fr 1fr;gap:7px}.controls .play button{min-height:44px;border:1px solid var(--gold-mute);background:transparent;color:var(--gold-light);padding:8px;font-size:14px}.controls .play button:first-child{background:var(--gold);border-color:var(--gold);color:var(--ink);font-weight:600}.controls .play button:hover{filter:brightness(1.13)}.controls .small{font-size:13px;color:var(--muted)}
     .research{margin-top:54px;border-top:1px solid #8a6e3255;padding-top:21px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:25px}.research article{border-top:1px solid #8a6e323d;padding-top:12px}.research h3{font:600 25px Cormorant;margin:0 0 6px}.research p{margin:0;color:var(--muted);font-size:14px}.research .path{grid-column:1/-1;border-top:1px solid #8a6e323d;padding-top:15px;color:var(--muted);font-size:13px}
     body[data-juice="quiet"]{--juice:.22;--shine:.38}body[data-juice="alive"]{--juice:.48;--shine:.85}body[data-juice="arcane"]{--juice:.85;--shine:1}body[data-juice="arcane"] .tile.mesa .shine{animation-duration:8s}body[data-juice="quiet"] .tile.mesa .shine{animation-duration:20s}body[data-juice="arcane"] .dial{box-shadow:0 0 32px #c9a84c66}body[data-juice="arcane"] .tile.mesa{box-shadow:0 15px 35px #0008,0 0 24px #c9a84c22}
-    body:not(.ambient-on) .phone::before,body:not(.ambient-on) .sky::after,body:not(.ambient-on) .table-art::before{animation:none;opacity:0}body:not(.spark-on) .shine{animation:none;opacity:0}body:not(.depth-on) .tile{transform:none!important}body:not(.depth-on) .tile.mesa img{transform:rotate(-10deg)!important}body:not(.glass-on) .nav{backdrop-filter:none;background:#101017}body.glass-on .tile.mesa{backdrop-filter:blur(10px)}
+    body:not(.ambient-on) .phone::before,body:not(.ambient-on) .sky::after,body:not(.ambient-on) .table-art::before{animation:none;opacity:0}body:not(.spark-on) .shine{animation:none;opacity:0}body:not(.depth-on) .tile:not(.shared-plate){transform:none!important}body:not(.depth-on) .tile.mesa img{transform:rotate(-10deg)!important}body:not(.glass-on) .nav{backdrop-filter:none;background:#101017}body.glass-on .tile.mesa{backdrop-filter:blur(10px)}
     body.motion-off *,body.motion-off *::before,body.motion-off *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}body.motion-off .shine{opacity:0!important}body.motion-off .table-art.revealed .burst{display:none}body.motion-off .table-art.revealed .table-card{transform:translateY(22px) rotate(3deg) scale(1.11)}
     .table-art .table-card{transform:rotate(-7deg) rotateY(0);transform-style:preserve-3d;transition:transform .65s cubic-bezier(.2,.75,.25,1),box-shadow .65s}.table-art .card-back,.table-art .table-card img{position:absolute;inset:0;width:100%;height:100%;backface-visibility:hidden}.table-art .card-back{display:grid;place-items:center;overflow:hidden;border:2px solid var(--gold);background:repeating-linear-gradient(45deg,#1a1726 0 10px,#242036 10px 11px);color:var(--gold-light);font:42px Cormorant}.table-art .card-back::before{content:'';position:absolute;inset:10px;border:1px solid #c9a84c88}.table-art .card-back::after{content:'';position:absolute;inset:26px;border:1px solid #c9a84c66;border-radius:50%}.table-art .table-card img{object-fit:cover;transform:rotateY(180deg)}.table-art.revealed .table-card,body.motion-off .table-art.revealed .table-card{transform:translateY(22px) rotate(3deg) rotateY(180deg) scale(1.11)}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.shine{opacity:0!important}.table-art.revealed .burst{display:none}}@media(prefers-reduced-transparency:reduce){.nav{backdrop-filter:none!important;background:#101017!important}.tile.mesa{backdrop-filter:none!important}}
     @keyframes ambient{from{transform:translate3d(-2%,0,0);opacity:var(--juice)}to{transform:translate3d(3%,-2%,0);opacity:var(--juice)}}@keyframes skywash{from{transform:translate3d(-8%,0,0);opacity:var(--juice)}to{transform:translate3d(10%,0,0);opacity:var(--juice)}}@keyframes orbit{to{transform:rotate(360deg)}}@keyframes shine{0%,23%,100%{transform:translateX(-120%);opacity:0}27%{opacity:var(--shine)}37%{transform:translateX(120%);opacity:0}}@keyframes revealRing{0%{transform:translate(-50%,-50%) scale(.35);opacity:.75}100%{transform:translate(-50%,-50%) scale(1.3);opacity:0}}
+    .sky{min-height:216px;margin-bottom:24px}.sky h2{max-width:255px;margin:10px 0 4px}.sky p{max-width:245px}.sky .sky-actions{display:flex;align-items:center;gap:10px;margin-top:13px}.sky .sky-more{position:relative;z-index:3;min-height:44px;padding:5px 0;border:0;border-bottom:1px solid var(--gold-light);background:transparent;color:var(--gold-light);font-size:14px}.sky .sky-stamp{color:#d7cdbb;font-size:12px}.sky .sky-detail{position:relative;z-index:3;margin-top:10px;padding:10px 12px;border-left:2px solid var(--gold);background:#0d0e14e8;font-size:13px;max-width:280px}.sky .sky-detail[hidden]{display:none}.sky .dial{right:15px;bottom:38px;width:67px;height:67px}.sky.expanded .dial{opacity:.18}.heading span{color:#d8bc79}.tile.mesa .tile-cta{display:inline-block;margin-top:17px;padding:7px 12px;border:1px solid #ecd79a9c;color:var(--gold-light);font:600 13px Crimson;position:relative;z-index:2}.tile.mesa small{max-width:190px}.nav{background:#101017e8}.nav button{min-height:60px}.nav button.current{font-weight:600}.shared-plate{position:absolute!important;z-index:20;pointer-events:none;grid-column:auto!important;margin:0!important;transform:none;transform-origin:top left;overflow:hidden;box-shadow:0 22px 45px #000c!important}.shared-plate .shine{animation:none!important;opacity:0!important}
+    .scene{transition:opacity .28s ease,transform .38s cubic-bezier(.22,.8,.23,1)}.table-scene{transform:translateY(16px)}.phone[data-scene="mesa"] .home{transform:translateY(-12px)}.phone[data-scene="mesa"] .table-scene{transform:translateY(0)}.steps{display:flex;list-style:none;gap:4px;padding:0;margin:0 17px 17px}.steps li{flex:1;min-width:0;padding:7px 2px 6px;border-top:2px solid #716140;color:#b8b0a0;font:12px Crimson;text-align:center}.steps li.active{border-color:var(--gold-light);color:var(--gold-light);font-weight:600}.steps li.done{border-color:#81713f;color:#e3d8c1}.table-art{min-height:222px}.table-art .table-card{top:4px}.table-art.revealed .burst{border-color:#ecd79ab3}.table-copy{padding:16px 22px 25px}.table-copy h2{font-size:35px}.table-copy p{font-size:15px}.flow-panel[hidden],.selection[hidden]{display:none}.flow-panel label{display:block;margin:13px 0 7px;color:var(--gold-light);font-weight:600}.flow-panel textarea{width:100%;min-height:78px;padding:12px;color:var(--ivory);background:#181922;border:1px solid #a59058;border-radius:0;resize:vertical;font:16px Crimson}.flow-panel textarea:focus{outline:2px solid var(--gold-light);outline-offset:2px}.flow-panel .action{margin-top:14px}.flow-panel .quiet{font-size:15px}.selection{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:16px 0}.selection button{position:relative;min-height:126px;border:1px solid #a18a59;background:linear-gradient(135deg,#2a2536,#11121a);color:var(--gold-light);font:32px Cormorant;box-shadow:0 9px 18px #0006;transition:transform .2s,border-color .2s}.selection button::before{content:'';position:absolute;inset:8px;border:1px solid #c9a84c55}.selection button[aria-pressed="true"]{border:2px solid var(--gold-light);transform:translateY(-6px);box-shadow:0 16px 25px #0009,0 0 18px #c9a84c44}.selection button span{position:absolute;bottom:7px;left:0;right:0;font:12px Crimson}.flow-panel .action:disabled{background:#655a40;color:#ded3bf;cursor:not-allowed}.result{line-height:1.08}.result-note{color:var(--muted);font-size:14px}.demo-tag{display:inline-block;padding:2px 7px;border:1px solid #ae996d;color:#e3d3a7;font:11px Crimson;letter-spacing:.1em;text-transform:uppercase}.saved-note{padding:12px;border-left:2px solid var(--gold);background:#191b20;color:var(--ivory);margin-top:15px}.table-art[data-step="question"] .table-card,.table-art[data-step="choose"] .table-card{opacity:.65;transform:rotate(-7deg) scale(.87)}.table-art[data-step="reveal"] .table-card{opacity:1}.table-art[data-step="saved"] .table-card{opacity:1}.flow-panel .back-step{margin-top:8px;min-height:44px;border:0;background:transparent;color:var(--gold-light);text-decoration:underline}
+    body:not(.glass-on) .nav{background:#101017}body.glass-on .tile.mesa{backdrop-filter:none}body.motion-off .shared-plate{display:none!important}@media(prefers-reduced-motion:reduce){.shared-plate{display:none!important}.selection button{transition:none!important}.table-art.revealed .table-card{transform:translateY(22px) rotateY(180deg) scale(1.08)}}@media(max-width:420px){.phone{width:100%;height:min(844px,calc(100dvh - 34px));min-height:660px}.sky{margin-left:13px;margin-right:13px}.tiles{margin-left:13px;margin-right:13px}.sky .dial{width:60px;height:60px}}
     @media(max-width:1100px){.lab{grid-template-columns:390px minmax(240px,1fr)}.leftnotes{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.leftnotes>.kicker,.leftnotes h2,.leftnotes>p,.leftnotes .note{grid-column:1/-1}.leftnotes h2{margin-bottom:0}.leftnotes>p{margin-bottom:6px}.moment{padding-right:13px}.research{grid-template-columns:1fr 1fr}.research article:last-of-type{grid-column:1/-1}}
     @media(max-width:700px){.mast{grid-template-columns:1fr}.lab{grid-template-columns:1fr}.phone{width:min(390px,100%);margin:auto}.leftnotes{display:block}.leftnotes .moment{display:none}.controls{max-width:500px;margin:auto;width:100%}.research{grid-template-columns:1fr}.research article:last-of-type{grid-column:auto}.page{padding:22px 14px 50px}.mast h1{font-size:63px}}
   </style>
@@ -42,17 +45,17 @@
       <div class="moment"><span class="count">01</span><b>Reposo</b><p>Bruma lenta bajo el instrumento. Un brillo raro cruza el filo de Mesa.</p></div>
       <div class="moment"><span class="count">02</span><b>Intención</b><p>La placa se alza unos píxeles y la carta acompaña el dedo.</p></div>
       <div class="moment"><span class="count">03</span><b>Revelación</b><p>Una expansión breve confirma la carta; el significado queda legible.</p></div>
-      <div class="note">El prototipo usa arte y paleta reales del repo. Los datos del cielo y la lectura son ejemplos visuales.</div>
+      <div class="note">Arte y paleta del repo. El cielo es una instantánea real y fechada; las cartas y sus textos son una demostración visual.</div>
     </div>
     <div class="phone" id="phone" data-scene="home" aria-label="Prototipo de Atlas de reliquias en teléfono 390 por 844">
       <div class="camera" aria-hidden="true"></div><div class="status"><span>9:41</span><span>●●● ▰</span></div>
       <div class="viewport">
         <section class="scene home" aria-label="Portada Hoy">
           <div class="apphead"><button type="button" class="menu" id="menu" aria-label="Navegación">☰</button><div><div class="brand">ARCANUM</div><small>Cielo · tu carta natal y lo que hoy la toca</small></div><button type="button" class="avatar" aria-label="Abrir tu cuenta">☾</button></div>
-          <div class="sky"><div class="kicker">MARTES · HORA DE MARTE</div><h2>Tu cielo está<br>en movimiento</h2><p>La Luna crece; el instrumento respira.</p><div class="dial" aria-hidden="true"><span>☾</span></div></div>
-          <div class="heading"><h3>Elige tu práctica</h3><span>Hoy →</span></div>
+          <div class="sky"><div class="kicker">CIELO · INSTANTÁNEA DEL 7 OCT 2026</div><h2>Luna<br>menguante</h2><p>10 % iluminada. Próxima Luna Nueva: 10 oct, 10:50 COT.</p><div class="sky-actions"><button type="button" class="sky-more" id="sky-more" aria-expanded="false" aria-controls="sky-detail">Ver detalles +</button><span class="sky-stamp">Motor astral ARCANUM</span></div><div class="sky-detail" id="sky-detail" hidden>Datos consultados el 7 oct 2026, 10:51 COT, en <code>/astral/moon</code> y <code>/astral/calendar/moon-phases</code>. Esta maqueta muestra una instantánea fechada; la app consulta el estado actual.</div><div class="dial" aria-hidden="true"><span>☾</span></div></div>
+          <div class="heading"><h3>Elige tu práctica</h3><span>Una acción a la vez</span></div>
           <div class="tiles">
-            <button type="button" class="tile mesa" id="mesa-tile" aria-label="Abrir Mesa de tarot"><span class="halo" aria-hidden="true"></span><span class="shine" aria-hidden="true"></span><span class="arrow" aria-hidden="true">✧</span><b>Mesa de tarot</b><small>Una tirada comienza aquí</small><img src="../arcanum_app/assets/tarot/la-luna.webp" alt=""></button>
+            <button type="button" class="tile mesa" id="mesa-tile" aria-label="Abrir Mesa de tarot"><span class="halo" aria-hidden="true"></span><span class="shine" aria-hidden="true"></span><span class="arrow" aria-hidden="true">✧</span><b>Mesa de tarot</b><small>Haz una pregunta y descubre una carta</small><span class="tile-cta">Comenzar tirada →</span><img src="../arcanum_app/assets/tarot/la-luna.webp" alt=""></button>
             <button type="button" class="tile horoscope" data-dest="Horóscopo"><span class="arrow" aria-hidden="true">☾</span><b>Horóscopo</b><small>Tu cielo de hoy</small><img src="../arcanum_app/assets/engravings/zodiaco/escorpio.jpg" alt=""></button>
             <button type="button" class="tile grimoire" data-dest="Grimorio"><span class="arrow" aria-hidden="true">✎</span><b>Grimorio</b><small>Escribe y guarda</small></button>
             <button type="button" class="tile saber" data-dest="Saber"><span class="arrow" aria-hidden="true">✳</span><b>Saber</b><small>Plantas y libros</small></button>
@@ -60,45 +63,148 @@
           </div>
         </section>
         <section class="scene table-scene" aria-label="Vista conceptual de Mesa de tarot" aria-hidden="true">
-          <div class="table-head"><button type="button" class="back" id="back" aria-label="Volver a Hoy">‹</button><div>Mesa de tarot<small>El paño está preparado</small></div></div>
-          <div class="table-art" id="table-art"><div class="cloth" aria-hidden="true"></div><div class="burst" aria-hidden="true"></div><div class="table-card" id="table-card" role="img" aria-label="Carta boca abajo"><div class="card-back" aria-hidden="true">☾</div><img src="../arcanum_app/assets/tarot/la-estrella.webp" alt="" aria-hidden="true"></div></div>
-          <div class="table-copy"><div class="kicker">TU PRÁCTICA</div><h2>Una carta,<br>una pregunta.</h2><p>Toca revelar para ver cómo se siente el momento de respuesta. Esta es una escena de diseño; no hace una tirada real.</p><div class="result" id="result">La carta espera.</div><button type="button" class="action" id="reveal">Revelar carta</button><button type="button" class="quiet" id="return">Volver a Hoy</button></div>
+          <div class="table-head"><button type="button" class="back" id="back" aria-label="Volver a Cielo">‹</button><div>Mesa de tarot<small>Una lectura de muestra · sin cuenta</small></div></div>
+          <ol class="steps" aria-label="Pasos de la lectura"><li data-step-label="question" class="active">Pregunta</li><li data-step-label="choose">Carta</li><li data-step-label="reveal">Revela</li><li data-step-label="saved">Cierra</li></ol>
+          <div class="table-art" id="table-art" data-step="question"><div class="cloth" aria-hidden="true"></div><div class="burst" aria-hidden="true"></div><div class="table-card" id="table-card" role="img" aria-label="Carta boca abajo"><div class="card-back" aria-hidden="true">☾</div><img id="card-face" src="../arcanum_app/assets/tarot/la-estrella.webp" alt="" aria-hidden="true"></div></div>
+          <div class="table-copy"><span class="demo-tag">Tirada visual de muestra</span>
+            <div class="flow-panel" data-panel="question"><div class="kicker">01 · INTENCIÓN</div><h2>Trae una<br>pregunta.</h2><p>Puedes escribirla o seguir en silencio. La maqueta no la envía ni la conserva al cerrar.</p><label for="question-input">Tu pregunta · opcional</label><textarea id="question-input" maxlength="180" placeholder="¿Qué necesito comprender hoy?"></textarea><button type="button" class="action" id="prepare">Preparar la mesa</button></div>
+            <div class="flow-panel" data-panel="choose" hidden><div class="kicker">02 · ELECCIÓN</div><h2>Escoge una<br>carta.</h2><p>Tres cartas de muestra. Elige la que te llame.</p><div class="selection" role="group" aria-label="Elige una de tres cartas"><button type="button" data-card="0" aria-pressed="false" aria-label="Elegir carta 1">☾<span>01</span></button><button type="button" data-card="1" aria-pressed="false" aria-label="Elegir carta 2">☾<span>02</span></button><button type="button" data-card="2" aria-pressed="false" aria-label="Elegir carta 3">☾<span>03</span></button></div><button type="button" class="action" id="confirm-card" disabled>Continuar con esta carta</button><button type="button" class="back-step" data-go="question">Cambiar pregunta</button></div>
+            <div class="flow-panel" data-panel="reveal" hidden><div class="kicker">03 · REVELACIÓN</div><h2>El momento<br>es tuyo.</h2><p id="question-echo">Sostén tu pregunta. La carta está lista.</p><button type="button" class="action" id="reveal">Revelar carta</button><button type="button" class="back-step" data-go="choose">Elegir otra carta</button></div>
+            <div class="flow-panel" data-panel="saved" hidden><div class="kicker">04 · LECTURA</div><h2 id="result-title">La Estrella.</h2><div class="result" id="result" role="status" aria-live="polite">Luz sobre el agua.</div><p class="result-note" id="result-note">Una imagen para contemplar, no una interpretación generada.</p><button type="button" class="action" id="save-demo">Guardar en esta sesión</button><button type="button" class="back-step" id="again">Otra pregunta</button><div class="saved-note" id="saved-note" role="status" hidden>Guardada solo en esta demostración. Nada se guardó en tu cuenta.</div></div>
+            <button type="button" class="quiet" id="return">Volver a Cielo</button></div>
         </section>
-        <nav class="nav" aria-label="Navegación conceptual"><button type="button" data-nav="home" class="current"><span class="ico" aria-hidden="true">☼</span>Hoy</button><button type="button" data-nav="mesa"><span class="ico" aria-hidden="true">▣</span>Mesa</button><button type="button" data-nav="Grimorio"><span class="ico" aria-hidden="true">▤</span>Grimorio</button><button type="button" data-nav="Saber"><span class="ico" aria-hidden="true">✳</span>Saber</button><button type="button" data-nav="Oráculo"><span class="ico" aria-hidden="true">✦</span>Oráculo</button></nav><div class="toast" id="toast" role="status" aria-live="polite"></div>
+        <nav class="nav" aria-label="Navegación conceptual"><button type="button" data-nav="home" class="current"><span class="ico" aria-hidden="true">☼</span>Cielo</button><button type="button" data-nav="Horóscopo"><span class="ico" aria-hidden="true">☾</span>Horóscopo</button><button type="button" data-nav="Grimorio"><span class="ico" aria-hidden="true">▤</span>Grimorio</button><button type="button" data-nav="Saber"><span class="ico" aria-hidden="true">✳</span>Saber</button><button type="button" data-nav="mesa"><span class="ico" aria-hidden="true">✦</span>Oráculo</button></nav><div class="toast" id="toast" role="status" aria-live="polite"></div>
       </div>
     </div>
     <aside class="controls"><div class="kicker">Mesa de efectos</div><h2>Dosifica la luz.</h2><p>Prueba cada capa. La escena E conserva la misma composición para que puedas juzgar el efecto, no el dibujo.</p>
       <div class="control-block"><h3>Intensidad</h3><div class="choice" id="juice-options"><button type="button" data-juice="quiet" aria-pressed="false">Velado</button><button type="button" data-juice="alive" aria-pressed="true">Vivo</button><button type="button" data-juice="arcane" aria-pressed="false">Arcano</button></div></div>
       <div class="control-block"><h3>Capas</h3><div class="checks"><label><input type="checkbox" data-layer="ambient" checked> Bruma del cielo</label><label><input type="checkbox" data-layer="spark" checked> Destello de Mesa</label><label><input type="checkbox" data-layer="depth" checked> Profundidad al tocar</label><label><input type="checkbox" data-layer="glass" checked> Vidrio selectivo</label></div></div>
-      <div class="control-block"><h3>Secuencia</h3><div class="play"><button type="button" id="open-demo">Abrir Mesa</button><button type="button" id="reveal-demo">Revelar carta</button><button type="button" id="reset-demo">Volver a Hoy</button><button type="button" id="pause-demo" aria-pressed="false">Pausar movimiento</button></div><p class="small">Las transiciones se pueden interrumpir. La preferencia de movimiento reducido del sistema también se respeta.</p></div>
+      <div class="control-block"><h3>Secuencia</h3><div class="play"><button type="button" id="open-demo">Abrir Mesa</button><button type="button" id="reveal-demo">Ver revelación</button><button type="button" id="reset-demo">Volver a Cielo</button><button type="button" id="pause-demo" aria-pressed="false">Pausar movimiento</button></div><p class="small">Las transiciones se pueden interrumpir. La preferencia de movimiento reducido del sistema también se respeta.</p></div>
     </aside>
   </section>
-  <section class="research" aria-label="Fundamento y límites"><article><div class="kicker">Diseño</div><h3>Movimiento con causa</h3><p>Apple recomienda que el movimiento apoye la acción y que la respuesta sea breve y cancelable. Por eso la revelación ocurre al tocar y no obliga a esperar. <a href="https://developer.apple.com/design/human-interface-guidelines/motion" target="_blank" rel="noopener">Fuente</a>.</p></article><article><div class="kicker">Rendimiento</div><h3>Capas controladas</h3><p>El movimiento del HTML usa principalmente transformaciones y opacidad. El vidrio es estático y está acotado. En Flutter hay que medirlo en el GN2200. <a href="https://web.dev/articles/animations-and-performance/" target="_blank" rel="noopener">Animación web</a> · <a href="https://api.flutter.dev/flutter/widgets/BackdropFilter-class.html" target="_blank" rel="noopener">Blur Flutter</a>.</p></article><article><div class="kicker">Accesibilidad</div><h3>Magia opcional</h3><p>«Pausar movimiento» apaga lo ornamental. El sistema puede pedir movimiento y transparencia reducidos. La carta y el estado se expresan también con texto. <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/%40media/prefers-reduced-motion" target="_blank" rel="noopener">Movimiento reducido</a>.</p></article><div class="path">Maqueta conceptual: estructura E, paleta y assets locales reales. Sin integración con el router, tarot ni datos de producción. Las duraciones, el contraste final y el coste en Flutter siguen pendientes de medición.</div></section>
+  <section class="research" aria-label="Fundamento y límites"><article><div class="kicker">Diseño</div><h3>Continuidad al tocar</h3><p>La placa Mesa conserva su lugar mientras crece hacia la lectura; el destello se reserva para la carta. <a href="https://design.google/library/making-motion-meaningful" target="_blank" rel="noopener">Google Design</a> · <a href="https://developer.apple.com/design/human-interface-guidelines/motion" target="_blank" rel="noopener">Apple HIG</a>.</p></article><article><div class="kicker">Dato real</div><h3>Cielo con fecha</h3><p>La instantánea lunar procede del motor astral de ARCANUM, consultado el 7 de octubre de 2026 a las 10:51 COT. Se fecha para no parecer un dato en vivo. <a href="https://arcanum-code-production.up.railway.app/astral/moon" target="_blank" rel="noopener">Fase</a> · <a href="https://arcanum-code-production.up.railway.app/astral/calendar/moon-phases" target="_blank" rel="noopener">Próximas fases</a>.</p></article><article><div class="kicker">Accesibilidad</div><h3>Magia opcional</h3><p>«Pausar movimiento» apaga lo ornamental. El sistema puede pedir movimiento y transparencia reducidos. La carta y el estado se expresan también con texto. <a href="https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide" target="_blank" rel="noopener">W3C</a> · <a href="https://api.flutter.dev/flutter/widgets/BackdropFilter-class.html" target="_blank" rel="noopener">Blur Flutter</a>.</p></article><div class="path">Maqueta conceptual: estructura E, paleta y assets locales reales. La pregunta y la lectura de muestra no salen del navegador; el guardado es temporal en memoria. No hay integración con router, tarot, grimorio ni sesión. Duraciones, contraste y coste en Flutter pendientes de medición.</div></section>
 </main>
 <script>
   const phone=document.getElementById('phone');
   const tableArt=document.getElementById('table-art');
   const tableCard=document.getElementById('table-card');
   const result=document.getElementById('result');
-  const revealButton=document.getElementById('reveal');
   const toast=document.getElementById('toast');
   const tableScene=document.querySelector('.table-scene');
   const homeScene=document.querySelector('.home');
-  let revealed=false;
+  const mesaTile=document.getElementById('mesa-tile');
+  const questionInput=document.getElementById('question-input');
+  const cardChoices=[...document.querySelectorAll('[data-card]')];
+  const cards=[
+    {name:'La Estrella',note:'Luz sobre el agua.',file:'la-estrella.webp'},
+    {name:'La Luna',note:'Escucha lo que aún no tiene forma.',file:'la-luna.webp'},
+    {name:'El Mago',note:'Comienza con lo que ya tienes.',file:'el-mago.webp'}
+  ];
+  const savedReadings=[];
+  let selectedCard=null;
+  let activeMotion=null;
+  let activeGhost=null;
   function notify(message){toast.textContent=`${message} · navegación aún conceptual`;toast.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>toast.classList.remove('show'),2200)}
   function scene(name){
     phone.dataset.scene=name;
     homeScene.setAttribute('aria-hidden',String(name!=='home'));
     tableScene.setAttribute('aria-hidden',String(name!=='mesa'));
+    homeScene.inert=name!=='home';
+    tableScene.inert=name!=='mesa';
     document.querySelectorAll('.nav button').forEach(button=>button.classList.toggle('current',button.dataset.nav===name));
   }
-  function openMesa(){scene('mesa');tableScene.scrollTop=0}
-  function reset(){revealed=false;tableArt.classList.remove('revealed');tableCard.setAttribute('aria-label','Carta boca abajo');result.textContent='La carta espera.';revealButton.textContent='Revelar carta';scene('home')}
-  function reveal(){openMesa();revealed=!revealed;tableArt.classList.remove('revealed');void tableArt.offsetWidth;if(revealed){tableArt.classList.add('revealed');tableCard.setAttribute('aria-label','La Estrella');result.textContent='La Estrella · luz sobre el agua';revealButton.textContent='Volver a velar'}else{tableCard.setAttribute('aria-label','Carta boca abajo');result.textContent='La carta espera.';revealButton.textContent='Revelar carta'}}
-  document.getElementById('mesa-tile').addEventListener('click',openMesa);
+  function positionInPhone(element,owner){
+    let left=0,top=phone.querySelector('.viewport').offsetTop-owner.scrollTop;
+    for(let node=element;node&&node!==owner;node=node.offsetParent){left+=node.offsetLeft;top+=node.offsetTop}
+    return {left,top,width:element.offsetWidth,height:element.offsetHeight};
+  }
+  function sharedTransition(opening){
+    if(activeMotion){activeMotion.cancel();activeGhost?.remove();activeMotion=null;activeGhost=null}
+    if(document.body.classList.contains('motion-off')||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    const from=positionInPhone(opening?mesaTile:tableArt,opening?homeScene:tableScene);
+    const to=positionInPhone(opening?tableArt:mesaTile,opening?tableScene:homeScene);
+    const ghost=mesaTile.cloneNode(true);
+    ghost.removeAttribute('id');ghost.setAttribute('aria-hidden','true');ghost.classList.add('shared-plate');
+    Object.assign(ghost.style,{left:`${from.left}px`,top:`${from.top}px`,width:`${from.width}px`,height:`${from.height}px`});
+    phone.appendChild(ghost);activeGhost=ghost;
+    activeMotion=ghost.animate([
+      {transform:'translate3d(0,0,0) scale(1,1)',opacity:opening?'1':'.3'},
+      {transform:`translate3d(${to.left-from.left}px,${to.top-from.top}px,0) scale(${to.width/from.width},${to.height/from.height})`,opacity:opening?'.3':'1'}
+    ],{duration:430,easing:'cubic-bezier(.22,.8,.23,1)',fill:'forwards'});
+    activeMotion.onfinish=()=>{ghost.remove();if(activeGhost===ghost){activeMotion=null;activeGhost=null}};
+    activeMotion.oncancel=()=>ghost.remove();
+  }
+  function showStep(step){
+    tableArt.dataset.step=step;
+    document.querySelectorAll('.flow-panel').forEach(panel=>panel.hidden=panel.dataset.panel!==step);
+    const order=['question','choose','reveal','saved'];
+    document.querySelectorAll('[data-step-label]').forEach(label=>{
+      const index=order.indexOf(label.dataset.stepLabel),current=order.indexOf(step);
+      label.classList.toggle('active',index===current);label.classList.toggle('done',index<current);
+    });
+    if(step!=='saved'){tableArt.classList.remove('revealed');tableCard.setAttribute('aria-label','Carta boca abajo')}
+  }
+  function startReading(){
+    selectedCard=null;questionInput.value='';tableArt.classList.remove('revealed');
+    tableCard.setAttribute('aria-label','Carta boca abajo');
+    cardChoices.forEach(button=>button.setAttribute('aria-pressed','false'));
+    document.getElementById('confirm-card').disabled=true;
+    document.getElementById('saved-note').hidden=true;
+    document.getElementById('save-demo').disabled=false;
+    showStep('question');tableScene.scrollTop=0;
+  }
+  function openMesa(){
+    if(phone.dataset.scene==='mesa')return;
+    sharedTransition(true);scene('mesa');tableScene.scrollTop=0;
+    document.getElementById('prepare').focus({preventScroll:true});
+  }
+  function reset(){
+    if(phone.dataset.scene==='mesa')sharedTransition(false);
+    scene('home');startReading();
+    mesaTile.focus({preventScroll:true});
+  }
+  function reveal(){
+    if(selectedCard===null)return;
+    const card=cards[selectedCard];
+    document.getElementById('card-face').src=`../arcanum_app/assets/tarot/${card.file}`;
+    document.getElementById('result-title').textContent=`${card.name}.`;
+    result.textContent=card.note;
+    tableCard.setAttribute('aria-label',card.name);
+    showStep('saved');
+    tableArt.classList.remove('revealed');void tableArt.offsetWidth;tableArt.classList.add('revealed');
+    document.getElementById('save-demo').focus({preventScroll:true});
+  }
+  document.getElementById('sky-more').addEventListener('click',event=>{
+    const detail=document.getElementById('sky-detail');detail.hidden=!detail.hidden;
+    event.currentTarget.setAttribute('aria-expanded',String(!detail.hidden));
+    event.currentTarget.textContent=detail.hidden?'Ver detalles +':'Ocultar detalles −';
+    event.currentTarget.closest('.sky').classList.toggle('expanded',!detail.hidden);
+  });
+  mesaTile.addEventListener('click',openMesa);
   document.getElementById('open-demo').addEventListener('click',openMesa);
+  document.getElementById('prepare').addEventListener('click',()=>{showStep('choose');tableScene.scrollTop=0;cardChoices[0].focus({preventScroll:true})});
+  cardChoices.forEach(button=>button.addEventListener('click',()=>{
+    selectedCard=Number(button.dataset.card);
+    cardChoices.forEach(choice=>choice.setAttribute('aria-pressed',String(choice===button)));
+    document.getElementById('confirm-card').disabled=false;
+  }));
+  document.getElementById('confirm-card').addEventListener('click',()=>{
+    document.getElementById('question-echo').textContent=questionInput.value.trim()||'Sostén tu pregunta. La carta está lista.';
+    showStep('reveal');tableScene.scrollTop=0;document.getElementById('reveal').focus({preventScroll:true});
+  });
   document.getElementById('reveal').addEventListener('click',reveal);
-  document.getElementById('reveal-demo').addEventListener('click',reveal);
+  document.getElementById('reveal-demo').addEventListener('click',()=>{
+    if(phone.dataset.scene!=='mesa')openMesa();
+    selectedCard=selectedCard??0;reveal();
+  });
+  document.querySelectorAll('[data-go]').forEach(button=>button.addEventListener('click',()=>showStep(button.dataset.go)));
+  document.getElementById('save-demo').addEventListener('click',event=>{
+    savedReadings.push({question:questionInput.value.trim(),card:cards[selectedCard].name});
+    const message=document.getElementById('saved-note');
+    message.textContent=`Lectura ${savedReadings.length} guardada solo en esta sesión de muestra. Se borrará al cerrar la página.`;
+    message.hidden=false;event.currentTarget.disabled=true;
+  });
+  document.getElementById('again').addEventListener('click',()=>{startReading();document.getElementById('prepare').focus({preventScroll:true})});
   document.getElementById('back').addEventListener('click',reset);
   document.getElementById('return').addEventListener('click',reset);
   document.getElementById('reset-demo').addEventListener('click',reset);
@@ -109,8 +215,9 @@
   document.querySelectorAll('.nav button').forEach(button=>button.addEventListener('click',()=>{if(button.dataset.nav==='home')reset();else if(button.dataset.nav==='mesa')openMesa();else notify(button.dataset.nav)}));
   const preview=new URLSearchParams(location.search);
   if(['quiet','alive','arcane'].includes(preview.get('juice')))document.body.dataset.juice=preview.get('juice');
+  scene('home');
   if(preview.get('scene')==='mesa')openMesa();
-  if(preview.get('reveal')==='1')reveal();
+  if(preview.get('reveal')==='1'){openMesa();selectedCard=0;reveal()}
 </script>
 </body>
 </html>

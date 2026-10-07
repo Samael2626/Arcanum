@@ -1,0 +1,39 @@
+<!doctype html><meta charset="utf-8"><title>QA Atlas</title>
+<iframe id="app" src="./atlas_reliquias_juice.html" style="width:500px;height:900px"></iframe>
+<pre id="result">PENDIENTE</pre>
+<script>
+const frame=document.getElementById('app');
+frame.onload=()=>{
+  try{
+    const d=frame.contentDocument;
+    const click=id=>d.getElementById(id).click();
+    const check=(yes,message)=>{if(!yes)throw Error(message)};
+    click('mesa-tile');
+    check(d.getElementById('phone').dataset.scene==='mesa','Mesa no abre');
+    check(d.querySelector('.home').inert,'Portada oculta sigue enfocables');
+    d.getElementById('question-input').value='¿Qué necesito comprender?';
+    click('prepare');
+    check(!d.querySelector('[data-panel="choose"]').hidden,'No llega a elegir carta');
+    d.querySelector('[data-card="1"]').click();
+    check(!d.getElementById('confirm-card').disabled,'Carta no seleccionada');
+    click('confirm-card');
+    check(d.getElementById('question-echo').textContent==='¿Qué necesito comprender?','Pregunta no acompaña');
+    click('reveal');
+    check(d.getElementById('result-title').textContent==='La Luna.','Carta revelada incorrecta');
+    check(d.getElementById('table-card').getAttribute('aria-label')==='La Luna','Carta sin semántica');
+    click('save-demo');
+    check(!d.getElementById('saved-note').hidden,'Guardado temporal no confirma');
+    click('return');
+    check(d.getElementById('phone').dataset.scene==='home','No vuelve a Cielo');
+    check(d.querySelector('.table-scene').inert,'Mesa oculta sigue enfocables');
+    d.body.classList.add('motion-off');
+    click('mesa-tile');
+    check(!d.querySelector('.shared-plate'),'Movimiento reducido crea una placa animada');
+    click('return');
+    frame.style.width='360px';
+    check(d.getElementById('phone').offsetWidth<=360,'Teléfono desborda a 360 px');
+    check(d.querySelector('.nav').scrollWidth<=d.querySelector('.nav').clientWidth,'Barra desborda a 360 px');
+    document.getElementById('result').textContent='PASS: flujo, semántica, movimiento reducido y 360 px';
+  }catch(error){document.getElementById('result').textContent='FAIL: '+error.message}
+};
+</script>
