@@ -245,6 +245,18 @@ void main() {
       expect(g.up(1, const Offset(5, 0), ms(120)).single, isA<TapIntent>());
     });
 
+    test('un temblor de 12 px sigue siendo un toque', () {
+      // Samuel, 07-oct: 18 px como el resto de Flutter. Con 6, un dedo que
+      // tiembla movia, extendia o cortaba un mazo sin querer
+      final g = GestureGrammar();
+      g.down(1, Offset.zero, ms(0), cardCenter);
+      expect(g.move(1, const Offset(12, 4), ms(60)), isEmpty);
+      expect(g.up(1, const Offset(12, 4), ms(120)).single, isA<TapIntent>());
+      g.down(2, Offset.zero, ms(500), cardCenter);
+      final out = g.move(2, const Offset(20, 0), ms(560));
+      expect(out.first, isA<DragStartIntent>());
+    });
+
     test('mantener 430 ms abre el radial; deslizar y soltar elige', () {
       final g = GestureGrammar();
       g.down(1, Offset.zero, ms(0), cardCenter);

@@ -270,7 +270,8 @@ void main() {
           0,
           -TableGeometry.cardH * TableGeometry.deckScale / 2 * .8,
         );
-        await drag(top, top.translate(0, -4 - 20), steps: 4);
+        // 40 u (unos 26 px): pasa el umbral de 18 px y queda casi encima
+        await drag(top, top.translate(0, -40), steps: 4);
         expect(
           table().piles,
           hasLength(1),
@@ -370,6 +371,20 @@ void main() {
         expect(f.pose.y, lessThan(under.pose.y));
         dir.pointerCancel(pointer);
         expect(fan().where((p) => p.focused), isEmpty);
+      });
+
+      test('la lupa sigue al dedo desde el primer pixel', () async {
+        // con el umbral de 18 px, los ajustes pequenos para elegir la vecina
+        // no movian la lupa (Samuel, 07-oct)
+        await openFan();
+        final at = screenOf(fan()[2].pose.offset);
+        final id = ++pointer;
+        dir.pointerDown(id, at, clock);
+        final before = focused().pose;
+        clock += const Duration(milliseconds: 16);
+        dir.pointerMove(id, at + const Offset(8, 0), clock);
+        expect(focused().pose, isNot(before));
+        dir.pointerCancel(id);
       });
 
       test('deslizar y soltar saca la carta de la lupa', () async {

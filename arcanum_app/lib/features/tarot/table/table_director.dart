@@ -687,6 +687,11 @@ class TableDirector extends ChangeNotifier {
   void pointerMove(int pointer, Offset screen, Duration time) {
     _now = time;
     _apply(grammar.move(pointer, screen, time));
+    // la lupa sigue al dedo desde el primer pixel: el umbral separa toque de
+    // arrastre, y por debajo de el los ajustes finos tambien eligen carta
+    if (_lensAt != null && _drag == null && _radial == null) {
+      _setLens(camera.toTable(screen));
+    }
   }
 
   void pointerUp(int pointer, Offset screen, Duration time) {

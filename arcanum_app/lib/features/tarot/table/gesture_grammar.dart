@@ -10,6 +10,8 @@ library;
 
 import 'dart:ui';
 
+import 'package:flutter/gestures.dart' show kTouchSlop;
+
 /// Que hay bajo el dedo al empezar.
 sealed class Hit {
   const Hit();
@@ -174,7 +176,12 @@ class GestureGrammar {
   static const sealHold = Duration(milliseconds: 1300);
 
   /// Lo que se mueve el dedo antes de dejar de ser un toque (px de pantalla).
-  static const slop = 6.0;
+  ///
+  /// 18, el `kTouchSlop` de Flutter (Samuel, 07-oct). Los 6 del prototipo eran
+  /// de raton: con un dedo que tiembla, un toque movia, extendia o cortaba un
+  /// mazo. La lupa del abanico no espera a este umbral: sigue al dedo desde el
+  /// primer pixel (`TableDirector.pointerMove`).
+  static const slop = kTouchSlop;
 
   /// Doble toque en el paño.
   static const doubleTapWindow = Duration(milliseconds: 320);

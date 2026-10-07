@@ -118,7 +118,7 @@ Umbrales:
 
 - **Pellizcar con dos dedos:** zoom y desplazamiento.
 - **Zona de toque de cada carta:** se amplía respecto al dibujo; los tests a 360 × 760 comprueban objetivos de al menos 48 dp para las acciones principales en reposo y zoom 1. La superposición y el lector de pantalla reales siguen pendientes en el GN2200.
-- **Extracción inmediata:** al tocar el abanico se ve un dorso pendiente en el mismo fotograma y su posición queda reservada. La carta definitiva llega con la respuesta del servidor; un error la devuelve al abanico y se avisa. El umbral de 6 px frente a los 18 px de `kTouchSlop` sigue como decisión abierta.
+- **Extracción inmediata:** al tocar el abanico se ve un dorso pendiente en el mismo fotograma y su posición queda reservada. La carta definitiva llega con la respuesta del servidor; un error la devuelve al abanico y se avisa. El umbral es de 18 px (`kTouchSlop`, 07-oct); la lupa del abanico no lo espera.
 
 ---
 
@@ -260,5 +260,5 @@ El cliente de API está en `lib/core/api/arcanum_api.dart`; las tiradas y mazos 
 - **Motor de interpretación:** Tradición funciona en la mesa con significados por posición y sentido. El Oráculo con las tiradas nuevas queda pendiente.
 - **Cartas pequeñas en la Cruz Celta y la Rueda:** mitigadas con la zona de toque y el zoom, pero siguen siendo pequeñas en un móvil de 360 dp.
 - **Validación en GN2200:** medir fps con Impeller, completar Cruz Celta, comprobar lector de pantalla, tacto, efectos y textos largos. Sin esas medidas no se afirma 60 fps ni aprobación móvil.
-- **Decisiones abiertas:** recuperación de calidad (provisional: tres ventanas de 2 s a ≥55 fps) y umbral de arrastre de 6 frente a 18 px. Opciones en `ARCANUM-Plan-Mesa-Tarot.md`.
+- **Cerradas el 07-oct (Samuel):** la calidad vuelve a subir tras 6 s a ≥55 fps; cada recaída después de subir dobla la espera (12, 24 s) y a la tercera ya no lo intenta en esa mesa. El umbral de arrastre pasa a 18 px (`kTouchSlop`) y la lupa del abanico sigue al dedo desde el primer píxel.
 - **Cerradas el 06-oct:** el giro ±40° ya no recorta: la cámara se aleja lo justo (`TableCamera.fitScale`). El abanico frente al sello y el bordado: se recoge solo al llenar la tirada y empieza al lado de la caja del mazo, a 32 dp o más de los bordes de pantalla.

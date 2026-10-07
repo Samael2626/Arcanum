@@ -176,7 +176,7 @@
 - **Decidido por Samuel (05-oct):**
   - **Las sombras cuentan como brillos caros.** Desde el nivel 1, las sombras de las cartas en juego, de la que se está sacando, del abanico, del barajado y del sello pierden el desenfoque y quedan nítidas.
   - **«Silenciar» del radial del paño apaga también la vibración** (y el sonido, cuando llegue). Se recuerda entre sesiones (`tarot_mesa_silencio` en las preferencias). El radial dice «Silenciar» o «Sonido» según toque.
-- **Sigue abierta:** cuándo vuelve a subir la calidad. La especificación dice «tras un rato holgado» sin cifra; provisional: 3 ventanas seguidas (6 s) a 55 fps o más.
+- **Cerrada (07-oct):** espera creciente: 6 s a ≥55 fps; cada recaída tras subir dobla la espera (12, 24 s); a la tercera, no lo intenta más en esa mesa. Antes, abierta: La especificación dice «tras un rato holgado» sin cifra; provisional: 3 ventanas seguidas (6 s) a 55 fps o más.
 
 ## Fase 7: calidad
 
@@ -226,7 +226,7 @@ Capturas del motor con el mismo guion (cuatro cartas sin tirada, tirada de tres,
 **Decisiones abiertas para Samuel** (no se han tocado; las cifras son de 360 × 760):
 
 1. **CERRADA (06-oct): opción B, `8666476`.** La cámara se aleja con el giro para que la mesa entre entera; en reposo el encuadre no cambia. Verificado en el GN2200. Texto original: **Giro de ±40° con zoom 1:** deja fuera hasta un 10 % del paño (esquinas). A) Dejarlo así: se recupera con doble toque en cualquier sitio. B) Encuadre que se aleja con el giro para que entre entero (la especificación solo fija que *inclinar* no cambia el zoom). C) Bajar el giro máximo; habría que medir con qué valor entra entero.
-2. **Umbral de toque:** 6 px, el del prototipo (pensado para ratón). Flutter usa 18 (`kTouchSlop`). Con 6, un temblor convierte un toque en arrastre; lo corregido cubre las cartas del abanico, no los montones ni las cartas sueltas. A) 6. B) 18. C) Un valor medido en el GN2200.
+2. **CERRADA (07-oct): opción B, 18 px**, con la lupa libre del umbral. Texto original: **Umbral de toque:** 6 px, el del prototipo (pensado para ratón). Flutter usa 18 (`kTouchSlop`). Con 6, un temblor convierte un toque en arrastre; lo corregido cubre las cartas del abanico, no los montones ni las cartas sueltas. A) 6. B) 18. C) Un valor medido en el GN2200.
 3. **CERRADA (06-oct).** Con la tirada llena el abanico se recoge solo (`9fd066b`) y el bordado queda libre. Texto original: **Abanico frente a sello y bordado:** hoy se resuelve con el orden de capas. A) Dejarlo. B) Bajar la línea del abanico dentro de la zona cercana (y 690–880) para que no se pisen; cambia una coordenada de la especificación (y = 782).
 
 - [ ] Medir en el móvil real con Impeller: 60 fps quieta y con la Cruz Celta; el abanico sin tirones.

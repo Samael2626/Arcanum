@@ -113,24 +113,40 @@ class TableQuality extends ValueNotifier<int> {
   /// Por debajo de esto baja un nivel (especificacion §6).
   static const double lowFps = 40;
 
-  /// «Vuelve a subir tras un rato holgado». La especificacion no da cifras:
-  /// estas son provisionales y estan en la fase 6 como decision abierta.
+  /// «Vuelve a subir tras un rato holgado»: ventanas seguidas a 55 fps o mas.
   static const double easyFps = 55;
   static const int easyWindows = 3;
 
+  /// Recaidas tras las que ya no se intenta subir en esta mesa.
+  static const int maxRelapses = 3;
+
   int _easy = 0;
+
+  /// Caidas despues de haber subido: cada una dobla la espera (6, 12, 24 s).
+  /// Decidido por Samuel (07-oct): sin espera creciente, en un movil flojo
+  /// los brillos iban y venian, porque quitarlos dejaba la escena holgada y a
+  /// los 6 s volvian a tumbarla.
+  int _relapses = 0;
+  bool _recovered = false;
+
+  int get _needed => easyWindows << _relapses;
 
   /// Lo que dice una ventana de 2 s.
   void onWindow(FrameWindow w) {
     if (!w.meaningful) return;
     if (w.fps < lowFps) {
       _easy = 0;
+      if (_recovered) {
+        _relapses++;
+        _recovered = false;
+      }
       if (value < 2) value = value + 1;
       return;
     }
-    if (w.fps >= easyFps && value > 0) {
-      if (++_easy >= easyWindows) {
+    if (w.fps >= easyFps && value > 0 && _relapses < maxRelapses) {
+      if (++_easy >= _needed) {
         _easy = 0;
+        _recovered = true;
         value = value - 1;
       }
     } else {
