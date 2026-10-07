@@ -51,3 +51,25 @@
 - [Avisos oficiales de Starlette](https://github.com/Kludex/starlette/security/advisories)
 - [Versiones FastAPI y compatibilidad con Starlette](https://fastapi.tiangolo.com/release-notes/)
 - [PyJWT en PyPI](https://pypi.org/project/PyJWT/)
+
+## Ejecución aislada del 7-oct-2026
+
+- Rama del PR #11: `codex/security-beta-2026-10-05`, último commit `d918c0a`. La rama no se mezcló con `main`.
+- Entorno Railway aislado `pentest-2026-10-06`: Postgres y Redis propios, backend `Arcanum-Pentest`; despliegue verificado en `d918c0a850591f1a5665950d68116dea500f4a4e`. No se copiaron secretos de producción. El entorno permanece encendido y facturable para completar la prueba móvil.
+- Suite del hook: 1291 aprobadas, 3 saltadas por el JSON local opcional de Culpeper; 133 pruebas PostgreSQL aprobadas. El catálogo privado sí estuvo montado. El ciclo de migraciones hasta `018` y 45 pruebas Flutter relevantes habían pasado en esta rama antes de este commit.
+- Prueba con dos cuentas sintéticas: creación, login, lectura propia y lista funcionaron; lectura, edición y borrado cruzados devolvieron 404; lectura anónima 401; `logout-all` invalidó access y refresh tokens anteriores con 401.
+- Hallazgo corregido: Railway alternaba pares internos `100.64.0.x` entre peticiones, por lo que el límite basado en `request.client.host` no acumulaba intentos. `d5e586a` usa `X-Real-IP` solo desde el proxy de Railway y falla con 503 si esa cabecera falta o es inválida. En staging, cinco logins erróneos devolvieron 401 y el sexto 429; falsificar `X-Real-IP` y `X-Forwarded-For` no evitó el 429.
+- Hallazgo corregido: el manejador global de `HTTPException` eliminaba las cabeceras de la excepción. `d918c0a` las preserva. En staging el 429 incluyó `Retry-After: 58`, y el 401 protegido incluyó `WWW-Authenticate: Bearer`.
+- Caída controlada de Redis: con el puerto incorrecto, `/health` siguió 200 y `/auth/login` devolvió 503. Tras restaurar la referencia de Railway y verificar el despliegue, el login volvió a 401. Webhook RevenueCat sin firma o con firma falsa: 401; admin de migraciones: 404; JWT `alg:none` y basura: 401; CORS de origen ajeno: 400 sin `Access-Control-Allow-Origin`.
+
+### Artefacto móvil y MobSF
+
+- AAB release firmado, `com.arcanum.magick` 1.0.7 (`versionCode=15`), SHA-256 `2EFB046B73FFFE2B37493DE93591EAA5D3636AE76EB6A4F40442410D3F31F33C`. Pasó `bundletool validate` y `jarsigner -verify`; `allowBackup=false`, sin `debuggable` ni tráfico claro en el manifiesto. El escaneo de 891 entradas no encontró patrones de claves privadas, Groq ni service role.
+- MobSF 4.5.4 terminó el análisis del AAB: SHA-256 del APK interno analizado `6F909DB66D56C951A38468FCD166AED4C733B584A880DE74267FD22F248D97CA`, puntuación 49, 3 alertas altas y 10 advertencias. La alerta de firma ausente no concuerda con `jarsigner` sobre el AAB; MobSF evalúa su APK interno y no demuestra que el bundle entregado esté sin firmar. `minSdk=24` expone compatibilidad con Android 7 sin parches: decisión de soporte pendiente. La alerta CBC señala código legado de `flutter_secure_storage`; su configuración actual predeterminada es GCM y migra los datos antiguos. El grimorio también conserva lectura CBC v1 para entradas previas y escribe GCM v2. No se reprodujo un oráculo de padding remoto.
+- MobSF encontró un rastreador real, Crashlytics. Sus 152 cadenas marcadas como posibles secretos incluyeron tres coincidencias de clave pública de Google; no coincidieron con patrones de Groq, RevenueCat o llaves privadas. No copiar el JSON bruto del escáner al repositorio ni al vault.
+- APK QA separada `com.arcanum.magick.securityqa`, compilada en modo debug con URL de staging, SHA-256 `EC95F76D8C82A27EB579C4945896A0CF791F6C34A841344667C1EA9169AF09E7`. No sustituye al AAB release ni a su firma. Android perdió la conexión ADB y no hay emulador instalado; instalación, proxy y recorrido móvil quedan pendientes.
+
+### Bloqueos de salida a testers
+
+- El AAB release auditado se compiló sin `REVENUECAT_API_KEY` pública: `ReleaseConfig.validateForStartup` lo detendría al arrancar. Hay que localizar esa clave y recompilar el release final; su SHA-256 cambiará y habrá que repetir la comprobación del artefacto.
+- Falta Redis de producción antes de mezclar el PR; `main` despliega automáticamente. También siguen pendientes la prueba móvil del release final, las compras de sandbox, la separación de `key.properties` y keystore en Drive y la comparación del AAB auditado con el que se suba a Play.
