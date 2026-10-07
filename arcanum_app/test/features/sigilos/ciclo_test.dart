@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:arcanum_app/features/grimorio/grimorio_detail.dart';
+import 'package:arcanum_app/features/grimorio/grimorio_editor.dart';
 import 'package:arcanum_app/features/sigilos/sigil_radial.dart';
 import 'package:arcanum_app/features/sigilos/sigil_store.dart';
 import 'package:arcanum_app/features/sigilos/taller_carga.dart';
@@ -236,24 +237,32 @@ void main() {
           find.textContaining('se borrará de tu Grimorio para siempre'),
           findsOneWidget,
         );
-        // «Volver» no toca nada
+        // «Volver» no suelta, pero la carga se hizo: se anota y la intencion sigue
         await t.tap(find.text('Volver'));
         await t.pumpAndSettle();
-        expect(api.updated, isEmpty);
+        final vuelta = _entry(
+          _plain(api.updated.single.$2['encrypted_content'] as String),
+        );
+        expect(vuelta.isReleased, isFalse);
+        expect(vuelta.charges, hasLength(1));
+        expect(vuelta.doc.sigil.intention, _intencion);
         expect(find.byType(TallerScreen), findsOneWidget);
+        await t.pump(const Duration(seconds: 5));
+        await t.pumpAndSettle();
 
         await t.tap(find.text('Cargar'));
         await t.pumpAndSettle();
         await _cargar(t, 'Olvidar');
         await t.tap(find.text('Soltar'));
         await t.pumpAndSettle();
-        final (id, body) = api.updated.single;
+        expect(api.updated, hasLength(2));
+        final (id, body) = api.updated.last;
         expect(id, 'sigilo-1');
         final plain = _plain(body['encrypted_content'] as String);
         expect(plain.toLowerCase(), isNot(contains('práctica')));
         final e = _entry(plain);
         expect(e.isReleased, isTrue);
-        expect(e.charges, hasLength(1));
+        expect(e.charges, hasLength(2));
         expect(find.byType(TallerScreen), findsNothing);
         expect(find.text('Soltado. No lo busques.'), findsOneWidget);
       },
@@ -273,6 +282,34 @@ void main() {
         expect(api.created, isEmpty);
         expect(api.updated, isEmpty);
         expect(find.byType(TallerScreen), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'sin guardar, «Volver» deja la carga pendiente y viaja con el guardado',
+      (t) async {
+        final api = FakeApi();
+        await forjar(t, api);
+        await t.tap(find.text('Cargar'));
+        await t.pumpAndSettle();
+        await _cargar(t, 'Olvidar');
+        await t.tap(find.text('Volver'));
+        await t.pumpAndSettle();
+        expect(api.created, isEmpty);
+        expect(
+          find.text('Carga anotada: se guardará con el sigilo.'),
+          findsOneWidget,
+        );
+        await t.pump(const Duration(seconds: 5));
+        await t.pumpAndSettle();
+        await t.tap(find.text('Guardar en el Grimorio'));
+        await t.pumpAndSettle();
+        expect(
+          _entry(
+            _plain(api.created.single['encrypted_content'] as String),
+          ).charges,
+          hasLength(1),
+        );
       },
     );
 
@@ -319,6 +356,10 @@ void main() {
       expect(t.takeException(), isNull);
     });
   });
+
+  group('teclado', teclado);
+  group('placa de fase', placaDeFase);
+  group('pantalla entera', pantallaEntera);
 
   group('radial en lienzo chico', () {
     testWidgets(
@@ -444,6 +485,32 @@ void main() {
     );
 
     testWidgets(
+      'desde el detalle, Olvidar y luego «Volver» anota la carga sin soltar',
+      (t) async {
+        phoneView(t);
+        final api = FakeApi()
+          ..detail = _detail(
+            's',
+            encodeSigilEntry(SigilEntry(SigilDoc()..generate(_intencion))),
+          );
+        await t.pumpWidget(tallerApp(const GrimorioDetail(id: 's'), api));
+        await _settle(t);
+        await t.ensureVisible(find.text('Cargar'));
+        await t.tap(find.text('Cargar'));
+        await _avanzar(t);
+        await _cargar(t, 'Olvidar');
+        await t.tap(find.text('Volver'));
+        await _avanzar(t);
+        final e = _entry(
+          _plain(api.updated.single.$2['encrypted_content'] as String),
+        );
+        expect(e.isReleased, isFalse);
+        expect(e.charges, hasLength(1));
+        expect(e.doc.sigil.intention, _intencion);
+      },
+    );
+
+    testWidgets(
       '«Cargar» desde el detalle anota la carga en la misma entrada',
       (t) async {
         phoneView(t);
@@ -466,5 +533,100 @@ void main() {
         expect(e.doc.sigil.intention, _intencion);
       },
     );
+  });
+}
+
+// Encontrado en el movil (6-oct): al subir el teclado el alto libre baja del
+// ancho, el taller se creia en horizontal, rehacia el panel y el campo perdia
+// el foco: el teclado subia y se bajaba solo y no se podia escribir.
+void teclado() {
+  testWidgets(
+    'subir el teclado no cambia la disposicion ni quita el foco al campo',
+    (t) async {
+      phoneView(t);
+      await t.pumpWidget(tallerApp(const TallerScreen(), FakeApi()));
+      await t.tap(find.byType(TextField).first);
+      await t.pump();
+      final campo = find.byType(EditableText).first;
+      expect(
+        t.state<EditableTextState>(campo).widget.focusNode.hasFocus,
+        isTrue,
+      );
+      // teclado de 420 dp: el alto libre queda por debajo del ancho, como en el
+      // GN2200 con la cabecera del Grimorio encima
+      t.view.viewInsets = const FakeViewPadding(bottom: 420 * 3);
+      await t.pumpAndSettle();
+      expect(
+        t
+            .state<EditableTextState>(find.byType(EditableText).first)
+            .widget
+            .focusNode
+            .hasFocus,
+        isTrue,
+        reason: 'el campo perdio el foco',
+      );
+      await t.enterText(
+        find.byType(TextField).first,
+        'Escribo con el teclado abierto',
+      );
+      expect(find.text('Escribo con el teclado abierto'), findsOneWidget);
+      t.view.resetViewInsets();
+    },
+  );
+}
+
+// Encontrado en el movil (6-oct): el taller se abria dentro del marco del
+// Grimorio (navegador anidado) y su cabecera quedaba encima del lienzo.
+void pantallaEntera() {
+  testWidgets(
+    'el taller se abre en el navegador raiz, fuera del marco del Grimorio',
+    (t) async {
+      phoneView(t);
+      final anidado = GlobalKey<NavigatorState>();
+      await t.pumpWidget(
+        tallerApp(
+          Scaffold(
+            appBar: AppBar(title: const Text('Cabecera del Grimorio')),
+            body: Navigator(
+              key: anidado,
+              onGenerateRoute: (_) =>
+                  MaterialPageRoute(builder: (_) => const GrimorioEditor()),
+            ),
+          ),
+          FakeApi(),
+        ),
+      );
+      await t.tap(find.text('Sigilo'));
+      await t.pump();
+      await t.tap(find.text('Abrir el taller'));
+      await t.pumpAndSettle();
+      expect(find.byType(TallerScreen), findsOneWidget);
+      // la cabecera del marco ya no se ve: el taller cubre la pantalla
+      expect(find.text('Cabecera del Grimorio'), findsNothing);
+      expect(
+        anidado.currentState!.canPop(),
+        isFalse,
+        reason: 'el taller entro en el navegador anidado',
+      );
+    },
+  );
+}
+
+// Encontrado en el movil (6-oct): «EXHALA» en dorado fino no se leia sobre las
+// lineas del sigilo. La fase va sobre una placa oscura.
+void placaDeFase() {
+  testWidgets('la fase de la respiracion va sobre una placa oscura', (t) async {
+    phoneView(t);
+    await t.pumpWidget(
+      tallerApp(TallerCarga(doc: SigilDoc()..generate(_intencion)), FakeApi()),
+    );
+    await t.tap(find.text('Empezar'));
+    await t.pump(const Duration(seconds: 1));
+    final placa = find
+        .ancestor(of: find.text('INHALA'), matching: find.byType(DecoratedBox))
+        .first;
+    final deco = t.widget<DecoratedBox>(placa).decoration as BoxDecoration;
+    expect(deco.color!.a, greaterThan(.7));
+    await t.pump(const Duration(seconds: 31));
   });
 }

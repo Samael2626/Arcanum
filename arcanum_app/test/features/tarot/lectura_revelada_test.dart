@@ -245,6 +245,76 @@ void main() {
       expect(find.text('El Sol'), findsOneWidget);
     });
 
+    testWidgets('el minimapa acepta el toque cerca del hueco, no solo encima', (
+      tester,
+    ) async {
+      // la caja era de 32 dp: por debajo de los 48 que pide un dedo
+      await pump(tester);
+      final c = tester.getCenter(find.bySemanticsLabel('Ir a 3, Futuro'));
+      await tester.tapAt(c + const Offset(0, 22));
+      await settleFrames(tester);
+      expect(find.text('3 / 3'), findsOneWidget);
+    });
+
+    testWidgets('en el cruce, tocar alterna entre la 1 y la 2', (tester) async {
+      // GN2200: «Ir a 1» e «Ir a 2» compartian zona; el toque iba siempre a una
+      final cross = SpreadDef.fromJson({
+        'slug': 'cross',
+        'name': 'Cruce',
+        'card_scale': .56,
+        'label_mode': 'number',
+        'slots': [
+          {'x': .3, 'y': .5, 'rotation': 0, 'name': 'Situación', 'meaning': ''},
+          {'x': .3, 'y': .5, 'rotation': 90, 'name': 'Desafío', 'meaning': ''},
+          {'x': .7, 'y': .5, 'rotation': 0, 'name': 'Raíz', 'meaning': ''},
+        ],
+      });
+      final reading = Interpretation.fromJson({
+        'spread': 'cross',
+        'spread_name': 'Cruce',
+        'read_at': '2026-10-02T21:14:00Z',
+        'cards': [
+          _card('la-torre', 'La Torre', 0, 'Situación', 'a'),
+          _card('el-sol', 'El Sol', 1, 'Desafío', 'b'),
+          _card('la-luna', 'La Luna', 2, 'Raíz', 'c'),
+        ],
+      });
+      tester.view
+        ..physicalSize = const Size(390, 844)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LecturaRevelada(
+            reading: reading,
+            spread: cross,
+            onCloseCircle: () {},
+            onBack: () {},
+          ),
+        ),
+      );
+      await settleFrames(tester);
+      await tester.tap(find.bySemanticsLabel('Ir a 3, Raíz'));
+      await settleFrames(tester);
+      expect(find.text('3 / 3'), findsOneWidget);
+      final at = tester.getCenter(find.bySemanticsLabel('Ir a 1, Situación'));
+      await tester.tapAt(at);
+      await settleFrames(tester);
+      expect(find.text('1 / 3'), findsOneWidget);
+      await tester.tapAt(at);
+      await settleFrames(tester);
+      expect(find.text('2 / 3'), findsOneWidget);
+      await tester.tapAt(at);
+      await settleFrames(tester);
+      expect(find.text('1 / 3'), findsOneWidget);
+      // con lector: «Ir a 2» va a la 2 sin pasar por la 1
+      await tester.tap(find.bySemanticsLabel('Ir a 3, Raíz'));
+      await settleFrames(tester);
+      tester.semantics.tap(find.semantics.byLabel('Ir a 2, Desafío'));
+      await settleFrames(tester);
+      expect(find.text('2 / 3'), findsOneWidget);
+    });
+
     testWidgets('la sintesis cierra el circulo solo manteniendo 1,3 s', (
       tester,
     ) async {
@@ -373,11 +443,15 @@ void main() {
       expect(server.interprets, 1);
       expect(find.byType(LecturaRevelada), findsOneWidget);
       expect(find.text('1 / 1'), findsOneWidget);
+      // GN2200: con la lectura encima, el lector seguia llegando a la mesa
+      final deckLabel = RegExp(r'Rider–Waite–Smith, \d+ cartas');
+      expect(find.semantics.byLabel(deckLabel), findsNothing);
 
       // atras vuelve a la mesa; el bordado la reabre sin cobrar otra vez
       await tester.binding.handlePopRoute();
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.byType(LecturaRevelada), findsNothing);
+      expect(find.semantics.byLabel(deckLabel), findsOne);
       await tapEmbroidery();
       expect(find.byType(LecturaRevelada), findsOneWidget);
       expect(server.interprets, 1);

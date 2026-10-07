@@ -2,7 +2,6 @@ import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/features/hoy/hoy_screen.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_frame.dart';
-import 'package:arcanum_app/shared/widgets/arcanum_motion.dart';
 import 'package:arcanum_app/shared/widgets/arcanum_resin.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -198,7 +197,11 @@ void main() {
     expect(find.text('Regente del día'), findsOneWidget);
     expect(find.text('Día de Sol'), findsOneWidget);
     expect(find.text('INSTRUMENTO DEL DÍA'), findsOneWidget);
-    expect(find.byType(ArcanumTilt), findsNothing);
+    // ArcanumTilt se retiro (y su fichero, en la depuracion del 7-oct): que no vuelva
+    expect(
+      find.byWidgetPredicate((w) => w.runtimeType.toString() == 'ArcanumTilt'),
+      findsNothing,
+    );
     expect(find.byType(ArcanumFrame), findsNothing);
     // El guardian no pide que exista una superficie: pide que haya EXACTAMENTE
     // una. Vigila que no se apilen materiales caros en la pantalla que se abre

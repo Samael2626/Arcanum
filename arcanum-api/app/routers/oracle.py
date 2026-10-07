@@ -31,7 +31,7 @@ from app.schemas.divination_session import DivinationSessionCreate, DivinationSe
 from app.schemas.oracle_conversation import OracleConversationResponse
 from app.services import safety
 from app.services.claude_service import get_claude_response
-from app.services.oracle_context import build_oracle_context, build_tarot_context
+from app.services.oracle_context import build_oracle_context, build_tarot_context, card_display_name
 
 logger = logging.getLogger("arcanum.oracle")
 
@@ -129,7 +129,7 @@ def ritual_ia(
         tarot_context = build_tarot_context(session)
         cards = (session.cards_drawn or {}).get("cards") or []
         card_count = len(cards)
-        expected_cards = [card.get("name") or card.get("slug") or "" for card in cards]
+        expected_cards = [card_display_name(card) for card in cards]
 
     is_premium = current_user.is_premium
     # El precio sale del tamano de la tirada, no de un numero fijo: una Cruz

@@ -134,6 +134,23 @@ class TarotSession:
         self.drawn.remove(slug)
         pile.append(slug)
 
+    def hide(self, seen: set[str], rng: Optional[random.Random] = None) -> None:
+        """Las cartas `seen` (ya vistas por el cliente y devueltas al mazo) pasan a
+        un sitio al azar de su monton y su sentido se sortea de nuevo.
+
+        Sin esto, sacar y deshacer servia para espiar: la carta volvia a su
+        posicion con su sentido (revision de codigo del 06-oct). Los huecos del
+        abanico (`None`) no se mueven. O(n) por monton.
+        """
+        rng = rng or _SECURE
+        for pid, pile in self.piles.items():
+            live = [i for i, s in enumerate(pile) if s is not None]
+            for i in [i for i in live if pile[i] in seen]:
+                j = rng.choice([k for k in live if k != i] or [i])
+                pile[i], pile[j] = pile[j], pile[i]
+        for s in seen:
+            self.reversed_[s] = self.allow_reversed and rng.random() < .5
+
     def gather(self, pid: str) -> None:
         """Todas las cartas sacadas vuelven al fondo del monton."""
         self.piles[pid] = self.live(pid) + self.drawn

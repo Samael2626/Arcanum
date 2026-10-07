@@ -121,8 +121,14 @@ class FeltPainter extends CustomPainter {
     _embroidery(canvas);
     final sp = spread;
     if (sp != null) {
+      final labels = [
+        for (var i = 0; i < sp.cardCount; i++) _labelPainter(sp, i),
+      ];
+      // misma medida que usa el director para no dejar cartas encima
+      final at = slotLabelCenters(sp, (i) => slotLabelSize(sp, i));
       for (var i = 0; i < sp.cardCount; i++) {
         _slot(canvas, sp, i);
+        labels[i].paint(canvas, at[i] - labels[i].size.center(Offset.zero));
       }
     }
   }
@@ -174,18 +180,21 @@ class FeltPainter extends CustomPainter {
         ..color = ArcanumColors.gold.withValues(alpha: hot ? .9 : .38),
     );
     canvas.restore();
-    final label = sp.labelByName ? sp.slots[i].name : '${i + 1}';
-    _text(
-      canvas,
-      label,
-      Offset(p.x, p.y + TableGeometry.cardH * p.scale / 2 + 16),
-      TextStyle(
+  }
+
+  static TextPainter _labelPainter(SpreadDef sp, int i) => TextPainter(
+    text: TextSpan(
+      text: sp.labelByName ? sp.slots[i].name : '${i + 1}',
+      style: TextStyle(
+        fontFamily: 'Cormorant Garamond',
         fontSize: sp.labelByName ? 19 : 21,
         letterSpacing: 1,
         color: ArcanumColors.goldLight.withValues(alpha: .7),
       ),
-    );
-  }
+    ),
+    textDirection: TextDirection.ltr,
+    textAlign: TextAlign.center,
+  )..layout(maxWidth: 220);
 
   static void _text(
     Canvas canvas,
@@ -289,10 +298,21 @@ class EmbroideryPainter extends CustomPainter {
 
 /// Las cartas del abanico: todas dorsos, estampados de la imagen grabada.
 class FanPainter extends CustomPainter {
-  FanPainter(this.poses, this.back, {this.soft = true});
+  FanPainter(this.poses, this.back, {this.soft = true, this.focusLast = false});
 
   final List<TablePose> poses;
   final ui.Image back;
+
+  /// La ultima es la que la lupa tiene levantada: lleva aura dorada.
+  final bool focusLast;
+
+  static final _halo = Paint()
+    ..color = ArcanumColors.goldLight.withValues(alpha: .55)
+    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+  static final _rim = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 2.4
+    ..color = ArcanumColors.goldLight;
 
   /// Sombra desenfocada; con la calidad baja, sombra nitida (Samuel, 05-oct:
   /// las sombras cuentan como brillos caros).
@@ -307,7 +327,22 @@ class FanPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (final p in poses) {
+    for (var i = 0; i < poses.length; i++) {
+      final p = poses[i];
+      final lit = focusLast && i == poses.length - 1;
+      if (lit) {
+        canvas
+          ..save()
+          ..translate(p.x, p.y)
+          ..rotate(p.rot * math.pi / 180)
+          ..scale(p.scale);
+        final r = RRect.fromRectAndRadius(_cardRect, const Radius.circular(9));
+        // con la calidad baja, solo el filo: el halo desenfocado es caro
+        if (soft) canvas.drawRRect(r.inflate(6), _halo);
+        canvas
+          ..drawRRect(r.inflate(1.5), _rim)
+          ..restore();
+      }
       canvas
         ..save()
         ..translate(p.x + 1.5, p.y + 2)
@@ -324,7 +359,10 @@ class FanPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(FanPainter old) =>
-      !identical(old.poses, poses) || old.back != back || old.soft != soft;
+      !identical(old.poses, poses) ||
+      old.back != back ||
+      old.soft != soft ||
+      old.focusLast != focusLast;
 }
 
 /// Un monton: cantos apilados segun las cartas que quedan y el dorso encima.

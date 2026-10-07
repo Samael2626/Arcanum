@@ -55,6 +55,9 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
   @visibleForTesting
   SigilDoc get debugDoc => doc;
 
+  // el panel conserva su estado (y el foco del campo) si cambia de sitio
+  final _panelKey = GlobalKey();
+
   // historial: fotos del documento (lo que decide el usuario)
   final List<String> _past = [], _future = [];
 
@@ -248,13 +251,13 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
   }
 
   Future<void> _charge() async {
-    final r = await Navigator.push<ChargeResult>(
-      context,
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => TallerCarga(doc: doc),
-      ),
-    );
+    final r = await Navigator.of(context, rootNavigator: true)
+        .push<ChargeResult>(
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (_) => TallerCarga(doc: doc),
+          ),
+        );
     if (!mounted || r == null) return;
     if (r.end == ChargeEnd.keep) {
       _charges.add(await _store.chargeNow(r.seconds));
@@ -262,7 +265,21 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
       return;
     }
     final saved = _savedId != null;
-    if (!await confirmRelease(context, saved: saved) || !mounted) return;
+    final release = await confirmRelease(context, saved: saved);
+    if (!mounted) return;
+    if (!release) {
+      // «Volver»: no se suelta, pero la carga se hizo y se anota igual; si el
+      // sigilo aun no esta guardado, queda pendiente y va con el guardado
+      _charges.add(await _store.chargeNow(r.seconds));
+      if (!mounted) return;
+      if (saved) {
+        await _save();
+      } else {
+        setState(() {});
+        _toast('Carga anotada: se guardará con el sigilo.');
+      }
+      return;
+    }
     if (saved) {
       // la intencion se borra de la entrada; el dibujo queda con la fecha
       final charge = await _store.chargeNow(r.seconds);
@@ -554,8 +571,13 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
           top: false,
           child: LayoutBuilder(
             builder: (context, box) {
-              final landscape = box.maxWidth > box.maxHeight;
+              // la orientacion es la de la pantalla, no la del hueco libre: con el
+              // teclado abierto el alto baja del ancho, y decidir por el hueco
+              // rehacia el panel y el campo perdia el foco (el teclado se cerraba)
+              final landscape =
+                  MediaQuery.orientationOf(context) == Orientation.landscape;
               final panel = ListView(
+                key: _panelKey,
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
                 children: [_panel()],
               );

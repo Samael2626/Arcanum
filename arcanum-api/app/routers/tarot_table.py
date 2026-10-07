@@ -36,6 +36,7 @@ from app.schemas.tarot_table import (
     CutIn,
     CutOut,
     DeckOut,
+    DrawnCardView,
     GatherIn,
     InterpretationOut,
     InterpretIn,
@@ -103,7 +104,9 @@ def current_session(user: UserEntity = Depends(get_current_user),
     table = tables.current(user.id)
     if table is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "No hay ninguna mesa abierta.")
-    return _view(table)
+    view = _view(table)
+    view.drawn = [DrawnCardView(**face) for face in tables.drawn_faces(table)]
+    return view
 
 
 @router.post("/sessions/{session_id}/shuffle", response_model=TableView)
@@ -207,7 +210,12 @@ def interpret(
         return reservation.operation.result
     try:
         with _errors():
-            tables.store_interpretation(session_id, user.id, result)
+            stored, fresh = tables.store_interpretation(session_id, user.id, result)
+        if not fresh:
+            # otra peticion casi a la vez ya la guardo y cobro: esta no cobra
+            db.rollback()
+            UsageService().reverse(db, reservation.operation)
+            return stored
         UsageService().capture(db, reservation.operation, result)
         return result
     except Exception:

@@ -2,16 +2,16 @@
 /// lo que la mesa pide (avisos, paneles, tienda, errores).
 library;
 
-import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/api/arcanum_api.dart';
+import '../../core/auth/auth_controller.dart';
 import '../../core/theme/arcanum_colors.dart';
 import 'application/table_controller.dart';
+import 'domain/table_error.dart';
 import 'domain/table_models.dart';
 import 'domain/table_state.dart';
 import 'reading/lectura_revelada.dart';
@@ -129,7 +129,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
       ),
       (AsyncError(:final error), _) ||
       (_, AsyncError(:final error)) => _Failure(
-        message: _describe(error),
+        message: _failedToLoad(error),
         onRetry: () {
           ref.invalidate(tarotCatalogProvider);
           ref.invalidate(tableControllerProvider);
@@ -157,50 +157,61 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
           child: Stack(
             key: _tableRootKey,
             children: [
-              Positioned.fill(child: body),
-              // encima de la mesa y fuera de su Listener: sus toques no tocan el paño
-              if (_director != null) ...[
-                const Positioned.fill(child: TableHelp()),
-                Positioned.fill(
-                  child: UndoDot(
-                    until: _ops.undoUntil,
-                    onUndo: () async {
-                      try {
-                        if (await _ops.undo()) toast('Deshecho');
-                      } on Object catch (e) {
-                        error(e);
-                      }
-                    },
+              // con la lectura encima, la mesa sale del lector de pantalla
+              Positioned.fill(
+                child: ExcludeSemantics(
+                  excluding: _revealing && _reading != null,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(child: body),
+                      // encima de la mesa y fuera de su Listener: sus toques no tocan el paño
+                      if (_director != null) ...[
+                        const Positioned.fill(child: TableHelp()),
+                        Positioned.fill(
+                          child: UndoDot(
+                            until: _ops.undoUntil,
+                            onUndo: () async {
+                              try {
+                                if (await _ops.undo()) toast('Deshecho');
+                              } on Object catch (e) {
+                                error(e);
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                      if (_director != null &&
+                          fanPositions != null &&
+                          fanPositions.isNotEmpty)
+                        Positioned.fill(
+                          child: FanPickerButton(
+                            positions: fanPositions,
+                            onChoose: _director!.takeFanPosition,
+                          ),
+                        ),
+                      // la fase, junto a la ayuda, como en el prototipo
+                      if (moon != null && _director != null)
+                        Positioned(
+                          top: 4,
+                          right: 52,
+                          child: MoonBadge(moon: moon, onTap: toast),
+                        ),
+                      Positioned(
+                        top: 4,
+                        left: 4,
+                        child: IconButton(
+                          tooltip: 'Volver',
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: ArcanumColors.goldLight,
+                          ),
+                          onPressed: () => context.canPop()
+                              ? context.pop()
+                              : context.go('/hoy'),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-              if (_director != null &&
-                  fanPositions != null &&
-                  fanPositions.isNotEmpty)
-                Positioned.fill(
-                  child: FanPickerButton(
-                    positions: fanPositions,
-                    onChoose: _director!.takeFanPosition,
-                  ),
-                ),
-              // la fase, junto a la ayuda, como en el prototipo
-              if (moon != null && _director != null)
-                Positioned(
-                  top: 4,
-                  right: 52,
-                  child: MoonBadge(moon: moon, onTap: toast),
-                ),
-              Positioned(
-                top: 4,
-                left: 4,
-                child: IconButton(
-                  tooltip: 'Volver',
-                  icon: const Icon(
-                    Icons.arrow_back,
-                    color: ArcanumColors.goldLight,
-                  ),
-                  onPressed: () =>
-                      context.canPop() ? context.pop() : context.go('/hoy'),
                 ),
               ),
               if (_revealing && _reading != null)
@@ -239,33 +250,31 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
         SnackBar(
           content: Text(message),
           duration: const Duration(milliseconds: 2600),
+          // flota sobre deshacer y «Elegir carta» (48 dp + 14 de margen):
+          // pegado abajo tapaba la mitad de los 5 s del deshacer
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 14 + 48 + 14 + 8),
         ),
       );
   }
 
   @override
-  void error(Object error) => toast(_describe(error));
+  void error(Object error) {
+    toast(tableErrorMessage(error));
+    // sesion caida: se cierra de verdad y la guarda del router lleva al login
+    if (isTableSessionLost(error)) ref.read(authProvider.notifier).logout();
+  }
 
-  static String _describe(Object error) {
-    if (error is DioException) {
-      final detail = error.response?.data;
-      if (detail is Map && detail['detail'] is String) {
-        return detail['detail'] as String;
-      }
-      if (error.response == null) {
-        return 'No hay conexión con el servidor. Inténtalo de nuevo.';
-      }
+  /// La mesa no cargo. Con la sesion caida, «Reintentar» fallaria igual:
+  /// se cierra despues del fotograma (no en pleno build) y el router lleva
+  /// al login.
+  String _failedToLoad(Object error) {
+    if (isTableSessionLost(error)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ref.read(authProvider.notifier).logout();
+      });
     }
-    // fuera de la version de la tienda se dice que fallo: el mensaje generico
-    // no deja saber si fue la sesion, el servidor o la app
-    if (!kReleaseMode) {
-      final what = error is DioException
-          ? 'HTTP ${error.response?.statusCode ?? '-'} '
-                '${error.requestOptions.path}'
-          : '${error.runtimeType}: $error';
-      return 'No se pudo completar. Inténtalo de nuevo.\n\n[$what]';
-    }
-    return 'No se pudo completar. Inténtalo de nuevo.';
+    return tableErrorMessage(error);
   }
 
   @override
@@ -330,20 +339,24 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            f.nameEs ?? f.name ?? 'Carta',
+            f.commonName,
             style: const TextStyle(
               fontSize: 22,
               height: 1.1,
               color: ArcanumColors.ivory,
             ),
           ),
+          if (f.goldenDawnTitle case final gd?)
+            Text(gd, style: _muted.copyWith(fontStyle: FontStyle.italic)),
           Text(card.reversed ? 'Invertida' : 'Al derecho', style: _muted),
           const SizedBox(height: 8),
           if (inSpread)
             Text(sp.slots[slot].meaning, style: _body)
           else if (card.host == null)
             Text(
-              'No cuenta para la lectura: arrástrala a un hueco.',
+              sp == null
+                  ? TableDirector.spreadHint
+                  : 'No cuenta para la lectura: arrástrala a un hueco.',
               style: _muted,
             ),
           const SizedBox(height: 8),
@@ -403,7 +416,12 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
   void openInterpretation() {
     final dir = _director;
     if (dir == null) return;
-    if (_reading != null) return setState(() => _revealing = true);
+    final shown = _reading;
+    if (shown != null && shown.describes(dir.table)) {
+      return setState(() => _revealing = true);
+    }
+    // la de antes era de otras cartas: se interpreta la mesa de ahora
+    _reading = null;
     // la clave vive lo que vive el panel: reintentar no cobra dos veces
     final key = IdempotencyKey.create();
     final seal = dir.table.seal;
@@ -477,7 +495,8 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (snap.hasError) Text(_describe(snap.error!), style: _muted),
+              if (snap.hasError)
+                Text(tableErrorMessage(snap.error!), style: _muted),
               if (rows == null && !snap.hasError)
                 const Padding(
                   padding: EdgeInsets.all(12),

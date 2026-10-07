@@ -101,14 +101,31 @@ def attr(card: Any, key: str, default: Any = None) -> Any:
     return getattr(card, key, default)
 
 
-def derive_name_es(card: Any) -> Optional[str]:
-    """Nombre en español LIMPIO, sin el descriptor bilingüe."""
-    name_es = attr(card, "name_es")
-    if name_es:
-        return name_es
+def _title_es(card: Any) -> Optional[str]:
+    """Mitad en español del titulo Book T («Lord of… / Señor de…»)."""
     title = attr(card, "title_book_t")
     if not title:
         return None
-    if " / " in title:
-        return title.split(" / ")[-1].strip()
-    return title
+    return title.split(" / ")[-1].strip() if " / " in title else title
+
+
+def derive_name_es(card: Any) -> Optional[str]:
+    """Nombre comun en español: el que reconoce cualquiera.
+
+    Un menor se llama por su numero y su palo («Dos de Espadas»), que es lo
+    que lleva su slug. El titulo Golden Dawn («Señor de la Paz Restaurada»)
+    va aparte, en `derive_title_es`: solo, nadie sabia que carta era.
+    """
+    name_es = attr(card, "name_es")
+    if name_es:
+        return name_es
+    slug = attr(card, "slug")
+    if attr(card, "arcana") == "minor" and slug:
+        return " ".join(w if w == "de" else w.capitalize() for w in slug.split("-"))
+    return _title_es(card)
+
+
+def derive_title_es(card: Any) -> Optional[str]:
+    """Titulo Golden Dawn en español, o None si es el mismo nombre comun."""
+    title = _title_es(card)
+    return None if title is None or title == derive_name_es(card) else title

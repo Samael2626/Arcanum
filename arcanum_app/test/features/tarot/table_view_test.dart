@@ -152,6 +152,37 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('cada pieza se anuncia donde esta dibujada, no en el origen', (
+    tester,
+  ) async {
+    // GN2200: los dos mazos, y todas las cartas, daban el mismo cuadro al
+    // lector de pantalla porque la posicion iba por debajo del Semantics
+    await pumpTable(tester);
+    final rws = tester.getRect(
+      find.bySemanticsLabel(RegExp('Rider–Waite–Smith, 78 cartas')),
+    );
+    final majors = tester.getRect(
+      find.bySemanticsLabel(RegExp('Arcanos Mayores, 22 cartas')),
+    );
+    expect(rws.contains(screen(shelfPose(0, 2).offset)), isTrue);
+    expect(majors.contains(screen(shelfPose(1, 2).offset)), isTrue);
+    expect(rws.overlaps(majors), isFalse);
+
+    await tap(tester, shelfPose(0, 2).offset);
+    final ops = c.read(tableControllerProvider.notifier);
+    ops.arrange((s) => s.copyWith(spread: () => 'one_card'));
+    final card = await tester.runAsync(() => ops.take('p0', 2));
+    ops.arrange((s) => s.putInSlot(card!.slug, 0));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 2));
+    final slot = tester.getRect(find.bySemanticsLabel(RegExp('Posición 1')));
+    final pile = tester.getRect(
+      find.bySemanticsLabel(RegExp('Rider–Waite–Smith, 5 cartas')),
+    );
+    expect(slot.overlaps(pile), isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('mantener el mazo abre el radial dibujado con su orden fijo', (
     tester,
   ) async {

@@ -30,6 +30,10 @@ class TableCamera {
   static const double maxYaw = 40;
   static const double minZoom = 1, maxZoom = 2.6;
 
+  /// Lo que el encuadre deja siempre a la vista con zoom 1: el paño a lo
+  /// ancho y la mesa entera a lo alto (lo mismo que mide `fit`).
+  static const Rect framed = Rect.fromLTRB(22, 0, 578, 900);
+
   // actual
   double theta = baseTheta, yaw = 0, zoom = 1, panX = 0, panY = 0;
   // destino
@@ -90,6 +94,42 @@ class TableCamera {
     clampToView();
   }
 
+  /// Cuanto se reduce la imagen para que, con este giro e inclinacion, la
+  /// mesa siga entera en pantalla. `fit` encuadra la mesa en reposo; al girar
+  /// las esquinas se salian por los lados y el mazo quedaba fuera (GN2200,
+  /// 06-oct). En reposo vale 1: la vista inicial no cambia. Multiplica al
+  /// zoom, asi que con el pellizco se sigue pudiendo acercar.
+  double get fitScale {
+    if (_viewport == Size.zero) return 1;
+    final key = (yaw, theta, _viewport);
+    if (key == _fitKey) return _fitValue;
+    final m = _matrix(scale: 1, px: 0, py: 0).storage;
+    final o = Offset(_viewport.width / 2, _viewport.height / 2 + _oy);
+    const mx = 4.0, my = 12.0;
+    var fit = 1.0;
+    final r = framed;
+    for (final p in [r.topLeft, r.topRight, r.bottomLeft, r.bottomRight]) {
+      final w = m[3] * p.dx + m[7] * p.dy + m[15];
+      final x = (m[0] * p.dx + m[4] * p.dy + m[12]) / w;
+      final y = (m[1] * p.dx + m[5] * p.dy + m[13]) / w;
+      // escalar s alrededor de o: o + s * (punto - o) tiene que caber
+      final room = Offset(
+        x > o.dx ? _viewport.width - mx - o.dx : o.dx - mx,
+        y > o.dy ? _viewport.height - my - o.dy : o.dy - my,
+      );
+      final reach = Offset((x - o.dx).abs(), (y - o.dy).abs());
+      if (reach.dx > 0) fit = math.min(fit, room.dx / reach.dx);
+      if (reach.dy > 0) fit = math.min(fit, room.dy / reach.dy);
+    }
+    // en reposo el encuadre ya cabe al milimetro: no se toca
+    _fitValue = fit >= .999 ? 1 : fit;
+    _fitKey = key;
+    return _fitValue;
+  }
+
+  (double, double, Size)? _fitKey;
+  double _fitValue = 1;
+
   /// Matriz de mesa a pantalla. La perspectiva se aplica desde el centro de
   /// la mesa en pantalla, como el `perspective-origin` del prototipo.
   ///
@@ -100,10 +140,15 @@ class TableCamera {
   /// carta levantada en la esquina de abajo ocupaba el 88 % del alto de la
   /// pantalla, frente al 10 % sin zoom. Ahora todo crece igual, como mucho 2,6
   /// veces lo que se ve sin zoom.
-  Matrix4 matrix() {
+  Matrix4 matrix() => _matrix(scale: zoom * fitScale, px: panX, py: panY);
+
+  Matrix4 _matrix({
+    required double scale,
+    required double px,
+    required double py,
+  }) {
     final k = _k;
-    final ox = _viewport.width / 2 + panX,
-        oy = _viewport.height / 2 + panY + _oy;
+    final ox = _viewport.width / 2 + px, oy = _viewport.height / 2 + py + _oy;
     // La perspectiva se MULTIPLICA como matriz propia. Poner la entrada (3, 2)
     // sobre una matriz ya trasladada no es lo mismo: deja el punto de fuga en
     // la esquina de la pantalla y la mesa sale sesgada hacia un lado.
@@ -111,7 +156,7 @@ class TableCamera {
       ..setEntry(3, 2, -1 / TableGeometry.perspective);
     return Matrix4.identity()
       ..translateByDouble(ox, oy, 0, 1)
-      ..scaleByDouble(zoom, zoom, 1, 1)
+      ..scaleByDouble(scale, scale, 1, 1)
       ..multiply(perspective)
       ..scaleByDouble(k, k, k, 1)
       ..rotateX(theta * math.pi / 180)

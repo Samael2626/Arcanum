@@ -397,10 +397,11 @@ def test_deshacer_un_corte_devuelve_el_mazo_de_antes(client):
     assert undone.status_code == 200, undone.text
     assert undone.json()["piles"] == before["piles"]
     assert _post(client, sid, "undo", {}).status_code == 409                # una sola vez
-    # el orden tambien vuelve: la primera carta es la misma que antes de cortar
-    a = _take(client, sid, [0])[0]
-    assert _post(client, sid, "undo", {}).status_code == 200
-    assert _take(client, sid, [0])[0]["slug"] == a["slug"]
+    # deshacer un «sacar» devuelve la carta al monton, pero no a su sitio: si
+    # volviera, sacar-deshacer serviria para espiar el orden (revision 06-oct)
+    _take(client, sid, [0])
+    back = _post(client, sid, "undo", {}).json()
+    assert back["total"] == 78 and back["drawn"] == []
 
 
 def test_un_gesto_de_varias_operaciones_se_deshace_entero(client):
@@ -453,3 +454,91 @@ def test_no_se_continua_la_lectura_de_otro(client, who, engine):
     who["id"] = _user(engine)
     r = client.post("/tarot/sessions", json={"deck": "rws", "from_reading": reading["id"]})
     assert r.status_code == 404
+
+
+# ---------- revision de codigo del 06-oct ----------
+def test_dos_interpretaciones_a_la_vez_cobran_una(client, engine, who, monkeypatch):
+    # las dos peticiones ven la mesa sin interpretar (la comprobacion va fuera del
+    # cerrojo); la segunda cobraba otra vez y pisaba la primera
+    from app.application.services.tarot_table_service import TarotTableService
+    monkeypatch.setattr(settings, "TAROT_FREE_DAILY", 5)
+    monkeypatch.setattr(TarotTableService, "stored_interpretation", lambda self, sid, uid: None)
+    sid, _, placements = _three(client)
+    a = _interpret(client, sid, placements)
+    b = _interpret(client, sid, placements)
+    assert a.status_code == b.status_code == 200, b.text
+    assert a.json() == b.json()
+    assert _one(engine, "SELECT count(*) FROM usage_operations WHERE user_id=:u AND state='captured'",
+                u=who["id"]) == 1
+
+
+def test_si_la_mesa_cambia_mientras_se_cobra_no_se_guarda_ni_se_cobra(client, engine, who, monkeypatch):
+    from app.application.services import usage_service as us
+    sid, _, placements = _three(client)
+    original = us.UsageService.reserve
+
+    def reserve_y_recoger(self, db, *a, **kw):
+        r = original(self, db, *a, **kw)
+        # otra peticion recoge las cartas entre el cobro y el guardado
+        with engine.begin() as c:
+            c.execute(text("UPDATE tarot_sessions SET state = jsonb_set(state, '{drawn}', '[]'::jsonb) "
+                           "WHERE id=:i"), {"i": sid})
+        return r
+
+    monkeypatch.setattr(us.UsageService, "reserve", reserve_y_recoger)
+    r = _interpret(client, sid, placements)
+    assert r.status_code in (400, 409), r.text
+    assert _one(engine, "SELECT count(*) FROM usage_operations WHERE user_id=:u AND state='captured'",
+                u=who["id"]) == 0
+    assert _one(engine, "SELECT status FROM tarot_sessions WHERE id=:i", i=sid) == "open"
+
+
+def test_abrir_otra_mesa_guarda_la_lectura_ya_pagada(client, engine, who):
+    sid, _, placements = _three(client)
+    assert _interpret(client, sid, placements).status_code == 200
+    _open(client)
+    assert _one(engine, "SELECT count(*) FROM tarot_readings WHERE user_id=:u", u=who["id"]) == 1
+    assert _one(engine, "SELECT status FROM tarot_sessions WHERE id=:i", i=sid) == "closed"
+
+
+def test_dos_aperturas_a_la_vez_dan_409_y_no_500(client, monkeypatch):
+    _open(client)
+    from app.adapters.repositories import TarotTableRepository
+    # la segunda no ve la primera (aun sin confirmar) y choca con el indice unico
+    monkeypatch.setattr(TarotTableRepository, "active", lambda self, uid, lock=False: None)
+    r = client.post("/tarot/sessions", json={"deck": "rws"})
+    assert r.status_code == 409, r.text
+
+
+def test_cerrar_tras_cambiar_la_tirada_guarda_las_cartas_de_ahora(client):
+    sid, _, placements = _three(client)
+    assert _interpret(client, sid, placements).status_code == 200
+    _post(client, sid, "gather", {"pile": "p0"})
+    nuevas = _take(client, sid, [1, 2, 3])
+    nuevos = [{"slug": c["slug"], "slot": i} for i, c in enumerate(nuevas)]
+    r = _post(client, sid, "close", {"spread": "three_card", "placements": nuevos})
+    assert r.status_code == 200, r.text
+    assert [c["slug"] for c in r.json()["cards_drawn"]] == [c["slug"] for c in nuevas]
+
+
+def test_cerrar_lo_interpretado_sin_cambios_guarda_la_interpretacion(client):
+    sid, cards, placements = _three(client)
+    assert _interpret(client, sid, placements).status_code == 200
+    r = _post(client, sid, "close", {"spread": "three_card", "placements": placements})
+    assert r.status_code == 200, r.text
+    assert [c["slug"] for c in r.json()["cards_drawn"]] == [c["slug"] for c in cards]
+
+
+def test_la_mesa_actual_trae_la_cara_de_las_sacadas(client):
+    # al volver sin la foto local, la app dibuja las sacadas con esto; sin ello
+    # quedaban invisibles (revision 06-oct)
+    sid = _open(client)["id"]
+    sacadas = _take(client, sid, [0, 1])
+    now = client.get("/tarot/sessions/current").json()
+    caras = {d["slug"]: d for d in now["drawn"]}
+    for c in sacadas:
+        assert caras[c["slug"]]["name_es"] == c["name_es"]
+        assert caras[c["slug"]]["arcana"] == c["arcana"]
+        assert caras[c["slug"]]["reversed"] == c["reversed"]
+    # y el orden del mazo sigue sin salir
+    assert "piles" in now and all(set(p) == {"count", "positions"} for p in now["piles"].values())

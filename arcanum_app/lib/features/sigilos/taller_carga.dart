@@ -162,11 +162,27 @@ class _TallerCargaState extends State<TallerCarga>
                                     ),
                                   ),
                                 ),
+                                // placa oscura: el dorado fino no se leia sobre las lineas del sigilo
                                 child: Center(
-                                  child: Text(
-                                    _fases[fase].toUpperCase(),
-                                    style: ArcanumText.label().copyWith(
-                                      color: ArcanumColors.gold,
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(
+                                        alpha: .78,
+                                      ),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      child: Text(
+                                        _fases[fase].toUpperCase(),
+                                        style: ArcanumText.label().copyWith(
+                                          color: ArcanumColors.goldLight,
+                                          letterSpacing: 3,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),

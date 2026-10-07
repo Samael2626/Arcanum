@@ -142,6 +142,49 @@ el prompt del catalogo, que es el bueno de los dos. Una corrida, no tres:
   la sintesis". `alcanzaras` no esta en `PROMESAS_DE_RESULTADO`.
 - Lo unico que aguanto el cambio de formato fue el cierre: un gesto, una frase.
 
+### MEDIDO EL 06-OCT: LAS CARTAS SE NOMBRAN POR SU NOMBRE COMUN
+
+Desde `b51f90a` el contexto nombra cada carta como la conoce cualquiera («Ocho de
+Oros», no «Señor de la Prudencia») y el guarda la exige con ese mismo nombre
+(`oracle_context.card_display_name`, que usan los dos). `muestra_voz.py` armaba la
+tirada con el titulo Book T: media un contexto que ya no se manda. Corregido.
+
+Cruz Celta, una corrida por lado, prompt vivo contra el ejemplo corregido: el
+modelo toma los nombres DEL CONTEXTO en los dos casos; el ejemplo no los cambia.
+Antes `retry=True` (por `decide_por_ti`, no por nombres); despues sin reintento y
+sin defectos. El catalogo ya lleva el ejemplo con nombres comunes; **Railway no**:
+se cambia `ORACLE_SYSTEM_PROMPT` al mezclar la rama, con el codigo.
+
+### MEDIDO EL 06-OCT: LA SINTESIS AUN COPIA EL CIELO
+
+Presupuesto fijado antes: dos lecturas nuevas de Cruz Celta, como maximo cuatro
+llamadas si el guarda reintentaba, con 75 segundos entre lecturas. Se usaron el
+codigo de `feat/mesa-tarot`, `muestra_voz.py` de `f12e818` y el prompt corregido
+del catalogo (`1fc1130`). Salieron dos llamadas, sin reintentos, con 10 nombres
+comunes cubiertos en cada lectura (salida: 2.465 y 2.698 tokens).
+
+- **2/2** parrafos de respuesta nombraron Sol, Marte y Saturno, pese a la regla
+  del 29-sep que veta cuerpos en ese parrafo. El segundo tambien nombro Nodo
+  Norte, Luna y la hora de Marte. El guarda no distingue las etiquetas del
+  parrafo final; los nombres son validos en los datos de entrada y en otras
+  partes de la lectura. Una busqueda global marcaria texto correcto.
+- **1/2** llevo la respuesta hacia la opcion consultada: «la posibilidad de
+  aceptar la nueva propuesta, siempre que la estructures». La otra dio dos
+  caminos condicionales, pero remato con «permite que la decision fluya». Las
+  dos pasaron `decide_por_ti`; tampoco cazaria «la verdadera decision yace en
+  aceptar la incertidumbre» ni «Saturno refuerza los limites que debes
+  reconocer» de la medida previa. Son bordes de juicio, no un patron probado
+  para regex: «aceptar» puede referirse a incertidumbre, no a la oferta.
+
+**Decision:** no sumar un reintento de pago por una guarda sin medir su eficacia.
+La prohibicion ya esta en el prompt y aun falla; repetirla ahi no aporta
+evidencia. Para cambiar el guarda hace falta un ensayo acotado que mida fallos
+entregados y reintentos con la misma tirada, y extraer de forma segura el
+parrafo de respuesta. Dos muestras no establecen una tasa de fallo estable.
+La variable viva de Railway solo difiere del catalogo en las dos lineas del
+ejemplo Golden Dawn (salvo salto final); no actualizar antes del merge de la
+mesa a `main`.
+
 ## EL BUCLE
 
 1. **Reproducir.** Generar el texto real. Si Samuel dice que algo no se

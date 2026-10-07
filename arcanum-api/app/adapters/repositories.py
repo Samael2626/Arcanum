@@ -13,8 +13,10 @@ from uuid import UUID
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, contains_eager, noload, selectinload
 
+from app.application.ports.repositories import DuplicateActiveTable
 from app.domain.entities import (
     DivinationSessionEntity,
     HoroscopeReadingEntity,
@@ -269,7 +271,12 @@ class TarotTableRepository:
     def create(self, user_id: UUID, deck: str, state: dict, expires_at: datetime) -> TarotTableEntity:
         row = TarotTableSession(user_id=user_id, deck=deck, state=state, status="open", expires_at=expires_at)
         self._db.add(row)
-        self._db.commit()
+        try:
+            self._db.commit()
+        except IntegrityError as exc:
+            # dos aperturas a la vez: la segunda choca con uq_tarot_sessions_one_active
+            self._db.rollback()
+            raise DuplicateActiveTable() from exc
         self._db.refresh(row)
         return _to_entity(TarotTableEntity, row)
 

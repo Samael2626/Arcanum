@@ -79,7 +79,7 @@ class _TableCardPieceState extends State<TableCardPiece>
     final f = widget.view.card!.face;
     return TarotFace.resolve({
       'slug': f.slug,
-      'name': f.nameEs ?? f.name ?? '',
+      'name': f.commonName,
       'arcana': f.arcana,
       'suit': f.suit,
       'number': f.number,
@@ -150,39 +150,40 @@ class _TableCardPieceState extends State<TableCardPiece>
     return Positioned(
       left: 0,
       top: 0,
-      child: Semantics(
-        label: _semantics(),
-        button: true,
-        child: AnimatedBuilder(
-          animation: Listenable.merge([motion, _flip, _turn]),
-          builder: (context, _) {
-            // «reducir movimiento»: volteo y giro de golpe, sin saltos; la
-            // esquina sigue al dedo porque la mueve el usuario
-            final still = MediaQuery.disableAnimationsOf(context);
-            final up = widget.view.card!.faceUp;
-            // grados de volteo: la esquina manda mientras el dedo tira de ella
-            final peel = v.peelAngle;
-            final flip = peel > 0
-                ? peel
-                : still
-                ? (up ? 180.0 : 0.0)
-                : 180 *
-                      (_flipFrom + (1 - _flipFrom) * _flip.value) *
-                      (up ? 1 : 0);
-            final turn = still ? (_reversed ? 1.0 : 0.0) : _turn.value;
-            final turnBump = still ? 0.0 : math.sin(math.pi * turn);
-            return Transform(
-              transform: pieceMatrix(
-                shownPose,
-                lift:
-                    v.lift +
-                    turnBump * 20 +
-                    (still && peel == 0
-                        ? 0
-                        : math.sin(math.pi * flip / 180) * 14),
-                tiltX: v.tiltX,
-                tiltY: v.tiltY,
-              ),
+      child: AnimatedBuilder(
+        animation: Listenable.merge([motion, _flip, _turn]),
+        builder: (context, _) {
+          // «reducir movimiento»: volteo y giro de golpe, sin saltos; la
+          // esquina sigue al dedo porque la mueve el usuario
+          final still = MediaQuery.disableAnimationsOf(context);
+          final up = widget.view.card!.faceUp;
+          // grados de volteo: la esquina manda mientras el dedo tira de ella
+          final peel = v.peelAngle;
+          final flip = peel > 0
+              ? peel
+              : still
+              ? (up ? 180.0 : 0.0)
+              : 180 *
+                    (_flipFrom + (1 - _flipFrom) * _flip.value) *
+                    (up ? 1 : 0);
+          final turn = still ? (_reversed ? 1.0 : 0.0) : _turn.value;
+          final turnBump = still ? 0.0 : math.sin(math.pi * turn);
+          return Transform(
+            transform: pieceMatrix(
+              shownPose,
+              lift:
+                  v.lift +
+                  turnBump * 20 +
+                  (still && peel == 0
+                      ? 0
+                      : math.sin(math.pi * flip / 180) * 14),
+              tiltX: v.tiltX,
+              tiltY: v.tiltY,
+            ),
+            // bajo el Transform: el lector la situa donde se dibuja
+            child: Semantics(
+              label: _semantics(),
+              button: true,
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -202,9 +203,9 @@ class _TableCardPieceState extends State<TableCardPiece>
                     ),
                 ],
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -308,17 +309,17 @@ class _PendingCardPieceState extends State<PendingCardPiece>
     left: 0,
     top: 0,
     child: IgnorePointer(
-      child: Semantics(
-        label: 'Sacando una carta',
-        child: AnimatedBuilder(
-          animation: motion,
-          builder: (context, child) => Transform(
-            transform: pieceMatrix(
-              shownPose,
-              lift: widget.view.lift + motionLift,
-            ),
-            child: child,
+      child: AnimatedBuilder(
+        animation: motion,
+        builder: (context, child) => Transform(
+          transform: pieceMatrix(
+            shownPose,
+            lift: widget.view.lift + motionLift,
           ),
+          child: child,
+        ),
+        child: Semantics(
+          label: 'Sacando una carta',
           child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(9),
@@ -396,20 +397,20 @@ class _PilePieceState extends State<PilePiece>
     return Positioned(
       left: 0,
       top: 0,
-      child: Semantics(
-        label: '${label ?? 'Montón'}, ${view.count} cartas',
-        button: true,
-        child: AnimatedBuilder(
-          animation: motion,
-          builder: (context, child) => Transform(
-            transform: pieceMatrix(
-              shownPose,
-              lift: view.lift + motionLift,
-              tiltX: view.tiltX,
-              tiltY: view.tiltY,
-            ),
-            child: child,
+      child: AnimatedBuilder(
+        animation: motion,
+        builder: (context, child) => Transform(
+          transform: pieceMatrix(
+            shownPose,
+            lift: view.lift + motionLift,
+            tiltX: view.tiltX,
+            tiltY: view.tiltY,
           ),
+          child: child,
+        ),
+        child: Semantics(
+          label: '${label ?? 'Montón'}, ${view.count} cartas',
+          button: true,
           child: SizedBox.fromSize(
             size: _cardSize,
             child: Stack(

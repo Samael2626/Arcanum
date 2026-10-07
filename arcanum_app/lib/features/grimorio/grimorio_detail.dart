@@ -83,8 +83,7 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
   }
 
   Future<void> _continueSigil(SigilEntry entry) async {
-    final saved = await Navigator.push<bool>(
-      context,
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(
       MaterialPageRoute(
         builder: (_) => TallerScreen(entryId: widget.id, initial: entry),
       ),
@@ -95,18 +94,19 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
   /// Cargar desde el Grimorio: la carga se anota en la entrada; soltar borra
   /// la intencion y deja el dibujo con la fecha.
   Future<void> _chargeSigil(SigilEntry entry) async {
-    final r = await Navigator.push<ChargeResult>(
-      context,
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => TallerCarga(doc: entry.doc, keepLabel: 'Anotar'),
-      ),
-    );
+    final r = await Navigator.of(context, rootNavigator: true)
+        .push<ChargeResult>(
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (_) => TallerCarga(doc: entry.doc, keepLabel: 'Anotar'),
+          ),
+        );
     if (!mounted || r == null) return;
-    final release = r.end == ChargeEnd.release;
-    if (release && (!await confirmRelease(context, saved: true) || !mounted)) {
-      return;
-    }
+    // «Volver» en el aviso no suelta, pero la carga se hizo: se anota igual
+    final release =
+        r.end == ChargeEnd.release &&
+        await confirmRelease(context, saved: true);
+    if (!mounted) return;
     final store = SigilStore(
       _api,
       ref.read(grimoireCryptoProvider),

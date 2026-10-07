@@ -199,7 +199,7 @@ void main() {
     expect(engancha, greaterThan(1), reason: 'el recorrido cruza varias guias');
     expect(toques, hasLength(engancha));
     expect(
-      toques.every((c) => c.contains('HapticFeedbackType.selectionClick')),
+      toques.every((c) => c.contains('HapticFeedbackType.lightImpact')),
       isTrue,
     );
     expect(

@@ -335,6 +335,263 @@ void main() {
     );
 
     test(
+      'sin tirada, la primera carta sacada avisa una vez de donde se elige',
+      () async {
+        // GN2200: las cartas quedaban «fuera de la tirada» sin pista de que
+        // «Tirada» vive en el menu del mazo
+        await openRws();
+        await tap(pileAt('p0'));
+        PieceView fanCard() =>
+            dir.pieces().firstWhere((p) => p.kind == PieceKind.fanCard);
+        await tap(fanCard().pose.offset);
+        expect(fx.toasts.where((t) => t.contains('«Tirada»')), hasLength(1));
+        await tap(fanCard().pose.offset);
+        expect(fx.toasts.where((t) => t.contains('«Tirada»')), hasLength(1));
+      },
+    );
+
+    group('lupa del abanico', () {
+      List<PieceView> fan() =>
+          dir.pieces().where((p) => p.kind == PieceKind.fanCard).toList();
+      PieceView focused() => fan().singleWhere((p) => p.focused);
+
+      Future<void> openFan() async {
+        await openRws();
+        await tap(pileAt('p0'));
+        expect(table().fan, isNotNull);
+      }
+
+      test('pulsar el abanico levanta la carta bajo el dedo', () async {
+        await openFan();
+        final under = fan()[3];
+        dir.pointerDown(++pointer, screenOf(under.pose.offset), clock);
+        final f = focused();
+        expect(f.pose.scale, greaterThan(under.pose.scale * 1.4));
+        expect(f.pose.y, lessThan(under.pose.y));
+        dir.pointerCancel(pointer);
+        expect(fan().where((p) => p.focused), isEmpty);
+      });
+
+      test('deslizar y soltar saca la carta de la lupa', () async {
+        await openFan();
+        final from = fan()[0].pose.offset, to = fan()[4].pose.offset;
+        final id = ++pointer;
+        dir.pointerDown(id, screenOf(from), clock);
+        for (var i = 1; i <= 12; i++) {
+          clock += const Duration(milliseconds: 16);
+          dir.pointerMove(id, screenOf(Offset.lerp(from, to, i / 12)!), clock);
+          await settle();
+        }
+        final chosen = focused().id;
+        dir.pointerUp(id, screenOf(to), clock);
+        clock += const Duration(milliseconds: 100);
+        await settle();
+        expect(table().cards, hasLength(1));
+        expect(fan().map((p) => p.id), isNot(contains(chosen)));
+        expect(fan().where((p) => p.focused), isEmpty);
+      });
+
+      test(
+        'el dedo quieto no abre el menu: la lupa sigue y soltar saca',
+        () async {
+          // GN2200, 06-oct: a los 430 ms salia el menu y la lupa se apagaba
+          await openFan();
+          final id = ++pointer;
+          dir.pointerDown(id, screenOf(fan()[3].pose.offset), clock);
+          final chosen = focused().id;
+          clock += const Duration(milliseconds: 900);
+          dir.tick(clock, const Duration(milliseconds: 16));
+          expect(dir.radial, isNull);
+          expect(focused().id, chosen);
+          dir.pointerUp(id, screenOf(fan()[3].pose.offset), clock);
+          await settle();
+          expect(table().cards, hasLength(1));
+        },
+      );
+
+      test('el abanico no llega a los bordes del gesto atras', () async {
+        // GN2200, 06-oct: la primera carta quedaba a menos de 24 dp del borde
+        // y deslizar desde ella sacaba de la mesa
+        await openFan();
+        const margin = TableDirector.screenEdgeMargin;
+        for (final p in fan()) {
+          final r = poseRect(p.pose);
+          for (final corner in [
+            r.topLeft,
+            r.topRight,
+            r.bottomLeft,
+            r.bottomRight,
+          ]) {
+            final s = dir.camera.toScreen(corner);
+            expect(s.dx, greaterThanOrEqualTo(margin - .5), reason: p.id);
+            expect(
+              s.dx,
+              lessThanOrEqualTo(phone.width - margin + .5),
+              reason: p.id,
+            );
+          }
+        }
+        // y sigue siendo un abanico largo
+        final f = table().fan!;
+        expect((f.end - f.start).distance, greaterThan(250));
+      });
+
+      test('subir el dedo lleva la carta a un hueco concreto', () async {
+        await openFan();
+        c
+            .read(tableControllerProvider.notifier)
+            .arrange((s) => s.copyWith(spread: () => 'three_card'));
+        final from = fan()[2].pose.offset, to = slotPose(three, 2).offset;
+        await drag(from, to, steps: 16);
+        await settle();
+        expect(table().cardInSlot(2), isNotNull);
+        expect(table().cards, hasLength(1));
+      });
+    });
+
+    test('elegir tirada aparta las sueltas que pisan un hueco nuevo', () async {
+      // GN2200: la carta sacada antes de elegir tirada tapaba el hueco 3
+      await openRws();
+      final ops = c.read(tableControllerProvider.notifier);
+      final loose = await ops.take('p0', 0);
+      final under = slotPose(three, 1);
+      ops.arrange(
+        (s) => s.updateCard(
+          loose.slug,
+          (k) => k.copyWith(x: under.x, y: under.y, scale: .7),
+        ),
+      );
+      await holdAndPick(pileAt('p0'), 'spread');
+      final layout = dir.radial!;
+      final i = layout.items.indexWhere((it) => it.id == 'three_card');
+      dir.pointerDown(++pointer, layout.positions[i], clock);
+      await settle();
+      expect(table().spread, 'three_card');
+      final k = table().card(loose.slug)!;
+      final r = poseRect(TablePose(k.x, k.y, rot: k.rot, scale: k.scale));
+      for (var s = 0; s < three.cardCount; s++) {
+        expect(
+          r.overlaps(poseRect(slotPose(three, s))),
+          isFalse,
+          reason: 'hueco ${s + 1}',
+        );
+      }
+    });
+
+    test(
+      'al llenar la tirada se avisa una vez; la aclaratoria no repite',
+      () async {
+        // GN2200, 06-oct: el abanico se recogia sin decir nada y quien seguia
+        // deslizando giraba la mesa
+        await openRws();
+        c
+            .read(tableControllerProvider.notifier)
+            .arrange((s) => s.copyWith(spread: () => 'three_card'));
+        await tap(pileAt('p0'));
+        PieceView fanCard() =>
+            dir.pieces().firstWhere((p) => p.kind == PieceKind.fanCard);
+        for (var i = 0; i < 3; i++) {
+          await tap(fanCard().pose.offset);
+        }
+        expect(
+          fx.toasts.where((t) => t.startsWith('Tirada completa')),
+          hasLength(1),
+        );
+        // reabrirlo para una aclaratoria no vuelve a anunciarlo
+        await tap(pileAt('p0'));
+        await tap(fanCard().pose.offset);
+        expect(
+          fx.toasts.where((t) => t.startsWith('Tirada completa')),
+          hasLength(1),
+        );
+      },
+    );
+
+    test('una suelta no cae sobre la etiqueta de un hueco', () async {
+      // GN2200, 06-oct: la carta de mas tapo «Presente»
+      await openRws();
+      c
+          .read(tableControllerProvider.notifier)
+          .arrange((s) => s.copyWith(spread: () => 'three_card'));
+      final labels = slotLabelRects(three);
+      for (var i = 0; i < three.cardCount; i++) {
+        final at = dir.debugLooseSpot(labels[i].center, three.cardScale);
+        final r = poseRect(at);
+        for (final l in labels) {
+          expect(
+            r.overlaps(l),
+            isFalse,
+            reason: 'cerca de la etiqueta ${i + 1}',
+          );
+        }
+      }
+    });
+
+    test('una carta arrastrada no se suelta colgando fuera del paño', () async {
+      await openRws();
+      final ops = c.read(tableControllerProvider.notifier);
+      final card = await ops.take('p0', 0);
+      ops.arrange(
+        (s) => s.updateCard(card.slug, (k) => k.copyWith(x: 300, y: 450)),
+      );
+      await drag(const Offset(300, 450), const Offset(-40, 520));
+      final k = table().card(card.slug)!;
+      final r = poseRect(TablePose(k.x, k.y, rot: k.rot, scale: k.scale));
+      expect(r.left, greaterThanOrEqualTo(TableGeometry.cloth.left));
+      expect(r.right, lessThanOrEqualTo(TableGeometry.cloth.right));
+    });
+
+    test('al llenar el ultimo hueco el abanico se recoge solo', () async {
+      // GN2200: con el abanico abierto, «Interpretar» se pintaba encima
+      await openRws();
+      c
+          .read(tableControllerProvider.notifier)
+          .arrange((s) => s.copyWith(spread: () => 'three_card'));
+      await tap(pileAt('p0'));
+      PieceView fanCard() =>
+          dir.pieces().firstWhere((p) => p.kind == PieceKind.fanCard);
+      await tap(fanCard().pose.offset);
+      await tap(fanCard().pose.offset);
+      expect(table().fan, isNotNull, reason: 'aun falta un hueco');
+      await tap(fanCard().pose.offset);
+      expect(table().cardInSlot(2), isNotNull);
+      expect(table().fan, isNull);
+    });
+
+    test('desvelar todas da la vuelta solo a las de la tirada', () async {
+      // GN2200: desvelaba tambien la carta suelta, que no cuenta
+      await openRws();
+      final ops = c.read(tableControllerProvider.notifier);
+      ops.arrange((s) => s.copyWith(spread: () => 'three_card'));
+      await holdAndPick(pileAt('p0'), 'deal');
+      final loose = await ops.take('p0', 3);
+      await settle();
+      await holdAndPick(slotPose(three, 0).offset, 'reveal-all');
+      for (var i = 0; i < 3; i++) {
+        expect(table().cardInSlot(i)!.faceUp, isTrue, reason: 'hueco $i');
+      }
+      expect(table().card(loose.slug)!.faceUp, isFalse);
+    });
+
+    test(
+      'con el abanico abierto, mantener el mazo da el menu del abanico',
+      () async {
+        // mantener sobre el abanico ya no abre nada: alli manda la lupa
+        await openRws();
+        await tap(pileAt('p0'));
+        final id = ++pointer;
+        dir.pointerDown(id, screenOf(pileAt('p0')), clock);
+        clock += const Duration(milliseconds: 450);
+        dir.tick(clock, const Duration(milliseconds: 16));
+        expect(dir.radial!.items.map((i) => i.id), contains('gather'));
+        dir.pointerCancel(id);
+        dir.closeRadial();
+        await holdAndPick(pileAt('p0'), 'spread');
+        expect(dir.radial!.items.map((i) => i.id), contains('three_card'));
+      },
+    );
+
+    test(
       'arrastrar una carta a un hueco la coloca; cerca de otra, la aclara',
       () async {
         await openRws();

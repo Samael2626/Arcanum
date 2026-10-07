@@ -10,7 +10,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/arcanum_colors.dart';
 import 'table_icons.dart';
 
-/// Lista de posiciones del abanico con zonas de toque de 48 dp.
+/// Lista de posiciones del abanico con zonas de toque de 48 dp, SOLO para el
+/// lector de pantalla. A la vista no hay boton: se elige con la lupa del
+/// abanico (Samuel, 05-oct: «carta 1, carta 2…» no es forma de elegir). Bajo
+/// el nodo no hay nada que reciba toques, asi que el dedo pasa a la mesa.
 class FanPickerButton extends StatelessWidget {
   const FanPickerButton({
     super.key,
@@ -28,50 +31,49 @@ class FanPickerButton extends StatelessWidget {
       alignment: Alignment.bottomCenter,
       child: Padding(
         padding: const EdgeInsets.all(14),
-        child: SizedBox(
-          height: 48,
-          child: FilledButton(
-            onPressed: () => showModalBottomSheet<void>(
-              context: context,
-              isScrollControlled: true,
-              builder: (sheet) => SafeArea(
-                child: FractionallySizedBox(
-                  heightFactor: .75,
-                  child: ListView.builder(
-                    itemCount: positions.length,
-                    itemExtent: 48,
-                    itemBuilder: (row, index) {
-                      final position = positions[index];
-                      void choose() {
-                        Navigator.pop(sheet);
-                        onChoose(position);
-                      }
+        child: Semantics(
+          button: true,
+          label: 'Elegir carta del abanico, ${positions.length} cartas',
+          onTap: () => showModalBottomSheet<void>(
+            context: context,
+            isScrollControlled: true,
+            builder: (sheet) => SafeArea(
+              child: FractionallySizedBox(
+                heightFactor: .75,
+                child: ListView.builder(
+                  itemCount: positions.length,
+                  itemExtent: 48,
+                  itemBuilder: (row, index) {
+                    final position = positions[index];
+                    void choose() {
+                      Navigator.pop(sheet);
+                      onChoose(position);
+                    }
 
-                      return Semantics(
-                        label:
-                            'Carta ${index + 1} de ${positions.length}, '
-                            'posicion ${position + 1} del mazo',
-                        button: true,
+                    return Semantics(
+                      label:
+                          'Carta ${index + 1} de ${positions.length}, '
+                          'posición ${position + 1} del mazo',
+                      button: true,
+                      onTap: choose,
+                      excludeSemantics: true,
+                      child: InkWell(
                         onTap: choose,
-                        excludeSemantics: true,
-                        child: InkWell(
-                          onTap: choose,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text('Carta ${position + 1}'),
-                            ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text('Carta ${position + 1}'),
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
-            child: Text('Elegir carta (${positions.length})'),
           ),
+          child: const SizedBox(width: 48, height: 48),
         ),
       ),
     );

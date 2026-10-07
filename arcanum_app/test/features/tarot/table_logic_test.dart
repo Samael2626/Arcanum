@@ -47,6 +47,45 @@ void main() {
       }
     });
 
+    test('girada o inclinada, la mesa sigue entera en pantalla', () {
+      // GN2200, 06-oct: con la mesa girada el mazo quedaba fuera por la
+      // derecha y habia que hacer doble toque para recuperarlo
+      for (final screen in const [phone, Size(360, 760)]) {
+        for (final yaw in const [-40.0, -25.0, 0.0, 25.0, 40.0]) {
+          for (final theta in const [16.0, 30.0, 56.0]) {
+            final c = TableCamera(
+              from: TableCameraState(theta: theta, yaw: yaw),
+            )..fit(screen);
+            final r = TableCamera.framed;
+            for (final p in [
+              r.topLeft,
+              r.topRight,
+              r.bottomLeft,
+              r.bottomRight,
+            ]) {
+              final s = c.toScreen(p);
+              final why = '$screen yaw $yaw theta $theta: $p -> $s';
+              expect(
+                s.dx,
+                inInclusiveRange(-.5, screen.width + .5),
+                reason: why,
+              );
+              expect(
+                s.dy,
+                inInclusiveRange(-.5, screen.height + .5),
+                reason: why,
+              );
+            }
+          }
+        }
+      }
+    });
+
+    test('en reposo el encuadre no cambia', () {
+      expect(cam().fitScale, 1);
+      expect(cam(yaw: 40).fitScale, lessThan(1));
+    });
+
     test(
       'lo cercano se ve mas grande: el borde de abajo es mas ancho que el de arriba',
       () {
@@ -411,6 +450,24 @@ void main() {
         expect(p.dy, lessThanOrEqualTo(phone.height));
       }
     });
+
+    test(
+      'pegado al borde, soltar sin deslizar no elige la opcion de debajo',
+      () {
+        // GN2200: mazo en la esquina; el circulo se mete hacia dentro y
+        // «Extender» quedaba bajo el dedo, asi que soltar lo ejecutaba
+        const gn2200 = Size(411, 914);
+        const press = Offset(325, 640);
+        final deck = RadialMenus.deck(count: 75, cardsOut: true, piles: 1);
+        final l = RadialLayout.at(press, gn2200, deck);
+        expect((l.center - press).distance, greaterThan(RadialLayout.deadZone));
+        expect(l.hotAt(press), isNull);
+        expect(l.hotAt(press.translate(-8, 6)), isNull);
+        // deslizar de verdad hasta una opcion sigue eligiendola
+        final spread = deck.indexWhere((i) => i.id == 'spread');
+        expect(l.hotAt(l.positions[spread]), spread);
+      },
+    );
 
     test('con mas de 6 opciones el circulo es mas grande', () {
       final deck = RadialMenus.deck(count: 78, cardsOut: false, piles: 1);

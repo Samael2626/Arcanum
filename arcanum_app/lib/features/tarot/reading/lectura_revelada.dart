@@ -16,7 +16,7 @@ import '../domain/table_models.dart';
 /// Cara dibujable de una carta de la mesa.
 TarotFace tarotFaceOf(CardFace f) => TarotFace.resolve({
   'slug': f.slug,
-  'name': f.nameEs ?? f.name ?? '',
+  'name': f.commonName,
   'arcana': f.arcana,
   'suit': f.suit,
   'number': f.number,
@@ -272,7 +272,8 @@ class _CardPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final accent = tarotAtmosphere(face).accent;
     final rev = card.face.reversed;
-    final name = card.face.nameEs ?? card.face.name ?? face.name;
+    final name = card.face.commonName;
+    final gd = card.face.goldenDawnTitle;
     return Semantics(
       container: true,
       label:
@@ -363,6 +364,17 @@ class _CardPage extends StatelessWidget {
                                 color: ArcanumColors.ivory,
                               ),
                             ),
+                            if (gd != null) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                gd,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontStyle: FontStyle.italic,
+                                  color: ArcanumColors.goldMuted,
+                                ),
+                              ),
+                            ],
                             const SizedBox(height: 4),
                             Text(
                               [
@@ -564,6 +576,41 @@ class _SpreadStrip extends StatelessWidget {
   /// Donde queda la tirada en pequeño dentro de la franja.
   static const double sideInset = 24, topInset = 44, bottomInset = 8;
 
+  /// Saltar al hueco `s`. Dos huecos con el mismo centro (el cruce 1/2 de la
+  /// Cruz Celta) comparten zona y el toque iria siempre al de encima: tocar
+  /// alterna entre ellos, empezando por el primero.
+  /// Radio alrededor de cada hueco del minimapa que cuenta como tocarlo.
+  static const double reach = 40;
+
+  void _tapNear(Offset p, Size box) {
+    final slots = spread!.slots;
+    int? best;
+    var bestD = reach;
+    for (var s = 0; s < slots.length; s++) {
+      if (!cards.any((c) => c.slot == s)) continue;
+      final d = (Offset(slots[s].x * box.width, slots[s].y * box.height) - p)
+          .distance;
+      if (d <= bestD) {
+        bestD = d;
+        best = s;
+      }
+    }
+    if (best != null) _goToSlot(best);
+  }
+
+  void _goToSlot(int s) {
+    final slots = spread!.slots;
+    final twins = [
+      for (var t = 0; t < slots.length; t++)
+        if (slots[t].x == slots[s].x && slots[t].y == slots[s].y) t,
+    ];
+    final now = current < cards.length ? cards[current].slot : null;
+    final at = twins.indexOf(now ?? -1);
+    final target = at < 0 ? twins.first : twins[(at + 1) % twins.length];
+    final i = cards.indexWhere((c) => c.slot == target);
+    if (i >= 0) go(i);
+  }
+
   /// Centro y giro del hueco de una carta en la franja, en coordenadas de la
   /// lectura. Una aclaratoria va al hueco que aclara; sin tirada, al centro.
   static ({Offset at, double rotation}) target(
@@ -669,11 +716,23 @@ class _SpreadStrip extends StatelessWidget {
                               filled: cards.any((c) => c.slot == s),
                               lit: lit == s,
                               label: '${s + 1}, ${spread!.slots[s].name}',
-                              onTap: () {
+                              // el lector nombra cada hueco: va directo a el
+                              onSemanticsTap: () {
                                 final i = cards.indexWhere((c) => c.slot == s);
                                 if (i >= 0) go(i);
                               },
                             ),
+                          // el dedo va al hueco mas cercano: cada uno gana su
+                          // zona sin pisar al vecino (en la columna de la Cruz
+                          // Celta no caben cajas de 48 dp)
+                          Positioned.fill(
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.translucent,
+                              excludeFromSemantics: true,
+                              onTapUp: (d) =>
+                                  _tapNear(d.localPosition, box.biggest),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -693,7 +752,7 @@ class _MiniSlot extends StatelessWidget {
     required this.filled,
     required this.lit,
     required this.label,
-    required this.onTap,
+    required this.onSemanticsTap,
   });
 
   final double x;
@@ -702,7 +761,7 @@ class _MiniSlot extends StatelessWidget {
   final bool filled;
   final bool lit;
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback onSemanticsTap;
 
   static const Size size = Size(14, 22);
 
@@ -716,9 +775,8 @@ class _MiniSlot extends StatelessWidget {
       button: filled,
       selected: lit,
       label: 'Ir a $label',
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: filled ? onTap : null,
+      onTap: filled ? onSemanticsTap : null,
+      child: SizedBox.expand(
         child: Center(
           child: Transform.rotate(
             angle: rotation * 3.14159265 / 180,

@@ -138,3 +138,50 @@ def test_draw_name_es_none_cuando_no_hay_title_ni_name_es():
              "meaning_upright": "Comienzos.", "meaning_reversed": "Imprudencia."}]
     c = draw_cards(deck, spread_type="one_card")[0]
     assert c["name_es"] is None
+
+
+def _gd_minor(slug, suit, number, title):
+    return SimpleNamespace(
+        slug=slug, arcana="minor", suit=suit, number=number, element="aire",
+        sephirah="Chokmah", decan=None, zodiac=None,
+        hebrew_letter=None, astro_correspondence=None,
+        name_es=None, title_book_t=title,
+        meaning_upright="Paz.", meaning_reversed="Tregua rota.",
+    )
+
+
+def test_menor_se_nombra_por_su_nombre_comun_y_el_titulo_gd_va_aparte():
+    # GN2200: «Señor de la Paz Restaurada» sin decir que es el Dos de Espadas
+    deck = [_gd_minor("dos-de-espadas", "espadas", 2,
+                      "Lord of Peace Restored / Señor de la Paz Restaurada")]
+    c = draw_cards(deck, spread_type="one_card")[0]
+    assert c["name_es"] == "Dos de Espadas"
+    assert c["title_es"] == "Señor de la Paz Restaurada"
+
+
+def test_as_y_cortes_tambien_por_nombre_comun():
+    deck = [
+        _gd_minor("as-de-copas", "copas", 1,
+                  "Root of the Powers of Water / Raíz de los Poderes del Agua"),
+    ]
+    assert draw_cards(deck, spread_type="one_card")[0]["name_es"] == "As de Copas"
+    deck = [
+        _gd_minor("sota-de-bastos", "bastos", 11,
+                  "Princess of the Shining Flame / Princesa de la Llama Brillante"),
+    ]
+    c = draw_cards(deck, spread_type="one_card")[0]
+    assert c["name_es"] == "Sota de Bastos"
+    assert c["title_es"] == "Princesa de la Llama Brillante"
+
+
+def test_mayor_sin_titulo_aparte_si_coincide_con_el_nombre():
+    deck = [SimpleNamespace(
+        slug="el-colgado", arcana="major", suit=None, number=12, element="agua",
+        sephirah="Hod", decan=None, zodiac=None,
+        hebrew_letter=None, astro_correspondence=None,
+        name_es=None, title_book_t="The Hanged Man / El Colgado",
+        meaning_upright="Entrega.", meaning_reversed="Estancamiento.",
+    )]
+    c = draw_cards(deck, spread_type="one_card")[0]
+    assert c["name_es"] == "El Colgado"
+    assert c["title_es"] is None

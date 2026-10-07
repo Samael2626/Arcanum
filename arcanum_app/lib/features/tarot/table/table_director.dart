@@ -74,6 +74,7 @@ class PieceView {
     this.peelHingeX = 0,
     this.label,
     this.dragging = false,
+    this.focused = false,
   });
 
   final String id;
@@ -99,6 +100,9 @@ class PieceView {
 
   /// Va pegada al dedo: se dibuja sin animar el cambio de sitio.
   final bool dragging;
+
+  /// La carta del abanico que la lupa tiene levantada: la que sale al soltar.
+  final bool focused;
 
   double get width =>
       (kind == PieceKind.card || kind == PieceKind.fanCard ? 1 : 1) *
@@ -376,6 +380,27 @@ class TableDirector extends ChangeNotifier {
 
   FanLayout? get fan => _fanDraft ?? table.fan;
 
+  /// Dedo sobre el abanico (unidades de mesa) mientras la lupa esta puesta.
+  Offset? _lensAt;
+
+  /// Carta del abanico que la lupa tiene levantada, o null.
+  String? _lensId;
+
+  /// Pone o quita la lupa y vibra al cruzar de una carta a otra.
+  void _setLens(Offset? at) {
+    _lensAt = at;
+    final before = _lensId;
+    pieces();
+    if (at != null && before != null && _lensId != before) {
+      _buzz(Buzz.fanTick);
+    }
+    notifyListeners();
+  }
+
+  /// Cuanto hay que subir el dedo sobre la linea del abanico para dejar la
+  /// lupa y llevarse la carta: por encima de la carta levantada.
+  static const double lensPullHeight = 130;
+
   /// El abanico sigue al dedo: se dibuja sin animar el despliegue.
   bool get fanDragging => _fanDraft != null;
 
@@ -435,17 +460,29 @@ class TableDirector extends ChangeNotifier {
         for (final pos in server?.piles[f.pid]?.positions ?? const <int>[])
           if (!_pending.containsKey('fan:${f.pid}:$pos')) pos,
       ];
-      final poses = fanPoses(f.start, f.end, positions.length);
-      for (var i = 0; i < positions.length; i++) {
-        out.add(
-          PieceView(
-            id: 'fan:${f.pid}:${positions[i]}',
-            kind: PieceKind.fanCard,
-            pose: poses[i],
-            fanPosition: positions[i],
-          ),
-        );
+      var poses = fanPoses(f.start, f.end, positions.length);
+      var sel = -1;
+      final lensAt = _lensAt;
+      if (lensAt != null && positions.isNotEmpty) {
+        final l = fanLens(poses, lensAt);
+        poses = l.poses;
+        sel = l.selected;
       }
+      _lensId = sel >= 0 ? 'fan:${f.pid}:${positions[sel]}' : null;
+      PieceView view(int i) => PieceView(
+        id: 'fan:${f.pid}:${positions[i]}',
+        kind: PieceKind.fanCard,
+        pose: poses[i],
+        fanPosition: positions[i],
+        focused: i == sel,
+      );
+      // la levantada se pinta (y se toca) por encima de sus vecinas
+      for (var i = 0; i < positions.length; i++) {
+        if (i != sel) out.add(view(i));
+      }
+      if (sel >= 0) out.add(view(sel));
+    } else {
+      _lensId = null;
     }
     for (final p in _pending.values) {
       out.add(
@@ -640,7 +677,11 @@ class TableDirector extends ChangeNotifier {
       }
       return;
     }
-    _apply(grammar.down(pointer, screen, time, hitAtScreen(screen)));
+    final hit = hitAtScreen(screen);
+    if (hit is HitCard && hit.inFan && !grammar.active) {
+      _setLens(camera.toTable(screen));
+    }
+    _apply(grammar.down(pointer, screen, time, hit));
   }
 
   void pointerMove(int pointer, Offset screen, Duration time) {
@@ -651,9 +692,13 @@ class TableDirector extends ChangeNotifier {
   void pointerUp(int pointer, Offset screen, Duration time) {
     _now = time;
     _apply(grammar.up(pointer, screen, time));
+    if (_lensAt != null && _drag == null) _setLens(null);
   }
 
-  void pointerCancel(int pointer) => _apply(grammar.cancel(pointer));
+  void pointerCancel(int pointer) {
+    _apply(grammar.cancel(pointer));
+    if (_lensAt != null) _setLens(null);
+  }
 
   /// Hay algo esperando al reloj (mantener, doble toque) o en movimiento.
   /// Con la mesa quieta no se piden frames: la bateria lo agradece.
@@ -689,6 +734,7 @@ class TableDirector extends ChangeNotifier {
           camera.reset();
           _saveCamera();
         case OpenRadialIntent(:final hit, :final position):
+          if (_lensAt != null) _setLens(null);
           _openRadialFor(hit, position);
         case RadialMoveIntent(:final position):
           final r = _radial;
@@ -786,7 +832,9 @@ class TableDirector extends ChangeNotifier {
   void _tap(Hit hit, Offset screen) {
     // sacar del abanico no espera a nada: cada toque es una carta
     if (hit case HitCard(inFan: true, :final slug)) {
-      unawaited(_takeFromFan(slug));
+      final chosen = _lensId ?? slug;
+      _setLens(null);
+      unawaited(_takeFromFan(chosen));
       return;
     }
     if (_busy) return;
@@ -912,13 +960,59 @@ class TableDirector extends ChangeNotifier {
     final endX = p.x > TableGeometry.width / 2
         ? 58.0
         : TableGeometry.width - 58;
+    final start = _fanStart(Offset(p.x, y), Offset(endX, y));
+    final end = _fanEndOffEdges(start, Offset(endX, y));
     ops.arrange(
       (s) => s.copyWith(
-        fan: () =>
-            FanLayout(pid: pid, start: Offset(p.x, y), end: Offset(endX, y)),
+        fan: () => FanLayout(pid: pid, start: start, end: end),
       ),
       undoable: true,
     );
+  }
+
+  /// El abanico empieza al lado de su caja, no encima: media caja, un hueco y
+  /// media carta. Encima la tapaba, y mantener el mazo (que es como se abre el
+  /// menu del abanico) caia en su primera carta.
+  static const double fanClearance =
+      TableGeometry.cardW * TableGeometry.deckScale / 2 +
+      6 +
+      TableGeometry.cardW * TableGeometry.fanScale / 2;
+
+  static Offset _fanStart(Offset pile, Offset toward) {
+    final d = toward - pile;
+    final len = d.distance;
+    return len == 0 ? pile : pile + d / len * fanClearance;
+  }
+
+  /// Distancia minima (dp) entre el abanico y los bordes de la pantalla. En
+  /// Android, deslizar desde menos de ~24 dp del borde es el gesto «atras»:
+  /// en el GN2200 la primera carta quedaba ahi y la lupa sacaba de la mesa.
+  static const double screenEdgeMargin = 32;
+
+  /// Acerca `end` al mazo hasta que la carta del extremo quede lejos de los
+  /// bordes con la camara de ahora. Pasos de 4 u; a lo sumo ~120 iteraciones.
+  Offset _fanEndOffEdges(Offset start, Offset end) {
+    final w = camera.viewport.width;
+    bool clear(Offset at) {
+      final r = poseRect(
+        TablePose(at.dx, at.dy, scale: TableGeometry.fanScale),
+      );
+      for (final c in [r.topLeft, r.topRight, r.bottomLeft, r.bottomRight]) {
+        final x = camera.toScreen(c).dx;
+        if (x < screenEdgeMargin || x > w - screenEdgeMargin) return false;
+      }
+      return true;
+    }
+
+    final d = start - end;
+    final len = d.distance;
+    if (len == 0 || w <= 0) return end;
+    final step = d / len * 4;
+    var at = end;
+    for (var walked = 0.0; walked < len && !clear(at); walked += 4) {
+      at += step;
+    }
+    return at;
   }
 
   /// Saca una carta del abanico.
@@ -931,8 +1025,16 @@ class TableDirector extends ChangeNotifier {
   ///
   /// Antes el toque esperaba la respuesta con la mesa bloqueada (`_busy`) y
   /// los toques de mientras se tiraban en silencio.
+  /// Sin tirada las cartas no cuentan para la lectura y nada decia donde se
+  /// elige: se avisa una vez, con la primera carta sacada.
+  static const spreadHint =
+      'Aún no hay tirada: mantén pulsado el mazo y elige «Tirada» para que '
+      'las cartas cuenten.';
+  bool _spreadHinted = false;
+
   Future<void> _takeFromFan(String fanId, {_Drag? drag}) async {
     if (_pending.containsKey(fanId)) return;
+    final wasFull = _spreadFull;
     final from = _poseOf(fanId);
     if (from == null) return;
     final parts = fanId.split(':');
@@ -972,6 +1074,10 @@ class TableDirector extends ChangeNotifier {
     }
     _pending.remove(fanId);
     _timeTake(p);
+    if (sp == null && !_spreadHinted) {
+      _spreadHinted = true;
+      effects.toast(spreadHint);
+    }
     if (_count(p.pid) == 0) ops.arrange((s) => s.copyWith(fan: () => null));
     if (drag != null && !p.released && identical(_drag, drag)) {
       // el dedo sigue abajo: la carta de verdad sigue al dedo desde ahi
@@ -982,7 +1088,40 @@ class TableDirector extends ChangeNotifier {
       _born('card:${card.slug}', _shownPending(p));
       _land(card.slug, p.slot, p.to);
     }
+    _gatherFanIfComplete(wasFull: wasFull);
     notifyListeners();
+  }
+
+  /// Tirada llena y abanico abierto: ya no hace falta sacar, y el abanico
+  /// tapaba «Interpretar». Se recoge solo; un toque al mazo lo vuelve a abrir
+  /// si hace falta una aclaratoria.
+  ///
+  /// `wasFull` es si la tirada ya estaba llena antes del gesto: el aviso sale
+  /// solo al completarla, no con cada aclaratoria de un abanico reabierto.
+  void _gatherFanIfComplete({bool wasFull = true}) {
+    if (!_spreadFull || table.fan == null) return;
+    ops.arrange((s) => s.copyWith(fan: () => null));
+    if (wasFull) return;
+    final sp = spread!;
+    final allUp = [
+      for (var i = 0; i < sp.cardCount; i++) table.cardInSlot(i)!,
+    ].every((c) => c.faceUp);
+    // quien siguiera deslizando por donde estaba el abanico giraria la mesa
+    // sin saber por que: se dice que se recogio y que toca ahora
+    effects.toast(
+      allUp
+          ? 'Tirada completa: toca «Interpretar».'
+          : 'Tirada completa: el mazo se recoge. Desvela las cartas.',
+    );
+  }
+
+  bool get _spreadFull {
+    final sp = spread;
+    if (sp == null) return false;
+    for (var i = 0; i < sp.cardCount; i++) {
+      if (table.cardInSlot(i) == null) return false;
+    }
+    return true;
   }
 
   /// Seleccion precisa desde la lista accesible; conserva el mismo flujo del toque.
@@ -1108,6 +1247,8 @@ class TableDirector extends ChangeNotifier {
     return [
       if (sp != null)
         for (var i = 0; i < sp.cardCount; i++) poseRect(slotPose(sp, i)),
+      // sus etiquetas tambien: una suelta encima tapaba «Presente»
+      if (sp != null) ...slotLabelRects(sp),
       for (final c in table.cards)
         if (c.slug != skip && !c.aside)
           poseRect(TablePose(c.x, c.y, rot: c.rot, scale: c.scale)),
@@ -1141,6 +1282,10 @@ class TableDirector extends ChangeNotifier {
     );
     return TablePose(at.dx, at.dy, scale: scale);
   }
+
+  @visibleForTesting
+  TablePose debugLooseSpot(Offset near, double scale) =>
+      _looseSpot(near, scale);
 
   /// Primer hueco sin carta y sin una carta de camino.
   int? _firstEmptySlot(SpreadDef sp) {
@@ -1397,8 +1542,14 @@ class TableDirector extends ChangeNotifier {
     );
   }
 
+  /// Boca abajo y dentro de la lectura: en un hueco o aclarando uno. La
+  /// suelta no cuenta, asi que «Desvelar todas» no la toca.
+  Iterable<TableCard> get _hiddenInReading => table.cards.where(
+    (c) => !c.aside && !c.faceUp && (c.slot != null || c.host != null),
+  );
+
   void _revealAll() {
-    final hidden = table.cards.where((c) => !c.aside && !c.faceUp).toList()
+    final hidden = _hiddenInReading.toList()
       ..sort((a, b) => (a.slot ?? 99).compareTo(b.slot ?? 99));
     _buzzReveal(hidden);
     ops.arrange((s) {
@@ -1466,6 +1617,10 @@ class TableDirector extends ChangeNotifier {
             _ => null,
           },
         );
+      case HitDeck(inPlay: true, :final pid) when fan?.pid == pid:
+        // con el abanico abierto, el mazo es la caja vacia: su menu es el del
+        // abanico (mantener sobre el abanico es de la lupa)
+        _openFanRadial(pid, screen);
       case HitDeck(inPlay: true, :final pid):
         final count = _count(pid);
         _openRadial(
@@ -1493,25 +1648,14 @@ class TableDirector extends ChangeNotifier {
           },
         );
       case HitCard(inFan: true, :final slug):
-        _openRadial(screen, 'Abanico', RadialMenus.fan, (id) async {
-          final pid = slug.split(':')[1];
-          switch (id) {
-            case 'take':
-              await _takeFromFan(slug);
-            case 'gather':
-              ops.arrange((s) => s.copyWith(fan: () => null));
-            case 'shuffle':
-              ops.arrange((s) => s.copyWith(fan: () => null));
-              _openShuffleRadial(pid, screen);
-          }
-        });
+        _openFanRadial(slug.split(':')[1], screen, take: slug);
       case HitCard(:final slug):
         final c = table.card(slug);
         if (c == null) return;
-        final hidden = table.cards.where((k) => !k.aside && !k.faceUp).length;
+        final hidden = _hiddenInReading.length;
         final sp = spread;
         final title = c.faceUp
-            ? (c.face.nameEs ?? c.face.name ?? '')
+            ? c.face.commonName
             : c.slot != null && sp != null
             ? '${c.slot! + 1} · ${sp.slots[c.slot!].name}'
             : c.aside
@@ -1538,6 +1682,29 @@ class TableDirector extends ChangeNotifier {
       case HitDeck() || HitEmbroidery() || HitSeal() || HitNothing():
         break;
     }
+  }
+
+  /// Menu del abanico. «Sacar» saca `take` o, sin ella, la primera carta.
+  void _openFanRadial(String pid, Offset screen, {String? take}) {
+    _openRadial(screen, 'Abanico', RadialMenus.fan, (id) async {
+      switch (id) {
+        case 'take':
+          final slug =
+              take ??
+              pieces()
+                  .where((p) => p.kind == PieceKind.fanCard)
+                  .map((p) => p.id)
+                  .firstOrNull;
+          if (slug != null) await _takeFromFan(slug);
+        case 'gather':
+          ops.arrange((s) => s.copyWith(fan: () => null));
+        case 'shuffle':
+          ops.arrange((s) => s.copyWith(fan: () => null));
+          _openShuffleRadial(pid, screen);
+        case 'spread':
+          _openSpreadRadial(pid);
+      }
+    });
   }
 
   void _openShuffleRadial(String pid, Offset screen) {
@@ -1598,6 +1765,18 @@ class TableDirector extends ChangeNotifier {
       ),
       undoable: true,
     );
+    // las sueltas que ahora caen sobre un hueco se apartan: si no, la carta
+    // del hueco las taparia o ellas al hueco
+    final slots = [for (var i = 0; i < sp.cardCount; i++) slotRect(sp, i)];
+    for (final c in table.cards) {
+      if (c.slot != null || c.host != null || c.aside) continue;
+      final r = poseRect(TablePose(c.x, c.y, rot: c.rot, scale: c.scale));
+      if (!slots.any(r.overlaps)) continue;
+      final to = _looseSpot(Offset(c.x, c.y), c.scale, skip: c.slug);
+      ops.arrange(
+        (s) => s.updateCard(c.slug, (k) => k.copyWith(x: to.x, y: to.y)),
+      );
+    }
   }
 
   // ---------- arrastrar ----------
@@ -1628,7 +1807,8 @@ class TableDirector extends ChangeNotifier {
       case DragKind.fan:
         final pid = (hit as HitDeck).pid;
         final p = _pile(pid)!;
-        _fanDraft = FanLayout(pid: pid, start: Offset(p.x, p.y), end: at);
+        final start = _fanStart(Offset(p.x, p.y), at);
+        _fanDraft = FanLayout(pid: pid, start: start, end: at);
         _drag = _Drag(kind, 'pile:$pid', Offset.zero);
       case DragKind.cut:
         final pid = (hit as HitDeck).pid;
@@ -1667,21 +1847,10 @@ class TableDirector extends ChangeNotifier {
         final d = _Drag(kind, id, Offset.zero);
         _drag = d;
         if (hit is HitCard && hit.inFan) {
-          // sale del abanico al empezar a arrastrarla: se ve en el dedo en el
-          // acto y la carta de verdad la sustituye al llegar del servidor
-          ops.beginUndoable();
-          d
-            ..gesture = true
-            ..id = 'pending:${hit.slug}';
-          unawaited(_takeFromFan(hit.slug, drag: d));
-          final p = _pending[hit.slug];
-          if (p == null) {
-            _drag = null;
-            ops.commitUndoable();
-            return;
-          }
-          _lift[d.id] = 64;
-          _moveDragged(d, at);
+          // deslizar sobre el abanico pasea la lupa; subir el dedo se lleva
+          // la carta (ver _dragUpdate)
+          d.id = 'lens';
+          _setLens(at);
           return;
         }
         final pose = _poseOf(id);
@@ -1696,6 +1865,23 @@ class TableDirector extends ChangeNotifier {
         _lift[id] = 64;
         _moveDragged(d, at);
     }
+  }
+
+  /// Saca `slug` del abanico pegada al dedo: se ve en el acto y la carta de
+  /// verdad la sustituye al llegar del servidor.
+  void _pullFromFan(_Drag d, String slug, Offset at) {
+    ops.beginUndoable();
+    d
+      ..gesture = true
+      ..id = 'pending:$slug';
+    unawaited(_takeFromFan(slug, drag: d));
+    if (_pending[slug] == null) {
+      _drag = null;
+      ops.commitUndoable();
+      return;
+    }
+    _lift[d.id] = 64;
+    _moveDragged(d, at);
   }
 
   void _moveDragged(_Drag d, Offset at) {
@@ -1713,6 +1899,21 @@ class TableDirector extends ChangeNotifier {
     final at = camera.toTable(screen);
     final prev = d.last ?? at;
     d.last = at;
+    if (d.id == 'lens') {
+      final f = fan;
+      final chosen = _lensId;
+      if (f != null &&
+          chosen != null &&
+          heightAboveLine(f.start, f.end, at) > lensPullHeight) {
+        _setLens(null);
+        final pull = _Drag(DragKind.move, chosen, Offset.zero);
+        _drag = pull;
+        _pullFromFan(pull, chosen, at);
+      } else {
+        _setLens(at);
+      }
+      return;
+    }
     switch (kind) {
       case DragKind.orbit:
         final v = camera.orbitBy(delta);
@@ -1723,7 +1924,14 @@ class TableDirector extends ChangeNotifier {
           localNormalized(TablePose(c.x, c.y, rot: c.rot, scale: c.scale), at),
         );
       case DragKind.fan:
-        _fanDraft = _fanDraft!.to(at);
+        final draft = _fanDraft!;
+        final pile = _pile(draft.pid)!;
+        final start = _fanStart(Offset(pile.x, pile.y), at);
+        _fanDraft = FanLayout(
+          pid: draft.pid,
+          start: start,
+          end: _fanEndOffEdges(start, at),
+        );
       case DragKind.cut || DragKind.move:
         if (!d.ready) return;
         _moveDragged(d, at);
@@ -1741,8 +1949,10 @@ class TableDirector extends ChangeNotifier {
     final pending = _drag?.id.startsWith('pending:') ?? false;
     // una carta del abanico que aun no llego cierra su gesto al llegar
     final gesture = !pending && (_drag?.gesture ?? false);
+    final wasFull = _spreadFull;
     try {
       _dropDragged(kind, cancelled);
+      _gatherFanIfComplete(wasFull: wasFull);
     } finally {
       if (gesture) ops.commitUndoable();
     }
@@ -1753,6 +1963,12 @@ class TableDirector extends ChangeNotifier {
     _drag = null;
     hotSlot = null;
     if (d == null) return;
+    if (d.id == 'lens') {
+      final chosen = _lensId;
+      _setLens(null);
+      if (!cancelled && chosen != null) unawaited(_takeFromFan(chosen));
+      return;
+    }
     _wobble[d.id]?.release();
     _lift.remove(d.id);
     switch (kind) {
@@ -1922,6 +2138,18 @@ class TableDirector extends ChangeNotifier {
       }
     }
     final aside = pose.y < TableGeometry.shelfY;
+    final scale = aside
+        ? TableGeometry.deckScale
+        : (sp?.cardScale ?? TableGeometry.freeScale);
+    // entera dentro del paño (o del estante): antes se sujetaba el centro y
+    // la carta podia quedar colgando sobre el marco y el borde de la pantalla
+    final hw = TableGeometry.cardW * scale / 2;
+    final hh = TableGeometry.cardH * scale / 2;
+    const c = TableGeometry.cloth;
+    final x = pose.x.clamp(c.left + hw, c.right - hw).toDouble();
+    final y = aside
+        ? pose.y.clamp(hh, TableGeometry.shelfY - 1).toDouble()
+        : pose.y.clamp(c.top + hh, c.bottom - hh).toDouble();
     ops.arrange(
       (s) => s.updateCard(
         slug,
@@ -1929,11 +2157,9 @@ class TableDirector extends ChangeNotifier {
           slot: () => null,
           host: () => null,
           aside: aside,
-          x: pose.x.clamp(40, TableGeometry.width - 40),
-          y: pose.y.clamp(40, TableGeometry.height - 40),
-          scale: aside
-              ? TableGeometry.deckScale
-              : (sp?.cardScale ?? TableGeometry.freeScale),
+          x: x,
+          y: y,
+          scale: scale,
         ),
       ),
       undoable: true,

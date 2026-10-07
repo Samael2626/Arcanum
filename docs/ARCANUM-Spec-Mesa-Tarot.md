@@ -6,7 +6,7 @@ Decisiones de Samuel que no se discuten al portar:
 
 - Módulo nuevo **Tarot**, separado del Oráculo.
 - **Regla única de gestos:** tocar hace la acción directa; mantener pulsado abre el radial.
-- **Sin barra de botones:** las acciones viven en la mesa; para elegir una posición exacta del abanico de 78 se abre una lista accesible.
+- **Sin barra de botones:** las acciones viven en la mesa. Una carta concreta del abanico se elige con la **lupa**: el dedo pasea por el abanico, la carta bajo él sube y crece y las vecinas se apartan. La lista de 78 posiciones queda solo para el lector de pantalla (06-oct, opción A del prototipo «Gestos para sacar carta»).
 - **Sin velas.**
 - **Nada de menús que se reordenen:** cada acción tiene siempre su sitio.
 
@@ -107,8 +107,8 @@ Umbrales:
 | Tapete o marco | — | Radial del paño | Gira e inclina la mesa |
 | Doble toque en tapete o marco | Restablece la cámara | | |
 | Mazo del estante | Lo pone en juego | — | Al paño: lo pone en juego |
-| Mazo o montón en juego | Lo extiende (o lo junta si otro tenía el abanico) | Radial del mazo | Centro: moverlo. Laterales: abanico. Borde de arriba: cortar. Soltarlo sobre otro: unirlos. |
-| Carta del abanico | La saca al primer hueco libre; la posición exacta se puede elegir en una lista de 78 filas de 48 dp | Radial del abanico | La saca y la lleva |
+| Mazo o montón en juego | Lo extiende (o lo junta si otro tenía el abanico) | Radial del mazo; con su abanico abierto, el radial del abanico | Centro: moverlo. Laterales: abanico. Borde de arriba: cortar. Soltarlo sobre otro: unirlos. |
+| Carta del abanico | Pulsar pone la lupa; soltar saca la carta resaltada al primer hueco libre | Nada: mantener es parte de la lupa (el radial del abanico se abre manteniendo el mazo) | Deslizar pasea la lupa; subir el dedo por encima del abanico se lleva la carta a un hueco concreto |
 | Carta suelta | Vuelve al montón más cercano | Radial de la carta | Moverla. Imán a los huecos; junto a otra carta de la tirada queda como aclaratoria. |
 | Carta en la tirada | Desvela o lee | Radial de la carta | Moverla (intercambio si el hueco está ocupado) |
 | Esquina de la carta boca abajo | — | — | La levanta y voltea (ver 5) |
@@ -134,7 +134,7 @@ Umbrales:
 |---|---|
 | Mazo o montón | Barajar · Cortar · Extender · Sacar · Recoger · Tirada · Unir |
 | Carta | Desvelar/Leer · Girar · Recoger · Sacar (apartar) · Desvelar todas |
-| Abanico | Sacar · Juntar · Barajar |
+| Abanico | Sacar · Juntar · Barajar · Tirada |
 | Paño | Sellar pregunta · Recoger todo · Lecturas · Sonido |
 | Barajar | Cascada · Por encima · Sobre el paño |
 | Tirada | las 7, con su esquema dibujado |
@@ -248,7 +248,7 @@ lib/features/tarot/
 
 El cliente de API está en `lib/core/api/arcanum_api.dart`; las tiradas y mazos vienen del backend. Riverpod usa `AsyncNotifier` manual, siguiendo el patrón existente en el repo; este módulo no añadió generación de código.
 
-**Accesibilidad implementada:** cartas con nombre, sentido y hueco; opciones y centro del radial, sello, bordado, deshacer, disco lunar y carta pendiente con etiquetas y acciones semánticas. El abanico visual mantiene sus 78 posiciones y añade una lista seleccionable de 78 filas de 48 dp; en 360 × 760 cada posición visual solo separa 3,27 dp. Los efectos decorativos quedan fuera del lector de pantalla. Las pruebas automatizadas no sustituyen la comprobación con lector real en GN2200.
+**Accesibilidad implementada:** cartas con nombre, sentido y hueco; opciones y centro del radial, sello, bordado, deshacer, disco lunar y carta pendiente con etiquetas y acciones semánticas. El abanico visual mantiene sus 78 posiciones (3,27 dp entre cartas en 360 × 760); la lupa separa las vecinas a más de 20 unidades de mesa bajo el dedo. Para el lector queda el nodo «Elegir carta del abanico, N cartas», invisible y sin zona de toque, que abre una lista de 78 filas de 48 dp. Los efectos decorativos quedan fuera del lector de pantalla. Las pruebas automatizadas no sustituyen la comprobación con lector real en GN2200.
 
 ---
 
@@ -260,4 +260,5 @@ El cliente de API está en `lib/core/api/arcanum_api.dart`; las tiradas y mazos 
 - **Motor de interpretación:** Tradición funciona en la mesa con significados por posición y sentido. El Oráculo con las tiradas nuevas queda pendiente.
 - **Cartas pequeñas en la Cruz Celta y la Rueda:** mitigadas con la zona de toque y el zoom, pero siguen siendo pequeñas en un móvil de 360 dp.
 - **Validación en GN2200:** medir fps con Impeller, completar Cruz Celta, comprobar lector de pantalla, tacto, efectos y textos largos. Sin esas medidas no se afirma 60 fps ni aprobación móvil.
-- **Decisiones abiertas:** recuperación de calidad (provisional: tres ventanas de 2 s a ≥55 fps), recorte de hasta 10 % del paño con giro ±40°, umbral de arrastre de 6 frente a 18 px, y posición del abanico frente al sello y bordado. Opciones en `ARCANUM-Plan-Mesa-Tarot.md`.
+- **Decisiones abiertas:** recuperación de calidad (provisional: tres ventanas de 2 s a ≥55 fps) y umbral de arrastre de 6 frente a 18 px. Opciones en `ARCANUM-Plan-Mesa-Tarot.md`.
+- **Cerradas el 06-oct:** el giro ±40° ya no recorta: la cámara se aleja lo justo (`TableCamera.fitScale`). El abanico frente al sello y el bordado: se recoge solo al llenar la tirada y empieza al lado de la caja del mazo, a 32 dp o más de los bordes de pantalla.
