@@ -11,9 +11,21 @@ import 'svg_parity_test.dart' show diffSvg;
 double _d(Object? v) => (v as num).toDouble();
 
 void main() {
-  final r = (jsonDecode(File('test/features/sigilos/fixtures/interaccion.json').readAsStringSync()) as Map<String, dynamic>)['radial'] as Map<String, dynamic>;
+  final r =
+      (jsonDecode(
+                File(
+                  'test/features/sigilos/fixtures/interaccion.json',
+                ).readAsStringSync(),
+              )
+              as Map<String, dynamic>)['radial']
+          as Map<String, dynamic>;
   final docIn = r['docIn'] as Map<String, dynamic>;
-  final doc = SigilDoc(layers: [for (final l in docIn['layers'] as List) Layer.fromJson(l as Map<String, dynamic>)]);
+  final doc = SigilDoc(
+    layers: [
+      for (final l in docIn['layers'] as List)
+        Layer.fromJson(l as Map<String, dynamic>),
+    ],
+  );
   doc.sigil.method = ReductionMethod.unique;
   doc.generate(docIn['intention'] as String);
   final ctl = CanvasController(doc);
@@ -53,23 +65,56 @@ void main() {
         expect(got, isNull, reason: '$label: sin ancla');
       } else {
         expect(got!.isLetter, a['kind'] == 'letter', reason: label);
-        expect([got.x, got.top, got.bottom], [for (final k in ['x', 'top', 'bottom']) closeTo(_d(a[k]), 1e-6)], reason: '$label: ancla');
+        expect(
+          [got.x, got.top, got.bottom],
+          [
+            for (final k in ['x', 'top', 'bottom']) closeTo(_d(a[k]), 1e-6),
+          ],
+          reason: '$label: ancla',
+        );
       }
       (s['users'] as Map<String, dynamic>).forEach((ch, u) {
-        final m = u as Map<String, dynamic>, e = doc.sigil.letters.firstWhere((l) => l.ch == ch).user;
-        expect([e.dx, e.dy, e.ds, e.drot], [for (final k in ['dx', 'dy', 'ds', 'drot']) closeTo(_d(m[k]), 1e-9)], reason: '$label: letra $ch');
-        expect([e.fx, e.fy], [m['fx'], m['fy']], reason: '$label: reflejos de $ch');
+        final m = u as Map<String, dynamic>,
+            e = doc.sigil.letters.firstWhere((l) => l.ch == ch).user;
+        expect(
+          [e.dx, e.dy, e.ds, e.drot],
+          [
+            for (final k in ['dx', 'dy', 'ds', 'drot']) closeTo(_d(m[k]), 1e-9),
+          ],
+          reason: '$label: letra $ch',
+        );
+        expect(
+          [e.fx, e.fy],
+          [m['fx'], m['fy']],
+          reason: '$label: reflejos de $ch',
+        );
       });
       final ls = (s['layers'] as List).cast<Map<String, dynamic>>();
-      expect(doc.layers.map((l) => l.id).toList(), ls.map((l) => l['id']).toList(), reason: '$label: capas');
+      expect(
+        doc.layers.map((l) => l.id).toList(),
+        ls.map((l) => l['id']).toList(),
+        reason: '$label: capas',
+      );
       for (var i = 0; i < ls.length; i++) {
         // cada tipo tiene sus campos: se comparan los que existen en el prototipo
-        final got = {'size': doc.layers[i].size, 'scale': doc.layers[i].scale, 'rot': doc.layers[i].rot};
+        final got = {
+          'size': doc.layers[i].size,
+          'scale': doc.layers[i].scale,
+          'rot': doc.layers[i].rot,
+        };
         for (final k in got.keys.where((k) => ls[i][k] != null)) {
-          expect(got[k], closeTo(_d(ls[i][k]), 1e-9), reason: '$label: $k de ${doc.layers[i].type.name}');
+          expect(
+            got[k],
+            closeTo(_d(ls[i][k]), 1e-9),
+            reason: '$label: $k de ${doc.layers[i].type.name}',
+          );
         }
       }
-      expect(diffSvg(doc.buildSVG(), s['svg'] as String), isNull, reason: '$label: SVG');
+      expect(
+        diffSvg(doc.buildSVG(), s['svg'] as String),
+        isNull,
+        reason: '$label: SVG',
+      );
     }
     expect(ids.length, 3);
   });

@@ -274,7 +274,10 @@ class ArcanumApi {
   }
 
   /// Reescribe una entrada (el taller de sigilos guarda sobre la misma).
-  Future<Map<String, dynamic>> grimoireUpdate(String id, Map<String, dynamic> body) async {
+  Future<Map<String, dynamic>> grimoireUpdate(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
     final res = await _dio.put('/grimoire/$id', data: body);
     return res.data as Map<String, dynamic>;
   }

@@ -16,12 +16,14 @@ import 'package:flutter_test/flutter_test.dart';
 
 class FakeAuth extends AuthNotifier {
   @override
-  AuthState build() => const AuthState(AuthStatus.authenticated, {'id': 'user-a'});
+  AuthState build() =>
+      const AuthState(AuthStatus.authenticated, {'id': 'user-a'});
 }
 
 class FakeApi extends ArcanumApi {
   FakeApi() : super(Dio());
-  final created = <Map<String, dynamic>>[], updated = <(String, Map<String, dynamic>)>[];
+  final created = <Map<String, dynamic>>[],
+      updated = <(String, Map<String, dynamic>)>[];
   Map<String, dynamic> detail = const {};
 
   /// Si no es null, el alta espera a que se complete (envio en curso).
@@ -35,7 +37,10 @@ class FakeApi extends ArcanumApi {
   }
 
   @override
-  Future<Map<String, dynamic>> grimoireUpdate(String id, Map<String, dynamic> body) async {
+  Future<Map<String, dynamic>> grimoireUpdate(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
     updated.add((id, body));
     return {'id': id};
   }
@@ -50,26 +55,30 @@ class FakeApi extends ArcanumApi {
 /// Cifrado de mentira: base64 (el de verdad tiene sus propios tests).
 class FakeCrypto extends GrimoireCrypto {
   @override
-  Future<({String ciphertext, String iv})> encryptText(String plaintext) async => (ciphertext: base64Encode(utf8.encode(plaintext)), iv: 'iv');
+  Future<({String ciphertext, String iv})> encryptText(
+    String plaintext,
+  ) async => (ciphertext: base64Encode(utf8.encode(plaintext)), iv: 'iv');
   @override
-  Future<String> decryptText(String ciphertextB64, String ivB64) async => utf8.decode(base64Decode(ciphertextB64));
+  Future<String> decryptText(String ciphertextB64, String ivB64) async =>
+      utf8.decode(base64Decode(ciphertextB64));
 }
 
 Widget tallerApp(Widget child, FakeApi api) => ProviderScope(
-      overrides: [
-        arcanumApiProvider.overrideWithValue(api),
-        authProvider.overrideWith(FakeAuth.new),
-        grimoireCryptoProvider.overrideWithValue(FakeCrypto()),
-        userPlaceProvider.overrideWithValue(null),
-        // miniatura fija: rasterizar no termina con el reloj falso
-        sigilPreviewProvider.overrideWithValue((_) async => Uint8List.fromList(const [137, 80, 78, 71])),
-      ],
-      child: MaterialApp(home: child),
-    );
+  overrides: [
+    arcanumApiProvider.overrideWithValue(api),
+    authProvider.overrideWith(FakeAuth.new),
+    grimoireCryptoProvider.overrideWithValue(FakeCrypto()),
+    userPlaceProvider.overrideWithValue(null),
+    // miniatura fija: rasterizar no termina con el reloj falso
+    sigilPreviewProvider.overrideWithValue(
+      (_) async => Uint8List.fromList(const [137, 80, 78, 71]),
+    ),
+  ],
+  child: MaterialApp(home: child),
+);
 
 void phoneView(WidgetTester tester) {
   tester.view.physicalSize = const Size(390 * 3, 844 * 3);
   tester.view.devicePixelRatio = 3;
   addTearDown(tester.view.reset);
 }
-

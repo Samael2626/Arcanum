@@ -42,10 +42,18 @@ void main() {
       expect(jergaEnLaLectura('el hod del oficio'), hasLength(1));
     });
 
-    test('encuentra tambien los terminos del glosario que salen en lecturas', () {
-      final t = jergaEnLaLectura('la Luna en Libra, primer decanato, y su dignidad');
-      expect(t.map((x) => x.titulo), containsAll(<String>['Decanato', 'Dignidad esencial']));
-    });
+    test(
+      'encuentra tambien los terminos del glosario que salen en lecturas',
+      () {
+        final t = jergaEnLaLectura(
+          'la Luna en Libra, primer decanato, y su dignidad',
+        );
+        expect(
+          t.map((x) => x.titulo),
+          containsAll(<String>['Decanato', 'Dignidad esencial']),
+        );
+      },
+    );
 
     test('un texto sin jerga no marca nada', () {
       // El objetivo de fondo: cuando la voz mejore, esto deberia quedarse
@@ -59,21 +67,24 @@ void main() {
       );
     });
 
-    test('los terminos mas frecuentes tambien abren, aunque su clave no se llame igual', () {
-      // El contenido ya estaba escrito y enterrado en otra entrada: "invertida"
-      // dentro de `tarot`, las cuatro dignidades dentro de `dignidad`. Lo que
-      // faltaba era el alias.
-      String? abre(String texto) {
-        final t = jergaEnLaLectura(texto);
-        return t.isEmpty ? null : t.first.titulo;
-      }
+    test(
+      'los terminos mas frecuentes tambien abren, aunque su clave no se llame igual',
+      () {
+        // El contenido ya estaba escrito y enterrado en otra entrada: "invertida"
+        // dentro de `tarot`, las cuatro dignidades dentro de `dignidad`. Lo que
+        // faltaba era el alias.
+        String? abre(String texto) {
+          final t = jergaEnLaLectura(texto);
+          return t.isEmpty ? null : t.first.titulo;
+        }
 
-      expect(abre('la carta sale invertida'), 'Tirada de tarot');
-      expect(abre('tu Venus natal'), isNotNull);
-      expect(abre('Venus en exilio'), 'Dignidad esencial');
-      expect(abre('Saturno en caída'), 'Dignidad esencial');
-      expect(abre('Marte en domicilio'), 'Dignidad esencial');
-    });
+        expect(abre('la carta sale invertida'), 'Tirada de tarot');
+        expect(abre('tu Venus natal'), isNotNull);
+        expect(abre('Venus en exilio'), 'Dignidad esencial');
+        expect(abre('Saturno en caída'), 'Dignidad esencial');
+        expect(abre('Marte en domicilio'), 'Dignidad esencial');
+      },
+    );
 
     test('un termino repetido se subraya SOLO la primera vez', () {
       // "natal" sale 52 veces en las lecturas medidas. Subrayarlas todas deja

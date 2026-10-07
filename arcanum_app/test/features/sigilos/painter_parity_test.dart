@@ -27,7 +27,8 @@ Future<double> diffPct(ui.Image a, ui.Image b) async {
   return n / (da.lengthInBytes / 4) * 100;
 }
 
-Future<ui.Image> decodePng(Uint8List bytes) async => (await (await ui.instantiateImageCodec(bytes)).getNextFrame()).image;
+Future<ui.Image> decodePng(Uint8List bytes) async =>
+    (await (await ui.instantiateImageCodec(bytes)).getNextFrame()).image;
 
 Future<ui.Image> painterImage(List<dynamic> scene, int px) async {
   final rec = ui.PictureRecorder();
@@ -43,25 +44,45 @@ const kMaxPct = 0.06;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  final cases = ((jsonDecode(File('test/features/sigilos/fixtures/capas.json').readAsStringSync()) as Map<String, dynamic>)['svgs'] as List)
-      .cast<Map<String, dynamic>>();
-  final pngs = Directory('test/features/sigilos/fixtures/png').listSync().whereType<File>().toList()
-    ..sort((a, b) => a.path.compareTo(b.path));
+  final cases =
+      ((jsonDecode(
+                    File(
+                      'test/features/sigilos/fixtures/capas.json',
+                    ).readAsStringSync(),
+                  )
+                  as Map<String, dynamic>)['svgs']
+              as List)
+          .cast<Map<String, dynamic>>();
+  final pngs =
+      Directory(
+          'test/features/sigilos/fixtures/png',
+        ).listSync().whereType<File>().toList()
+        ..sort((a, b) => a.path.compareTo(b.path));
 
-  test('hay imagenes de referencia', () => expect(pngs.length, greaterThan(20)));
+  test(
+    'hay imagenes de referencia',
+    () => expect(pngs.length, greaterThan(20)),
+  );
 
   for (final f in pngs) {
     final i = int.parse(RegExp(r'svg(\d+)\.png').firstMatch(f.path)![1]!);
     final c = cases[i], st = c['style'] as Map<String, dynamic>;
-    testWidgets('lienzo = SVG en el navegador · caso $i · ${c['mode']} · ${st['preset']}${st['relief'] == true ? ' relieve' : ''}${st['glow'] == true ? ' resplandor' : ''}${st['line'] == 'double' ? ' doble' : ''}', (tester) async {
-      await tester.runAsync(() async {
-        final doc = docFor(c);
-        final s = doc.scene(transparent: doc.transparent);
-        final got = await painterImage([s.bg, s.fg], 400);
-        final ref = await decodePng(f.readAsBytesSync());
-        final pct = await diffPct(got, ref);
-        expect(pct, lessThan(kMaxPct), reason: '${pct.toStringAsFixed(3)} % de pixeles distintos');
-      });
-    });
+    testWidgets(
+      'lienzo = SVG en el navegador · caso $i · ${c['mode']} · ${st['preset']}${st['relief'] == true ? ' relieve' : ''}${st['glow'] == true ? ' resplandor' : ''}${st['line'] == 'double' ? ' doble' : ''}',
+      (tester) async {
+        await tester.runAsync(() async {
+          final doc = docFor(c);
+          final s = doc.scene(transparent: doc.transparent);
+          final got = await painterImage([s.bg, s.fg], 400);
+          final ref = await decodePng(f.readAsBytesSync());
+          final pct = await diffPct(got, ref);
+          expect(
+            pct,
+            lessThan(kMaxPct),
+            reason: '${pct.toStringAsFixed(3)} % de pixeles distintos',
+          );
+        });
+      },
+    );
   }
 }

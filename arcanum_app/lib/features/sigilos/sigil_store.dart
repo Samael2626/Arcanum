@@ -24,23 +24,29 @@ class SigilCharge {
   final DateTime at;
   final int seconds;
   final String? moon, hour, dayRuler;
-  const SigilCharge({required this.at, required this.seconds, this.moon, this.hour, this.dayRuler});
+  const SigilCharge({
+    required this.at,
+    required this.seconds,
+    this.moon,
+    this.hour,
+    this.dayRuler,
+  });
 
   Map<String, Object?> toJson() => {
-        'at': at.toUtc().toIso8601String(),
-        'secs': seconds,
-        if (moon != null) 'moon': moon,
-        if (hour != null) 'hour': hour,
-        if (dayRuler != null) 'day': dayRuler,
-      };
+    'at': at.toUtc().toIso8601String(),
+    'secs': seconds,
+    if (moon != null) 'moon': moon,
+    if (hour != null) 'hour': hour,
+    if (dayRuler != null) 'day': dayRuler,
+  };
 
   factory SigilCharge.fromJson(Map<String, dynamic> j) => SigilCharge(
-        at: DateTime.parse(j['at'] as String).toLocal(),
-        seconds: (j['secs'] as num).toInt(),
-        moon: j['moon'] as String?,
-        hour: j['hour'] as String?,
-        dayRuler: j['day'] as String?,
-      );
+    at: DateTime.parse(j['at'] as String).toLocal(),
+    seconds: (j['secs'] as num).toInt(),
+    moon: j['moon'] as String?,
+    hour: j['hour'] as String?,
+    dayRuler: j['day'] as String?,
+  );
 }
 
 /// Lo que va cifrado en la entrada: el documento, sus cargas y, si se solto,
@@ -49,17 +55,18 @@ class SigilEntry {
   final SigilDoc doc;
   final List<SigilCharge> charges;
   final DateTime? released;
-  SigilEntry(this.doc, {List<SigilCharge>? charges, this.released}) : charges = charges ?? [];
+  SigilEntry(this.doc, {List<SigilCharge>? charges, this.released})
+    : charges = charges ?? [];
 
   bool get isReleased => released != null;
 }
 
 String encodeSigilEntry(SigilEntry e) => jsonEncode({
-      'taller': kTallerMark,
-      'doc': e.doc.toJson(),
-      if (e.charges.isNotEmpty) 'charges': [for (final c in e.charges) c.toJson()],
-      if (e.released != null) 'released': e.released!.toUtc().toIso8601String(),
-    });
+  'taller': kTallerMark,
+  'doc': e.doc.toJson(),
+  if (e.charges.isNotEmpty) 'charges': [for (final c in e.charges) c.toJson()],
+  if (e.released != null) 'released': e.released!.toUtc().toIso8601String(),
+});
 
 /// Resultado de leer una entrada «Sigilo».
 sealed class SigilDecoded {
@@ -91,13 +98,20 @@ SigilDecoded? decodeSigilEntry(String content) {
   if (j is! Map<String, dynamic> || j['taller'] != kTallerMark) return null;
   try {
     final d = j['doc'] as Map<String, dynamic>;
-    if ((d['v'] as int? ?? 0) > SigilDoc.kVersion) return const SigilUnreadable(newerVersion: true);
+    if ((d['v'] as int? ?? 0) > SigilDoc.kVersion) {
+      return const SigilUnreadable(newerVersion: true);
+    }
     final released = j['released'] as String?;
-    return SigilReadable(SigilEntry(
-      SigilDoc.fromJson(d),
-      charges: [for (final c in (j['charges'] as List? ?? const [])) SigilCharge.fromJson(c as Map<String, dynamic>)],
-      released: released == null ? null : DateTime.parse(released).toLocal(),
-    ));
+    return SigilReadable(
+      SigilEntry(
+        SigilDoc.fromJson(d),
+        charges: [
+          for (final c in (j['charges'] as List? ?? const []))
+            SigilCharge.fromJson(c as Map<String, dynamic>),
+        ],
+        released: released == null ? null : DateTime.parse(released).toLocal(),
+      ),
+    );
   } catch (error) {
     // datos rotos: se dice, sin tumbar la pantalla del Grimorio
     debugPrint('ARCANUM taller: sigilo ilegible ($error).');
@@ -105,7 +119,20 @@ SigilDecoded? decodeSigilEntry(String content) {
   }
 }
 
-const kMonthsEs = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const kMonthsEs = [
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
+];
 
 String dayMonthEs(DateTime d) => '${d.day} de ${kMonthsEs[d.month - 1]}';
 
@@ -114,8 +141,11 @@ String sigilTitle(DateTime d) => 'Sigilo del ${dayMonthEs(d)}';
 
 /// Copia del sigilo soltado: sin intencion y con la fecha. El original no se
 /// toca hasta que el guardado sale bien.
-SigilEntry releasedCopy(SigilEntry e, DateTime at) =>
-    SigilEntry(SigilDoc.fromJson(e.doc.toJson())..forget(), charges: [...e.charges], released: at);
+SigilEntry releasedCopy(SigilEntry e, DateTime at) => SigilEntry(
+  SigilDoc.fromJson(e.doc.toJson())..forget(),
+  charges: [...e.charges],
+  released: at,
+);
 
 /// Lado de la miniatura de la lista: el doble de lo que ocupa (52 dp) en 3x.
 const kPreviewPx = 160;
@@ -131,7 +161,9 @@ Future<Uint8List?> renderSigilPreview(SigilDoc doc) async {
   paintScene(c, s.fg, minW: 2 * kSize / kPreviewPx);
   final img = await rec.endRecording().toImage(kPreviewPx, kPreviewPx);
   try {
-    return (await img.toByteData(format: ui.ImageByteFormat.png))?.buffer.asUint8List();
+    return (await img.toByteData(
+      format: ui.ImageByteFormat.png,
+    ))?.buffer.asUint8List();
   } finally {
     img.dispose();
   }
@@ -139,14 +171,21 @@ Future<Uint8List?> renderSigilPreview(SigilDoc doc) async {
 
 /// Quien dibuja la miniatura (en los tests, uno de mentira: rasterizar no
 /// termina dentro del reloj falso de los tests de widgets).
-final sigilPreviewProvider = Provider<Future<Uint8List?> Function(SigilDoc)>((ref) => renderSigilPreview);
+final sigilPreviewProvider = Provider<Future<Uint8List?> Function(SigilDoc)>(
+  (ref) => renderSigilPreview,
+);
 
 class SigilStore {
   final ArcanumApi api;
   final GrimoireCrypto crypto;
   final UserPlace? place;
   final Future<Uint8List?> Function(SigilDoc) preview;
-  const SigilStore(this.api, this.crypto, this.place, {this.preview = renderSigilPreview});
+  const SigilStore(
+    this.api,
+    this.crypto,
+    this.place, {
+    this.preview = renderSigilPreview,
+  });
 
   /// Miniatura cifrada como el contenido. Si falla, la entrada se guarda sin
   /// ella (la lista cae a la capitular): nunca bloquea el guardado.
@@ -167,7 +206,13 @@ class SigilStore {
   Future<({String? moon, String? hour, String? dayRuler})> sky() async {
     try {
       final p = place;
-      if (p == null) return (moon: (await api.moon())['phase_name'] as String?, hour: null, dayRuler: null);
+      if (p == null) {
+        return (
+          moon: (await api.moon())['phase_name'] as String?,
+          hour: null,
+          dayRuler: null,
+        );
+      }
       final today = await api.today(lat: p.lat, lon: p.lon);
       return (
         moon: today['moon']?['phase_name'] as String?,
@@ -175,14 +220,22 @@ class SigilStore {
         dayRuler: today['day_ruler'] as String?,
       );
     } catch (error) {
-      debugPrint('ARCANUM taller: sin contexto astral para el sigilo ($error).');
+      debugPrint(
+        'ARCANUM taller: sin contexto astral para el sigilo ($error).',
+      );
       return (moon: null, hour: null, dayRuler: null);
     }
   }
 
   Future<SigilCharge> chargeNow(int seconds) async {
     final s = await sky();
-    return SigilCharge(at: DateTime.now(), seconds: seconds, moon: s.moon, hour: s.hour, dayRuler: s.dayRuler);
+    return SigilCharge(
+      at: DateTime.now(),
+      seconds: seconds,
+      moon: s.moon,
+      hour: s.hour,
+      dayRuler: s.dayRuler,
+    );
   }
 
   /// Crea la entrada (o reescribe [entryId]) y devuelve su id.
@@ -191,7 +244,11 @@ class SigilStore {
     final thumb = await _previewFields(e.doc);
     if (entryId != null) {
       // al seguir editando, el momento de creacion (luna, hora) no cambia
-      await api.grimoireUpdate(entryId, {'encrypted_content': enc.ciphertext, 'content_iv': enc.iv, ...thumb});
+      await api.grimoireUpdate(entryId, {
+        'encrypted_content': enc.ciphertext,
+        'content_iv': enc.iv,
+        ...thumb,
+      });
       return entryId;
     }
     final s = await sky();

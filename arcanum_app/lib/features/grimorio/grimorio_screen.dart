@@ -298,11 +298,16 @@ class _CodexLeaf extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // un sigilo con miniatura se ve a si mismo; si no, capitular
-                        if (type == 'sigil' && entry['encrypted_preview'] is String && entry['preview_iv'] is String)
+                        if (type == 'sigil' &&
+                            entry['encrypted_preview'] is String &&
+                            entry['preview_iv'] is String)
                           SigilThumb(
                             ciphertext: entry['encrypted_preview'] as String,
                             iv: entry['preview_iv'] as String,
-                            fallback: IlluminatedDropCap(letter: titleText[0], mood: mood),
+                            fallback: IlluminatedDropCap(
+                              letter: titleText[0],
+                              mood: mood,
+                            ),
                           )
                         else
                           IlluminatedDropCap(letter: titleText[0], mood: mood),
@@ -721,7 +726,13 @@ class SigilThumb extends ConsumerStatefulWidget {
   final String ciphertext, iv;
   final Widget fallback;
   final double size;
-  const SigilThumb({super.key, required this.ciphertext, required this.iv, required this.fallback, this.size = 52});
+  const SigilThumb({
+    super.key,
+    required this.ciphertext,
+    required this.iv,
+    required this.fallback,
+    this.size = 52,
+  });
 
   static final _cache = <String, Uint8List>{};
 
@@ -735,14 +746,18 @@ class _SigilThumbState extends ConsumerState<SigilThumb> {
   @override
   void didUpdateWidget(SigilThumb old) {
     super.didUpdateWidget(old);
-    if (old.iv != widget.iv || old.ciphertext != widget.ciphertext) _png = _load();
+    if (old.iv != widget.iv || old.ciphertext != widget.ciphertext) {
+      _png = _load();
+    }
   }
 
   Future<Uint8List?> _load() async {
     final hit = SigilThumb._cache[widget.iv];
     if (hit != null) return hit;
     try {
-      final b64 = await ref.read(grimoireCryptoProvider).decryptText(widget.ciphertext, widget.iv);
+      final b64 = await ref
+          .read(grimoireCryptoProvider)
+          .decryptText(widget.ciphertext, widget.iv);
       final png = base64Decode(b64);
       if (SigilThumb._cache.length > 200) SigilThumb._cache.clear();
       return SigilThumb._cache[widget.iv] = png;
@@ -757,13 +772,20 @@ class _SigilThumbState extends ConsumerState<SigilThumb> {
   Widget build(BuildContext context) {
     final cached = SigilThumb._cache[widget.iv];
     Widget img(Uint8List png) => ClipRRect(
-          borderRadius: BorderRadius.circular(widget.size * .22),
-          child: Image.memory(png, width: widget.size, height: widget.size, gaplessPlayback: true, filterQuality: FilterQuality.medium),
-        );
+      borderRadius: BorderRadius.circular(widget.size * .22),
+      child: Image.memory(
+        png,
+        width: widget.size,
+        height: widget.size,
+        gaplessPlayback: true,
+        filterQuality: FilterQuality.medium,
+      ),
+    );
     if (cached != null) return img(cached);
     return FutureBuilder<Uint8List?>(
       future: _png,
-      builder: (context, snap) => snap.data != null ? img(snap.data!) : widget.fallback,
+      builder: (context, snap) =>
+          snap.data != null ? img(snap.data!) : widget.fallback,
     );
   }
 }

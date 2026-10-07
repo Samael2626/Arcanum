@@ -39,11 +39,16 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
   /// Cargas ya anotadas (y las nuevas, hasta que se guarden).
   late final List<SigilCharge> _charges = [...?widget.initial?.charges];
   late CanvasController ctl = CanvasController(doc);
-  late final TextEditingController _intention = TextEditingController(text: doc.sigil.intention);
+  late final TextEditingController _intention = TextEditingController(
+    text: doc.sigil.intention,
+  );
   final _repaint = ValueNotifier<int>(0);
   int _tab = 0;
   GridMode _grid = GridMode.none;
-  bool _letterColors = false, _addOpen = false, _saving = false, _transparent = false;
+  bool _letterColors = false,
+      _addOpen = false,
+      _saving = false,
+      _transparent = false;
   late String? _savedId = widget.entryId;
   String? _savedSnapshot;
 
@@ -126,7 +131,11 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
     ctl
       ..sel = null
       ..layerSel = null;
-    if (!ok) _toast('La intención no deja ninguna letra latina. Prueba otra reducción o escríbela de otra forma.');
+    if (!ok) {
+      _toast(
+        'La intención no deja ninguna letra latina. Prueba otra reducción o escríbela de otra forma.',
+      );
+    }
     _changed();
   }
 
@@ -146,32 +155,54 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
       builder: (context) => DraggableScrollableSheet(
         expand: false,
         initialChildSize: .6,
-        builder: (context, scroll) => ListView(controller: scroll, padding: const EdgeInsets.all(16), children: [
-          Text('Símbolo', style: ArcanumText.heading(22)),
-          Text('Elige uno y toca el lienzo donde quieras ponerlo.', style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted)),
-          for (final (group, items) in kStampCatalog) ...[
-            sectionTitle(group),
-            Wrap(spacing: 6, runSpacing: 6, children: [
-              for (final (s, name) in items)
-                Tooltip(
-                  message: name,
-                  child: Semantics(
-                    button: true,
-                    label: name,
-                    child: InkWell(
-                      onTap: () => Navigator.pop(context, s),
-                      child: Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(border: Border.all(color: ArcanumColors.surfaceHigh), borderRadius: BorderRadius.circular(6)),
-                        child: Center(child: GlyphIcon(s, size: 28, color: ArcanumColors.goldLight)),
+        builder: (context, scroll) => ListView(
+          controller: scroll,
+          padding: const EdgeInsets.all(16),
+          children: [
+            Text('Símbolo', style: ArcanumText.heading(22)),
+            Text(
+              'Elige uno y toca el lienzo donde quieras ponerlo.',
+              style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
+            ),
+            for (final (group, items) in kStampCatalog) ...[
+              sectionTitle(group),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final (s, name) in items)
+                    Tooltip(
+                      message: name,
+                      child: Semantics(
+                        button: true,
+                        label: name,
+                        child: InkWell(
+                          onTap: () => Navigator.pop(context, s),
+                          child: Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: ArcanumColors.surfaceHigh,
+                              ),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Center(
+                              child: GlyphIcon(
+                                s,
+                                size: 28,
+                                color: ArcanumColors.goldLight,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-            ]),
+                ],
+              ),
+            ],
           ],
-        ]),
+        ),
       ),
     );
     if (sym == null || !mounted) return;
@@ -185,8 +216,12 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
   }
 
   // ── Guardar, cargar, compartir ────────────────────────────────
-  SigilStore get _store =>
-      SigilStore(ref.read(arcanumApiProvider), ref.read(grimoireCryptoProvider), ref.read(userPlaceProvider), preview: ref.read(sigilPreviewProvider));
+  SigilStore get _store => SigilStore(
+    ref.read(arcanumApiProvider),
+    ref.read(grimoireCryptoProvider),
+    ref.read(userPlaceProvider),
+    preview: ref.read(sigilPreviewProvider),
+  );
 
   Future<bool> _save() async {
     if (_saving) return false;
@@ -194,7 +229,10 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
     // la foto se toma ANTES de enviar: lo que se mueva durante el envio sigue
     // contando como cambio sin guardar
     final snap = _saveSnap;
-    final entry = SigilEntry(SigilDoc.fromJson(doc.toJson()), charges: [..._charges]);
+    final entry = SigilEntry(
+      SigilDoc.fromJson(doc.toJson()),
+      charges: [..._charges],
+    );
     try {
       _savedId = await _store.save(entry, entryId: _savedId);
       _savedSnapshot = snap;
@@ -210,7 +248,13 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
   }
 
   Future<void> _charge() async {
-    final r = await Navigator.push<ChargeResult>(context, MaterialPageRoute(fullscreenDialog: true, builder: (_) => TallerCarga(doc: doc)));
+    final r = await Navigator.push<ChargeResult>(
+      context,
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => TallerCarga(doc: doc),
+      ),
+    );
     if (!mounted || r == null) return;
     if (r.end == ChargeEnd.keep) {
       _charges.add(await _store.chargeNow(r.seconds));
@@ -222,13 +266,18 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
     if (saved) {
       // la intencion se borra de la entrada; el dibujo queda con la fecha
       final charge = await _store.chargeNow(r.seconds);
-      final out = releasedCopy(SigilEntry(doc, charges: [..._charges, charge]), DateTime.now());
+      final out = releasedCopy(
+        SigilEntry(doc, charges: [..._charges, charge]),
+        DateTime.now(),
+      );
       setState(() => _saving = true);
       try {
         await _store.save(out, entryId: _savedId);
       } catch (e) {
         debugPrint('ARCANUM taller: fallo al soltar el sigilo ($e).');
-        _toast('No se pudo soltar: la intención sigue guardada. Revisa la conexión e inténtalo de nuevo.');
+        _toast(
+          'No se pudo soltar: la intención sigue guardada. Revisa la conexión e inténtalo de nuevo.',
+        );
         return;
       } finally {
         if (mounted) setState(() => _saving = false);
@@ -238,7 +287,9 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
     _savedSnapshot = _saveSnap;
     final messenger = ScaffoldMessenger.maybeOf(context);
     Navigator.pop(context, saved);
-    messenger?.showSnackBar(const SnackBar(content: Text('Soltado. No lo busques.')));
+    messenger?.showSnackBar(
+      const SnackBar(content: Text('Soltado. No lo busques.')),
+    );
   }
 
   Future<ui.Image> _render(int px) async {
@@ -269,7 +320,11 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
         path = '${dir.path}/arcanum-sigilo.svg';
         await File(path).writeAsString(svg, flush: true);
       }
-      await SharePlus.instance.share(ShareParams(files: [XFile(path, mimeType: png ? 'image/png' : 'image/svg+xml')]));
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(path, mimeType: png ? 'image/png' : 'image/svg+xml')],
+        ),
+      );
     } catch (e) {
       debugPrint('ARCANUM taller: no se pudo compartir ($e).');
       _toast('No se pudo preparar el archivo para compartir.');
@@ -283,10 +338,19 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: ArcanumColors.surface,
         title: Text('¿Salir sin guardar?', style: ArcanumText.heading(22)),
-        content: Text('Los cambios de este sigilo se perderán.', style: ArcanumText.body(15)),
+        content: Text(
+          'Los cambios de este sigilo se perderán.',
+          style: ArcanumText.body(15),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Seguir aquí')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Salir')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Seguir aquí'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Salir'),
+          ),
         ],
       ),
     );
@@ -298,75 +362,132 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
     final empty = doc.sigil.prims.isEmpty;
     return SizedBox.square(
       dimension: side,
-      child: Stack(clipBehavior: Clip.hardEdge, children: [
-        SigilCanvas(controller: ctl, grid: _grid, letterColors: _letterColors, repaint: _repaint, onChanged: _changed),
-        if (empty)
-          IgnorePointer(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Text('Escribe tu intención y pulsa «Forjar».', textAlign: TextAlign.center, style: ArcanumText.body(16, color: ArcanumColors.ivoryMuted, italic: true)),
+      child: Stack(
+        clipBehavior: Clip.hardEdge,
+        children: [
+          SigilCanvas(
+            controller: ctl,
+            grid: _grid,
+            letterColors: _letterColors,
+            repaint: _repaint,
+            onChanged: _changed,
+          ),
+          if (empty)
+            IgnorePointer(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Text(
+                    'Escribe tu intención y pulsa «Forjar».',
+                    textAlign: TextAlign.center,
+                    style: ArcanumText.body(
+                      16,
+                      color: ArcanumColors.ivoryMuted,
+                      italic: true,
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
-        if (!empty) SelectionRadial(ctl: ctl, side: side, onEdited: _changed),
-        if (!empty)
-          Positioned.fill(
-            child: AddRadial(
-              open: _addOpen,
-              onToggle: (v) => setState(() => _addOpen = v),
-              onAdd: (t) {
-                ctl.addLayer(t);
-                _changed();
-              },
-              onSymbol: _pickSymbol,
-              side: side,
+          if (!empty) SelectionRadial(ctl: ctl, side: side, onEdited: _changed),
+          if (!empty)
+            Positioned.fill(
+              child: AddRadial(
+                open: _addOpen,
+                onToggle: (v) => setState(() => _addOpen = v),
+                onAdd: (t) {
+                  ctl.addLayer(t);
+                  _changed();
+                },
+                onSymbol: _pickSymbol,
+                side: side,
+              ),
             ),
-          ),
-      ]),
+        ],
+      ),
     );
   }
 
   Widget _panel() => switch (_tab) {
-        0 => CrearPanel(ctl: ctl, intention: _intention, onForge: _forge, onChanged: _changed, letterColors: _letterColors, onLetterColors: (v) => setState(() => _letterColors = v)),
-        1 => CapasPanel(ctl: ctl, onChanged: _changed, onAddSymbol: _pickSymbol),
-        2 => EstiloPanel(doc: doc, onChanged: _changed),
-        _ => GuardarPanel(
-            saving: _saving,
-            saved: _savedId != null,
-            canSave: doc.sigil.prims.isNotEmpty,
-            onCharge: _charge,
-            onSave: _save,
-            onSharePng: () => _share(png: true),
-            onShareSvg: () => _share(png: false),
-            transparent: _transparent,
-            onTransparent: (v) => setState(() => _transparent = v),
-          ),
-      };
+    0 => CrearPanel(
+      ctl: ctl,
+      intention: _intention,
+      onForge: _forge,
+      onChanged: _changed,
+      letterColors: _letterColors,
+      onLetterColors: (v) => setState(() => _letterColors = v),
+    ),
+    1 => CapasPanel(ctl: ctl, onChanged: _changed, onAddSymbol: _pickSymbol),
+    2 => EstiloPanel(doc: doc, onChanged: _changed),
+    _ => GuardarPanel(
+      saving: _saving,
+      saved: _savedId != null,
+      canSave: doc.sigil.prims.isNotEmpty,
+      onCharge: _charge,
+      onSave: _save,
+      onSharePng: () => _share(png: true),
+      onShareSvg: () => _share(png: false),
+      transparent: _transparent,
+      onTransparent: (v) => setState(() => _transparent = v),
+    ),
+  };
 
-  static const _tabs = [(Icons.edit_outlined, 'Crear'), (Icons.layers_outlined, 'Capas'), (Icons.water_drop_outlined, 'Estilo'), (Icons.save_alt, 'Guardar')];
+  static const _tabs = [
+    (Icons.edit_outlined, 'Crear'),
+    (Icons.layers_outlined, 'Capas'),
+    (Icons.water_drop_outlined, 'Estilo'),
+    (Icons.save_alt, 'Guardar'),
+  ];
 
-  Widget _tabBar() => Row(children: [
-        for (var i = 0; i < _tabs.length; i++)
-          Expanded(
-            child: Semantics(
-              selected: _tab == i,
-              button: true,
-              label: _tabs[i].$2,
-              child: InkWell(
-                onTap: () => setState(() => _tab = i),
-                child: Container(
-                  height: 56,
-                  decoration: BoxDecoration(border: Border(bottom: BorderSide(color: _tab == i ? ArcanumColors.gold : ArcanumColors.surfaceHigh, width: 2))),
-                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Icon(_tabs[i].$1, size: 22, color: _tab == i ? ArcanumColors.gold : ArcanumColors.ivoryMuted),
-                    Text(_tabs[i].$2, style: TextStyle(fontSize: 12, color: _tab == i ? ArcanumColors.gold : ArcanumColors.ivoryMuted)),
-                  ]),
+  Widget _tabBar() => Row(
+    children: [
+      for (var i = 0; i < _tabs.length; i++)
+        Expanded(
+          child: Semantics(
+            selected: _tab == i,
+            button: true,
+            label: _tabs[i].$2,
+            child: InkWell(
+              onTap: () => setState(() => _tab = i),
+              child: Container(
+                height: 56,
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: _tab == i
+                          ? ArcanumColors.gold
+                          : ArcanumColors.surfaceHigh,
+                      width: 2,
+                    ),
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      _tabs[i].$1,
+                      size: 22,
+                      color: _tab == i
+                          ? ArcanumColors.gold
+                          : ArcanumColors.ivoryMuted,
+                    ),
+                    Text(
+                      _tabs[i].$2,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _tab == i
+                            ? ArcanumColors.gold
+                            : ArcanumColors.ivoryMuted,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-      ]);
+        ),
+    ],
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -374,7 +495,9 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
-        if (await _confirmLeave() && context.mounted) Navigator.pop(context, _savedId != null);
+        if (await _confirmLeave() && context.mounted) {
+          Navigator.pop(context, _savedId != null);
+        }
       },
       child: Scaffold(
         backgroundColor: ArcanumColors.background,
@@ -385,41 +508,86 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
             tooltip: 'Cerrar',
             icon: const Icon(Icons.close, color: ArcanumColors.ivoryMuted),
             onPressed: () async {
-              if (await _confirmLeave() && context.mounted) Navigator.pop(context, _savedId != null);
+              if (await _confirmLeave() && context.mounted) {
+                Navigator.pop(context, _savedId != null);
+              }
             },
           ),
           actions: [
-            IconButton(tooltip: 'Deshacer', icon: const Icon(Icons.undo), color: ArcanumColors.gold, onPressed: _past.length < 2 ? null : _undo),
-            IconButton(tooltip: 'Rehacer', icon: const Icon(Icons.redo), color: ArcanumColors.gold, onPressed: _future.isEmpty ? null : _redo),
             IconButton(
-              tooltip: switch (_grid) { GridMode.none => 'Rejilla: no', GridMode.polar => 'Rejilla polar', GridMode.square => 'Rejilla cuadrada' },
-              icon: Icon(switch (_grid) { GridMode.none => Icons.grid_off, GridMode.polar => Icons.track_changes, GridMode.square => Icons.grid_on }),
+              tooltip: 'Deshacer',
+              icon: const Icon(Icons.undo),
               color: ArcanumColors.gold,
-              onPressed: () => setState(() => _grid = GridMode.values[(_grid.index + 1) % 3]),
+              onPressed: _past.length < 2 ? null : _undo,
             ),
-            IconButton(tooltip: 'Fuentes', icon: const Icon(Icons.menu_book_outlined), color: ArcanumColors.gold, onPressed: () => showTallerFuentes(context, doc)),
+            IconButton(
+              tooltip: 'Rehacer',
+              icon: const Icon(Icons.redo),
+              color: ArcanumColors.gold,
+              onPressed: _future.isEmpty ? null : _redo,
+            ),
+            IconButton(
+              tooltip: switch (_grid) {
+                GridMode.none => 'Rejilla: no',
+                GridMode.polar => 'Rejilla polar',
+                GridMode.square => 'Rejilla cuadrada',
+              },
+              icon: Icon(switch (_grid) {
+                GridMode.none => Icons.grid_off,
+                GridMode.polar => Icons.track_changes,
+                GridMode.square => Icons.grid_on,
+              }),
+              color: ArcanumColors.gold,
+              onPressed: () => setState(
+                () => _grid = GridMode.values[(_grid.index + 1) % 3],
+              ),
+            ),
+            IconButton(
+              tooltip: 'Fuentes',
+              icon: const Icon(Icons.menu_book_outlined),
+              color: ArcanumColors.gold,
+              onPressed: () => showTallerFuentes(context, doc),
+            ),
           ],
         ),
         body: SafeArea(
           top: false,
-          child: LayoutBuilder(builder: (context, box) {
-            final landscape = box.maxWidth > box.maxHeight;
-            final panel = ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 32), children: [_panel()]);
-            if (landscape) {
-              final side = box.maxHeight;
-              return Row(children: [
-                _canvasArea(side),
-                Expanded(child: Column(children: [_tabBar(), Expanded(child: panel)])),
-              ]);
-            }
-            // el lienzo deja sitio para la hoja: como mucho el 55 % del alto
-            final side = box.maxWidth < box.maxHeight * .55 ? box.maxWidth : box.maxHeight * .55;
-            return Column(children: [
-              Center(child: _canvasArea(side)),
-              _tabBar(),
-              Expanded(child: panel),
-            ]);
-          }),
+          child: LayoutBuilder(
+            builder: (context, box) {
+              final landscape = box.maxWidth > box.maxHeight;
+              final panel = ListView(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+                children: [_panel()],
+              );
+              if (landscape) {
+                final side = box.maxHeight;
+                return Row(
+                  children: [
+                    _canvasArea(side),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          _tabBar(),
+                          Expanded(child: panel),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              }
+              // el lienzo deja sitio para la hoja: como mucho el 55 % del alto
+              final side = box.maxWidth < box.maxHeight * .55
+                  ? box.maxWidth
+                  : box.maxHeight * .55;
+              return Column(
+                children: [
+                  Center(child: _canvasArea(side)),
+                  _tabBar(),
+                  Expanded(child: panel),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
