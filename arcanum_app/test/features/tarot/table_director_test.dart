@@ -762,6 +762,46 @@ void main() {
     );
   });
 
+  group('prueba en el GN2200 del 07-oct', () {
+    void pileTo(Offset at) => c
+        .read(tableControllerProvider.notifier)
+        .arrange(
+          (s) => s.copyWith(
+            piles: [for (final p in s.piles) p.moved(at.dx, at.dy)],
+          ),
+        );
+
+    test(
+      'con el mazo en el centro, la carta sacada no cae sobre el abanico',
+      () async {
+        // soltar la lupa sin subir el dedo dejaba la carta montada en el abanico
+        await openRws();
+        pileTo(const Offset(300, 560));
+        await tap(pileAt('p0'));
+        final fanCards = dir.pieces().where((p) => p.kind == PieceKind.fanCard);
+        final fanBox = fanCards
+            .map((p) => poseRect(p.pose))
+            .reduce((a, b) => a.expandToInclude(b));
+        await tap(fanCards.elementAt(3).pose.offset);
+        final card = table().cards.single;
+        final r = poseRect(
+          TablePose(card.x, card.y, rot: card.rot, scale: card.scale),
+        );
+        expect(r.overlaps(fanBox), isFalse, reason: '$r sobre $fanBox');
+      },
+    );
+
+    test('soltar el mazo sobre «Interpretar» lo aparta y avisa', () async {
+      await openRws();
+      final emb = TableDirector.embroideryRect.center;
+      await drag(pileAt('p0'), emb);
+      final p = table().piles.single;
+      final box = poseRect(TablePose(p.x, p.y, scale: TableGeometry.deckScale));
+      expect(box.overlaps(TableDirector.embroideryRect), isFalse);
+      expect(fx.toasts.last, contains('Interpretar'));
+    });
+  });
+
   group('sonido', () {
     test('el vuelo que espera el sonido es el de la animacion', () {
       expect(TableDirector.cardTravel, PoseMotion.travel);

@@ -1293,9 +1293,21 @@ class TableDirector extends ChangeNotifier {
           poseRect(TablePose(c.x, c.y, rot: c.rot, scale: c.scale)),
       for (final p in table.piles) _pileRect(TablePose(p.x, p.y, rot: p.rot)),
       for (final p in _pending.values) poseRect(p.to),
+      // el abanico tambien: con el mazo en el centro, la carta sacada caia
+      // montada sobre el (GN2200, 07-oct)
+      ?_fanRect(),
       sealRect,
       embroideryRect,
     ];
+  }
+
+  Rect? _fanRect() {
+    final f = fan;
+    if (f == null) return null;
+    final poses = fanPoses(f.start, f.end, 2);
+    return poseRect(
+      poses.first,
+    ).expandToInclude(poseRect(poses.last)).inflate(30);
   }
 
   /// Un monton ocupa su caja y su nombre, que va debajo.
@@ -1393,13 +1405,6 @@ class TableDirector extends ChangeNotifier {
   /// lejos de otros montones y podia caer sobre el bordado o el sello.
   Offset _freeSpot(PileLayout near) {
     final taken = _occupied();
-    final f = fan;
-    if (f != null) {
-      final poses = fanPoses(f.start, f.end, 2);
-      taken.add(
-        poseRect(poses.first).expandToInclude(poseRect(poses.last)).inflate(30),
-      );
-    }
     final size = _pileRect(const TablePose(0, 0)).size;
     Offset pick(Rect area) => freeSpot(
       size: size,
@@ -2243,11 +2248,27 @@ class TableDirector extends ChangeNotifier {
         return;
       }
     }
-    final x = pose.x.clamp(70.0, TableGeometry.width - 70);
-    final y = pose.y.clamp(
-      TableGeometry.shelfY + 70,
-      TableGeometry.height - 70,
-    );
+    var x = pose.x.clamp(70.0, TableGeometry.width - 70);
+    var y = pose.y.clamp(TableGeometry.shelfY + 70, TableGeometry.height - 70);
+    // ni sobre «Interpretar» ni sobre el sello: tapados no se pueden tocar
+    // (GN2200, 07-oct). Se aparta al sitio libre mas cercano.
+    final keep = [embroideryRect, if (table.seal != null) sealRect];
+    if (keep.any(_pileRect(TablePose(x, y)).overlaps)) {
+      final size = _pileRect(const TablePose(0, 0)).size;
+      final at = freeSpot(
+        size: size,
+        taken: keep,
+        area: TableGeometry.cloth,
+        near: Offset(x, y + 17),
+      ).translate(0, -17);
+      x = at.dx;
+      y = at.dy;
+      effects.toast(
+        keep.first.overlaps(_pileRect(pose))
+            ? 'Ahí taparía «Interpretar»: el montón se aparta un poco.'
+            : 'Ahí taparía el sello: el montón se aparta un poco.',
+      );
+    }
     ops.arrange(
       (s) => s.copyWith(
         piles: [for (final p in s.piles) p.pid == pid ? p.moved(x, y) : p],
