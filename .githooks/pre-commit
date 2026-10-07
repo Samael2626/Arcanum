@@ -61,6 +61,9 @@ ok "Codificacion: limpia."
 if echo "$STAGED" | grep -q '^arcanum-api/.*\.py$'; then
   info "Cambios en backend — corriendo suite completa..."
 
+  PYTEST_LOG="$(mktemp -t arcanum_pytest.XXXXXX)"
+  PG_LOG="$(mktemp -t arcanum_pytest_pg.XXXXXX)"
+
   # Puerto 5434, no 5433: el 5433 lo ocupa `botlaw-pg` en esta maquina y el
   # hook llevaba tiempo apuntando a la base de OTRO proyecto. Fallaba con
   # "password authentication failed" y parecia un problema de credenciales.
@@ -86,14 +89,14 @@ if echo "$STAGED" | grep -q '^arcanum-api/.*\.py$'; then
   # no de la raiz del repo.
   if ! (cd arcanum-api && TEST_DATABASE_URL="$DB_URL" DATABASE_URL="$DB_URL" \
         "$PY_BIN" -m pytest tests/ tests_unit/ -q --no-header --disable-warnings 2>&1) \
-       | tee /tmp/arcanum_pytest.log | tail -25; then
-    fail "Commit BLOQUEADO: pytest en rojo. Log completo: /tmp/arcanum_pytest.log"
+       | tee "$PYTEST_LOG" | tail -25; then
+    fail "Commit BLOQUEADO: pytest en rojo. Log completo: $PYTEST_LOG"
     exit 1
   fi
 
   # Un "skipped" masivo significa que los tests de integracion no corrieron.
   # Verde con la mitad de la suite dormida es peor que rojo.
-  SKIPPED="$(grep -oE '[0-9]+ skipped' /tmp/arcanum_pytest.log | tail -1 | grep -oE '[0-9]+' || echo 0)"
+  SKIPPED="$(grep -oE '^[0-9]+ passed, [0-9]+ skipped' "$PYTEST_LOG" | tail -1 | grep -oE '[0-9]+ skipped' | grep -oE '[0-9]+' || echo 0)"
   if [ "${SKIPPED:-0}" -gt 10 ]; then
     fail "Commit BLOQUEADO: $SKIPPED tests saltados — falta TEST_DATABASE_URL."
     fail "Verde con la suite de integracion dormida no cuenta como verde."
@@ -137,17 +140,17 @@ if echo "$STAGED" | grep -q '^arcanum-api/.*\.py$'; then
 
   if ! (cd arcanum-api && MIGRATION_TEST_DATABASE_URL="$PG_URL" \
         "$PY_BIN" -m pytest tests_pg -q --no-header --disable-warnings 2>&1) \
-       | tee /tmp/arcanum_pytest_pg.log | tail -25; then
-    fail "Commit BLOQUEADO: tests_pg en rojo. Log: /tmp/arcanum_pytest_pg.log"
+       | tee "$PG_LOG" | tail -25; then
+    fail "Commit BLOQUEADO: tests_pg en rojo. Log: $PG_LOG"
     exit 1
   fi
 
   # Aqui CUALQUIER salto es sospechoso: o la base no esta migrada a 006, o la
   # URL apunta a otro sitio. El motivo del salto sale en el log, con la receta.
-  PG_SKIPPED="$(grep -oE '[0-9]+ skipped' /tmp/arcanum_pytest_pg.log | tail -1 | grep -oE '[0-9]+' || echo 0)"
+  PG_SKIPPED="$(grep -oE '^[0-9]+ passed, [0-9]+ skipped' "$PG_LOG" | tail -1 | grep -oE '[0-9]+ skipped' | grep -oE '[0-9]+' || echo 0)"
   if [ "${PG_SKIPPED:-0}" -gt 0 ]; then
     fail "Commit BLOQUEADO: $PG_SKIPPED tests_pg saltados."
-    fail "Corre con -rs para ver el motivo. Log: /tmp/arcanum_pytest_pg.log"
+    fail "Corre con -rs para ver el motivo. Log: $PG_LOG"
     exit 1
   fi
   ok "tests_pg: verde (esquema Alembic real)."

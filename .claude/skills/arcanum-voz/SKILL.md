@@ -152,8 +152,35 @@ tirada con el titulo Book T: media un contexto que ya no se manda. Corregido.
 Cruz Celta, una corrida por lado, prompt vivo contra el ejemplo corregido: el
 modelo toma los nombres DEL CONTEXTO en los dos casos; el ejemplo no los cambia.
 Antes `retry=True` (por `decide_por_ti`, no por nombres); despues sin reintento y
-sin defectos. El catalogo ya lleva el ejemplo con nombres comunes; **Railway no**:
-se cambia `ORACLE_SYSTEM_PROMPT` al mezclar la rama, con el codigo.
+sin defectos. El catálogo ya lleva el ejemplo con nombres comunes. Tras entrar
+`b51f90a` en `main`, se actualizó `ORACLE_SYSTEM_PROMPT` en Railway; el valor
+vivo coincide con el catálogo completo salvo el salto final (06-oct).
+
+### MEDIDO EL 06-OCT: LA SINTESIS COPIA EL CIELO
+
+Con el prompt corregido y los nombres comunes, dos Cruces Celtas sin reintento
+nombraron cuerpos en la respuesta final (**2/2**). Una empujó hacia aceptar la
+oferta consultada; la otra ofreció dos caminos, pero cerró con «permite que la
+decisión fluya». `decide_por_ti` dejó pasar ambas. Esas muestras reproducen el
+fallo; no estiman su frecuencia.
+
+Piloto de una guarda **solo en `banco_voz.py`**, nunca en producción: dos
+lecturas nuevas, presupuesto máximo de cuatro llamadas reales, 75 segundos
+entre inicios de petición. Se gastaron las cuatro. En la primera, la guarda
+experimental detectó cinco nombres de cuerpos y forzó un reintento que los
+quitó. En la segunda, reintentó la guarda existente por `asesoria_real`; la
+respuesta entregada tampoco nombró cuerpos. Las dos salidas finales tuvieron
+las diez cartas por nombre común. La primera pide «romper la inercia»; la
+segunda deja «que la esperanza guíe tu paso». No son órdenes de aceptar la
+oferta, pero sigue haciendo falta juicio humano sobre cuánto orientan.
+
+**No pasar esta guarda a producción aún:** dos respuestas limpias costaron
+cuatro llamadas frente a las dos de la base; solo uno de los dos reintentos fue
+causado por la nueva regla. El extractor del piloto depende de la etiqueta
+`Resultado — El Mundo` y excluye «Luna», que también es carta en esa tirada.
+No es un detector general seguro. El siguiente ensayo necesita presupuesto
+previo, más preguntas y un extractor de respuesta que no confunda cartas con
+cuerpos. El guarda de decisión tampoco se ensancha por una frase ambigua.
 
 ### MEDIDO EL 06-OCT: LA SINTESIS AUN COPIA EL CIELO
 
@@ -437,13 +464,16 @@ el guard y los bloques de datos en memoria.
 
 ```bash
 cd arcanum-api && set -a; . ./.env; set +a
-python ../.claude/skills/arcanum-voz/scripts/banco_voz.py horoscopo --cartas ABC     --prompt variante.txt --v2guard --cuerpo --pausa 75
-python ../.claude/skills/arcanum-voz/scripts/banco_voz.py oraculo --limpio --cruz
+python ../.claude/skills/arcanum-voz/scripts/banco_voz.py horoscopo --cartas ABC --prompt variante.txt --v2guard --cuerpo --pausa 75 --max-llamadas 6
+python ../.claude/skills/arcanum-voz/scripts/banco_voz.py oraculo --cruz --pausa 75 --max-llamadas 4 --veces 2
+python ../.claude/skills/arcanum-voz/scripts/banco_voz.py oraculo --cruz --guard-sintesis --pausa 75 --max-llamadas 4 --veces 2
 ```
 
 `--pausa 75` no es capricho: una llamada de horoscopo pide 6.200 tokens y el
 plan gratuito da 8.000 POR MINUTO, asi que dos seguidas rebotan por TPM aunque
-sobre cupo diario. Con 35 segundos rebota; con 75 no.
+sobre cupo diario. La pausa y `--max-llamadas` se aplican a cada petición real
+del SDK, incluidos el reintento y el salto a otra clave por 429. El presupuesto
+se fija ANTES de medir; `--guard-sintesis` es una variante de laboratorio.
 
 `scripts/muestra_voz.py` genera el texto real con lo que hay vigente. Tres cartas
 distintas para el horoscopo, o una tirada con carta falsa para el Oraculo:
