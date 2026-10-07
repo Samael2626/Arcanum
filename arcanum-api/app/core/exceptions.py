@@ -24,7 +24,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
-        headers=_cors_headers(request),
+        headers={**(exc.headers or {}), **_cors_headers(request)},
     )
 
 

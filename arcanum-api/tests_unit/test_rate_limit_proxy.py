@@ -1,10 +1,13 @@
 """El proxy de Railway no debe convertir cada intento en un cliente nuevo."""
 
+import asyncio
+
 import pytest
 from fastapi import HTTPException
 from starlette.requests import Request
 
 from app.core import security
+from app.core.exceptions import http_exception_handler
 from app.core.rate_limit import RateLimiter, client_ip_for_rate_limit
 
 
@@ -53,3 +56,10 @@ def test_proxy_sin_ip_real_falla_cerrado(monkeypatch):
     with pytest.raises(HTTPException) as error:
         client_ip_for_rate_limit(request("100.64.0.2", None))
     assert error.value.status_code == 503
+
+
+def test_error_preserva_cabeceras_de_seguridad():
+    error = HTTPException(429, "Demasiados intentos", headers={"Retry-After": "30"})
+    response = asyncio.run(http_exception_handler(request("127.0.0.1", None), error))
+    assert response.status_code == 429
+    assert response.headers["Retry-After"] == "30"
