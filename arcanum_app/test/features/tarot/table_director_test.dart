@@ -859,6 +859,28 @@ void main() {
       expect(table().piles.single.x, 300);
     });
 
+    test('el abanico no pasa por encima de la tirada', () async {
+      // GN2200: con el mazo a la altura de los huecos, el abanico tapaba
+      // «Pasado» y el borde de las cartas
+      await openRws();
+      c
+          .read(tableControllerProvider.notifier)
+          .arrange((s) => s.copyWith(spread: () => 'three_card'));
+      pileTo(Offset(300, slotPose(three, 0).y));
+      await tap(pileAt('p0'));
+      final fanBox = dir
+          .pieces()
+          .where((p) => p.kind == PieceKind.fanCard)
+          .map((p) => poseRect(p.pose))
+          .reduce((a, b) => a.expandToInclude(b));
+      for (final r in [
+        for (var i = 0; i < 3; i++) poseRect(slotPose(three, i)),
+        ...slotLabelRects(three),
+      ]) {
+        expect(fanBox.overlaps(r), isFalse, reason: '$fanBox sobre $r');
+      }
+    });
+
     test('cada aviso sale donde toca: hito, pieza o estado', () async {
       await openRws();
       expect(fx.notices.last.kind, NoticeKind.piece, reason: 'mazo en juego');

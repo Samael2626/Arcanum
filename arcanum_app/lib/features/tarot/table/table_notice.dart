@@ -107,17 +107,33 @@ class NoticeLayer extends StatelessWidget {
           child: Center(child: text),
         );
       case NoticeKind.piece:
-        // encima de la pieza; si no cabe arriba, debajo
+        // encima de la pieza; si no cabe arriba, debajo. El piquito apunta a
+        // ella: con dos cartas juntas, la burbuja sola no decia de cual hablaba
         final at = camera.toScreen(n.at!);
         const width = 240.0, lift = 64.0;
         final above = at.dy - lift > top + 40;
         final left = (at.dx - width / 2).clamp(16.0, screen.width - 16 - width);
+        final tailX = (at.dx - left).clamp(18.0, width - 18);
+        final tail = Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: EdgeInsets.only(left: tailX - _Tail.size.width / 2),
+            child: _Tail(down: above),
+          ),
+        );
         return Positioned(
           left: left,
           width: width,
-          top: above ? null : at.dy + lift / 2,
-          bottom: above ? screen.height - (at.dy - lift) : null,
-          child: Center(child: text),
+          top: above ? null : at.dy + lift / 2 - _Tail.size.height,
+          bottom: above
+              ? screen.height - (at.dy - lift) - _Tail.size.height
+              : null,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: above
+                ? [Center(child: text), tail]
+                : [tail, Center(child: text)],
+          ),
         );
     }
   }
@@ -195,4 +211,47 @@ class _Stitch extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// El piquito de la burbuja: del mismo fondo y con el borde dorado.
+class _Tail extends StatelessWidget {
+  const _Tail({required this.down});
+
+  static const size = Size(16, 9);
+  final bool down;
+
+  @override
+  Widget build(BuildContext context) =>
+      CustomPaint(size: size, painter: _TailPainter(down));
+}
+
+class _TailPainter extends CustomPainter {
+  _TailPainter(this.down);
+  final bool down;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width, h = size.height;
+    // se solapa 1 px con la burbuja para tapar su borde
+    final path = down
+        ? (Path()
+            ..moveTo(0, -1)
+            ..lineTo(w / 2, h)
+            ..lineTo(w, -1))
+        : (Path()
+            ..moveTo(0, h + 1)
+            ..lineTo(w / 2, 0)
+            ..lineTo(w, h + 1));
+    canvas.drawPath(path, Paint()..color = const Color(0xF014131B));
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = ArcanumColors.gold
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_TailPainter old) => old.down != down;
 }

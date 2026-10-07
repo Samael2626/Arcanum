@@ -1012,9 +1012,21 @@ class TableDirector extends ChangeNotifier {
   void _autoFan(String pid) {
     final p = _pile(pid);
     if (p == null || _count(pid) == 0) return;
-    final y = p.y
-        .clamp(TableGeometry.shelfY + 90, TableGeometry.fanY)
-        .toDouble();
+    var y = p.y.clamp(TableGeometry.shelfY + 90, TableGeometry.fanY).toDouble();
+    // el mazo solo cambia de altura si la tirada lo obliga
+    var pileY = p.y;
+    // a la altura de la tirada, el abanico taparia huecos y rotulos: el mazo
+    // baja a su fila de siempre (GN2200, 07-oct)
+    final sp = spread;
+    if (sp != null) {
+      final h = TableGeometry.cardH * TableGeometry.fanScale / 2 + 12;
+      final band = Rect.fromLTRB(0, y - h, TableGeometry.width, y + h);
+      final spreadArea = [
+        for (var i = 0; i < sp.cardCount; i++) poseRect(slotPose(sp, i)),
+        ...slotLabelRects(sp),
+      ];
+      if (spreadArea.any(band.overlaps)) pileY = y = TableGeometry.fanY;
+    }
     // con el mazo lejos de los bordes no cabe un abanico: el mazo se aparta al
     // borde mas cercano y se extiende desde ahi (Samuel, 07-oct)
     var x = p.x;
@@ -1026,7 +1038,7 @@ class TableDirector extends ChangeNotifier {
     final end = _fanEndOffEdges(start, Offset(endX, y));
     ops.arrange(
       (s) => s.copyWith(
-        piles: [for (final q in s.piles) q.pid == pid ? q.moved(x, q.y) : q],
+        piles: [for (final q in s.piles) q.pid == pid ? q.moved(x, pileY) : q],
         fan: () => FanLayout(pid: pid, start: start, end: end),
       ),
       undoable: true,
