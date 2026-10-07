@@ -231,3 +231,31 @@ def test_continuar_rechaza_cartas_ajenas_o_repetidas():
     with pytest.raises(SessionError):
         TarotSession.resume(get_deck("rws"), RWS, [(RWS[1], False), (RWS[1], True)])
 
+
+
+# ---------- revision 06-oct: deshacer no revela el orden ----------
+def test_esconder_mueve_las_vistas_y_sortea_su_sentido():
+    # al deshacer un «sacar», la carta ya vista vuelve al monton: si volviera a
+    # su sitio con su sentido, el cliente sabria que hay en esa posicion
+    s = _open()
+    s.shuffle("p0", rng=random.Random(1))
+    vista, _ = s.take("p0", 17)
+    s.give_back(vista, "p0")
+    antes = dict(s.reversed_)
+    s.hide({vista}, rng=random.Random(7))
+    pila = s.piles["p0"]
+    assert _todas(s) == Counter(RWS)
+    assert pila.index(vista) != 17
+    # sus huecos de abanico no se mueven: las posiciones libres siguen libres
+    assert [i for i, x in enumerate(pila) if x is None] == [17]
+    assert {k: v for k, v in s.reversed_.items() if k != vista} == {k: v for k, v in antes.items() if k != vista}
+
+
+def test_esconder_varias_y_en_varios_montones():
+    s = _open()
+    s.shuffle("p0", rng=random.Random(2))
+    otro = s.cut("p0", 30)
+    vistas = {s.piles["p0"][0], s.piles[otro][5]}
+    s.hide(vistas, rng=random.Random(3))
+    assert _todas(s) == Counter(RWS)
+    assert s.piles["p0"][0] not in vistas or s.piles[otro][5] not in vistas

@@ -28,6 +28,10 @@ from app.domain.entities import (
 )
 
 
+class DuplicateActiveTable(Exception):
+    """Ya hay una mesa activa para ese usuario (indice unico de la base)."""
+
+
 @runtime_checkable
 class UserRepository(Protocol):
     def get_by_id(self, user_id: UUID) -> UserEntity | None: ...
@@ -72,7 +76,9 @@ class TarotReadingRepository(Protocol):
 class TarotTableRepository(Protocol):
     def active(self, user_id: UUID, *, lock: bool = False) -> TarotTableEntity | None: ...
     def get_owned(self, session_id: UUID, user_id: UUID, *, lock: bool = False) -> TarotTableEntity | None: ...
-    def create(self, user_id: UUID, deck: str, state: dict, expires_at: datetime) -> TarotTableEntity: ...
+    def create(self, user_id: UUID, deck: str, state: dict, expires_at: datetime) -> TarotTableEntity:
+        """Lanza `DuplicateActiveTable` si el usuario ya tiene una mesa activa."""
+        ...
     def save(self, entity: TarotTableEntity, *, commit: bool = True) -> TarotTableEntity: ...
 
 

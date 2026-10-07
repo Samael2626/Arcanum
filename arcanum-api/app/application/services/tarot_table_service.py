@@ -6,12 +6,14 @@ El cupo NO se toca aqui: lo reserva la ruta de interpretar (decision D1).
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+import json
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Callable, Optional, TypeVar
 from uuid import UUID
 
 from app.application.ports.repositories import (
+    DuplicateActiveTable,
     TarotCardRepository,
     TarotReadingRepository,
     TarotTableRepository,
@@ -100,11 +102,17 @@ class TarotTableService:
             drawn = [(c["slug"], bool(c.get("reversed"))) for c in reading.cards_drawn or []]
             session = TarotSession.resume(deck, cards, drawn)
         previous = self._tables.active(user_id, lock=True)
-        if previous is not None:
+        if previous is not None and previous.status == "interpreted" and previous.interpretation:
+            # ya pagada: se guarda su lectura en vez de tirarla (revision 06-oct)
+            self._save_reading(previous, previous.interpretation, None)
+        elif previous is not None:
             # abrir otra mesa abandona la anterior: una activa por usuario
             previous.status = "abandoned"
             self._tables.save(previous, commit=False)
-        return self._tables.create(user_id, deck.slug, session.to_dict(), self._now() + SESSION_TTL)
+        try:
+            return self._tables.create(user_id, deck.slug, session.to_dict(), self._now() + SESSION_TTL)
+        except DuplicateActiveTable as exc:
+            raise TableConflict("Ya se estaba abriendo otra mesa: vuelve a intentarlo.") from exc
 
     def current(self, user_id: UUID) -> Optional[TarotTableEntity]:
         table = self._tables.active(user_id)
@@ -176,7 +184,11 @@ class TarotTableService:
         table = self._load(session_id, user_id)
         if table.previous_state is None or table.previous_until is None or table.previous_until <= self._now():
             raise TableConflict("Ya no se puede deshacer.")
-        table.state = table.previous_state
+        now, before = TarotSession.from_dict(table.state), TarotSession.from_dict(table.previous_state)
+        # lo que se saco en el gesto vuelve al mazo, pero no a su sitio: el
+        # cliente ya lo vio y sacar-deshacer serviria para espiar el orden
+        before.hide(set(now.drawn) - set(before.drawn))
+        table.state = before.to_dict()
         table.previous_state = table.previous_until = None
         self._tables.save(table)
         return table
@@ -263,15 +275,29 @@ class TarotTableService:
             return None
         return table.interpretation
 
-    def store_interpretation(self, session_id: UUID, user_id: UUID, interpretation: dict) -> None:
-        """Deja la lectura en la mesa sin commit: la ruta captura el cupo en la misma transaccion."""
+    def store_interpretation(self, session_id: UUID, user_id: UUID, interpretation: dict) -> tuple[dict, bool]:
+        """Deja la lectura en la mesa sin commit: la ruta captura el cupo en la misma transaccion.
+
+        Devuelve (lectura, nueva). Lo comprobado al armarla se comprueba otra vez
+        aqui, ya con la fila bloqueada: entre medias el cobro hace commit y suelta
+        el cerrojo (revision 06-oct). Si otra peticion guardo la misma lectura, se
+        devuelve esa con `nueva=False` y la ruta no cobra; si las cartas ya no
+        estan fuera del mazo, no se guarda nada.
+        """
         table = self._load(session_id, user_id)
+        if (table.status == "interpreted" and table.interpretation
+                and table.interpretation.get("request") == interpretation.get("request")):
+            return table.interpretation, False
+        drawn = set(TarotSession.from_dict(table.state).drawn)
+        if any(c["slug"] not in drawn for c in interpretation["cards"]):
+            raise TableConflict("La mesa cambió mientras se interpretaba: vuelve a intentarlo.")
         table.interpretation = interpretation
         table.status = "interpreted"
         # lo interpretado ya no se deshace: la lectura se quedaria sin sus cartas
         table.previous_state = table.previous_until = None
         table.expires_at = self._now() + SESSION_TTL
         self._tables.save(table, commit=False)
+        return interpretation, True
 
     # ---------- cerrar el circulo ----------
     def close(self, session_id: UUID, user_id: UUID, table_snapshot: Optional[dict], *,
@@ -291,9 +317,12 @@ class TarotTableService:
             reading = self._readings.get_owned(table.reading_id, user_id)
             if reading is not None:
                 return self.reading_response(reading)
-        if table.status == "interpreted" and table.interpretation:
+        if table.status == "interpreted" and table.interpretation and self._still_interpreted(
+                table, placements or []):
             it = table.interpretation
-        elif table.status == "open":
+        elif table.status in ("open", "interpreted"):
+            # sin interpretar, o la mesa cambio despues de interpretar: se guarda
+            # lo que hay ahora, no la lectura de otras cartas (revision 06-oct)
             name, cards = self._lay_out(
                 TarotSession.from_dict(table.state), spread_slug, placements or [], complete=False,
             )
@@ -301,16 +330,37 @@ class TarotTableService:
                   "moon_phase": moon_phase, "planetary_hour": planetary_hour, "cards": cards}
         else:
             raise TableConflict("Esta mesa no se puede cerrar.")
+        entity = self._save_reading(table, it, table_snapshot)
+        self._tables.save(table)
+        return self.reading_response(entity)
+
+    def _save_reading(self, table: TarotTableEntity, it: dict,
+                      table_snapshot: Optional[dict]) -> TarotReadingEntity:
+        """Guarda la lectura y deja la mesa cerrada, todo sin commit."""
         entity = self._readings.create(
-            user_id=user_id, spread_type=it["spread"], question=it.get("question"),
+            user_id=table.user_id, spread_type=it["spread"], question=it.get("question"),
             cards=[{k: c[k] for k in ("slug", "position", "reversed", "slot", "clarifies")} for c in it["cards"]],
             moon_phase=it.get("moon_phase"), planetary_hour=it.get("planetary_hour"),
             table_snapshot=table_snapshot, commit=False,
         )
         table.status, table.reading_id = "closed", entity.id
         table.previous_state = table.previous_until = None
-        self._tables.save(table)
-        return self.reading_response(entity)
+        self._tables.save(table, commit=False)
+        return entity
+
+    @staticmethod
+    def _still_interpreted(table: TarotTableEntity, placements: list[Placement]) -> bool:
+        """La interpretacion guardada sigue describiendo la mesa: sus cartas siguen
+        fuera y, si el cliente dice donde esta cada una, en el mismo sitio."""
+        it = table.interpretation
+        drawn = set(TarotSession.from_dict(table.state).drawn)
+        if any(c["slug"] not in drawn for c in it["cards"]):
+            return False
+        if not placements:
+            return True
+        asked = (it.get("request") or {}).get("placements")
+        now = sorted((asdict(p) for p in placements), key=lambda p: json.dumps(p, sort_keys=True))
+        return asked == now
 
     # ---------- lecturas guardadas ----------
     def readings(self, user_id: UUID, limit: int) -> list[TarotReadingResponse]:

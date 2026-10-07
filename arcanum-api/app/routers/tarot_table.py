@@ -207,7 +207,12 @@ def interpret(
         return reservation.operation.result
     try:
         with _errors():
-            tables.store_interpretation(session_id, user.id, result)
+            stored, fresh = tables.store_interpretation(session_id, user.id, result)
+        if not fresh:
+            # otra peticion casi a la vez ya la guardo y cobro: esta no cobra
+            db.rollback()
+            UsageService().reverse(db, reservation.operation)
+            return stored
         UsageService().capture(db, reservation.operation, result)
         return result
     except Exception:
