@@ -223,7 +223,9 @@ void main() {
 
   group('vibracion', () {
     test('los milisegundos de la especificacion pasan a golpes', () {
-      expect(hapticFor(4), HapticKind.selection);
+      // lo corto tambien es golpe ligero: selectionClick no vibra en el GN2200
+      expect(hapticFor(3), HapticKind.light);
+      expect(hapticFor(4), HapticKind.light);
       expect(hapticFor(8), HapticKind.light);
       expect(hapticFor(10), HapticKind.light);
       expect(hapticFor(12), HapticKind.medium);
@@ -258,7 +260,10 @@ void main() {
       );
       calls.clear();
       await const TableHaptics().play(Buzz.radialHover);
-      expect(calls.single.$1, 'HapticFeedbackType.selectionClick');
+      expect(calls.single.$1, 'HapticFeedbackType.lightImpact');
+      calls.clear();
+      await const TableHaptics().play(Buzz.fanTick);
+      expect(calls.single.$1, 'HapticFeedbackType.lightImpact');
     });
   });
 

@@ -631,6 +631,10 @@ void main() {
         dir.closeRadial();
         await holdAndPick(pileAt('p0'), 'spread');
         expect(dir.radial!.items.map((i) => i.id), contains('three_card'));
+        // cada tirada con su dibujo, distinto de las demas (antes, el mismo icono)
+        final glyphs = dir.radial!.items.map((i) => i.glyph).toList();
+        expect(glyphs, everyElement(isNotNull));
+        expect(glyphs.toSet(), hasLength(glyphs.length));
       },
     );
 
