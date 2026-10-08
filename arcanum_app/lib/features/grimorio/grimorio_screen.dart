@@ -38,10 +38,10 @@ class _GrimorioScreenState extends ConsumerState<GrimorioScreen> {
     });
   }
 
-  Future<void> _newEntry() async {
+  Future<void> _newEntry({String? title}) async {
     final saved = await Navigator.push<bool>(
       context,
-      bookPageRoute(const GrimorioEditor()),
+      bookPageRoute(GrimorioEditor(initialTitle: title)),
     );
     if (mounted && saved == true) _refresh();
   }
@@ -86,7 +86,10 @@ class _GrimorioScreenState extends ConsumerState<GrimorioScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && ref.read(grimoireComposeProvider)) {
           ref.read(grimoireComposeProvider.notifier).set(false);
-          _newEntry();
+          // el titulo se consume una vez: la siguiente entrada nace vacia
+          final title = ref.read(grimoireComposeTitleProvider);
+          ref.read(grimoireComposeTitleProvider.notifier).set(null);
+          _newEntry(title: title);
         }
       });
     }

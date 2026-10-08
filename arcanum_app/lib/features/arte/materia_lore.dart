@@ -6,6 +6,7 @@ import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_resin.dart';
+import '../../shared/widgets/practice_links.dart';
 import '../lecturas/domain/library_models.dart';
 import 'materia_engravings.dart';
 import 'materia_plate_loader.dart';
@@ -76,6 +77,11 @@ void showMateriaLoreSheet(
   // herbario). Si resuelve 404 (planta sin capítulo) la tarjeta no se muestra:
   // ausencia esperada, en silencio. La entrada vive al pie, junto a FUENTE.
   Future<Map<String, dynamic>>? bridgeFuture,
+  // Salidas a la practica, al pie. Las pone quien sabe navegar (la pantalla
+  // de Plantas); sin ellas la ficha es solo de consulta. La hoja se cierra
+  // antes de saltar.
+  VoidCallback? onAnnotate,
+  VoidCallback? onPlanetHour,
 }) {
   final mood = materiaMood(planet, element);
 
@@ -83,7 +89,7 @@ void showMateriaLoreSheet(
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
-    builder: (_) => DraggableScrollableSheet(
+    builder: (sheet) => DraggableScrollableSheet(
       initialChildSize: 0.72,
       minChildSize: 0.5,
       maxChildSize: 0.95,
@@ -157,6 +163,31 @@ void showMateriaLoreSheet(
                     materiaPlanet: planet,
                     mood: mood,
                   ),
+                const SizedBox(height: 14),
+                PracticeLinks(
+                  links: [
+                    if (onAnnotate != null)
+                      PracticeLink(
+                        label: 'Anotar en el Grimorio',
+                        icon: Icons.edit_note,
+                        onTap: () {
+                          Navigator.of(sheet).pop();
+                          onAnnotate();
+                        },
+                      ),
+                    if (onPlanetHour != null &&
+                        planet != null &&
+                        planet.isNotEmpty)
+                      PracticeLink(
+                        label: 'Su hora en Cielo',
+                        icon: Icons.wb_twilight_outlined,
+                        onTap: () {
+                          Navigator.of(sheet).pop();
+                          onPlanetHour();
+                        },
+                      ),
+                  ],
+                ),
               ],
             ),
           ),

@@ -19,13 +19,18 @@ import '../sigilos/taller_screen.dart';
 import 'grimorio_atmosphere.dart';
 
 class GrimorioEditor extends ConsumerStatefulWidget {
-  const GrimorioEditor({super.key});
+  const GrimorioEditor({super.key, this.initialTitle});
+
+  /// Titulo de partida (p. ej. el nombre de una planta desde Saber). El titulo
+  /// viaja en claro; el contenido se cifra igual que siempre al sellar.
+  final String? initialTitle;
+
   @override
   ConsumerState<GrimorioEditor> createState() => _GrimorioEditorState();
 }
 
 class _GrimorioEditorState extends ConsumerState<GrimorioEditor> {
-  final _title = TextEditingController();
+  late final _title = TextEditingController(text: widget.initialTitle);
   final _content = TextEditingController();
   String _type = 'note';
   bool _saving = false;

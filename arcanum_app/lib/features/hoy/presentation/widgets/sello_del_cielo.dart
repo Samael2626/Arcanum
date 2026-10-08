@@ -115,7 +115,7 @@ class _SelloDelCieloState extends State<SelloDelCielo>
     final nombre = _nombreDelAspecto(a);
     final action = widget.regente == null
         ? 'Abrir el sello'
-        : 'Abrir el sello ${_delRegente(widget.regente!)}';
+        : 'Abrir el sello ${pointGenitiveEs(widget.regente!)}';
 
     return Semantics(
       button: !widget.abierto,
@@ -279,15 +279,6 @@ String? _cuandoCierra(String? exactoEn) {
   if (faltan == 0) return 'hoy';
   if (faltan == 1) return 'mañana';
   return 'el ${cuando.day} de ${_meses[cuando.month - 1]}';
-}
-
-/// «del Sol», «de la Luna», «de Venus».
-///
-/// El artículo no es adorno: «Abrir el sello de Sol» está mal escrito, y esto
-/// lo lee una persona. Solo las dos luminarias lo llevan.
-String _delRegente(String clave) {
-  const conArticulo = {'sun': 'del Sol', 'moon': 'de la Luna'};
-  return conArticulo[clave] ?? 'de ${pointEs(clave)}';
 }
 
 /// El chip de un papel: su trazo, el papel y el cuerpo que lo ocupa.

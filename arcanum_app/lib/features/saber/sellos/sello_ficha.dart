@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
+import '../../../shared/widgets/practice_links.dart';
 import 'sello_modelo.dart';
 import 'sello_painter.dart';
 
@@ -32,6 +33,8 @@ class SelloFicha extends StatelessWidget {
     required this.catalogo,
     required this.pieza,
     required this.onElegir,
+    this.onAnnotate,
+    this.onPlanetHour,
   });
 
   final CatalogoSellos catalogo;
@@ -39,6 +42,11 @@ class SelloFicha extends StatelessWidget {
 
   /// Abre otra pieza (la pareja de un espíritu con dos sellos).
   final ValueChanged<SelloPieza> onElegir;
+
+  /// Salidas a la practica, al pie. Null = la ficha es solo de consulta.
+  /// La hora solo se ofrece si la pieza tiene planeta.
+  final VoidCallback? onAnnotate;
+  final VoidCallback? onPlanetHour;
 
   @override
   Widget build(BuildContext context) {
@@ -140,6 +148,22 @@ class SelloFicha extends StatelessWidget {
                   );
                 },
               ),
+            ),
+            PracticeLinks(
+              links: [
+                if (onAnnotate != null)
+                  PracticeLink(
+                    label: 'Anotar en el Grimorio',
+                    icon: Icons.edit_note,
+                    onTap: onAnnotate!,
+                  ),
+                if (onPlanetHour != null && pieza.planet != null)
+                  PracticeLink(
+                    label: 'Su hora en Cielo',
+                    icon: Icons.wb_twilight_outlined,
+                    onTap: onPlanetHour!,
+                  ),
+              ],
             ),
           ],
         ),

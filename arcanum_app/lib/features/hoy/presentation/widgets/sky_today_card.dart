@@ -24,7 +24,10 @@ import '../../../../shared/widgets/prosa_generada.dart';
 import '../../../../core/auth/auth_controller.dart';
 import '../../../../core/privacy/ai_consent_service.dart';
 import '../../../../core/astro/birth_data.dart';
+import '../../../../core/state/flow_navigation.dart';
 import '../../../../core/state/flow_providers.dart';
+import '../../../../shared/widgets/practice_links.dart';
+import '../../hoy_guidance.dart';
 import 'banda_del_anio.dart';
 import 'sello_del_cielo.dart';
 import '../../../horoscopo/compartir_horoscopo.dart';
@@ -312,6 +315,9 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
                               fecha: lec.data!['date'] as String?,
                             ),
                           ),
+                          // La lectura no es un callejon: sale a la carta que
+                          // la sostiene y a las plantas del regente del dia.
+                          _EnlacesLectura(regente: d['day_ruler'] as String?),
                           // La tarjeta se MONTA aqui, fuera de la pantalla.
                           // No con `Offstage` ni con `Opacity(0)`: los dos se
                           // saltan el pintado, y sin pintar no hay capa que
@@ -702,6 +708,35 @@ class _LocalReading extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Salidas al pie de la lectura: la carta natal siempre, y las plantas del
+/// regente del dia solo si el cielo lo trae y es uno de los siete clasicos (los
+/// unicos con Materia filtrable). Sin regente no se inventa ninguno.
+class _EnlacesLectura extends ConsumerWidget {
+  const _EnlacesLectura({required this.regente});
+
+  final String? regente;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final planeta = classicalPlanets.contains(regente) ? regente : null;
+    return PracticeLinks(
+      links: [
+        PracticeLink(
+          label: 'Ver tu carta',
+          icon: Icons.auto_awesome_outlined,
+          onTap: () => goCielo(ref, context, cara: cieloCaraCarta),
+        ),
+        if (planeta != null)
+          PracticeLink(
+            label: 'Plantas ${pointGenitiveEs(planeta)}',
+            icon: Icons.local_florist_outlined,
+            onTap: () => goMateriaOf(ref, context, planeta),
+          ),
+      ],
     );
   }
 }
