@@ -22,7 +22,7 @@ const SEAL_SOURCES = {
   }
 };
 const GOETIA_RANKS = ['Rey', 'Duque', 'Príncipe o prelado', 'Marqués', 'Presidente', 'Conde', 'Caballero'];
-const SEALS_DATA = [...(window.SEALS || []).map(s => ({ ...s, src: 'agrippa1651' })), ...(window.GOETIA || [])];
+const SEALS_DATA = (window.SEALS || []).map(s => ({ ...s, src: 'agrippa1651' }));
 const SEAL_BY_ID = Object.fromEntries(SEALS_DATA.map(s => [s.id, s]));
 const sealSrc = s => SEAL_SOURCES[s.src];
 const scanUrl = s => `https://archive.org/details/${sealSrc(s).item}/page/n${s.leaf}/mode/1up`;

@@ -7,8 +7,7 @@ import 'sello_ficha.dart';
 import 'sello_modelo.dart';
 import 'sello_painter.dart';
 
-/// Tercera cara de Saber: consulta de los sellos históricos (Agrippa 1651 y
-/// Goetia 1916). Es obra ajena de dominio público: se consulta, no se edita.
+/// Tercera cara de Saber: consulta de los sellos historicos de Agrippa 1651.
 class SellosScreen extends StatefulWidget {
   const SellosScreen({super.key, this.catalogoOverride});
 
@@ -20,11 +19,8 @@ class SellosScreen extends StatefulWidget {
 }
 
 class _SellosScreenState extends State<SellosScreen> {
-  static const _colecciones = ['agrippa1651', 'goetia1916'];
-
   late Future<CatalogoSellos> _futuro =
       widget.catalogoOverride ?? CatalogoSellos.cargar();
-  int _coleccion = 0;
   String? _filtro;
 
   void _reintentar() => setState(
@@ -49,18 +45,14 @@ class _SellosScreenState extends State<SellosScreen> {
   }
 
   Widget _cuerpo(CatalogoSellos cat) {
-    final fuente = _colecciones[_coleccion];
+    const fuente = 'agrippa1651';
     final todas = cat.de(fuente).toList();
-    final filtros = fuente == 'goetia1916'
-        ? cat.goetiaRanks
-        : <String>{for (final p in todas) p.planetName!}.toList();
+    final filtros = <String>{for (final p in todas) p.planetName!}.toList();
     final piezas = _filtro == null
         ? todas
         : todas
               .where(
-                (p) => p.esGoetia
-                    ? p.ranks.contains(_filtro)
-                    : p.planetName == _filtro,
+                (p) => p.planetName == _filtro,
               )
               .toList();
     return Center(
@@ -69,18 +61,6 @@ class _SellosScreenState extends State<SellosScreen> {
         child: Column(
           children: [
             const SizedBox(height: 12),
-            ArcanumToggle(
-              index: _coleccion,
-              onChanged: (i) => setState(() {
-                _coleccion = i;
-                _filtro = null;
-              }),
-              options: const [
-                ArcanumToggleOption(label: 'Agrippa'),
-                ArcanumToggleOption(label: 'Goetia'),
-              ],
-            ),
-            const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(

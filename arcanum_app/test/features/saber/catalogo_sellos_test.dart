@@ -21,26 +21,21 @@ void main() {
     );
   });
 
-  test('103 piezas: 23 de Agrippa y 80 de la Goetia', () {
-    expect(cat.items, hasLength(103));
+  test('la app contiene solo las 23 piezas de Agrippa', () {
+    expect(cat.items, hasLength(23));
     expect(cat.de('agrippa1651'), hasLength(23));
-    expect(cat.de('goetia1916'), hasLength(80));
-    expect({for (final p in cat.items) p.id}, hasLength(103));
+    expect(cat.de('goetia1916'), isEmpty);
+    expect(cat.sources.keys, contains('agrippa1651'));
+    expect(cat.sources.keys, isNot(contains('goetia1916')));
+    expect({for (final p in cat.items) p.id}, hasLength(23));
   });
 
-  test(
-    '72 espíritus y 8 con sello doble, y cada doble encuentra su pareja',
-    () {
-      final g = cat.de('goetia1916').toList();
-      expect({for (final p in g) p.spirit}, hasLength(72));
-      final dobles = g.where((p) => cat.pareja(p) != null).toList();
-      expect(dobles, hasLength(16)); // 8 espíritus × 2 figuras
-      for (final p in dobles) {
-        expect(cat.pareja(cat.pareja(p)!)!.id, p.id);
-      }
-      expect(cat.pareja(cat.de('agrippa1651').first), isNull);
-    },
-  );
+  test('el catalogo no incluye parejas ni rangos goeticos', () {
+    expect(cat.goetiaRanks, isEmpty);
+    for (final p in cat.items) {
+      expect(cat.pareja(p), isNull);
+    }
+  });
 
   test('cada pieza cita fuente, edición, escaneo y licencia', () {
     for (final p in cat.items) {
@@ -55,18 +50,12 @@ void main() {
     }
   });
 
-  test('Goetia: nombre, rango y metal por pieza; Agrippa: planeta y tipo', () {
-    for (final p in cat.de('goetia1916')) {
-      expect(p.name, isNotEmpty, reason: p.id);
-      expect(p.ranks, isNotEmpty, reason: p.id);
-      expect(p.metals, hasLength(p.ranks.length), reason: p.id);
-      expect(cat.goetiaRanks, containsAll(p.ranks), reason: p.id);
-    }
+  test('Agrippa: planeta y tipo por pieza', () {
     for (final p in cat.de('agrippa1651')) {
       expect(p.planet, isNotNull, reason: p.id);
       expect(p.kind, isNotNull, reason: p.id);
     }
-    expect(cat.items.where((p) => p.note != null), hasLength(5));
+    expect(cat.items.every((p) => p.source == 'agrippa1651'), isTrue);
   });
 
   test('el asset es idéntico al export del prototipo (sin deriva)', () {
@@ -78,7 +67,7 @@ void main() {
     );
   });
 
-  test('los 103 trazos se parsean y caen dentro de la caja del escaneo', () {
+  test('los 23 trazos se parsean y caen dentro de la caja del escaneo', () {
     for (final p in cat.items) {
       expect(p.paths, isNotEmpty, reason: p.id);
       var caja = Rect.zero;
@@ -99,7 +88,7 @@ void main() {
   });
 
   test(
-    'el pintor deja tinta en las 103 piezas y respeta el recuadro',
+    'el pintor deja tinta en las 23 piezas y respeta el recuadro',
     () async {
       for (final p in cat.items) {
         final rec = ui.PictureRecorder();

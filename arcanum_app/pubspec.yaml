@@ -106,8 +106,8 @@ flutter:
     - assets/materia/manifest.json
     - assets/materia/entonado/
     - assets/materia/grabado/
-    # Catalogo historico de sellos (Agrippa 1651, Goetia 1916): obra de dominio
-    # publico con su procedencia. Lo genera arcanum-sigil-prototype/_export_catalogo.mjs.
+    # Catalogo historico de Agrippa 1651, con procedencia.
+    # Lo genera arcanum-sigil-prototype/_export_catalogo.mjs.
     - assets/sellos/catalogo-sellos.json
     # Licencias de las fuentes: la OFL 1.1 obliga a distribuir su texto con el
     # software. Se empaquetan como asset y se registran en LicenseRegistry para
