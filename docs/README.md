@@ -1,6 +1,6 @@
 # Documentación de ARCANUM
 
-Este índice es la entrada a la documentación del producto. El código y los textos publicados mandan cuando una nota antigua discrepa con ellos. Fecha de revisión del índice: 2026-10-07.
+Este índice es la entrada a la documentación del producto. El código y los textos publicados mandan cuando una nota antigua discrepa con ellos. Fecha de revisión del índice: 2026-10-08.
 
 ## Para qué sirve cada lugar
 
@@ -15,15 +15,16 @@ Este índice es la entrada a la documentación del producto. El código y los te
 
 1. [Estado actual](ARCANUM-Estado.md): índice de avances, con secciones históricas señaladas.
 2. [Mapa de arquitectura](arquitectura.md): sistemas, límites de datos y flujos que merecen diagrama.
-3. [Plan de documentación y web](plan-documentacion-web.md): qué publicar, qué mantener internamente y orden de trabajo.
-4. [README del repositorio](../README.md): entorno, ramas, pruebas y despliegue.
-5. [AGENTS.md](../AGENTS.md): reglas operativas y datos verificados del proyecto.
+3. [Mapa de producto](producto.md): cinco secciones, acceso, recorridos y límites comprobados en la app.
+4. [Plan de documentación y web](plan-documentacion-web.md): qué publicar, qué mantener internamente y orden de trabajo.
+5. [README del repositorio](../README.md): entorno, ramas, pruebas y despliegue.
+6. [AGENTS.md](../AGENTS.md): reglas operativas y datos verificados del proyecto.
 
 ## Documentos existentes
 
 | Tema | Documentos |
 |---|---|
-| Producto | [Propósito de módulos](ARCANUM-Modulos-Proposito.md), [Mesa de tarot](ARCANUM-Spec-Mesa-Tarot.md), [Taller de sigilos](ARCANUM-Informe-Taller-Sigilos-2026-10-02.md) |
+| Producto | [Mapa actual](producto.md), [Propósito de módulos](ARCANUM-Modulos-Proposito.md), [Mesa de tarot](ARCANUM-Spec-Mesa-Tarot.md), [Taller de sigilos](ARCANUM-Informe-Taller-Sigilos-2026-10-02.md) |
 | Operación | [Play Console](ARCANUM-Play-Console-Progreso.md), [Seguridad beta](ARCANUM-Auditoria-Seguridad-Beta-2026-10-05.md), [Data Safety](ARCANUM-Data-Safety.md) |
 | Historia | [`checkpoints/`](checkpoints/), archivos `ARCANUM-Avance-*` y documentos `ARCANUM-Semana*` |
 
