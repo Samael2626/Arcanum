@@ -452,9 +452,15 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
   void openInterpretation() {
     final dir = _director;
     if (dir == null) return;
-    final shown = _reading;
+    // la lectura de esta mesa: la que se acaba de ver o, si la pantalla se
+    // monto de nuevo (al volver del Oraculo, 08-oct), la que la mesa tiene
+    // guardada. Ya esta pagada: se abre sin aviso de cobro
+    final shown = _reading ?? dir.table.server?.interpretation;
     if (shown != null && shown.describes(dir.table)) {
-      return setState(() => _revealing = true);
+      return setState(() {
+        _reading = shown;
+        _revealing = true;
+      });
     }
     // la de antes era de otras cartas: se interpreta la mesa de ahora
     _reading = null;

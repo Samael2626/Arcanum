@@ -458,6 +458,23 @@ void main() {
       await tapEmbroidery();
       expect(find.byType(LecturaRevelada), findsOneWidget);
       expect(server.interprets, 1);
+
+      // ir al Oraculo y volver (08-oct): la pantalla se monta de nuevo, sin la
+      // lectura en memoria. La mesa la tiene guardada: se abre sin el aviso
+      // de cobro y sin volver a pedirla
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: c,
+          child: const MaterialApp(home: TarotTableScreen()),
+        ),
+      );
+      await settle();
+      expect(find.byType(LecturaRevelada), findsNothing);
+      await tapEmbroidery();
+      expect(find.textContaining('gasta una lectura'), findsNothing);
+      expect(find.byType(LecturaRevelada), findsOneWidget);
+      expect(server.interprets, 1);
       expect(tester.takeException(), isNull);
     },
   );
