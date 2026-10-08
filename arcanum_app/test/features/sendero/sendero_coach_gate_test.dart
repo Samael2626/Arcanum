@@ -138,21 +138,22 @@ void main() {
     final container = await _mount(tester, api, router);
     final guide = container.read(senderoGuideProvider.notifier);
     guide.start(senderoJourneyById('orientation')!);
-    guide.onAction('menu');
+    // v3 (07-oct): el primer paso es tocar Horoscopo en la portada
+    guide.onAction('section_horoscopo');
     await guide.idle;
     router.go('/saber');
     await tester.pumpAndSettle();
 
     expect(find.text('Sendero te sigue'), findsOneWidget);
     expect(container.read(senderoGuideProvider)?.step, 1);
-    expect(find.text('Volver a Cielo'), findsOneWidget);
+    // v3: el paso 1 vive en el horoscopo, y a el se vuelve
+    expect(find.text('Volver a Horóscopo'), findsOneWidget);
     expect(find.text('Explorar Saber'), findsOneWidget);
     expect(find.text('Pausar'), findsOneWidget);
-    await tester.tap(find.text('Volver a Cielo'));
+    await tester.tap(find.text('Volver a Horóscopo'));
     await tester.pumpAndSettle();
-    expect(router.routeInformationProvider.value.uri.path, '/hoy');
+    expect(router.routeInformationProvider.value.uri.path, '/horoscopo');
     expect(container.read(senderoGuideProvider)?.step, 1);
-    expect(find.text('Abre el menú para continuar'), findsOneWidget);
     router.go('/saber');
     await tester.pumpAndSettle();
     await tester.tap(find.text('Explorar Saber'));
@@ -160,7 +161,7 @@ void main() {
     expect(container.read(senderoGuideProvider)?.journey.id, 'saber');
     final saved = container
         .read(senderoControllerProvider)
-        .value?['orientation:2'];
+        .value?['orientation:${senderoJourneyById('orientation')!.version}'];
     expect(saved?.step, 1);
     expect(saved?.status, 'in_progress');
 

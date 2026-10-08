@@ -1,10 +1,11 @@
-// El horóscopo como SECCIÓN DEL CAJÓN, que es lo que se decidió el
-// 21-sep-2026 al quitar la barra de abajo.
+// Navegación entre secciones: los MOSAICOS de la portada desde el 07-oct-2026.
 //
-// Antes esto probaba la barra: que cada destino llevara a su rama y que el
-// horóscopo quedara MARCADO al leerlo. La barra ya no existe, así que lo que
-// se prueba es lo mismo un piso más abajo -- sobre `StatefulNavigationShell`,
-// que es quien de verdad sabe en qué rama estás. El cajón solo lo dibuja.
+// Primero fue la barra de abajo; el 21-sep-2026 pasó al cajón; el 07-oct-2026
+// las secciones se abren desde los mosaicos de Cielo, se vuelve por la casa de
+// la barra superior y el cajón se queda con la cuenta y la ayuda. Lo que se
+// prueba no ha cambiado: que cada destino lleve a su rama, que se sepa dónde
+// estás, y que se pueda volver -- sobre `StatefulNavigationShell`, que es
+// quien de verdad sabe en qué rama estás.
 //
 // Se monta la app ENTERA por el router y no una pantalla suelta, porque lo que
 // se prueba vive en la carcasa: un test que montara `HoroscopoScreen` a pelo
@@ -14,10 +15,12 @@ import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/core/content/sections.dart';
 import 'package:arcanum_app/core/router/app_router.dart';
+import 'package:arcanum_app/core/state/flow_providers.dart';
 import 'package:arcanum_app/core/theme/arcanum_theme.dart';
 import 'package:arcanum_app/features/horoscopo/horoscopo_screen.dart';
 import 'package:arcanum_app/features/hoy/hoy_screen.dart';
 import 'package:arcanum_app/features/sendero/application/sendero_guide_controller.dart';
+import 'package:arcanum_app/features/sendero/domain/sendero_catalog.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -190,104 +193,157 @@ Future<ProviderContainer> _montar(WidgetTester tester) async {
   return contenedor;
 }
 
-/// En que rama estamos. Sale del shell y no del cajon a proposito: el cajon
-/// no existe mientras esta cerrado, y lo que importa es donde estas, no lo que
-/// se este dibujando.
+/// En que rama estamos. Sale del shell y no de la pantalla a proposito: lo
+/// que importa es donde estas, no lo que se este dibujando.
 int _rama(WidgetTester tester) => tester
     .widget<StatefulNavigationShell>(find.byType(StatefulNavigationShell))
     .currentIndex;
 
-/// Abre el cajon por la hamburguesa. Dos toques para cada seccion: ese es el
-/// precio del patron y por eso esta escrito aqui una sola vez.
+int _indice(String route) =>
+    arcanumSections.indexWhere((s) => s.route == route);
+
+/// Dos tiempos fijos y no `pumpAndSettle`: el Grimorio tiene un sello que
+/// respira en bucle y el arbol no se queda quieto nunca.
+Future<void> _esperar(WidgetTester tester) async {
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.pump(const Duration(milliseconds: 400));
+}
+
+/// Abre el cajon por la hamburguesa.
 Future<void> _abrirCajon(WidgetTester tester) async {
   await tester.tap(find.byIcon(Icons.menu));
-  // Tiempo fijo y no `pumpAndSettle`, por lo mismo que abajo: desde el
-  // Grimorio el arbol nunca se queda quieto y el settle expira.
-  await tester.pump(const Duration(milliseconds: 400));
-  await tester.pump(const Duration(milliseconds: 400));
+  await _esperar(tester);
 }
 
-Future<void> _irA(WidgetTester tester, String titulo) async {
-  await _abrirCajon(tester);
-  await tester.tap(find.text(titulo));
-  // `pump` con tiempo fijo y no `pumpAndSettle`: el Grimorio tiene un sello
-  // que respira en bucle y el arbol no se queda quieto nunca. Dos tiempos
-  // porque aqui se encadenan dos animaciones: el cajon que se cierra y la
-  // rama que entra.
-  await tester.pump(const Duration(milliseconds: 400));
-  await tester.pump(const Duration(milliseconds: 400));
+/// El mosaico de la portada. El del horoscopo no lleva su `Key` propia en la
+/// app: la cambia por la del objetivo de Sendero, que es por donde se le
+/// apunta.
+Finder _mosaico(ProviderContainer c, String titulo) => switch (titulo) {
+  'Horóscopo' => find.byKey(
+    c.read(senderoGuideTargetsProvider).keyFor('section_horoscopo'),
+  ),
+  'Grimorio' => find.byKey(const Key('atlas-grimorio')),
+  'Saber' => find.byKey(const Key('atlas-saber')),
+  'Mesa de tarot' => find.byKey(const Key('atlas-mesa')),
+  _ => throw ArgumentError(titulo),
+};
+
+/// Un toque en el mosaico, desde la portada. Dos toques por seccion contando
+/// el de la casa: el mismo precio que tenia el cajon.
+Future<void> _irA(WidgetTester tester, ProviderContainer c, String t) async {
+  final mosaico = _mosaico(c, t);
+  await tester.ensureVisible(mosaico);
+  await tester.pump();
+  await tester.tap(mosaico);
+  await _esperar(tester);
 }
+
+/// La casa de la barra superior: vuelve a la portada desde cualquier seccion.
+Future<void> _aCasa(WidgetTester tester) async {
+  await tester.tap(find.byTooltip('Volver a la portada'));
+  await _esperar(tester);
+}
+
+GoRouter _router(WidgetTester tester) =>
+    tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig!
+        as GoRouter;
 
 void main() {
-  // El cajon y las ramas del shell tienen que ser la MISMA lista. Lo fueron
-  // hasta que se quito Cielos de `arcanumSections` y el destino se quedo
-  // escrito a mano en el shell: seis destinos, cinco ramas, y tocar el ultimo
-  // llamaba a una rama que no existia. Ningun test lo veia porque cada uno
-  // miraba su lado. Quitar la barra no relaja esto: el cajon se construye de
-  // la misma lista y el indice de la fila sigue siendo el de la rama.
-  testWidgets('cada fila del cajón lleva a una rama que existe', (
-    tester,
-  ) async {
-    await _montar(tester);
-    // Se tocan todas, de atras adelante: si alguna apuntara a una rama
-    // inexistente, `goBranch` reventaria aqui.
-    for (var i = arcanumSections.length - 1; i >= 0; i--) {
-      await _irA(tester, arcanumSections[i].title);
-      expect(
-        _rama(tester),
-        i,
-        reason: 'la fila ${arcanumSections[i].title} no llego a su rama',
-      );
-    }
-  });
-
   // Ya no hace falta devolver el router a /hoy entre tests: cada uno construye
   // el suyo desde su contenedor. Cuando era global, el que navegaba dejaba al
   // siguiente empezando dentro del horoscopo.
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('el cajón lista las cinco secciones y la cuenta', (tester) async {
-    await _montar(tester);
-    expect(find.byType(HoyScreen), findsOneWidget);
-    expect(find.byType(FloatingActionButton), findsNothing);
-    // Y ninguna barra abajo, que es lo que cambio.
-    expect(find.byType(NavigationBar), findsNothing);
-
-    await _abrirCajon(tester);
-    for (final seccion in arcanumSections) {
+  // Los destinos y las ramas del shell tienen que casar. Lo hacian la barra y
+  // luego el cajon hasta que se quito Cielos de `arcanumSections` y el
+  // destino se quedo escrito a mano: seis destinos, cinco ramas, y tocar el
+  // ultimo llamaba a una rama que no existia. Ningun test lo veia porque cada
+  // uno miraba su lado.
+  //
+  // 07-oct-2026: los destinos son ahora los mosaicos de Cielo, y van escritos
+  // a mano en `AtlasHomePanel`. Razon de mas para tocarlos todos y comprobar
+  // que cada uno cae en la rama de SU seccion, y no en otra.
+  testWidgets('cada mosaico de la portada lleva a una rama que existe', (
+    tester,
+  ) async {
+    final c = await _montar(tester);
+    for (final (titulo, ruta) in [
+      ('Saber', '/saber'),
+      ('Grimorio', '/grimorio'),
+      ('Horóscopo', '/horoscopo'),
+    ]) {
+      await _irA(tester, c, titulo);
       expect(
-        find.text(seccion.title),
-        findsWidgets,
-        reason: '${seccion.title} no esta en el cajon',
+        _rama(tester),
+        _indice(ruta),
+        reason: 'el mosaico $titulo no llego a su rama',
       );
+      await _aCasa(tester);
+      expect(_rama(tester), 0, reason: 'la casa no volvio a Cielo');
     }
-    expect(find.text('Perfil'), findsOneWidget);
-    expect(find.text('Ajustes'), findsOneWidget);
-    expect(find.text('Privacidad y datos'), findsOneWidget);
-    expect(find.text('Cielos'), findsNothing);
   });
 
-  testWidgets('la fila lleva a su pantalla', (tester) async {
-    await _montar(tester);
-    await _irA(tester, 'Horóscopo');
+  // Antes: "el cajon lista las cinco secciones y la cuenta" (21-sep-2026).
+  // Los mosaicos y el cajon ofrecen las mismas secciones principales.
+  testWidgets('portada y cajon ofrecen las secciones principales', (
+    tester,
+  ) async {
+    final c = await _montar(tester);
+    expect(find.byType(HoyScreen), findsOneWidget);
+    expect(find.byType(FloatingActionButton), findsNothing);
+    expect(find.byType(NavigationBar), findsNothing);
+
+    // Cielo es la propia portada: su barra lleva el nombre de la seccion.
+    expect(find.text(arcanumSections[0].title), findsWidgets);
+    expect(find.byKey(const Key('atlas-cielo')), findsOneWidget);
+    for (final titulo in ['Horóscopo', 'Grimorio', 'Saber']) {
+      expect(_mosaico(c, titulo), findsOneWidget, reason: titulo);
+    }
+    // La quinta: en debug y perfil la placa del Oraculo es la mesa de tarot,
+    // y los tests corren en debug. La placa del Oraculo de la tienda la
+    // vigila `atlas_home_panel_test.dart`.
+    expect(_mosaico(c, 'Mesa de tarot'), findsOneWidget);
+
+    await _abrirCajon(tester);
+    final cajon = find.byType(Drawer);
+    for (final rotulo in [
+      'Ahora y horas',
+      'Carta natal',
+      'Horóscopo',
+      'Oráculo',
+      'Grimorio',
+      'Saber · plantas, libros y sellos',
+      'Ayuda y recorrido',
+      'Perfil',
+      'Ajustes',
+      'Privacidad y datos',
+    ]) {
+      expect(
+        find.descendant(of: cajon, matching: find.text(rotulo)),
+        findsOneWidget,
+        reason: rotulo,
+      );
+    }
+    expect(find.descendant(of: cajon, matching: find.text('CIELO')), findsOneWidget);
+  });
+
+  testWidgets('el mosaico lleva a su pantalla', (tester) async {
+    final c = await _montar(tester);
+    await _irA(tester, c, 'Horóscopo');
     expect(find.byType(HoroscopoScreen), findsOneWidget);
   });
 
-  testWidgets('y ahí dentro SÍ queda marcada, al abrir el cajón', (
-    tester,
-  ) async {
-    await _montar(tester);
-    await _irA(tester, 'Horóscopo');
-    expect(_rama(tester), 1);
+  // Antes: "y ahi dentro SI queda marcada, al abrir el cajon". El cajon ya no
+  // marca secciones (07-oct-2026); donde estas lo dice la barra superior, que
+  // lleva el nombre y la linea llana de la seccion abierta, sin abrir nada.
+  testWidgets('y ahí dentro la barra dice dónde estás', (tester) async {
+    final c = await _montar(tester);
+    await _irA(tester, c, 'Horóscopo');
+    expect(_rama(tester), _indice('/horoscopo'));
 
-    // Lo que la barra daba gratis ahora cuesta un toque: hay que abrir el
-    // cajon para ver donde estas. Marcada lo esta, pero solo ahi dentro.
-    await _abrirCajon(tester);
-    // La regla de la casa: sin filete, lo que marca es el icono RELLENO (mas
-    // el color y el peso, que viajan con el).
-    final horoscopo = arcanumSections[1];
-    expect(find.byIcon(horoscopo.selectedIcon), findsOneWidget);
-    expect(find.byIcon(horoscopo.icon), findsNothing);
+    final horoscopo = arcanumSections[_indice('/horoscopo')];
+    expect(find.text(horoscopo.subtitle), findsWidgets);
+    expect(find.text(arcanumSections[0].subtitle), findsNothing);
   });
 
   // Un capítulo de la Biblioteca abierto desde OTRA sección tiene que acabar
@@ -299,55 +355,79 @@ void main() {
     await _montar(tester);
     expect(_rama(tester), 0, reason: 'se arranca en Cielo');
 
-    final router =
-        tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig!
-            as GoRouter;
-    router.go('/saber/culpeper-complete-herbal/henbane');
+    _router(tester).go('/saber/culpeper-complete-herbal/henbane');
     await tester.pump(const Duration(milliseconds: 400));
 
-    final saber = arcanumSections.indexWhere((s) => s.route == '/saber');
     expect(
       _rama(tester),
-      saber,
+      _indice('/saber'),
       reason: 'el capítulo se quedó en la rama de la sección de origen',
     );
   });
 
-  testWidgets('desde el horóscopo se vuelve por el cajón', (tester) async {
-    await _montar(tester);
-    await _irA(tester, 'Horóscopo');
-    await _irA(tester, 'Cielo');
+  // Antes: "desde el horoscopo se vuelve por el cajon". Desde el 07-oct-2026
+  // se vuelve por la casa, y la casa ademas deja Cielo en su cara de "Ahora":
+  // es lo que hacia tocar en el cajon la seccion en la que ya estabas.
+  testWidgets('desde el horóscopo se vuelve por la casa, a su raíz', (
+    tester,
+  ) async {
+    final c = await _montar(tester);
+    await _irA(tester, c, 'Horóscopo');
+    c.read(cieloCaraProvider.notifier).set(1);
+    await _aCasa(tester);
     expect(find.byType(HoyScreen), findsOneWidget);
     expect(find.byType(HoroscopoScreen), findsNothing);
     expect(_rama(tester), 0);
+    expect(c.read(cieloCaraProvider), 0, reason: 'Cielo no volvio a Ahora');
   });
 
-  testWidgets('Sendero avanza al tocar menu, seccion y lectura opcional', (
+  // El Sendero avanza SOLO con gestos reales sobre la app montada: el mosaico
+  // de la portada, la lectura opcional (que no gasta) y la hamburguesa.
+  // Primer umbral v3 (07-oct) unido a los arreglos de release 1.0.6.
+  testWidgets('Sendero avanza al tocar mosaico, lectura opcional y menú', (
     tester,
   ) async {
     final container = await _montar(tester);
     await _abrirCajon(tester);
-    await tester.tap(find.text('Sendero'));
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump(const Duration(milliseconds: 400));
+    final ayuda = find.text('Ayuda y recorrido');
+    await tester.ensureVisible(ayuda);
+    await _esperar(tester);
+    await tester.tap(ayuda);
+    await _esperar(tester);
     await tester.tap(find.text('Primer umbral'));
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump(const Duration(milliseconds: 400));
+    await _esperar(tester);
     expect(find.byKey(const ValueKey('sendero_guide_card')), findsOneWidget);
+    expect(container.read(senderoGuideProvider)?.journey.id, 'orientation');
     expect(container.read(senderoGuideProvider)?.step, 0);
 
-    await tester.tap(find.byIcon(Icons.menu));
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump(const Duration(milliseconds: 400));
+    // Se toca donde esta, sin desplazar: es el hueco que el velo deja abierto.
+    // Si la placa queda bajo el pliegue, el propio foco la trae a la vista
+    // (07-oct); se espera a que termine antes de tocar.
+    await _esperar(tester);
+    await tester.tap(_mosaico(container, 'Horóscopo'));
+    await _esperar(tester);
+    expect(find.byType(HoroscopoScreen), findsOneWidget);
     expect(container.read(senderoGuideProvider)?.step, 1);
-    await tester.tap(find.text('Horóscopo').last);
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(container.read(senderoGuideProvider)?.step, 2);
 
     await tester.tap(find.text('Terminar sin gastar'));
     await tester.pump(const Duration(milliseconds: 400));
     expect(container.read(senderoGuideProvider), isNull);
     expect(find.byKey(const ValueKey('sendero_guide_card')), findsNothing);
+
+    // La ayuda dejo su hoja abierta: se cierra tocando fuera, como en el
+    // aparato. Y luego la hamburguesa, en el recorrido de la cuenta.
+    await tester.tapAt(const Offset(200, 20));
+    await _esperar(tester);
+    _router(tester).go('/hoy');
+    await _esperar(tester);
+    container
+        .read(senderoGuideProvider.notifier)
+        .start(senderoJourneyById('account')!);
+    await _esperar(tester);
+    expect(container.read(senderoGuideProvider)?.step, 0);
+    await _abrirCajon(tester);
+    expect(container.read(senderoGuideProvider)?.step, 1);
+    container.read(senderoGuideProvider.notifier).pause();
+    await tester.pump(const Duration(milliseconds: 400));
   });
 }

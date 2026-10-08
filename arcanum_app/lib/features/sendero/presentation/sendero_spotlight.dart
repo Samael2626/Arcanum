@@ -48,8 +48,20 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
   @override
   void didChangeMetrics() => _scheduleMeasure();
 
+  /// La pantalla que se desplaza bajo el objetivo: al moverse, el hueco del
+  /// velo se recoloca (07-oct: se quedaba donde estaba y tapaba la placa).
+  ScrollPosition? _watched;
+
+  void _watch(BuildContext target) {
+    final position = Scrollable.maybeOf(target)?.position;
+    if (identical(position, _watched)) return;
+    _watched?.removeListener(_measure);
+    _watched = position?..addListener(_measure);
+  }
+
   @override
   void dispose() {
+    _watched?.removeListener(_measure);
     _measureTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -83,13 +95,18 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
       if (_targetRect != null) setState(() => _targetRect = null);
       return;
     }
+    _watch(targetContext!);
     final origin = root.globalToLocal(target.localToGlobal(Offset.zero));
-    final rect = (origin & target.size).intersect(Offset.zero & root.size);
-    if (rect.isEmpty && _scrolledTarget != widget.guide.current.target) {
+    final whole = origin & target.size;
+    final rect = whole.intersect(Offset.zero & root.size);
+    // a medias tambien se trae a la vista: asomaba un borde, el velo iluminaba
+    // media placa y el toque caia fuera de la pantalla
+    final cut = rect.isEmpty || rect.height < whole.height - 1;
+    if (cut && _scrolledTarget != widget.guide.current.target) {
       _scrolledTarget = widget.guide.current.target;
       unawaited(
         Scrollable.ensureVisible(
-          targetContext!,
+          targetContext,
           duration: MediaQuery.of(context).disableAnimations
               ? Duration.zero
               : const Duration(milliseconds: 300),

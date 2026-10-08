@@ -21,8 +21,11 @@ import '../../features/saber/saber_screen.dart';
 import '../../features/settings/privacy_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/tarot/tarot_screen.dart';
+import '../../features/respiracion/presentation/breath_practice_screen.dart';
+import '../../features/respiracion/presentation/breath_setup_screen.dart';
 import '../../features/sendero/presentation/sendero_screen.dart';
 import '../../features/fragmentos/presentation/fragmentos_screen.dart';
+import '../../features/sigilos/taller_screen.dart';
 import 'app_shell.dart';
 
 /// Rutas que se pueden ver SIN sesion.
@@ -92,8 +95,21 @@ final arcanumRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/paywall', builder: (c, s) => const PaywallScreen()),
       GoRoute(path: '/sendero', builder: (c, s) => const SenderoScreen()),
       GoRoute(path: '/fragmentos', builder: (c, s) => const FragmentosScreen()),
+      GoRoute(path: '/sigilos', builder: (c, s) => const TallerScreen()),
       // Mesa de tarot en construccion: la pestaña propia llega en la fase 8.
       GoRoute(path: '/tarot', builder: (c, s) => const TarotTableScreen()),
+      // Motor de respiracion en pruebas: modulo suelto, aun sin uniones con
+      // la carga de sigilos ni con la mesa.
+      GoRoute(
+        path: '/respirar',
+        builder: (c, s) => const BreathSetupScreen(),
+        routes: [
+          GoRoute(
+            path: 'practica',
+            builder: (c, s) => const BreathPracticeScreen(),
+          ),
+        ],
+      ),
       GoRoute(path: '/sendero/:journey', redirect: (c, s) => '/sendero'),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

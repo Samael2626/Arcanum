@@ -40,20 +40,15 @@ const senderoJourneys = <SenderoJourney>[
   SenderoJourney(
     id: 'orientation',
     title: 'Primer umbral',
-    subtitle: 'Descubre el menú y las ayudas sobre la app',
+    subtitle: 'Descubre la portada y las ayudas sobre la app',
     icon: Icons.explore_outlined,
-    version: 2,
+    version: 3,
     steps: [
       SenderoStep(
-        title: 'Todo empieza en el menú',
-        body: 'Ábrelo. Sendero esperará tu gesto antes de continuar.',
-        target: 'menu',
-        route: '/hoy',
-      ),
-      SenderoStep(
-        title: 'Entra al Horóscopo',
-        body: 'Toca su nombre. Conocerás cada cámara dentro de ella.',
+        title: 'Elige una práctica',
+        body: 'Toca Horóscopo en la portada. Cada mosaico abre una sección.',
         target: 'section_horoscopo',
+        route: '/hoy',
       ),
       SenderoStep(
         title: 'Este es tu cielo de hoy',
