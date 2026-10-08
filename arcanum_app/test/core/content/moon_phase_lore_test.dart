@@ -57,8 +57,7 @@ void main() {
       ]) {
         final practica = moonPhaseLore[slug]!.practica.toLowerCase();
         expect(
-          practica.contains('no se empieza') ||
-              !practica.contains('empieza '),
+          practica.contains('no se empieza') || !practica.contains('empieza '),
           isTrue,
           reason: '"$slug" manda empezar algo en fase menguante',
         );
@@ -89,13 +88,18 @@ void main() {
       conceptos.forEach((nombre, patron) {
         final re = RegExp(patron, caseSensitive: false);
         final fases = moonPhaseLore.entries
-            .where((e) => re.hasMatch(_plano('${e.value.practica} ${e.value.favorece}')))
+            .where(
+              (e) => re.hasMatch(
+                _plano('${e.value.practica} ${e.value.favorece}'),
+              ),
+            )
             .map((e) => e.key)
             .toList();
         expect(
           fases.length,
           lessThanOrEqualTo(1),
-          reason: 'la practica "$nombre" sale en ${fases.join(", ")}; '
+          reason:
+              'la practica "$nombre" sale en ${fases.join(", ")}; '
               'si dos fases mandan lo mismo, una de las dos sobra',
         );
       });

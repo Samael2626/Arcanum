@@ -11,7 +11,7 @@ from dataclasses import fields
 from datetime import datetime, timezone
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, contains_eager, noload, selectinload
@@ -107,7 +107,9 @@ class UserRepository:
         row = self._db.query(User).filter(User.id == user.id).first()
         if not row:
             raise ValueError(f"User {user.id} not found")
-        _apply_to_orm(user, row)
+        for field in fields(UserEntity):
+            if field.name != "auth_epoch" and hasattr(row, field.name):
+                setattr(row, field.name, getattr(user, field.name))
         self._db.commit()
         self._db.refresh(row)
         return _to_entity(UserEntity, row)
@@ -137,6 +139,15 @@ class RefreshTokenRepository:
         row = self._db.query(RefreshToken).filter(RefreshToken.token_hash == token_hash).first()
         return _to_entity(RefreshTokenEntity, row)
 
+    def consume_by_hash(self, token_hash: str) -> UUID | None:
+        user_id = self._db.execute(
+            delete(RefreshToken)
+            .where(RefreshToken.token_hash == token_hash)
+            .returning(RefreshToken.user_id)
+        ).scalar_one_or_none()
+        self._db.commit()
+        return user_id
+
     def delete(self, token: RefreshTokenEntity) -> None:
         row = self._db.query(RefreshToken).filter(RefreshToken.id == token.id).first()
         if row:
@@ -144,6 +155,9 @@ class RefreshTokenRepository:
             self._db.commit()
 
     def delete_all_for_user(self, user_id: UUID) -> int:
+        self._db.query(User).filter(User.id == user_id).update(
+            {User.auth_epoch: User.auth_epoch + 1}
+        )
         count = self._db.query(RefreshToken).filter(RefreshToken.user_id == user_id).delete()
         self._db.commit()
         return count

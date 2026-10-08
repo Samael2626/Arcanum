@@ -105,7 +105,10 @@ class _GrimorioEditorState extends ConsumerState<GrimorioEditor> {
   Future<void> _openTaller() async {
     // navegador raiz: el taller ocupa la pantalla entera, sin la cabecera
     // del Grimorio encima (le quitaba ~85 dp al lienzo)
-    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(MaterialPageRoute(builder: (_) => const TallerScreen()));
+    final saved = await Navigator.of(
+      context,
+      rootNavigator: true,
+    ).push<bool>(MaterialPageRoute(builder: (_) => const TallerScreen()));
     if (mounted && saved == true) Navigator.pop(context, true);
   }
 
@@ -318,19 +321,29 @@ class _SigilInvite extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text('✦', style: TextStyle(fontSize: 40, color: ArcanumColors.gold.withValues(alpha: .8))),
-          const SizedBox(height: 12),
-          Text('Un sigilo no se escribe: se forja.', textAlign: TextAlign.center, style: ArcanumText.heading(22)),
-          const SizedBox(height: 8),
-          Text(
-            'En el taller tu intención se reduce a letras y las letras se funden en un signo. Al guardarlo queda aquí, cifrado como el resto de tu grimorio.',
-            textAlign: TextAlign.center,
-            style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
-          ),
-          const SizedBox(height: 20),
-          GoldButton(label: 'Abrir el taller', onPressed: onOpen),
-        ],
-      );
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Text(
+        '✦',
+        style: TextStyle(
+          fontSize: 40,
+          color: ArcanumColors.gold.withValues(alpha: .8),
+        ),
+      ),
+      const SizedBox(height: 12),
+      Text(
+        'Un sigilo no se escribe: se forja.',
+        textAlign: TextAlign.center,
+        style: ArcanumText.heading(22),
+      ),
+      const SizedBox(height: 8),
+      Text(
+        'En el taller tu intención se reduce a letras y las letras se funden en un signo. Al guardarlo queda aquí, cifrado como el resto de tu grimorio.',
+        textAlign: TextAlign.center,
+        style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
+      ),
+      const SizedBox(height: 20),
+      GoldButton(label: 'Abrir el taller', onPressed: onOpen),
+    ],
+  );
 }

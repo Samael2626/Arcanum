@@ -118,7 +118,10 @@ void main() {
     expect(find.text('Romero'), findsOneWidget);
     expect(find.text('Amatista'), findsNothing);
     // ArcanumTilt se retiro (y su fichero, en la depuracion del 7-oct): que no vuelva
-    expect(find.byWidgetPredicate((w) => w.runtimeType.toString() == 'ArcanumTilt'), findsNothing);
+    expect(
+      find.byWidgetPredicate((w) => w.runtimeType.toString() == 'ArcanumTilt'),
+      findsNothing,
+    );
   });
 
   testWidgets('filtros y tarjetas exponen semántica de controles', (

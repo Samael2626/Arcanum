@@ -57,6 +57,9 @@ def main() -> int:
         columns = {column['name'] for column in inspector.get_columns('credit_ledger')}
         if 'usage_operation_id' not in columns:
             raise RuntimeError('credit_ledger.usage_operation_id falta tras migrar')
+        user_columns = {column['name'] for column in inspector.get_columns('users')}
+        if 'auth_epoch' not in user_columns:
+            raise RuntimeError('users.auth_epoch falta tras migrar')
 
         # El ciclo tiene que ser reversible: una migracion que solo sabe subir
         # no sirve de plan de rollback el dia que haga falta.

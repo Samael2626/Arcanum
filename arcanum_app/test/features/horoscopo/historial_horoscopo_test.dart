@@ -157,7 +157,9 @@ void main() {
     expect(find.text('Reportar'), findsOneWidget);
   });
 
-  testWidgets('a partir de la segunda vez el aviso va en corto', (tester) async {
+  testWidgets('a partir de la segunda vez el aviso va en corto', (
+    tester,
+  ) async {
     resetDisclosureForTest();
     // Se gasta la primera exposicion antes de montar el archivo.
     final _ = AiOutput;

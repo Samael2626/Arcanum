@@ -31,6 +31,7 @@ class User(Base):
     revenuecat_customer_id = Column(String(100), nullable=True)
     credits_balance = Column(Integer, nullable=False, server_default=text("0"))
     fragments_balance = Column(Integer, nullable=False, server_default=text("0"))
+    auth_epoch = Column(Integer, nullable=False, server_default=text("0"))
     preferred_tradition = Column(String(50), nullable=True)
     preferred_house_system = Column(String(30), nullable=False, server_default=text("'placidus'"))
     onboarding_completed = Column(Boolean, nullable=False, server_default=text("false"))

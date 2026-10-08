@@ -198,7 +198,10 @@ void main() {
     expect(find.text('Día de Sol'), findsOneWidget);
     expect(find.text('INSTRUMENTO DEL DÍA'), findsOneWidget);
     // ArcanumTilt se retiro (y su fichero, en la depuracion del 7-oct): que no vuelva
-    expect(find.byWidgetPredicate((w) => w.runtimeType.toString() == 'ArcanumTilt'), findsNothing);
+    expect(
+      find.byWidgetPredicate((w) => w.runtimeType.toString() == 'ArcanumTilt'),
+      findsNothing,
+    );
     expect(find.byType(ArcanumFrame), findsNothing);
     // El guardian no pide que exista una superficie: pide que haya EXACTAMENTE
     // una. Vigila que no se apilen materiales caros en la pantalla que se abre

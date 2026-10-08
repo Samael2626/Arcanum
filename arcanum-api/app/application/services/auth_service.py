@@ -36,8 +36,10 @@ class AuthService:
         return user
 
     def issue_token_pair(self, user: UserEntity) -> TokenPair:
-        access_token = create_access_token(data={"sub": user.email})
-        refresh_token_raw = create_refresh_token(data={"sub": user.email})
+        access_token = create_access_token(data={"sub": user.email, "auth_epoch": user.auth_epoch})
+        refresh_token_raw = create_refresh_token(
+            data={"sub": user.email, "auth_epoch": user.auth_epoch}
+        )
         expires_at = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
         self._refresh_token_repo.create(
             user_id=user.id,
@@ -55,20 +57,23 @@ class AuthService:
         if payload is None:
             return None
         token_hash = self._hash_token(refresh_token_raw)
-        db_token = self._refresh_token_repo.get_by_hash(token_hash)
-        if db_token is None:
+        user_id = self._refresh_token_repo.consume_by_hash(token_hash)
+        if user_id is None:
             return None
         email: str = payload.get("sub")
         user = self._user_repo.get_by_email(email)
-        if user is None:
+        if (
+            user is None
+            or user.id != user_id
+            or payload.get("auth_epoch", 0) != user.auth_epoch
+        ):
             return None
-        self._refresh_token_repo.delete(db_token)
         return self.issue_token_pair(user)
 
-    def revoke_refresh_token(self, refresh_token_raw: str) -> bool:
+    def revoke_refresh_token(self, refresh_token_raw: str, user_id: UUID) -> bool:
         token_hash = self._hash_token(refresh_token_raw)
         db_token = self._refresh_token_repo.get_by_hash(token_hash)
-        if db_token is None:
+        if db_token is None or db_token.user_id != user_id:
             return False
         self._refresh_token_repo.delete(db_token)
         return True

@@ -8,9 +8,15 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('ningun setState devuelve un Future (flecha que asigna una carga)', () {
     // lo que devuelve un Future: un campo *future*, una carga (_load...) o Future.algo
-    final malo = RegExp(r'setState\(\(\)\s*=>\s*(_\w*[Ff]uture\w*\s*=|_\w+\s*=\s*(_?load\w*\(|Future\.))');
+    final malo = RegExp(
+      r'setState\(\(\)\s*=>\s*(_\w*[Ff]uture\w*\s*=|_\w+\s*=\s*(_?load\w*\(|Future\.))',
+    );
     final hallados = <String>[];
-    for (final f in Directory('lib').listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.dart'))) {
+    for (final f
+        in Directory('lib')
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where((f) => f.path.endsWith('.dart'))) {
       final lineas = f.readAsLinesSync();
       for (var i = 0; i < lineas.length; i++) {
         if (malo.hasMatch(lineas[i])) hallados.add('${f.path}:${i + 1}');
