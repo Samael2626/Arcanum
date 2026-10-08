@@ -18,7 +18,7 @@ from app.application.services.usage_service import UsageService
 from app.core.config import settings
 from app.core.security import get_current_user
 from app.db.session import get_db
-from app.domain.entities import NatalChartEntity, UserEntity
+from app.domain.entities import UserEntity
 from app.schemas.natal_chart import NatalChartResponse
 from app.services import horoscope as hs
 from app.services import horoscope_agenda as hag
@@ -43,7 +43,7 @@ def planetary_hour(
     try:
         return ph.get_planetary_hour(dt, lat, lon).to_dict()
     except ph.AstralCalculationError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
 
 
 @router.get("/planetary-hours")
@@ -61,7 +61,7 @@ def planetary_hours(
             "hours": [h.to_dict() for h in ph.list_planetary_hours(d, lat, lon)],
         }
     except ph.AstralCalculationError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
 
 
 @router.get("/moon")
@@ -89,14 +89,14 @@ def _birth_data(user: UserEntity, house_system: str) -> nce.BirthData:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Zona horaria inválida: {tzname}",
-        )
+        ) from None
     try:
         lat, lon = float(user.birth_lat), float(user.birth_lon)
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Coordenadas de nacimiento inválidas",
-        )
+        ) from None
     local = datetime.combine(user.birth_date.date(), user.birth_time.time(), tzinfo=tz)
     return nce.BirthData(dt_utc=local.astimezone(timezone.utc), lat=lat, lon=lon, house_system=house_system)
 
@@ -117,7 +117,7 @@ def compute_natal_chart(
     try:
         chart_data = nce.compute_natal_chart(birth)
     except nce.NatalChartError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
 
     entity = repo.create_or_update(
         user_id=current_user.id,
@@ -497,7 +497,7 @@ def today(
     try:
         hour = ph.get_planetary_hour(now, lat, lon)
     except ph.AstralCalculationError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
     # Regente del día planetario (no del calendario UTC): se deriva de la hora
     # vigente -> planet = CHALDEAN[(ruler_idx + hour_number) % 7].
     day_ruler = ph.CHALDEAN[(ph.CHALDEAN.index(hour.planet) - hour.hour_number) % 7]
@@ -523,7 +523,7 @@ def upcoming_hours(
     try:
         hours = rc.upcoming_planetary_hours(now, lat, lon, count)
     except ph.AstralCalculationError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
     return {"from": now.isoformat(), "hours": [h.to_dict() for h in hours]}
 
 
@@ -538,9 +538,9 @@ def next_planet_hour(
     try:
         hour = rc.next_hour_of_planet(now, lat, lon, planet)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
     except ph.AstralCalculationError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
     if hour is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No se encontró una hora para ese planeta.")
     return hour.to_dict()

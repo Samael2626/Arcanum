@@ -16,7 +16,6 @@ from app.core.security import (
     get_password_hash,
     verify_password,
     verify_token,
-    blacklist_token,
 )
 from app.models.refresh_token import RefreshToken
 from app.models.user import User

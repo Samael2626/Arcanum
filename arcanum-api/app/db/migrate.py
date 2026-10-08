@@ -7,7 +7,6 @@ from pathlib import Path
 
 from alembic.config import Config
 from alembic.runtime.migration import MigrationContext
-from alembic.operations import Operations
 from alembic.script.revision import RevisionError
 from alembic.util.exc import CommandError
 from sqlalchemy import text
@@ -65,11 +64,9 @@ def run_migrations(engine) -> dict:
     try:
         config = get_alembic_config()
 
-        with engine.begin() as connection:
-            ctx = MigrationContext.configure(connection)
-            op = Operations(ctx)
-
-            # Run migrations
+        # la conexion abierta antes de migrar es la que detecta una base caida
+        # (los tests de fallos la usan); alembic migra con la suya propia
+        with engine.begin():
             from alembic import command
             command.upgrade(config, "head")
 
@@ -92,8 +89,6 @@ def check_migration_status(engine) -> dict:
         dict con head actual y tablas existentes
     """
     try:
-        config = get_alembic_config()
-
         with engine.begin() as connection:
             ctx = MigrationContext.configure(connection)
 

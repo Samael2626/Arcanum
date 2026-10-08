@@ -174,7 +174,8 @@ def audita_patrones() -> None:
 
 # ── TODO/FIXME viejos ────────────────────────────────────────────────
 def audita_todos() -> None:
-    out = git("grep", "-n", "-E", r"\b(TODO|FIXME|HACK|XXX)\b", "--", "arcanum_app/lib", "arcanum_app/packages", "arcanum-api/app")
+    # TODO( o TODO: ; sin eso, «TODO lo demas» en espanol contaba como pendiente
+    out = git("grep", "-n", "-E", r"\b(TODO|FIXME|HACK|XXX)\s*[(:]", "--", "arcanum_app/lib", "arcanum_app/packages", "arcanum-api/app")
     for linea in out.splitlines()[:400]:
         ruta, num, texto = linea.split(":", 2)
         blame = git("blame", "-L", f"{num},{num}", "--porcelain", ruta)
@@ -229,7 +230,7 @@ def audita_python() -> None:
         tipo, que = nombres.get(it["code"], ("fallo", it["code"]))
         if it["code"] == "F401" and ruta.endswith("__init__.py"):
             continue  # en __init__ el import suele registrar (modelos de SQLAlchemy, API publica)
-        anota(modulo_de(ruta), tipo, f"{ruta}:{it['location']['row']}", f"{que}: {it['message'][:80]}", f"ruff {it['code']}.", "alta" if it["code"] in ("F401", "F841", "F811") else "media")
+        anota(modulo_de(ruta), tipo, f"{ruta}:{it['location']['row']}", f"{que}: {it['message'][:80]}", f"ruff {it['code']}.", "alta" if it["code"] in ("F401", "F841", "F811") else "baja" if it["code"] == "ERA001" else "media")
 
 
 # ── Carpetas sueltas del repo ─────────────────────────────────────────

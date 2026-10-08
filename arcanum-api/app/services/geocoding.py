@@ -109,12 +109,12 @@ def resolve_location(country: str, city: str, timeout: float = 10.0) -> Resolved
     except httpx.HTTPError as e:
         raise GeocodingError(
             f"No se pudo contactar el servicio de geocodificación: {e}"
-        )
+        ) from e
 
     try:
         results = resp.json()
     except ValueError:
-        raise GeocodingError("Respuesta de geocodificación inválida (JSON malformado).")
+        raise GeocodingError("Respuesta de geocodificación inválida (JSON malformado).") from None
 
     if not results:
         raise GeocodingError(
@@ -127,7 +127,7 @@ def resolve_location(country: str, city: str, timeout: float = 10.0) -> Resolved
         lat = float(best["lat"])
         lon = float(best["lon"])
     except (KeyError, ValueError, TypeError):
-        raise GeocodingError("Respuesta de geocodificación inválida (sin coordenadas).")
+        raise GeocodingError("Respuesta de geocodificación inválida (sin coordenadas).") from None
 
     tzname = _timezone_finder().timezone_at(lat=lat, lng=lon)
     if not tzname:

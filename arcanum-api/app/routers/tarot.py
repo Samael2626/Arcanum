@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, status
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_tarot_service

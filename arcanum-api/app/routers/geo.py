@@ -40,7 +40,7 @@ def resolve_geo(
     except geocoding.GeocodingError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
-        )
+        ) from e
 
     return GeoResolveResponse(
         display_name=loc.display_name,

@@ -5,7 +5,6 @@ Admin endpoints (protegidos).
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.core.config import settings
 from app.db.session import get_engine
 from app.db.migrate import run_migrations, check_migration_status
 from app.api.deps import require_migrations_enabled, verify_admin_token
