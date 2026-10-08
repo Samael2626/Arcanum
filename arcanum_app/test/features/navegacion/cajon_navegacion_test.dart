@@ -18,6 +18,7 @@ import 'package:arcanum_app/core/router/app_router.dart';
 import 'package:arcanum_app/core/state/flow_providers.dart';
 import 'package:arcanum_app/core/theme/arcanum_theme.dart';
 import 'package:arcanum_app/features/horoscopo/horoscopo_screen.dart';
+import 'package:arcanum_app/features/settings/settings_screen.dart';
 import 'package:arcanum_app/features/hoy/hoy_screen.dart';
 import 'package:arcanum_app/features/sendero/application/sendero_guide_controller.dart';
 import 'package:arcanum_app/features/tarot/reading/readings_history.dart';
@@ -171,7 +172,10 @@ class _ApiMuda extends ArcanumApi {
   };
 }
 
-Future<ProviderContainer> _montar(WidgetTester tester) async {
+Future<ProviderContainer> _montar(
+  WidgetTester tester, {
+  double ancho = 411,
+}) async {
   // Con sesion: sin ella, el redirect central manda todo a /login y no habria
   // barra ni boton que probar. Ese camino tiene sus propios tests en
   // `core/router/redirect_sesion_test.dart`.
@@ -180,7 +184,7 @@ Future<ProviderContainer> _montar(WidgetTester tester) async {
   // una etiqueta larga -- un fallo suyo, anterior a esto, que no toca arreglar
   // aqui pero que haria fallar este test por algo que no es lo que prueba.
   tester.view
-    ..physicalSize = const Size(1233, 2745)
+    ..physicalSize = Size(ancho * 3, 2745)
     ..devicePixelRatio = 3.0;
   addTearDown(tester.view.reset);
   final contenedor = ProviderContainer(
@@ -296,8 +300,11 @@ void main() {
   });
 
   // Antes: "el cajon lista las cinco secciones y la cuenta" (21-sep-2026).
-  // Los mosaicos y el cajon ofrecen las mismas secciones principales.
-  testWidgets('portada y cajon ofrecen las secciones principales', (
+  // 08-oct: el menu es un indice con sellos y lleva LAS MISMAS secciones que
+  // la portada, con el mismo nombre y EN EL MISMO ORDEN. El orden se lee de la
+  // portada de verdad: el 08-oct el menu salio con Horoscopo antes que Tarot y
+  // nadie lo vio hasta compararlos.
+  testWidgets('portada y menu ofrecen las mismas secciones y en su orden', (
     tester,
   ) async {
     final c = await _montar(tester);
@@ -307,46 +314,113 @@ void main() {
 
     // Cielo es la propia portada: su barra lleva el nombre de la seccion.
     expect(find.text(arcanumSections[0].title), findsWidgets);
-    expect(find.byKey(const Key('atlas-cielo')), findsOneWidget);
-    for (final titulo in ['Horóscopo', 'Grimorio', 'Saber']) {
-      expect(_mosaico(c, titulo), findsOneWidget, reason: titulo);
+
+    // Cada mosaico con la seccion del menu a la que pertenece. En debug y
+    // perfil la placa de Tarot que va primero es la mesa, y los tests corren
+    // en debug; la del Oraculo de la tienda la vigila
+    // `atlas_home_panel_test.dart`.
+    final mosaicos = <(Finder, String)>[
+      (find.byKey(const Key('atlas-cielo')), 'Cielo'),
+      (_mosaico(c, 'Mesa de tarot'), 'Tarot'),
+      (_mosaico(c, 'Horóscopo'), 'Horóscopo'),
+      (_mosaico(c, 'Grimorio'), 'Grimorio'),
+      (_mosaico(c, 'Saber'), 'Saber'),
+    ];
+    for (final (f, nombre) in mosaicos) {
+      expect(f, findsOneWidget, reason: nombre);
     }
-    // La quinta: en debug y perfil la placa del Oraculo es la mesa de tarot,
-    // y los tests corren en debug. La placa del Oraculo de la tienda la
-    // vigila `atlas_home_panel_test.dart`.
-    expect(_mosaico(c, 'Mesa de tarot'), findsOneWidget);
+    // Orden de lectura: de arriba abajo y, en la misma fila, de izquierda a
+    // derecha (Grimorio y Saber van lado a lado).
+    final enPortada =
+        [for (final (f, nombre) in mosaicos) (tester.getTopLeft(f), nombre)]
+          ..sort((a, b) {
+            final dy = a.$1.dy.compareTo(b.$1.dy);
+            return dy != 0 ? dy : a.$1.dx.compareTo(b.$1.dx);
+          });
+    final ordenPortada = [for (final (_, nombre) in enPortada) nombre];
 
     await _abrirCajon(tester);
     final cajon = find.byType(Drawer);
-    for (final rotulo in [
-      'Ahora y horas',
-      'Carta natal',
-      'Horóscopo',
-      'Oráculo',
-      'Grimorio',
-      'Saber · plantas, libros y sellos',
-      'Ayuda y recorrido',
-      'Perfil',
-      'Ajustes',
-      'Privacidad y datos',
-    ]) {
-      expect(
-        find.descendant(of: cajon, matching: find.text(rotulo)),
-        findsOneWidget,
-        reason: rotulo,
-      );
+    double y(String rotulo) {
+      final f = find.descendant(of: cajon, matching: find.text(rotulo));
+      expect(f, findsOneWidget, reason: rotulo);
+      return tester.getCenter(f).dy;
     }
-    expect(
-      find.descendant(of: cajon, matching: find.text('CIELO')),
-      findsOneWidget,
-    );
+
+    final ordenMenu = [...ordenPortada]..sort((a, b) => y(a).compareTo(y(b)));
+    expect(ordenMenu, ordenPortada, reason: 'el menu no sigue a la portada');
+    // Y los numeros romanos siguen ese orden, cada uno en su fila.
+    const romanos = ['I', 'II', 'III', 'IV', 'V'];
+    for (var i = 0; i < romanos.length; i++) {
+      expect(y(romanos[i]), moreOrLessEquals(y(ordenPortada[i]), epsilon: 2));
+    }
+    expect(y('Tu cuenta'), greaterThan(y(ordenPortada.last)));
   });
+
+  // 08-oct: el menu nuevo puso en su fila Horoscopo la MISMA GlobalKey del
+  // Sendero que lleva la placa de la portada. El shell es indexedStack: la
+  // portada sigue montada en cualquier rama, y abrir el menu reventaba con
+  // "Multiple widgets used the same GlobalKey". Se abre con la app entera,
+  // desplegando todo, y no puede saltar ninguna excepcion.
+  testWidgets('abrir el menu con la portada montada no lanza nada', (
+    tester,
+  ) async {
+    await _montar(tester);
+    await _abrirCajon(tester);
+    expect(find.byType(Drawer), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    final cajon = find.byType(Drawer);
+    for (final seccion in ['Tarot', 'Grimorio', 'Tu cuenta']) {
+      final f = find.descendant(of: cajon, matching: find.text(seccion));
+      await tester.ensureVisible(f);
+      await _esperar(tester);
+      await tester.tap(f);
+      await _esperar(tester);
+      expect(tester.takeException(), isNull, reason: seccion);
+    }
+    // Y desde otra rama, con la portada debajo en el indexedStack.
+    _router(tester).go('/horoscopo');
+    await _esperar(tester);
+    await _abrirCajon(tester);
+    expect(find.byType(Drawer), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  // 08-oct: el saldo de «Tu cuenta» colgaba del hilo, y con su relleno se
+  // quedaba en 190 dp: desbordaba 1-2 px a 411 de ancho. A 360, peor. Se
+  // despliega la cuenta en los dos anchos y no puede saltar nada de layout.
+  for (final ancho in [360.0, 411.0]) {
+    testWidgets(
+      '«Tu cuenta» se despliega a ${ancho.round()} dp sin desbordes',
+      (tester) async {
+        await _montar(tester, ancho: ancho);
+        // la portada tampoco desborda ya a 360 (el boton de «tu siguiente
+        // paso» parte linea desde el 08-oct): nada que descartar
+        expect(tester.takeException(), isNull);
+        await _abrirCajon(tester);
+        final cuenta = find.descendant(
+          of: find.byType(Drawer),
+          matching: find.text('Tu cuenta'),
+        );
+        await tester.tap(cuenta);
+        await _esperar(tester);
+        expect(find.byKey(const Key('saldo-cajon')), findsOneWidget);
+        expect(find.text('Ayuda y recorrido'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 
   // Estudio del 08-oct: la mesa decia «quedo guardada en Lecturas» y no habia
   // puerta. Con el router de la app: la fila existe y abre el historial.
   testWidgets('«Tus lecturas» abre el historial de la mesa', (tester) async {
     await _montar(tester);
     await _abrirCajon(tester);
+    // Tus lecturas cuelga de Tarot: un toque para desplegarlo.
+    await tester.tap(
+      find.descendant(of: find.byType(Drawer), matching: find.text('Tarot')),
+    );
+    await _esperar(tester);
     final fila = find.text('Tus lecturas');
     await tester.ensureVisible(fila);
     await _esperar(tester);
@@ -419,6 +493,9 @@ void main() {
   ) async {
     final container = await _montar(tester);
     await _abrirCajon(tester);
+    // Desde el 08-oct la ayuda vive dentro de «Tu cuenta».
+    await tester.tap(find.text('Tu cuenta'));
+    await _esperar(tester);
     final ayuda = find.text('Ayuda y recorrido');
     await tester.ensureVisible(ayuda);
     await _esperar(tester);
@@ -457,7 +534,28 @@ void main() {
     expect(container.read(senderoGuideProvider)?.step, 0);
     await _abrirCajon(tester);
     expect(container.read(senderoGuideProvider)?.step, 1);
-    container.read(senderoGuideProvider.notifier).pause();
-    await tester.pump(const Duration(milliseconds: 400));
+    // El paso siguiente senala Ajustes, que vive dentro de «Tu cuenta»: la
+    // cuenta se despliega sola y Ajustes se toca sin buscarla.
+    final ajustes = find.byKey(
+      container.read(senderoGuideTargetsProvider).keyFor('settings'),
+    );
+    expect(ajustes, findsOneWidget);
+    expect(find.text('Ajustes'), findsOneWidget);
+    // La cuenta se despliega con animacion y la tarjeta del Sendero se
+    // recoloca al medir: se espera a que las dos terminen.
+    await _esperar(tester);
+    await _esperar(tester);
+    await tester.tap(ajustes);
+    await _esperar(tester);
+    expect(
+      find.byType(SettingsScreen),
+      findsOneWidget,
+      reason: 'Ajustes no se abrio',
+    );
+    expect(
+      container.read(senderoGuideProvider),
+      isNull,
+      reason: 'tocar Ajustes no cerro el recorrido de la cuenta',
+    );
   });
 }

@@ -401,9 +401,13 @@ class _NextStepCard extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      step.actionLabel,
-                      style: ArcanumText.body(15, color: mood.accent),
+                    // en 360 dp una accion larga desbordaba 22 px: parte linea
+                    Flexible(
+                      child: Text(
+                        step.actionLabel,
+                        textAlign: TextAlign.center,
+                        style: ArcanumText.body(15, color: mood.accent),
+                      ),
                     ),
                     const SizedBox(width: 6),
                     Icon(

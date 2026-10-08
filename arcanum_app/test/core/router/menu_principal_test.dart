@@ -94,11 +94,11 @@ void main() {
         findsOneWidget,
         reason: 'Dos tiradores, un solo cajon: nunca dos a la vez.',
       );
-      expect(find.text('Privacidad y datos'), findsOneWidget);
+      expect(find.text('Tu cuenta'), findsOneWidget);
       // Fuera del cajon, que ahora cuelga del borde izquierdo.
       await t.tapAt(const Offset(760, 400));
       await t.pumpAndSettle();
-      expect(find.text('Privacidad y datos'), findsNothing);
+      expect(find.text('Tu cuenta'), findsNothing);
     }
   });
 
