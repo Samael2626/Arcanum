@@ -1,6 +1,7 @@
 import 'package:arcanum_app/core/content/sections.dart';
 import 'package:arcanum_app/core/theme/arcanum_theme.dart';
 import 'package:arcanum_app/features/hoy/presentation/widgets/atlas_home_panel.dart';
+import 'package:arcanum_app/shared/widgets/moon_disc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -45,6 +46,7 @@ void main() {
               onTable: () => abiertos.add('/tarot'),
               onOracle: () => abiertos.add('/oraculo'),
               onSigil: () => abiertos.add('taller'),
+              onBreathe: () => abiertos.add('/respirar'),
             ),
           ),
         ),
@@ -126,7 +128,9 @@ void main() {
   // Grimorio, y tocar la placa no abre el taller.
   group('«+ Sigilo» en la placa del Grimorio', () {
     for (final width in [411.0, 320.0]) {
-      testWidgets('abre el taller, no el Grimorio, a $width de ancho', (t) async {
+      testWidgets('abre el taller, no el Grimorio, a $width de ancho', (
+        t,
+      ) async {
         final abiertos = await montar(t, showTable: true, width: width);
         await tocar(t, const Key('atlas-sigilo'));
         expect(abiertos, ['taller']);
@@ -141,7 +145,10 @@ void main() {
     testWidgets('el lector de pantalla lo nombra aparte', (t) async {
       final handle = t.ensureSemantics();
       await montar(t, showTable: false);
-      expect(find.bySemanticsLabel('Crear un sigilo de letras'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Crear un sigilo de letras'),
+        findsOneWidget,
+      );
       handle.dispose();
     });
 
@@ -150,6 +157,44 @@ void main() {
       final chip = t.getRect(find.byKey(const Key('atlas-sigilo')));
       final write = t.getRect(find.textContaining('Escribir'));
       expect(chip.overlaps(write), isFalse, reason: '$chip sobre $write');
+    });
+  });
+
+  // Samuel, 07-oct: el motor de respiracion vive en la baldosa Cielo, la del
+  // ahora; la portada no crece. Boton propio, como «+ Sigilo».
+  group('«Respirar» en la baldosa Cielo', () {
+    testWidgets('abre la respiracion, no la Luna', (t) async {
+      final abiertos = await montar(t, showTable: false);
+      await tocar(t, const Key('atlas-respirar'));
+      expect(abiertos, ['/respirar']);
+      await tocar(t, const Key('atlas-cielo'));
+      expect(abiertos.last, 'luna');
+      final r = t.getRect(find.byKey(const Key('atlas-respirar')));
+      expect(r.height, greaterThanOrEqualTo(48));
+    });
+
+    testWidgets('no se monta sobre la Luna dibujada', (t) async {
+      // la Luna va abajo a la derecha de la baldosa, donde cae el boton
+      for (final width in [411.0, 320.0]) {
+        await montar(t, showTable: false, width: width);
+        final chip = t.getRect(find.byKey(const Key('atlas-respirar')));
+        final moon = t.getRect(find.byType(MoonDisc));
+        expect(
+          chip.overlaps(moon),
+          isFalse,
+          reason: '$width: $chip sobre $moon',
+        );
+      }
+    });
+
+    testWidgets('el lector de pantalla lo nombra aparte', (t) async {
+      final handle = t.ensureSemantics();
+      await montar(t, showTable: false, width: 320);
+      expect(
+        find.bySemanticsLabel('Abrir la práctica de respiración'),
+        findsOneWidget,
+      );
+      handle.dispose();
     });
   });
 }

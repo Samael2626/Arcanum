@@ -191,6 +191,8 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
           onOracle: () => context.go('/oraculo'),
           // el taller de letras entra por el Grimorio, donde se guardan los
           // sigilos (Samuel, 07-oct); como el editor, por el navegador raiz
+          // el motor de respiracion, desde la baldosa del ahora (07-oct)
+          onBreathe: () => context.push('/respirar'),
           onSigil: () async {
             final saved = await Navigator.of(context, rootNavigator: true)
                 .push<bool>(

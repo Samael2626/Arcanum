@@ -18,6 +18,7 @@ class AtlasHomePanel extends StatelessWidget {
     required this.onTable,
     required this.onOracle,
     required this.onSigil,
+    required this.onBreathe,
     this.showTable = false,
     this.horoscopeKey,
   });
@@ -34,6 +35,10 @@ class AtlasHomePanel extends StatelessWidget {
   /// «+ Sigilo» en la placa del Grimorio: abre el taller de letras (Samuel,
   /// 07-oct, opcion B). Los sigilos se guardan en el Grimorio.
   final VoidCallback onSigil;
+
+  /// «Respirar» en la baldosa Cielo: abre el motor de respiracion (Samuel,
+  /// 07-oct). La practica del ahora, sin anadir placa.
+  final VoidCallback onBreathe;
 
   /// La placa de la mesa de tarot sale solo donde la mesa ya se ensena (builds
   /// de desarrollo y perfil, como su entrada del cajon). Se SUMA a la del
@@ -65,6 +70,12 @@ class AtlasHomePanel extends StatelessWidget {
           background: ArcanumColors.moonCore,
           height: 194,
           onTap: onMoonTap,
+          extra: _TileExtra(
+            key: const Key('atlas-respirar'),
+            text: 'Respirar',
+            semantics: 'Abrir la práctica de respiración',
+            onTap: onBreathe,
+          ),
           art: MoonDisc(illumination: illumination, waxing: waxing, size: 82),
         ),
         const SizedBox(height: 22),
@@ -251,7 +262,9 @@ class _AtlasTile extends StatelessWidget {
                 children: [
                   Positioned(
                     right: 0,
-                    bottom: compact ? 54 : 0,
+                    // con boton extra, el dibujo sube por encima de la fila de
+                    // abajo: si no, el boton tapaba la Luna (07-oct)
+                    bottom: compact || extra != null ? 54 : 0,
                     child: ExcludeSemantics(
                       child: IconTheme(
                         data: IconThemeData(
