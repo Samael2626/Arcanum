@@ -20,6 +20,7 @@ import '../../features/lecturas/presentation/indice_screen.dart';
 import '../../features/saber/saber_screen.dart';
 import '../../features/settings/privacy_screen.dart';
 import '../../features/settings/settings_screen.dart';
+import '../../features/tarot/reading/readings_history.dart';
 import '../../features/tarot/tarot_screen.dart';
 import '../../features/respiracion/presentation/breath_practice_screen.dart';
 import '../../features/respiracion/presentation/breath_setup_screen.dart';
@@ -97,7 +98,20 @@ final arcanumRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/fragmentos', builder: (c, s) => const FragmentosScreen()),
       GoRoute(path: '/sigilos', builder: (c, s) => const TallerScreen()),
       // Mesa de tarot en construccion: la pestaña propia llega en la fase 8.
-      GoRoute(path: '/tarot', builder: (c, s) => const TarotTableScreen()),
+      // `extra`: lectura guardada que se abre en la mesa (desde /lecturas).
+      GoRoute(
+        path: '/tarot',
+        builder: (c, s) => TarotTableScreen(
+          continueFrom: s.extra is Map<String, dynamic>
+              ? s.extra! as Map<String, dynamic>
+              : null,
+        ),
+      ),
+      // Lecturas guardadas de la mesa, fuera de ella (estudio del 08-oct).
+      GoRoute(
+        path: '/lecturas',
+        builder: (c, s) => const TarotReadingsScreen(),
+      ),
       // Motor de respiracion: modulo suelto, aun sin uniones con
       // la carga de sigilos ni con la mesa.
       GoRoute(

@@ -20,6 +20,7 @@ void main() {
     '/privacy',
     '/sendero',
     '/tarot',
+    '/lecturas',
     '/respirar',
     '/sigilos',
     '/fragmentos',
@@ -104,6 +105,7 @@ void main() {
     'Respirar',
     'Taller de sigilos',
     'Mesa de tarot',
+    'Tus lecturas',
     'Saber · plantas, libros y sellos',
     'Fragmentos Arcanos',
     'Ayuda y recorrido',
@@ -153,6 +155,18 @@ void main() {
     expect(router.routeInformationProvider.value.uri.path, '/horoscopo');
     expect(find.text('pantalla /horoscopo'), findsOneWidget);
     expect(find.text('Carta natal'), findsNothing);
+  });
+
+  testWidgets('Tus lecturas abre /lecturas encima del shell', (t) async {
+    final router = await abrir(t);
+    await abrirCajon(t);
+    await t.ensureVisible(find.text('Tus lecturas'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Tus lecturas'));
+    await t.pumpAndSettle();
+
+    expect(find.text('pantalla /lecturas'), findsOneWidget);
+    expect(router.canPop(), isTrue, reason: 'se vuelve con atras');
   });
 
   testWidgets('las de la cuenta viven al mismo nivel', (t) async {

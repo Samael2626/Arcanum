@@ -147,6 +147,13 @@ class ArcanumDrawer extends ConsumerWidget {
                       rotulo: 'Mesa de tarot',
                       ruta: '/tarot',
                     ),
+                    // la mesa guarda en «Lecturas»: aqui esta la puerta
+                    const _FilaRuta(
+                      icono: Icons.history_edu_outlined,
+                      iconoActivo: Icons.history_edu,
+                      rotulo: 'Tus lecturas',
+                      ruta: '/lecturas',
+                    ),
                     const _Separador(),
                     const Padding(
                       padding: EdgeInsets.fromLTRB(20, 6, 20, 14),

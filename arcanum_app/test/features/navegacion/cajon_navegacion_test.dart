@@ -20,6 +20,7 @@ import 'package:arcanum_app/core/theme/arcanum_theme.dart';
 import 'package:arcanum_app/features/horoscopo/horoscopo_screen.dart';
 import 'package:arcanum_app/features/hoy/hoy_screen.dart';
 import 'package:arcanum_app/features/sendero/application/sendero_guide_controller.dart';
+import 'package:arcanum_app/features/tarot/reading/readings_history.dart';
 import 'package:arcanum_app/features/sendero/domain/sendero_catalog.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -89,6 +90,17 @@ class _ApiMuda extends ArcanumApi {
 
   @override
   Future<List<Map<String, dynamic>>> libraryWorks() async => [];
+
+  /// `/lecturas` pide el historial de la mesa y su catalogo de tiradas.
+  @override
+  Future<List<Map<String, dynamic>>> tarotReadings({int limit = 20}) async =>
+      [];
+
+  @override
+  Future<List<Map<String, dynamic>>> tarotDecks() async => [];
+
+  @override
+  Future<List<Map<String, dynamic>>> tarotSpreads() async => [];
 
   @override
   Future<List<Map<String, dynamic>>> allProgress() async => [];
@@ -324,7 +336,25 @@ void main() {
         reason: rotulo,
       );
     }
-    expect(find.descendant(of: cajon, matching: find.text('CIELO')), findsOneWidget);
+    expect(
+      find.descendant(of: cajon, matching: find.text('CIELO')),
+      findsOneWidget,
+    );
+  });
+
+  // Estudio del 08-oct: la mesa decia «quedo guardada en Lecturas» y no habia
+  // puerta. Con el router de la app: la fila existe y abre el historial.
+  testWidgets('«Tus lecturas» abre el historial de la mesa', (tester) async {
+    await _montar(tester);
+    await _abrirCajon(tester);
+    final fila = find.text('Tus lecturas');
+    await tester.ensureVisible(fila);
+    await _esperar(tester);
+    await tester.tap(fila);
+    await _esperar(tester);
+    expect(find.byType(TarotReadingsScreen), findsOneWidget);
+    expect(find.text('Todavía no has cerrado ningún círculo.'), findsOneWidget);
+    expect(_router(tester).canPop(), isTrue);
   });
 
   testWidgets('el mosaico lleva a su pantalla', (tester) async {

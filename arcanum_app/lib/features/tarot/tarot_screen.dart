@@ -17,6 +17,7 @@ import 'domain/table_error.dart';
 import 'domain/table_models.dart';
 import 'domain/table_state.dart';
 import 'reading/lectura_revelada.dart';
+import 'reading/readings_history.dart';
 import 'table/table_director.dart';
 import 'table/table_moon.dart';
 import 'table/table_notice.dart';
@@ -43,7 +44,10 @@ final tarotCatalogProvider =
     });
 
 class TarotTableScreen extends ConsumerStatefulWidget {
-  const TarotTableScreen({super.key});
+  const TarotTableScreen({super.key, this.continueFrom});
+
+  /// Lectura guardada que se abre en la mesa al llegar (desde `/lecturas`).
+  final Map<String, dynamic>? continueFrom;
 
   /// Donde se recuerda el silencio de la mesa entre sesiones.
   static const mutedKey = 'tarot_mesa_silencio';
@@ -82,6 +86,9 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
   }
 
   TableController get _ops => ref.read(tableControllerProvider.notifier);
+
+  /// La lectura de `continueFrom` ya se pidio: no se repite en cada build.
+  bool _continueAsked = false;
 
   @override
   void initState() {
@@ -152,6 +159,13 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
         child: CircularProgressIndicator(color: ArcanumColors.gold),
       ),
     };
+    final pending = widget.continueFrom;
+    if (pending != null && !_continueAsked && _director != null) {
+      _continueAsked = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _continue(pending);
+      });
+    }
     final panel = _panel;
     return PopScope(
       // atras cierra el panel antes que la mesa
@@ -242,6 +256,7 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
                     spread: _director?.spread,
                     onBack: () => setState(() => _revealing = false),
                     onCloseCircle: _closeCircle,
+                    onAskOracle: _askOracle,
                     entrance: _entranceOf(_reading!),
                   ),
                 ),
@@ -511,53 +526,22 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
     _openPanel(
       _menuAnchor,
       'Lecturas guardadas',
-      (context) => FutureBuilder(
-        future: readings,
-        builder: (context, snap) {
-          final rows = snap.data;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (snap.hasError)
-                Text(tableErrorMessage(snap.error!), style: _muted),
-              if (rows == null && !snap.hasError)
-                const Padding(
-                  padding: EdgeInsets.all(12),
-                  child: Center(
-                    child: CircularProgressIndicator(color: ArcanumColors.gold),
-                  ),
-                ),
-              if (rows != null && rows.isEmpty)
-                Text('Todavía no has cerrado ningún círculo.', style: _muted),
-              for (final r in rows ?? const <Map<String, dynamic>>[])
-                ListTile(
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    _spreadName(r['spread_type'] as String),
-                    style: _body,
-                  ),
-                  subtitle: Text(
-                    [
-                      _date(r['created_at'] as String?),
-                      if (r['question'] != null) '«${r['question']}»',
-                    ].join(' · '),
-                    style: _muted,
-                  ),
-                  // solo las lecturas de la mesa guardaron la mesa: las demas no se recolocan
-                  trailing: r['table_snapshot'] == null
-                      ? null
-                      : TextButton(
-                          onPressed: () => _continue(r),
-                          child: const Text('Continuar'),
-                        ),
-                ),
-            ],
-          );
-        },
+      (context) => TarotReadingsList(
+        readings: readings,
+        spreadName: (slug) =>
+            tarotSpreadName(slug, _director?.spreads ?? const <SpreadDef>[]),
+        onContinue: _continue,
       ),
     );
+  }
+
+  /// Del final de la lectura al Oraculo. `go` y no `push`: el Oraculo vive en
+  /// el shell y apilarlo encima de la mesa duplica sus navegadores. No se
+  /// pierde nada: la mesa queda guardada y el servidor devuelve la misma
+  /// interpretacion sin volver a cobrarla.
+  void _askOracle() {
+    unawaited(_ops.flush());
+    context.go('/oraculo');
   }
 
   /// Continuar: mesa nueva con las mismas cartas colocadas (decision del
@@ -594,21 +578,6 @@ class _TarotTableScreenState extends ConsumerState<TarotTableScreen>
     } on Object catch (e) {
       error(e);
     }
-  }
-
-  String _spreadName(String slug) {
-    if (slug == 'free') return 'Lectura libre';
-    for (final s in _director?.spreads ?? const <SpreadDef>[]) {
-      if (s.slug == slug) return s.name;
-    }
-    return 'Tirada';
-  }
-
-  static String _date(String? iso) {
-    final d = iso == null ? null : DateTime.tryParse(iso)?.toLocal();
-    if (d == null) return '';
-    String two(int v) => v.toString().padLeft(2, '0');
-    return '${two(d.day)}/${two(d.month)}/${d.year} ${two(d.hour)}:${two(d.minute)}';
   }
 }
 

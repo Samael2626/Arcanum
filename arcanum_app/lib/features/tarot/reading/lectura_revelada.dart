@@ -30,7 +30,11 @@ class LecturaRevelada extends StatefulWidget {
     required this.onCloseCircle,
     required this.onBack,
     this.entrance = const [],
+    this.onAskOracle,
   });
+
+  /// «Pregúntale al Oráculo» al final de la lectura; null, sin enlace.
+  final VoidCallback? onAskOracle;
 
   /// Donde estaba cada carta en la mesa, en pantalla (mismo orden que
   /// `reading.cards`; null si no se sabe). Al abrir, las cartas vuelan de
@@ -130,6 +134,7 @@ class _LecturaReveladaState extends State<LecturaRevelada>
   Widget _reading(BuildContext context) {
     final onBack = widget.onBack;
     final onCloseCircle = widget.onCloseCircle;
+    final onAskOracle = widget.onAskOracle;
     const headerHeight = LecturaRevelada.headerHeight;
     final cards = reading.cards;
     final faces = [for (final c in cards) tarotFaceOf(c.face)];
@@ -177,6 +182,7 @@ class _LecturaReveladaState extends State<LecturaRevelada>
                   faces: faces,
                   active: active,
                   onCloseCircle: onCloseCircle,
+                  onAskOracle: onAskOracle,
                 )
               : _CardPage(
                   card: cards[i],
@@ -449,12 +455,14 @@ class _Synthesis extends StatelessWidget {
     required this.faces,
     required this.active,
     required this.onCloseCircle,
+    this.onAskOracle,
   });
 
   final Interpretation reading;
   final List<TarotFace> faces;
   final bool active;
   final VoidCallback onCloseCircle;
+  final VoidCallback? onAskOracle;
 
   @override
   Widget build(BuildContext context) {
@@ -547,6 +555,19 @@ class _Synthesis extends StatelessWidget {
               label: 'Mantén para cerrar el círculo',
               onConfirm: onCloseCircle,
             ),
+            // la lectura sigue en el Oraculo: preguntar sobre lo que salio
+            if (onAskOracle case final ask?) ...[
+              const SizedBox(height: 14),
+              TextButton.icon(
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(48, 48),
+                  foregroundColor: ArcanumColors.goldLight,
+                ),
+                onPressed: ask,
+                icon: const Icon(Icons.auto_awesome_outlined, size: 18),
+                label: const Text('Pregúntale al Oráculo'),
+              ),
+            ],
           ],
         ),
       ),

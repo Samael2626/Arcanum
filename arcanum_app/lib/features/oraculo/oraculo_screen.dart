@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/api/arcanum_api.dart';
 import '../../core/api/oracle_error.dart';
@@ -578,6 +579,21 @@ class _OracleViewState extends ConsumerState<_OracleView> {
           style: ArcanumText.body(
             12,
             color: ArcanumColors.ivoryMuted.withValues(alpha: 0.7),
+          ),
+        ),
+        // la misma tirada, con las manos: la mesa vive fuera del shell y se apila
+        Center(
+          child: TextButton.icon(
+            style: TextButton.styleFrom(
+              minimumSize: const Size(48, 48),
+              foregroundColor: ArcanumColors.goldLight,
+            ),
+            onPressed: () => context.push('/tarot'),
+            icon: const Icon(Icons.style_outlined, size: 18),
+            label: Text(
+              'Tirar en la mesa',
+              style: ArcanumText.body(14, color: ArcanumColors.goldLight),
+            ),
           ),
         ),
         if (_drawError != null) ...[
