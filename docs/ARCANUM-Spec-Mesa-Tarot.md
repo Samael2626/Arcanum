@@ -107,18 +107,19 @@ Umbrales:
 | Tapete o marco | — | Radial del paño | Gira e inclina la mesa |
 | Doble toque en tapete o marco | Restablece la cámara | | |
 | Mazo del estante | Lo pone en juego | — | Al paño: lo pone en juego |
-| Mazo o montón en juego | Lo extiende (o lo junta si otro tenía el abanico) | Radial del mazo; con su abanico abierto, el radial del abanico | Centro: moverlo. Laterales: abanico. Borde de arriba: cortar. Soltarlo sobre otro: unirlos. |
+| Mazo o montón en juego | Lo extiende (o lo junta si otro tenía el abanico). Si no está junto a un borde, primero se aparta al más cercano | Radial del mazo; con su abanico abierto, el radial del abanico | Centro: moverlo. Laterales: abanico. Borde de arriba: cortar. Soltarlo sobre otro: unirlos. |
 | Carta del abanico | Pulsar pone la lupa; soltar saca la carta resaltada al primer hueco libre | Nada: mantener es parte de la lupa (el radial del abanico se abre manteniendo el mazo) | Deslizar pasea la lupa; subir el dedo por encima del abanico se lleva la carta a un hueco concreto |
-| Carta suelta | Vuelve al montón más cercano | Radial de la carta | Moverla. Imán a los huecos; junto a otra carta de la tirada queda como aclaratoria. |
-| Carta en la tirada | Desvela o lee | Radial de la carta | Moverla (intercambio si el hueco está ocupado) |
+| Carta suelta | Boca abajo la desvela; boca arriba, la lee | Radial de la carta | Moverla. Imán a los huecos; junto a otra carta de la tirada queda como aclaratoria. Soltarla en la bandeja la recoge. |
+| Carta en la tirada | Desvela o lee | Radial de la carta | Moverla (intercambio si el hueco está ocupado). Soltarla en la bandeja la recoge. |
 | Esquina de la carta boca abajo | — | — | La levanta y voltea (ver 5) |
-| Doble toque en carta suelta | Desvela o lee | | |
 | «Interpretar» bordado | Interpretación | 1,3 s: un hilo rodea la tirada y **cierra el círculo** | |
 | Sello de la pregunta | Cuándo se selló | | |
 
+- **Bandeja y mazo que se aparta (07-oct).** Elegidos por Samuel en el prototipo «Toques de la mesa», tras la prueba en el GN2200: un toque devolvía la carta suelta al montón y en la mesa libre las cartas «desaparecían» al ir a girarlas. Ahora tocar una carta, suelta o en su hueco, la desvela o la lee. Recoger es arrastrarla a la **bandeja**, que solo aparece mientras se arrastra una carta: abajo, a todo lo ancho, 64 dp de alto. «Recoger» sigue en el radial de la carta. Con el mazo lejos de los bordes, el abanico salía de media mesa (75 cartas en una banda); ahora el mazo **se aparta** al borde más cercano y se extiende desde ahí, todo en un solo deshacer.
+- **Avisos según lo que dicen (07-oct).** Fuera el SnackBar blanco. **Bordado** en el paño, bajo «Interpretar», para los hitos del ritual (barajar, cortar, tirada completa, círculo cerrado, la lectura vuelve). **Burbuja junto a la pieza** para lo que habla de una carta o un montón (el hueco donde cae, invertida, montón vacío, se aparta). **Píldora arriba** para el estado de la mesa y del sistema (silencio, deshecho, errores). La regla vive en `table_notice.dart`. Ninguno tapa deshacer ni «Elegir carta» a 360 × 640.
 - **Pellizcar con dos dedos:** zoom y desplazamiento.
 - **Zona de toque de cada carta:** se amplía respecto al dibujo; los tests a 360 × 760 comprueban objetivos de al menos 48 dp para las acciones principales en reposo y zoom 1. La superposición y el lector de pantalla reales siguen pendientes en el GN2200.
-- **Extracción inmediata:** al tocar el abanico se ve un dorso pendiente en el mismo fotograma y su posición queda reservada. La carta definitiva llega con la respuesta del servidor; un error la devuelve al abanico y se avisa. El umbral de 6 px frente a los 18 px de `kTouchSlop` sigue como decisión abierta.
+- **Extracción inmediata:** al tocar el abanico se ve un dorso pendiente en el mismo fotograma y su posición queda reservada. La carta definitiva llega con la respuesta del servidor; un error la devuelve al abanico y se avisa. El umbral es de 18 px (`kTouchSlop`, 07-oct); la lupa del abanico no lo espera.
 
 ---
 
@@ -157,7 +158,7 @@ Leer, la pregunta y las lecturas guardadas usan paneles compactos anclados a lo 
   - En cada fotograma: velocidad = velocidad × 0,74 + (objetivo − actual) × 0,16.
   - Al soltar, el objetivo se reduce ×0,8 por fotograma y la carta oscila hasta calmarse.
   - En Flutter: `SpringSimulation` o un `Ticker` con esta misma integración.
-- **Reparto:** una carta cada 110 ms, 420 ms de vuelo; al encajar vibra. El sonido espera las grabaciones de Samuel.
+- **Reparto:** una carta cada 110 ms, 420 ms de vuelo; al encajar vibra. Suena el papel al salir cada carta y la madera al aterrizar.
 - **Barajados:** son animación, porque el azar lo pone el servidor.
   - **Cascada:** dos mitades que se entrelazan.
   - **Por encima:** 4 rondas de bloques de 3.
@@ -188,22 +189,28 @@ En Flutter se decide con `FrameTiming`.
 
 ## 7. Sonido y háptica
 
-Todo el sonido está en re dórico pentatónico, con reverberación de 2,8 s. Nada suena áspero.
+Todo el sonido está en re dórico pentatónico. Nada suena áspero. Elegido por Samuel el 07-oct tras tres vueltas de prototipo (página «Sonidos de la mesa»): la versión **para altavoz de móvil** —lo grave una octava arriba, porque el altavoz no da menos de unos 250 Hz, y sala de 1,6 s en vez de 2,8 s, que en un altavoz pequeño emborronaba—, con todas las mejoras de la segunda y la tercera vuelta.
 
 | Evento | Sonido | Vibración |
 |---|---|---|
-| Barajar en cascada | 10 roces de papel y 3 campanitas ascendentes | 8 ms |
-| Cortar | Roce y campana grave | 12 ms |
-| Encajar en un hueco | Golpe de madera suave y una nota | 8 ms |
-| Desvelar | Campana de cristal (dos notas) | 10 ms |
-| Desvelar un Mayor | Cuenco con batido de 5 s | 12, 40, 12 |
+| Barajar | Cascada de 24 roces que acelera y 3 campanitas ascendentes | 8 ms |
+| Cortar | Roce y campana | 12 ms |
+| Sacar una carta | Solo papel, sin nota | — |
+| Encajar en un hueco | Madera y la nota de su hueco: el hueco 1 es el más grave y cada uno sube un grado | 8 ms |
+| Desvelar | Dos notas con el timbre del palo: Bastos bronce, Copas redondo, Espadas cristal, Oros madera afinada. Al derecho suben; invertida bajan y suenan veladas | 10 ms |
+| Desvelar un Mayor | Cuenco con batido | 12, 40, 12 |
 | Sellar / romper el sello | Tono cálido / chasquido y 4 notas descendentes | 14 / 8, 30, 8 |
-| Cerrar el círculo | Acorde lento | 10, 60, 10 |
+| Cerrar el círculo | El acorde de la lectura: la tónica y la nota final de cada carta desvelada | 10, 60, 10 |
 | Opción del radial bajo el dedo | — | 4 ms |
 
-- **Sonido pendiente:** Samuel aportará las grabaciones; no se sintetizaron ni se añadieron muestras de prueba. Al integrarlas se variará el tono ±5 % y el volumen ±3 dB.
+- **Cada carta suena siempre igual.** En el prototipo la nota se sorteaba; en la app sale de la carta (su número), así que se aprende de oído y dos lecturas con las mismas cartas cierran con el mismo acorde.
+- **Lo nuevo no pisa lo que suena:** durante los 2,2 s del cuenco de un Mayor, lo siguiente entra al 55 %. El mismo sonido repetido en menos de 250 ms baja un 30 % cada vez, hasta la mitad como mucho (con suelo, para que el reparto se siga oyendo).
+- **Variación por disparo:** tono ±5 % y volumen ±3 dB.
+- **Desvelar varias** las hace sonar una tras otra, cada 300 ms.
+- **Ficheros:** 76 OGG mono a 24 kHz (571 KB) en `assets/sounds/mesa/`, sintetizados por `tools/build_mesa_sonidos.py` con la misma receta del prototipo; nada de muestras de terceros. Si Samuel graba papel y madera de verdad, se cambian los ficheros sin tocar el código.
+- **Motor:** `flutter_soloud` (baja latencia, varias voces). Decodificados ocupan unos 9,6 MB en memoria (calculado, por medir en el aparato). Si el motor no arranca, la mesa sigue sin sonido y el fallo se reporta.
 - **Háptica implementada** con `HapticFeedback`: los tiempos del prototipo se traducen a los golpes fijos disponibles en Flutter.
-- **Silenciar** desde el radial del paño apaga la vibración y apagará el sonido cuando exista; se recuerda entre sesiones.
+- **Silenciar** desde el radial del paño apaga el sonido y la vibración; se recuerda entre sesiones.
 
 ---
 
@@ -260,5 +267,5 @@ El cliente de API está en `lib/core/api/arcanum_api.dart`; las tiradas y mazos 
 - **Motor de interpretación:** Tradición funciona en la mesa con significados por posición y sentido. El Oráculo con las tiradas nuevas queda pendiente.
 - **Cartas pequeñas en la Cruz Celta y la Rueda:** mitigadas con la zona de toque y el zoom, pero siguen siendo pequeñas en un móvil de 360 dp.
 - **Validación en GN2200:** medir fps con Impeller, completar Cruz Celta, comprobar lector de pantalla, tacto, efectos y textos largos. Sin esas medidas no se afirma 60 fps ni aprobación móvil.
-- **Decisiones abiertas:** recuperación de calidad (provisional: tres ventanas de 2 s a ≥55 fps) y umbral de arrastre de 6 frente a 18 px. Opciones en `ARCANUM-Plan-Mesa-Tarot.md`.
+- **Cerradas el 07-oct (Samuel):** la calidad vuelve a subir tras 6 s a ≥55 fps; cada recaída después de subir dobla la espera (12, 24 s) y a la tercera ya no lo intenta en esa mesa. El umbral de arrastre pasa a 18 px (`kTouchSlop`) y la lupa del abanico sigue al dedo desde el primer píxel.
 - **Cerradas el 06-oct:** el giro ±40° ya no recorta: la cámara se aleja lo justo (`TableCamera.fitScale`). El abanico frente al sello y el bordado: se recoge solo al llenar la tirada y empieza al lado de la caja del mazo, a 32 dp o más de los bordes de pantalla.

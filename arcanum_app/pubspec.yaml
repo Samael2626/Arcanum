@@ -64,6 +64,7 @@ dependencies:
   firebase_core: ^3.12.1
   firebase_crashlytics: ^4.3.1
   share_plus: ^13.3.0
+  flutter_soloud: ^4.1.7
 
 dev_dependencies:
   flutter_test:
@@ -97,6 +98,8 @@ flutter:
     - assets/engravings/resinas/
     - assets/engravings/zodiaco/
     - assets/tarot/
+    # Sonidos de la mesa: los escribe tools/build_mesa_sonidos.py.
+    - assets/sounds/mesa/
     # Laminas de Materia: la cara entonada (cerrada) y el grabado (abierta).
     # Las escribe tools/build_materia_laminas.py --laminas.
     - assets/materia/manifest.json

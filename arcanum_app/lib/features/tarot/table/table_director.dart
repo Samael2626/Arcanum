@@ -26,11 +26,15 @@ import 'table_camera.dart';
 import 'table_fx.dart';
 import 'table_geometry.dart';
 import 'table_haptics.dart';
+import 'table_notice.dart';
 import 'table_smoke.dart';
+import 'table_sound.dart';
 
 /// Lo que la mesa necesita de la pantalla: paneles, avisos y errores.
 abstract class TableEffects {
-  void toast(String message) {}
+  /// Un aviso. Donde sale depende de [kind] (ver `table_notice.dart`); las
+  /// burbujas van junto a la pieza de [at] (punto de la mesa).
+  void toast(String message, {NoticeKind kind = NoticeKind.pill, Offset? at}) {}
   void flipped(TableCard card) {}
   void shuffled(String pile, String style) {}
   void openReading(TableCard card) {}
@@ -172,30 +176,61 @@ class TableDirector extends ChangeNotifier {
     math.Random? random,
     TableCamera? camera,
     this.haptics = const TableHaptics(),
+    TableSound? sound,
   }) : camera = camera ?? TableCamera(from: ops.table.camera),
+       sound = sound ?? TableSound(),
        _random = random ?? math.Random();
 
   final TableOps ops;
   final TableEffects effects;
   final TableCamera camera;
   final TableHaptics haptics;
+  final TableSound sound;
   final GestureGrammar grammar = GestureGrammar();
 
   /// «Reducir movimiento» del sistema: la camara salta sin suavizado ni
   /// inercia. Lo pone la vista en cada construccion.
   bool reduceMotion = false;
 
-  /// Mesa en silencio (radial del paño): sin vibracion, y sin sonido cuando
-  /// llegue. Decidido por Samuel el 05-oct. Lo guarda la pantalla.
+  /// Mesa en silencio (radial del paño): ni vibra ni suena. Decidido por
+  /// Samuel el 05-oct. Lo guarda la pantalla.
   bool muted = false;
 
-  /// Vibra, salvo con la mesa en silencio. La pantalla lo usa para sellar,
-  /// romper el sello y cerrar el circulo.
+  /// Vibra, salvo con la mesa en silencio.
   void buzz(Buzz b) {
     if (!muted) unawaited(haptics.play(b));
   }
 
   void _buzz(Buzz b) => buzz(b);
+
+  /// Aviso junto a una pieza de la mesa.
+  void _noteAt(String message, Offset at) =>
+      effects.toast(message, kind: NoticeKind.piece, at: at);
+
+  /// Aviso bordado en el paño: un hito del ritual.
+  void _embroider(String message) =>
+      effects.toast(message, kind: NoticeKind.embroidery);
+
+  Offset _pileAt(String pid) {
+    final p = _pile(pid);
+    return p == null ? embroideryAt : Offset(p.x, p.y);
+  }
+
+  Offset _cardAt(String slug) {
+    final c = table.card(slug);
+    return c == null ? embroideryAt : Offset(c.x, c.y);
+  }
+
+  /// Suena, salvo con la mesa en silencio.
+  void _chime(void Function(TableSound s) play) {
+    if (!muted) play(sound);
+  }
+
+  /// Se sello la pregunta: tono calido y vibracion.
+  void sealed() {
+    buzz(Buzz.seal);
+    _chime((s) => s.seal());
+  }
 
   /// Humo de la mesa (la vista lo pinta encima, en pantalla).
   final SmokeEmitter smoke = SmokeEmitter();
@@ -209,12 +244,16 @@ class TableDirector extends ChangeNotifier {
   /// Se rompio el sello al interpretar: chasquido y humo, como el prototipo.
   void sealBroken() {
     buzz(Buzz.breakSeal);
+    _chime((s) => s.breakSeal());
     smoke.puff(camera.toScreen(sealAt), 16);
   }
 
   /// Se cerro el circulo: vibracion y humo desde el centro del bordado.
   void circleClosed() {
     buzz(Buzz.closeCircle);
+    _chime(
+      (s) => s.closeCircle(table.cards.where((c) => c.faceUp && !c.aside)),
+    );
     circleMark.mark();
     smoke.puff(camera.toScreen(circleCenter), 26);
   }
@@ -224,6 +263,7 @@ class TableDirector extends ChangeNotifier {
     smoke.dispose();
     circleMark.dispose();
     sealFlight.dispose();
+    unawaited(sound.dispose());
     super.dispose();
   }
 
@@ -231,7 +271,9 @@ class TableDirector extends ChangeNotifier {
     muted = !muted;
     effects.muteChanged(muted);
     effects.toast(
-      muted ? 'Mesa en silencio: ya no vibra.' : 'La mesa vuelve a vibrar.',
+      muted
+          ? 'Mesa en silencio: ni suena ni vibra.'
+          : 'La mesa vuelve a sonar y a vibrar.',
     );
   }
 
@@ -257,10 +299,28 @@ class TableDirector extends ChangeNotifier {
   /// Lo que tardo cada carta del abanico desde el toque hasta que el servidor
   /// la dio (las ultimas 50). La carta se ve en el acto; esto mide la red.
   final List<Duration> takeTimings = [];
-  (String, Duration)? _pendingCardTap;
-  Duration _now = Duration.zero;
 
-  static const looseDoubleTap = Duration(milliseconds: 280);
+  // ---------- bandeja ----------
+  // Elegida por Samuel el 07-oct en el prototipo «Toques de la mesa». Antes,
+  // un toque devolvia la carta suelta al monton y dos la desvelaban: en la
+  // mesa libre las cartas «desaparecian» al ir a girarlas. Ahora tocar
+  // desvela (y lee), y recoger es arrastrarla a la bandeja, que solo aparece
+  // mientras se arrastra una carta.
+
+  /// Bandeja de recoger, en pantalla: abajo y a todo lo ancho.
+  Rect get trayRect {
+    final v = camera.viewport;
+    return Rect.fromLTRB(20, v.height - 20 - 64, v.width - 20, v.height - 20);
+  }
+
+  /// Se esta arrastrando una carta: la bandeja se ve.
+  bool get trayShown {
+    final d = _drag;
+    return d != null && d.ready && d.id.startsWith('card:') && d.last != null;
+  }
+
+  /// El dedo esta sobre la bandeja: soltar recoge.
+  bool trayHot = false;
 
   // ---------- movimiento: de donde nace y a donde va cada pieza ----------
   //
@@ -283,6 +343,9 @@ class TableDirector extends ChangeNotifier {
   Duration takeExitDuration(String id) => _circleExits.remove(id)
       ? const Duration(milliseconds: 900)
       : const Duration(milliseconds: 480);
+
+  /// Lo que vuela una carta al nacer o al caer en su sitio (`PoseMotion`).
+  static const cardTravel = Duration(milliseconds: 420);
 
   void _born(String id, TablePose from, [Duration delay = Duration.zero]) =>
       _births[id] = (from: from, delay: delay);
@@ -661,7 +724,6 @@ class TableDirector extends ChangeNotifier {
 
   // ---------- entrada de toques (coordenadas de pantalla) ----------
   void pointerDown(int pointer, Offset screen, Duration time) {
-    _now = time;
     final r = _radial;
     if (r != null && !grammar.active) {
       // radial abierto para tocar: tocar una opcion la elige, tocar fuera lo cierra
@@ -685,12 +747,15 @@ class TableDirector extends ChangeNotifier {
   }
 
   void pointerMove(int pointer, Offset screen, Duration time) {
-    _now = time;
     _apply(grammar.move(pointer, screen, time));
+    // la lupa sigue al dedo desde el primer pixel: el umbral separa toque de
+    // arrastre, y por debajo de el los ajustes finos tambien eligen carta
+    if (_lensAt != null && _drag == null && _radial == null) {
+      _setLens(camera.toTable(screen));
+    }
   }
 
   void pointerUp(int pointer, Offset screen, Duration time) {
-    _now = time;
     _apply(grammar.up(pointer, screen, time));
     if (_lensAt != null && _drag == null) _setLens(null);
   }
@@ -703,21 +768,12 @@ class TableDirector extends ChangeNotifier {
   /// Hay algo esperando al reloj (mantener, doble toque) o en movimiento.
   /// Con la mesa quieta no se piden frames: la bateria lo agradece.
   bool get needsTicks =>
-      grammar.deadline != null ||
-      _pendingCardTap != null ||
-      _wobble.isNotEmpty ||
-      _drag != null;
+      grammar.deadline != null || _wobble.isNotEmpty || _drag != null;
 
   /// Un frame: temporizadores de la gramatica, camara y peso de las cartas.
   /// Devuelve true si hay que repintar.
   bool tick(Duration time, Duration dt) {
-    _now = time;
     _apply(grammar.tick(time));
-    final pending = _pendingCardTap;
-    if (pending != null && time - pending.$2 >= looseDoubleTap) {
-      _pendingCardTap = null;
-      _returnToPile(pending.$1);
-    }
     var moving = reduceMotion ? camera.settleNow() : camera.step(dt);
     _wobble.removeWhere((_, w) => !w.step());
     moving |= _wobble.isNotEmpty;
@@ -851,20 +907,15 @@ class TableDirector extends ChangeNotifier {
       case HitDeck(:final pid, :final count):
         if (_union != null) return _pickUnion(pid);
         if (count == 0 && fan?.pid != pid) {
-          return effects.toast('Este montón está vacío');
+          return _noteAt('Este montón está vacío', _pileAt(pid));
         }
         _autoFan(pid);
       case HitCard(:final slug):
         final c = table.card(slug);
         if (c == null) return;
-        if (c.slot != null || c.host != null) return _revealOrRead(c);
-        // suelta: un toque la devuelve a su monton; dos, la desvelan
-        final pending = _pendingCardTap;
-        if (pending != null && pending.$1 == slug) {
-          _pendingCardTap = null;
-          return _revealOrRead(c);
-        }
-        _pendingCardTap = (slug, _now);
+        // en su hueco o suelta, igual: boca abajo la desvela; boca arriba, la
+        // lee. Recogerla es arrastrarla a la bandeja (o «Recoger» del radial)
+        _revealOrRead(c);
       case HitNothing():
         break;
     }
@@ -902,9 +953,11 @@ class TableDirector extends ChangeNotifier {
     effects.flipped(table.card(c.slug)!);
   }
 
-  /// Desvelar vibra una vez; si sale un Mayor, con su patron.
+  /// Desvelar vibra una vez; si sale un Mayor, con su patron. Suena cada
+  /// carta, una tras otra.
   void _buzzReveal(Iterable<TableCard> cards) {
     if (cards.isEmpty) return;
+    _chime((s) => s.reveal(cards));
     _buzz(
       cards.any((c) => c.face.arcana == 'major')
           ? Buzz.revealMajor
@@ -937,8 +990,9 @@ class TableDirector extends ChangeNotifier {
         ),
       );
     }
-    effects.toast(
+    _noteAt(
       '${_deckName(deck)} en juego. Tócalo para extenderlo; mantenlo pulsado para lo demás.',
+      pid == null ? at : _pileAt(pid),
     );
   }
 
@@ -951,19 +1005,40 @@ class TableDirector extends ChangeNotifier {
 
   int _count(String pid) => table.server?.piles[pid]?.count ?? 0;
 
+  /// Largo minimo del abanico (unidades de mesa). Con menos, 78 cartas se
+  /// apelotonan en una banda donde no se distingue ninguna.
+  static const double fanRoom = TableGeometry.width * .6;
+
   void _autoFan(String pid) {
     final p = _pile(pid);
     if (p == null || _count(pid) == 0) return;
-    final y = p.y
-        .clamp(TableGeometry.shelfY + 90, TableGeometry.fanY)
-        .toDouble();
-    final endX = p.x > TableGeometry.width / 2
-        ? 58.0
-        : TableGeometry.width - 58;
-    final start = _fanStart(Offset(p.x, y), Offset(endX, y));
+    var y = p.y.clamp(TableGeometry.shelfY + 90, TableGeometry.fanY).toDouble();
+    // el mazo solo cambia de altura si la tirada lo obliga
+    var pileY = p.y;
+    // a la altura de la tirada, el abanico taparia huecos y rotulos: el mazo
+    // baja a su fila de siempre (GN2200, 07-oct)
+    final sp = spread;
+    if (sp != null) {
+      final h = TableGeometry.cardH * TableGeometry.fanScale / 2 + 12;
+      final band = Rect.fromLTRB(0, y - h, TableGeometry.width, y + h);
+      final spreadArea = [
+        for (var i = 0; i < sp.cardCount; i++) poseRect(slotPose(sp, i)),
+        ...slotLabelRects(sp),
+      ];
+      if (spreadArea.any(band.overlaps)) pileY = y = TableGeometry.fanY;
+    }
+    // con el mazo lejos de los bordes no cabe un abanico: el mazo se aparta al
+    // borde mas cercano y se extiende desde ahi (Samuel, 07-oct)
+    var x = p.x;
+    if (math.max(x - 58, TableGeometry.width - 58 - x) < fanRoom) {
+      x = x < TableGeometry.width / 2 ? 70.0 : TableGeometry.width - 70;
+    }
+    final endX = x > TableGeometry.width / 2 ? 58.0 : TableGeometry.width - 58;
+    final start = _fanStart(Offset(x, y), Offset(endX, y));
     final end = _fanEndOffEdges(start, Offset(endX, y));
     ops.arrange(
       (s) => s.copyWith(
+        piles: [for (final q in s.piles) q.pid == pid ? q.moved(x, pileY) : q],
         fan: () => FanLayout(pid: pid, start: start, end: end),
       ),
       undoable: true,
@@ -1055,6 +1130,7 @@ class TableDirector extends ChangeNotifier {
       slot: slot,
     );
     _pending[fanId] = p;
+    _chime((s) => s.slide());
     if (drag == null) _born(p.id, from);
     notifyListeners();
     final TableCard card;
@@ -1076,7 +1152,7 @@ class TableDirector extends ChangeNotifier {
     _timeTake(p);
     if (sp == null && !_spreadHinted) {
       _spreadHinted = true;
-      effects.toast(spreadHint);
+      _noteAt(spreadHint, _pileAt(p.pid));
     }
     if (_count(p.pid) == 0) ops.arrange((s) => s.copyWith(fan: () => null));
     if (drag != null && !p.released && identical(_drag, drag)) {
@@ -1086,7 +1162,7 @@ class TableDirector extends ChangeNotifier {
       _landReleased(p, card, drag);
     } else {
       _born('card:${card.slug}', _shownPending(p));
-      _land(card.slug, p.slot, p.to);
+      _land(card.slug, p.slot, p.to, landing: cardTravel);
     }
     _gatherFanIfComplete(wasFull: wasFull);
     notifyListeners();
@@ -1108,7 +1184,7 @@ class TableDirector extends ChangeNotifier {
     ].every((c) => c.faceUp);
     // quien siguiera deslizando por donde estaba el abanico giraria la mesa
     // sin saber por que: se dice que se recogio y que toca ahora
-    effects.toast(
+    _embroider(
       allUp
           ? 'Tirada completa: toca «Interpretar».'
           : 'Tirada completa: el mazo se recoge. Desvela las cartas.',
@@ -1162,7 +1238,12 @@ class TableDirector extends ChangeNotifier {
   }
 
   /// Deja una carta recien sacada en su hueco (si sigue libre) o en `spot`.
-  void _land(String slug, int? slot, TablePose spot) {
+  void _land(
+    String slug,
+    int? slot,
+    TablePose spot, {
+    Duration landing = Duration.zero,
+  }) {
     final sp = spread;
     final free =
         sp != null &&
@@ -1171,7 +1252,9 @@ class TableDirector extends ChangeNotifier {
             table.cardInSlot(slot) == null
         ? slot
         : null;
-    if (sp != null && free != null) return _place(slug, sp, free);
+    if (sp != null && free != null) {
+      return _place(slug, sp, free, landing: landing);
+    }
     ops.arrange(
       (s) => s.updateCard(
         slug,
@@ -1254,9 +1337,21 @@ class TableDirector extends ChangeNotifier {
           poseRect(TablePose(c.x, c.y, rot: c.rot, scale: c.scale)),
       for (final p in table.piles) _pileRect(TablePose(p.x, p.y, rot: p.rot)),
       for (final p in _pending.values) poseRect(p.to),
+      // el abanico tambien: con el mazo en el centro, la carta sacada caia
+      // montada sobre el (GN2200, 07-oct)
+      ?_fanRect(),
       sealRect,
       embroideryRect,
     ];
+  }
+
+  Rect? _fanRect() {
+    final f = fan;
+    if (f == null) return null;
+    final poses = fanPoses(f.start, f.end, 2);
+    return poseRect(
+      poses.first,
+    ).expandToInclude(poseRect(poses.last)).inflate(30);
   }
 
   /// Un monton ocupa su caja y su nombre, que va debajo.
@@ -1298,9 +1393,17 @@ class TableDirector extends ChangeNotifier {
   bool _slotFree(int i) =>
       table.cardInSlot(i) == null && !_pending.values.any((p) => p.slot == i);
 
-  void _place(String slug, SpreadDef sp, int slot) {
+  /// `landing`: lo que tarda la carta en llegar; el sonido espera a que
+  /// aterrice.
+  void _place(
+    String slug,
+    SpreadDef sp,
+    int slot, {
+    Duration landing = Duration.zero,
+  }) {
     final pose = slotPose(sp, slot);
     _buzz(Buzz.snap);
+    _chime((s) => s.snap(slot, after: landing));
     ops.arrange(
       (s) => s
           .putInSlot(slug, slot)
@@ -1329,18 +1432,15 @@ class TableDirector extends ChangeNotifier {
     for (final slot in empty) {
       final positions = table.server?.piles[pid]?.positions ?? const [];
       if (positions.isEmpty) {
-        return effects.toast('No quedan cartas en este montón');
+        return _noteAt('No quedan cartas en este montón', _pileAt(pid));
       }
       final pile = _pile(pid);
       final card = await ops.take(pid, positions.first);
-      if (pile != null) {
-        _born(
-          'card:${card.slug}',
-          _pilePose(pile),
-          Duration(milliseconds: 110 * dealt++),
-        );
-      }
-      _place(card.slug, sp, slot);
+      // una carta cada 110 ms: suena el papel al salir y la madera al llegar
+      final wait = Duration(milliseconds: 110 * dealt++);
+      if (pile != null) _born('card:${card.slug}', _pilePose(pile), wait);
+      _chime((s) => s.slide(after: wait));
+      _place(card.slug, sp, slot, landing: wait + cardTravel);
     }
   }
 
@@ -1349,13 +1449,6 @@ class TableDirector extends ChangeNotifier {
   /// lejos de otros montones y podia caer sobre el bordado o el sello.
   Offset _freeSpot(PileLayout near) {
     final taken = _occupied();
-    final f = fan;
-    if (f != null) {
-      final poses = fanPoses(f.start, f.end, 2);
-      taken.add(
-        poseRect(poses.first).expandToInclude(poseRect(poses.last)).inflate(30),
-      );
-    }
     final size = _pileRect(const TablePose(0, 0)).size;
     Offset pick(Rect area) => freeSpot(
       size: size,
@@ -1393,6 +1486,7 @@ class TableDirector extends ChangeNotifier {
     await _undoable(() async {
       final np = await ops.cut(pid, _cutSize(_count(pid)));
       _buzz(Buzz.cut);
+      _chime((s) => s.cut());
       _born('pile:$np', _pilePose(src));
       ops.arrange(
         (s) => s.copyWith(
@@ -1403,7 +1497,7 @@ class TableDirector extends ChangeNotifier {
         ),
       );
     });
-    effects.toast(
+    _embroider(
       'Corte hecho. Mantén pulsado un montón para Unir, o arrástralo sobre otro.',
     );
   }
@@ -1438,7 +1532,10 @@ class TableDirector extends ChangeNotifier {
     if (u.length == table.piles.length) {
       _run(() async {
         await _undoable(() => _stack(List.of(u)));
-        effects.toast('Unidos en el orden que elegiste');
+        _noteAt(
+          'Unidos en el orden que elegiste',
+          _pileAt(table.piles.first.pid),
+        );
       });
     }
   }
@@ -1451,7 +1548,7 @@ class TableDirector extends ChangeNotifier {
         if (p.pid != active) p.pid,
     ].reversed;
     await _undoable(() => _stack([...others, active]));
-    effects.toast('Unidos: lo de abajo pasa arriba');
+    _noteAt('Unidos: lo de abajo pasa arriba', _pileAt(table.piles.first.pid));
   }
 
   /// Recoger todo: une los montones y devuelve las cartas. Se deshace entero.
@@ -1483,7 +1580,7 @@ class TableDirector extends ChangeNotifier {
       rethrow;
     }
     circleClosed();
-    effects.toast('Círculo cerrado. La lectura quedó guardada en Lecturas.');
+    _embroider('Círculo cerrado. La lectura quedó guardada en Lecturas.');
   }
 
   // ---------- cartas ----------
@@ -1526,7 +1623,7 @@ class TableDirector extends ChangeNotifier {
       ),
       undoable: true,
     );
-    effects.toast('Apartada en el estante: no cuenta para la lectura');
+    _noteAt('Apartada en el estante: no cuenta para la lectura', _cardAt(slug));
   }
 
   void _turn(String slug) {
@@ -1535,10 +1632,11 @@ class TableDirector extends ChangeNotifier {
       undoable: true,
     );
     final c = table.card(slug)!;
-    effects.toast(
+    _noteAt(
       c.faceUp
           ? (c.reversed ? 'Ahora está invertida' : 'Ahora está al derecho')
           : 'Girada: se desvelará en el otro sentido',
+      Offset(c.x, c.y),
     );
   }
 
@@ -1711,10 +1809,11 @@ class TableDirector extends ChangeNotifier {
     _openRadial(screen, 'Barajar', RadialMenus.shuffle, (style) async {
       shuffling = (pid: pid, style: style, epoch: ++_shuffleEpoch);
       _buzz(Buzz.shuffle);
+      _chime((s) => s.shuffle());
       notifyListeners();
       await ops.shuffle(pid, style: style);
       effects.shuffled(pid, style);
-      effects.toast(
+      _embroider(
         table.piles.length > 1
             ? 'Montón barajado. Los demás no se tocan.'
             : 'Barajado. El servidor fija el orden; tú eliges qué posiciones sacar.',
@@ -1825,6 +1924,7 @@ class TableDirector extends ChangeNotifier {
             .then(
               (np) {
                 _buzz(Buzz.cut);
+                _chime((s) => s.cut());
                 d
                   ..id = 'pile:$np'
                   ..ready = true;
@@ -1936,6 +2036,7 @@ class TableDirector extends ChangeNotifier {
         if (!d.ready) return;
         _moveDragged(d, at);
         (_wobble[d.id] ??= Wobble()).push(at - prev);
+        trayHot = trayShown && trayRect.inflate(12).contains(screen);
         final sp = spread;
         hotSlot =
             (d.id.startsWith('card:') || d.id.startsWith('pending:')) &&
@@ -1962,6 +2063,8 @@ class TableDirector extends ChangeNotifier {
     final d = _drag;
     _drag = null;
     hotSlot = null;
+    final overTray = trayHot;
+    trayHot = false;
     if (d == null) return;
     if (d.id == 'lens') {
       final chosen = _lensId;
@@ -2031,7 +2134,9 @@ class TableDirector extends ChangeNotifier {
         }
         if (!d.ready || pose == null) return;
         if (cancelled) return;
-        if (d.id.startsWith('card:')) {
+        if (d.id.startsWith('card:') && overTray) {
+          _returnToPile(d.id.substring(5));
+        } else if (d.id.startsWith('card:')) {
           _dropCard(d.id.substring(5), pose, d);
         } else if (d.id.startsWith('pile:')) {
           _dropPile(d.id.substring(5), pose);
@@ -2073,6 +2178,7 @@ class TableDirector extends ChangeNotifier {
                   skip: other.slug,
                 );
       _buzz(Buzz.snap);
+      _chime((s) => s.snap(slot));
       ops.arrange((s) {
         var t = s.putInSlot(slug, slot);
         final target = slotPose(sp, slot);
@@ -2101,7 +2207,10 @@ class TableDirector extends ChangeNotifier {
         }
         return t;
       }, undoable: true);
-      return effects.toast('${slot + 1} · ${sp.slots[slot].name}');
+      return _noteAt(
+        '${slot + 1} · ${sp.slots[slot].name}',
+        slotPose(sp, slot).offset,
+      );
     }
     // soltada junto a una carta de la tirada (sin caer en su hueco): aclaratoria
     if (sp != null && pose.y >= TableGeometry.shelfY) {
@@ -2131,8 +2240,9 @@ class TableDirector extends ChangeNotifier {
                 ),
             undoable: true,
           );
-          return effects.toast(
+          return _noteAt(
             'Aclaratoria de ${h.slot! + 1} · ${sp.slots[h.slot!].name}',
+            at.offset,
           );
         }
       }
@@ -2165,9 +2275,12 @@ class TableDirector extends ChangeNotifier {
       undoable: true,
     );
     if (aside) {
-      effects.toast('Apartada en el estante: no cuenta para la lectura');
+      _noteAt(
+        'Apartada en el estante: no cuenta para la lectura',
+        _cardAt(slug),
+      );
     } else if (sp != null) {
-      effects.toast('Fuera de la tirada: no cuenta para la lectura');
+      _noteAt('Fuera de la tirada: no cuenta para la lectura', _cardAt(slug));
     }
   }
 
@@ -2188,18 +2301,36 @@ class TableDirector extends ChangeNotifier {
         );
         _run(() async {
           await _undoable(() => _stack([q.pid, pid]));
-          effects.toast(
+          _noteAt(
             table.piles.length > 1 ? 'Montones unidos' : 'Mazo entero de nuevo',
+            _pileAt(q.pid),
           );
         });
         return;
       }
     }
-    final x = pose.x.clamp(70.0, TableGeometry.width - 70);
-    final y = pose.y.clamp(
-      TableGeometry.shelfY + 70,
-      TableGeometry.height - 70,
-    );
+    var x = pose.x.clamp(70.0, TableGeometry.width - 70);
+    var y = pose.y.clamp(TableGeometry.shelfY + 70, TableGeometry.height - 70);
+    // ni sobre «Interpretar» ni sobre el sello: tapados no se pueden tocar
+    // (GN2200, 07-oct). Se aparta al sitio libre mas cercano.
+    final keep = [embroideryRect, if (table.seal != null) sealRect];
+    if (keep.any(_pileRect(TablePose(x, y)).overlaps)) {
+      final size = _pileRect(const TablePose(0, 0)).size;
+      final at = freeSpot(
+        size: size,
+        taken: keep,
+        area: TableGeometry.cloth,
+        near: Offset(x, y + 17),
+      ).translate(0, -17);
+      x = at.dx;
+      y = at.dy;
+      _noteAt(
+        keep.first.overlaps(_pileRect(pose))
+            ? 'Ahí taparía «Interpretar»: el montón se aparta un poco.'
+            : 'Ahí taparía el sello: el montón se aparta un poco.',
+        Offset(x, y),
+      );
+    }
     ops.arrange(
       (s) => s.copyWith(
         piles: [for (final p in s.piles) p.pid == pid ? p.moved(x, y) : p],

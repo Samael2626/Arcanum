@@ -182,6 +182,38 @@ void main() {
       expect(q.value, 0);
     });
 
+    test(
+      'si recae tras recuperar espera el doble; a la tercera, no vuelve',
+      () {
+        // Samuel, 07-oct: espera creciente. Sin ella, en un movil flojo los
+        // brillos iban y venian: quitarlos dejaba la escena holgada y a los 6 s
+        // volvian a tumbarla
+        final q = TableQuality();
+        void holgadas(int n) {
+          for (var i = 0; i < n; i++) {
+            q.onWindow(win(58));
+          }
+        }
+
+        q.onWindow(win(35));
+        holgadas(3);
+        expect(q.value, 0, reason: 'primera vez: 6 s');
+        q.onWindow(win(35));
+        holgadas(3);
+        expect(q.value, 1, reason: 'recaida: ya no bastan 6 s');
+        holgadas(3);
+        expect(q.value, 0, reason: '12 s');
+        q.onWindow(win(35));
+        holgadas(11);
+        expect(q.value, 1);
+        holgadas(1);
+        expect(q.value, 0, reason: '24 s');
+        q.onWindow(win(35));
+        holgadas(60);
+        expect(q.value, 1, reason: 'tercera recaida: no lo intenta mas');
+      },
+    );
+
     test('a medio ritmo el efecto cambia la mitad de veces', () {
       const len = Duration(seconds: 1);
       final seen = {for (var f = 0; f <= 60; f++) halfRate(f / 60, len)};

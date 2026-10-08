@@ -32,6 +32,7 @@ _SKIP_SUFFIXES = (
     ".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".pdf", ".zip",
     ".ttf", ".otf", ".woff", ".woff2", ".jar", ".keystore", ".so", ".dll",
     ".pyc", ".lock",
+    ".ogg", ".mp3", ".wav", ".m4a", ".opus",
 )
 
 

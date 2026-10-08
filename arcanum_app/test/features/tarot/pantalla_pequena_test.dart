@@ -2,12 +2,15 @@
 // paneles y la «Lectura revelada» tienen que caber sin desbordar.
 import 'dart:math' as math;
 
+import 'package:arcanum_app/features/tarot/table/table_sound.dart';
+import 'package:arcanum_app/features/tarot/table/table_sound_player.dart';
 import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/features/tarot/application/table_controller.dart';
 import 'package:arcanum_app/features/tarot/domain/table_models.dart';
 import 'package:arcanum_app/features/tarot/reading/lectura_revelada.dart';
 import 'package:arcanum_app/features/tarot/table/table_director.dart';
+import 'package:arcanum_app/features/tarot/table/table_notice.dart';
 import 'package:arcanum_app/features/tarot/tarot_screen.dart';
 import 'package:arcanum_app/shared/revelado/reveal_pager.dart';
 import 'package:flutter/material.dart';
@@ -176,6 +179,7 @@ void main() {
     _phone(tester, _small);
     final c = ProviderContainer(
       overrides: [
+        tableSoundPlayerProvider.overrideWithValue(const SilentPlayer()),
         arcanumApiProvider.overrideWithValue(_Server()),
         authProvider.overrideWith(_Auth.new),
       ],
@@ -237,6 +241,7 @@ void main() {
     _phone(tester, _small);
     final c = ProviderContainer(
       overrides: [
+        tableSoundPlayerProvider.overrideWithValue(const SilentPlayer()),
         arcanumApiProvider.overrideWithValue(_Server()),
         authProvider.overrideWith(_Auth.new),
       ],
@@ -254,18 +259,35 @@ void main() {
     );
     await _frames(tester, 20);
     final effects = tester.state(find.byType(TarotTableScreen)) as TableEffects;
-    effects.toast('3 · Futuro');
-    await _frames(tester, 20);
-    // la superficie que se ve; el rect del SnackBar incluye su margen
-    final bar = tester.getRect(
-      find
-          .descendant(
-            of: find.byType(SnackBar),
-            matching: find.byType(Material),
-          )
-          .first,
-    );
-    // deshacer y «Elegir carta»: 48 dp con 14 de margen, pegados abajo
-    expect(bar.bottom, lessThanOrEqualTo(_small.height - (14 + 48 + 14)));
+    // los tres tipos de aviso, y la burbuja de una pieza pegada abajo, que es
+    // la que mas cerca cae de los botones
+    final cases = <String, void Function()>{
+      'pildora': () => effects.toast('Deshecho'),
+      'bordado': () =>
+          effects.toast('Tirada completa', kind: NoticeKind.embroidery),
+      'pieza': () => effects.toast(
+        '3 · Futuro',
+        kind: NoticeKind.piece,
+        at: const Offset(300, 880),
+      ),
+    };
+    for (final MapEntry(:key, :value) in cases.entries) {
+      value();
+      await _frames(tester, 20);
+      final text = {
+        'pildora': 'Deshecho',
+        'bordado': 'Tirada completa',
+        'pieza': '3 · Futuro',
+      }[key]!;
+      final r = tester.getRect(find.text(text));
+      // deshacer y «Elegir carta»: 48 dp con 14 de margen, pegados abajo
+      expect(
+        r.bottom,
+        lessThanOrEqualTo(_small.height - (14 + 48 + 14)),
+        reason: key,
+      );
+      expect(r.left, greaterThanOrEqualTo(0), reason: key);
+      expect(r.right, lessThanOrEqualTo(_small.width), reason: key);
+    }
   });
 }

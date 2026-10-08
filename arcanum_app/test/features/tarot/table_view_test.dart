@@ -297,9 +297,15 @@ void main() {
       final ops = c.read(tableControllerProvider.notifier);
       final card = (await tester.runAsync(() => ops.take('p0', 0)))!;
       await tester.pump(const Duration(seconds: 1));
-      // un toque y esperar: tras la ventana del doble toque vuelve al monton
-      final g = await tester.startGesture(screen(Offset(card.x, card.y)));
-      now += const Duration(milliseconds: 60);
+      // arrastrada a la bandeja vuelve al monton (07-oct: antes, un toque)
+      final from = screen(Offset(card.x, card.y)), to = dir.trayRect.center;
+      final g = await tester.startGesture(from);
+      for (var i = 1; i <= 10; i++) {
+        now += const Duration(milliseconds: 16);
+        await g.moveTo(Offset.lerp(from, to, i / 10)!);
+        await tester.pump();
+      }
+      expect(find.text('Suelta para recoger'), findsOneWidget);
       await g.up();
       var seen = false, gone = false;
       for (var i = 0; i < 40 && !gone; i++) {
@@ -402,8 +408,9 @@ void main() {
           hh = TableGeometry.cardH * card.scale / 2;
       final corner = Offset(card.x + hw * .85, card.y + hh * .85);
 
-      // un tiron corto no llega a 70 grados: la carta vuelve boca abajo
-      await drag(tester, corner, corner.translate(-hw * .4, 0));
+      // un tiron corto (pasado el umbral de 18 px; por debajo es un toque, y
+      // un toque desvela) no llega a 70 grados: la carta vuelve boca abajo
+      await drag(tester, corner, corner.translate(-hw * .7, 0));
       expect(dir.table.card(card.slug)!.faceUp, isFalse);
 
       // hasta el borde contrario pasa de 70 grados: se voltea
