@@ -24,6 +24,8 @@ class CompareScreen extends ConsumerStatefulWidget {
 }
 
 class CompareScreenState extends ConsumerState<CompareScreen> {
+  // el panel conserva su estado (y el foco del campo) si cambia de sitio
+  final _panelKey = GlobalKey();
   late final CompareDoc doc = widget.initial ?? CompareDoc();
   late final TextEditingController _name = TextEditingController(
     text: doc.name,
@@ -279,9 +281,10 @@ class CompareScreenState extends ConsumerState<CompareScreen> {
         top: false,
         child: LayoutBuilder(
           builder: (context, box) {
-            final landscape = box.maxWidth > box.maxHeight;
-            final panel = ListView(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+            // orientacion de la pantalla, no del hueco libre: con el teclado abierto el
+            // alto baja del ancho y el panel se rehacia (el campo perdia el foco)
+            final landscape = MediaQuery.orientationOf(context) == Orientation.landscape;
+            final panel = ListView(key: _panelKey, padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
               children: [_panel()],
             );
             if (landscape) {

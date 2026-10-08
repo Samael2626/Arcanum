@@ -30,6 +30,8 @@ class KameaScreen extends ConsumerStatefulWidget {
 }
 
 class KameaScreenState extends ConsumerState<KameaScreen> {
+  // el panel conserva su estado (y el foco del campo) si cambia de sitio
+  final _panelKey = GlobalKey();
   late final KameaDoc doc = widget.initial ?? KameaDoc();
   late final TextEditingController _name = TextEditingController(text: doc.name);
   late final TextEditingController _hebrew = TextEditingController(text: doc.hebrew);
@@ -319,8 +321,10 @@ class KameaScreenState extends ConsumerState<KameaScreen> {
         body: SafeArea(
           top: false,
           child: LayoutBuilder(builder: (context, box) {
-            final landscape = box.maxWidth > box.maxHeight;
-            final panel = ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 32), children: [_panel()]);
+            // orientacion de la pantalla, no del hueco libre: con el teclado abierto el
+            // alto baja del ancho y el panel se rehacia (el campo perdia el foco)
+            final landscape = MediaQuery.orientationOf(context) == Orientation.landscape;
+            final panel = ListView(key: _panelKey, padding: const EdgeInsets.fromLTRB(16, 4, 16, 32), children: [_panel()]);
             if (landscape) return Row(children: [_canvas(box.maxHeight), Expanded(child: panel)]);
             final side = box.maxWidth < box.maxHeight * .55 ? box.maxWidth : box.maxHeight * .55;
             return Column(children: [Center(child: _canvas(side)), Expanded(child: panel)]);

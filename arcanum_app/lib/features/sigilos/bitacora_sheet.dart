@@ -10,6 +10,16 @@ import '../../core/theme/arcanum_theme.dart';
 import '../../shared/widgets/gold_button.dart';
 import 'sigil_store.dart';
 
+/// Abre la hoja de la bitacora; true si se guardo una nota.
+Future<bool> showBitacora(BuildContext context, {required bool savedCopy}) async =>
+    await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: ArcanumColors.surface,
+      builder: (_) => BitacoraSheet(savedCopy: savedCopy),
+    ) ==
+    true;
+
 class BitacoraSheet extends ConsumerStatefulWidget {
   final bool savedCopy;
   const BitacoraSheet({super.key, this.savedCopy = false});
@@ -50,7 +60,7 @@ class _BitacoraSheetState extends ConsumerState<BitacoraSheet> {
       const SizedBox(height: 8),
       Text('El sigilo se soltó. Anota qué observaste, sin volver a dibujarlo. La nota se cifra en tu Grimorio.',
         style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted)),
-      if (widget.savedCopy) Text('La copia que ya guardaste en el Grimorio permanece allí.',
+      if (widget.savedCopy) Text('El dibujo sigue en tu Grimorio, ya sin la intención.',
         style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted)),
       const SizedBox(height: 18),
       TextField(controller: _note, minLines: 3, maxLines: 6, maxLength: 2000,

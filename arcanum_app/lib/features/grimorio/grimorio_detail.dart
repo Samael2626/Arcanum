@@ -9,6 +9,7 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
+import '../sigilos/bitacora_sheet.dart';
 import '../sigilos/compare_screen.dart';
 import '../sigilos/kamea_screen.dart';
 import '../sigilos/personal_screen.dart';
@@ -130,33 +131,31 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
           : 'No se pudo anotar la carga. Revisa la conexión e inténtalo de nuevo.');
       return;
     }
+    // tras soltar desde el Grimorio, tambien la bitacora opcional
+    if (release && mounted) await showBitacora(context, savedCopy: true);
     _snack(release ? 'Soltado. No lo busques.' : 'Carga anotada en el sigilo.');
     _retry();
   }
 
   Future<void> _continueKamea(KameaDoc doc) async {
-    final saved = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(builder: (_) => KameaScreen(entryId: widget.id, initial: doc)),
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(MaterialPageRoute(builder: (_) => KameaScreen(entryId: widget.id, initial: doc)),
     );
     if (mounted && saved == true) _retry();
   }
 
   Future<void> _continueRosa(RosaDoc doc) async {
-    final saved = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(builder: (_) => RosaScreen(entryId: widget.id, initial: doc)),
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(MaterialPageRoute(builder: (_) => RosaScreen(entryId: widget.id, initial: doc)),
     );
     if (mounted && saved == true) _retry();
   }
 
   Future<void> _continuePersonal(PersonalDoc doc) async {
-    final saved = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => PersonalScreen(entryId: widget.id, initial: doc)));
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(MaterialPageRoute(builder: (_) => PersonalScreen(entryId: widget.id, initial: doc)));
     if (mounted && saved == true) _retry();
   }
 
   Future<void> _continueCompare(CompareDoc doc) async {
-    final saved = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => CompareScreen(entryId: widget.id, initial: doc)));
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(MaterialPageRoute(builder: (_) => CompareScreen(entryId: widget.id, initial: doc)));
     if (mounted && saved == true) _retry();
   }
 

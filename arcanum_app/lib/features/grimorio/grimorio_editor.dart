@@ -114,22 +114,22 @@ class _GrimorioEditorState extends ConsumerState<GrimorioEditor> {
   }
 
   Future<void> _openKamea() async {
-    final saved = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => const KameaScreen()));
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(MaterialPageRoute(builder: (_) => const KameaScreen()));
     if (mounted && saved == true) Navigator.pop(context, true);
   }
 
   Future<void> _openRosa() async {
-    final saved = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => const RosaScreen()));
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(MaterialPageRoute(builder: (_) => const RosaScreen()));
     if (mounted && saved == true) Navigator.pop(context, true);
   }
 
   Future<void> _openPersonal() async {
-    final saved = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => const PersonalScreen()));
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(MaterialPageRoute(builder: (_) => const PersonalScreen()));
     if (mounted && saved == true) Navigator.pop(context, true);
   }
 
   Future<void> _openCompare() async {
-    final saved = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => const CompareScreen()));
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(MaterialPageRoute(builder: (_) => const CompareScreen()));
     if (mounted && saved == true) Navigator.pop(context, true);
   }
 

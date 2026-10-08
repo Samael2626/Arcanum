@@ -121,8 +121,9 @@ KameaDoc? decodeKameaEntry(String content) {
   try {
     final j = jsonDecode(t);
     if (j is Map<String, dynamic> && j['taller'] == kKameaMark) return KameaDoc.fromJson(j['doc'] as Map<String, dynamic>);
-  } on FormatException {
-    return null;
+  } catch (error) {
+    // dato roto: se dice, sin tumbar el Grimorio
+    debugPrint('ARCANUM taller: kamea ilegible ($error).');
   }
   return null;
 }
@@ -139,8 +140,9 @@ RosaDoc? decodeRosaEntry(String content) {
   try {
     final j = jsonDecode(t);
     if (j is Map<String, dynamic> && j['taller'] == kRosaMark) return RosaDoc.fromJson(j['doc'] as Map<String, dynamic>);
-  } on FormatException {
-    return null;
+  } catch (error) {
+    // dato roto: se dice, sin tumbar el Grimorio
+    debugPrint('ARCANUM taller: Rosa-Cruz ilegible ($error).');
   }
   return null;
 }
@@ -156,8 +158,9 @@ PersonalDoc? decodePersonalEntry(String content) {
   try {
     final j = jsonDecode(t);
     if (j is Map<String, dynamic> && j['taller'] == kPersonalMark) return PersonalDoc.fromJson(j['doc'] as Map<String, dynamic>);
-  } on FormatException {
-    return null;
+  } catch (error) {
+    // dato roto: se dice, sin tumbar el Grimorio
+    debugPrint('ARCANUM taller: sello personal ilegible ($error).');
   }
   return null;
 }
@@ -174,8 +177,9 @@ CompareDoc? decodeCompareEntry(String content) {
   try {
     final j = jsonDecode(t);
     if (j is Map<String, dynamic> && j['taller'] == kCompareMark) return CompareDoc.fromJson(j['doc'] as Map<String, dynamic>);
-  } on FormatException {
-    return null;
+  } catch (error) {
+    // dato roto: se dice, sin tumbar el Grimorio
+    debugPrint('ARCANUM taller: comparacion ilegible ($error).');
   }
   return null;
 }
