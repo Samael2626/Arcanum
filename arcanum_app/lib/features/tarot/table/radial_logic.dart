@@ -15,11 +15,16 @@ class RadialItem {
     this.label, {
     this.enabled = true,
     this.current = false,
+    this.glyph,
   });
 
   final String id;
   final String label;
   final bool enabled;
+
+  /// Dibujo propio (camino SVG en 24x24) cuando el id no tiene icono fijo:
+  /// cada tirada se dibuja con su propia disposicion.
+  final String? glyph;
 
   /// La opcion que ya esta en uso (p. ej. la tirada puesta).
   final bool current;

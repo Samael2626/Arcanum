@@ -7,11 +7,14 @@
 ///
 /// | ms del prototipo | golpe |
 /// |---|---|
-/// | hasta 5 | `selectionClick` |
-/// | 6–10 | `lightImpact` |
+/// | hasta 10 | `lightImpact` |
 /// | 11–20 | `mediumImpact` |
 ///
 /// Si el aparato tiene la respuesta tactil apagada, Android no vibra.
+///
+/// Sin `selectionClick`: en Android es `CLOCK_TICK`, que en varios fabricantes
+/// no vibra (comprobado en el GN2200, OnePlus, 6-oct). La lupa del abanico y el
+/// radial quedaban mudos; ahora usan el golpe ligero.
 library;
 
 import 'package:flutter/services.dart';
@@ -43,13 +46,9 @@ enum Buzz {
 }
 
 /// Golpe de `HapticFeedback` que corresponde a una vibracion de `ms`.
-HapticKind hapticFor(int ms) => ms <= 5
-    ? HapticKind.selection
-    : ms <= 10
-    ? HapticKind.light
-    : HapticKind.medium;
+HapticKind hapticFor(int ms) => ms <= 10 ? HapticKind.light : HapticKind.medium;
 
-enum HapticKind { selection, light, medium }
+enum HapticKind { light, medium }
 
 /// Quien vibra. Los tests lo sustituyen para ver que se pidio.
 class TableHaptics {
@@ -67,7 +66,6 @@ class TableHaptics {
   }
 
   Future<void> _hit(HapticKind k) => switch (k) {
-    HapticKind.selection => HapticFeedback.selectionClick(),
     HapticKind.light => HapticFeedback.lightImpact(),
     HapticKind.medium => HapticFeedback.mediumImpact(),
   };

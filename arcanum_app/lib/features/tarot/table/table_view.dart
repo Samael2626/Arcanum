@@ -807,6 +807,7 @@ class _RadialButton extends StatelessWidget {
                 ),
                 child: TableIcon(
                   item.id,
+                  path: item.glyph,
                   color: hot
                       ? ArcanumColors.background
                       : ArcanumColors.goldLight,

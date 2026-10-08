@@ -22,6 +22,7 @@ import '../domain/table_state.dart';
 import 'card_physics.dart';
 import 'gesture_grammar.dart';
 import 'radial_logic.dart';
+import 'spread_glyph.dart';
 import 'table_camera.dart';
 import 'table_fx.dart';
 import 'table_geometry.dart';
@@ -1832,7 +1833,7 @@ class TableDirector extends ChangeNotifier {
       'Tirada',
       [
         for (final s in spreads)
-          RadialItem(s.slug, s.name, current: s.slug == table.spread),
+          RadialItem(s.slug, s.name, current: s.slug == table.spread, glyph: spreadGlyph(s)),
       ],
       (slug) async {
         _applySpread(slug);
