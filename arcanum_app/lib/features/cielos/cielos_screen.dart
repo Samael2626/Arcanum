@@ -113,6 +113,13 @@ class _NatalViewState extends ConsumerState<_NatalView> {
 
   Future<(Map<String, dynamic>, Map<String, dynamic>)> _load() async {
     _firma = ref.read(birthSignatureProvider);
+    if (_firma != null) {
+      final data = await ref.read(natalOverviewProvider.future);
+      return (
+        data['natal_chart'] as Map<String, dynamic>,
+        data['transits'] as Map<String, dynamic>,
+      );
+    }
     try {
       final data = await _api.celestialOverview();
       return (
@@ -160,8 +167,10 @@ class _NatalViewState extends ConsumerState<_NatalView> {
           color: ArcanumColors.gold,
           backgroundColor: ArcanumColors.surface,
           // se espera a la carga: antes el indicador se iba al instante. El
-          // error lo pinta el FutureBuilder; aqui solo se deja de esperar
+          // error lo pinta el FutureBuilder; aqui solo se deja de esperar.
+          // Tambien se recarga la carta natal (release 1.0.6)
           onRefresh: () {
+            ref.invalidate(natalOverviewProvider);
             final next = _load();
             setState(() {
               _future = next;

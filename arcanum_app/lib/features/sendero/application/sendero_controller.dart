@@ -173,7 +173,8 @@ Future<void> clearSenderoLocalData() async {
   for (final key in prefs.getKeys().where(
     (key) =>
         key.startsWith(SenderoController._storagePrefix) ||
-        key.startsWith('sendero_offer_'),
+        key.startsWith('sendero_offer_') ||
+        key.startsWith('sendero_context_seen_'),
   )) {
     await prefs.remove(key);
   }

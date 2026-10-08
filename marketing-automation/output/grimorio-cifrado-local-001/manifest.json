@@ -1,0 +1,46 @@
+{
+  "external_key": "grimorio-cifrado-local-001",
+  "format": "carousel",
+  "source": "marketing-automation/visuals/carousels/grimorio-cifrado-local-001-v2/content.json",
+  "template": "marketing-automation/visuals/templates/carousel.html",
+  "asset_id": "grimorio-arcane-ui-background-v2",
+  "content_status": "approved",
+  "render_mode": "final",
+  "files": [
+    {
+      "file": "01.png",
+      "sha256": "5506b15975e8cee2d3b1a488e1a97217f0f63a3fbbbe9bca0ac75cc0e5a2f917",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Grimorio abierto a la izquierda, con un sigilo dorado que se eleva de la página; el título ocupa el espacio negro enmarcado de la derecha."
+    },
+    {
+      "file": "02.png",
+      "sha256": "44e0acd7d3f11ac21ede967aef5fb477aa91183a2911d15ae42378bf5df705c6",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Libro abierto y sigilo luminoso a la izquierda; a la derecha, el texto identifica el cifrado AES-256 en el dispositivo."
+    },
+    {
+      "file": "03.png",
+      "sha256": "eb5a68162c8a59b2ea04eee015bb86dd96a45867683951cff01991b15dd2628e",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Sigilo geométrico dorado sobre un grimorio detrás de un panel borgoña inclinado que explica el orden entre cifrado y almacenamiento."
+    },
+    {
+      "file": "04.png",
+      "sha256": "700157caa430944d931bf0a2fee50a6b4235ef86454b362e45fa4692da728847",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Grimorio mágico y líneas doradas recortados a la izquierda; el texto sobre el límite de lectura del servidor aparece a la derecha."
+    },
+    {
+      "file": "05.png",
+      "sha256": "ae96c9a316b089954739987884d1900c020c0264944e1995aac26096d61a4323",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Libro ceremonial con sigilo dorado, neblina azul y resina borgoña; el cierre invita a conocer el grimorio cifrado de ARCANUM."
+    }
+  ]
+}

@@ -13,7 +13,7 @@ import '../theme/arcanum_theme.dart';
 import '../../shared/widgets/info_dot.dart';
 import '../../features/sendero/presentation/sendero_invitation.dart';
 import '../../features/sendero/application/sendero_guide_controller.dart';
-import '../../features/sendero/presentation/sendero_spotlight.dart';
+import '../../features/sendero/presentation/sendero_coach_gate.dart';
 
 /// Carcasa con barra superior contextual. YA NO HAY BARRA INFERIOR.
 ///
@@ -37,58 +37,36 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = GoRouter.of(context);
-    final guide = ref.watch(senderoGuideProvider);
-    ref.listen<int?>(senderoRewardProvider, (_, reward) {
-      if (reward == null) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '$reward Fragmentos Arcanos despertaron en tu saldo.',
-            ),
-            action: SnackBarAction(
-              label: 'Ver',
-              onPressed: () => context.push('/fragmentos'),
-            ),
-          ),
-        );
-        ref.read(senderoRewardProvider.notifier).clear();
-      });
-    });
 
     return SenderoInvitationGate(
-      child: Stack(
-        children: [
-          Scaffold(
-            drawer: ArcanumDrawer(navigationShell: navigationShell),
-            // Se abre SOLO por sus dos tiradores, nunca arrastrando desde el borde:
-            // ese gesto es el de volver atras del sistema, y ahora que el cajon
-            // cuelga del lado izquierdo los dos caerian en el mismo sitio.
-            drawerEnableOpenDragGesture: false,
-            body: SafeArea(
-              child: Column(
-                children: [
-                  // Se reconstruye en cada navegación para saber si estamos en una
-                  // raíz de sección (mostrar barra) o en una sub-ruta (ocultarla).
-                  AnimatedBuilder(
-                    animation: router.routerDelegate,
-                    builder: (context, _) {
-                      final location =
-                          router.routerDelegate.currentConfiguration.uri.path;
-                      final section = arcanumSectionForRoute(location);
-                      if (section == null) return const SizedBox.shrink();
-                      return _SectionBar(section: section);
-                    },
-                  ),
-                  Expanded(child: navigationShell),
-                ],
-              ),
+      child: SenderoCoachGate(
+        router: router,
+        child: Scaffold(
+          drawer: ArcanumDrawer(navigationShell: navigationShell),
+          // Se abre SOLO por sus dos tiradores, nunca arrastrando desde el borde:
+          // ese gesto es el de volver atras del sistema, y ahora que el cajon
+          // cuelga del lado izquierdo los dos caerian en el mismo sitio.
+          drawerEnableOpenDragGesture: false,
+          body: SafeArea(
+            child: Column(
+              children: [
+                // Se reconstruye en cada navegación para saber si estamos en una
+                // raíz de sección (mostrar barra) o en una sub-ruta (ocultarla).
+                AnimatedBuilder(
+                  animation: router.routerDelegate,
+                  builder: (context, _) {
+                    final location =
+                        router.routerDelegate.currentConfiguration.uri.path;
+                    final section = arcanumSectionForRoute(location);
+                    if (section == null) return const SizedBox.shrink();
+                    return _SectionBar(section: section);
+                  },
+                ),
+                Expanded(child: navigationShell),
+              ],
             ),
           ),
-          if (guide != null)
-            Positioned.fill(child: SenderoSpotlight(guide: guide)),
-        ],
+        ),
       ),
     );
   }

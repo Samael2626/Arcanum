@@ -35,8 +35,8 @@ contiene las decisiones de producto ya cerradas.
 6. Sincronizar progreso por cuenta en backend y conservar caché local para uso
    sin conexión. Resolver conflictos de forma monotónica: nunca perder un paso
    completado confirmado por servidor o dispositivo.
-7. Al completar la orientación v2, el backend entrega 3 Fragmentos una sola
-   vez por cuenta. Sendero nunca acuña moneda en Flutter: usa el servicio
+7. Al completar cada lección vigente, el backend entrega 1 Fragmento una sola
+   vez por lección y cuenta. Repetir o versionar no vuelve a premiar. Sendero nunca acuña moneda en Flutter: usa el servicio
    canónico y muestra solo el resultado confirmado. Estudiar cada carta real
    del mazo concede 1 más la primera vez.
 8. Añadir pruebas del comportamiento observable y ejecutar los gates reales del
@@ -52,7 +52,7 @@ contiene las decisiones de producto ya cerradas.
   movimiento.
 - Funciones premium: mostrar valor por encima, sin fingir acceso. La llamada a
   mejorar el plan es opcional y secundaria.
-- Fragmentos Arcanos: explicar el regalo único de Sendero, el estudio de cartas
+- Fragmentos Arcanos: explicar el premio por lección de Sendero, el estudio de cartas
   y el canje. No presentarlos como moneda comprable.
 
 ## Contratos que no se rompen

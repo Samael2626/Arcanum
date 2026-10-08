@@ -1,0 +1,58 @@
+{
+  "external_key": "grimorio-cifrado-local-001",
+  "status": "ready_for_review",
+  "format": "carousel",
+  "canvas": {
+    "width": 1080,
+    "height": 1350
+  },
+  "source_ids": ["play-ficha-grimorio"],
+  "asset_id": "grimorio-private-background-v1",
+  "copy_side": "left",
+  "review_copy": {
+    "script": "Las notas del grimorio se cifran con AES-256 en el teléfono antes de llegar al servidor. La infraestructura externa guarda texto cifrado y no puede leer el cuerpo de la nota.",
+    "caption": "La privacidad del grimorio parte de una decisión técnica: cifrar el cuerpo de cada nota en el teléfono antes de enviarlo al servidor.",
+    "cta": "Conoce el grimorio cifrado"
+  },
+  "slides": [
+    {
+      "layout": "cover",
+      "eyebrow": "GRIMORIO · 01",
+      "title": "Tu nota se cifra antes de salir del teléfono.",
+      "body": "La privacidad empieza en el dispositivo, no en una promesa posterior.",
+      "alt_text": "Cuaderno abierto sobre madera oscura, iluminado lateralmente; el título aparece en el espacio azul negro de la izquierda."
+    },
+    {
+      "layout": "proof",
+      "index": "01",
+      "eyebrow": "EN EL DISPOSITIVO",
+      "title": "Cifrado AES-256",
+      "body": "El cuerpo de la nota se cifra directamente en el teléfono.",
+      "alt_text": "Detalle de un cuaderno con trazos abstractos junto al texto que identifica el cifrado AES-256 en el teléfono."
+    },
+    {
+      "layout": "split",
+      "index": "02",
+      "eyebrow": "ANTES DE ENVIAR",
+      "title": "Primero se cifra. Después se almacena.",
+      "body": "La transformación técnica ocurre antes de que el contenido llegue al servidor.",
+      "alt_text": "Cuaderno y pluma detrás de un panel borgoña inclinado que explica el orden entre cifrado y almacenamiento."
+    },
+    {
+      "layout": "catalog",
+      "index": "03",
+      "eyebrow": "LÍMITE TÉCNICO",
+      "title": "El servidor no puede leer el cuerpo de la nota",
+      "body": "La infraestructura externa conserva únicamente el texto cifrado.",
+      "alt_text": "Naturaleza muerta de archivo privado recortada a la derecha, con texto sobre la imposibilidad del servidor de leer la nota."
+    },
+    {
+      "layout": "closing",
+      "eyebrow": "ARCANUM · REGISTRO PERSONAL",
+      "title": "Escribe. Cifra. Conserva.",
+      "body": "Un grimorio personal con un límite técnico claro sobre el acceso al contenido.",
+      "cta": "Conoce el grimorio cifrado",
+      "alt_text": "Cuaderno antiguo, pluma y caja de latón bajo luz cálida; el cierre resume el proceso de escribir, cifrar y conservar."
+    }
+  ]
+}

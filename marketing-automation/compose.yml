@@ -51,6 +51,25 @@ services:
       - ./exchange:/files
       - ./workflows:/workflow-import:ro
 
+  video-assembler:
+    build:
+      context: ./video-assembler
+    restart: unless-stopped
+    environment:
+      PEXELS_API_KEY: ${PEXELS_API_KEY}
+      VIDEO_TITLE_FONT_PATH: /app/fonts/CormorantGaramond-600.ttf
+      VIDEO_BODY_FONT_PATH: /app/fonts/CrimsonPro-600.ttf
+    ports:
+      - "127.0.0.1:3001:3001"
+    volumes:
+      - ./output/video:/app/output
+      - ../arcanum_app/assets/fonts:/app/fonts:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:3001/healthz', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   marketing_postgres_data:
   marketing_n8n_data:

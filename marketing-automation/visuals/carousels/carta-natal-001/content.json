@@ -1,0 +1,58 @@
+{
+  "external_key": "astrologia-carta-natal-001",
+  "status": "approved",
+  "approved_at": "2026-09-30",
+  "format": "carousel",
+  "canvas": {
+    "width": 1080,
+    "height": 1350
+  },
+  "source_ids": ["play-ficha-carta"],
+  "asset_id": "natal-chart-background-v1",
+  "approved_copy": {
+    "script": "En ARCANUM, la carta natal se calcula con Swiss Ephemeris. Puedes trabajar con casas Placidus y un sistema configurable, y consultar planetas clásicos, ángulos, aspectos y sus orbes. Son parámetros visibles del cálculo, no promesas sobre personalidad ni destino.",
+    "caption": "La astrología también tiene una capa técnica: efemérides, sistema de casas, aspectos y orbes. ARCANUM reúne esos parámetros en la carta natal.",
+    "cta": "Calcula tu carta natal"
+  },
+  "slides": [
+    {
+      "layout": "cover",
+      "eyebrow": "CARTA NATAL · 01",
+      "title": "¿Qué hay detrás del cálculo de una carta natal?",
+      "body": "Parámetros visibles. Sin promesas sobre personalidad ni destino.",
+      "alt_text": "Gráfico astronómico antiguo sobre papel oscuro, recortado hacia la derecha; a la izquierda aparece el título sobre el cálculo de la carta natal."
+    },
+    {
+      "layout": "proof",
+      "index": "01",
+      "eyebrow": "BASE DE CÁLCULO",
+      "title": "Swiss Ephemeris",
+      "body": "ARCANUM utiliza Swiss Ephemeris para calcular la carta natal.",
+      "alt_text": "Detalle de un instrumento astronómico grabado junto al texto que identifica Swiss Ephemeris como base de cálculo."
+    },
+    {
+      "layout": "split",
+      "index": "02",
+      "eyebrow": "SISTEMA DE CASAS",
+      "title": "Placidus, con configuración disponible",
+      "body": "Trabaja con casas Placidus dentro de un sistema configurable.",
+      "alt_text": "Carta astronómica antigua atravesada por un panel borgoña con texto sobre casas Placidus y configuración."
+    },
+    {
+      "layout": "catalog",
+      "index": "03",
+      "eyebrow": "PARÁMETROS VISIBLES",
+      "title": "Planetas, ángulos, aspectos y orbes",
+      "body": "Los componentes del cálculo permanecen disponibles para consulta.",
+      "alt_text": "Composición tipográfica con una carta celeste recortada; enumera planetas, ángulos, aspectos y orbes."
+    },
+    {
+      "layout": "closing",
+      "eyebrow": "ARCANUM · INSTRUMENTO DE PRÁCTICA",
+      "title": "La técnica también forma parte de la lectura.",
+      "body": "La carta natal reúne sus parámetros sin convertirlos en certezas sobre el destino.",
+      "cta": "Calcula tu carta natal",
+      "alt_text": "Carta astronómica dorada sobre fondo azul oscuro con cierre editorial y llamado a calcular la carta natal."
+    }
+  ]
+}

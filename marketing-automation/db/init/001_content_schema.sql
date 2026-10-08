@@ -5,30 +5,58 @@ CREATE TYPE marketing.content_status AS ENUM (
     'fact_checked',
     'generated',
     'review',
+    'queued',
+    'generating',
+    'needs_revision',
+    'ready_for_review',
     'approved',
     'rendered',
     'scheduled',
     'published',
     'measured',
-    'rejected'
+    'rejected',
+    'failed'
 );
 
 CREATE TABLE marketing.content_items (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     external_key text NOT NULL UNIQUE,
     pillar text NOT NULL,
+    objective text NOT NULL,
+    audience text NOT NULL,
+    angle text NOT NULL,
+    primary_format text NOT NULL,
+    derived_formats jsonb NOT NULL DEFAULT '[]'::jsonb,
     premise text NOT NULL,
     facts jsonb NOT NULL DEFAULT '[]'::jsonb,
     sources jsonb NOT NULL DEFAULT '[]'::jsonb,
     asset jsonb,
     warnings jsonb NOT NULL DEFAULT '[]'::jsonb,
     generated_content jsonb,
-    status marketing.content_status NOT NULL DEFAULT 'idea',
+    status marketing.content_status NOT NULL DEFAULT 'queued',
     content_hash text UNIQUE,
+    generation_attempts integer NOT NULL DEFAULT 0,
+    generation_model text,
+    last_error text,
+    claimed_at timestamptz,
+    generated_at timestamptz,
+    approved_at timestamptz,
+    approved_by text,
+    rendered_at timestamptz,
+    rendered_assets jsonb,
     scheduled_at timestamptz,
     published_at timestamptz,
     created_at timestamptz NOT NULL DEFAULT now(),
-    updated_at timestamptz NOT NULL DEFAULT now()
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT content_items_derived_formats_array
+        CHECK (jsonb_typeof(derived_formats) = 'array'),
+    CONSTRAINT content_items_generation_attempts_nonnegative
+        CHECK (generation_attempts >= 0),
+    CONSTRAINT content_items_rendered_assets_object
+        CHECK (
+            rendered_assets IS NULL
+            OR jsonb_typeof(rendered_assets) = 'object'
+        )
 );
 
 CREATE TABLE marketing.publications (

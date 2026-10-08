@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1080, initial-scale=1">
+  <title>ARCANUM — Carrusel</title>
+  <style>
+    @font-face {
+      font-family: "Cormorant Garamond";
+      src: url("../../../arcanum_app/assets/fonts/CormorantGaramond-600.ttf") format("truetype");
+      font-weight: 600;
+    }
+    @font-face {
+      font-family: "Crimson Pro";
+      src: url("../../../arcanum_app/assets/fonts/CrimsonPro-400.ttf") format("truetype");
+      font-weight: 400;
+    }
+    @font-face {
+      font-family: "Crimson Pro";
+      src: url("../../../arcanum_app/assets/fonts/CrimsonPro-600.ttf") format("truetype");
+      font-weight: 600;
+    }
+    :root {
+      --ink: #090b11;
+      --navy: #0d1420;
+      --burgundy: #3a1018;
+      --gold: #b99a5a;
+      --parchment: #e3d7bd;
+      --muted: #aaa18f;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 1080px; height: 1350px; overflow: hidden; background: var(--ink); }
+    body { color: var(--parchment); font-family: "Crimson Pro", Georgia, serif; }
+    #stage { width: 1080px; height: 1350px; }
+    .slide {
+      display: none;
+      position: relative;
+      width: 1080px;
+      height: 1350px;
+      overflow: hidden;
+      isolation: isolate;
+      background: var(--navy);
+    }
+    .slide.active { display: block; }
+    .art {
+      position: absolute;
+      inset: 0;
+      z-index: -3;
+      background-size: cover;
+      background-position: center;
+    }
+    .veil { position: absolute; inset: 0; z-index: -2; background: linear-gradient(90deg, rgba(7,10,16,.98) 0%, rgba(7,10,16,.82) 43%, rgba(7,10,16,.22) 76%, rgba(7,10,16,.08) 100%); }
+    .grain { position: absolute; inset: 0; z-index: 8; pointer-events: none; opacity: .22; background-image: repeating-linear-gradient(14deg, transparent 0 3px, rgba(231,215,185,.025) 4px); mix-blend-mode: screen; }
+    .safe { position: absolute; inset: 82px; }
+    .eyebrow { color: var(--gold); font: 600 24px/1 "Crimson Pro", serif; letter-spacing: .19em; text-transform: uppercase; }
+    h1, h2 { margin: 0; font-family: "Cormorant Garamond", Georgia, serif; font-weight: 600; letter-spacing: -.025em; }
+    h1 { font-size: 100px; line-height: .94; max-width: 710px; }
+    h2 { font-size: 88px; line-height: .95; max-width: 750px; }
+    p { margin: 0; font-size: 42px; line-height: 1.16; max-width: 720px; }
+    .rule { width: 118px; height: 2px; margin: 34px 0; background: var(--gold); }
+    .brand { position: absolute; left: 82px; bottom: 72px; color: var(--muted); font-size: 22px; letter-spacing: .26em; }
+    .folio { position: absolute; right: 70px; bottom: 64px; color: var(--gold); font-size: 22px; letter-spacing: .12em; }
+    .cover .art { transform: scale(1.07); background-position: 60% center; }
+    .cover .safe { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding-bottom: 110px; }
+    .cover .eyebrow { margin-bottom: 42px; }
+    .cover p { margin-top: 48px; color: #c9bea8; max-width: 600px; }
+    .proof .art { left: 390px; transform: scale(1.28) rotate(1.2deg); background-position: 74% 50%; filter: saturate(.78); }
+    .proof .veil { background: linear-gradient(90deg, rgba(8,11,17,1) 0 38%, rgba(8,11,17,.88) 53%, rgba(8,11,17,.15) 100%); }
+    .proof .index, .catalog .index { position: absolute; left: -25px; top: 120px; color: rgba(185,154,90,.14); font: 600 410px/.8 "Cormorant Garamond", serif; }
+    .proof .copy { position: absolute; left: 82px; bottom: 210px; width: 700px; }
+    .proof p { margin-top: 38px; max-width: 560px; }
+    .split .art { transform: scale(1.15); background-position: 66% center; }
+    .split .veil { background: rgba(5,8,13,.26); }
+    .split .panel { position: absolute; left: -80px; top: 170px; width: 810px; min-height: 940px; padding: 130px 105px 110px 165px; background: rgba(58,16,24,.94); clip-path: polygon(0 6%, 94% 0, 100% 91%, 8% 100%); transform: rotate(-1.4deg); box-shadow: 50px 0 100px rgba(0,0,0,.42); }
+    .split .panel > * { transform: rotate(1.4deg); }
+    .split .index { color: rgba(227,215,189,.16); font: 600 150px/1 "Cormorant Garamond", serif; margin-bottom: 80px; }
+    .split p { margin-top: 55px; max-width: 600px; }
+    .catalog .art { width: 510px; left: auto; transform: scale(1.35); background-position: 74% center; clip-path: polygon(16% 0, 100% 0, 100% 100%, 0 90%); }
+    .catalog .veil { background: linear-gradient(90deg, rgba(11,17,27,1) 0 56%, rgba(11,17,27,.62) 72%, rgba(11,17,27,.08) 100%); }
+    .catalog .safe { display: flex; flex-direction: column; justify-content: center; padding-right: 280px; }
+    .catalog .index { top: 80px; }
+    .catalog .eyebrow { margin-bottom: 42px; }
+    .catalog p { margin-top: 46px; max-width: 620px; }
+    .closing .art { transform: scale(1.18); background-position: 76% center; filter: saturate(.76) brightness(.86); }
+    .closing .veil { background: linear-gradient(180deg, rgba(7,10,16,.25), rgba(7,10,16,.94) 74%); }
+    .closing .safe { display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 150px; }
+    .closing h2 { max-width: 850px; }
+    .closing p { margin-top: 36px; max-width: 760px; color: #c9bea8; }
+    .cta { display: inline-block; margin-top: 54px; padding-top: 24px; border-top: 2px solid var(--gold); color: var(--gold); font-size: 32px; letter-spacing: .09em; text-transform: uppercase; }
+    .theme-app { --ink: #0a0a0f; --navy: #12121a; --burgundy: #4a0e1a; --gold: #c9a84c; --parchment: #f5f0e8; --muted: #b8b0a0; }
+    .theme-app .grain { opacity: .28; mix-blend-mode: color-dodge; }
+    .theme-app .eyebrow, .theme-app .cta, .theme-app .folio { text-shadow: 0 0 18px rgba(201,168,76,.18); }
+    .preview-mark { position: absolute; right: 40px; top: 34px; z-index: 20; padding: 10px 16px 8px; border: 1px solid rgba(227,215,189,.46); color: rgba(227,215,189,.72); background: rgba(9,11,17,.68); font: 600 18px/1 "Crimson Pro", serif; letter-spacing: .2em; }
+    .copy-right.cover .veil { background: linear-gradient(270deg, rgba(7,10,16,.98) 0%, rgba(7,10,16,.82) 46%, rgba(7,10,16,.12) 82%, rgba(7,10,16,.05) 100%); }
+    .copy-right.cover .safe { align-items: flex-end; text-align: right; }
+    .copy-right.cover h1, .copy-right.cover p { max-width: 680px; }
+    .copy-right.proof .art { inset: 0 390px 0 0; transform: scale(1.2) rotate(-1deg); background-position: 28% 50%; }
+    .copy-right.proof .veil { background: linear-gradient(270deg, rgba(8,11,17,1) 0 42%, rgba(8,11,17,.82) 60%, rgba(8,11,17,.1) 100%); }
+    .copy-right.proof .index { left: auto; right: -18px; }
+    .copy-right.proof .copy { left: auto; right: 82px; text-align: right; }
+    .copy-right.proof .rule { margin-left: auto; }
+    .copy-right.split .panel { left: auto; right: -80px; padding: 130px 165px 110px 105px; clip-path: polygon(6% 0, 100% 6%, 92% 100%, 0 91%); transform: rotate(1.4deg); text-align: right; }
+    .copy-right.split .panel > * { transform: rotate(-1.4deg); }
+    .copy-right.catalog .art { left: 0; right: auto; background-position: 28% center; clip-path: polygon(0 0, 84% 0, 100% 90%, 0 100%); }
+    .copy-right.catalog .veil { background: linear-gradient(270deg, rgba(11,17,27,1) 0 56%, rgba(11,17,27,.62) 72%, rgba(11,17,27,.08) 100%); }
+    .copy-right.catalog .safe { align-items: flex-end; padding-left: 280px; padding-right: 0; text-align: right; }
+    .copy-right.catalog .index { left: auto; right: -25px; }
+    .copy-right.closing .safe { align-items: flex-end; text-align: right; }
+  </style>
+</head>
+<body>
+  <main id="stage"></main>
+  <script>
+    const stage = document.getElementById('stage');
+    const text = (tag, className, value) => {
+      const element = document.createElement(tag);
+      if (className) element.className = className;
+      element.textContent = value || '';
+      return element;
+    };
+    const decorate = (slide, page, total) => {
+      slide.append(text('div', 'grain', ''));
+      slide.append(text('div', 'brand', 'ARCANUM'));
+      slide.append(text('div', 'folio', `${String(page).padStart(2, '0')} / ${String(total).padStart(2, '0')}`));
+    };
+    const art = (assetUri) => {
+      const element = text('div', 'art', '');
+      element.style.backgroundImage = `url("${assetUri}")`;
+      return element;
+    };
+    const veil = () => text('div', 'veil', '');
+    window.renderCarousel = (content) => {
+      stage.replaceChildren();
+      const total = content.slides.length;
+      content.slides.forEach((item, position) => {
+        const copySide = content.copy_side === 'right' ? 'copy-right' : 'copy-left';
+        const theme = content.theme === 'app' ? 'theme-app' : '';
+        const slide = text('section', `slide ${item.layout} ${copySide} ${theme}`, '');
+        slide.dataset.alt = item.alt_text;
+        slide.append(art(content._asset_uri), veil());
+        if (item.layout === 'cover') {
+          const safe = text('div', 'safe', '');
+          safe.append(text('div', 'eyebrow', item.eyebrow), text('h1', '', item.title), text('p', '', item.body));
+          slide.append(safe);
+        } else if (item.layout === 'proof') {
+          slide.append(text('div', 'index', item.index));
+          const copy = text('div', 'copy', '');
+          copy.append(text('div', 'eyebrow', item.eyebrow), text('div', 'rule', ''), text('h2', '', item.title), text('p', '', item.body));
+          slide.append(copy);
+        } else if (item.layout === 'split') {
+          const panel = text('div', 'panel', '');
+          panel.append(text('div', 'index', item.index), text('div', 'eyebrow', item.eyebrow), text('h2', '', item.title), text('p', '', item.body));
+          slide.append(panel);
+        } else if (item.layout === 'catalog') {
+          slide.append(text('div', 'index', item.index));
+          const safe = text('div', 'safe', '');
+          safe.append(text('div', 'eyebrow', item.eyebrow), text('h2', '', item.title), text('p', '', item.body));
+          slide.append(safe);
+        } else {
+          const safe = text('div', 'safe', '');
+          safe.append(text('div', 'eyebrow', item.eyebrow), text('h2', '', item.title), text('p', '', item.body), text('div', 'cta', item.cta));
+          slide.append(safe);
+        }
+        decorate(slide, position + 1, total);
+        if (content._preview) slide.append(text('div', 'preview-mark', 'PREVIEW'));
+        stage.append(slide);
+      });
+    };
+    window.activateSlide = (index) => {
+      document.querySelectorAll('.slide').forEach((slide, position) => slide.classList.toggle('active', position === index));
+    };
+  </script>
+</body>
+</html>

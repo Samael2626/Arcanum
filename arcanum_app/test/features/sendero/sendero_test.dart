@@ -5,8 +5,10 @@ import 'package:arcanum_app/features/sendero/application/sendero_guide_controlle
 import 'package:arcanum_app/features/sendero/domain/sendero_catalog.dart';
 import 'package:arcanum_app/features/sendero/presentation/sendero_invitation.dart';
 import 'package:arcanum_app/features/sendero/presentation/sendero_screen.dart';
+import 'package:arcanum_app/features/sendero/presentation/sendero_spotlight.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -43,6 +45,154 @@ class _AuthenticatedAuthNotifier extends AuthNotifier {
   @override
   AuthState build() =>
       const AuthState(AuthStatus.authenticated, {'id': 'sendero-test-user'});
+}
+
+class _SpotlightFixture extends ConsumerWidget {
+  const _SpotlightFixture({required this.targetAtBottom});
+
+  final bool targetAtBottom;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final targetKey = ref.read(senderoGuideTargetsProvider).keyFor('menu');
+    return Scaffold(
+      body: Stack(
+        children: [
+          Positioned(
+            top: targetAtBottom ? 700 : 40,
+            left: 40,
+            child: SizedBox(key: targetKey, width: 48, height: 48),
+          ),
+          Positioned.fill(
+            child: SenderoSpotlight(
+              guide: SenderoGuideState(
+                journey: senderoJourneyById('orientation')!,
+                step: 0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MovingSpotlightFixture extends ConsumerWidget {
+  const _MovingSpotlightFixture({required this.targetTop});
+
+  final ValueNotifier<double> targetTop;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final targetKey = ref.read(senderoGuideTargetsProvider).keyFor('menu');
+    return Scaffold(
+      body: Stack(
+        children: [
+          ValueListenableBuilder<double>(
+            valueListenable: targetTop,
+            builder: (_, top, _) => Positioned(
+              top: top,
+              left: 40,
+              child: SizedBox(key: targetKey, width: 48, height: 48),
+            ),
+          ),
+          Positioned.fill(
+            child: SenderoSpotlight(
+              guide: SenderoGuideState(
+                journey: senderoJourneyById('orientation')!,
+                step: 0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HoroscopeSpotlightFixture extends ConsumerWidget {
+  const _HoroscopeSpotlightFixture();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          Positioned(
+            top: 100,
+            child: SizedBox(
+              key: ref
+                  .read(senderoGuideTargetsProvider)
+                  .keyFor('horoscope_card'),
+              width: 120,
+              height: 48,
+            ),
+          ),
+          Positioned.fill(
+            child: SenderoSpotlight(
+              guide: SenderoGuideState(
+                journey: senderoJourneyById('orientation')!,
+                step: 2,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DrawerSpotlightFixture extends ConsumerWidget {
+  const _DrawerSpotlightFixture({required this.onSaberTap});
+
+  final VoidCallback onSaberTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final targets = ref.read(senderoGuideTargetsProvider);
+    return Scaffold(
+      body: Stack(
+        children: [
+          Positioned(
+            top: 240,
+            left: 0,
+            child: SizedBox(
+              key: targets.keyFor('section_hoy'),
+              width: 280,
+              height: 40,
+            ),
+          ),
+          Positioned(
+            top: 285,
+            left: 0,
+            child: SizedBox(
+              key: targets.keyFor('section_horoscopo'),
+              width: 280,
+              height: 40,
+            ),
+          ),
+          Positioned(
+            top: 350,
+            left: 0,
+            child: GestureDetector(
+              key: const ValueKey('saber_drawer_row'),
+              behavior: HitTestBehavior.opaque,
+              onTap: onSaberTap,
+              child: const SizedBox(width: 280, height: 40),
+            ),
+          ),
+          Positioned.fill(
+            child: SenderoSpotlight(
+              guide: SenderoGuideState(
+                journey: senderoJourneyById('orientation')!,
+                step: 1,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 void main() {
@@ -93,7 +243,7 @@ void main() {
     final journey = senderoJourneyById('orientation')!;
     final guide = container.read(senderoGuideProvider.notifier);
     guide.start(journey);
-    guide.onAction('help');
+    guide.onAction('horoscope_card');
     expect(container.read(senderoGuideProvider)?.step, 0);
     guide.onAction('menu');
     expect(container.read(senderoGuideProvider)?.step, 1);
@@ -105,10 +255,9 @@ void main() {
       journey,
       saved: container.read(senderoControllerProvider).value?['orientation:2'],
     );
-    expect(container.read(senderoGuideProvider)?.step, 0);
-    guide.onAction('menu');
+    expect(container.read(senderoGuideProvider)?.step, 1);
     guide.onAction('section_horoscopo');
-    guide.onAction('help');
+    guide.onAction('horoscope_card');
     expect(container.read(senderoGuideProvider), isNull);
     await guide.idle;
     expect(
@@ -117,6 +266,10 @@ void main() {
           .value?['orientation:2']
           ?.isCompleted,
       isTrue,
+    );
+    expect(
+      container.read(senderoCompletionProvider)?.journey.id,
+      'orientation',
     );
 
     guide.start(
@@ -157,6 +310,11 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Primer umbral'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Cielo'),
+      150,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('Cielo'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('Fragmentos Arcanos'),
@@ -164,6 +322,39 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Fragmentos Arcanos'), findsOneWidget);
+  });
+
+  testWidgets('marco del indice deja espacio al texto en movil', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(360, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final api = _SenderoApi()
+      ..remote = [
+        {
+          'journey_id': 'orientation',
+          'version': 2,
+          'step': 2,
+          'status': 'completed',
+        },
+      ];
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          arcanumApiProvider.overrideWithValue(api),
+          authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+        ],
+        child: const MaterialApp(home: SenderoScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final card = tester.getRect(
+      find.byKey(const ValueKey('sendero_summary_card')),
+    );
+    final label = tester.getRect(find.text('A TU LADO'));
+    expect(label.left - card.left, greaterThanOrEqualTo(32));
+    expect(label.top - card.top, greaterThanOrEqualTo(36));
   });
 
   testWidgets('primera entrada lleva la guia a Cielo y permite pausarla', (
@@ -232,5 +423,201 @@ void main() {
 
     expect(api.saved.last['status'], 'dismissed');
     expect(find.text('CIELO'), findsOneWidget);
+  });
+
+  testWidgets('invitacion no bloquea la app mientras el usuario explora', (
+    tester,
+  ) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          arcanumApiProvider.overrideWithValue(_SenderoApi()),
+          authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+        ],
+        child: MaterialApp(
+          home: SenderoInvitationGate(
+            child: Scaffold(
+              body: Align(
+                alignment: Alignment.topCenter,
+                child: TextButton(
+                  onPressed: () => taps++,
+                  child: const Text('Explorar Cielo'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('sendero_invitation_card')),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Explorar Cielo'));
+    await tester.pump();
+    expect(taps, 1);
+    expect(
+      find.byKey(const ValueKey('sendero_invitation_card')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('invitacion inicia guia sobre Cielo sin abrir el hub', (
+    tester,
+  ) async {
+    final api = _SenderoApi();
+    final router = GoRouter(
+      initialLocation: '/hoy',
+      routes: [
+        GoRoute(
+          path: '/hoy',
+          builder: (_, _) =>
+              const SenderoInvitationGate(child: Scaffold(body: Text('CIELO'))),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          arcanumApiProvider.overrideWithValue(api),
+          authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Empezar guía'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('CIELO'), findsOneWidget);
+    expect(find.byType(SenderoScreen), findsNothing);
+    final container = ProviderScope.containerOf(
+      tester.element(find.text('CIELO')),
+    );
+    expect(container.read(senderoGuideProvider)?.journey.id, 'orientation');
+    expect(container.read(senderoGuideProvider)?.step, 0);
+  });
+
+  for (final targetAtBottom in [false, true]) {
+    testWidgets(
+      'el cartel sigue al objetivo sin taparlo: ${targetAtBottom ? 'abajo' : 'arriba'}',
+      (tester) async {
+        tester.view.physicalSize = const Size(400, 800);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          ProviderScope(
+            child: MaterialApp(
+              home: _SpotlightFixture(targetAtBottom: targetAtBottom),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(_SpotlightFixture)),
+        );
+        final target = tester.getRect(
+          find.byKey(
+            container.read(senderoGuideTargetsProvider).keyFor('menu'),
+          ),
+        );
+        final card = tester.getRect(
+          find.byKey(const ValueKey('sendero_guide_card')),
+        );
+        if (targetAtBottom) {
+          expect(card.bottom, lessThan(target.top));
+        } else {
+          expect(card.top, greaterThan(target.bottom));
+        }
+      },
+    );
+  }
+
+  testWidgets(
+    'el foco sigue una fila que cambia de lugar tras cargar el cajon',
+    (tester) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final top = ValueNotifier<double>(40);
+      addTearDown(top.dispose);
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(home: _MovingSpotlightFixture(targetTop: top)),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      top.value = 700;
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      final card = tester.getRect(
+        find.byKey(const ValueKey('sendero_guide_card')),
+      );
+      expect(card.bottom, lessThan(700));
+    },
+  );
+
+  testWidgets('guia del cajon deja libres todas las filas de seccion', (
+    tester,
+  ) async {
+    for (final (family, asset) in [
+      ('Cormorant Garamond', 'assets/fonts/CormorantGaramond-600.ttf'),
+      ('Crimson Pro', 'assets/fonts/CrimsonPro-400.ttf'),
+    ]) {
+      final loader = FontLoader(family)..addFont(rootBundle.load(asset));
+      await loader.load();
+    }
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    var saberTapped = false;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: _DrawerSpotlightFixture(onSaberTap: () => saberTapped = true),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 350));
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(_DrawerSpotlightFixture)),
+    );
+    final firstRow = tester.getRect(
+      find.byKey(
+        container.read(senderoGuideTargetsProvider).keyFor('section_hoy'),
+      ),
+    );
+    final card = tester.getRect(
+      find.byKey(const ValueKey('sendero_guide_card')),
+    );
+    expect(card.bottom, lessThan(firstRow.top));
+    await tester.tap(find.byKey(const ValueKey('saber_drawer_row')));
+    expect(saberTapped, isTrue);
+  });
+
+  testWidgets('sin datos natales Sendero no ofrece una lectura imposible', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [authProvider.overrideWith(_AuthenticatedAuthNotifier.new)],
+        child: const MaterialApp(home: _HoroscopeSpotlightFixture()),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.textContaining('Puedes abrir tu lectura'), findsNothing);
+    expect(
+      find.textContaining('Necesitas completar tu carta natal'),
+      findsOneWidget,
+    );
+    expect(find.text('Terminar sin gastar'), findsOneWidget);
   });
 }

@@ -1,0 +1,46 @@
+{
+  "external_key": "grimorio-cifrado-local-001",
+  "format": "carousel",
+  "source": "marketing-automation/visuals/carousels/grimorio-cifrado-local-001/content.json",
+  "template": "marketing-automation/visuals/templates/carousel.html",
+  "asset_id": "grimorio-private-background-v1",
+  "content_status": "ready_for_review",
+  "render_mode": "preview",
+  "files": [
+    {
+      "file": "01.png",
+      "sha256": "c460b1f920b1e606a9505f4eb00793db658c10928f078e19a16df29dcedfb4d8",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Cuaderno abierto sobre madera oscura, iluminado lateralmente; el título aparece en el espacio azul negro de la izquierda."
+    },
+    {
+      "file": "02.png",
+      "sha256": "fa2cdaf67b3763634e47e4717e9ffd06634be01070b40366311a4c5e4aceb8e3",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Detalle de un cuaderno con trazos abstractos junto al texto que identifica el cifrado AES-256 en el teléfono."
+    },
+    {
+      "file": "03.png",
+      "sha256": "5ba9d11cf9e2837c2935eee7330907c78988c37c020fcdf667e20570573d129e",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Cuaderno y pluma detrás de un panel borgoña inclinado que explica el orden entre cifrado y almacenamiento."
+    },
+    {
+      "file": "04.png",
+      "sha256": "7837e4e1148bd882d7825dec42f8ddeefe2a754dc1ea09f88c12582d97a06154",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Naturaleza muerta de archivo privado recortada a la derecha, con texto sobre la imposibilidad del servidor de leer la nota."
+    },
+    {
+      "file": "05.png",
+      "sha256": "b222869c1c3bbc32ab70091a38db70a96e00cc5052c9016d0273fd07eb645b06",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Cuaderno antiguo, pluma y caja de latón bajo luz cálida; el cierre resume el proceso de escribir, cifrar y conservar."
+    }
+  ]
+}

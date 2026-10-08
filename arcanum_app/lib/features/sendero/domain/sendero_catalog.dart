@@ -56,10 +56,12 @@ const senderoJourneys = <SenderoJourney>[
         target: 'section_horoscopo',
       ),
       SenderoStep(
-        title: 'Las ayudas viven aquí',
-        body: 'Toca el signo. Aclara un concepto sin detener tu práctica.',
-        target: 'help',
+        title: 'Este es tu cielo de hoy',
+        body:
+            'Puedes abrir tu lectura si quieres. Antes de gastar cupo o créditos, verás una confirmación. También puedes seguir sin gastar.',
+        target: 'horoscope_card',
         route: '/horoscopo',
+        buttonLabel: 'Terminar sin gastar',
       ),
     ],
   ),
@@ -170,7 +172,7 @@ const senderoJourneys = <SenderoJourney>[
       SenderoStep(
         title: 'Tu práctica deja huella',
         body:
-            'Sendero te entrega Fragmentos una sola vez. Estudiar cada carta del mazo también suma uno la primera vez. Aquí ves tu saldo real.',
+            'Cada lección de Sendero te entrega un Fragmento una sola vez. Estudiar cada carta del mazo también suma uno la primera vez. Aquí ves tu saldo real.',
         target: 'fragments_balance',
         route: '/fragmentos',
         buttonLabel: 'Entendido',

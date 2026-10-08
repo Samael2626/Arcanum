@@ -45,7 +45,7 @@ class _ApiMuda extends ArcanumApi {
     'conversion_rate': 12,
     'weekly_conversions_remaining': 3,
     'weekly_conversion_limit': 3,
-    'tutorial_reward': 3,
+    'tutorial_reward': 1,
   };
 
   /// Este arnes prueba navegacion de una cuenta existente, no el primer uso.
@@ -322,7 +322,7 @@ void main() {
     expect(_rama(tester), 0);
   });
 
-  testWidgets('Sendero avanza al tocar menu, seccion y ayuda reales', (
+  testWidgets('Sendero avanza al tocar menu, seccion y lectura opcional', (
     tester,
   ) async {
     final container = await _montar(tester);
@@ -345,8 +345,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(container.read(senderoGuideProvider)?.step, 2);
 
-    final helpKey = container.read(senderoGuideTargetsProvider).keyFor('help');
-    await tester.tap(find.byKey(helpKey));
+    await tester.tap(find.text('Terminar sin gastar'));
     await tester.pump(const Duration(milliseconds: 400));
     expect(container.read(senderoGuideProvider), isNull);
     expect(find.byKey(const ValueKey('sendero_guide_card')), findsNothing);

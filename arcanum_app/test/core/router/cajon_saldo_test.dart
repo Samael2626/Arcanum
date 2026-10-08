@@ -8,6 +8,7 @@ library;
 
 import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/shared/widgets/bloque_saldo.dart';
+import 'package:arcanum_app/shared/widgets/arcane_currency_emblem.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,7 +40,7 @@ class _ApiConSaldo extends ArcanumApi {
     'conversion_rate': 12,
     'weekly_conversions_remaining': 3,
     'weekly_conversion_limit': 3,
-    'tutorial_reward': 3,
+    'tutorial_reward': 1,
   };
 
   @override
@@ -92,15 +93,24 @@ Future<void> _montar(
 void main() {
   group('el bloque del cajon', () {
     testWidgets('pinta el saldo que dice el servidor', (tester) async {
-      await _montar(tester, const BloqueSaldoCajon(), api: _ApiConSaldo(creditos: 7));
+      await _montar(
+        tester,
+        const BloqueSaldoCajon(),
+        api: _ApiConSaldo(creditos: 7),
+      );
       expect(find.text('7'), findsOneWidget);
       expect(find.text('créditos'), findsOneWidget);
       expect(find.text('Conseguir más'), findsOneWidget);
       expect(find.text('3 Fragmentos Arcanos'), findsOneWidget);
+      expect(find.byType(ArcaneCurrencyEmblem), findsNWidgets(2));
     });
 
     testWidgets('en singular dice "crédito"', (tester) async {
-      await _montar(tester, const BloqueSaldoCajon(), api: _ApiConSaldo(creditos: 1));
+      await _montar(
+        tester,
+        const BloqueSaldoCajon(),
+        api: _ApiConSaldo(creditos: 1),
+      );
       expect(find.text('crédito'), findsOneWidget);
     });
 
@@ -149,10 +159,7 @@ void main() {
         const BloqueSaldoOraculo(accion: 'tarot'),
         api: _ApiConSaldo(creditos: 0, gastaCredito: false),
       );
-      expect(
-        find.textContaining('entra en tu cupo de hoy'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('entra en tu cupo de hoy'), findsOneWidget);
       expect(find.textContaining('gasta 1'), findsNothing);
     });
 

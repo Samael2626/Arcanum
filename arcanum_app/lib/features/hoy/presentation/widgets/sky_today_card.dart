@@ -19,6 +19,7 @@ import 'today_card.dart';
 import 'lamina_del_signo.dart';
 import 'zodiaco_laminas.g.dart';
 import '../../../../shared/widgets/ai_output.dart';
+import '../../../../shared/widgets/nota_del_cielo.dart';
 import '../../../../shared/widgets/prosa_generada.dart';
 import '../../../../core/auth/auth_controller.dart';
 import '../../../../core/privacy/ai_consent_service.dart';
@@ -58,6 +59,11 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
   /// que puede llegar despues de construirse esta tarjeta.
   Future<Map<String, dynamic>> _pedirCielo() {
     _firma = ref.read(birthSignatureProvider);
+    return _loadSky();
+  }
+
+  Future<Map<String, dynamic>> _loadSky() async {
+    if (_firma != null) await ref.read(natalOverviewProvider.future);
     return _api.skyToday();
   }
 
@@ -255,6 +261,7 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
                       );
                     }
                     final texto = (lec.data!['text'] as String?)?.trim() ?? '';
+                    final partido = TextoConNota.partir(texto);
                     return Padding(
                       padding: const EdgeInsets.only(top: 18),
                       child: Column(
@@ -278,10 +285,25 @@ class _SkyTodayCardState extends ConsumerState<SkyTodayCard> {
                             ),
                             const SizedBox(height: 10),
                           ],
+                          // La nota del cielo se saca de la prosa y se pliega:
+                          // el cuerpo se lee sin tropezar con los nombres, y
+                          // quien los quiere los abre. Ver `nota_del_cielo`.
+                          // Al compartir y al reportar sigue viajando el texto
+                          // ENTERO: la nota es contenido, no decoracion.
                           AiOutput(
                             text: texto,
                             surface: 'horoscopo',
-                            child: ProsaGenerada(texto),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ProsaGenerada(partido.cuerpo),
+                                if (partido.nota != null) ...[
+                                  const SizedBox(height: 6),
+                                  NotaDelCielo(partido.nota!),
+                                ],
+                              ],
+                            ),
                           ),
                           _BotonCompartir(
                             ocupado: _compartiendo,

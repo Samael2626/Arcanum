@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sendero · QA real · GN2200</title>
+  <style>
+    :root { color-scheme: dark; background: #090a10; color: #eee6d9; font-family: Georgia, serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { max-width: 1120px; margin: auto; padding: clamp(20px, 4vw, 48px); }
+    h1 { color: #d8ba70; font-size: clamp(2rem, 5vw, 3.6rem); font-weight: 400; margin: 8px 0; }
+    h2 { color: #e4d4ae; font-weight: 400; margin: 0 0 12px; }
+    p { line-height: 1.55; }
+    .eyebrow { color: #b59653; letter-spacing: .22em; text-transform: uppercase; font: 700 12px system-ui, sans-serif; }
+    .lead { max-width: 720px; color: #bdb6aa; }
+    .result { border-left: 3px solid #b59653; background: #171820; padding: 18px 22px; margin: 28px 0 38px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: 22px; }
+    figure { margin: 0; background: #15161d; border: 1px solid #4f422b; padding: 12px; }
+    figure img { display: block; width: 100%; height: auto; }
+    figcaption { padding: 14px 5px 4px; font: 14px/1.45 system-ui, sans-serif; color: #c8c0b3; }
+    figcaption strong { display: block; color: #e8d09a; margin-bottom: 4px; }
+    .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 36px; font: 14px/1.5 system-ui, sans-serif; }
+    .facts div { background: #171820; padding: 16px; }
+    .facts b { color: #c3a15e; display: block; }
+    .pending { border-top: 1px solid #4f422b; margin-top: 38px; padding-top: 18px; color: #bdb6aa; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">ARCANUM / Sendero / 02 oct 2026</div>
+    <h1>Dos correcciones, vistas en el teléfono</h1>
+    <p class="lead">Recorrido real en GN2200, Android 12. APK debug compilado desde <code>release/1.0.6</code> con el cambio <code>6fb2ea1</code> e instalado sobre la app sin borrar datos.</p>
+    <div class="result"><strong>Resultado:</strong> el texto del índice ya no queda cruzado por el marco. En Saber aparecen «Volver a Cielo», «Explorar Saber» y «Pausar»; volver conserva el paso 2/3. <strong>Pero</strong> el cartel del paso 2/3 tapa la fila Saber del cajón: llegar al desvío exigió tocar su estrecho borde izquierdo. Ninguna lección se completó.</div>
+    <section class="grid" aria-label="Capturas reales del dispositivo">
+      <figure>
+        <img src="02_indice.png" alt="Índice Sendero: tarjeta A TU LADO dentro del marco, sin solape de texto" loading="lazy">
+        <figcaption><strong>01 · Marco</strong>«A TU LADO», título y descripción quedan dentro de la zona legible. El marco aún se ve denso: gusto visual pendiente, no solape funcional.</figcaption>
+      </figure>
+      <figure>
+        <img src="03_menu_paso2.png" alt="Paso 2 de 3 de Primer umbral, con Horóscopo iluminado en el cajón" loading="lazy">
+        <figcaption><strong>02 · Nuevo hallazgo P1</strong>Primer umbral en 2/3; Horóscopo iluminado correctamente. El cartel cubre Saber y otras filas: el desvío solo fue posible tocando el estrecho borde izquierdo.</figcaption>
+      </figure>
+      <figure>
+        <img src="04_desvio_saber.png" alt="Saber con tarjeta Sendero te sigue y tres acciones de regreso, explorar y pausar" loading="lazy">
+        <figcaption><strong>03 · Desvío</strong>La tarjeta ofrece las tres acciones. «Volver a Cielo» está visible y se puede tocar; la tarjeta no bloqueó la pantalla completa.</figcaption>
+      </figure>
+      <figure>
+        <img src="05_regreso_cielo.png" alt="Cielo tras volver desde Saber, con Primer umbral todavía en 2 de 3" loading="lazy">
+        <figcaption><strong>04 · Regreso</strong>La app volvió a Cielo con Primer umbral aún en 2/3. Después se pausó la guía.</figcaption>
+      </figure>
+    </section>
+    <section class="facts" aria-label="Control de seguridad">
+      <div><b>Fragmentos</b>3 antes y después</div>
+      <div><b>Créditos</b>0 antes y después</div>
+      <div><b>Instalación</b><code>adb install -r</code>; datos conservados</div>
+      <div><b>APK</b>SHA-256 <code>D4410CB1…626</code></div>
+    </section>
+    <p class="pending">Pendiente funcional: despejar el cajón durante el paso 2/3 para que explorar otra sección sea una opción real. No cubierto aquí: nueva recompensa de 1 Fragmento, precarga natal con datos consentidos, lector de pantalla, texto grande ni otro dispositivo. No se gastaron créditos ni se repitió una lección con premio.</p>
+  </main>
+</body>
+</html>

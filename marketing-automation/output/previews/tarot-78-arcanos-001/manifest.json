@@ -1,0 +1,46 @@
+{
+  "external_key": "tarot-78-arcanos-001",
+  "format": "carousel",
+  "source": "marketing-automation/visuals/carousels/tarot-78-arcanos-001/content.json",
+  "template": "marketing-automation/visuals/templates/carousel.html",
+  "asset_id": "tarot-study-background-v1",
+  "content_status": "ready_for_review",
+  "render_mode": "preview",
+  "files": [
+    {
+      "file": "01.png",
+      "sha256": "b2bf6b97a64f270f6060518f448592b0b26f62d7bba123d8a4edb952ab989559",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Mesa antigua iluminada por una vela, con varias cartas ilustradas dispuestas por una mano; el título ocupa el espacio oscuro de la derecha."
+    },
+    {
+      "file": "02.png",
+      "sha256": "755bd23d4c43254c69feac79718e6238a39b0806075d24825530b203168f741c",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Detalle de cartas sobre madera oscura junto a un gran número tipográfico y el texto sobre los 78 arcanos."
+    },
+    {
+      "file": "03.png",
+      "sha256": "e7e3dd50ac013429a9fba015c717c13145980ea528df7ddd76c2df048e937747",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Cartas de Tarot parcialmente visibles detrás de un panel borgoña inclinado que presenta las tiradas disponibles."
+    },
+    {
+      "file": "04.png",
+      "sha256": "5eb85f32d1febbbc7cdf862e30a9b4c72c121567e5cd289cac5b5772f82e2ea3",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Composición editorial con una mano ordenando cartas a la izquierda y texto grande sobre la pregunta del usuario a la derecha."
+    },
+    {
+      "file": "05.png",
+      "sha256": "4c5b30d81332f9a983608ba0be9f4468afead4dbee7861239f5209566722f159",
+      "width": 1080,
+      "height": 1350,
+      "alt_text": "Mesa de Tarot en penumbra con cartas, latón y papel envejecido; un llamado final invita a explorar el módulo."
+    }
+  ]
+}

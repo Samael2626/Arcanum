@@ -2,6 +2,7 @@ import 'package:arcanum_app/core/api/arcanum_api.dart';
 import 'package:arcanum_app/features/fragmentos/presentation/fragmentos_screen.dart';
 import 'package:arcanum_app/features/sendero/application/sendero_guide_controller.dart';
 import 'package:arcanum_app/features/sendero/domain/sendero_catalog.dart';
+import 'package:arcanum_app/shared/widgets/arcane_currency_emblem.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,7 +21,7 @@ class _Api extends ArcanumApi {
     'conversion_rate': 12,
     'weekly_conversions_remaining': balance == 15 ? 3 : 2,
     'weekly_conversion_limit': 3,
-    'tutorial_reward': 3,
+    'tutorial_reward': 1,
   };
 
   @override
@@ -71,7 +72,26 @@ void main() {
     final api = _Api();
     await _mount(tester, api);
     expect(find.text('15 Fragmentos'), findsOneWidget);
-    expect(find.textContaining('Sendero te da 3'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is ArcaneCurrencyEmblem &&
+            widget.currency == ArcaneCurrency.fragment,
+      ),
+      findsNWidgets(2),
+    );
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is ArcaneCurrencyEmblem &&
+            widget.currency == ArcaneCurrency.credit,
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Sendero te da 1 Fragmento por cada lección'),
+      findsOneWidget,
+    );
 
     await tester.ensureVisible(find.text('Convertir en crédito'));
     await tester.pumpAndSettle();

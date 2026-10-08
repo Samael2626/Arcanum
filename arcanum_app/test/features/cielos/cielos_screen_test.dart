@@ -1,4 +1,5 @@
 import 'package:arcanum_app/core/api/arcanum_api.dart';
+import 'package:arcanum_app/core/astro/birth_data.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/features/cielos/cielos_screen.dart';
 import 'package:arcanum_app/features/cielos/widgets/natal_wheel.dart';
@@ -13,15 +14,36 @@ class _AuthenticatedAuthNotifier extends AuthNotifier {
       const AuthState(AuthStatus.authenticated, {'id': 'user-a'});
 }
 
+class _NatalAuthNotifier extends AuthNotifier {
+  @override
+  AuthState build() => const AuthState(AuthStatus.authenticated, {
+    'id': 'user-natal',
+    'birth_date': '2000-01-01',
+    'birth_time': '2000-01-01T12:00:00',
+    'birth_lat': 4.6,
+    'birth_lon': -74.1,
+  });
+}
+
 class _CielosApi extends ArcanumApi {
   _CielosApi() : super(Dio());
 
   var overviewCalls = 0;
   var natalCalls = 0;
+  var missingFirst = false;
 
   @override
   Future<Map<String, dynamic>> celestialOverview() async {
     overviewCalls++;
+    if (missingFirst && natalCalls == 0) {
+      throw DioException(
+        requestOptions: RequestOptions(path: '/astral/overview'),
+        response: Response(
+          requestOptions: RequestOptions(path: '/astral/overview'),
+          statusCode: 404,
+        ),
+      );
+    }
     const signs = [
       'aries',
       'taurus',
@@ -78,6 +100,26 @@ class _CielosApi extends ArcanumApi {
 }
 
 void main() {
+  test(
+    'la carta se calcula una vez al iniciar con perfil natal completo',
+    () async {
+      final api = _CielosApi()..missingFirst = true;
+      final container = ProviderContainer(
+        overrides: [
+          arcanumApiProvider.overrideWithValue(api),
+          authProvider.overrideWith(_NatalAuthNotifier.new),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(natalOverviewProvider.future);
+      await container.read(natalOverviewProvider.future);
+
+      expect(api.overviewCalls, 2);
+      expect(api.natalCalls, 1);
+    },
+  );
+
   testWidgets('Cielos usa overview cacheado y la rueda queda en reposo', (
     tester,
   ) async {

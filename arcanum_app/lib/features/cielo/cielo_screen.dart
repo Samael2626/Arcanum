@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/astro/birth_data.dart';
 import '../../core/state/flow_providers.dart';
 import '../sendero/application/sendero_guide_controller.dart';
 import '../../shared/widgets/arcanum_toggle.dart';
@@ -30,11 +31,8 @@ import '../hoy/hoy_screen.dart';
 /// `IndexedStack` y no un `if`: conserva el scroll y el estado de cada cara al
 /// alternar, que es lo que hace que volver a "Ahora" no recargue el cielo.
 ///
-/// PERO LA RUEDA NO SE MONTA HASTA QUE SE PIDE. `IndexedStack` construye TODOS
-/// sus hijos, asi que al abrir la app se cargaria tambien la carta natal
-/// aunque nadie mire esa cara: una llamada de red y una rueda entera pintadas
-/// para nadie. Hasta la primera vez que se abre va un hueco; despues se queda
-/// montada y conserva su estado como la otra.
+/// La carta se prepara al entrar si hay datos natales. La rueda no se pinta
+/// hasta abrir su cara; despues conserva su estado como la otra.
 class CieloScreen extends ConsumerStatefulWidget {
   const CieloScreen({super.key});
 
@@ -48,6 +46,9 @@ class _CieloScreenState extends ConsumerState<CieloScreen> {
   @override
   Widget build(BuildContext context) {
     final cara = ref.watch(cieloCaraProvider);
+    if (ref.watch(birthSignatureProvider) != null) {
+      ref.watch(natalOverviewProvider);
+    }
     final guide = ref.watch(senderoGuideProvider);
     if (cara == 1 && guide?.current.target == 'cielo_toggle') {
       WidgetsBinding.instance.addPostFrameCallback((_) {

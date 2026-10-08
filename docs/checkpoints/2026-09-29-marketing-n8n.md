@@ -82,11 +82,69 @@ para convertir un paquete factual en borrador mediante Gemini.
 - Esta decision actualiza el plan del 28-sep: la automatizacion si comienza, pero
   todavia no abre TikTok, Instagram o YouTube como canales de publicacion.
 
+## Ruta operativa de contenido
+
+- El plan ejecutable vive en `marketing-automation/PLAN-ACCION.md` y avanza de
+  cola editorial a carruseles, arte, stories, video corto, publicacion y metricas.
+- Se crearon cuatro skills separadas por responsabilidad:
+  `arcanum-content-plan`, `arcanum-content-visual`, `arcanum-video-short` y
+  `arcanum-content-release`.
+- La fuente canonica esta en `.claude/skills/` y el espejo compatible con Codex
+  en `.agents/skills/`. Las ocho carpetas pasan `quick_validate.py`.
+- El prototipo anterior de video sigue en
+  `D:/Proyectos/Youtube/video-assembler`: FastAPI + MoviePy + Pexels, salida
+  vertical 1080x1920. No tiene Git ni tests; por eso se recupera en la fase de
+  video y no se usa como base de las primeras publicaciones.
+
+## Fase 1 completada - 30 sep 2026
+
+- PostgreSQL recibió una migración compatible para cola, reclamación, intentos,
+  modelo usado, error y fechas de generación.
+- `seeds/content-briefs.json` contiene diez briefs verificados contra
+  `docs/play-ficha.md`: dos Tarot, dos astrología/cielo, dos grimorio, dos
+  Materia y dos posicionamiento/producto.
+- `Seed-ContentQueue.ps1` aplica migraciones y semillas de forma idempotente. La
+  segunda ejecución conservó todos los estados.
+- El workflow reclama con `FOR UPDATE SKIP LOCKED`, valida el brief, genera,
+  bloquea claims sensibles y faltas frecuentes, registra el modelo realmente
+  usado y persiste el resultado.
+- Una ejecución falló porque Gemini no respetó el JSON Schema. Ese hallazgo creó
+  la rama terminal que marca `failed`, guarda el error y libera la reclamación.
+- Prueba viva final: diez briefs recorrieron el flujo sin editar nodos; ocho
+  quedaron `ready_for_review`, dos `needs_revision`, cero `queued`, cero
+  `generating` y cero `failed`.
+- Los dos bloqueos reales fueron una garantía no respaldada y tildes ausentes.
+  `ready_for_review` sigue sin equivaler a aprobado.
+
 ## Git
 
 - Rama: `release/1.0.6`.
 - El commit incluye solo `marketing-automation/` y este checkpoint.
 - Los cambios previos de creditos, sigilos y Flutter quedan fuera.
+
+## Fase 2 iniciada - 30 sep 2026
+
+- Samuel aprobo de forma explicita el copy tecnico de carta natal.
+- Se produjo un carrusel de cinco tarjetas en 1080x1350 con composiciones
+  asimetricas, tipografia local y paleta old money de ARCANUM.
+- El fondo es una ilustracion original generada para esta pieza; su procedencia
+  queda en `marketing-automation/assets/manifest.json`.
+- El render es determinista: Playwright compone texto real sobre HTML y exporta
+  PNG con alt text y SHA-256 por archivo.
+- La cola guarda aprobador, fecha de aprobacion, fecha de render y manifiesto.
+- Estado final de `astrologia-carta-natal-001`: `rendered`. No fue programado ni
+  publicado.
+- La misma plantilla quedó validada con dos direcciones visuales: copy a la
+  izquierda para grimorio y a la derecha para Tarot.
+- `tarot-78-arcanos-001` y `grimorio-cifrado-local-001` tienen previews de cinco
+  tarjetas, con marca visible y estado `ready_for_review`. No se registran como
+  renders finales hasta recibir aprobación humana explícita.
+- Grimorio recibió una V2 tras revisión visual: composición a la derecha como
+  Tarot, paleta exacta de `ArcanumColors`, sigilo dorado coherente, neblina azul,
+  resina borgoña y marco inspirado en `ArcanumFrame`. La V1 permanece intacta.
+- Samuel aprobó Tarot y Grimorio V2. Se retiró la marca `PREVIEW`, se generaron
+  diez PNG finales y ambos items quedaron `rendered` con aprobador, fechas y
+  manifiestos en PostgreSQL. Fase 2 cerrada con tres carruseles finales.
 
 ## Relacionado
 

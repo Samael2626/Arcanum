@@ -7,6 +7,7 @@ import '../../core/monetization/monetization_service.dart';
 import '../../core/monetization/saldo.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
+import '../../shared/widgets/arcane_currency_emblem.dart';
 import '../../shared/widgets/gold_button.dart';
 
 /// Paywall de ARCANUM: 3 vías — Gratis, Consumibles, Premium.
@@ -702,12 +703,21 @@ class _SaldoActual extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'TU SALDO',
-                  style: ArcanumText.body(
-                    10,
-                    color: ArcanumColors.goldLabel,
-                  ).copyWith(letterSpacing: 2.2),
+                Row(
+                  children: [
+                    const ArcaneCurrencyEmblem(
+                      currency: ArcaneCurrency.credit,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 7),
+                    Text(
+                      'TU SALDO',
+                      style: ArcanumText.body(
+                        10,
+                        color: ArcanumColors.goldLabel,
+                      ).copyWith(letterSpacing: 2.2),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Row(

@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/astro/birth_data.dart';
 import '../../../core/theme/arcanum_colors.dart';
 import '../../../core/theme/arcanum_theme.dart';
 import '../application/sendero_guide_controller.dart';
@@ -20,7 +22,9 @@ class SenderoSpotlight extends ConsumerStatefulWidget {
 class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
     with WidgetsBindingObserver {
   final _rootKey = GlobalKey();
+  final _cardKey = GlobalKey();
   Rect? _targetRect;
+  double? _cardHeight;
   String? _scrolledTarget;
   Timer? _measureTimer;
 
@@ -54,11 +58,21 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
   void _scheduleMeasure() {
     WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
     _measureTimer?.cancel();
-    _measureTimer = Timer(const Duration(milliseconds: 350), _measure);
+    _measureTimer = Timer.periodic(
+      const Duration(milliseconds: 250),
+      (_) => _measure(),
+    );
   }
 
   void _measure() {
     if (!mounted) return;
+    final card = _cardKey.currentContext?.findRenderObject();
+    if (card is RenderBox && card.hasSize) {
+      final height = card.size.height;
+      if (_cardHeight == null || (height - _cardHeight!).abs() > 1) {
+        setState(() => _cardHeight = height);
+      }
+    }
     final targetKey = ref
         .read(senderoGuideTargetsProvider)
         .keyFor(widget.guide.current.target);
@@ -89,32 +103,80 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
   @override
   Widget build(BuildContext context) {
     final step = widget.guide.current;
+    final hasNatalData = ref.watch(birthSignatureProvider) != null;
+    final body = step.target == 'horoscope_card' && !hasNatalData
+        ? 'Necesitas completar tu carta natal para abrir una lectura. Puedes terminar esta guía sin gastar nada.'
+        : step.body;
     final rect = _targetRect;
     final targets = ref.watch(senderoGuideTargetsProvider);
+    final root = _rootKey.currentContext?.findRenderObject();
+    final firstDrawerRow = step.target.startsWith('section_')
+        ? targets.keyFor('section_hoy').currentContext?.findRenderObject()
+        : null;
+    final firstDrawerRowTop = root is RenderBox && firstDrawerRow is RenderBox
+        ? root.globalToLocal(firstDrawerRow.localToGlobal(Offset.zero)).dy
+        : null;
     if (targets.keyFor(step.target).currentContext == null && rect != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
     }
 
-    return Stack(
-      key: _rootKey,
-      children: [
-        if (rect != null)
-          Positioned.fill(
-            child: IgnorePointer(
-              child: CustomPaint(painter: _VeilPainter(rect)),
-            ),
-          ),
-        Align(
-          alignment:
-              rect != null &&
-                  rect.center.dy > MediaQuery.sizeOf(context).height * .58
-              ? Alignment.topCenter
-              : Alignment.bottomCenter,
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
+    return LayoutBuilder(
+      builder: (context, bounds) {
+        final cardWidth = math.min(360.0, bounds.maxWidth - 24);
+        final cardHeight = _cardHeight ?? 200;
+        final safeTop = MediaQuery.paddingOf(context).top + 12;
+        final safeBottom =
+            bounds.maxHeight - MediaQuery.paddingOf(context).bottom - 12;
+        final maxTop = math.max(safeTop, safeBottom - cardHeight);
+        final drawerCardTop = firstDrawerRowTop == null
+            ? null
+            : firstDrawerRowTop - cardHeight - 12;
+        final top = switch (rect) {
+          null => maxTop,
+          _ => () {
+            if (drawerCardTop != null && drawerCardTop >= safeTop) {
+              return drawerCardTop.clamp(safeTop, maxTop);
+            }
+            final below = rect.bottom + 12;
+            final above = rect.top - cardHeight - 12;
+            final spaceBelow = safeBottom - below;
+            final spaceAbove = rect.top - safeTop - 12;
+            final preferred = spaceBelow >= cardHeight
+                ? below
+                : spaceAbove >= cardHeight
+                ? above
+                : spaceBelow >= spaceAbove
+                ? below
+                : above;
+            return preferred.clamp(safeTop, maxTop);
+          }(),
+        };
+        final left = rect == null
+            ? (bounds.maxWidth - cardWidth) / 2
+            : (rect.center.dx - cardWidth / 2).clamp(
+                12.0,
+                bounds.maxWidth - cardWidth - 12,
+              );
+
+        return Stack(
+          key: _rootKey,
+          children: [
+            if (rect != null)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(painter: _VeilPainter(rect)),
+                ),
+              ),
+            AnimatedPositioned(
+              duration: MediaQuery.of(context).disableAnimations
+                  ? Duration.zero
+                  : const Duration(milliseconds: 240),
+              curve: Curves.easeOutCubic,
+              top: top,
+              left: left,
+              width: cardWidth,
+              child: KeyedSubtree(
+                key: _cardKey,
                 child: Material(
                   key: const ValueKey('sendero_guide_card'),
                   color: ArcanumColors.surfaceHigh,
@@ -124,7 +186,7 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,16 +195,26 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
                           '${widget.guide.journey.title.toUpperCase()} · ${widget.guide.step + 1} DE ${widget.guide.journey.steps.length}',
                           style: ArcanumText.label(),
                         ),
-                        const SizedBox(height: 9),
-                        Text(step.title, style: ArcanumText.heading(27)),
                         const SizedBox(height: 6),
-                        Text(step.body, style: ArcanumText.body(16)),
-                        const SizedBox(height: 10),
-                        if (rect == null)
+                        Text(step.title, style: ArcanumText.heading(23)),
+                        const SizedBox(height: 4),
+                        Text(body, style: ArcanumText.body(14)),
+                        const SizedBox(height: 6),
+                        if (rect == null &&
+                            (step.target.startsWith('section_') ||
+                                step.target == 'settings'))
+                          Text(
+                            'Abre el menú para continuar',
+                            style: ArcanumText.body(
+                              13,
+                              color: ArcanumColors.gold,
+                            ),
+                          )
+                        else if (rect == null)
                           TextButton(
-                            onPressed: step.route == null
+                            onPressed: widget.guide.expectedRoute == null
                                 ? null
-                                : () => context.go(step.route!),
+                                : () => context.go(widget.guide.expectedRoute!),
                             child: const Text('Ir a esta parte'),
                           )
                         else if (step.buttonLabel != null)
@@ -185,9 +257,9 @@ class _SenderoSpotlightState extends ConsumerState<SenderoSpotlight>
                 ),
               ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }
@@ -204,7 +276,7 @@ class _VeilPainter extends CustomPainter {
       ..fillType = PathFillType.evenOdd
       ..addRect(Offset.zero & size)
       ..addRRect(cutout);
-    canvas.drawPath(veil, Paint()..color = const Color(0xB807060A));
+    canvas.drawPath(veil, Paint()..color = const Color(0x7607060A));
     canvas.drawRRect(
       cutout,
       Paint()

@@ -1,0 +1,62 @@
+{
+  "external_key": "grimorio-cifrado-local-001",
+  "version": 2,
+  "status": "approved",
+  "approved_at": "2026-09-30",
+  "approved_by": "human:samuel",
+  "format": "carousel",
+  "canvas": {
+    "width": 1080,
+    "height": 1350
+  },
+  "source_ids": ["play-ficha-grimorio"],
+  "asset_id": "grimorio-arcane-ui-background-v2",
+  "copy_side": "right",
+  "theme": "app",
+  "approved_copy": {
+    "script": "Las notas del grimorio se cifran con AES-256 en el teléfono antes de llegar al servidor. La infraestructura externa guarda texto cifrado y no puede leer el cuerpo de la nota.",
+    "caption": "Antes de cruzar la red, el cuerpo de cada nota ya está cifrado. ARCANUM conserva el límite entre tu práctica y la infraestructura que la almacena.",
+    "cta": "Conoce el grimorio cifrado"
+  },
+  "slides": [
+    {
+      "layout": "cover",
+      "eyebrow": "GRIMORIO · 01",
+      "title": "Lo que escribes ya viaja cifrado.",
+      "body": "La nota se transforma en tu teléfono antes de cruzar la red.",
+      "alt_text": "Grimorio abierto a la izquierda, con un sigilo dorado que se eleva de la página; el título ocupa el espacio negro enmarcado de la derecha."
+    },
+    {
+      "layout": "proof",
+      "index": "01",
+      "eyebrow": "EN EL DISPOSITIVO",
+      "title": "Cifrado AES-256",
+      "body": "El cuerpo de la nota se cifra directamente en el teléfono.",
+      "alt_text": "Libro abierto y sigilo luminoso a la izquierda; a la derecha, el texto identifica el cifrado AES-256 en el dispositivo."
+    },
+    {
+      "layout": "split",
+      "index": "02",
+      "eyebrow": "ANTES DE CRUZAR EL UMBRAL",
+      "title": "Primero se cifra. Después se almacena.",
+      "body": "La transformación ocurre antes de que el contenido llegue al servidor.",
+      "alt_text": "Sigilo geométrico dorado sobre un grimorio detrás de un panel borgoña inclinado que explica el orden entre cifrado y almacenamiento."
+    },
+    {
+      "layout": "catalog",
+      "index": "03",
+      "eyebrow": "LÍMITE TÉCNICO",
+      "title": "El servidor no puede leer el cuerpo de la nota",
+      "body": "La infraestructura externa conserva únicamente el texto cifrado.",
+      "alt_text": "Grimorio mágico y líneas doradas recortados a la izquierda; el texto sobre el límite de lectura del servidor aparece a la derecha."
+    },
+    {
+      "layout": "closing",
+      "eyebrow": "ARCANUM · GRIMORIO VIVO",
+      "title": "Lo íntimo permanece ilegible.",
+      "body": "Un límite técnico claro entre tu práctica y el servidor que la almacena.",
+      "cta": "Conoce el grimorio cifrado",
+      "alt_text": "Libro ceremonial con sigilo dorado, neblina azul y resina borgoña; el cierre invita a conocer el grimorio cifrado de ARCANUM."
+    }
+  ]
+}

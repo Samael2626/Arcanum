@@ -10,6 +10,10 @@ class ArcanumColors {
 
   /// Oro claro de los rombos y realces finos del instrumento.
   static const goldLight = Color(0xFFECD79A);
+  static const fragmentBlue = Color(0xFF5AA9D0);
+  static const fragmentBlueLight = Color(0xFFC7E9F7);
+  static const fragmentBlueDeep = Color(0xFF16375D);
+  static const creditGoldAged = Color(0xFFA98746);
 
   /// Oro de los rotulos en versalitas. NO es `goldMuted`: ese se queda en
   /// 3,50:1 sobre `surfaceHigh` y no llega al 4,5:1 que pide el texto.

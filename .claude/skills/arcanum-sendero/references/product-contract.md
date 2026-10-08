@@ -6,7 +6,7 @@ Enseñar todas las funciones reales de ARCANUM mediante uso guiado, sin forzar a
 usuario ni convertir su primera sesión en una clase larga.
 
 **Sendero es la guía. Fragmentos Arcanos es la moneda de práctica.**
-Completar la orientación v2 da 3 Fragmentos una sola vez por cuenta. Después,
+Completar cada lección vigente da 1 Fragmento, una sola vez por lección y cuenta. Después,
 marcar cada carta real estudiada en Oráculo → Aprender da 1 la primera vez.
 El servicio económico del backend concede ambos premios; Flutter no acuña.
 
@@ -24,9 +24,15 @@ El servicio económico del backend concede ambos premios; Flutter no acuña.
   local para continuar sin conexión.
 - Usuarios actuales: invitación única y opcional para recordar cómo usar la app.
 - Funciones nuevas: mini recorrido opcional, mostrado una sola vez y repetible.
+- Descubrimiento contextual: tras completar la orientación, la primera visita a
+  cada sección puede ofrecer una pista compacta y descartable. Verla no avanza
+  la lección ni entrega Fragmentos. La guía solo comienza si se acepta.
+- Cambio de ruta: si hay una lección activa y el usuario explora otra sección,
+  conservar el paso exacto y ofrecer explorar la nueva sección o volver.
+- Siguiente lección: al completar una, sugerir otra sin abrirla automáticamente.
 - Premium: explicación breve orientada a despertar interés; no simular acceso ni
   convertir el recorrido en un muro de pago.
-- Fragmentos Arcanos: regalo único de 3 al cerrar la primera orientación,
+- Fragmentos Arcanos: 1 por cada lección completada por primera vez,
   más 1 por cada carta real marcada estudiada por primera vez. La revelación
   muestra el incremento confirmado por backend y el canje de 12 por crédito.
 
