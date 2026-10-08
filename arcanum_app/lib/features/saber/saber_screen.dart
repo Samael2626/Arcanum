@@ -14,7 +14,8 @@ import 'sellos/sellos_screen.dart';
 /// pestañas separadas y esa relación no se veía. Juntas bajo un toggle, el
 /// puente Materia↔Culpeper vive en su casa natural.
 ///
-/// Sellos es la tercera cara: consulta de los sellos historicos de Agrippa.
+/// Sellos es la tercera cara: consulta de los sellos históricos de Agrippa y de
+/// la Goetia (obra de dominio público, con su procedencia a la vista).
 class SaberScreen extends ConsumerStatefulWidget {
   const SaberScreen({super.key});
 
@@ -26,7 +27,7 @@ class _SaberScreenState extends ConsumerState<SaberScreen> {
   // 0 = Plantas (Materia), 1 = Biblioteca (obras que se leen), 2 = Sellos.
   int _tab = 0;
 
-  // Sellos carga el catalogo al abrirse por primera vez, y
+  // Sellos carga ~2,9 MB de catálogo: no se construye hasta que se pide, y
   // una vez abierto conserva su estado como las otras caras.
   bool _sellosVisto = false;
 

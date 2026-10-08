@@ -67,33 +67,62 @@ void main() {
       -80,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.ensureVisible(find.text('Todos'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Todos'));
     await tester.pumpAndSettle();
     expect(find.text('Sello'), findsWidgets);
   });
 
-  testWidgets('no muestra ni ofrece la coleccion Goetia', (tester) async {
-    await _montar(tester, Future.value(cat));
-    expect(find.text('Goetia'), findsNothing);
-    expect(find.text('1 · Bael'), findsNothing);
-    expect(find.text('Sello'), findsWidgets);
-  });
+  testWidgets(
+    'Goetia: filtra por rango y cambia de colección sin arrastrar el filtro',
+    (tester) async {
+      await _montar(tester, Future.value(cat));
+      await tester.tap(find.text('Goetia'));
+      await tester.pumpAndSettle();
+      expect(find.text('Goetia · 72 espíritus'), findsOneWidget);
+      expect(find.text('1 · Bael'), findsOneWidget);
+      await tester.tap(find.text('Rey'));
+      await tester.pumpAndSettle();
+      expect(find.text('1 · Bael'), findsOneWidget);
+      expect(find.text('2 · Agares'), findsNothing); // Agares es Duque
+      // volver a Agrippa limpia el filtro
+      await tester.tap(find.text('Agrippa'));
+      await tester.pumpAndSettle();
+      expect(find.text('Sello'), findsWidgets);
+    },
+  );
 
   testWidgets('tocar una pieza abre su ficha con la procedencia completa', (
     tester,
   ) async {
     await _montar(tester, Future.value(cat));
-    await tester.tap(find.text('Sello').first);
+    await tester.tap(find.text('Goetia'));
     await tester.pumpAndSettle();
-    final f = cat.sources['agrippa1651']!;
-    expect(find.text('Sello de Saturno'), findsWidgets);
+    await tester.tap(find.text('1 · Bael'));
+    await tester.pumpAndSettle();
+    final f = cat.sources['goetia1916']!;
+    expect(find.text('Sello de Bael'), findsOneWidget);
     expect(find.text(f.work), findsOneWidget);
     expect(find.text(f.edition), findsOneWidget);
     expect(find.text(f.scan), findsOneWidget);
     expect(find.text(f.license), findsOneWidget);
+    expect(find.textContaining('su sello va en oro'), findsOneWidget);
     expect(find.text('Copiar enlace al escaneo'), findsOneWidget);
+  });
+
+  testWidgets('la ficha de un espíritu con dos sellos lleva a su pareja', (
+    tester,
+  ) async {
+    final doble = cat.de('goetia1916').firstWhere((p) => cat.pareja(p) != null);
+    final otra = cat.pareja(doble)!;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildArcanumTheme(),
+        home: Scaffold(
+          body: SelloFicha(catalogo: cat, pieza: doble, onElegir: (_) {}),
+        ),
+      ),
+    );
+    expect(find.text('Ver su otro sello (figura ${otra.fig})'), findsOneWidget);
   });
 
   testWidgets('las piezas con nota la muestran en la ficha', (tester) async {
@@ -114,7 +143,7 @@ void main() {
     (tester) async {
       await _montar(tester, Future.value(cat));
       await _hastaMarte(tester);
-      for (final rotulo in ['Todos', 'Marte']) {
+      for (final rotulo in ['Todos', 'Marte', 'Agrippa', 'Goetia']) {
         final caja = tester.getRect(
           find
               .ancestor(of: find.text(rotulo), matching: find.byType(InkWell))
