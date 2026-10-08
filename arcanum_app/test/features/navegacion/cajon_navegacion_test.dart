@@ -284,10 +284,8 @@ void main() {
   });
 
   // Antes: "el cajon lista las cinco secciones y la cuenta" (21-sep-2026).
-  // Desde el 07-oct-2026 se reparten: la portada ofrece las secciones y el
-  // cajon guarda la cuenta. Lo que se vigila es lo mismo -- que ninguna de las
-  // cinco se quede sin entrada y que la cuenta siga a mano.
-  testWidgets('la portada ofrece las cinco secciones y el cajón la cuenta', (
+  // Los mosaicos y el cajon ofrecen las mismas secciones principales.
+  testWidgets('portada y cajon ofrecen las secciones principales', (
     tester,
   ) async {
     final c = await _montar(tester);
@@ -309,6 +307,12 @@ void main() {
     await _abrirCajon(tester);
     final cajon = find.byType(Drawer);
     for (final rotulo in [
+      'Ahora y horas',
+      'Carta natal',
+      'Horóscopo',
+      'Oráculo',
+      'Grimorio',
+      'Saber · plantas, libros y sellos',
       'Ayuda y recorrido',
       'Perfil',
       'Ajustes',
@@ -320,7 +324,7 @@ void main() {
         reason: rotulo,
       );
     }
-    expect(find.text('Cielos'), findsNothing);
+    expect(find.descendant(of: cajon, matching: find.text('CIELO')), findsOneWidget);
   });
 
   testWidgets('el mosaico lleva a su pantalla', (tester) async {
@@ -386,7 +390,10 @@ void main() {
   ) async {
     final container = await _montar(tester);
     await _abrirCajon(tester);
-    await tester.tap(find.text('Ayuda y recorrido'));
+    final ayuda = find.text('Ayuda y recorrido');
+    await tester.ensureVisible(ayuda);
+    await _esperar(tester);
+    await tester.tap(ayuda);
     await _esperar(tester);
     await tester.tap(find.text('Primer umbral'));
     await _esperar(tester);
@@ -422,5 +429,7 @@ void main() {
     expect(container.read(senderoGuideProvider)?.step, 0);
     await _abrirCajon(tester);
     expect(container.read(senderoGuideProvider)?.step, 1);
+    container.read(senderoGuideProvider.notifier).pause();
+    await tester.pump(const Duration(milliseconds: 400));
   });
 }

@@ -13,8 +13,8 @@ import '../../features/sendero/presentation/sendero_invitation.dart';
 import '../../features/sendero/application/sendero_guide_controller.dart';
 import '../../features/sendero/presentation/sendero_spotlight.dart';
 
-/// Las secciones se abren desde los mosaicos de Cielo. La barra superior deja
-/// visible el retorno a esa portada; el cajon contiene solo cuenta y ayuda.
+/// Las secciones se abren desde la portada o el cajon. La barra superior
+/// mantiene visible el retorno a la portada.
 class AppShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
   const AppShell({super.key, required this.navigationShell});
@@ -142,17 +142,17 @@ class _SectionBar extends ConsumerWidget {
   }
 }
 
-/// La hamburguesa abre cuenta, ajustes y ayuda. Su zona tactil mide 48.
+/// La hamburguesa abre el mapa de la app. Su zona tactil mide 48.
 class _MenuPrincipal extends ConsumerWidget {
   const _MenuPrincipal();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Tooltip(
-      message: 'Cuenta y ayuda',
+      message: 'Abrir menú principal',
       child: Semantics(
         button: true,
-        label: 'Abrir cuenta y ayuda',
+        label: 'Abrir menú principal',
         child: InkWell(
           customBorder: const CircleBorder(),
           key: ref.read(senderoGuideTargetsProvider).keyFor('menu'),

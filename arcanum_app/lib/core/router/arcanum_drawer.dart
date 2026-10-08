@@ -11,8 +11,9 @@ import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_resin.dart';
 import '../../shared/widgets/arcanum_toggle.dart';
 import '../../features/sendero/application/sendero_guide_controller.dart';
+import '../state/flow_providers.dart';
 
-/// Cajon de cuenta y ayuda. Las secciones viven en los mosaicos de Cielo.
+/// Mapa de las secciones y sus accesos directos.
 ///
 /// LA EXCEPCION DE MATERIAL, DICHA EN VOZ ALTA
 ///
@@ -48,6 +49,8 @@ class ArcanumDrawer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final base = ArcanumResin.gradient(mood: ArcanumMood.neutral);
     final targets = ref.read(senderoGuideTargetsProvider);
+    final path = GoRouterState.of(context).uri.path;
+    final cieloCara = ref.watch(cieloCaraProvider);
 
     return Drawer(
       backgroundColor: Colors.transparent,
@@ -79,21 +82,95 @@ class ArcanumDrawer extends ConsumerWidget {
                       padding: EdgeInsets.fromLTRB(20, 22, 20, 14),
                       child: SectionLabel('ARCANUM'),
                     ),
-                    const BloqueSaldoCajon(),
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(20, 6, 20, 14),
+                      child: SectionLabel('CIELO'),
+                    ),
+                    _Fila(
+                      icono: Icons.wb_twilight_outlined,
+                      iconoActivo: Icons.wb_twilight,
+                      rotulo: 'Ahora y horas',
+                      activa: path == '/hoy' && cieloCara == 0,
+                      onTap: () {
+                        ref.read(cieloCaraProvider.notifier).set(0);
+                        context.go('/hoy');
+                      },
+                    ),
+                    _Fila(
+                      icono: Icons.auto_awesome_outlined,
+                      iconoActivo: Icons.auto_awesome,
+                      rotulo: 'Carta natal',
+                      activa: path == '/hoy' && cieloCara == 1,
+                      onTap: () {
+                        ref.read(cieloCaraProvider.notifier).set(1);
+                        context.go('/hoy');
+                      },
+                    ),
+                    const _FilaSeccion(
+                      icono: Icons.brightness_4_outlined,
+                      iconoActivo: Icons.brightness_4,
+                      rotulo: 'Horóscopo',
+                      ruta: '/horoscopo',
+                    ),
                     const _Separador(),
                     const Padding(
                       padding: EdgeInsets.fromLTRB(20, 6, 20, 14),
-                      child: SectionLabel('CUENTA Y AYUDA'),
+                      child: SectionLabel('PRACTICAR'),
                     ),
-                    // Solo en builds de desarrollo y perfil: la mesa esta a
-                    // medias y la version de la tienda no debe enseñarla.
+                    const _FilaSeccion(
+                      icono: Icons.style_outlined,
+                      iconoActivo: Icons.style,
+                      rotulo: 'Oráculo',
+                      ruta: '/oraculo',
+                    ),
+                    const _FilaSeccion(
+                      icono: Icons.menu_book_outlined,
+                      iconoActivo: Icons.menu_book,
+                      rotulo: 'Grimorio',
+                      ruta: '/grimorio',
+                    ),
+                    const _FilaRuta(
+                      icono: Icons.air_outlined,
+                      iconoActivo: Icons.air,
+                      rotulo: 'Respirar',
+                      ruta: '/respirar',
+                    ),
+                    const _FilaRuta(
+                      icono: Icons.auto_fix_high_outlined,
+                      iconoActivo: Icons.auto_fix_high,
+                      rotulo: 'Taller de sigilos',
+                      ruta: '/sigilos',
+                    ),
                     if (kDebugMode || kProfileMode)
-                      _FilaRuta(
+                      const _FilaRuta(
                         icono: Icons.style_outlined,
                         iconoActivo: Icons.style,
                         rotulo: 'Mesa de tarot · en pruebas',
                         ruta: '/tarot',
                       ),
+                    const _Separador(),
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(20, 6, 20, 14),
+                      child: SectionLabel('DESCUBRIR'),
+                    ),
+                    const _FilaSeccion(
+                      icono: Icons.local_library_outlined,
+                      iconoActivo: Icons.local_library,
+                      rotulo: 'Saber · plantas, libros y sellos',
+                      ruta: '/saber',
+                    ),
+                    const _Separador(),
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(20, 6, 20, 14),
+                      child: SectionLabel('CUENTA Y AYUDA'),
+                    ),
+                    const BloqueSaldoCajon(),
+                    const _FilaRuta(
+                      icono: Icons.auto_awesome_outlined,
+                      iconoActivo: Icons.auto_awesome,
+                      rotulo: 'Fragmentos Arcanos',
+                      ruta: '/fragmentos',
+                    ),
                     _FilaRuta(
                       icono: Icons.explore_outlined,
                       iconoActivo: Icons.explore,
@@ -215,6 +292,30 @@ class _Fila extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Ruta principal del shell: sustituye la rama visible y conserva su estado.
+class _FilaSeccion extends StatelessWidget {
+  const _FilaSeccion({
+    required this.icono,
+    required this.iconoActivo,
+    required this.rotulo,
+    required this.ruta,
+  });
+
+  final IconData icono;
+  final IconData iconoActivo;
+  final String rotulo;
+  final String ruta;
+
+  @override
+  Widget build(BuildContext context) => _Fila(
+    icono: icono,
+    iconoActivo: iconoActivo,
+    rotulo: rotulo,
+    activa: GoRouterState.of(context).uri.path == ruta,
+    onTap: () => context.go(ruta),
+  );
 }
 
 /// Lo de la cuenta: rutas de primer nivel FUERA del shell, asi que se apilan
