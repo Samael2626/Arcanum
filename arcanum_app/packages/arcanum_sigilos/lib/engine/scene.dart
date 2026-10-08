@@ -25,13 +25,17 @@ class PathItem {
   final double? op;
   final List<String>? units;
   final Grad? grad;
-  const PathItem(this.d, {this.fill = false, this.op, this.units, this.grad});
+
+  /// Degradado a lo largo del trazo (Rosa-Cruz con colores). Solo lo pinta el
+  /// lienzo: el SVG de esa familia lo escribe su propio emisor.
+  final Grad? strokeGrad;
+  const PathItem(this.d, {this.fill = false, this.op, this.units, this.grad, this.strokeGrad});
 }
 
 /// Grupo de la escena. Lleva caminos (items) o primitivas de capa (prims).
 class SceneGroup {
   final String layer, color;
-  final double? w, op, dx, dy;
+  final double? w, op, dx, dy, scale;
 
   /// Ancho base de los halos cuando el trazo real no es un `stroke` (la pluma).
   final double? hw;
@@ -44,13 +48,13 @@ class SceneGroup {
   final List<PathItem> items;
   final List<LayerPrim>? prims;
   const SceneGroup(
-      {required this.layer, required this.color, this.w, this.op, this.dx, this.dy, this.hw, this.cap, this.sigil = false, bool? live, this.items = const [], this.prims})
+      {required this.layer, required this.color, this.w, this.op, this.dx, this.dy, this.scale, this.hw, this.cap, this.sigil = false, bool? live, this.items = const [], this.prims})
       : live = live ?? sigil;
 
   bool get isEmpty => prims != null ? prims!.isEmpty : items.isEmpty;
 
-  SceneGroup copyWith({String? layer, String? color, double? w, double? op, double? dx, double? dy}) => SceneGroup(
-      layer: layer ?? this.layer, color: color ?? this.color, w: w ?? this.w, op: op ?? this.op, dx: dx ?? this.dx, dy: dy ?? this.dy, hw: hw,
+  SceneGroup copyWith({String? layer, String? color, double? w, double? op, double? dx, double? dy, double? scale}) => SceneGroup(
+      layer: layer ?? this.layer, color: color ?? this.color, w: w ?? this.w, op: op ?? this.op, dx: dx ?? this.dx, dy: dy ?? this.dy, scale: scale ?? this.scale, hw: hw,
       cap: cap, sigil: sigil, live: live, items: items, prims: prims);
 }
 
@@ -79,7 +83,7 @@ String primsSVG(List<LayerPrim> prims, String color, {bool outline = false}) => 
             final drawn = outline ? textOutlineSVG(t, color, o) : null;
             if (drawn != null) return drawn;
             final italic = t.font.startsWith('italic');
-            return '<text transform="translate(${f2(t.x)} ${f2(t.y)}) rotate(${f2(t.rot)})" y="${f2(t.size * kTextMid)}" text-anchor="middle" font-family="${italic ? 'Georgia, serif' : t.font}"${italic ? ' font-style="italic"' : ''} font-size="${f2(t.size)}" fill="$color"$o>${esc(t.ch)}</text>';
+            return '<text transform="translate(${f2(t.x)} ${f2(t.y)}) rotate(${f2(t.rot)})" y="${f2(t.size * kTextMid)}" text-anchor="${t.alignStart ? 'start' : 'middle'}" font-family="${italic ? 'Georgia, serif' : t.font}"${italic ? ' font-style="italic"' : ''} font-size="${f2(t.size)}" fill="$color"$o>${esc(t.ch)}</text>';
           }(),
       };
     }).join();
@@ -87,7 +91,7 @@ String primsSVG(List<LayerPrim> prims, String color, {bool outline = false}) => 
 LayerPrim _withOp(LayerPrim p, double k) => switch (p) {
       CirclePrim c => CirclePrim(c.cx, c.cy, c.r, c.w, c.op * k),
       PolyPrim q => PolyPrim(q.pts, q.closed, q.w, q.op * k),
-      TextPrim t => TextPrim(t.x, t.y, t.rot, t.size, t.ch, t.font, t.op * k),
+      TextPrim t => TextPrim(t.x, t.y, t.rot, t.size, t.ch, t.font, t.op * k, alignStart: t.alignStart),
       GlyphLayerPrim g => GlyphLayerPrim(g.x, g.y, g.rot, g.size, g.ch, g.op * k),
     };
 
@@ -104,7 +108,7 @@ String _opAttr(double? op) => op != null && op < 1 ? ' opacity="${jsFixedNum(op,
 
 String groupSVG(SceneGroup g, {bool outline = false}) {
   final dx = g.dx ?? 0, dy = g.dy ?? 0;
-  final tf = dx != 0 || dy != 0 ? ' transform="translate(${jsNum(dx)} ${jsNum(dy)})"' : '';
+  final tf = dx != 0 || dy != 0 || g.scale != null ? ' transform="translate(${jsNum(dx)} ${jsNum(dy)})${g.scale == null ? '' : ' scale(${g.scale!.toStringAsFixed(4)})'}"' : '';
   final gop = g.op ?? 1;
   if (g.prims != null) {
     return '<g data-layer="${g.layer}"$tf>${primsSVG(gop < 1 ? g.prims!.map((p) => _withOp(p, gop)).toList() : g.prims!, g.color, outline: outline)}</g>';

@@ -19,6 +19,7 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import 'sigil_radial.dart';
 import 'sigil_store.dart';
+import 'bitacora_sheet.dart';
 import 'taller_carga.dart';
 import 'taller_fuentes.dart';
 import 'taller_panels.dart';
@@ -49,6 +50,10 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
 
   @visibleForTesting
   SigilDoc get debugDoc => doc;
+
+  /// Texto del campo de la intencion (aunque la pestaña Crear no este a la vista).
+  @visibleForTesting
+  String get debugIntentionText => _intention.text;
 
   // el panel conserva su estado (y el foco del campo) si cambia de sitio
   final _panelKey = GlobalKey();
@@ -252,9 +257,24 @@ class TallerScreenState extends ConsumerState<TallerScreen> {
       }
     }
     if (!mounted) return;
+    // el sigilo y la intencion salen de la vista y del deshacer antes de la
+    // hoja: soltado, no se vuelve a mirar (antes quedaban visibles detras)
+    setState(() {
+      doc = SigilDoc();
+      ctl = CanvasController(doc);
+      _intention.clear();
+      _charges.clear();
+      _past.clear();
+      _future.clear();
+      _commit();
+      _repaint.value++;
+    });
     _savedSnapshot = _saveSnap;
+    // anotacion voluntaria en la Bitacora: solo lo que la persona observo, nunca la intencion
+    final noted = await showBitacora(context, savedCopy: saved);
+    if (!mounted) return;
     final messenger = ScaffoldMessenger.maybeOf(context);
-    Navigator.pop(context, saved);
+    Navigator.pop(context, saved || noted);
     messenger?.showSnackBar(const SnackBar(content: Text('Soltado. No lo busques.')));
   }
 

@@ -11,6 +11,10 @@ import '../../shared/widgets/arcanum_field.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_resin.dart';
 import '../../shared/widgets/gold_button.dart';
+import '../sigilos/compare_screen.dart';
+import '../sigilos/kamea_screen.dart';
+import '../sigilos/personal_screen.dart';
+import '../sigilos/rosa_screen.dart';
 import '../sigilos/taller_screen.dart';
 import 'grimorio_atmosphere.dart';
 
@@ -109,6 +113,26 @@ class _GrimorioEditorState extends ConsumerState<GrimorioEditor> {
     if (mounted && saved == true) Navigator.pop(context, true);
   }
 
+  Future<void> _openKamea() async {
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(MaterialPageRoute(builder: (_) => const KameaScreen()));
+    if (mounted && saved == true) Navigator.pop(context, true);
+  }
+
+  Future<void> _openRosa() async {
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(MaterialPageRoute(builder: (_) => const RosaScreen()));
+    if (mounted && saved == true) Navigator.pop(context, true);
+  }
+
+  Future<void> _openPersonal() async {
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(MaterialPageRoute(builder: (_) => const PersonalScreen()));
+    if (mounted && saved == true) Navigator.pop(context, true);
+  }
+
+  Future<void> _openCompare() async {
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(MaterialPageRoute(builder: (_) => const CompareScreen()));
+    if (mounted && saved == true) Navigator.pop(context, true);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -142,7 +166,7 @@ class _GrimorioEditorState extends ConsumerState<GrimorioEditor> {
                     // un sigilo no se escribe: se forja en el taller, que lo
                     // guarda el mismo como entrada «Sigilo» cifrada
                     if (_type == 'sigil')
-                      Expanded(child: _SigilInvite(onOpen: _openTaller))
+                      Expanded(child: _SigilInvite(onOpen: _openTaller, onKamea: _openKamea, onRosa: _openRosa, onPersonal: _openPersonal, onCompare: _openCompare))
                     else ...[
                       ArcanumField(controller: _title, label: 'Título'),
                       const SizedBox(height: 16),
@@ -313,24 +337,59 @@ class _WritingPage extends StatelessWidget {
 }
 
 class _SigilInvite extends StatelessWidget {
-  final VoidCallback onOpen;
-  const _SigilInvite({required this.onOpen});
+  final VoidCallback onOpen, onKamea, onRosa, onPersonal, onCompare;
+  const _SigilInvite({required this.onOpen, required this.onKamea, required this.onRosa, required this.onPersonal, required this.onCompare});
 
   @override
-  Widget build(BuildContext context) => Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text('✦', style: TextStyle(fontSize: 40, color: ArcanumColors.gold.withValues(alpha: .8))),
-          const SizedBox(height: 12),
-          Text('Un sigilo no se escribe: se forja.', textAlign: TextAlign.center, style: ArcanumText.heading(22)),
-          const SizedBox(height: 8),
-          Text(
-            'En el taller tu intención se reduce a letras y las letras se funden en un signo. Al guardarlo queda aquí, cifrado como el resto de tu grimorio.',
-            textAlign: TextAlign.center,
-            style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
+  Widget build(BuildContext context) => Center(
+        // con tres puertas el invitado no cabe en un movil bajo: se desplaza
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('✦', style: TextStyle(fontSize: 40, color: ArcanumColors.gold.withValues(alpha: .8))),
+              const SizedBox(height: 12),
+              Text('Un sigilo no se escribe: se forja.', textAlign: TextAlign.center, style: ArcanumText.heading(22)),
+              const SizedBox(height: 8),
+              Text(
+                'En el taller tu intención se reduce a letras y las letras se funden en un signo. Al guardarlo queda aquí, cifrado como el resto de tu grimorio.',
+                textAlign: TextAlign.center,
+                style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
+              ),
+              const SizedBox(height: 20),
+              GoldButton(label: 'Abrir el taller', onPressed: onOpen),
+              const SizedBox(height: 18),
+              Text(
+                'O traza un nombre sobre una figura histórica, sin ritual de carga: la tabla de Agrippa o el Lamen de la Rosa-Cruz.',
+                textAlign: TextAlign.center,
+                style: ArcanumText.body(14, color: ArcanumColors.ivoryMuted),
+              ),
+              const SizedBox(height: 10),
+              OutlinedButton(
+                onPressed: onKamea,
+                style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: ArcanumColors.gold),
+                child: const Text('Abrir una kamea'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: onRosa,
+                style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: ArcanumColors.gold),
+                child: const Text('Abrir una Rosa-Cruz'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: onPersonal,
+                style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: ArcanumColors.gold),
+                child: const Text('Crear sello personal'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: onCompare,
+                style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: ArcanumColors.gold),
+                child: const Text('Comparar tres sistemas'),
+              ),
+            ],
           ),
-          const SizedBox(height: 20),
-          GoldButton(label: 'Abrir el taller', onPressed: onOpen),
-        ],
+        ),
       );
 }

@@ -9,10 +9,31 @@ import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_mood.dart';
+import '../sigilos/bitacora_sheet.dart';
+import '../sigilos/compare_screen.dart';
+import '../sigilos/kamea_screen.dart';
+import '../sigilos/personal_screen.dart';
+import '../sigilos/rosa_screen.dart';
 import '../sigilos/sigil_store.dart';
 import '../sigilos/taller_carga.dart';
 import '../sigilos/taller_screen.dart';
 import 'grimorio_atmosphere.dart';
+
+/// Escena de la kamea en el detalle: sin el rotulo del nombre (primera prim de la leyenda).
+@visibleForTesting
+({List<SceneGroup> bg, List<SceneGroup> fg}) kameaDetailScene(KameaDoc doc) {
+  final scene = doc.scene();
+  return (
+    bg: scene.bg,
+    fg: [
+      for (final g in scene.fg)
+        if (g.layer == 'caption' && g.prims != null)
+          SceneGroup(layer: g.layer, color: g.color, prims: g.prims!.skip(1).toList())
+        else
+          g,
+    ],
+  );
+}
 
 class GrimorioDetail extends ConsumerStatefulWidget {
   final String id;
@@ -110,8 +131,32 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
           : 'No se pudo anotar la carga. Revisa la conexión e inténtalo de nuevo.');
       return;
     }
+    // tras soltar desde el Grimorio, tambien la bitacora opcional
+    if (release && mounted) await showBitacora(context, savedCopy: true);
     _snack(release ? 'Soltado. No lo busques.' : 'Carga anotada en el sigilo.');
     _retry();
+  }
+
+  Future<void> _continueKamea(KameaDoc doc) async {
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(MaterialPageRoute(builder: (_) => KameaScreen(entryId: widget.id, initial: doc)),
+    );
+    if (mounted && saved == true) _retry();
+  }
+
+  Future<void> _continueRosa(RosaDoc doc) async {
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(MaterialPageRoute(builder: (_) => RosaScreen(entryId: widget.id, initial: doc)),
+    );
+    if (mounted && saved == true) _retry();
+  }
+
+  Future<void> _continuePersonal(PersonalDoc doc) async {
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(MaterialPageRoute(builder: (_) => PersonalScreen(entryId: widget.id, initial: doc)));
+    if (mounted && saved == true) _retry();
+  }
+
+  Future<void> _continueCompare(CompareDoc doc) async {
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(MaterialPageRoute(builder: (_) => CompareScreen(entryId: widget.id, initial: doc)));
+    if (mounted && saved == true) _retry();
   }
 
   Future<void> _confirmDelete() async {
@@ -337,7 +382,7 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
           delayMs: 120,
           // un sigilo del taller se dibuja (y se puede seguir editando); una
           // entrada «Sigilo» escrita a mano antes del taller sigue siendo texto
-          child: switch (type == 'sigil' ? _decodeSigil(content) : null) {
+          child: switch (type == 'sigil' ? (_decodeSigil(content) ?? decodeKameaEntry(content) ?? decodeRosaEntry(content) ?? decodePersonalEntry(content) ?? decodeCompareEntry(content)) : null) {
             SigilReadable(:final entry) => _SigilBody(
                 entry: entry,
                 onEdit: () => _continueSigil(entry),
@@ -350,7 +395,11 @@ class _GrimorioDetailState extends ConsumerState<GrimorioDetail> {
                     : 'Este sigilo no se puede dibujar: sus datos están dañados.',
                 style: ArcanumText.body(16, color: ArcanumColors.ivoryMuted, italic: true),
               ),
-            null => _ManuscriptBody(content: content, accent: accent),
+            final KameaDoc doc => _FamiliaBody(scene: kameaDetailScene(doc), label: 'Kamea de ${doc.def.name}', editLabel: 'Seguir en la kamea', onEdit: () => _continueKamea(doc), accent: accent),
+            final RosaDoc doc => _FamiliaBody(scene: doc.scene(), label: 'Rosa-Cruz', editLabel: 'Seguir en la Rosa-Cruz', onEdit: () => _continueRosa(doc), accent: accent),
+            final PersonalDoc doc => _FamiliaBody(scene: doc.scene(), label: 'Sello personal', editLabel: 'Seguir el sello personal', onEdit: () => _continuePersonal(doc), accent: accent),
+            final CompareDoc doc => _FamiliaBody(scene: doc.scene(), label: 'Comparación de sigilos', editLabel: 'Seguir la comparación', onEdit: () => _continueCompare(doc), accent: accent),
+            _ => _ManuscriptBody(content: content, accent: accent),
           },
         ),
         const SizedBox(height: 34),
@@ -528,6 +577,38 @@ class _SigilBodyState extends State<_SigilBody> {
         const SizedBox(height: 6),
         for (final c in e.charges) Padding(padding: const EdgeInsets.only(bottom: 4), child: Text(_chargeLine(c), style: muted)),
       ],
+    ]);
+  }
+}
+
+
+/// Una familia historica guardada (Kamea, Rosa-Cruz): la figura y el camino
+/// para seguir editandola.
+class _FamiliaBody extends StatelessWidget {
+  final ({List<SceneGroup> bg, List<SceneGroup> fg}) scene;
+  final String label, editLabel;
+  final VoidCallback onEdit;
+  final Color accent;
+  const _FamiliaBody({required this.scene, required this.label, required this.editLabel, required this.onEdit, required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      LayoutBuilder(
+        builder: (context, box) => Center(
+          child: Semantics(
+            image: true,
+            label: label,
+            child: CustomPaint(size: Size.square(box.maxWidth), painter: SigilScenePainter(bg: scene.bg, fg: scene.fg)),
+          ),
+        ),
+      ),
+      const SizedBox(height: 16),
+      OutlinedButton(
+        onPressed: onEdit,
+        style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: accent),
+        child: Text(editLabel),
+      ),
     ]);
   }
 }

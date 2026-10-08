@@ -3,11 +3,15 @@
 library;
 
 export 'engine/arcane_glyphs.dart';
+export 'engine/compare.dart';
 export 'engine/fusion.dart';
 export 'engine/geometry.dart';
 export 'engine/glyphs.dart';
 export 'engine/hebrew.dart';
 export 'engine/interaction.dart';
+export 'engine/kamea.dart';
+export 'engine/personal.dart';
+export 'engine/rosa.dart';
 export 'engine/js_num.dart';
 export 'engine/layers.dart';
 export 'engine/letter_sigil.dart';

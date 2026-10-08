@@ -97,7 +97,7 @@ void _paintPrims(Canvas canvas, List<LayerPrim> prims, String color, double gop)
         canvas.translate(t.x, t.y);
         canvas.rotate(t.rot * math.pi / 180);
         // misma regla que el SVG: centro horizontal y base a TEXT_MID del cuerpo
-        tp.paint(canvas, Offset(-tp.width / 2, t.size * kTextMid - base));
+        tp.paint(canvas, Offset(t.alignStart ? 0 : -tp.width / 2, t.size * kTextMid - base));
         canvas.restore();
     }
   }
@@ -137,6 +137,7 @@ void paintScene(Canvas canvas, List<SceneGroup> groups, {double? minW, double Fu
   for (final g in groups) {
     canvas.save();
     if ((g.dx ?? 0) != 0 || (g.dy ?? 0) != 0) canvas.translate(g.dx ?? 0, g.dy ?? 0);
+    if (g.scale != null) canvas.scale(g.scale!);
     final gop = g.op ?? 1;
     if (g.prims != null) {
       _paintPrims(canvas, g.prims!, g.color, gop);
@@ -152,6 +153,7 @@ void paintScene(Canvas canvas, List<SceneGroup> groups, {double? minW, double Fu
         paint.shader = _gradient(it.grad!);
         if (a < 1) paint.color = Color.fromRGBO(0, 0, 0, a);
       } else if (!it.fill) {
+        if (it.strokeGrad != null) paint.shader = _gradient(it.strokeGrad!);
         paint
           ..style = PaintingStyle.stroke
           ..strokeWidth = w

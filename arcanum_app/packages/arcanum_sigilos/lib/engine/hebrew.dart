@@ -120,3 +120,15 @@ final _spaces = RegExp(r'\s+');
 
 bool hasHebrew(String s) => _hebLetter.hasMatch(s);
 String cleanHebrew(String s) => s.replaceAll(_hebMarks, '').replaceAll(_notHeb, '').replaceAll(_spaces, ' ').trim();
+
+// ── Valores de las letras (puerto de js/rosa.js) ─────────────────
+const kHebValue = {
+  'א': 1, 'ב': 2, 'ג': 3, 'ד': 4, 'ה': 5, 'ו': 6, 'ז': 7, 'ח': 8, 'ט': 9, 'י': 10, 'כ': 20, 'ל': 30, 'מ': 40, 'נ': 50, 'ס': 60,
+  'ע': 70, 'פ': 80, 'צ': 90, 'ק': 100, 'ר': 200, 'ש': 300, 'ת': 400,
+};
+const kFinalToBase = {'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ'};
+
+/// Valor «gadol» de las finales (500 a 900), como las cuenta Agrippa.
+const kGadolFinal = {'ך': 500, 'ם': 600, 'ן': 700, 'ף': 800, 'ץ': 900};
+
+String baseLetter(String ch) => kFinalToBase[ch] ?? ch;
