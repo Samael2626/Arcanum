@@ -98,7 +98,7 @@ final arcanumRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/sigilos', builder: (c, s) => const TallerScreen()),
       // Mesa de tarot en construccion: la pestaña propia llega en la fase 8.
       GoRoute(path: '/tarot', builder: (c, s) => const TarotTableScreen()),
-      // Motor de respiracion en pruebas: modulo suelto, aun sin uniones con
+      // Motor de respiracion: modulo suelto, aun sin uniones con
       // la carga de sigilos ni con la mesa.
       GoRoute(
         path: '/respirar',

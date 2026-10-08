@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -184,9 +183,9 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
             context.go('/grimorio');
           },
           onSaber: () => context.go('/saber'),
-          // la placa Mesa abre la mesa (prototipo E), pero solo donde la mesa
-          // ya se ensena: en la tienda sigue siendo el Oraculo
-          showTable: kDebugMode || kProfileMode,
+          // la mesa sale en la 1.0.7 (Samuel, 08-oct): su placa se suma a la
+          // del Oraculo, no la sustituye
+          showTable: true,
           onTable: () => context.push('/tarot'),
           onOracle: () => context.go('/oraculo'),
           // el taller de letras entra por el Grimorio, donde se guardan los

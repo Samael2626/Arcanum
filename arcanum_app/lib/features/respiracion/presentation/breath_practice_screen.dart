@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +10,7 @@ import '../application/breath_settings.dart';
 import '../domain/breath_engine.dart';
 import '../domain/breath_pattern.dart';
 import '../domain/breath_phase.dart';
+import 'breath_awake.dart';
 import 'breath_cues.dart';
 import 'breath_orb.dart';
 import 'breath_texts.dart';
@@ -31,6 +34,9 @@ class _BreathPracticeScreenState extends ConsumerState<BreathPracticeScreen>
   late final BreathSettings _settings;
   late final List<BreathCue> _cues;
   late final Ticker _ticker;
+
+  /// Pantalla encendida solo mientras corre la practica.
+  late final ScreenAwake _awake;
   BreathEngine? _engine;
   ObserveSession? _observe;
 
@@ -49,6 +55,7 @@ class _BreathPracticeScreenState extends ConsumerState<BreathPracticeScreen>
     super.initState();
     _settings = ref.read(breathSettingsProvider);
     _cues = ref.read(breathCuesProvider);
+    _awake = ref.read(screenAwakeProvider);
     _ticker = createTicker(_onTick);
     final p = _settings.pattern;
     if (p.free) {
@@ -64,6 +71,7 @@ class _BreathPracticeScreenState extends ConsumerState<BreathPracticeScreen>
       _apply(_engine!.tick());
     }
     _ticker.start();
+    unawaited(_awake.keep(true));
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -73,6 +81,8 @@ class _BreathPracticeScreenState extends ConsumerState<BreathPracticeScreen>
     _ticker.dispose();
     _engine?.stop();
     _observe?.stop();
+    // al salir, el apagado vuelve al sistema
+    unawaited(_awake.keep(false));
     super.dispose();
   }
 
@@ -115,6 +125,7 @@ class _BreathPracticeScreenState extends ConsumerState<BreathPracticeScreen>
     if (_doneText != null) return;
     _doneText = text;
     _ticker.stop();
+    unawaited(_awake.keep(false));
     for (final c in _cues) {
       c.finish();
     }
@@ -127,6 +138,7 @@ class _BreathPracticeScreenState extends ConsumerState<BreathPracticeScreen>
         _observe?.resume();
         _paused = false;
         _ticker.start();
+        unawaited(_awake.keep(true));
         // reanudar repite el anuncio de la fase, sin volver a vibrar
         if (_engine != null) _apply(_engine!.tick(), cue: false);
       } else {
@@ -136,6 +148,7 @@ class _BreathPracticeScreenState extends ConsumerState<BreathPracticeScreen>
         _accum += _tickerNow;
         _tickerNow = Duration.zero;
         _ticker.stop();
+        unawaited(_awake.keep(false));
       }
     });
   }

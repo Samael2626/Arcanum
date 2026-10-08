@@ -1,6 +1,5 @@
 import 'dart:ui' show ImageFilter;
 
-import 'package:flutter/foundation.dart' show kDebugMode, kProfileMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -141,13 +140,13 @@ class ArcanumDrawer extends ConsumerWidget {
                       rotulo: 'Taller de sigilos',
                       ruta: '/sigilos',
                     ),
-                    if (kDebugMode || kProfileMode)
-                      const _FilaRuta(
-                        icono: Icons.style_outlined,
-                        iconoActivo: Icons.style,
-                        rotulo: 'Mesa de tarot · en pruebas',
-                        ruta: '/tarot',
-                      ),
+                    // sale en la 1.0.7 (Samuel, 08-oct): ya sin «en pruebas»
+                    const _FilaRuta(
+                      icono: Icons.style_outlined,
+                      iconoActivo: Icons.style,
+                      rotulo: 'Mesa de tarot',
+                      ruta: '/tarot',
+                    ),
                     const _Separador(),
                     const Padding(
                       padding: EdgeInsets.fromLTRB(20, 6, 20, 14),

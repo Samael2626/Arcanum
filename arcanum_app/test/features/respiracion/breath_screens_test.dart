@@ -3,6 +3,7 @@
 import 'package:arcanum_app/core/theme/arcanum_theme.dart';
 import 'package:arcanum_app/features/respiracion/application/breath_settings.dart';
 import 'package:arcanum_app/features/respiracion/domain/breath_pattern.dart';
+import 'package:arcanum_app/features/respiracion/presentation/breath_awake.dart';
 import 'package:arcanum_app/features/respiracion/presentation/breath_cues.dart';
 import 'package:arcanum_app/features/respiracion/presentation/breath_orb.dart';
 import 'package:arcanum_app/features/respiracion/presentation/breath_practice_screen.dart';
@@ -23,10 +24,15 @@ void _phone(WidgetTester tester, [Size size = _small]) {
   addTearDown(tester.view.reset);
 }
 
-/// Apunta las senales en vez de vibrar.
-class _Recorder implements BreathCue {
+/// Apunta las senales en vez de vibrar, y si la pantalla debe seguir
+/// encendida en vez de pedirselo al sistema.
+class _Recorder implements BreathCue, ScreenAwake {
   final phases = <BreathKind>[];
   var finished = 0;
+  final awake = <bool>[];
+
+  @override
+  Future<void> keep(bool on) async => awake.add(on);
 
   @override
   Future<void> phase(BreathKind kind) async => phases.add(kind);
@@ -72,6 +78,7 @@ Future<_Recorder> _pumpApp(
       overrides: [
         breathSettingsProvider.overrideWith(() => _Preset(settings)),
         breathHapticCueProvider.overrideWithValue(rec),
+        screenAwakeProvider.overrideWithValue(rec),
       ],
       child: MaterialApp.router(
         theme: buildArcanumTheme(),
@@ -344,6 +351,48 @@ void main() {
       // sigue en pausa hasta que la persona decida
       expect(find.text('Reanudar'), findsOneWidget);
       expect(_textOf(tester, 'breath_left').data, '0:15');
+    });
+
+    // 08-oct (Samuel): una respiracion de varios minutos no puede apagar la
+    // pantalla a medias
+    testWidgets('la pantalla sigue encendida solo mientras se respira', (
+      tester,
+    ) async {
+      _phone(tester);
+      final rec = await _pumpApp(
+        tester,
+        settings: const BreathSettings(amount: 1),
+        start: '/respirar/practica',
+      );
+      expect(rec.awake, [true], reason: 'al empezar');
+      await tester.pump(const Duration(seconds: 1));
+      await tester.tap(find.text('Pausar'));
+      await tester.pump();
+      expect(rec.awake.last, isFalse, reason: 'en pausa se puede apagar');
+      await tester.tap(find.text('Reanudar'));
+      await tester.pump();
+      expect(rec.awake.last, isTrue, reason: 'al reanudar');
+      await tester.pump(const Duration(seconds: 4));
+      await tester.pump(const Duration(seconds: 4));
+      await tester.pump();
+      expect(find.text('Terminado'), findsOneWidget);
+      expect(rec.awake.last, isFalse, reason: 'al terminar');
+    });
+
+    testWidgets('al salir se devuelve el apagado al sistema', (tester) async {
+      _phone(tester);
+      final rec = await _pumpApp(tester, settings: regardie);
+      final start = find.byKey(const ValueKey('breath_start'));
+      await tester.scrollUntilVisible(start, 300);
+      await tester.tap(start);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(rec.awake.last, isTrue);
+      await tester.tap(find.byTooltip('Salir'));
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.byType(BreathSetupScreen), findsOneWidget);
+      expect(rec.awake.last, isFalse);
     });
 
     testWidgets('al terminar dice «Terminado» y avisa una vez', (tester) async {

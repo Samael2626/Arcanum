@@ -65,6 +65,7 @@ dependencies:
   firebase_crashlytics: ^4.3.1
   share_plus: ^13.3.0
   flutter_soloud: ^4.1.7
+  wakelock_plus: ^1.8.1
 
 dev_dependencies:
   flutter_test:

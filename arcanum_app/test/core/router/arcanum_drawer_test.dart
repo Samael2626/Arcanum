@@ -103,7 +103,7 @@ void main() {
     'Grimorio',
     'Respirar',
     'Taller de sigilos',
-    'Mesa de tarot · en pruebas',
+    'Mesa de tarot',
     'Saber · plantas, libros y sellos',
     'Fragmentos Arcanos',
     'Ayuda y recorrido',
