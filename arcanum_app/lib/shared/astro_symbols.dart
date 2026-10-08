@@ -100,3 +100,12 @@ String pointEs(String? clave) {
   if (clave == null || clave.isEmpty) return '';
   return planetEs[clave] ?? angleEs[clave] ?? clave;
 }
+
+/// «del Sol», «de la Luna», «de Venus».
+///
+/// El artículo no es adorno: «Abrir el sello de Sol» está mal escrito, y esto
+/// lo lee una persona. Solo las dos luminarias lo llevan.
+String pointGenitiveEs(String clave) {
+  const conArticulo = {'sun': 'del Sol', 'moon': 'de la Luna'};
+  return conArticulo[clave] ?? 'de ${pointEs(clave)}';
+}

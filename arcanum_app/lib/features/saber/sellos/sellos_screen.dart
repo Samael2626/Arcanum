@@ -10,10 +10,20 @@ import 'sello_painter.dart';
 /// Tercera cara de Saber: consulta de los sellos históricos (Agrippa 1651 y
 /// Goetia 1916). Es obra ajena de dominio público: se consulta, no se edita.
 class SellosScreen extends StatefulWidget {
-  const SellosScreen({super.key, this.catalogoOverride});
+  const SellosScreen({
+    super.key,
+    this.catalogoOverride,
+    this.onAnnotate,
+    this.onPlanetHour,
+  });
 
   /// Fuente inyectable para widget tests; producción lee el asset.
   final Future<CatalogoSellos>? catalogoOverride;
+
+  /// Salidas de la ficha a la practica. Las pone Saber, que sabe navegar; la
+  /// ficha se cierra antes de llamarlas.
+  final ValueChanged<SelloPieza>? onAnnotate;
+  final ValueChanged<SelloPieza>? onPlanetHour;
 
   @override
   State<SellosScreen> createState() => _SellosScreenState();
@@ -168,9 +178,23 @@ class _SellosScreenState extends State<SellosScreen> {
           Navigator.of(sheet).pop();
           _abrir(cat, otra);
         },
+        onAnnotate: _salida(sheet, pieza, widget.onAnnotate),
+        onPlanetHour: _salida(sheet, pieza, widget.onPlanetHour),
       ),
     );
   }
+
+  /// Cierra la ficha y entrega la pieza a quien navega. Null si no hay nadie.
+  VoidCallback? _salida(
+    BuildContext sheet,
+    SelloPieza pieza,
+    ValueChanged<SelloPieza>? destino,
+  ) => destino == null
+      ? null
+      : () {
+          Navigator.of(sheet).pop();
+          destino(pieza);
+        };
 }
 
 class _Celda extends StatelessWidget {

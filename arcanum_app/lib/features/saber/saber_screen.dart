@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/state/flow_navigation.dart';
 import '../sendero/application/sendero_guide_controller.dart';
 import '../../shared/widgets/arcanum_toggle.dart';
 import '../arte/arte_screen.dart';
@@ -71,7 +72,12 @@ class _SaberScreenState extends ConsumerState<SaberScreen> {
               const ArteScreen(),
               const LecturasScreen(),
               if (_sellosVisto)
-                const SellosScreen()
+                SellosScreen(
+                  onAnnotate: (p) =>
+                      goGrimoireCompose(ref, context, title: p.title),
+                  onPlanetHour: (_) =>
+                      goCielo(ref, context, cara: cieloCaraAhora),
+                )
               else
                 const SizedBox.shrink(),
             ],

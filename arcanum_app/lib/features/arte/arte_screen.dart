@@ -6,6 +6,7 @@ import '../../core/api/arcanum_api.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/monetization/monetization_service.dart';
 import '../../core/monetization/quota_service.dart';
+import '../../core/state/flow_navigation.dart';
 import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
@@ -351,6 +352,10 @@ class _ArteScreenState extends ConsumerState<ArteScreen> {
       element: item['element'] as String?,
       zodiac: item['zodiac'] as String?,
       bridgeFuture: isHerb ? _api.materiaBridge(slug) : null,
+      // `context` es el de esta pantalla, que sigue montada tras cerrar la hoja
+      onAnnotate: () =>
+          goGrimoireCompose(ref, context, title: item['name'] as String),
+      onPlanetHour: () => goCielo(ref, context, cara: cieloCaraAhora),
     );
     await quota.recordUsage('materia');
   }

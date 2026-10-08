@@ -24,6 +24,18 @@ final grimoireComposeProvider = NotifierProvider<GrimoireCompose, bool>(
   GrimoireCompose.new,
 );
 
+/// Título con el que abrir el editor del grimorio (Saber → Grimorio). Solo el
+/// título, que viaja en claro; el contenido sigue cifrándose al sellar. El
+/// grimorio lo consume y lo limpia al abrir el editor.
+class GrimoireComposeTitle extends Notifier<String?> {
+  @override
+  String? build() => null;
+  void set(String? title) => state = title;
+}
+
+final grimoireComposeTitleProvider =
+    NotifierProvider<GrimoireComposeTitle, String?>(GrimoireComposeTitle.new);
+
 /// Planeta a enfocar en Cielos al entrar (Hoy → Cielos). Cielos resalta la fila
 /// de ese planeta en la carta natal y se desplaza hasta ella; luego lo limpia
 /// para no re-disparar el foco en visitas siguientes.
