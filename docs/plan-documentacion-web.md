@@ -56,3 +56,7 @@ No hace falta elegir un generador nuevo de documentación para este lote: Markdo
 - Las fuentes de las capturas son `arcanum_app/test/capturas/hoy_capturas_test.dart` y `arcanum_app/test/capturas/navegacion_capturas_test.dart`. Al cambiar esas pantallas, regenerar y revisar las imágenes de `arcanum_app/sitio/assets/` antes del siguiente despliegue.
 - El texto de privacidad distingue el cuerpo cifrado de las entradas del Grimorio de sus títulos y datos de contexto. La afirmación se contrastó con `arcanum_app/lib/features/grimorio/grimorio_editor.dart`.
 - La página conserva los enlaces legales de `gh-pages` y `app-ads.txt` en la raíz de Hosting. La llamada a la acción envía un correo para solicitar acceso a la prueba cerrada.
+
+## Guía de uso — 8 de octubre de 2026
+
+El [mapa de producto](producto.md) y la [guía de uso](guia-de-uso.md) cubren los cinco recorridos del primer lote con fuentes en código. Falta verificarlos de punta a punta en Android; la guía enumera los casos a probar. Después corresponde dibujar los flujos sensibles indicados en [arquitectura.md](arquitectura.md).

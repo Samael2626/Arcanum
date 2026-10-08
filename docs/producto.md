@@ -38,4 +38,4 @@ Fuentes de las cinco filas: [router](../arcanum_app/lib/core/router/app_router.d
 
 ## Reglas para mantener este mapa
 
-Al cambiar una tarea, comprobar primero la ruta en `app_router.dart`, el nombre en `sections.dart`, la pantalla y el flujo de API. Corregir aquí el recorrido y su límite; después revisar [la web pública](../arcanum_app/sitio/index.html), las capturas y la guía de uso que se escriba a partir de este mapa. Las notas `ARCANUM-Avance-*` y las specs antiguas registran decisiones de su fecha; no definen por sí solas lo que la app ofrece hoy.
+Al cambiar una tarea, comprobar primero la ruta en `app_router.dart`, el nombre en `sections.dart`, la pantalla y el flujo de API. Corregir aquí el recorrido y su límite; después revisar [la guía de uso](guia-de-uso.md), [la web pública](../arcanum_app/sitio/index.html) y las capturas. Las notas `ARCANUM-Avance-*` y las specs antiguas registran decisiones de su fecha; no definen por sí solas lo que la app ofrece hoy.
