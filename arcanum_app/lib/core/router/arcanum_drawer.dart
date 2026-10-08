@@ -152,6 +152,15 @@ class ArcanumDrawer extends ConsumerWidget {
                         rotulo: 'Mesa de tarot · en pruebas',
                         ruta: '/tarot',
                       ),
+                    // Igual que la mesa: el motor de respiracion aun no sale
+                    // en la version de la tienda.
+                    if (kDebugMode || kProfileMode)
+                      _FilaRuta(
+                        icono: Icons.air,
+                        iconoActivo: Icons.air,
+                        rotulo: 'Respirar · en pruebas',
+                        ruta: '/respirar',
+                      ),
                     _FilaRuta(
                       icono: Icons.explore_outlined,
                       iconoActivo: Icons.explore,

@@ -49,7 +49,7 @@ void main() {
               ),
           ],
         ),
-        for (final r in ['/perfil', '/settings', '/privacy'])
+        for (final r in ['/perfil', '/settings', '/privacy', '/respirar'])
           GoRoute(
             path: r,
             builder: (c, s) => Scaffold(body: Text('pantalla $r')),
@@ -123,6 +123,21 @@ void main() {
           'Estaba a tres toques metida dentro de Ajustes. Si vuelve a '
           'estarlo, el cajon deja de tener sentido.',
     );
+  });
+
+  testWidgets('en desarrollo, «Respirar · en pruebas» abre /respirar', (
+    t,
+  ) async {
+    // los tests corren en modo debug: la fila tiene que estar
+    await abrir(t);
+    await abrirCajon(t);
+    final fila = find.text('Respirar · en pruebas');
+    await t.ensureVisible(fila);
+    await t.pumpAndSettle();
+    await t.tap(fila);
+    await t.pumpAndSettle();
+
+    expect(find.text('pantalla /respirar'), findsOneWidget);
   });
 
   testWidgets('una seccion cuesta dos toques, y cambia de rama', (t) async {
