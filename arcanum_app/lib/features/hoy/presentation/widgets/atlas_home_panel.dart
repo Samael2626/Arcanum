@@ -17,6 +17,7 @@ class AtlasHomePanel extends StatelessWidget {
     required this.onSaber,
     required this.onTable,
     required this.onOracle,
+    required this.onSigil,
     this.showTable = false,
     this.horoscopeKey,
   });
@@ -29,6 +30,10 @@ class AtlasHomePanel extends StatelessWidget {
   final VoidCallback onSaber;
   final VoidCallback onTable;
   final VoidCallback onOracle;
+
+  /// «+ Sigilo» en la placa del Grimorio: abre el taller de letras (Samuel,
+  /// 07-oct, opcion B). Los sigilos se guardan en el Grimorio.
+  final VoidCallback onSigil;
 
   /// La placa de la mesa de tarot sale solo donde la mesa ya se ensena (builds
   /// de desarrollo y perfil, como su entrada del cajon). Se SUMA a la del
@@ -134,6 +139,12 @@ class AtlasHomePanel extends StatelessWidget {
               height: stacked ? 132 : 190,
               onTap: onGrimoire,
               compact: !stacked,
+              extra: _TileExtra(
+                key: const Key('atlas-sigilo'),
+                text: '+ Sigilo',
+                semantics: 'Crear un sigilo de letras',
+                onTap: onSigil,
+              ),
               art: const Icon(Icons.menu_book_outlined, size: 40),
             );
             final saber = _AtlasTile(
@@ -181,6 +192,7 @@ class _AtlasTile extends StatelessWidget {
     required this.onTap,
     required this.art,
     this.compact = false,
+    this.extra,
   });
 
   final String label;
@@ -196,6 +208,9 @@ class _AtlasTile extends StatelessWidget {
   final VoidCallback onTap;
   final Widget art;
   final bool compact;
+
+  /// Segunda accion de la placa, con su propio boton (no la placa entera).
+  final _TileExtra? extra;
 
   /// Hueco que la columna deja a la accion de abajo.
   static const double _actionRoom = 34;
@@ -226,18 +241,18 @@ class _AtlasTile extends StatelessWidget {
               ),
             ],
           ),
-          child: ExcludeSemantics(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: height),
-              child: Padding(
-                padding: EdgeInsets.all(compact ? 14 : 20),
-                // la accion va anclada abajo y la columna le deja su hueco:
-                // asi la baldosa mide su alto de diseno o lo que pida el texto
-                child: Stack(
-                  children: [
-                    Positioned(
-                      right: 0,
-                      bottom: compact ? 54 : 0,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: height),
+            child: Padding(
+              padding: EdgeInsets.all(compact ? 14 : 20),
+              // la accion va anclada abajo y la columna le deja su hueco:
+              // asi la baldosa mide su alto de diseno o lo que pida el texto
+              child: Stack(
+                children: [
+                  Positioned(
+                    right: 0,
+                    bottom: compact ? 54 : 0,
+                    child: ExcludeSemantics(
                       child: IconTheme(
                         data: IconThemeData(
                           color: accent.withValues(alpha: .65),
@@ -245,8 +260,12 @@ class _AtlasTile extends StatelessWidget {
                         child: art,
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: _actionRoom),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      bottom: extra == null ? _actionRoom : 52,
+                    ),
+                    child: ExcludeSemantics(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,19 +299,77 @@ class _AtlasTile extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: Text(
-                        '$action  →',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: ArcanumText.body(14, color: accent),
-                      ),
+                  ),
+                  // la accion y el boton extra en una fila: la accion se
+                  // encoge antes que solaparse, con cualquier letra. El boton
+                  // lleva su propia etiqueta y su toque no abre la placa
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ExcludeSemantics(
+                            child: Text(
+                              '$action  →',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: ArcanumText.body(14, color: accent),
+                            ),
+                          ),
+                        ),
+                        ?extra,
+                      ],
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/// Boton secundario de una placa: 48 dp, borde dorado.
+class _TileExtra extends StatelessWidget {
+  const _TileExtra({
+    super.key,
+    required this.text,
+    required this.semantics,
+    required this.onTap,
+  });
+
+  final String text;
+  final String semantics;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: semantics,
+    excludeSemantics: true,
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const StadiumBorder(),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: ShapeDecoration(
+                shape: const StadiumBorder(
+                  side: BorderSide(color: ArcanumColors.gold),
                 ),
+                color: ArcanumColors.surface.withValues(alpha: .7),
+              ),
+              child: Text(
+                text,
+                style: ArcanumText.body(14, color: ArcanumColors.goldLight),
               ),
             ),
           ),

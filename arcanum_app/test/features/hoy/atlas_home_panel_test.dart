@@ -44,6 +44,7 @@ void main() {
               onSaber: () => abiertos.add('/saber'),
               onTable: () => abiertos.add('/tarot'),
               onOracle: () => abiertos.add('/oraculo'),
+              onSigil: () => abiertos.add('taller'),
             ),
           ),
         ),
@@ -119,4 +120,36 @@ void main() {
       expect(t.takeException(), isNull, reason: 'algo se desbordo');
     });
   }
+
+  // Samuel, 07-oct (opcion B): el taller de letras entra por la placa del
+  // Grimorio, donde se guardan los sigilos. Boton propio: tocarlo no abre el
+  // Grimorio, y tocar la placa no abre el taller.
+  group('«+ Sigilo» en la placa del Grimorio', () {
+    for (final width in [411.0, 320.0]) {
+      testWidgets('abre el taller, no el Grimorio, a $width de ancho', (t) async {
+        final abiertos = await montar(t, showTable: true, width: width);
+        await tocar(t, const Key('atlas-sigilo'));
+        expect(abiertos, ['taller']);
+        await tocar(t, const Key('atlas-grimorio'));
+        expect(abiertos.last, '/grimorio');
+        final r = t.getRect(find.byKey(const Key('atlas-sigilo')));
+        expect(r.height, greaterThanOrEqualTo(48));
+        expect(r.width, greaterThanOrEqualTo(48));
+      });
+    }
+
+    testWidgets('el lector de pantalla lo nombra aparte', (t) async {
+      final handle = t.ensureSemantics();
+      await montar(t, showTable: false);
+      expect(find.bySemanticsLabel('Crear un sigilo de letras'), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('no se monta sobre «Escribir»', (t) async {
+      await montar(t, showTable: false, width: 320);
+      final chip = t.getRect(find.byKey(const Key('atlas-sigilo')));
+      final write = t.getRect(find.textContaining('Escribir'));
+      expect(chip.overlaps(write), isFalse, reason: '$chip sobre $write');
+    });
+  });
 }

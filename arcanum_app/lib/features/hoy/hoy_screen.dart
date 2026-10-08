@@ -16,6 +16,7 @@ import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_resin.dart';
 import '../sendero/application/sendero_guide_controller.dart';
+import '../sigilos/taller_screen.dart';
 import 'hoy_guidance.dart';
 import 'hoy_lore.dart';
 import 'presentation/widgets/atlas_home_panel.dart';
@@ -188,6 +189,15 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
           showTable: kDebugMode || kProfileMode,
           onTable: () => context.push('/tarot'),
           onOracle: () => context.go('/oraculo'),
+          // el taller de letras entra por el Grimorio, donde se guardan los
+          // sigilos (Samuel, 07-oct); como el editor, por el navegador raiz
+          onSigil: () async {
+            final saved = await Navigator.of(context, rootNavigator: true)
+                .push<bool>(
+                  MaterialPageRoute(builder: (_) => const TallerScreen()),
+                );
+            if (mounted && saved == true) context.go('/grimorio');
+          },
           horoscopeKey: ref
               .read(senderoGuideTargetsProvider)
               .keyFor('section_horoscopo'),
