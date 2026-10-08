@@ -17,7 +17,7 @@ const SEAL_SOURCES = {
     work: 'La Llave menor de Salomón, Goetia (Lemegeton, libro I), traducción de S. L. MacGregor Mathers, edición de Aleister Crowley (1904)',
     edition: 'Reimpresión de L. W. de Laurence, Chicago, 1916, que reproduce la edición de 1904 con su prefacio de 1903',
     scan: 'Harold B. Lee Library (Brigham Young University), en Internet Archive (lesserkeyofsolom00dela)',
-    license: 'Dominio público en EE. UU.: publicada en 1916, antes de 1929', item: 'lesserkeyofsolom00dela',
+    license: 'Dominio público en EE. UU. (edición de 1916). Situación de las figuras en Colombia: NO COMPROBADA', item: 'lesserkeyofsolom00dela',
     img: s => `sellos/goetia/g${String(s.fig).padStart(2, '0')}.jpg`
   }
 };

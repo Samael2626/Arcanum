@@ -24,7 +24,7 @@ const items = [
 ];
 const out = {
   version: 1,
-  note: 'Calcos de escaneos de dominio publico; no se redibujan. Generado por _export_catalogo.mjs: no editar a mano.',
+  note: 'Calcos de escaneos históricos; el estado jurídico depende de la fuente y el país. Generado por _export_catalogo.mjs: no editar a mano.',
   sources: Object.fromEntries(Object.entries(SOURCES).map(([k, v]) => [k, { name: v.name, short: v.short, work: v.work, edition: v.edition, scan: v.scan, license: v.license, item: v.item }])),
   goetiaRanks: GOETIA_RANKS,
   items
