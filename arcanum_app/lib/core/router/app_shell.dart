@@ -9,6 +9,7 @@ import '../state/flow_providers.dart';
 import '../theme/arcanum_colors.dart';
 import '../theme/arcanum_theme.dart';
 import '../../shared/widgets/info_dot.dart';
+import '../../features/hoy/presentation/widgets/portada_header.dart';
 import '../../features/hoy/presentation/widgets/reliquary_fx.dart';
 import '../../features/sendero/presentation/sendero_invitation.dart';
 import '../../features/sendero/application/sendero_guide_controller.dart';
@@ -57,7 +58,7 @@ class AppShell extends ConsumerWidget {
                         child: Column(
                           children: [
                             if (portada)
-                              const _PortadaBar()
+                              const _FloatingPortadaBar()
                             else if (section != null)
                               _SectionBar(section: section),
                             Expanded(child: navigationShell),
@@ -134,6 +135,32 @@ class _SectionBar extends ConsumerWidget {
           const SizedBox(width: 4),
           const _HomeButton(),
         ],
+      ),
+    );
+  }
+}
+
+/// La cabecera de la portada como un `SliverAppBar` flotante con snap: se
+/// pliega al bajar la lista y vuelve entera al subir un poco (lo decide
+/// `PortadaHeaderScroll`). Sigue en el arbol al plegarse, recortada: la
+/// hamburguesa lleva la clave unica del Sendero. Si el Sendero la senala, se
+/// queda a la vista.
+class _FloatingPortadaBar extends ConsumerWidget {
+  const _FloatingPortadaBar();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pointed = ref.watch(senderoGuideProvider)?.current.target == 'menu';
+    final shown = pointed || ref.watch(portadaHeaderShownProvider);
+    return ClipRect(
+      child: AnimatedAlign(
+        alignment: Alignment.bottomCenter,
+        heightFactor: shown ? 1 : 0,
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        child: ExcludeSemantics(excluding: !shown, child: const _PortadaBar()),
       ),
     );
   }

@@ -19,6 +19,7 @@ import 'hoy_guidance.dart';
 import 'hoy_lore.dart';
 import 'presentation/widgets/atlas_home_panel.dart';
 import 'presentation/widgets/nested_sky_instrument.dart';
+import 'presentation/widgets/portada_header.dart';
 import 'presentation/widgets/today_card.dart';
 
 /// El cielo de hoy de ESTA persona, o solo la luna si no ha confirmado lugar.
@@ -91,20 +92,23 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 460),
-        child: RefreshIndicator(
-          color: ArcanumColors.gold,
-          backgroundColor: ArcanumColors.surface,
-          onRefresh: _reload,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(15, 8, 15, 28),
-            children: [
-              switch (sky) {
-                AsyncData(:final value) => _content(value),
-                AsyncError(:final error) => _error(error.toString()),
-                _ => const _SkyLoading(),
-              },
-            ],
+        // la cabecera flota: se va al bajar y vuelve al subir un poco
+        child: PortadaHeaderScroll(
+          child: RefreshIndicator(
+            color: ArcanumColors.gold,
+            backgroundColor: ArcanumColors.surface,
+            onRefresh: _reload,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(15, 8, 15, 28),
+              children: [
+                switch (sky) {
+                  AsyncData(:final value) => _content(value),
+                  AsyncError(:final error) => _error(error.toString()),
+                  _ => const _SkyLoading(),
+                },
+              ],
+            ),
           ),
         ),
       ),

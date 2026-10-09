@@ -101,6 +101,7 @@ Future<void> _retratar(
   double alto = 844,
   double letra = 1,
   double scroll = 0,
+  double back = 0,
 }) async {
   tester.view
     ..physicalSize = Size(ancho, alto) * 3
@@ -137,6 +138,12 @@ Future<void> _retratar(
   });
   if (scroll != 0) {
     await tester.drag(find.byType(ListView).first, Offset(0, -scroll));
+    await tester.pump(const Duration(milliseconds: 300));
+  }
+  if (back != 0) {
+    // subir un poco: la cabecera flotante vuelve
+    await tester.drag(find.byType(ListView).first, Offset(0, back));
+    await tester.pump(const Duration(milliseconds: 300));
   }
   // en mitad del destello del canto (7 s, del 18 al 35 %)
   await tester.pump(const Duration(milliseconds: 1600));
@@ -187,5 +194,9 @@ void main() {
       letra: 1.6,
       scroll: 1150,
     ),
+  );
+  testWidgets(
+    'portada E 390 sube un poco',
+    (t) => _retratar(t, 'portada-e-390-sube', scroll: 420, back: 60),
   );
 }

@@ -4,7 +4,10 @@ import 'package:arcanum_app/features/hoy/presentation/widgets/atlas_home_panel.d
 import 'package:arcanum_app/features/hoy/presentation/widgets/reliquary_fx.dart';
 import 'package:arcanum_app/features/hoy/presentation/widgets/zodiaco_laminas.g.dart';
 import 'package:arcanum_app/shared/widgets/moon_disc.dart';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Los mosaicos de la portada, desde el 07-oct-2026 la entrada a las
@@ -24,6 +27,20 @@ String? _asset(Image i) {
 }
 
 void main() {
+  // Con la letra real y no con Ahem (cuadros de un cuerpo de ancho): lo que se
+  // mide aqui es si un titulo cabe o pisa una carta, y eso depende de la letra.
+  setUpAll(() async {
+    for (final (familia, ruta) in [
+      ('Cormorant Garamond', 'assets/fonts/CormorantGaramond-600.ttf'),
+      ('Crimson Pro', 'assets/fonts/CrimsonPro-400.ttf'),
+    ]) {
+      final cargador = FontLoader(
+        familia,
+      )..addFont(File(ruta).readAsBytes().then((b) => ByteData.view(b.buffer)));
+      await cargador.load();
+    }
+  });
+
   const moon = {
     'phase_name': 'Gibosa creciente',
     'illumination': 0.62,
@@ -230,6 +247,13 @@ void main() {
       expect(t.takeException(), isNull, reason: 'algo se desbordo');
     });
   }
+
+  // Samuel, 08-oct: «Mesa de tarot» en UNA linea a 390 dp, sin pisar la carta
+  testWidgets('a 390 «Mesa de tarot» cabe en una línea', (t) async {
+    await montar(t, showTable: true, width: 390);
+    final titulo = t.getSize(find.text('Mesa de tarot'));
+    expect(titulo.height, lessThan(36 * 1.5), reason: '$titulo');
+  });
 
   testWidgets('«Tu carta» y «Hoy →» llevan a lo suyo', (t) async {
     final abiertos = await montar(t, showTable: true);

@@ -304,6 +304,25 @@ void main() {
   // la portada, con el mismo nombre y EN EL MISMO ORDEN. El orden se lee de la
   // portada de verdad: el 08-oct el menu salio con Horoscopo antes que Tarot y
   // nadie lo vio hasta compararlos.
+  // Samuel, 08-oct: como en E, la cabecera de la portada se va con el scroll
+  // y vuelve al subir un poco (flotante con snap). Solo en la portada.
+  testWidgets('la cabecera de la portada se va al bajar y vuelve al subir', (
+    tester,
+  ) async {
+    await _montar(tester);
+    final cuenta = find.byKey(const Key('portada-cuenta')).hitTestable();
+    expect(cuenta, findsOneWidget);
+
+    final lista = find.byType(ListView).first;
+    await tester.drag(lista, const Offset(0, -400));
+    await tester.pumpAndSettle();
+    expect(cuenta, findsNothing, reason: 'al bajar se pliega');
+
+    await tester.drag(lista, const Offset(0, 60));
+    await tester.pumpAndSettle();
+    expect(cuenta, findsOneWidget, reason: 'al subir un poco vuelve');
+  });
+
   testWidgets('portada y menu ofrecen las mismas secciones y en su orden', (
     tester,
   ) async {

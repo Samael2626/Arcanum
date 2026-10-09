@@ -378,12 +378,7 @@ class _SkyHero extends StatelessWidget {
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                21,
-                                19,
-                                21,
-                                16,
-                              ),
+                              padding: const EdgeInsets.fromLTRB(21, 19, 21, 2),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
@@ -397,7 +392,7 @@ class _SkyHero extends StatelessWidget {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(height: 18),
+                                  const SizedBox(height: 14),
                                   ConstrainedBox(
                                     constraints: BoxConstraints(
                                       // con letra grande el ancho crece con ella: nunca se parte
@@ -433,31 +428,52 @@ class _SkyHero extends StatelessWidget {
                                       ).copyWith(height: 1.28),
                                     ),
                                   ),
-                                  const SizedBox(height: 10),
+                                  // una linea de enlaces, como «Hoy →»: la
+                                  // zona tactil de 48 se come el margen de
+                                  // abajo en vez de sumar alto a la placa
                                   SizedBox(
                                     width: math.max(120, textRoom),
                                     child: Wrap(
-                                      spacing: 8,
+                                      crossAxisAlignment:
+                                          WrapCrossAlignment.center,
                                       children: [
-                                        _ReliquaryAction(
+                                        _ReliquaryLink(
                                           key: const Key('atlas-respirar'),
                                           text: 'Respirar',
                                           semantics:
                                               'Abrir la práctica de respiración',
                                           onTap: onBreathe,
                                         ),
-                                        if (onChart != null)
+                                        if (onChart != null) ...[
+                                          ExcludeSemantics(
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 4,
+                                                  ),
+                                              child: Text(
+                                                '·',
+                                                style: ArcanumText.body(
+                                                  14,
+                                                  color:
+                                                      ArcanumColors.goldLabel,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
                                           KeyedSubtree(
                                             key: chartKey,
-                                            child: _ReliquaryAction(
+                                            child: _ReliquaryLink(
                                               key: const Key('atlas-tu-carta'),
                                               text: 'Tu carta',
+                                              arrow: true,
                                               semantics:
                                                   'Ver tu carta natal y lo que '
                                                   'hoy la toca',
                                               onTap: onChart!,
                                             ),
                                           ),
+                                        ],
                                       ],
                                     ),
                                   ),
@@ -529,35 +545,12 @@ class _SectionTitle extends StatelessWidget {
           ),
         ),
         if (onToday != null)
-          Semantics(
-            button: true,
-            label: 'Bajar al instrumento de hoy',
-            excludeSemantics: true,
-            child: InkWell(
-              key: const Key('atlas-hoy'),
-              onTap: onToday,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Hoy',
-                      style: ArcanumText.body(
-                        14,
-                        color: ArcanumColors.goldLabel,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 15,
-                      color: ArcanumColors.goldLabel,
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          _ReliquaryLink(
+            key: const Key('atlas-hoy'),
+            text: 'Hoy',
+            arrow: true,
+            semantics: 'Bajar al instrumento de hoy',
+            onTap: onToday!,
           ),
       ],
     ),
@@ -632,10 +625,10 @@ class _ArtSpec {
 
   /// La carta de la Mesa: inclinada a la izquierda y a plena luz.
   const _ArtSpec.table()
-    : width = 112,
-      height = 167,
-      right = 29,
-      bottom = -23,
+    : width = 98,
+      height = 146,
+      right = -12,
+      bottom = -22,
       degrees = -9,
       opacity = 1,
       saturation = .8,
@@ -941,6 +934,56 @@ class _LowerRow extends StatelessWidget {
         ),
       );
     },
+  );
+}
+
+/// Enlace de texto en oro, sin caja: el lenguaje de «Hoy →». La zona
+/// tactil mide 48 aunque el texto sea pequeno.
+class _ReliquaryLink extends StatelessWidget {
+  const _ReliquaryLink({
+    super.key,
+    required this.text,
+    required this.semantics,
+    required this.onTap,
+    this.arrow = false,
+  });
+
+  final String text;
+  final String semantics;
+  final VoidCallback onTap;
+  final bool arrow;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: semantics,
+    excludeSemantics: true,
+    child: InkWell(
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text(
+                text,
+                style: ArcanumText.body(14, color: ArcanumColors.goldLabel),
+              ),
+            ),
+            if (arrow) ...[
+              const SizedBox(width: 4),
+              const Icon(
+                Icons.arrow_forward_rounded,
+                size: 15,
+                color: ArcanumColors.goldLabel,
+              ),
+            ],
+          ],
+        ),
+      ),
+    ),
   );
 }
 
