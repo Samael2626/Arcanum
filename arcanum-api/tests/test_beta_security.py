@@ -56,9 +56,14 @@ def test_registration_cannot_grant_premium_or_credits(client):
         "revenuecat_customer_id": "forged",
         "credits_balance": 999999,
     })
-    assert response.status_code == 201, response.text
-    assert response.json()["subscription_tier"] == "free"
-    assert response.json()["revenuecat_customer_id"] is None
+    assert response.status_code == 422, response.text
+    clean = client.post("/auth/register", json={
+        "email": "beta-escalation@arcanum.com",
+        "password": "strong-password-123",
+    })
+    assert clean.status_code == 201, clean.text
+    assert clean.json()["subscription_tier"] == "free"
+    assert clean.json()["revenuecat_customer_id"] is None
     tokens = client.post("/auth/login", data={
         "username": "beta-escalation@arcanum.com", "password": "strong-password-123",
     }).json()

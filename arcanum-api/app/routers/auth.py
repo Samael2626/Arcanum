@@ -47,14 +47,7 @@ def register(
         email=user_in.email,
         password=user_in.password,
         display_name=user_in.display_name,
-        birth_date=user_in.birth_date,
-        birth_time=user_in.birth_time,
-        birth_lat=user_in.birth_lat,
-        birth_lon=user_in.birth_lon,
-        birth_city=user_in.birth_city,
-        birth_timezone=user_in.birth_timezone,
-        preferred_tradition=user_in.preferred_tradition,
-        preferred_house_system=user_in.preferred_house_system or "placidus",
+        preferred_house_system="placidus",
     )
     return user
 

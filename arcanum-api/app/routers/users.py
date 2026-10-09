@@ -1,7 +1,9 @@
 import logging
 
 import httpx
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.adapters.repositories import UserRepository
 from app.api.deps import get_user_repo
@@ -9,6 +11,8 @@ from app.core.config import settings
 from app.domain.entities import UserEntity
 from app.schemas.user import UserResponse, UserUpdate
 from app.core.security import get_current_user
+from app.db.session import get_db
+from app.models.user_consent import UserConsent
 from app.services.oracle_context import invalidate_oracle_context
 
 logger = logging.getLogger(__name__)
@@ -29,8 +33,27 @@ def update_user_me(
     user_in: UserUpdate,
     users: UserRepository = Depends(get_user_repo),
     current_user: UserEntity = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     user_data = user_in.dict(exclude_unset=True)
+    sensitive_fields = {
+        "birth_date", "birth_time", "birth_lat", "birth_lon",
+        "birth_city", "birth_timezone", "preferred_tradition",
+    }
+    if any(user_data.get(field) is not None for field in sensitive_fields):
+        consent = db.execute(
+            select(UserConsent).where(
+                UserConsent.user_id == current_user.id,
+                UserConsent.kind == "datos_sensibles",
+                UserConsent.policy_version == "datos-sensibles-v1",
+                UserConsent.granted.is_(True),
+            ).with_for_update()
+        ).scalar_one_or_none()
+        if consent is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Autoriza los datos sensibles antes de guardar el perfil natal.",
+            )
     for field, value in user_data.items():
         setattr(current_user, field, value)
     users.save(current_user)

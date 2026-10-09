@@ -1,6 +1,6 @@
 # Documentación de ARCANUM
 
-Este índice es la entrada a la documentación del producto. El código y los textos publicados mandan cuando una nota antigua discrepa con ellos. Fecha de revisión del índice: 2026-10-08.
+Este índice es la entrada a la documentación del producto. El código y los textos publicados mandan cuando una nota antigua discrepa con ellos. Fecha de revisión del índice: 2026-10-09.
 
 ## Para qué sirve cada lugar
 
@@ -26,7 +26,7 @@ Este índice es la entrada a la documentación del producto. El código y los te
 | Tema | Documentos |
 |---|---|
 | Producto | [Mapa actual](producto.md), [Guía de uso](guia-de-uso.md), [Propósito de módulos](ARCANUM-Modulos-Proposito.md), [Mesa de tarot](ARCANUM-Spec-Mesa-Tarot.md), [Taller de sigilos](ARCANUM-Informe-Taller-Sigilos-2026-10-02.md) |
-| Operación | [Play Console](ARCANUM-Play-Console-Progreso.md), [Seguridad beta](ARCANUM-Auditoria-Seguridad-Beta-2026-10-05.md), [Data Safety](ARCANUM-Data-Safety.md) |
+| Operación | [Play Console](ARCANUM-Play-Console-Progreso.md), [Seguridad beta](ARCANUM-Auditoria-Seguridad-Beta-2026-10-05.md), [Privacidad del onboarding](legal/privacidad-onboarding.md), [Data Safety](ARCANUM-Data-Safety.md) |
 | Historia | [`checkpoints/`](checkpoints/), archivos `ARCANUM-Avance-*` y documentos `ARCANUM-Semana*` |
 
 Las notas históricas registran decisiones de su fecha. No usarlas como ficha del producto actual sin comprobar la implementación. Ejemplo: [Propósito de módulos](ARCANUM-Modulos-Proposito.md) aún marca Grimorio y Oráculo como pendientes, aunque ya existen.

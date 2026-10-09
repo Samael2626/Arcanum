@@ -1,13 +1,16 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.core.security import get_current_user
 from app.db.session import get_db
 from app.domain.entities import UserEntity
 from app.models.user_consent import UserConsent
+from app.models.user import User
+from app.models.natal_chart import NatalChart
+from app.services.oracle_context import invalidate_oracle_context
 from app.schemas.user_consent import UserConsentCreate, UserConsentResponse
 
 router = APIRouter(prefix="/consents", tags=["consents"])
@@ -53,6 +56,17 @@ def record_user_consent(
     else:
         consent.revoked_at = now
 
+    if payload.kind.value == "datos_sensibles" and not payload.granted:
+        user = db.get(User, current_user.id)
+        for field in (
+            "birth_date", "birth_time", "birth_lat", "birth_lon",
+            "birth_city", "birth_timezone", "preferred_tradition",
+        ):
+            setattr(user, field, None)
+        db.execute(delete(NatalChart).where(NatalChart.user_id == current_user.id))
+
     db.commit()
+    if payload.kind.value == "datos_sensibles" and not payload.granted:
+        invalidate_oracle_context(current_user.id)
     db.refresh(consent)
     return consent

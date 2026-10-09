@@ -9,15 +9,14 @@ def test_register_user(client):
         json={
             "email": "test@arcanum.com",
             "password": "supersecurepassword123",
-            "display_name": "Mystic Apprentice",
-            "preferred_tradition": "hermeticism"
+            "display_name": "Mystic Apprentice"
         }
     )
     assert response.status_code == 201
     data = response.json()
     assert data["email"] == "test@arcanum.com"
     assert data["display_name"] == "Mystic Apprentice"
-    assert data["preferred_tradition"] == "hermeticism"
+    assert data["preferred_tradition"] is None
     assert "id" in data
 
 

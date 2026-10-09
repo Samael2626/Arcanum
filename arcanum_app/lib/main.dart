@@ -16,9 +16,11 @@ import 'core/places/city_index_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/arcanum_theme.dart';
 import 'features/onboarding/application/onboarding_controller.dart';
+import 'features/onboarding/application/pending_profile_store.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await purgeLegacyOnboardingData();
   // La OFL obliga a distribuir su texto; esto lo hace visible en la app.
   registrarLicencias();
   // No usar Firebase.initializeApp directamente: en Android el provider nativo
@@ -88,6 +90,7 @@ class ArcanumApp extends ConsumerWidget {
         }
       }
       if (!next.isAuthenticated && previous?.isAuthenticated == true) {
+        ref.invalidate(onboardingProvider);
         ref.read(monetizationServiceProvider).logout();
       }
     });

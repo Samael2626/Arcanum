@@ -5,6 +5,7 @@ import 'package:arcanum_app/core/auth/token_storage.dart';
 import 'package:arcanum_app/features/settings/account_deletion_service.dart';
 import 'package:arcanum_app/features/settings/sensitive_data_consent_settings_card.dart';
 import 'package:arcanum_app/features/settings/settings_screen.dart';
+import 'package:arcanum_app/features/onboarding/application/pending_profile_store.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -79,6 +80,21 @@ class _SettingsAuthRepository extends AuthRepository {
   };
 }
 
+class _MemoryPendingProfileStore implements PendingProfileStore {
+  Map<String, dynamic>? profile = {'birth_date': '2000-01-01'};
+
+  @override
+  Future<void> save(String userId, Map<String, dynamic> profile) async {
+    this.profile = profile;
+  }
+
+  @override
+  Future<Map<String, dynamic>?> readFor(String userId) async => profile;
+
+  @override
+  Future<void> clear() async => profile = null;
+}
+
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
@@ -133,12 +149,14 @@ void main() {
   testWidgets('revocar autorizacion borra datos sensibles', (tester) async {
     final api = _SettingsApi();
     final authRepository = _SettingsAuthRepository();
+    final pending = _MemoryPendingProfileStore();
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
           arcanumApiProvider.overrideWithValue(api),
           authRepositoryProvider.overrideWithValue(authRepository),
+          pendingProfileStoreProvider.overrideWithValue(pending),
         ],
         child: const MaterialApp(
           home: Scaffold(body: SensitiveDataConsentSettingsCard()),
@@ -147,16 +165,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Revocar y borrar datos sensibles'));
+    await tester.tap(find.text('Revocar y borrar perfil natal'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(api.recorded.single['granted'], isFalse);
-    expect(authRepository.updated, isNotNull);
-    expect(authRepository.updated?['birth_date'], isNull);
-    expect(authRepository.updated?['preferred_tradition'], isNull);
+    expect(pending.profile, isNull);
     expect(
-      find.text('Autorización revocada y datos sensibles borrados.'),
+      find.text('Autorización revocada y perfil natal borrado.'),
       findsOneWidget,
     );
   });

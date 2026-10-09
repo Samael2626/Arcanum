@@ -43,12 +43,22 @@ _CON_LUGAR = {
 
 
 def _auth(client, payload):
-    client.post("/auth/register", json=payload)
+    client.post("/auth/register", json={
+        key: payload[key] for key in ("email", "password", "display_name") if key in payload
+    })
     tok = client.post(
         "/auth/login",
         data={"username": payload["email"], "password": payload["password"]},
     ).json()
-    return {"Authorization": f"Bearer {tok['access_token']}"}
+    headers = {"Authorization": f"Bearer {tok['access_token']}"}
+    profile = {key: value for key, value in payload.items()
+               if key not in ("email", "password", "display_name")}
+    if profile:
+        client.post("/consents", headers=headers, json={
+            "kind": "datos_sensibles", "policy_version": "datos-sensibles-v1", "granted": True,
+        })
+        client.put("/users/me", headers=headers, json=profile)
+    return headers
 
 
 def _entrada(**extra) -> dict:

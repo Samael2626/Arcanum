@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:arcanum_app/features/onboarding/application/onboarding_controller.dart';
+import 'package:arcanum_app/features/onboarding/application/pending_profile_store.dart';
 import 'package:arcanum_app/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:arcanum_app/core/auth/auth_controller.dart';
 import 'package:arcanum_app/core/auth/auth_repository.dart';
@@ -35,6 +34,45 @@ class _RecordingAuthRepository extends AuthRepository {
   }
 }
 
+class _ForbiddenAuthRepository extends AuthRepository {
+  _ForbiddenAuthRepository() : super(Dio(), TokenStorage());
+
+  @override
+  Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
+    throw AuthException('Consentimiento revocado', statusCode: 403);
+  }
+}
+
+class _AuthenticatedAuthNotifier extends AuthNotifier {
+  @override
+  AuthState build() =>
+      const AuthState(AuthStatus.authenticated, {'id': 'user-a'});
+
+  @override
+  Future<void> refreshUser() async {}
+}
+
+class _MemoryPendingProfileStore implements PendingProfileStore {
+  String? userId;
+  Map<String, dynamic>? profile;
+
+  @override
+  Future<void> save(String userId, Map<String, dynamic> profile) async {
+    this.userId = userId;
+    this.profile = Map<String, dynamic>.from(profile);
+  }
+
+  @override
+  Future<Map<String, dynamic>?> readFor(String userId) async =>
+      this.userId == userId ? profile : null;
+
+  @override
+  Future<void> clear() async {
+    userId = null;
+    profile = null;
+  }
+}
+
 void main() {
   // Use an in-memory mock for SharedPreferences so the controller can read/write
   // without touching real storage.
@@ -44,12 +82,26 @@ void main() {
 
   final authRepository = _OfflineAuthRepository();
 
-  ProviderContainer makeContainer() => ProviderContainer(
-    overrides: [authRepositoryProvider.overrideWithValue(authRepository)],
+  ProviderContainer makeContainer({
+    AuthRepository? repository,
+    PendingProfileStore? pendingStore,
+  }) => ProviderContainer(
+    overrides: [
+      authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+      authRepositoryProvider.overrideWithValue(repository ?? authRepository),
+      pendingProfileStoreProvider.overrideWithValue(
+        pendingStore ?? _MemoryPendingProfileStore(),
+      ),
+    ],
   );
 
   Widget wrap() => ProviderScope(
-    overrides: [authRepositoryProvider.overrideWithValue(authRepository)],
+    overrides: [
+      authRepositoryProvider.overrideWithValue(authRepository),
+      pendingProfileStoreProvider.overrideWithValue(
+        _MemoryPendingProfileStore(),
+      ),
+    ],
     child: const MaterialApp(home: OnboardingScreen()),
   );
 
@@ -148,7 +200,13 @@ void main() {
   ) async {
     final online = _RecordingAuthRepository();
     final container = ProviderContainer(
-      overrides: [authRepositoryProvider.overrideWithValue(online)],
+      overrides: [
+        authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+        authRepositoryProvider.overrideWithValue(online),
+        pendingProfileStoreProvider.overrideWithValue(
+          _MemoryPendingProfileStore(),
+        ),
+      ],
     );
     addTearDown(container.dispose);
 
@@ -209,8 +267,6 @@ void main() {
   // quedaban solo en el dispositivo, el onboarding no volvía a mostrarse, y la
   // carta natal era imposible (422) para siempre, sin arreglo posible.
   group('perfil pendiente de reintento', () {
-    const kPending = 'onboarding_pending_profile';
-
     void confirmPlace(OnboardingNotifier n) {
       n.setSensitiveDataConsent(true);
       n.setResolvedLocation(
@@ -224,7 +280,8 @@ void main() {
     testWidgets('un fallo de red encola el perfil en vez de perderlo', (
       tester,
     ) async {
-      final container = makeContainer();
+      final pending = _MemoryPendingProfileStore();
+      final container = makeContainer(pendingStore: pending);
       addTearDown(container.dispose);
       final notifier = container.read(onboardingProvider.notifier);
 
@@ -236,11 +293,8 @@ void main() {
       expect(await notifier.isCompleted(), isTrue);
 
       // …pero los datos quedan guardados para reintentarlos.
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(kPending);
-      expect(raw, isNotNull, reason: 'el perfil debe quedar encolado');
-
-      final payload = jsonDecode(raw!) as Map<String, dynamic>;
+      expect(pending.userId, 'user-a');
+      final payload = pending.profile!;
       expect(payload['birth_lat'], '4.710000');
       expect(payload['birth_lon'], '-74.070000');
       expect(payload['birth_timezone'], 'America/Bogota');
@@ -252,18 +306,17 @@ void main() {
       tester,
     ) async {
       final online = _RecordingAuthRepository();
-      final container = ProviderContainer(
-        overrides: [authRepositoryProvider.overrideWithValue(online)],
+      final pending = _MemoryPendingProfileStore();
+      await pending.save('user-a', {
+        'onboarding_completed': true,
+        'birth_lat': '4.710000',
+        'birth_timezone': 'America/Bogota',
+      });
+      final container = makeContainer(
+        repository: online,
+        pendingStore: pending,
       );
       addTearDown(container.dispose);
-
-      SharedPreferences.setMockInitialValues({
-        kPending: jsonEncode({
-          'onboarding_completed': true,
-          'birth_lat': '4.710000',
-          'birth_timezone': 'America/Bogota',
-        }),
-      });
 
       final notifier = container.read(onboardingProvider.notifier);
       expect(await notifier.flushPendingProfile(), isTrue);
@@ -271,12 +324,7 @@ void main() {
       expect(online.sent, hasLength(1));
       expect(online.sent.single['birth_lat'], '4.710000');
 
-      final prefs = await SharedPreferences.getInstance();
-      expect(
-        prefs.getString(kPending),
-        isNull,
-        reason: 'enviado con éxito, no debe reintentarse otra vez',
-      );
+      expect(pending.profile, isNull);
     });
 
     testWidgets('sin nada encolado, el reintento no llama al backend', (
@@ -296,56 +344,80 @@ void main() {
     testWidgets('si el reintento vuelve a fallar, el perfil se conserva', (
       tester,
     ) async {
-      final container = makeContainer(); // repositorio offline
+      final pending = _MemoryPendingProfileStore();
+      await pending.save('user-a', {'birth_lat': '4.710000'});
+      final container = makeContainer(pendingStore: pending);
       addTearDown(container.dispose);
-
-      SharedPreferences.setMockInitialValues({
-        kPending: jsonEncode({'birth_lat': '4.710000'}),
-      });
 
       final notifier = container.read(onboardingProvider.notifier);
       await tryFlushPendingProfile(notifier); // no debe propagar
 
-      final prefs = await SharedPreferences.getInstance();
-      expect(
-        prefs.getString(kPending),
-        isNotNull,
-        reason: 'sigue pendiente para el próximo arranque',
+      expect(pending.profile, isNotNull);
+    });
+
+    testWidgets('otra cuenta no recibe el perfil pendiente', (tester) async {
+      final online = _RecordingAuthRepository();
+      final pending = _MemoryPendingProfileStore();
+      await pending.save('user-b', {'birth_lat': '4.710000'});
+      final container = makeContainer(
+        repository: online,
+        pendingStore: pending,
       );
+      addTearDown(container.dispose);
+
+      expect(
+        await container.read(onboardingProvider.notifier).flushPendingProfile(),
+        isFalse,
+      );
+      expect(online.sent, isEmpty);
+      expect(pending.userId, 'user-b');
+    });
+
+    testWidgets('un 403 no encola ni reenvía datos revocados', (tester) async {
+      final pending = _MemoryPendingProfileStore();
+      final container = makeContainer(
+        repository: _ForbiddenAuthRepository(),
+        pendingStore: pending,
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(onboardingProvider.notifier);
+      confirmPlace(notifier);
+
+      await expectLater(notifier.finish(), throwsA(isA<AuthException>()));
+      expect(pending.profile, isNull);
+      expect(await notifier.isCompleted(), isFalse);
+
+      await pending.save('user-a', {'birth_city': 'Bogotá'});
+      expect(await notifier.flushPendingProfile(), isFalse);
+      expect(pending.profile, isNull);
     });
 
     testWidgets('borrar la cuenta elimina el perfil pendiente', (tester) async {
       // Si sobreviviera, los datos de nacimiento de un usuario se enviarían
       // a la cuenta siguiente en el mismo dispositivo.
-      SharedPreferences.setMockInitialValues({
-        kPending: jsonEncode({'birth_lat': '4.710000'}),
-        'onboarding_completed': true,
-      });
+      final pending = _MemoryPendingProfileStore();
+      await pending.save('user-a', {'birth_lat': '4.710000'});
+      SharedPreferences.setMockInitialValues({'onboarding_completed': true});
 
-      await clearOnboardingLocalData();
+      await clearOnboardingLocalData(pendingStore: pending);
 
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString(kPending), isNull);
+      expect(pending.profile, isNull);
       expect(prefs.getBool('onboarding_completed'), isNull);
     });
 
     testWidgets('reset también limpia el perfil pendiente', (tester) async {
-      final container = makeContainer();
+      final pending = _MemoryPendingProfileStore();
+      final container = makeContainer(pendingStore: pending);
       addTearDown(container.dispose);
       final notifier = container.read(onboardingProvider.notifier);
 
       confirmPlace(notifier);
       await notifier.finish();
-      expect(
-        (await SharedPreferences.getInstance()).getString(kPending),
-        isNotNull,
-      );
+      expect(pending.profile, isNotNull);
 
       await notifier.reset();
-      expect(
-        (await SharedPreferences.getInstance()).getString(kPending),
-        isNull,
-      );
+      expect(pending.profile, isNull);
     });
   });
 

@@ -5,6 +5,8 @@ import '../../core/api/arcanum_api.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/privacy/consent_policy.dart';
 import '../../core/theme/arcanum_theme.dart';
+import '../onboarding/application/onboarding_controller.dart';
+import '../onboarding/application/pending_profile_store.dart';
 import '../../shared/widgets/arcanum_card.dart';
 
 class SensitiveDataConsentSettingsCard extends ConsumerStatefulWidget {
@@ -37,6 +39,7 @@ class _SensitiveDataConsentSettingsCardState
   Future<void> _revoke() async {
     setState(() => _busy = true);
     try {
+      await ref.read(pendingProfileStoreProvider).clear();
       await ref
           .read(arcanumApiProvider)
           .recordConsent(
@@ -44,15 +47,8 @@ class _SensitiveDataConsentSettingsCardState
             policyVersion: sensitiveDataConsentPolicyVersion,
             granted: false,
           );
-      await ref.read(authRepositoryProvider).updateProfile({
-        'birth_date': null,
-        'birth_time': null,
-        'birth_lat': null,
-        'birth_lon': null,
-        'birth_city': null,
-        'birth_timezone': null,
-        'preferred_tradition': null,
-      });
+      // El backend revoca y borra el perfil natal en una sola transaccion.
+      ref.invalidate(onboardingProvider);
       if (!mounted) return;
       setState(() {
         _busy = false;
@@ -60,7 +56,7 @@ class _SensitiveDataConsentSettingsCardState
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Autorización revocada y datos sensibles borrados.'),
+          content: Text('Autorización revocada y perfil natal borrado.'),
         ),
       );
       try {
@@ -95,7 +91,7 @@ class _SensitiveDataConsentSettingsCardState
               const SectionLabel('DATOS SENSIBLES'),
               const SizedBox(height: 12),
               Text(
-                'Autorizaste el uso de tus datos natales y de práctica.',
+                'Autorizaste el uso de tus datos natales y de práctica. Tu historial y las entradas del Grimorio se eliminan por separado.',
                 style: ArcanumText.body(16),
               ),
               const SizedBox(height: 12),
@@ -103,7 +99,7 @@ class _SensitiveDataConsentSettingsCardState
                 onPressed: _busy ? null : _revoke,
                 icon: const Icon(Icons.delete_sweep_outlined),
                 label: Text(
-                  _busy ? 'Revocando…' : 'Revocar y borrar datos sensibles',
+                  _busy ? 'Revocando…' : 'Revocar y borrar perfil natal',
                 ),
               ),
             ],

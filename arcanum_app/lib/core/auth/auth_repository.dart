@@ -16,7 +16,8 @@ class RegisterData {
 
 class AuthException implements Exception {
   final String message;
-  AuthException(this.message);
+  final int? statusCode;
+  AuthException(this.message, {this.statusCode});
   @override
   String toString() => message;
 }
@@ -69,7 +70,10 @@ class AuthRepository {
       final res = await _dio.put('/users/me', data: data);
       return res.data as Map<String, dynamic>;
     } on DioException catch (e) {
-      throw AuthException(_detail(e) ?? 'No se pudo guardar el perfil');
+      throw AuthException(
+        _detail(e) ?? 'No se pudo guardar el perfil',
+        statusCode: e.response?.statusCode,
+      );
     }
   }
 

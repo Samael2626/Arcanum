@@ -23,8 +23,12 @@ class UserBase(BaseModel):
     preferred_house_system: Optional[str] = None
     onboarding_completed: Optional[bool] = None
 
-class UserCreate(UserBase):
+class UserCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: EmailStr
     password: str = Field(..., min_length=8)
+    display_name: Optional[str] = None
 
 class UserUpdate(BaseModel):
     """Solo campos editables por el propio usuario.

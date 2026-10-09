@@ -56,7 +56,7 @@ class _SensitiveDataConsentStepState extends State<SensitiveDataConsentStep> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Puedes retirar tu autorización desde Ajustes y borrar estos datos cuando quieras.',
+            'Puedes retirar tu autorización desde Ajustes. Tu perfil natal se borra allí; las entradas del Grimorio y las lecturas se eliminan por separado.',
             style: ArcanumText.body(15, color: ArcanumColors.ivoryMuted),
           ),
           if (_error != null) ...[

@@ -1,10 +1,10 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/auth/auth_controller.dart';
+import '../../../core/auth/auth_repository.dart';
+import 'pending_profile_store.dart';
 
 class OnboardingData {
   final String? displayName;
@@ -69,7 +69,6 @@ class OnboardingState {
 
 class OnboardingNotifier extends Notifier<OnboardingState> {
   static const _kCompleted = 'onboarding_completed';
-  static const _kPendingProfile = 'onboarding_pending_profile';
   static const _kName = 'onboarding_display_name';
   static const _kDate = 'onboarding_birth_date';
   static const _kTime = 'onboarding_birth_time';
@@ -88,8 +87,6 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
       (await _prefs).getBool(_kCompleted) ?? false;
 
   Future<void> setDisplayName(String v) async {
-    final p = await _prefs;
-    await p.setString(_kName, v);
     state = OnboardingState(
       step: state.step,
       data: state.data.copyWith(displayName: v),
@@ -97,9 +94,6 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
   }
 
   Future<void> setBirthDate(DateTime v) async {
-    final p = await _prefs;
-    final iso = v.toIso8601String();
-    await p.setString(_kDate, iso);
     state = OnboardingState(
       step: state.step,
       data: state.data.copyWith(birthDate: v),
@@ -107,8 +101,6 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
   }
 
   Future<void> setBirthTime(String v) async {
-    final p = await _prefs;
-    await p.setString(_kTime, v);
     state = OnboardingState(
       step: state.step,
       data: state.data.copyWith(birthTime: v),
@@ -116,8 +108,6 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
   }
 
   Future<void> setBirthCity(String v) async {
-    final p = await _prefs;
-    await p.setString(_kCity, v);
     state = OnboardingState(
       step: state.step,
       data: state.data.copyWith(birthCity: v),
@@ -202,10 +192,17 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
   }
 
   Future<void> finishWithoutSensitiveData() async {
+    await ref.read(pendingProfileStoreProvider).clear();
     await _complete({'onboarding_completed': true});
   }
 
   Future<void> _complete(Map<String, dynamic> payload) async {
+    final userId = ref.read(authProvider).user?['id'] as String?;
+    if (userId == null) {
+      throw StateError(
+        'No se puede guardar un perfil sin usuario autenticado.',
+      );
+    }
     // A diferencia del resolve (que debe fallar visible), persistir el perfil
     // tolera fallo de red: el flag local permite continuar y el perfil se
     // reintenta en el próximo arranque autenticado. Los datos que se
@@ -213,13 +210,23 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
     try {
       await ref.read(authRepositoryProvider).updateProfile(payload);
       await ref.read(authProvider.notifier).refreshUser();
-      await _clearPendingProfile();
+      await ref.read(pendingProfileStoreProvider).clear();
     } catch (error) {
+      if (error is AuthException &&
+          error.statusCode != null &&
+          error.statusCode! < 500 &&
+          error.statusCode != 429) {
+        await ref.read(pendingProfileStoreProvider).clear();
+        rethrow;
+      }
+      if (ref.read(authProvider).user?['id'] != userId) {
+        throw StateError('La sesión cambió mientras se guardaba el perfil.');
+      }
       // No bloquear el flujo, pero tampoco perder los datos: se guardan en
       // disco para reintentarlos. Estar sin red es una condición ESPERADA y
       // gestionada, no una anomalía: se registra, no se reporta como error del
       // framework (eso ensuciaría el crash reporting en cada uso offline).
-      await _savePendingProfile(payload);
+      await ref.read(pendingProfileStoreProvider).save(userId, payload);
       debugPrint(
         'ARCANUM onboarding: perfil no persistido ($error). '
         'Queda encolado para reintento.',
@@ -228,17 +235,6 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
 
     final p = await _prefs;
     await p.setBool(_kCompleted, true);
-  }
-
-  /// Guarda el perfil que no se pudo enviar, para reintentarlo al arrancar.
-  Future<void> _savePendingProfile(Map<String, dynamic> payload) async {
-    final p = await _prefs;
-    await p.setString(_kPendingProfile, jsonEncode(payload));
-  }
-
-  Future<void> _clearPendingProfile() async {
-    final p = await _prefs;
-    await p.remove(_kPendingProfile);
   }
 
   /// Reintenta el perfil que quedó pendiente por un fallo de red al terminar
@@ -251,14 +247,20 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
   ///
   /// Devuelve true si había algo pendiente y se envió.
   Future<bool> flushPendingProfile() async {
-    final p = await _prefs;
-    final raw = p.getString(_kPendingProfile);
-    if (raw == null) return false;
-
-    final payload = jsonDecode(raw) as Map<String, dynamic>;
-    await ref.read(authRepositoryProvider).updateProfile(payload);
+    final userId = ref.read(authProvider).user?['id'] as String?;
+    if (userId == null) return false;
+    final store = ref.read(pendingProfileStoreProvider);
+    final payload = await store.readFor(userId);
+    if (payload == null) return false;
+    try {
+      await ref.read(authRepositoryProvider).updateProfile(payload);
+    } on AuthException catch (error) {
+      if (error.statusCode != 403) rethrow;
+      await store.clear();
+      return false;
+    }
     await ref.read(authProvider.notifier).refreshUser();
-    await p.remove(_kPendingProfile);
+    await store.clear();
     return true;
   }
 
@@ -271,8 +273,8 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
       p.remove(_kTime),
       p.remove(_kCountryHeredada),
       p.remove(_kCity),
-      p.remove(_kPendingProfile),
     ]);
+    await ref.read(pendingProfileStoreProvider).clear();
     state = OnboardingState.initial;
   }
 }
@@ -304,7 +306,9 @@ final onboardingCompletedProvider = FutureProvider<bool>((ref) async {
   return prefs.getBool('onboarding_completed') ?? false;
 });
 
-Future<void> clearOnboardingLocalData() async {
+Future<void> clearOnboardingLocalData({
+  PendingProfileStore? pendingStore,
+}) async {
   final prefs = await SharedPreferences.getInstance();
   for (final key in const [
     'onboarding_completed',
@@ -315,8 +319,8 @@ Future<void> clearOnboardingLocalData() async {
     'onboarding_birth_city',
     // Crítico al borrar la cuenta: si el perfil pendiente sobreviviera, los
     // datos de nacimiento de un usuario se enviarían a la cuenta siguiente.
-    'onboarding_pending_profile',
   ]) {
     await prefs.remove(key);
   }
+  await (pendingStore ?? SecurePendingProfileStore()).clear();
 }

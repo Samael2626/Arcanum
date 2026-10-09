@@ -33,12 +33,22 @@ _REGISTER = {
 
 
 def _auth(client):
-    client.post("/auth/register", json=_REGISTER)
+    client.post("/auth/register", json={
+        key: _REGISTER[key] for key in ("email", "password", "display_name")
+    })
     tok = client.post(
         "/auth/login",
         data={"username": _REGISTER["email"], "password": _REGISTER["password"]},
     ).json()
-    return {"Authorization": f"Bearer {tok['access_token']}"}
+    headers = {"Authorization": f"Bearer {tok['access_token']}"}
+    client.post("/consents", headers=headers, json={
+        "kind": "datos_sensibles", "policy_version": "datos-sensibles-v1", "granted": True,
+    })
+    client.put("/users/me", headers=headers, json={
+        key: value for key, value in _REGISTER.items()
+        if key not in ("email", "password", "display_name")
+    })
+    return headers
 
 
 def _hoy(client, headers):

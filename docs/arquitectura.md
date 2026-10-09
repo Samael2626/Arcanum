@@ -1,6 +1,6 @@
 # Mapa de arquitectura de ARCANUM
 
-Estado: contexto y dos secuencias verificados en el código el 2026-10-08. Describen el comportamiento implementado; falta comprobar los recorridos completos en Android.
+Estado: contexto y dos secuencias verificados en el código el 2026-10-09. Describen el comportamiento implementado; falta comprobar los recorridos completos en Android.
 
 ```mermaid
 flowchart LR
@@ -40,6 +40,7 @@ sequenceDiagram
   actor Persona
   participant App as App Flutter
   participant Local as SharedPreferences
+  participant Secure as FlutterSecureStorage
   participant API as API FastAPI
   participant DB as PostgreSQL
   Persona->>App: Registrarse con correo y contraseña
@@ -53,19 +54,20 @@ sequenceDiagram
     API->>DB: Registrar consentimiento
     API-->>App: Confirmación
     App->>Persona: Pedir nombre, fecha, hora y lugar
-    App->>Local: Guardar borrador de nombre, fecha, hora y ciudad
+    Note over App: El borrador natal permanece en memoria
     opt Lugar fuera del catálogo
       App->>API: POST /geo/resolve
       API-->>App: Coordenadas y zona horaria
     end
     Persona->>App: Confirmar lugar y finalizar
     App->>API: PUT /users/me con perfil natal
+    API->>DB: Comprobar consentimiento vigente
     alt Perfil persistido
       API->>DB: Guardar perfil
       API-->>App: Confirmación
     else Fallo de red o de actualización
-      App->>Local: Guardar onboarding_pending_profile para reintento
-      Note over App,Local: El perfil pendiente contiene datos natales
+      App->>Secure: Guardar perfil pendiente vinculado al usuario
+      Note over App,Secure: El perfil pendiente contiene datos natales
     end
   else Rechaza
     Persona->>App: Continuar sin datos sensibles
@@ -73,19 +75,20 @@ sequenceDiagram
     Note over App,API: Si falla este registro, el rechazo no bloquea la app
     App->>API: PUT /users/me con onboarding_completed
     opt Falla la actualización
-      App->>Local: Guardar actualización pendiente
+      App->>Secure: Guardar actualización pendiente
     end
   end
   App->>Local: Marcar onboarding_completed
   App->>Persona: Abrir Sendero
   opt Nuevo inicio de sesión con perfil pendiente
+    App->>Secure: Leer pendiente solo si pertenece al usuario actual
     App->>API: PUT /users/me con datos pendientes
     API-->>App: Confirmación
-    App->>Local: Borrar onboarding_pending_profile
+    App->>Secure: Borrar perfil pendiente
   end
 ```
 
-El borrador de nombre, fecha, hora y ciudad, y el perfil pendiente para reintento, se escriben en `SharedPreferences`; este flujo **no les aplica el cifrado del Grimorio**. Las coordenadas y la zona horaria confirmadas viven en memoria hasta el envío o el guardado del perfil pendiente. Si falla `POST /consents` al aceptar, no se avanza a los datos natales; al rechazar, el fallo se tolera. El reintento ocurre al pasar a estado autenticado y conserva el perfil pendiente si vuelve a fallar. Esto describe el código actual, no una garantía de protección del almacenamiento local. [Registro](../arcanum_app/lib/features/auth/register_screen.dart), [autenticación](../arcanum_app/lib/core/auth/auth_controller.dart), [consentimiento y navegación](../arcanum_app/lib/features/onboarding/presentation/onboarding_screen.dart), [borrador y reintento](../arcanum_app/lib/features/onboarding/application/onboarding_controller.dart), [selector de lugar](../arcanum_app/lib/shared/widgets/place_chooser.dart), [API de perfil](../arcanum-api/app/routers/users.py), [API de consentimiento](../arcanum-api/app/routers/consents.py).
+El borrador natal permanece en memoria; `SharedPreferences` solo conserva el indicador de onboarding completo. El perfil pendiente se guarda en `FlutterSecureStorage` con el ID de su cuenta y solo se reenvía a esa cuenta. Al iniciar la app se borran los campos natales heredados de `SharedPreferences`; el pendiente antiguo, sin dueño verificable, se descarta. Las coordenadas y la zona horaria confirmadas permanecen en memoria hasta el envío o el guardado seguro del perfil pendiente. La API rechaza datos natales en `/auth/register` y exige consentimiento vigente para escribirlos en `/users/me`. Si falla `POST /consents` al aceptar, no se avanza a los datos natales; al rechazar, el fallo se tolera. Revocar el consentimiento borra los campos natales y la carta natal calculada en la misma transacción e invalida la caché del Oráculo; el cliente elimina el pendiente local. Historiales y entradas de práctica se gestionan por separado: ver la [revisión de privacidad](legal/privacidad-onboarding.md). [Registro](../arcanum_app/lib/features/auth/register_screen.dart), [autenticación](../arcanum_app/lib/core/auth/auth_controller.dart), [consentimiento y navegación](../arcanum_app/lib/features/onboarding/presentation/onboarding_screen.dart), [borrador y reintento](../arcanum_app/lib/features/onboarding/application/onboarding_controller.dart), [almacén seguro](../arcanum_app/lib/features/onboarding/application/pending_profile_store.dart), [selector de lugar](../arcanum_app/lib/shared/widgets/place_chooser.dart), [API de registro](../arcanum-api/app/routers/auth.py), [API de perfil](../arcanum-api/app/routers/users.py), [API de consentimiento](../arcanum-api/app/routers/consents.py).
 
 ## Crear y leer una entrada del Grimorio
 
