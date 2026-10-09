@@ -46,7 +46,7 @@ Primera versión: ampliar la página de Firebase existente con recorrido, tres a
 2. Hacer inventario visual de las cinco secciones en la build actual; escoger capturas sin datos personales.
 3. Redactar la guía de uso por recorridos reales: primer inicio, consulta del cielo, guardar en Grimorio, leer en Saber y usar el Oráculo.
 4. Ampliar `arcanum_app/sitio/index.html` con ese material; revisar enlaces legales y `app-ads.txt` antes de desplegar.
-5. Dibujar las tres secuencias sensibles indicadas en [arquitectura.md](arquitectura.md) a medida que se verifiquen sus flujos.
+5. Dibujar las secuencias sensibles indicadas en [arquitectura.md](arquitectura.md) a medida que se verifiquen sus flujos.
 
 No hace falta elegir un generador nuevo de documentación para este lote: Markdown y Mermaid en Git cubren índice, revisión y diagramas; el sitio estático existente cubre la cara pública. Reconsiderarlo si aparecen múltiples autores, búsqueda de muchas páginas o traducciones.
 
@@ -59,4 +59,8 @@ No hace falta elegir un generador nuevo de documentación para este lote: Markdo
 
 ## Guía de uso — 8 de octubre de 2026
 
-El [mapa de producto](producto.md) y la [guía de uso](guia-de-uso.md) cubren los cinco recorridos del primer lote con fuentes en código. Falta verificarlos de punta a punta en Android; la guía enumera los casos a probar. Después corresponde dibujar los flujos sensibles indicados en [arquitectura.md](arquitectura.md).
+El [mapa de producto](producto.md) y la [guía de uso](guia-de-uso.md) cubren los cinco recorridos del primer lote con fuentes en código. Falta verificarlos de punta a punta en Android; la guía enumera los casos a probar.
+
+## Diagramas de arquitectura — 8 de octubre de 2026
+
+El [mapa de arquitectura](arquitectura.md) ya incluye secuencias de registro, consentimiento y perfil natal, y de creación y lectura del Grimorio. Ambas están contrastadas con el código, no con un recorrido completo en Android. El flujo de onboarding revela que el borrador y los reintentos del perfil natal usan `SharedPreferences` sin el cifrado del Grimorio; requiere revisión de privacidad aparte. Quedan por diagramar pagos y créditos, Oráculo y un modelo de datos acotado.

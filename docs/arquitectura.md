@@ -1,6 +1,6 @@
 # Mapa de arquitectura de ARCANUM
 
-Estado: mapa inicial verificado en el repositorio el 2026-10-07. Es un diagrama de contexto, no un inventario de clases.
+Estado: contexto y dos secuencias verificados en el código el 2026-10-08. Describen el comportamiento implementado; falta comprobar los recorridos completos en Android.
 
 ```mermaid
 flowchart LR
@@ -31,11 +31,102 @@ El mapa resume integraciones. La app también usa Firebase en el cliente; este d
 | Webhook de pagos | [`arcanum-api/app/routers/revenuecat.py`](../arcanum-api/app/routers/revenuecat.py) |
 | Sitio que publica Firebase | [`arcanum_app/firebase.json`](../arcanum_app/firebase.json) |
 
-## Diagramas siguientes, solo cuando aporten una respuesta
+## Registro, consentimiento y perfil natal
 
-1. **Secuencia del Grimorio:** crear entrada, cifrar en cliente, guardar, leer y descifrar. Útil para auditar privacidad y recuperación de clave.
-2. **Secuencia de compra y créditos:** RevenueCat, webhook, idempotencia y saldo. Útil para depurar cobros.
-3. **Flujo del Oráculo:** consentimiento, datos enviados, cuota, Groq y respuesta. Útil para privacidad y fallos 429.
-4. **Modelo de datos acotado:** usuario, entrada de Grimorio, tirada, créditos y eventos de pago. Derivarlo de modelos y migraciones, sin copiar todo el esquema.
+**Pregunta:** ¿en qué momento salen los datos de nacimiento del dispositivo y qué ocurre si falla la red? El registro envía correo y contraseña, inicia sesión automáticamente y abre el onboarding. El consentimiento de datos sensibles se pide antes de capturar el perfil natal.
 
-Usar Mermaid versionado junto al texto. UML de clases solo para relaciones complejas reales; un diagrama por pregunta, con fecha y fuentes. Si una figura no se puede contrastar con código o prueba, rotularla como propuesta.
+```mermaid
+sequenceDiagram
+  actor Persona
+  participant App as App Flutter
+  participant Local as SharedPreferences
+  participant API as API FastAPI
+  participant DB as PostgreSQL
+  Persona->>App: Registrarse con correo y contraseña
+  App->>API: POST /auth/register
+  API->>DB: Crear usuario
+  App->>API: POST /auth/login y GET /users/me
+  App->>Persona: Mostrar consentimiento de datos sensibles
+  alt Acepta
+    Persona->>App: Aceptar
+    App->>API: POST /consents granted=true
+    API->>DB: Registrar consentimiento
+    API-->>App: Confirmación
+    App->>Persona: Pedir nombre, fecha, hora y lugar
+    App->>Local: Guardar borrador de nombre, fecha, hora y ciudad
+    opt Lugar fuera del catálogo
+      App->>API: POST /geo/resolve
+      API-->>App: Coordenadas y zona horaria
+    end
+    Persona->>App: Confirmar lugar y finalizar
+    App->>API: PUT /users/me con perfil natal
+    alt Perfil persistido
+      API->>DB: Guardar perfil
+      API-->>App: Confirmación
+    else Fallo de red o de actualización
+      App->>Local: Guardar onboarding_pending_profile para reintento
+      Note over App,Local: El perfil pendiente contiene datos natales
+    end
+  else Rechaza
+    Persona->>App: Continuar sin datos sensibles
+    App->>API: POST /consents granted=false
+    Note over App,API: Si falla este registro, el rechazo no bloquea la app
+    App->>API: PUT /users/me con onboarding_completed
+    opt Falla la actualización
+      App->>Local: Guardar actualización pendiente
+    end
+  end
+  App->>Local: Marcar onboarding_completed
+  App->>Persona: Abrir Sendero
+  opt Nuevo inicio de sesión con perfil pendiente
+    App->>API: PUT /users/me con datos pendientes
+    API-->>App: Confirmación
+    App->>Local: Borrar onboarding_pending_profile
+  end
+```
+
+El borrador de nombre, fecha, hora y ciudad, y el perfil pendiente para reintento, se escriben en `SharedPreferences`; este flujo **no les aplica el cifrado del Grimorio**. Las coordenadas y la zona horaria confirmadas viven en memoria hasta el envío o el guardado del perfil pendiente. Si falla `POST /consents` al aceptar, no se avanza a los datos natales; al rechazar, el fallo se tolera. El reintento ocurre al pasar a estado autenticado y conserva el perfil pendiente si vuelve a fallar. Esto describe el código actual, no una garantía de protección del almacenamiento local. [Registro](../arcanum_app/lib/features/auth/register_screen.dart), [autenticación](../arcanum_app/lib/core/auth/auth_controller.dart), [consentimiento y navegación](../arcanum_app/lib/features/onboarding/presentation/onboarding_screen.dart), [borrador y reintento](../arcanum_app/lib/features/onboarding/application/onboarding_controller.dart), [selector de lugar](../arcanum_app/lib/shared/widgets/place_chooser.dart), [API de perfil](../arcanum-api/app/routers/users.py), [API de consentimiento](../arcanum-api/app/routers/consents.py).
+
+## Crear y leer una entrada del Grimorio
+
+**Pregunta:** ¿qué información puede leer el servidor? El cuerpo se cifra en Flutter con AES-256-GCM antes de `POST /grimoire`. El título, el tipo y los metadatos de contexto viajan como campos separados. La lista devuelve estos campos; el detalle devuelve además el cuerpo cifrado y el IV.
+
+```mermaid
+sequenceDiagram
+  actor Persona
+  participant App as App Flutter
+  participant Key as FlutterSecureStorage
+  participant API as API FastAPI
+  participant DB as PostgreSQL
+  Persona->>App: Escribir título y cuerpo; sellar entrada
+  App->>Key: Leer o crear clave local de 256 bits
+  Key-->>App: Clave del dispositivo
+  App->>App: Cifrar cuerpo con AES-256-GCM y nonce aleatorio
+  opt Contexto astral disponible
+    App->>API: Consultar Luna o cielo del día
+    API-->>App: Contexto astral
+  end
+  App->>API: POST /grimoire con título, metadatos, cuerpo cifrado e IV
+  API->>API: Calcular hora planetaria del usuario
+  API->>DB: Guardar campos y contenido cifrado
+  API-->>App: Entrada creada
+  Persona->>App: Abrir entrada
+  App->>API: GET /grimoire/{id}
+  API->>DB: Buscar entrada del usuario autenticado
+  DB-->>API: Campos, contenido cifrado e IV
+  API-->>App: Entrada cifrada
+  App->>Key: Leer clave local
+  Key-->>App: Clave del dispositivo
+  App->>App: Descifrar y autenticar cuerpo
+  App->>Persona: Mostrar título y cuerpo
+```
+
+Las escrituras nuevas llevan prefijo `v2:` y usan AES-256-GCM; la lectura conserva soporte para entradas antiguas AES-256-CBC. La clave del Grimorio se crea y guarda en `FlutterSecureStorage` del dispositivo. Si no está la clave original o falla la autenticación del texto, el detalle no puede recuperar el cuerpo. El backend calcula la hora planetaria y no confía en la enviada por el cliente. El contexto astral opcional no impide guardar si falla su consulta. [Editor](../arcanum_app/lib/features/grimorio/grimorio_editor.dart), [cifrado](../arcanum_app/lib/core/crypto/grimoire_crypto.dart), [detalle](../arcanum_app/lib/features/grimorio/grimorio_detail.dart), [API del cliente](../arcanum_app/lib/core/api/arcanum_api.dart), [router del servidor](../arcanum-api/app/routers/grimoire.py), [modelo](../arcanum-api/app/models/grimoire_entry.py).
+
+## Diagramas siguientes
+
+1. **Compra y créditos:** RevenueCat, webhook, idempotencia y saldo, tras verificar el recorrido en código.
+2. **Oráculo:** consentimiento, datos enviados, cuota, Groq y respuesta.
+3. **Modelo de datos acotado:** usuario, entrada de Grimorio, tirada, créditos y eventos de pago, derivado de modelos y migraciones.
+
+Mantener Mermaid junto al texto y corregir cada figura al cambiar su flujo. Usar UML de clases solo cuando una relación entre clases reales sea la pregunta.
