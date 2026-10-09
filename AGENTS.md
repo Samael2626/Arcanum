@@ -302,5 +302,5 @@ Nunca `ARCANUM_SKIP_HOOKS=1`: si el hook bloquea, el bloqueo es el dato.
 5. Commit + push automatico + doc en vault
 
 ## Memoria permanente de direccion visual
-- Al mejorar un instrumento existente, conservar sus simbolos y lecturas. Si Samuel pide corregir las rayas, marcas o el minutero, no quitar el glifo central: aclarar o refinar solo las marcas/aguja. Si el alcance no esta claro, preguntar antes de eliminar un elemento semantico.
+- Al mejorar un instrumento existente, conservar sus simbolos y lecturas. Si Samuel pide corregir las rayas, marcas o el minutero, no quitar el glifo central ni el arco circular de cuenta regresiva; refinar solo las marcas/borde. No sustituir el arco por una flecha. Si el alcance no esta claro, preguntar antes de eliminar un elemento semantico.
 - Preferencias actuales para el instrumento de Ahora: Luna como esfera circular 3D que Samuel pueda girar arrastrando; glifos planetarios con volumen propio; acabados favoritos vidrio ahumado y esmalte. No convertir el instrumento en un sello o medallon.
