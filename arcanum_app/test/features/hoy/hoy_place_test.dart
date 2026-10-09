@@ -144,7 +144,7 @@ void main() {
     );
     expect(adapter.to('/astral/moon'), hasLength(1));
     // La luna es global: se calcula siempre.
-    expect(find.text('Gibosa creciente'), findsOneWidget);
+    expect(find.textContaining('Gibosa creciente'), findsOneWidget);
     // El regente y la hora se declaran ausentes, no se rellenan.
     expect(find.textContaining('Día de '), findsNothing);
     expect(find.text('No disponible sin saber dónde estás'), findsOneWidget);

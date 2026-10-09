@@ -9,6 +9,7 @@ import '../state/flow_providers.dart';
 import '../theme/arcanum_colors.dart';
 import '../theme/arcanum_theme.dart';
 import '../../shared/widgets/info_dot.dart';
+import '../../features/hoy/presentation/widgets/reliquary_fx.dart';
 import '../../features/sendero/presentation/sendero_invitation.dart';
 import '../../features/sendero/application/sendero_guide_controller.dart';
 import '../../features/sendero/presentation/sendero_coach_gate.dart';
@@ -32,24 +33,42 @@ class AppShell extends ConsumerWidget {
           // ese gesto es el de volver atras del sistema, y ahora que el cajon
           // cuelga del lado izquierdo los dos caerian en el mismo sitio.
           drawerEnableOpenDragGesture: false,
-          body: SafeArea(
-            child: Column(
-              children: [
-                // Se reconstruye en cada navegación para saber si estamos en una
-                // raíz de sección (mostrar barra) o en una sub-ruta (ocultarla).
-                AnimatedBuilder(
-                  animation: router.routerDelegate,
-                  builder: (context, _) {
-                    final location =
-                        router.routerDelegate.currentConfiguration.uri.path;
-                    final section = arcanumSectionForRoute(location);
-                    if (section == null) return const SizedBox.shrink();
-                    return _SectionBar(section: section);
-                  },
-                ),
-                Expanded(child: navigationShell),
-              ],
-            ),
+          // Se reconstruye en cada navegación para saber si estamos en una
+          // raíz de sección (mostrar barra), en una sub-ruta (ocultarla) o en
+          // la portada (cabecera del Atlas de reliquias y su fondo).
+          body: Consumer(
+            builder: (context, ref, _) {
+              final cara = ref.watch(cieloCaraProvider);
+              return AnimatedBuilder(
+                animation: router.routerDelegate,
+                builder: (context, _) {
+                  final location =
+                      router.routerDelegate.currentConfiguration.uri.path;
+                  final section = arcanumSectionForRoute(location);
+                  final portada = location == '/hoy' && cara == 0;
+                  return Stack(
+                    children: [
+                      Positioned.fill(
+                        child: portada
+                            ? const ReliquaryBackdrop()
+                            : const SizedBox.shrink(),
+                      ),
+                      SafeArea(
+                        child: Column(
+                          children: [
+                            if (portada)
+                              const _PortadaBar()
+                            else if (section != null)
+                              _SectionBar(section: section),
+                            Expanded(child: navigationShell),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
           ),
         ),
       ),
@@ -120,9 +139,112 @@ class _SectionBar extends ConsumerWidget {
   }
 }
 
+/// Cabecera de la portada, la del Atlas de reliquias: hamburguesa, la marca,
+/// que es esto en llano y el sello de la cuenta. Sin «?», sin casa y sin
+/// pestanas: la portada ES la casa, y la carta tiene su entrada en el cielo
+/// vivo.
+class _PortadaBar extends StatelessWidget {
+  const _PortadaBar();
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(9, 12, 14, 6),
+    child: Row(
+      children: [
+        const _MenuPrincipal(color: ArcanumColors.goldLight, size: 26),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Semantics(
+            header: true,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // la marca no se parte nunca: con letra grande se encoge
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'ARCANUM',
+                    maxLines: 1,
+                    style: ArcanumText.wordmark(size: 27).copyWith(
+                      letterSpacing: 2.2,
+                      color: ArcanumColors.goldLight,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Cielo · tu carta natal y lo que hoy la toca',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcanumText.body(12, color: ArcanumColors.ivoryMuted),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        const _AccountSeal(),
+      ],
+    ),
+  );
+}
+
+/// El sello de la cuenta: la Luna en bronce. Abre el mismo menu, que guarda
+/// la cuenta al pie.
+class _AccountSeal extends StatelessWidget {
+  const _AccountSeal();
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+    message: 'Abrir tu cuenta',
+    child: Semantics(
+      button: true,
+      label: 'Abrir tu cuenta y el menú',
+      excludeSemantics: true,
+      child: InkWell(
+        key: const Key('portada-cuenta'),
+        customBorder: const CircleBorder(),
+        onTap: () => Scaffold.of(context).openDrawer(),
+        child: SizedBox(
+          width: 48,
+          height: 48,
+          child: Center(
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: ArcanumColors.gold.withValues(alpha: .47),
+                ),
+                gradient: const RadialGradient(
+                  center: Alignment(-.4, -.8),
+                  radius: .9,
+                  colors: [
+                    ArcanumColors.reliquarySealLight,
+                    ArcanumColors.reliquarySealDark,
+                  ],
+                  stops: [0, .7],
+                ),
+              ),
+              alignment: Alignment.center,
+              child: ReliquaryMark.crescent.draw(size: 22),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 /// La hamburguesa abre el mapa de la app. Su zona tactil mide 48.
 class _MenuPrincipal extends ConsumerWidget {
-  const _MenuPrincipal();
+  const _MenuPrincipal({this.color = ArcanumColors.gold, this.size = 22});
+
+  final Color color;
+  final double size;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -142,7 +264,7 @@ class _MenuPrincipal extends ConsumerWidget {
             child: SizedBox(
               width: 48,
               height: 48,
-              child: Icon(Icons.menu, size: 22, color: ArcanumColors.gold),
+              child: Icon(Icons.menu, size: size, color: color),
             ),
           ),
         ),

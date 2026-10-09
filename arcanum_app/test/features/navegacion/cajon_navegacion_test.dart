@@ -312,8 +312,17 @@ void main() {
     expect(find.byType(FloatingActionButton), findsNothing);
     expect(find.byType(NavigationBar), findsNothing);
 
-    // Cielo es la propia portada: su barra lleva el nombre de la seccion.
-    expect(find.text(arcanumSections[0].title), findsWidgets);
+    // Cielo es la propia portada: su cabecera (Atlas de reliquias, 08-oct)
+    // lleva la marca y dice en llano que es Cielo. Sin «?», sin casa y sin
+    // pestanas: eso queda para las demas secciones.
+    expect(find.text('ARCANUM'), findsOneWidget);
+    expect(
+      find.textContaining('${arcanumSections[0].title} · '),
+      findsOneWidget,
+    );
+    expect(find.byTooltip('Volver a la portada'), findsNothing);
+    expect(find.text('Tu carta'), findsOneWidget);
+    expect(find.text('Ahora'), findsNothing);
 
     // Cada mosaico con la seccion del menu a la que pertenece. En debug y
     // perfil la placa de Tarot que va primero es la mesa, y los tests corren

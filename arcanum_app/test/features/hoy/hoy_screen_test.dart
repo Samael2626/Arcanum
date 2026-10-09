@@ -139,6 +139,11 @@ class _TodayApi extends ArcanumApi {
     };
   }
 
+  /// La placa de la Mesa pide la ultima tirada; sin esto se iria al Dio real.
+  @override
+  Future<List<Map<String, dynamic>>> tarotReadings({int limit = 20}) async =>
+      const [];
+
   @override
   Future<Map<String, dynamic>> today({
     required double lat,
@@ -203,10 +208,12 @@ void main() {
       findsNothing,
     );
     expect(find.byType(ArcanumFrame), findsNothing);
-    // El guardian no pide que exista una superficie: pide que haya EXACTAMENTE
-    // una. Vigila que no se apilen materiales caros en la pantalla que se abre
-    // todos los dias. Al migrar a Resina cambia el tipo, no la intencion.
-    expect(find.byType(ArcanumResin), findsOneWidget);
+    // El guardian vigila que no se apilen materiales caros en la pantalla que
+    // se abre todos los dias. Con el Atlas de reliquias (08-oct) el fondo lo
+    // pinta el shell y el vidrio es SELECTIVO: dos desenfoques, el cielo vivo y
+    // la Mesa, ni uno mas. Cambia el material, no la intencion.
+    expect(find.byType(ArcanumResin), findsNothing);
+    expect(find.byType(BackdropFilter), findsNWidgets(2));
     expect(find.byType(TweenAnimationBuilder<double>), findsNothing);
 
     final chip = find.ancestor(
@@ -265,7 +272,8 @@ void main() {
     // La Luna.
     await pulsar(tester, const Key('hoy-selector-moon'));
     expect(find.text('La Luna'), findsOneWidget);
-    expect(find.text('Gibosa creciente'), findsOneWidget);
+    // la fase con su nombre la dice el cielo vivo de arriba
+    expect(find.textContaining('Gibosa creciente'), findsOneWidget);
     expect(find.text('Plantas de la Luna'), findsOneWidget);
 
     // Y se puede volver.

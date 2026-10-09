@@ -60,22 +60,18 @@ class _CieloScreenState extends ConsumerState<CieloScreen> {
     if (cara == 1) _cartaMontada = true;
     return Column(
       children: [
-        const SizedBox(height: 10),
-        KeyedSubtree(
-          key: ref.read(senderoGuideTargetsProvider).keyFor('cielo_toggle'),
-          child: _Caras(
+        // La portada (cara Ahora) es el Atlas de reliquias y no lleva
+        // conmutador: su entrada a la carta es «Tu carta», en el cielo vivo,
+        // y esa lleva la clave del Sendero. Dentro de la carta el conmutador
+        // sigue, para volver.
+        if (cara == 1) ...[
+          const SizedBox(height: 10),
+          _Caras(
             cara: cara,
-            onChanged: (i) {
-              ref.read(cieloCaraProvider.notifier).set(i);
-              if (i == 1) {
-                ref
-                    .read(senderoGuideProvider.notifier)
-                    .onAction('cielo_toggle');
-              }
-            },
+            onChanged: (i) => ref.read(cieloCaraProvider.notifier).set(i),
           ),
-        ),
-        const SizedBox(height: 6),
+          const SizedBox(height: 6),
+        ],
         Expanded(
           child: IndexedStack(
             index: cara,

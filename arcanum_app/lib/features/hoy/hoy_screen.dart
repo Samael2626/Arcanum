@@ -13,7 +13,6 @@ import '../../core/theme/arcanum_theme.dart';
 import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/arcanum_mood.dart';
-import '../../shared/widgets/arcanum_resin.dart';
 import '../sendero/application/sendero_guide_controller.dart';
 import '../sigilos/taller_screen.dart';
 import 'hoy_guidance.dart';
@@ -51,6 +50,24 @@ final hoySkyProvider = FutureProvider.autoDispose<Map<String, dynamic>>((
   };
 });
 
+/// Slug de la primera carta de la ultima tirada guardada, para la placa de la
+/// Mesa. Null si no hay ninguna o no se pudo leer: entonces la placa ensena su
+/// carta fija, que es decoracion y no un dato que haya que avisar.
+final lastTableCardProvider = FutureProvider.autoDispose<String?>((ref) async {
+  try {
+    final rows = await ref.read(arcanumApiProvider).tarotReadings(limit: 1);
+    if (rows.isEmpty) return null;
+    final cards = rows.first['cards_drawn'];
+    if (cards is! List || cards.isEmpty) return null;
+    final slug = (cards.first as Map?)?['slug'];
+    return slug is String && RegExp(r'^[a-z0-9-]+$').hasMatch(slug)
+        ? slug
+        : null;
+  } catch (_) {
+    return null;
+  }
+});
+
 class HoyScreen extends ConsumerStatefulWidget {
   const HoyScreen({super.key});
   @override
@@ -60,43 +77,52 @@ class HoyScreen extends ConsumerStatefulWidget {
 class _HoyScreenState extends ConsumerState<HoyScreen> {
   /// Vuelve a pedir el cielo y espera a que llegue: sin el await, el indicador
   /// de arrastre se cerraria antes de que hubiera nada nuevo que mirar.
-  Future<void> _reload() => ref.refresh(hoySkyProvider.future);
+  Future<void> _reload() {
+    ref.invalidate(lastTableCardProvider);
+    return ref.refresh(hoySkyProvider.future);
+  }
 
   @override
   Widget build(BuildContext context) {
     final sky = ref.watch(hoySkyProvider);
-    // La atmósfera del cielo deriva del regente REAL del día; mientras
-    // carga, penumbra neutra.
-    final ruler = sky.value?['day_ruler'] as String?;
-    final mood = ruler != null
-        ? ArcanumMood.forPlanet(ruler)
-        : ArcanumMood.neutral;
 
-    return Stack(
-      children: [
-        Positioned.fill(child: _LivingSky(mood: mood)),
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 460),
-            child: RefreshIndicator(
-              color: ArcanumColors.gold,
-              backgroundColor: ArcanumColors.surface,
-              onRefresh: _reload,
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(22, 36, 22, 28),
-                children: [
-                  switch (sky) {
-                    AsyncData(:final value) => _content(value),
-                    AsyncError(:final error) => _error(error.toString()),
-                    _ => const _SkyLoading(),
-                  },
-                ],
-              ),
-            ),
+    // Sin fondo propio: el de la portada (tinta con brumas de agua y vino) lo
+    // pinta el shell, que tambien cubre la cabecera.
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 460),
+        child: RefreshIndicator(
+          color: ArcanumColors.gold,
+          backgroundColor: ArcanumColors.surface,
+          onRefresh: _reload,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(15, 8, 15, 28),
+            children: [
+              switch (sky) {
+                AsyncData(:final value) => _content(value),
+                AsyncError(:final error) => _error(error.toString()),
+                _ => const _SkyLoading(),
+              },
+            ],
           ),
         ),
-      ],
+      ),
+    );
+  }
+
+  /// El instrumento del dia: «Hoy →» baja hasta el.
+  final _instrumentKey = GlobalKey();
+
+  void _scrollToInstrument() {
+    final target = _instrumentKey.currentContext;
+    if (target == null) return;
+    Scrollable.ensureVisible(
+      target,
+      duration: MediaQuery.disableAnimationsOf(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 520),
+      curve: Curves.easeOutCubic,
     );
   }
 
@@ -171,6 +197,15 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         AtlasHomePanel(
           moon: moon,
           observedAt: observedAt,
+          dayRuler: ruler,
+          hour: hour,
+          tableCard: ref.watch(lastTableCardProvider).value,
+          onToday: _scrollToInstrument,
+          // la otra cara de Cielo; el Sendero la cuenta al cambiar de cara
+          onChart: () => ref.read(cieloCaraProvider.notifier).set(1),
+          chartKey: ref
+              .read(senderoGuideTargetsProvider)
+              .keyFor('cielo_toggle'),
           onMoonTap: () => _openMoonLore(moon),
           onHoroscope: () {
             ref
@@ -220,7 +255,10 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         // no compartian barra. Desde que el horoscopo tiene pestana propia, la
         // lectura vive ALLI y esta cara se queda con lo suyo -- el instrumento
         // del instante y el siguiente paso.
-        _skyInstrument(ruler: ruler, hour: hour, moon: moon),
+        KeyedSubtree(
+          key: _instrumentKey,
+          child: _skyInstrument(ruler: ruler, hour: hour, moon: moon),
+        ),
       ],
     );
   }
@@ -459,58 +497,6 @@ class _JumpChip extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _LivingSky extends StatefulWidget {
-  final ArcanumMood mood;
-  const _LivingSky({required this.mood});
-
-  @override
-  State<_LivingSky> createState() => _LivingSkyState();
-}
-
-class _LivingSkyState extends State<_LivingSky>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _fade = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 900),
-  );
-
-  late ArcanumMood _from = widget.mood;
-  late ArcanumMood _to = widget.mood;
-
-  @override
-  void didUpdateWidget(covariant _LivingSky old) {
-    super.didUpdateWidget(old);
-    if (widget.mood.core != _to.core) {
-      _from = ArcanumMood.lerp(_from, _to, _fade.value);
-      _to = widget.mood;
-      _fade.value = 1;
-    }
-  }
-
-  @override
-  void dispose() {
-    _fade.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _fade,
-      builder: (context, _) {
-        final mood = widget.mood;
-        return ArcanumResin(
-          mood: mood,
-          drift: null,
-          // Cielo como INSINUACIÓN del regente: penumbra profunda para que el
-          // color se lea misterioso, no brillante. Los paneles rebotan sobre él.
-          intensity: 0.34,
-        );
-      },
     );
   }
 }

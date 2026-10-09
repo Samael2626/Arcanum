@@ -105,6 +105,22 @@ class ArcanumColors {
   static const neutralGlow = Color(0xFF8A6E32); // oro apagado
   static const neutralAccent = Color(0xFFC9A84C);
 
+  // ── Atlas de reliquias (portada E, Samuel 08-oct) ──────────────────────
+  // Placas de la portada. Lectura = resina estable (sin desenfoque); el cielo
+  // vivo y la Mesa son vidrio: translucidos sobre el fondo, con su alfa ya
+  // dentro del token. Los valores salen tal cual del prototipo aprobado
+  // (prototipos/comparador_portada_viva.html, acabado «Vidrio selectivo»).
+  static const reliquaryTileTop = Color(0xFF29232A);
+  static const reliquaryTileBottom = Color(0xFF15151D);
+  static const reliquaryHeroTop = Color(0xB3494153); // malva humo
+  static const reliquaryHeroBottom = Color(0xB8101015);
+  static const reliquaryTableTop = Color(0xCC5A2B3C); // vino de la mesa
+  static const reliquaryTableBottom = Color(0xDB18151E);
+
+  /// Sello de la cuenta: bronce viejo que se apaga hacia el centro.
+  static const reliquarySealLight = Color(0xFF574528);
+  static const reliquarySealDark = Color(0xFF17151D);
+
   // ── Aspectos de la rueda natal ─────────────────────────────────────────
   // Trazos que cruzan el centro de la carta, coloreados por su naturaleza.
   // Unión (conjunción) = oro · Armonía (sextil/trígono) = azul sereno ·
