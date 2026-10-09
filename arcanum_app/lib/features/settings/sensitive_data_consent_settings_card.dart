@@ -7,6 +7,7 @@ import '../../core/privacy/consent_policy.dart';
 import '../../core/theme/arcanum_theme.dart';
 import '../onboarding/application/onboarding_controller.dart';
 import '../onboarding/application/pending_profile_store.dart';
+import '../sendero/application/sendero_controller.dart';
 import '../../shared/widgets/arcanum_card.dart';
 
 class SensitiveDataConsentSettingsCard extends ConsumerStatefulWidget {
@@ -37,9 +38,28 @@ class _SensitiveDataConsentSettingsCardState
   }
 
   Future<void> _revoke() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Revocar autorización'),
+        content: const Text(
+          'Se borrarán para siempre tu perfil natal, las lecturas, las conversaciones, el Grimorio y los pasajes guardados. Tu cuenta y tus créditos seguirán disponibles.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Revocar y borrar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
     setState(() => _busy = true);
     try {
-      await ref.read(pendingProfileStoreProvider).clear();
       await ref
           .read(arcanumApiProvider)
           .recordConsent(
@@ -47,16 +67,32 @@ class _SensitiveDataConsentSettingsCardState
             policyVersion: sensitiveDataConsentPolicyVersion,
             granted: false,
           );
-      // El backend revoca y borra el perfil natal en una sola transaccion.
+      var localCleared = true;
+      try {
+        final userId = ref.read(authProvider).user?['id']?.toString();
+        if (userId == null) throw StateError('Missing user id');
+        final pendingStore = ref.read(pendingProfileStoreProvider);
+        if (await pendingStore.readFor(userId) != null) {
+          await pendingStore.clear();
+        }
+        await clearSenderoLocalData(userId: userId);
+      } catch (_) {
+        localCleared = false;
+      }
       ref.invalidate(onboardingProvider);
+      ref.invalidate(senderoControllerProvider);
       if (!mounted) return;
       setState(() {
         _busy = false;
         _granted = Future.value(false);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Autorización revocada y perfil natal borrado.'),
+        SnackBar(
+          content: Text(
+            localCleared
+                ? 'Autorización revocada e historial borrado.'
+                : 'Historial borrado en el servidor. No se pudieron limpiar todos los datos de este dispositivo.',
+          ),
         ),
       );
       try {
@@ -91,7 +127,7 @@ class _SensitiveDataConsentSettingsCardState
               const SectionLabel('DATOS SENSIBLES'),
               const SizedBox(height: 12),
               Text(
-                'Autorizaste el uso de tus datos natales y de práctica. Tu historial y las entradas del Grimorio se eliminan por separado.',
+                'Autorizaste el uso de tus datos natales y de práctica. Al revocar, se borrarán tus lecturas, conversaciones, Grimorio y perfil natal. La cuenta y los créditos se conservan.',
                 style: ArcanumText.body(16),
               ),
               const SizedBox(height: 12),
@@ -99,7 +135,7 @@ class _SensitiveDataConsentSettingsCardState
                 onPressed: _busy ? null : _revoke,
                 icon: const Icon(Icons.delete_sweep_outlined),
                 label: Text(
-                  _busy ? 'Revocando…' : 'Revocar y borrar perfil natal',
+                  _busy ? 'Revocando…' : 'Revocar y borrar historial',
                 ),
               ),
             ],

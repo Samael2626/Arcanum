@@ -11,6 +11,7 @@ from app.db.session import get_db
 from app.domain.entities import UserEntity
 from app.models.sendero_progress import SenderoProgress
 from app.application.services.fragment_service import FragmentService
+from app.api.deps import require_practice_consent
 from app.schemas.sendero import (
     SenderoProgressResponse,
     SenderoProgressUpdate,
@@ -48,6 +49,7 @@ def list_sendero_progress(
 @router.put(
     "/progress/{journey_id}",
     response_model=SenderoProgressResponse,
+    dependencies=[Depends(require_practice_consent)],
 )
 def update_sendero_progress(
     journey_id: str,

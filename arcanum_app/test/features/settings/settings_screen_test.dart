@@ -147,6 +147,10 @@ void main() {
   });
 
   testWidgets('revocar autorizacion borra datos sensibles', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'sendero_progress_v1_user-a': '[]',
+      'sendero_progress_v1_user-b': '[]',
+    });
     final api = _SettingsApi();
     final authRepository = _SettingsAuthRepository();
     final pending = _MemoryPendingProfileStore();
@@ -165,14 +169,26 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Revocar y borrar perfil natal'));
+    await tester.tap(find.text('Revocar y borrar historial'));
+    await tester.pumpAndSettle();
+    expect(api.recorded, isEmpty);
+    expect(find.textContaining('Se borrarán para siempre'), findsOneWidget);
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+    expect(api.recorded, isEmpty);
+    await tester.tap(find.text('Revocar y borrar historial'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Revocar y borrar'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(api.recorded.single['granted'], isFalse);
     expect(pending.profile, isNull);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.containsKey('sendero_progress_v1_user-a'), isFalse);
+    expect(prefs.containsKey('sendero_progress_v1_user-b'), isTrue);
     expect(
-      find.text('Autorización revocada y perfil natal borrado.'),
+      find.text('Autorización revocada e historial borrado.'),
       findsOneWidget,
     );
   });

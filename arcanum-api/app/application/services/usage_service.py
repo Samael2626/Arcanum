@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.models.credit_ledger import CreditLedger
 from app.models.usage_operation import UsageOperation
 from app.models.user import User
+from app.services.sensitive_consent import reject_revoked_sensitive_consent
 
 
 @dataclass
@@ -39,7 +40,8 @@ class UsageService:
                 daily_limit: int, cost: int = 1) -> UsageReservation:
         self._validate_key(key)
         fingerprint = self.request_fingerprint(payload)
-        user = db.execute(select(User).where(User.id == user_id).with_for_update()).scalar_one()
+        reject_revoked_sensitive_consent(db, user_id)
+        user = db.get(User, user_id)
         operation = db.query(UsageOperation).filter_by(user_id=user_id, idempotency_key=key).first()
         if operation is not None:
             if operation.action != action or operation.request_fingerprint != fingerprint:
@@ -108,6 +110,7 @@ class UsageService:
         db.add(CreditLedger(user_id=user.id, delta=-cost, reason=f"{action}_spend", usage_operation=operation))
 
     def capture(self, db: Session, operation: UsageOperation, result: dict) -> None:
+        reject_revoked_sensitive_consent(db, operation.user_id)
         operation.state = "captured"
         operation.result = self._result_json(result)
         try:

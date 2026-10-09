@@ -23,6 +23,16 @@ from app.adapters.repositories import (
 from app.application.services.auth_service import AuthService
 from app.application.services.tarot_service import TarotService
 from app.db.session import get_db
+from app.core.security import get_current_user
+from app.domain.entities import UserEntity
+from app.services.sensitive_consent import reject_revoked_sensitive_consent
+
+
+def require_practice_consent(
+    current_user: UserEntity = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    reject_revoked_sensitive_consent(db, current_user.id)
 
 
 def get_user_repo(db: Session = Depends(get_db)) -> UserRepository:

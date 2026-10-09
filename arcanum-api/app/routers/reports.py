@@ -5,12 +5,14 @@ from app.core.security import get_current_user
 from app.db.session import get_db
 from app.domain.entities import UserEntity
 from app.models.content_report import ContentReport
+from app.api.deps import require_practice_consent
 from app.schemas.content_report import ContentReportCreate, ContentReportResponse
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
 
-@router.post("", response_model=ContentReportResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=ContentReportResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_practice_consent)])
 def create_content_report(
     payload: ContentReportCreate,
     current_user: UserEntity = Depends(get_current_user),

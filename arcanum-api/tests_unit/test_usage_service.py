@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from app.application.services import usage_service
 from app.application.services.usage_service import UsageService
 from app.models.usage_operation import UsageOperation
+from app.models.user import User
 from app.domain.entities import UserEntity
 
 
@@ -16,6 +17,9 @@ class Result:
         self.value = value
 
     def scalar_one(self):
+        return self.value
+
+    def scalar_one_or_none(self):
         return self.value
 
     def first(self):
@@ -57,6 +61,8 @@ class Db:
         self.executed += 1
         if self.executed == 1:
             return Result(SimpleNamespace(id=uuid4()))
+        if self.executed == 2:
+            return Result(None)
         return Result(self.spent)
 
     def query(self, model):
@@ -72,6 +78,8 @@ class Db:
         self.rollbacks += 1
 
     def get(self, model, identifier):
+        if model is User:
+            return SimpleNamespace(id=identifier)
         return self.persisted
 
 
@@ -113,7 +121,7 @@ def test_replay_returns_saved_result_without_second_charge():
     db = Db(existing=operation)
     reservation = UsageService().reserve(db, operation.user_id, "oracle", "retry-key", {"q": "x"}, 1)
     assert reservation.replay is True
-    assert db.executed == 1
+    assert db.executed == 2
     assert not db.added
 
 

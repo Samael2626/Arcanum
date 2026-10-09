@@ -168,12 +168,14 @@ final senderoControllerProvider =
       SenderoController.new,
     );
 
-Future<void> clearSenderoLocalData() async {
+Future<void> clearSenderoLocalData({String? userId}) async {
   final prefs = await SharedPreferences.getInstance();
   for (final key in prefs.getKeys().where(
-    (key) =>
-        key.startsWith(SenderoController._storagePrefix) ||
-        key.startsWith('sendero_offer_'),
+    (key) => userId == null
+        ? key.startsWith(SenderoController._storagePrefix) ||
+              key.startsWith('sendero_offer_')
+        : key == '${SenderoController._storagePrefix}$userId' ||
+              (key.startsWith('sendero_offer_') && key.endsWith('_$userId')),
   )) {
     await prefs.remove(key);
   }

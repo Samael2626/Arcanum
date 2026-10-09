@@ -9,7 +9,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.adapters.repositories import GrimoireEntryRepository
-from app.api.deps import get_grimoire_repo
+from app.api.deps import get_grimoire_repo, require_practice_consent
 from app.core.security import get_current_user
 from app.domain.entities import UserEntity
 from app.schemas.grimoire_entry import (
@@ -54,7 +54,8 @@ def list_entries(
     return grimoire.list_by_user(current_user.id)
 
 
-@router.post("", response_model=GrimoireEntryResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=GrimoireEntryResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_practice_consent)])
 def create_entry(
     entry_in: GrimoireEntryCreate,
     grimoire: GrimoireEntryRepository = Depends(get_grimoire_repo),
@@ -74,7 +75,8 @@ def get_entry(
     return _owned(grimoire, entry_id, current_user)
 
 
-@router.put("/{entry_id}", response_model=GrimoireEntryResponse)
+@router.put("/{entry_id}", response_model=GrimoireEntryResponse,
+            dependencies=[Depends(require_practice_consent)])
 def update_entry(
     entry_id: UUID,
     entry_in: GrimoireEntryUpdate,

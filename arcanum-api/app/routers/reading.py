@@ -24,6 +24,7 @@ from app.api.deps import (
     get_bookmark_repo,
     get_progress_repo,
     get_saved_passage_repo,
+    require_practice_consent,
 )
 from app.core.security import get_current_user
 from app.db.session import get_db
@@ -93,7 +94,8 @@ def _echo(db: Session, position: ReadingPosition) -> PositionEcho:
 # ── Progreso ────────────────────────────────────────────────────────────────
 
 
-@router.put("/progress", response_model=ProgressResponse)
+@router.put("/progress", response_model=ProgressResponse,
+            dependencies=[Depends(require_practice_consent)])
 def upsert_progress(
     payload: ProgressUpsert,
     db: Session = Depends(get_db),
@@ -159,7 +161,8 @@ def get_progress(
 # ── Marcadores ──────────────────────────────────────────────────────────────
 
 
-@router.post("/bookmarks", response_model=BookmarkResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/bookmarks", response_model=BookmarkResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_practice_consent)])
 def create_bookmark(
     payload: BookmarkCreate,
     db: Session = Depends(get_db),
@@ -217,7 +220,8 @@ def delete_bookmark(
 # ── Pasajes guardados ───────────────────────────────────────────────────────
 
 
-@router.post("/passages", response_model=PassageResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/passages", response_model=PassageResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_practice_consent)])
 def create_passage(
     payload: PassageCreate,
     db: Session = Depends(get_db),
@@ -255,7 +259,8 @@ def list_passages(
     ]
 
 
-@router.patch("/passages/{passage_id}", response_model=PassageResponse)
+@router.patch("/passages/{passage_id}", response_model=PassageResponse,
+              dependencies=[Depends(require_practice_consent)])
 def update_passage_note(
     passage_id: UUID,
     payload: PassageNoteUpdate,
