@@ -47,6 +47,7 @@ dependencies:
   crypto: ^3.0.3
   shared_preferences: ^2.5.5
   flutter_svg: ^2.3.0
+  sensors_plus: ^6.1.2
   # taller de sigilos: motor y lienzo en un paquete propio (lo usa tambien la
   # prueba en movil, que no puede ser una ruta de la app por Firebase)
   arcanum_sigilos:
@@ -90,6 +91,8 @@ flutter:
     - assets/data/cities.txt
     - assets/data/cities.bin
     - assets/models/
+    # Mapas de color LROC y elevacion LOLA del NASA CGI Moon Kit.
+    - assets/images/moon/
     - assets/engravings/manifest.json
     - assets/engravings/hierbas/
     - assets/engravings/piedras/
@@ -154,5 +157,5 @@ flutter:
     - family: Noto Serif Hebrew
       fonts:
         - asset: assets/fonts/NotoSerifHebrew-Regular.ttf
-  # shaders:
-  #   - shaders/nebula.frag
+  shaders:
+    - shaders/moon_globe.frag

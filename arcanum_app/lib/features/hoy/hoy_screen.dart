@@ -10,7 +10,6 @@ import '../../core/astro/user_place.dart';
 import '../../core/state/flow_providers.dart';
 import '../../core/theme/arcanum_colors.dart';
 import '../../core/theme/arcanum_theme.dart';
-import '../../shared/astro_symbols.dart';
 import '../../shared/widgets/arcanum_card.dart';
 import '../../shared/widgets/arcanum_mood.dart';
 import '../../shared/widgets/arcanum_resin.dart';
@@ -162,20 +161,20 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
       children: [
         OutlinedButton.icon(
           onPressed: () async {
-            final saved = await Navigator.push<bool>(context,
-              MaterialPageRoute(builder: (_) => const TallerScreen()));
+            final saved = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(builder: (_) => const TallerScreen()),
+            );
             if (mounted && saved == true) context.go('/grimorio');
           },
           icon: const Icon(Icons.auto_fix_high, size: 18),
           label: const Text('Crear sigilo de letras'),
-          style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48),
-            foregroundColor: ArcanumColors.gold),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(48, 48),
+            foregroundColor: ArcanumColors.gold,
+          ),
         ),
         const SizedBox(height: 12),
-        if (step != null) ...[
-          _NextStepCard(step: step, onTap: () => _runStep(step)),
-          const SizedBox(height: 18),
-        ],
         // AQUI NO VA `SkyTodayCard`, y es a proposito desde el 12-sep-2026.
         //
         // La tenia, y la pestana Horoscopo tambien: la MISMA tarjeta montada
@@ -189,6 +188,10 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         // lectura vive ALLI y esta cara se queda con lo suyo -- el instrumento
         // del instante y el siguiente paso.
         _skyInstrument(ruler: ruler, hour: hour, moon: moon),
+        if (step != null) ...[
+          const SizedBox(height: 18),
+          _NextStepCard(step: step, onTap: () => _runStep(step)),
+        ],
       ],
     );
   }
@@ -238,6 +241,7 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
     required Map<String, dynamic>? hour,
     required Map<String, dynamic> moon,
   }) {
+    final place = ref.watch(userPlaceProvider);
     final hourPlanet = hour?['planet'] as String?;
     // Ni `planet` ni `mood` se calculan ya aqui: los decide el selector del
     // instrumento, que es quien sabe que cuerpo se esta mirando.
@@ -252,6 +256,8 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
     return NestedSkyInstrument(
       ruler: ruler,
       hour: hour,
+      latitude: place?.lat,
+      longitude: place?.lon,
       moon: moon,
       onRulerTap: ruler == null
           ? null
@@ -273,55 +279,6 @@ class _HoyScreenState extends ConsumerState<HoyScreen> {
         phaseSlug: phaseSlug,
       ),
       onConfirmPlace: () => context.push('/perfil'),
-      // Los chips siguen al cuerpo elegido en el selector, no a la hora: los
-      // del Sol no le sirven a la Luna.
-      actionsFor: (elegido) =>
-          _jumpRow(elegido, ArcanumMood.forPlanet(elegido)),
-    );
-  }
-
-  Widget _jumpRow(String planet, ArcanumMood mood) {
-    final name = planetEs[planet] ?? planet;
-    // "Plantas de Venus" pero "Plantas de la Luna": de los siete cuerpos, el
-    // unico con articulo es la Luna. Se veia poco porque los chips seguian al
-    // planeta de la hora; con el selector, elegirla es un toque.
-    final deName = planet == 'moon' ? 'de la $name' : 'de $name';
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      alignment: WrapAlignment.center,
-      children: [
-        _JumpChip(
-          label: 'Lore $deName',
-          mood: mood,
-          onTap: () => showPlanetLoreSheet(context, planet),
-        ),
-        _JumpChip(
-          label: 'Plantas $deName',
-          mood: mood,
-          onTap: () => _navigate(NextStepKind.materia, planet, null),
-        ),
-        if (planetCulpeperChapter.containsKey(planet))
-          _JumpChip(
-            label: 'Léelo en Culpeper',
-            mood: mood,
-            onTap: () => _navigate(
-              NextStepKind.culpeper,
-              planet,
-              planetCulpeperChapter[planet],
-            ),
-          ),
-        _JumpChip(
-          label: 'Tu $name natal',
-          mood: mood,
-          onTap: () => _navigate(NextStepKind.cielos, planet, null),
-        ),
-        _JumpChip(
-          label: 'Anota',
-          mood: mood,
-          onTap: () => _navigate(NextStepKind.grimoire, planet, null),
-        ),
-      ],
     );
   }
 }
@@ -389,43 +346,6 @@ class _NextStepCard extends StatelessWidget {
                 ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Chip de salto contextual: un hilo corto a otra sección, teñido del planeta
-/// del panel donde vive.
-class _JumpChip extends StatelessWidget {
-  final String label;
-  final ArcanumMood mood;
-  final VoidCallback onTap;
-  const _JumpChip({
-    required this.label,
-    required this.mood,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: mood.glow.withValues(alpha: 0.10),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(label, style: ArcanumText.body(13, color: mood.accent)),
-            const SizedBox(width: 5),
-            Icon(Icons.arrow_forward_rounded, size: 14, color: mood.accent),
           ],
         ),
       ),

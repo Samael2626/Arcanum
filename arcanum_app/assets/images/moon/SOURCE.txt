@@ -1,0 +1,14 @@
+Fuente: NASA Scientific Visualization Studio, CGI Moon Kit (ID 4720).
+
+lroc_color_2k.jpg: mapa de color equirectangular 2048x1024, preparado con el
+mosaico global Hapke-normalized WAC de LROC, compuesto de mas de 100.000 imagenes.
+
+ldem_3_8bit.jpg: mapa global de elevacion LOLA 1024x512.
+
+Pagina de fuente: https://svs.gsfc.nasa.gov/4720/
+Archivos:
+https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_2k.jpg
+https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/ldem_3_8bit.jpg
+
+NASA SVS indica que los mapas fueron creados a partir de datos de LRO/LROC y
+LOLA para renderizado 3D. Credito: NASA's Scientific Visualization Studio.
